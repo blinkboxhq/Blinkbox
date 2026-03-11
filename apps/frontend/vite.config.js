@@ -4,8 +4,8 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  // CRITICAL: This must exactly match your GitHub repository name
-  base: "/Blinkbox/",
+  // CRITICAL: Set to root because you are using a custom domain (blinkbox.net)
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

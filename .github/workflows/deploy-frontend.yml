@@ -52,10 +52,10 @@ jobs:
           # Tell GitHub where the built files are
           path: ./apps/frontend/dist
 
-  deploy:
+ deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: https://blinkbox.net  # 👈 Update this to your real domain
     runs-on: ubuntu-latest
     needs: build
     steps:
