@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+body {
+  background-color: #000000;
+  color: #e5e5e5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
+.react-flow__background {
+  background-color: #000000 !important;
+}
+
+.react-flow__minimap {
+  background-color: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+  border-radius: 8px !important;
+}
+
+.react-flow__controls {
+  border: 1px solid #1a1a1a !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-flow__controls-button {
+  background-color: #0a0a0a !important;
+  border-bottom: 1px solid #1a1a1a !important;
+  fill: #666 !important;
+  transition: all 0.15s ease;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #111 !important;
+  fill: #e5e5e5 !important;
+}
+
+.react-flow__edge-path {
+  stroke: #333 !important;
+  transition: stroke 0.2s ease;
+}
+
+.react-flow__connection-line {
+  stroke: #3b82f6 !important;
+  stroke-width: 2 !important;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* ── Edge flow animation ───────────────────────────────────────────────────── */
+@keyframes edgeFlow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* ── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #fff;
+}
+
+/* ── Scroll Reveal ─────────────────────────────────────────────────────────── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-on-scroll[data-delay="1"] { transition-delay: 0.1s; }
+.reveal-on-scroll[data-delay="2"] { transition-delay: 0.2s; }
+.reveal-on-scroll[data-delay="3"] { transition-delay: 0.3s; }
+.reveal-on-scroll[data-delay="4"] { transition-delay: 0.4s; }
+.reveal-on-scroll[data-delay="5"] { transition-delay: 0.5s; }
+
+/* ── Live Grid Background ─────────────────────────────────────────────────── */
+.live-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridFlow 20s linear infinite;
+}
+
+/* ── Animated Gradient Text ────────────────────────────────────────────────── */
+.gradient-text-animated {
+  background-size: 200% 200%;
+  animation: textShimmer 3s ease-in-out infinite;
+}
+
+/* ── Floating Orb ─────────────────────────────────────────────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────────────────── */
+.marquee-track {
+  display: flex;
+  gap: 3rem;
+  width: max-content;
+}
+
+/* ── Smooth Scroll ────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}

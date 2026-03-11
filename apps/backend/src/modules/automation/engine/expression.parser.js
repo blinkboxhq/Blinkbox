@@ -1,0 +1,108 @@
+import ivm from "isolated-vm";
+
+const MAX_RESOLVE_DEPTH = 20;
+
+/**
+ * Executes the string as JavaScript within a heavily restricted V8 Isolate
+ */
+function evaluateExpression(expression, $json, $node, $runIndex) {
+  const isolate = new ivm.Isolate({ memoryLimit: 8 });
+
+  try {
+    const context = isolate.createContextSync();
+    const jail = context.global;
+
+    // Safe serialization — handle non-serializable values
+    let safeJson;
+    try {
+      safeJson = JSON.stringify($json || {});
+    } catch (e) {
+      console.warn("Failed to serialize $json for expression:", e.message);
+      safeJson = "{}";
+    }
+
+    jail.setSync("__raw_json", safeJson);
+
+    const script = isolate.compileScriptSync(`
+      (() => {
+        const $json = JSON.parse(__raw_json);
+        const Math = globalThis.Math;
+        const Date = globalThis.Date;
+
+        return ${expression};
+      })();
+    `);
+
+    const result = script.runSync(context, { timeout: 50 });
+    return result;
+  } catch (err) {
+    console.warn(`Expression evaluation failed: ${expression}`, err.message);
+    return null;
+  } finally {
+    isolate.dispose();
+  }
+}
+
+/**
+ * Recursively scans a configuration object and evaluates {{ expressions }}
+ */
+export function resolveConfig(
+  config,
+  currentItem,
+  executionContext,
+  itemIndex,
+  _depth = 0,
+) {
+  if (_depth > MAX_RESOLVE_DEPTH) {
+    console.warn("resolveConfig exceeded max depth");
+    return config;
+  }
+
+  if (config === null || config === undefined) return config;
+
+  if (typeof config === "string") {
+    const regex = /\{\{([\s\S]+?)\}\}/g;
+
+    const exactMatch = config.match(/^\{\{([\s\S]+?)\}\}$/);
+    if (exactMatch) {
+      return evaluateExpression(
+        exactMatch[1].trim(),
+        currentItem,
+        executionContext,
+        itemIndex,
+      );
+    }
+
+    return config.replace(regex, (_, expression) => {
+      const result = evaluateExpression(
+        expression.trim(),
+        currentItem,
+        executionContext,
+        itemIndex,
+      );
+      return result !== undefined && result !== null ? String(result) : "";
+    });
+  }
+
+  if (Array.isArray(config)) {
+    return config.map((item) =>
+      resolveConfig(item, currentItem, executionContext, itemIndex, _depth + 1),
+    );
+  }
+
+  if (typeof config === "object") {
+    const resolved = {};
+    for (const [key, value] of Object.entries(config)) {
+      resolved[key] = resolveConfig(
+        value,
+        currentItem,
+        executionContext,
+        itemIndex,
+        _depth + 1,
+      );
+    }
+    return resolved;
+  }
+
+  return config;
+}
