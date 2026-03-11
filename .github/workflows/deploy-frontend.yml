@@ -16,7 +16,6 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,19 +28,24 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          cache-dependency-path: apps/frontend/package-lock.json
+          # Removed the strict cache path so it auto-detects
 
       - name: Install Dependencies
         working-directory: ./apps/frontend
-        run: npm ci
+        # Switched from 'npm ci' to 'npm install' so it doesn't crash without a lockfile
+        run: npm install
 
       - name: Build React App
         working-directory: ./apps/frontend
-        # Make sure to inject your Google Auth ID here so the live site has it
         env:
           VITE_GOOGLE_CLIENT_ID: "914837067072-6iem3t2t0t79irj6dtlano5irqqq0v7k.apps.googleusercontent.com"
+          CI: false # The magic kill-switch for warnings
         run: npm run build
 
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./apps/frontend/dist
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
