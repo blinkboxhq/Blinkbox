@@ -43,6 +43,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          # Verify this path matches where Vite actually builds
           path: ./apps/frontend/dist
 
   deploy:
