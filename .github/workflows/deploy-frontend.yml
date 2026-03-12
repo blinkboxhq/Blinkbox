@@ -3,7 +3,6 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches: ["main"]
-  # 👈 Added this so we don't have to rely on file paths, it will run on every push to main!
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -37,13 +36,14 @@ jobs:
         working-directory: ./apps/frontend
         env:
           VITE_GOOGLE_CLIENT_ID: "914837067072-6iem3t2t0t79irj6dtlano5irqqq0v7k.apps.googleusercontent.com"
+          # 👇 THIS IS THE ONLY NEW LINE. PASTE YOUR RAILWAY URL HERE:
+          VITE_API_URL: "blinkbox-backend.railway.internal"
           CI: false
         run: npm run build
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Verify this path matches where Vite actually builds
           path: ./apps/frontend/dist
 
   deploy:
