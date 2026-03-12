@@ -37,7 +37,7 @@ jobs:
         env:
           VITE_GOOGLE_CLIENT_ID: "914837067072-6iem3t2t0t79irj6dtlano5irqqq0v7k.apps.googleusercontent.com"
           # 👇 THIS IS THE ONLY NEW LINE. PASTE YOUR RAILWAY URL HERE:
-          VITE_API_URL: "https://blinkbox-backend.railway.internal"
+          VITE_API_URL: "https://blinkbox-backend-production.up.railway.app"
           CI: false
         run: npm run build
 
