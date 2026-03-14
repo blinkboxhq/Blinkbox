@@ -1,9 +1,10 @@
-import { Handle, Position } from "reactflow";
-import { 
-  Zap, Globe, Code2, Clock, CheckCircle2, 
-  AlertCircle, Play, Database, Network
+import { Handle, Position } from "@xyflow/react";
+import {
+  Zap, Globe, Code2, Clock, CheckCircle2,
+  AlertCircle, AlertTriangle, Play, Database, Network
 } from "lucide-react";
 import clsx from "clsx";
+import useWorkspaceStore from "../../../../store/workspaceStore";
 
 const ICON_MAP = {
   webhook: Globe,
@@ -18,6 +19,8 @@ const ICON_MAP = {
 export default function PremiumNode({ id, data, selected, isConnectable }) {
   const Icon = ICON_MAP[data.backendType] || Play;
   const status = data.status || "idle"; // idle, running, success, failed
+  const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
+  const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   return (
     <div
@@ -26,7 +29,8 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         "border shadow-xl shadow-black/40",
         selected ? "border-blue-500 ring-1 ring-blue-500/50" : "border-zinc-800",
         status === "failed" && "border-red-500/50",
-        status === "success" && "border-emerald-500/30"
+        status === "success" && "border-emerald-500/30",
+        hasMappingWarning && status === "idle" && "ring-2 ring-amber-500/50 animate-pulse border-amber-500/50"
       )}
     >
       {/* Target Handle (Input) */}
@@ -48,8 +52,18 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
           <span className="text-xs font-semibold tracking-wide text-zinc-100 uppercase">
             {data.label || data.backendType}
           </span>
+          {hasMappingWarning && (
+            <div className="relative group">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 cursor-help" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 border border-amber-500/30 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-56">
+                {warnings.map((w, i) => (
+                  <p key={i} className="text-[10px] text-amber-300 leading-relaxed">{w}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-        
+
         {/* Status Indicator */}
         <div className="flex items-center justify-center">
           {status === "running" && (

@@ -3,6 +3,7 @@ import {
   calculateAllAvailableVariables,
   calculateAvailableVariables,
   inferSchemaFromValue,
+  validateAllNodeMappings,
 } from "./schemaEngine";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export const createGraphSlice = (set, get) => ({
   edges: [],
   nodeOutputSchemas: {},
   availableVariables: {},
+  mappingWarnings: {},
   _schemaGeneration: 0,
 
   // ── XYFlow callbacks ─────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ export const createGraphSlice = (set, get) => ({
     set({
       edges: newEdges,
       availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
       _schemaGeneration: ++_generation,
     });
   },
@@ -102,6 +105,7 @@ export const createGraphSlice = (set, get) => ({
     set({
       edges: newEdges,
       availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(nodes, newVars),
       _schemaGeneration: ++_generation,
     });
   },
@@ -123,18 +127,21 @@ export const createGraphSlice = (set, get) => ({
   addNode: (node) => set({ nodes: [...get().nodes, node] }),
 
   updateNodeConfig: (nodeId, key, value) => {
+    const state = get();
+    const newNodes = state.nodes.map((node) =>
+      node.id === nodeId
+        ? {
+            ...node,
+            data: {
+              ...node.data,
+              config: { ...node.data.config, [key]: value },
+            },
+          }
+        : node,
+    );
     set({
-      nodes: get().nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                config: { ...node.data.config, [key]: value },
-              },
-            }
-          : node,
-      ),
+      nodes: newNodes,
+      mappingWarnings: validateAllNodeMappings(newNodes, state.availableVariables),
     });
   },
 
@@ -161,6 +168,7 @@ export const createGraphSlice = (set, get) => ({
       nodes,
       edges,
       availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(nodes, newVars),
       _schemaGeneration: ++_generation,
     });
   },
@@ -186,6 +194,7 @@ export const createGraphSlice = (set, get) => ({
     set({
       nodeOutputSchemas: newSchemas,
       availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
       _schemaGeneration: ++_generation,
     });
   },
@@ -199,5 +208,9 @@ export const createGraphSlice = (set, get) => ({
    */
   getAvailableVariables: (nodeId) => {
     return get().availableVariables[nodeId] || {};
+  },
+
+  getMappingWarnings: (nodeId) => {
+    return get().mappingWarnings[nodeId] || { hasMappingWarning: false, warnings: [] };
   },
 });

@@ -8,6 +8,7 @@ import WorkspaceHeader from './components/WorkspaceHeader';
 import WorkspaceLeftSidebar from './components/WorkspaceLeftSidebar';
 import WorkspaceRightSidebar from './components/WorkspaceRightSidebar';
 import Canvas from './components/Canvas';
+import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 
 // 🚀 SINGLE SOURCE OF TRUTH: Re-export from the centralized registry
 // Every component (LeftSidebar, RightSidebar, CustomNode) should import from here
@@ -32,6 +33,7 @@ export default function Workspace() {
           <WorkspaceLeftSidebar />
           <Canvas />
           <WorkspaceRightSidebar />
+          <ExecutionTraceSidebar />
         </ReactFlowProvider>
       </div>
     </div>

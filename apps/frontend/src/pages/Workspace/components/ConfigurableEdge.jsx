@@ -1,4 +1,4 @@
-import { getBezierPath, EdgeLabelRenderer } from "reactflow";
+import { getBezierPath, EdgeLabelRenderer } from "@xyflow/react";
 
 export default function ConfigurableEdge({
   id,

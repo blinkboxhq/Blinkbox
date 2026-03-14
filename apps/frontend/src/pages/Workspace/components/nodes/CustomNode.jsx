@@ -9,7 +9,9 @@ export default function CustomNode({ id, data }) {
 
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore((s) => s.getNodeStatus);
+  const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const status = isExecutionLive ? getNodeStatus(id) : null;
+  const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
 
@@ -41,6 +43,13 @@ export default function CustomNode({ id, data }) {
     );
   }
 
+  // Mapping warning — amber pulsating border
+  if (hasMappingWarning && !status) {
+    borderColor = "border-amber-500/50";
+    ringClass = "ring-2 ring-amber-500/50 animate-pulse";
+    glowStyle = { boxShadow: "0 0 16px rgba(245,158,11,0.12)" };
+  }
+
   return (
     <div
       className={`relative flex items-center gap-3 border ${borderColor} ${ringClass} rounded-xl px-5 py-3 transition-all duration-200 min-w-[200px] backdrop-blur-md`}
@@ -69,9 +78,21 @@ export default function CustomNode({ id, data }) {
 
       {/* Label */}
       <div className="flex flex-col overflow-hidden">
-        <span className="text-neutral-100 font-semibold text-sm tracking-tight truncate">
-          {data.label}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-neutral-100 font-semibold text-sm tracking-tight truncate">
+            {data.label}
+          </span>
+          {hasMappingWarning && (
+            <div className="relative group">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 cursor-help" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 border border-amber-500/30 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-56">
+                {warnings.map((w, i) => (
+                  <p key={i} className="text-[10px] text-amber-300 leading-relaxed">{w}</p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-widest">
           {nodeDef.category}
         </span>

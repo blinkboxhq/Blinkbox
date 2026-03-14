@@ -15,7 +15,7 @@
 // Known output shapes for built-in node types. Used as fallback when a node
 // hasn't been tested yet. Users see *something* useful immediately.
 
-const DEFAULT_SCHEMAS = {
+export const DEFAULT_SCHEMAS = {
   // Triggers
   manual: { payload: "object" },
   webhook: {
@@ -157,6 +157,123 @@ export function calculateAvailableVariables(
   }
 
   traverse(targetNodeId);
+  return result;
+}
+
+// ── Expected Input Schemas ────────────────────────────────────────────────
+// Declares what each config field expects as its input type.
+// Used by validateNodeMapping to flag type mismatches.
+
+const EXPECTED_INPUT_TYPES = {
+  http_request: { body: "object", headers: "object", url: "string" },
+  send_email: { to: "string", subject: "string", body: "string" },
+  data_mapper: { mappings: "object" },
+  code: { input: "object" },
+  ai_agent: { prompt: "string", context: "object" },
+  logic_router: { conditions: "array" },
+  respond_webhook: { body: "object", statusCode: "number" },
+};
+
+/**
+ * Extract `{{nodeId.path.to.field}}` expressions from a config value.
+ * Returns an array of { raw, nodeId, path[] }.
+ */
+function extractExpressions(value) {
+  if (typeof value !== "string") return [];
+  const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
+  return matches.map((m) => {
+    const parts = m[1].trim().split(".");
+    return { raw: m[0], nodeId: parts[0], path: parts.slice(1) };
+  });
+}
+
+/**
+ * Resolve a dot-path against a schema tree to get the terminal type.
+ * Returns the type string ("string", "number", "object", etc.) or null.
+ */
+function resolveType(schema, path) {
+  let current = schema;
+  for (const key of path) {
+    if (current === null || current === undefined) return null;
+    if (typeof current === "string") return null; // leaf type, can't descend
+    if (current._type === "array" && key === "*") {
+      current = current._items;
+      continue;
+    }
+    current = current[key];
+  }
+  if (current === null || current === undefined) return null;
+  if (typeof current === "string") return current; // "string", "number", etc.
+  if (typeof current === "object" && current._type) return current._type;
+  if (typeof current === "object") return "object";
+  return null;
+}
+
+/**
+ * Validate that a node's config mappings match the types of upstream schemas.
+ *
+ * @param {string} nodeId
+ * @param {Record<string, object>} availableVars — upstream variables for this node
+ * @param {object} nodeConfig — the node's config object
+ * @param {string} backendType — the node's backend type
+ * @returns {{ hasMappingWarning: boolean, warnings: string[] }}
+ */
+export function validateNodeMapping(nodeId, availableVars, nodeConfig, backendType) {
+  const warnings = [];
+  const expected = EXPECTED_INPUT_TYPES[backendType];
+  if (!expected || !nodeConfig) return { hasMappingWarning: false, warnings };
+
+  for (const [configKey, configValue] of Object.entries(nodeConfig)) {
+    const expectedType = expected[configKey];
+    if (!expectedType) continue;
+
+    const expressions = extractExpressions(
+      typeof configValue === "string" ? configValue : JSON.stringify(configValue),
+    );
+
+    for (const expr of expressions) {
+      const sourceSchema = availableVars[expr.nodeId];
+      if (!sourceSchema) continue;
+
+      const sourceType = resolveType(sourceSchema, expr.path);
+      if (!sourceType) continue;
+
+      // Flag mismatch: mapping a scalar into a compound type or vice versa
+      const isScalar = (t) => ["string", "number", "boolean", "null"].includes(t);
+      const isCompound = (t) => ["object", "array"].includes(t);
+
+      if (isScalar(sourceType) && isCompound(expectedType)) {
+        warnings.push(
+          `Type mismatch: You mapped a ${sourceType} (${expr.raw}) into "${configKey}" which expects ${expectedType}.`,
+        );
+      } else if (isCompound(sourceType) && isScalar(expectedType)) {
+        warnings.push(
+          `Type mismatch: You mapped an ${sourceType} (${expr.raw}) into "${configKey}" which expects ${expectedType}.`,
+        );
+      }
+    }
+  }
+
+  return { hasMappingWarning: warnings.length > 0, warnings };
+}
+
+/**
+ * Validate mappings for ALL nodes in the graph.
+ *
+ * @param {Array} nodes
+ * @param {Record<string, object>} allAvailableVariables
+ * @returns {Record<string, { hasMappingWarning: boolean, warnings: string[] }>}
+ */
+export function validateAllNodeMappings(nodes, allAvailableVariables) {
+  const result = {};
+  for (const node of nodes) {
+    result[node.id] = validateNodeMapping(
+      node.id,
+      allAvailableVariables[node.id] || {},
+      node.data?.config || {},
+      node.data?.backendType,
+    );
+  }
   return result;
 }
 

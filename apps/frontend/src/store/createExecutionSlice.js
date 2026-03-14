@@ -1,4 +1,5 @@
 import api from "../lib/api";
+import { toast } from "sonner";
 import { getSocket } from "../lib/socket";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -11,6 +12,7 @@ export const createExecutionSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   isRunning: false,
   isExecutionLive: false,
+  isTraceSidebarOpen: false,
   liveExecutionState: null,
 
   // ── Derived helper: per-node status map for O(1) lookups ─────────────────
@@ -28,11 +30,13 @@ export const createExecutionSlice = (set, get) => ({
     if (state.liveExecutionState?._id) {
       socket.emit("unsubscribe:execution", state.liveExecutionState._id);
     }
-    set({ isExecutionLive: false, liveExecutionState: null });
+    set({ isExecutionLive: false, isTraceSidebarOpen: false, liveExecutionState: null });
   },
 
+  closeTraceSidebar: () => set({ isTraceSidebarOpen: false }),
+
   runEngine: async (automationId) => {
-    set({ isRunning: true, isExecutionLive: true, liveExecutionState: null });
+    set({ isRunning: true, isExecutionLive: true, isTraceSidebarOpen: true, liveExecutionState: null });
 
     try {
       const state = get();
@@ -83,7 +87,7 @@ export const createExecutionSlice = (set, get) => ({
     } catch (error) {
       console.error("Execution failed:", error);
       set({ isRunning: false, isExecutionLive: false });
-      alert(
+      toast.error(
         "Execution failed: " +
           (error.response?.data?.message || error.message),
       );

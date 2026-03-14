@@ -1,4 +1,5 @@
 import api from "../lib/api";
+import { toast } from "sonner";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI Slice — owns sidebar selection, workflow metadata, and API persistence.
@@ -105,9 +106,9 @@ export const createUISlice = (set, get) => ({
       };
 
       await api.put(`/api/automation/${automationId}`, payload);
-      alert("Workflow saved successfully.");
+      toast.success("Workflow saved");
     } catch (error) {
-      alert(
+      toast.error(
         "Save failed: " + (error.response?.data?.message || error.message),
       );
     } finally {
