@@ -7,6 +7,7 @@
   ],
   "dependencies": {
     "ioredis": "^5.9.2",
+    "motion-dom": "^12.36.0",
     "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
