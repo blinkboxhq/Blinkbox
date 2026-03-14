@@ -3,10 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/index.js"
+    "dev": "tsx src/index.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@blinkbox/shared-types": "*",
     "@react-oauth/google": "^0.13.4",
+    "@temporalio/activity": "^1.15.0",
+    "@temporalio/client": "^1.15.0",
+    "@temporalio/worker": "^1.15.0",
+    "@temporalio/workflow": "^1.15.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.70.4",
@@ -23,6 +29,14 @@
     "puppeteer-cluster": "^0.25.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^7.0.11",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
   }
 }

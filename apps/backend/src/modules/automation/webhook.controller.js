@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import Automation from "../../models/automation.model.js";
-import { executeAutomation } from "./automation.executor.js";
+import { startWorkflowExecution } from "../execution/execution.service.js";
 import { redis } from "../../infra/redis.client.js";
 
 const RATE_LIMIT = 60;
@@ -35,19 +35,20 @@ export async function handlePublicWebhook(req, res) {
       method:  req.method,
     };
 
-    const uniqueIdempotencyKey = crypto.randomUUID();
+    const idempotencyKey = crypto.randomUUID();
 
-    executeAutomation(automation, [webhookData], {
-      idempotencyKey: uniqueIdempotencyKey,
+    // Fire-and-forget: Temporal handles retries, timeouts, and crash recovery
+    startWorkflowExecution(automation, webhookData, {
+      idempotencyKey,
       workspaceId: automation.workspaceId,
     }).catch((err) => {
-      console.error(`[Webhook] Execution error for ${automationId}:`, err.message);
+      console.error(`[Webhook] Temporal start error for ${automationId}:`, err.message);
     });
 
     return res.status(200).json({
       success: true,
       message: "Webhook accepted",
-      executionKey: uniqueIdempotencyKey,
+      workflowKey: idempotencyKey,
     });
   } catch (err) {
     console.error("[Webhook] Controller error:", err.message);

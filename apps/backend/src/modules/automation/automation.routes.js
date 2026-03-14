@@ -8,13 +8,14 @@ import {
   duplicateAutomation,
   renameAutomation,
 } from "./engine/automation.controller.js";
+import { parseWorkflowBody } from "./engine/automation.validator.js";
 import { verifyToken } from "../auth/auth.middleware.js";
 
 const router = express.Router();
 
 router.get("/", verifyToken, getAutomations);
-router.post("/", verifyToken, saveAutomation);
-router.put("/:id", verifyToken, saveAutomation);
+router.post("/", verifyToken, parseWorkflowBody, saveAutomation);
+router.put("/:id", verifyToken, parseWorkflowBody, saveAutomation);
 router.delete("/:id", verifyToken, deleteAutomation);
 router.post("/:id/duplicate", verifyToken, duplicateAutomation);
 router.patch("/:id/rename", verifyToken, renameAutomation);

@@ -1,0 +1,387 @@
+/**
+ * Temporal Activities — Stateless, idempotent units of work.
+ *
+ * Each activity maps to a former node's `run()` logic, restructured for
+ * Temporal's retry & timeout semantics. Activities throw standard Errors
+ * on failure so Temporal can apply retry policies.
+ */
+
+import axios from "axios";
+import ivm from "isolated-vm";
+import nodemailer from "nodemailer";
+import Credential from "../models/credential.model.js";
+import { decrypt } from "../utils/crypto.js";
+import { nodeRegistry } from "../nodes/index.js";
+import {
+  telemetryService,
+  type TelemetryLog,
+} from "../modules/telemetry/telemetry.service.js";
+
+// ── Constants ───────────────────────────────────────────────────────────────────
+
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const MAX_TIMEOUT_MS = 60_000;
+
+// ── Input / Output Types ────────────────────────────────────────────────────────
+
+interface HttpRequestInput {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  body?: unknown;
+  credentialId?: string;
+  workspaceId?: string;
+  queryParams?: Record<string, string>;
+  timeout?: number;
+  followRedirects?: boolean;
+}
+
+interface HttpRequestOutput {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  data: unknown;
+}
+
+interface SendEmailInput {
+  to: string;
+  subject: string;
+  body: string;
+  smtpConfig: {
+    host?: string;
+    port?: number;
+    user: string;
+    pass: string;
+  };
+}
+
+interface SendEmailOutput {
+  success: true;
+  messageId: string;
+  deliveredTo: string;
+  content: string;
+}
+
+interface ExecuteNodeInput {
+  nodeType: string;
+  config: Record<string, unknown>;
+  inputData: Record<string, unknown>;
+  workspaceId: string;
+}
+
+interface SecureCodeInput {
+  code: string;
+  variables: Record<string, unknown>;
+}
+
+interface SecureCodeOutput {
+  result: unknown;
+}
+
+// ── Generic Node Activity ───────────────────────────────────────────────────────
+// Dispatches to the existing nodeRegistry so every node type works out of the box.
+
+export async function executeNodeActivity(
+  input: ExecuteNodeInput,
+): Promise<unknown> {
+  const handler = (nodeRegistry as Record<string, { run: Function }>)[input.nodeType];
+  if (!handler) {
+    throw new Error(`Unsupported node type: ${input.nodeType}`);
+  }
+  return handler.run(input.config, input.inputData, {
+    workspaceId: input.workspaceId,
+  });
+}
+
+// ── HTTP Request Activity ───────────────────────────────────────────────────────
+
+export async function executeHttpRequestActivity(
+  input: HttpRequestInput,
+): Promise<HttpRequestOutput> {
+  const {
+    url,
+    method = "GET",
+    headers = {},
+    body = null,
+    credentialId,
+    workspaceId,
+    queryParams = {},
+    timeout = 15_000,
+    followRedirects = true,
+  } = input;
+
+  if (!url) {
+    throw new Error("HTTP Request: 'url' is required.");
+  }
+
+  const finalHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...headers,
+  };
+  const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
+
+  // Vault: decrypt and inject credentials at runtime
+  if (credentialId) {
+    const query: Record<string, string> = { _id: credentialId };
+    if (workspaceId) query["workspaceId"] = workspaceId;
+
+    const cred = await Credential.findOne(query);
+    if (!cred) {
+      throw new Error("HTTP Request: Credential not found in Vault.");
+    }
+
+    const secretValue = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+
+    switch (cred.type) {
+      case "bearer":
+        finalHeaders["Authorization"] = `Bearer ${secretValue}`;
+        break;
+      case "api_key":
+        finalHeaders["x-api-key"] = secretValue;
+        break;
+      case "basic": {
+        const encoded = Buffer.from(secretValue, "utf-8").toString("base64");
+        finalHeaders["Authorization"] = `Basic ${encoded}`;
+        break;
+      }
+    }
+  }
+
+  const upperMethod = method.toUpperCase();
+
+  try {
+    const response = await axios({
+      url,
+      method: upperMethod,
+      headers: finalHeaders,
+      data: ["POST", "PUT", "PATCH"].includes(upperMethod) ? body : undefined,
+      params: queryParams,
+      timeout: clampedTimeout,
+      maxContentLength: MAX_RESPONSE_BYTES,
+      maxRedirects: followRedirects ? 5 : 0,
+      validateStatus: () => true,
+    });
+
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers as Record<string, string>,
+      data: response.data,
+    };
+  } catch (err: unknown) {
+    const axiosErr = err as { code?: string; response?: { status?: number }; message: string };
+    if (axiosErr.code === "ECONNABORTED") {
+      throw new Error(`HTTP Request: Timeout after ${clampedTimeout}ms`);
+    }
+    throw new Error(
+      `HTTP Request failed: ${axiosErr.response?.status ?? axiosErr.code} — ${axiosErr.message}`,
+    );
+  }
+}
+
+// ── Send Email Activity ─────────────────────────────────────────────────────────
+
+export async function executeSendEmailActivity(
+  input: SendEmailInput,
+): Promise<SendEmailOutput> {
+  const { to, subject, body, smtpConfig } = input;
+
+  if (!to || !subject || !body) {
+    throw new Error("Send Email: 'to', 'subject', and 'body' are required.");
+  }
+
+  if (!smtpConfig?.user || !smtpConfig?.pass) {
+    throw new Error(
+      "Send Email: Gmail account and App Password are required.",
+    );
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: smtpConfig.host ?? "smtp.gmail.com",
+    port: smtpConfig.port ?? 465,
+    secure: true,
+    auth: {
+      user: smtpConfig.user,
+      pass: smtpConfig.pass,
+    },
+  });
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"BlinkBox Engine" <${smtpConfig.user}>`,
+      to,
+      subject,
+      text: body,
+    });
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      deliveredTo: to,
+      content: body,
+    };
+  } catch (err: unknown) {
+    const error = err as Error;
+    throw new Error(`Email Delivery Failed: ${error.message}`);
+  }
+}
+
+// ── Secure Code Execution Activity ──────────────────────────────────────────────
+// Hard-isolated V8 sandbox via isolated-vm.
+//   - 32 MB memory ceiling (OOM → isolate killed, worker survives)
+//   - 500 ms wall-clock timeout (infinite loops → killed)
+//   - No require, process, fs, net, or host global access
+//   - Variables injected via ivm.Reference (no JSON bridge escape hatch)
+
+const CODE_MEMORY_LIMIT_MB = 32;
+const CODE_TIMEOUT_MS = 500;
+const MAX_VARIABLES_BYTES = 5 * 1024 * 1024; // 5 MB payload guard
+
+export async function executeSecureCodeActivity(
+  input: SecureCodeInput,
+): Promise<SecureCodeOutput> {
+  const { code, variables } = input;
+
+  if (!code || typeof code !== "string") {
+    throw new Error("Code Node: 'code' string is required.");
+  }
+
+  // Pre-flight: reject oversized variable payloads before allocating an isolate
+  const serialized = JSON.stringify(variables ?? {});
+  if (Buffer.byteLength(serialized, "utf-8") > MAX_VARIABLES_BYTES) {
+    throw new Error(
+      "Code Node: Variables payload exceeds 5 MB limit. Reduce input size upstream.",
+    );
+  }
+
+  const isolate = new ivm.Isolate({ memoryLimit: CODE_MEMORY_LIMIT_MB });
+
+  try {
+    const context = await isolate.createContext();
+    const jail = context.global;
+
+    // Inject variables into the sandbox via ivm.Reference.
+    // Each top-level key becomes a frozen global inside the isolate.
+    // Using copyInto() deep-copies the value into V8 heap — no host references leak in.
+    await jail.set(
+      "__vars",
+      new ivm.ExternalCopy(variables ?? {}).copyInto(),
+    );
+
+    // Wrapper script:
+    //   1. Spreads __vars into individual globals ($input, $output, + any user keys)
+    //   2. Provides a no-op console to prevent crashes on console.log()
+    //   3. Runs user code synchronously
+    //   4. Returns $output serialized as JSON (only way to cross the isolate boundary)
+    const wrapper = `
+      (function () {
+        const $input  = __vars;
+        let   $output = JSON.parse(JSON.stringify(__vars));
+        const console = { log() {}, warn() {}, error() {}, info() {} };
+
+        ${code}
+
+        return JSON.stringify($output);
+      })()
+    `;
+
+    const script = await isolate.compileScript(wrapper);
+
+    // runSync: blocks the activity thread (fine — Temporal schedules activities on
+    // a thread pool) and guarantees the 500 ms hard kill via V8's wall-clock timer.
+    const resultStr = script.runSync(context, { timeout: CODE_TIMEOUT_MS });
+
+    if (typeof resultStr !== "string") {
+      throw new Error(
+        "Code Node: Script must return a value via $output. Got undefined.",
+      );
+    }
+
+    return { result: JSON.parse(resultStr) };
+  } catch (err: unknown) {
+    const error = err as Error;
+
+    // Translate isolate-specific errors into structured messages
+    if (error.message.includes("Script execution timed out")) {
+      throw new Error(
+        `Code Node: Execution timed out after ${CODE_TIMEOUT_MS}ms. ` +
+        "Check for infinite loops or expensive operations.",
+      );
+    }
+    if (error.message.includes("disposed")) {
+      throw new Error(
+        `Code Node: Isolate killed — exceeded ${CODE_MEMORY_LIMIT_MB}MB memory limit.`,
+      );
+    }
+    if (error.message.includes("CompileError") || error.message.includes("SyntaxError")) {
+      throw new Error(`Code Node: Compilation failed — ${error.message}`);
+    }
+
+    throw new Error(`Code Node: Execution failed — ${error.message}`);
+  } finally {
+    // Always free the C++ isolate memory, even on error
+    if (!isolate.isDisposed) {
+      isolate.dispose();
+    }
+  }
+}
+
+// ── Telemetry Activity ──────────────────────────────────────────────────────────
+// Pushes a log entry to the Redis telemetry queue (<1ms).
+// Called from the Temporal workflow for execution start/end and each node step.
+// The telemetry flusher drains the queue into the database in batches.
+
+interface TelemetryInput {
+  action: "execution_start" | "node_step" | "execution_end";
+  workflowId: string;
+  automationId: string;
+  // execution_start
+  trigger?: string;
+  triggerData?: Record<string, unknown>;
+  // node_step
+  nodeId?: string;
+  nodeType?: string;
+  status?: string;
+  durationMs?: number;
+  input?: unknown;
+  output?: unknown;
+  error?: string;
+  // execution_end
+  totalNodes?: number;
+}
+
+export async function emitTelemetryActivity(
+  params: TelemetryInput,
+): Promise<void> {
+  switch (params.action) {
+    case "execution_start":
+      await telemetryService.logExecutionStart({
+        workflowId: params.workflowId,
+        automationId: params.automationId,
+        trigger: params.trigger ?? "unknown",
+        triggerData: params.triggerData ?? {},
+      });
+      break;
+    case "node_step":
+      await telemetryService.logNodeStep({
+        workflowId: params.workflowId,
+        automationId: params.automationId,
+        nodeId: params.nodeId ?? "",
+        nodeType: params.nodeType ?? "",
+        status: (params.status as "success" | "failed") ?? "success",
+        durationMs: params.durationMs ?? 0,
+        input: params.input,
+        output: params.output,
+        error: params.error,
+      });
+      break;
+    case "execution_end":
+      await telemetryService.logExecutionEnd({
+        workflowId: params.workflowId,
+        automationId: params.automationId,
+        status: (params.status as "completed" | "failed") ?? "completed",
+        totalNodes: params.totalNodes ?? 0,
+      });
+      break;
+  }
+}

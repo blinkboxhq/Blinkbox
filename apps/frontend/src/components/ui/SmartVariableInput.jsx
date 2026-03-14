@@ -1,222 +1,399 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Variable, ChevronRight } from 'lucide-react';
-import useWorkspaceStore from '../../store/workspaceStore';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from "react";
+import * as Popover from "@radix-ui/react-popover";
+import { AnimatePresence, motion } from "framer-motion";
+import { Variable, ChevronRight, ChevronDown } from "lucide-react";
+import useWorkspaceStore from "../../store/workspaceStore";
 
-function extractKeysFromPayload(mockPayload) {
-  if (!mockPayload) return [];
-  try {
-    const parsed = typeof mockPayload === 'string' ? JSON.parse(mockPayload) : mockPayload;
-    if (!parsed || typeof parsed !== 'object') return [];
-    return flattenKeys(parsed);
-  } catch {
-    return [];
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const TYPE_COLOR = {
+  string: "text-emerald-400",
+  number: "text-blue-400",
+  boolean: "text-orange-400",
+  object: "text-purple-400",
+  array: "text-yellow-400",
+};
+
+const PILL_CLASS =
+  "inline-flex items-center gap-1 bg-blue-600/20 border border-blue-500/30 " +
+  "text-blue-300 rounded px-1.5 py-0.5 font-mono text-[11px] leading-none " +
+  "select-none cursor-default whitespace-nowrap mx-0.5 align-baseline";
+
+/** Convert a contenteditable div's DOM back to a plain string with {{tokens}}. */
+function serializeContent(el) {
+  if (!el) return "";
+  let result = "";
+  for (const child of el.childNodes) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      result += child.textContent;
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      const token = child.dataset?.token;
+      if (token) {
+        result += `{{${token}}}`;
+      } else if (child.tagName === "BR") {
+        result += "\n";
+      } else {
+        result += child.innerText ?? child.textContent;
+      }
+    }
   }
+  return result;
 }
 
-function flattenKeys(obj, prefix = '') {
-  const keys = [];
-  for (const [key, value] of Object.entries(obj)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    keys.push({ path, type: typeof value });
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      keys.push(...flattenKeys(value, path));
-    }
-  }
-  return keys;
+/** Build innerHTML from a string that may contain {{token}} placeholders. */
+function buildHTML(str) {
+  if (!str) return "";
+  return str.replace(/\{\{([^}]+)\}\}/g, (_, token) => {
+    const label = token.split(".").slice(-1)[0];
+    return `<span class="${PILL_CLASS}" data-token="${token}" contenteditable="false">&#123;&#123;&nbsp;${label}&nbsp;&#125;&#125;</span>`;
+  });
 }
 
-export default function SmartVariableInput({
-  value = '',
-  onChange,
-  placeholder = '',
-  label,
-  className = '',
-  multiline = false,
-}) {
-  const [showPopover, setShowPopover] = useState(false);
-  const [filter, setFilter] = useState('');
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const inputRef = useRef(null);
-  const popoverRef = useRef(null);
+/** Insert a pill token at the current caret position inside a contenteditable. */
+function insertTokenAtCursor(el, fullPath, shortLabel) {
+  el.focus();
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
 
-  const nodes = useWorkspaceStore((s) => s.nodes);
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
 
-  // Find trigger node and extract available keys
-  const triggerNode = nodes.find((n) => n.data.type === 'trigger');
-  const mockPayload = triggerNode?.data?.config?.mockPayload;
-  const allKeys = extractKeysFromPayload(mockPayload);
+  // Build the pill span
+  const pill = document.createElement("span");
+  pill.className = PILL_CLASS;
+  pill.dataset.token = fullPath;
+  pill.contentEditable = "false";
+  pill.textContent = `{{ ${shortLabel} }}`;
 
-  const filteredKeys = filter
-    ? allKeys.filter((k) => k.path.toLowerCase().includes(filter.toLowerCase()))
-    : allKeys;
+  // Zero-width spacer so caret can land after pill
+  const spacer = document.createTextNode("\u200B");
 
-  // Reset highlight when filter changes
-  useEffect(() => {
-    setHighlightIndex(0);
-  }, [filter]);
+  range.insertNode(spacer);
+  range.insertNode(pill);
 
-  // Close popover on outside click
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (
-        popoverRef.current && !popoverRef.current.contains(e.target) &&
-        inputRef.current && !inputRef.current.contains(e.target)
-      ) {
-        setShowPopover(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  // Move caret after the spacer
+  const after = document.createRange();
+  after.setStartAfter(spacer);
+  after.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(after);
+}
 
-  const insertVariable = useCallback((keyPath) => {
-    const token = `{{ $json.${keyPath} }}`;
-    const el = inputRef.current;
+// ── Schema Tree Components ────────────────────────────────────────────────────
 
-    if (el) {
-      const start = el.selectionStart ?? value.length;
-      const end = el.selectionEnd ?? value.length;
-      const newValue = value.slice(0, start) + token + value.slice(end);
-      onChange(newValue);
+function SchemaLeaf({ nodeId, path, label, type, onSelect }) {
+  const fullPath = `${nodeId}.${path}`;
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onSelect(fullPath, label);
+      }}
+      className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-neutral-400 hover:bg-zinc-700/50 hover:text-white transition-colors rounded"
+    >
+      <span className="flex items-center gap-1.5 font-mono">
+        <span className="text-neutral-600">·</span>
+        {label}
+      </span>
+      <span className={`text-[10px] font-bold uppercase ${TYPE_COLOR[type] || "text-neutral-600"}`}>
+        {type}
+      </span>
+    </button>
+  );
+}
 
-      // Restore cursor position after React re-render
-      requestAnimationFrame(() => {
-        const newPos = start + token.length;
-        el.setSelectionRange(newPos, newPos);
-        el.focus();
-      });
-    } else {
-      onChange(value + token);
-    }
+function SchemaSubtree({ nodeId, basePath, schema, onSelect, depth = 0 }) {
+  const [open, setOpen] = useState(depth === 0);
 
-    setShowPopover(false);
-    setFilter('');
-  }, [value, onChange]);
+  if (typeof schema === "string") {
+    const parts = basePath.split(".");
+    const label = parts[parts.length - 1];
+    return (
+      <SchemaLeaf
+        nodeId={nodeId}
+        path={basePath}
+        label={label}
+        type={schema}
+        onSelect={onSelect}
+      />
+    );
+  }
 
-  const handleKeyDown = (e) => {
-    if (!showPopover) {
-      if (e.key === '{') {
-        // Open on double {{
-        if (value.endsWith('{')) {
-          e.preventDefault();
-          setShowPopover(true);
-          return;
-        }
-      }
-      return;
-    }
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightIndex((i) => Math.min(i + 1, filteredKeys.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && filteredKeys.length > 0) {
-      e.preventDefault();
-      // Remove the trailing `{` that triggered the popover
-      const cleaned = value.endsWith('{') ? value.slice(0, -1) : value;
-      onChange(cleaned);
-      setTimeout(() => insertVariable(filteredKeys[highlightIndex].path), 0);
-    } else if (e.key === 'Escape') {
-      setShowPopover(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const newValue = e.target.value;
-    onChange(newValue);
-
-    // Track filter: text after last `{{`
-    const lastBrace = newValue.lastIndexOf('{{');
-    if (lastBrace >= 0 && showPopover) {
-      setFilter(newValue.slice(lastBrace + 2).trim());
-    }
-  };
-
-  const typeColor = {
-    string: 'text-emerald-500',
-    number: 'text-blue-400',
-    boolean: 'text-orange-400',
-    object: 'text-purple-400',
-  };
-
-  const InputTag = multiline ? 'textarea' : 'input';
+  const entries = Object.entries(schema).filter(
+    ([k]) => !k.startsWith("_")
+  );
+  const parts = basePath.split(".");
+  const label = parts[parts.length - 1];
 
   return (
-    <div className={`flex flex-col gap-1.5 relative ${className}`}>
+    <div>
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setOpen((o) => !o);
+        }}
+        className="w-full flex items-center gap-1.5 px-3 py-1.5 text-xs text-neutral-300 hover:bg-zinc-700/30 transition-colors rounded"
+      >
+        {open ? (
+          <ChevronDown className="w-3 h-3 text-neutral-500 shrink-0" />
+        ) : (
+          <ChevronRight className="w-3 h-3 text-neutral-500 shrink-0" />
+        )}
+        <span className="font-mono">{label}</span>
+        <span className="ml-auto text-[10px] text-neutral-600 uppercase">
+          object
+        </span>
+      </button>
+      {open && (
+        <div className="pl-3 border-l border-zinc-700/50 ml-4">
+          {entries.map(([key, val]) => (
+            <SchemaSubtree
+              key={key}
+              nodeId={nodeId}
+              basePath={basePath ? `${basePath}.${key}` : key}
+              schema={val}
+              onSelect={onSelect}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NodeGroup({ nodeId, nodeSchema, onSelect, schemaGeneration }) {
+  const [open, setOpen] = useState(true);
+  const { _label, _type, ...fields } = nodeSchema;
+  const entries = Object.entries(fields);
+
+  return (
+    <div className="mb-1">
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setOpen((o) => !o);
+        }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-neutral-200 hover:bg-zinc-700/40 transition-colors rounded"
+      >
+        {open ? (
+          <ChevronDown className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+        )}
+        <span className="truncate">{_label || nodeId}</span>
+        <span className="ml-auto text-[10px] text-neutral-600 font-normal uppercase shrink-0">
+          {_type}
+        </span>
+      </button>
+
+      {open && (
+        <div className="pl-1">
+          {entries.length === 0 ? (
+            <p className="px-4 py-1.5 text-[11px] text-neutral-600 italic">
+              No fields
+            </p>
+          ) : (
+            entries.map(([key, val]) => (
+              <SchemaSubtree
+                key={`${key}-${schemaGeneration}`}
+                nodeId={nodeId}
+                basePath={key}
+                schema={val}
+                onSelect={onSelect}
+                depth={0}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+export default function SmartVariableInput({
+  value = "",
+  onChange,
+  placeholder = "",
+  label,
+  className = "",
+  multiline = false,
+  nodeId: propNodeId,
+}) {
+  const [open, setOpen] = useState(false);
+  const editableRef = useRef(null);
+  const isComposing = useRef(false);
+
+  const selectedNodeId = useWorkspaceStore((s) => s.selectedNodeId);
+  const getAvailableVariables = useWorkspaceStore(
+    (s) => s.getAvailableVariables
+  );
+  const schemaGeneration = useWorkspaceStore((s) => s._schemaGeneration);
+
+  const targetNodeId = propNodeId || selectedNodeId;
+  const availableVars = getAvailableVariables(targetNodeId);
+  const nodeEntries = Object.entries(availableVars);
+
+  // ── Sync value → DOM (avoid cursor jump on every keystroke) ──────────────
+  useLayoutEffect(() => {
+    const el = editableRef.current;
+    if (!el) return;
+    const current = serializeContent(el);
+    if (current !== value) {
+      el.innerHTML = buildHTML(value);
+      // Move caret to end on external value change
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  }, [value]);
+
+  const handleInput = useCallback(() => {
+    if (isComposing.current) return;
+    const el = editableRef.current;
+    if (!el) return;
+    onChange(serializeContent(el));
+  }, [onChange]);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Escape") setOpen(false);
+    },
+    []
+  );
+
+  const handleTokenSelect = useCallback(
+    (fullPath, shortLabel) => {
+      const el = editableRef.current;
+      if (!el) return;
+      insertTokenAtCursor(el, fullPath, shortLabel);
+      onChange(serializeContent(el));
+      setOpen(false);
+      el.focus();
+    },
+    [onChange]
+  );
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
+        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
           {label}
         </label>
       )}
 
-      <div className="relative">
-        <InputTag
-          ref={inputRef}
-          type={multiline ? undefined : 'text'}
-          value={value}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          rows={multiline ? 4 : undefined}
-          className={`w-full bg-surface-1 border border-neutral-800 rounded-lg px-3 py-2.5 pr-9 text-xs text-white font-mono focus:outline-none focus:border-neutral-600 transition-colors placeholder-neutral-700 ${multiline ? 'resize-none leading-relaxed' : ''}`}
-        />
-
-        {/* Variable trigger button */}
-        <button
-          type="button"
-          onClick={() => setShowPopover(!showPopover)}
-          className={`absolute ${multiline ? 'top-2.5' : 'top-1/2 -translate-y-1/2'} right-2 p-1 rounded transition-colors ${
-            showPopover ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-600 hover:text-neutral-400'
-          }`}
-          title="Insert variable"
-        >
-          <Variable className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Popover */}
-        {showPopover && (
+      <Popover.Root open={open} onOpenChange={setOpen}>
+        <div className="relative">
+          {/* Contenteditable input */}
           <div
-            ref={popoverRef}
-            className="absolute z-50 top-full mt-1 left-0 w-full max-h-48 overflow-y-auto bg-neutral-950 border border-neutral-800 rounded-lg shadow-2xl animate-slide-up"
+            ref={editableRef}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={() => (isComposing.current = true)}
+            onCompositionEnd={() => {
+              isComposing.current = false;
+              handleInput();
+            }}
+            data-placeholder={placeholder}
+            className={[
+              "w-full bg-surface-1 border border-neutral-800 rounded-lg px-3 py-2.5 pr-9",
+              "text-xs text-white font-mono focus:outline-none focus:border-neutral-600",
+              "transition-colors empty:before:content-[attr(data-placeholder)]",
+              "empty:before:text-neutral-700 empty:before:pointer-events-none",
+              "min-h-[38px]",
+              multiline ? "leading-relaxed" : "whitespace-nowrap overflow-x-auto",
+            ].join(" ")}
+          />
+
+          {/* Trigger button */}
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              className={[
+                "absolute right-2 p-1 rounded transition-colors",
+                multiline ? "top-2.5" : "top-1/2 -translate-y-1/2",
+                open
+                  ? "text-blue-400 bg-blue-500/10"
+                  : "text-neutral-600 hover:text-neutral-400",
+              ].join(" ")}
+              title="Insert variable"
+            >
+              <Variable className="w-3.5 h-3.5" />
+            </button>
+          </Popover.Trigger>
+        </div>
+
+        {/* Portal popover — not clipped by sidebar overflow:hidden */}
+        <Popover.Portal>
+          <Popover.Content
+            side="bottom"
+            align="start"
+            sideOffset={6}
+            avoidCollisions
+            className="z-[9999] w-72 outline-none"
+            onOpenAutoFocus={(e) => e.preventDefault()}
           >
-            {allKeys.length === 0 ? (
-              <div className="p-3 text-xs text-neutral-600 text-center">
-                No variables available. Add a test payload in the Trigger node.
-              </div>
-            ) : filteredKeys.length === 0 ? (
-              <div className="p-3 text-xs text-neutral-600 text-center">
-                No matching variables.
-              </div>
-            ) : (
-              filteredKeys.map((key, i) => (
-                <button
-                  key={key.path}
-                  onClick={() => {
-                    const cleaned = value.endsWith('{') ? value.slice(0, -1) : value;
-                    onChange(cleaned);
-                    setTimeout(() => insertVariable(key.path), 0);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors ${
-                    i === highlightIndex
-                      ? 'bg-neutral-800/80 text-white'
-                      : 'text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200'
-                  }`}
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  key="svi-popover"
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden"
                 >
-                  <span className="flex items-center gap-2 font-mono">
-                    <ChevronRight className="w-3 h-3 text-neutral-600" />
-                    $json.{key.path}
-                  </span>
-                  <span className={`text-[10px] font-bold uppercase ${typeColor[key.type] || 'text-neutral-600'}`}>
-                    {key.type}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+                  {/* Header */}
+                  <div className="px-3 py-2 border-b border-zinc-800 flex items-center gap-2">
+                    <Variable className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider">
+                      Available Variables
+                    </span>
+                  </div>
+
+                  {/* Tree */}
+                  <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5 scrollbar-thin scrollbar-thumb-zinc-700">
+                    {nodeEntries.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-neutral-600">
+                        <Variable className="w-4 h-4 mx-auto mb-2 opacity-40" />
+                        No upstream nodes connected.
+                        <br />
+                        Connect a node to see its variables.
+                      </div>
+                    ) : (
+                      nodeEntries.map(([nId, nSchema]) => (
+                        <NodeGroup
+                          key={nId}
+                          nodeId={nId}
+                          nodeSchema={nSchema}
+                          onSelect={handleTokenSelect}
+                          schemaGeneration={schemaGeneration}
+                        />
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </div>
   );
 }

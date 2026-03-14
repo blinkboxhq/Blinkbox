@@ -1,33 +1,39 @@
 import mongoose from "mongoose";
+import type {
+  NodeConfig,
+  EdgeConfig,
+  WorkflowDefinition,
+} from "@blinkbox/shared-types";
 
 /**
- * ===============================
- * NODE SCHEMA
- * ===============================
- * Represents a step or action in the automation flow
+ * Node subdocument — mirrors NodeConfigSchema from @blinkbox/shared-types.
  */
 const NodeSchema = new mongoose.Schema(
   {
     id: { type: String, required: true },
-    type: { type: String, required: true }, // send_email, call_webhook, condition, etc.
-    config: { type: Object, default: {} },
+    type: { type: String, required: true },
+    data: { type: Object, default: {} },
+    position: {
+      x: { type: Number, default: 0 },
+      y: { type: Number, default: 0 },
+    },
     description: { type: String, default: "" },
   },
   { _id: false },
 );
 
 /**
- * ===============================
- * EDGE SCHEMA
- * ===============================
- * Connects nodes together and supports conditional branching
+ * Edge subdocument — mirrors EdgeConfigSchema from @blinkbox/shared-types.
  */
 const EdgeSchema = new mongoose.Schema(
   {
-    from: { type: String, required: true },
-    to: { type: String, required: true },
+    id: { type: String, required: true },
+    source: { type: String, required: true },
+    target: { type: String, required: true },
+    sourceHandle: { type: String, default: null },
+    targetHandle: { type: String, default: null },
     condition: {
-      type: mongoose.Schema.Types.Mixed, // Phase 7 allows object-based conditions
+      type: mongoose.Schema.Types.Mixed,
       default: "always",
     },
     type: {
@@ -41,35 +47,31 @@ const EdgeSchema = new mongoose.Schema(
 );
 
 /**
- * ===============================
- * AUTOMATION SCHEMA
- * ===============================
+ * Automation document — mirrors WorkflowDefinitionSchema from @blinkbox/shared-types.
+ *
+ * MIGRATION NOTE: Field renames from the original JS model:
+ *   - Node: `config` → `data`, added `position`
+ *   - Edge: `from` → `source`, `to` → `target`, added `id`, `sourceHandle`, `targetHandle`
+ *   - Removed: `actions` (legacy, unused)
  */
 const AutomationSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     trigger: { type: String, required: true },
     active: { type: Boolean, default: true },
-
-    // 🔐 ADD THIS ONE LINE:
     workspaceId: { type: String, required: true, index: true },
-
-    actions: { type: Array, default: [] },
     nodes: { type: [NodeSchema], default: [] },
     edges: { type: [EdgeSchema], default: [] },
     entryNodeId: { type: String, default: null },
-
     settings: {
       type: Object,
       default: { maxParallel: 10 },
     },
-
     description: { type: String, default: "" },
   },
   { timestamps: true },
 );
 
-// Unique combination of trigger + name to prevent duplicates
 AutomationSchema.index({ trigger: 1, name: 1 }, { unique: true });
 
 export default mongoose.model("Automation", AutomationSchema);

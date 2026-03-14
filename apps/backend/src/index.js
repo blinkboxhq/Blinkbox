@@ -26,7 +26,15 @@ async function bootstrap() {
       console.warn("Puppeteer cluster pre-warm skipped:", err.message);
     }
 
-    // 4. Start server + workers
+    // 4. Start Temporal worker (non-fatal — runs without Temporal in dev)
+    try {
+      const { startTemporalWorker } = await import("./temporal/worker.js");
+      await startTemporalWorker();
+    } catch (err) {
+      console.warn("Temporal worker skipped:", err.message);
+    }
+
+    // 5. Start server + workers
     await startServer();
 
     console.log("BOOTSTRAP: server started");

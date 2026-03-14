@@ -1,4 +1,9 @@
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
+import {
+  calculateAllAvailableVariables,
+  calculateAvailableVariables,
+  inferSchemaFromValue,
+} from "./schemaEngine";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Graph Slice — owns nodes, edges, and all XYFlow mutation logic.
@@ -30,20 +35,40 @@ function wouldCreateCycle(edges, source, target) {
   return false;
 }
 
+// ── Memoization key for availableVariables ──────────────────────────────────
+// We track a generation counter that bumps on every edge/schema mutation.
+// Components can use this to know if their cached variables are stale.
+let _generation = 0;
+
 export const createGraphSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   nodes: [],
   edges: [],
+  nodeOutputSchemas: {},
+  availableVariables: {},
+  _schemaGeneration: 0,
 
   // ── XYFlow callbacks ─────────────────────────────────────────────────────
   onNodesChange: (changes) =>
     set({ nodes: applyNodeChanges(changes, get().nodes) }),
 
-  onEdgesChange: (changes) =>
-    set({ edges: applyEdgeChanges(changes, get().edges) }),
+  onEdgesChange: (changes) => {
+    const newEdges = applyEdgeChanges(changes, get().edges);
+    const state = get();
+    const newVars = calculateAllAvailableVariables(
+      state.nodes,
+      newEdges,
+      state.nodeOutputSchemas,
+    );
+    set({
+      edges: newEdges,
+      availableVariables: newVars,
+      _schemaGeneration: ++_generation,
+    });
+  },
 
   onConnect: (connection) => {
-    const { nodes, edges } = get();
+    const { nodes, edges, nodeOutputSchemas } = get();
 
     // RULE 1: Reject connections targeting a trigger node
     const targetNode = nodes.find((n) => n.id === connection.target);
@@ -58,16 +83,26 @@ export const createGraphSlice = (set, get) => ({
     // RULE 3: DFS cycle detection
     if (wouldCreateCycle(edges, connection.source, connection.target)) return;
 
+    const newEdges = addEdge(
+      {
+        ...connection,
+        type: "configurable",
+        data: { conditionPath: "" },
+        style: { stroke: "#3b82f6", strokeWidth: 2 },
+      },
+      edges,
+    );
+
+    const newVars = calculateAllAvailableVariables(
+      nodes,
+      newEdges,
+      nodeOutputSchemas,
+    );
+
     set({
-      edges: addEdge(
-        {
-          ...connection,
-          type: "configurable",
-          data: { conditionPath: "" },
-          style: { stroke: "#3b82f6", strokeWidth: 2 },
-        },
-        edges,
-      ),
+      edges: newEdges,
+      availableVariables: newVars,
+      _schemaGeneration: ++_generation,
     });
   },
 
@@ -115,5 +150,54 @@ export const createGraphSlice = (set, get) => ({
   },
 
   // Bulk-set nodes + edges (used by loadEngine)
-  setGraph: (nodes, edges) => set({ nodes, edges }),
+  setGraph: (nodes, edges) => {
+    const state = get();
+    const newVars = calculateAllAvailableVariables(
+      nodes,
+      edges,
+      state.nodeOutputSchemas,
+    );
+    set({
+      nodes,
+      edges,
+      availableVariables: newVars,
+      _schemaGeneration: ++_generation,
+    });
+  },
+
+  // ── Schema / Variable Inference ───────────────────────────────────────────
+
+  /**
+   * Store the output schema for a node (called when a node is tested).
+   * Accepts either a raw schema object or a runtime value to infer from.
+   *
+   * @param {string} nodeId
+   * @param {object} outputOrSchema — The node's test output (runtime value)
+   */
+  setNodeOutputSchema: (nodeId, outputOrSchema) => {
+    const schema = inferSchemaFromValue(outputOrSchema);
+    const state = get();
+    const newSchemas = { ...state.nodeOutputSchemas, [nodeId]: schema };
+    const newVars = calculateAllAvailableVariables(
+      state.nodes,
+      state.edges,
+      newSchemas,
+    );
+    set({
+      nodeOutputSchemas: newSchemas,
+      availableVariables: newVars,
+      _schemaGeneration: ++_generation,
+    });
+  },
+
+  /**
+   * Get available variables for a specific node.
+   * Returns the pre-computed result from the memoized store — O(1).
+   *
+   * @param {string} nodeId
+   * @returns {Record<string, object>}
+   */
+  getAvailableVariables: (nodeId) => {
+    return get().availableVariables[nodeId] || {};
+  },
 });
