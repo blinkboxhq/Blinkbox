@@ -25,7 +25,7 @@ export default function Workspace() {
 
   return (
 
-    <div className="w-screen h-screen bg-[#020202] overflow-hidden flex flex-col">
+    <div className="w-screen h-screen bg-zinc-950 overflow-hidden flex flex-col">
       <WorkspaceHeader />
       <div className="flex-1 w-full flex overflow-hidden">
         {/* ReactFlowProvider MUST be the parent of Canvas and Sidebars */}

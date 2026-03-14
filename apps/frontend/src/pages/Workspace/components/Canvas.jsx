@@ -55,7 +55,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full w-full relative bg-black"
+      className="flex-1 h-full w-full relative bg-zinc-950"
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
@@ -72,9 +72,12 @@ export default function Canvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={{ type: "configurable" }}
+        proOptions={{ hideAttribution: true }}
       >
-        <Background variant="dots" gap={24} size={0.8} color="#1a1a1a" />
-        <Controls />
+        <Background variant="dots" gap={24} size={1.5} color="#27272a" />
+        <Controls
+          className="!bg-zinc-900 !border-zinc-800 !rounded-lg !shadow-none [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800 [&>button]:!text-zinc-400 [&>button:hover]:!bg-zinc-800 [&>button:hover]:!text-zinc-200"
+        />
       </ReactFlow>
     </div>
   );

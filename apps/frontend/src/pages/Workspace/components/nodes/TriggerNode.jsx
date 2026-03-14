@@ -38,13 +38,13 @@ export default function TriggerNode({ config, updateConfig }) {
           <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 ${
             isActive ? 'bg-[#2E5C2A] shadow-[0_0_15px_rgba(46,92,42,0.5)]' : 'bg-[#111] border border-[#333]'
           }`}>
-            <Zap className={`w-5 h-5 transition-colors duration-500 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-slate-400'}`} />
+            <Zap className={`w-5 h-5 transition-colors duration-500 ${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
           </div>
           <div className="flex flex-col">
-            <span className={`text-sm font-bold transition-colors duration-300 ${isActive ? 'text-[#6B9F5D]' : 'text-slate-400'}`}>
+            <span className={`text-sm font-bold transition-colors duration-300 ${isActive ? 'text-[#6B9F5D]' : 'text-zinc-400'}`}>
               {isActive ? 'Engine Active' : 'Engine Paused'}
             </span>
-            <span className="text-[10px] text-slate-500 font-mono tracking-wide mt-0.5">
+            <span className="text-[10px] text-zinc-500 font-mono tracking-wide mt-0.5">
               {isActive ? 'LISTENING FOR EVENTS' : 'CLICK TO WAKE UP'}
             </span>
           </div>
@@ -63,13 +63,13 @@ export default function TriggerNode({ config, updateConfig }) {
       <div className="border border-[#222] rounded-xl overflow-hidden bg-[#0a0a0a] shadow-lg">
         <button 
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full flex items-center justify-between p-3.5 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors bg-gradient-to-b from-[#111] to-[#0a0a0a]"
+          className="w-full flex items-center justify-between p-3.5 text-xs font-bold text-zinc-400 hover:text-zinc-200 transition-colors bg-gradient-to-b from-[#111] to-[#0a0a0a]"
         >
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
             Webhook & Test Data
           </div>
-          {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500"/> : <ChevronDown className="w-4 h-4 text-slate-500"/>}
+          {showAdvanced ? <ChevronUp className="w-4 h-4 text-zinc-500"/> : <ChevronDown className="w-4 h-4 text-zinc-500"/>}
         </button>
         
         <div className={`transition-all duration-300 ease-in-out origin-top ${
@@ -79,7 +79,7 @@ export default function TriggerNode({ config, updateConfig }) {
             
             {/* 🌐 LIVE WEBHOOK INGRESS URL */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Ingress URL</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Live Ingress URL</label>
               <div className="relative flex items-center group/url">
                 <input 
                   readOnly
@@ -88,7 +88,7 @@ export default function TriggerNode({ config, updateConfig }) {
                 />
                 <button 
                   onClick={handleCopyUrl}
-                  className="absolute right-2 p-1.5 text-slate-500 hover:text-white hover:bg-white/10 rounded transition-all"
+                  className="absolute right-2 p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded transition-all"
                   title="Copy Webhook URL"
                 >
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}

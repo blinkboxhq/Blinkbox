@@ -18,19 +18,19 @@ const ICON_MAP = {
 
 export default function PremiumNode({ id, data, selected, isConnectable }) {
   const Icon = ICON_MAP[data.backendType] || Play;
-  const status = data.status || "idle"; // idle, running, success, failed
+  const status = data.status || "idle";
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   return (
     <div
       className={clsx(
-        "relative min-w-[240px] bg-zinc-900 rounded-xl transition-all duration-200",
-        "border shadow-xl shadow-black/40",
-        selected ? "border-blue-500 ring-1 ring-blue-500/50" : "border-zinc-800",
-        status === "failed" && "border-red-500/50",
-        status === "success" && "border-emerald-500/30",
-        hasMappingWarning && status === "idle" && "ring-2 ring-amber-500/50 animate-pulse border-amber-500/50"
+        "relative min-w-[260px] bg-zinc-900/80 backdrop-blur-md rounded-xl transition-all duration-200",
+        "border shadow-2xl",
+        selected ? "border-zinc-600 ring-1 ring-zinc-600/30" : "border-zinc-800/50",
+        status === "failed" && "border-red-500/30",
+        status === "success" && "border-emerald-500/20",
+        hasMappingWarning && status === "idle" && "ring-2 ring-amber-500/30 animate-pulse border-amber-500/30"
       )}
     >
       {/* Target Handle (Input) */}
@@ -39,17 +39,17 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
           type="target"
           position={Position.Top}
           isConnectable={isConnectable}
-          className="w-3 h-3 bg-zinc-900 border-2 border-zinc-500 rounded-full transition-colors hover:border-blue-400 hover:bg-blue-500/20"
+          className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm transition-colors hover:!border-zinc-400"
         />
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/50 bg-zinc-800/20 rounded-t-xl">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/50">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700">
-            <Icon className="w-3.5 h-3.5 text-zinc-300" />
+          <div className="p-1.5 bg-zinc-800/60 rounded-lg">
+            <Icon className="w-3.5 h-3.5 text-zinc-400" />
           </div>
-          <span className="text-xs font-semibold tracking-wide text-zinc-100 uppercase">
+          <span className="text-[13px] font-medium text-zinc-200 tracking-tight">
             {data.label || data.backendType}
           </span>
           {hasMappingWarning && (
@@ -67,24 +67,24 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         {/* Status Indicator */}
         <div className="flex items-center justify-center">
           {status === "running" && (
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
             </span>
           )}
-          {status === "success" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
-          {status === "failed" && <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
-          {status === "idle" && <div className="w-2 h-2 rounded-full bg-zinc-700" />}
+          {status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+          {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
+          {status === "idle" && <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />}
         </div>
       </div>
 
       {/* Body */}
-      <div className="px-4 py-3">
-        <p className="text-[11px] text-zinc-400 truncate">
+      <div className="px-5 py-4">
+        <p className="text-[12px] text-zinc-500 leading-relaxed truncate">
           {data.subtitle || "Configure node parameters"}
         </p>
         {data.error && (
-          <p className="mt-2 text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 truncate">
+          <p className="mt-2 text-[11px] text-red-400/80 bg-red-500/5 px-3 py-1.5 rounded-md border border-red-500/10 truncate">
             {data.error}
           </p>
         )}
@@ -95,7 +95,7 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         type="source"
         position={Position.Bottom}
         isConnectable={isConnectable}
-        className="w-3 h-3 bg-zinc-900 border-2 border-zinc-500 rounded-full transition-colors hover:border-blue-400 hover:bg-blue-500/20"
+        className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm transition-colors hover:!border-zinc-400"
       />
     </div>
   );

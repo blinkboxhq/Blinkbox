@@ -43,7 +43,7 @@ export default function VariableInput({ label, value, onChange, placeholder, typ
 
   return (
     <div className="flex flex-col gap-1.5 relative w-full">
-      {label && <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{label}</label>}
+      {label && <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">{label}</label>}
       
       <div className="relative flex items-center">
         <input
@@ -58,7 +58,7 @@ export default function VariableInput({ label, value, onChange, placeholder, typ
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className={`absolute right-2 p-1.5 rounded transition-all ${showPicker ? 'bg-blue-500 text-white' : 'text-slate-500 hover:text-blue-400 hover:bg-blue-500/10'}`}
+          className={`absolute right-2 p-1.5 rounded transition-all ${showPicker ? 'bg-blue-500 text-white' : 'text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10'}`}
           title="Insert Variable"
         >
           <Braces className="w-4 h-4" />
@@ -69,11 +69,11 @@ export default function VariableInput({ label, value, onChange, placeholder, typ
       {showPicker && (
         <div ref={dropdownRef} className="absolute top-full mt-2 right-0 w-64 bg-[#111] border border-[#333] rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-3 py-2 border-b border-[#222] bg-[#0a0a0a]">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Data</span>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Available Data</span>
           </div>
           <div className="max-h-48 overflow-y-auto p-1.5">
             {availableVars.length === 0 ? (
-              <div className="p-3 text-xs text-slate-500 text-center leading-relaxed">
+              <div className="p-3 text-xs text-zinc-500 text-center leading-relaxed">
                 No variables found.<br/>Add mock JSON to your Trigger node.
               </div>
             ) : (

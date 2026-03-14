@@ -37,7 +37,7 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
         
         <div className="flex flex-col z-10 overflow-hidden">
           <span className="text-sm font-bold text-cyan-400 tracking-wide">Send via Gmail</span>
-          <span className="text-[10px] text-slate-400 truncate mt-0.5">
+          <span className="text-[10px] text-zinc-400 truncate mt-0.5">
             {to ? `Target: ${to}` : 'Awaiting recipient...'}
           </span>
         </div>
@@ -47,13 +47,13 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
       <div className="flex bg-[#0a0a0a] p-1 rounded-lg border border-[#222]">
         <button 
           onClick={() => setActiveTab('message')}
-          className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'message' ? 'bg-[#222] text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'message' ? 'bg-[#222] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
         >
           <Mail className="w-3.5 h-3.5" /> Message
         </button>
         <button 
           onClick={() => setActiveTab('connection')}
-          className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'connection' ? 'bg-[#222] text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'connection' ? 'bg-[#222] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
         >
           {/* Show a green checkmark if they've entered their credentials */}
           {isConnected ? <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> : <KeyRound className="w-3.5 h-3.5" />} 
@@ -67,7 +67,7 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
         {/* --- MESSAGE TAB --- */}
         <div className={`absolute inset-0 transition-opacity duration-200 flex flex-col gap-4 ${activeTab === 'message' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
               <AtSign className="w-3 h-3 text-cyan-400" /> Recipient (To)
             </label>
             <input 
@@ -80,7 +80,7 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
               Subject Line
             </label>
             <input 
@@ -93,14 +93,14 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
           </div>
 
           <div className="flex flex-col gap-1.5 flex-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
               Email Body (Optional)
             </label>
             <textarea 
               value={body}
               onChange={(e) => updateConfig('body', e.target.value)}
               placeholder="Hello,\n\nHere is the data you requested..."
-              className="w-full h-full bg-[#0a0a0a] border border-[#222] rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none shadow-inner leading-relaxed"
+              className="w-full h-full bg-[#0a0a0a] border border-[#222] rounded-lg p-3 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none shadow-inner leading-relaxed"
             />
           </div>
         </div>
@@ -121,13 +121,13 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-white">Google Integration</span>
-              <span className="text-[10px] text-slate-400">Securely send via your Gmail account</span>
+              <span className="text-[10px] text-zinc-400">Securely send via your Gmail account</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Gmail Address</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Gmail Address</label>
               <input 
                 type="email"
                 value={smtpConfig.user}
@@ -139,7 +139,7 @@ export default function SendEmailNode({ config = {}, updateConfig }) {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">App Password</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">App Password</label>
                 <a 
                   href="https://myaccount.google.com/apppasswords" 
                   target="_blank" 

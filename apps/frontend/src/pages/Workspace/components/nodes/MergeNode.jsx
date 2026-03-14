@@ -19,7 +19,7 @@ export default function MergeNode({ config = {}, updateConfig }) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-teal-400">Merge Branches</span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">
+          <span className="text-[10px] text-zinc-400 uppercase tracking-widest mt-0.5">
             Join parallel paths into one
           </span>
         </div>
@@ -27,7 +27,7 @@ export default function MergeNode({ config = {}, updateConfig }) {
 
       {/* Mode selector */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Merge Mode</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Merge Mode</label>
         <div className="flex flex-col gap-2">
           {MODES.map((m) => (
             <button
@@ -39,10 +39,10 @@ export default function MergeNode({ config = {}, updateConfig }) {
                   : 'border-[#222] bg-[#0a0a0a] hover:border-[#333]'
               }`}
             >
-              <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${mode === m.value ? 'bg-teal-400' : 'bg-slate-600'}`} />
+              <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${mode === m.value ? 'bg-teal-400' : 'bg-zinc-600'}`} />
               <div>
-                <span className={`text-xs font-bold ${mode === m.value ? 'text-teal-400' : 'text-slate-300'}`}>{m.label}</span>
-                <p className="text-[10px] text-slate-500 mt-0.5">{m.desc}</p>
+                <span className={`text-xs font-bold ${mode === m.value ? 'text-teal-400' : 'text-zinc-300'}`}>{m.label}</span>
+                <p className="text-[10px] text-zinc-500 mt-0.5">{m.desc}</p>
               </div>
             </button>
           ))}
@@ -52,19 +52,19 @@ export default function MergeNode({ config = {}, updateConfig }) {
       {/* Array key (only needed in "array" mode) */}
       {mode === 'array' && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Array Output Key</label>
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Array Output Key</label>
           <input
             type="text"
             value={config.key || 'merged'}
             onChange={(e) => updateConfig('key', e.target.value)}
             placeholder="merged"
-            className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-teal-500 transition-colors placeholder-slate-700"
+            className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-teal-500 transition-colors placeholder-zinc-700"
           />
         </div>
       )}
 
-      <div className="p-3 bg-teal-500/5 border border-teal-500/10 rounded-lg text-[10px] text-slate-500 leading-relaxed">
-        💡 Place this node after a <strong className="text-slate-300">Loop</strong> or at the end of parallel branches to collect all results back into one item.
+      <div className="p-3 bg-teal-500/5 border border-teal-500/10 rounded-lg text-[10px] text-zinc-500 leading-relaxed">
+        💡 Place this node after a <strong className="text-zinc-300">Loop</strong> or at the end of parallel branches to collect all results back into one item.
       </div>
     </div>
   );

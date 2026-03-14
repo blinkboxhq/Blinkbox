@@ -29,7 +29,7 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-sky-400">Respond to Webhook</span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">
+          <span className="text-[10px] text-zinc-400 uppercase tracking-widest mt-0.5">
             Sends a custom response payload
           </span>
         </div>
@@ -37,7 +37,7 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
 
       {/* Status code */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">HTTP Status Code</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">HTTP Status Code</label>
         <div className="flex gap-2 items-center">
           <input
             type="number"
@@ -47,7 +47,7 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
             onChange={(e) => updateConfig('statusCode', parseInt(e.target.value))}
             className={`w-24 bg-[#0a0a0a] border rounded-lg px-3 py-2.5 text-xs font-bold focus:outline-none transition-colors ${statusColors[colorKey] || 'text-white border-[#222]'}`}
           />
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-zinc-500">
             {statusCode >= 200 && statusCode < 300 ? '✓ Success' :
              statusCode >= 400 && statusCode < 500 ? '⚠ Client Error' :
              statusCode >= 500 ? '✗ Server Error' : '→ Redirect'}
@@ -57,13 +57,13 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
 
       {/* Content type */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Content Type</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Content Type</label>
         <div className="flex bg-[#0a0a0a] p-1 rounded-lg border border-[#222]">
           {['json', 'text'].map((ct) => (
             <button
               key={ct}
               onClick={() => updateConfig('contentType', ct)}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${(config.contentType || 'json') === ct ? 'bg-[#222] text-white' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${(config.contentType || 'json') === ct ? 'bg-[#222] text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
               {ct === 'json' ? 'application/json' : 'text/plain'}
             </button>
@@ -74,7 +74,7 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
       {/* Response body */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Response Body (leave empty to pass $json through)
           </label>
           {!isValidJson && <span className="text-[10px] text-red-400 font-bold animate-pulse">Invalid JSON</span>}
@@ -88,8 +88,8 @@ export default function RespondWebhookNode({ config = {}, updateConfig }) {
         />
       </div>
 
-      <div className="p-3 bg-sky-500/5 border border-sky-500/10 rounded-lg text-[10px] text-slate-500 leading-relaxed">
-        💡 Supports <code className="text-slate-400">{'{{ $json.field }}'}</code> expressions. The response is recorded in the execution log even for async webhooks.
+      <div className="p-3 bg-sky-500/5 border border-sky-500/10 rounded-lg text-[10px] text-zinc-500 leading-relaxed">
+        💡 Supports <code className="text-zinc-400">{'{{ $json.field }}'}</code> expressions. The response is recorded in the execution log even for async webhooks.
       </div>
     </div>
   );

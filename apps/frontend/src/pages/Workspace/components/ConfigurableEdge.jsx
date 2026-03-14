@@ -29,15 +29,15 @@ export default function ConfigurableEdge({
         id={id}
         className="react-flow__edge-path"
         d={edgePath}
-        strokeWidth={selected ? 3 : 2}
-        stroke={selected ? "#60a5fa" : "#52525b"} // blue-400 or zinc-600
+        strokeWidth={selected ? 2 : 1.5}
+        stroke={selected ? "#a1a1aa" : "#3f3f46"}
         style={{
           ...style,
           animation: isRunning ? "flow 1s linear infinite" : "none",
           strokeDasharray: isRunning ? "5 5" : "none",
         }}
       />
-      
+
       {/* Condition Label Pill */}
       {data?.condition && (
         <EdgeLabelRenderer>
@@ -47,7 +47,7 @@ export default function ConfigurableEdge({
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "all",
             }}
-            className="nodrag nopan bg-zinc-900 border border-zinc-700 text-zinc-300 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full shadow-md"
+            className="nodrag nopan bg-zinc-900 border border-zinc-800 text-zinc-400 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full"
           >
             {data.condition.operator ? "Condition" : "Pass"}
           </div>

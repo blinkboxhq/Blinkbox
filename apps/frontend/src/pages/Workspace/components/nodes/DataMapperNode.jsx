@@ -27,13 +27,13 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-emerald-400 tracking-wide">Data Mapper</span>
-          <span className="text-[10px] text-slate-400 truncate mt-0.5">Transform & reshape data</span>
+          <span className="text-[10px] text-zinc-400 truncate mt-0.5">Transform & reshape data</span>
         </div>
       </div>
 
       {/* Mode Selection */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Operation Mode</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation Mode</label>
         <div className="grid grid-cols-2 gap-2">
           {MODES.map((m) => {
             const Icon = m.icon;
@@ -42,7 +42,7 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
                 key={m.value}
                 onClick={() => { updateConfig('mode', m.value); updateConfig('items', []); }}
                 className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                  mode === m.value ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-[#0a0a0a] border-[#222] text-slate-400 hover:border-[#333]'
+                  mode === m.value ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" /> {m.label}
@@ -55,7 +55,7 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
       {/* Dynamic List Editor */}
       <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl shadow-inner">
         <div className="flex items-center justify-between border-b border-[#222] pb-3">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+          <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2">
             <Scissors className="w-3.5 h-3.5 text-emerald-500" /> Rules
           </span>
           <button onClick={addItem} className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase">
@@ -64,7 +64,7 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
         </div>
 
         {items.length === 0 ? (
-           <div className="text-center py-4 text-xs text-slate-600">No rules added.</div>
+           <div className="text-center py-4 text-xs text-zinc-600">No rules added.</div>
         ) : (
           <div className="flex flex-col gap-2">
             {items.map((item, i) => (
@@ -83,7 +83,7 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
                     className="w-1/2 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 )}
-                <button onClick={() => removeItem(i)} className="p-1.5 text-slate-600 hover:text-red-400 transition-colors">
+                <button onClick={() => removeItem(i)} className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

@@ -38,7 +38,7 @@ export default function DelayNode({ config, updateConfig }) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-orange-400">Execution Delay</span>
-          <span className="text-[10px] text-slate-400 leading-relaxed">
+          <span className="text-[10px] text-zinc-400 leading-relaxed">
             {summaryText}
           </span>
         </div>
@@ -46,7 +46,7 @@ export default function DelayNode({ config, updateConfig }) {
 
       {/* 2. CHUNKY INPUT CONTROLS */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wait Duration</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Wait Duration</label>
         <div className="flex bg-[#0a0a0a] border border-[#222] rounded-xl overflow-hidden focus-within:border-orange-500/50 focus-within:shadow-[0_0_15px_rgba(249,115,22,0.15)] transition-all">
           
           <input 
@@ -74,29 +74,29 @@ export default function DelayNode({ config, updateConfig }) {
 
       {/* 3. QUICK PRESETS */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quick Presets</label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Quick Presets</label>
         <div className="grid grid-cols-4 gap-2">
           <button 
             onClick={() => handlePreset(15, 'seconds')}
-            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-slate-400 hover:text-orange-400 transition-colors"
+            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-zinc-400 hover:text-orange-400 transition-colors"
           >
             15 Sec
           </button>
           <button 
             onClick={() => handlePreset(1, 'minutes')}
-            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-slate-400 hover:text-orange-400 transition-colors"
+            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-zinc-400 hover:text-orange-400 transition-colors"
           >
             1 Min
           </button>
           <button 
             onClick={() => handlePreset(15, 'minutes')}
-            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-slate-400 hover:text-orange-400 transition-colors"
+            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-zinc-400 hover:text-orange-400 transition-colors"
           >
             15 Min
           </button>
           <button 
             onClick={() => handlePreset(1, 'hours')}
-            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-slate-400 hover:text-orange-400 transition-colors"
+            className="py-2 bg-[#050505] border border-[#222] hover:border-orange-500/30 hover:bg-orange-500/5 rounded-lg text-xs font-bold text-zinc-400 hover:text-orange-400 transition-colors"
           >
             1 Hour
           </button>
