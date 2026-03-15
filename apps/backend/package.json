@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.js",
+    "start": "tsx src/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -29,13 +30,13 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socket.io": "^4.8.3",
+    "tsx": "^4.19.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^7.0.11",
-    "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
 }

@@ -6,15 +6,6 @@ import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { initSocketServer } from "../infra/socket.server.js";
-import automationRoutes from "../modules/automation/automation.routes.js";
-import executionRoutes from "../modules/execution/execution.routes.js";
-import billingRoutes from "../modules/billing/billing.routes.js";
-import credentialRoutes from "../modules/credentials/credential.routes.js";
-
-app.use("/api/automation", automationRoutes);
-app.use("/api/execution", executionRoutes);
-app.use("/api/billing", billingRoutes);
-app.use("/api/credentials", credentialRoutes);
 
 export async function startServer() {
   const PORT = process.env.PORT || 3000;
