@@ -141,8 +141,10 @@ export async function triggerAutomation(req, res) {
 
     res.json({ success: true, reused: false, execution: result });
   } catch (err) {
-    console.error("Trigger error:", err.message);
-    res.status(400).json({ success: false, message: "Failed to trigger automation" });
+    if (err.message !== "Engine is paused or inactive.") {
+      console.error("Trigger error:", err.message);
+    }
+    res.status(400).json({ success: false, message: err.message });
   }
 }
 
