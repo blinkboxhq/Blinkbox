@@ -1,11 +1,13 @@
 import { Handle, Position } from "@xyflow/react";
 import { Check, AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
 import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-export default function CustomNode({ id, data }) {
+export default function CustomNode({ id, data, selected }) {
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
   const Icon = nodeDef.icon;
+  const accent = nodeDef.accentColor || "161,161,170";
 
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore((s) => s.getNodeStatus);
@@ -20,42 +22,76 @@ export default function CustomNode({ id, data }) {
   let glowStyle = {};
   let ringClass = "";
   let badge = null;
+  let accentBarOpacity = 0.3;
 
   if (status === "running") {
     borderColor = "border-blue-500/40";
-    glowStyle = { boxShadow: "0 0 24px rgba(59,130,246,0.08)" };
+    glowStyle = { boxShadow: `0 0 30px rgba(59,130,246,0.15), 0 0 60px rgba(59,130,246,0.05)` };
     ringClass = "ring-1 ring-blue-500/20";
+    accentBarOpacity = 1;
   } else if (status === "completed") {
     borderColor = "border-emerald-500/30";
-    glowStyle = { boxShadow: "0 0 20px rgba(34,197,94,0.06)" };
+    glowStyle = { boxShadow: `0 0 24px rgba(34,197,94,0.12)` };
+    accentBarOpacity = 0.8;
     badge = (
-      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center z-20">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center z-20"
+      >
         <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-      </div>
+      </motion.div>
     );
   } else if (status === "failed") {
     borderColor = "border-red-500/30";
-    glowStyle = { boxShadow: "0 0 20px rgba(239,68,68,0.08)" };
+    glowStyle = { boxShadow: `0 0 24px rgba(239,68,68,0.12)` };
+    accentBarOpacity = 0.8;
     badge = (
-      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center z-20">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center z-20"
+      >
         <AlertTriangle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-      </div>
+      </motion.div>
     );
   }
 
-  // Mapping warning — amber pulsating border
   if (hasMappingWarning && !status) {
     borderColor = "border-amber-500/30";
     ringClass = "ring-2 ring-amber-500/30 animate-pulse";
-    glowStyle = { boxShadow: "0 0 20px rgba(245,158,11,0.06)" };
+    glowStyle = { boxShadow: "0 0 20px rgba(245,158,11,0.08)" };
+  }
+
+  if (selected) {
+    glowStyle = {
+      ...glowStyle,
+      boxShadow: `0 0 30px rgba(${accent},0.15), 0 0 60px rgba(${accent},0.05)`,
+    };
   }
 
   return (
-    <div
-      className={`relative border ${borderColor} ${ringClass} rounded-xl transition-all duration-200 min-w-[260px] backdrop-blur-md bg-zinc-900/80 shadow-2xl`}
+    <motion.div
+      whileHover={{
+        scale: 1.02,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 24px rgba(${accent},0.12)`,
+      }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className={`relative border ${borderColor} ${ringClass} rounded-xl min-w-[260px] backdrop-blur-md bg-zinc-900/80 shadow-2xl overflow-hidden`}
       style={glowStyle}
     >
       {badge}
+
+      {/* Colored accent bar — left edge */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl transition-opacity duration-500"
+        style={{
+          background: `rgba(${accent},${accentBarOpacity})`,
+          boxShadow: `0 0 8px rgba(${accent},${accentBarOpacity * 0.3})`,
+        }}
+      />
 
       {/* Input handle */}
       {!isTrigger && (
@@ -67,12 +103,18 @@ export default function CustomNode({ id, data }) {
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800/50">
-        <div
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800/30">
+        {/* Animated icon container */}
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: 3 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${nodeDef.bgClass} ${nodeDef.colorClass}`}
+          style={{
+            boxShadow: `0 0 12px rgba(${accent},0.15)`,
+          }}
         >
           <Icon className="w-4 h-4" />
-        </div>
+        </motion.div>
 
         <div className="flex flex-col overflow-hidden flex-1">
           <div className="flex items-center gap-1.5">
@@ -98,14 +140,31 @@ export default function CustomNode({ id, data }) {
         {/* Status indicator */}
         <div className="flex items-center justify-center shrink-0">
           {status === "running" && (
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
             </span>
           )}
-          {status === "completed" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-          {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
-          {!status && <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />}
+          {status === "completed" && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-2 h-2 rounded-full bg-emerald-500"
+            />
+          )}
+          {status === "failed" && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-2 h-2 rounded-full bg-red-500"
+            />
+          )}
+          {!status && (
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: `rgba(${accent},0.4)` }}
+            />
+          )}
         </div>
       </div>
 
@@ -127,6 +186,6 @@ export default function CustomNode({ id, data }) {
         position={Position.Right}
         className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm hover:!border-zinc-400 transition-colors"
       />
-    </div>
+    </motion.div>
   );
 }

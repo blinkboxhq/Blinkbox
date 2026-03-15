@@ -3,6 +3,7 @@ import {
   Zap, Globe, Code2, Clock, CheckCircle2,
   AlertCircle, AlertTriangle, Play, Database, Network
 } from "lucide-react";
+import { motion } from "framer-motion";
 import clsx from "clsx";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
@@ -16,16 +17,32 @@ const ICON_MAP = {
   data_mapper: Database,
 };
 
+const ACCENT_MAP = {
+  webhook: "34,197,94",
+  http_request: "59,130,246",
+  code: "139,92,246",
+  delay: "251,146,60",
+  cron_trigger: "34,197,94",
+  trigger: "34,197,94",
+  data_mapper: "52,211,153",
+};
+
 export default function PremiumNode({ id, data, selected, isConnectable }) {
   const Icon = ICON_MAP[data.backendType] || Play;
   const status = data.status || "idle";
+  const accent = ACCENT_MAP[data.backendType] || "161,161,170";
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   return (
-    <div
+    <motion.div
+      whileHover={{
+        scale: 1.02,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 24px rgba(${accent},0.12)`,
+      }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={clsx(
-        "relative min-w-[260px] bg-zinc-900/80 backdrop-blur-md rounded-xl transition-all duration-200",
+        "relative min-w-[260px] bg-zinc-900/80 backdrop-blur-md rounded-xl overflow-hidden",
         "border shadow-2xl",
         selected ? "border-zinc-600 ring-1 ring-zinc-600/30" : "border-zinc-800/50",
         status === "failed" && "border-red-500/30",
@@ -33,7 +50,16 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         hasMappingWarning && status === "idle" && "ring-2 ring-amber-500/30 animate-pulse border-amber-500/30"
       )}
     >
-      {/* Target Handle (Input) */}
+      {/* Colored accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        style={{
+          background: `rgba(${accent},0.4)`,
+          boxShadow: `0 0 8px rgba(${accent},0.12)`,
+        }}
+      />
+
+      {/* Target Handle */}
       {data.backendType !== "trigger" && data.backendType !== "webhook" && (
         <Handle
           type="target"
@@ -44,11 +70,16 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/50">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/30">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-zinc-800/60 rounded-lg">
-            <Icon className="w-3.5 h-3.5 text-zinc-400" />
-          </div>
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 3 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="p-1.5 bg-zinc-800/60 rounded-lg"
+            style={{ boxShadow: `0 0 10px rgba(${accent},0.12)` }}
+          >
+            <Icon className="w-3.5 h-3.5" style={{ color: `rgba(${accent},0.85)` }} />
+          </motion.div>
           <span className="text-[13px] font-medium text-zinc-200 tracking-tight">
             {data.label || data.backendType}
           </span>
@@ -64,17 +95,19 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
           )}
         </div>
 
-        {/* Status Indicator */}
+        {/* Status */}
         <div className="flex items-center justify-center">
           {status === "running" && (
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
             </span>
           )}
           {status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
           {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
-          {status === "idle" && <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />}
+          {status === "idle" && (
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `rgba(${accent},0.4)` }} />
+          )}
         </div>
       </div>
 
@@ -90,13 +123,13 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         )}
       </div>
 
-      {/* Source Handle (Output) */}
+      {/* Source Handle */}
       <Handle
         type="source"
         position={Position.Bottom}
         isConnectable={isConnectable}
         className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm transition-colors hover:!border-zinc-400"
       />
-    </div>
+    </motion.div>
   );
 }
