@@ -46,8 +46,8 @@ body {
 }
 
 .react-flow__connection-line {
-  stroke: #3b82f6 !important;
-  stroke-width: 2 !important;
+  stroke: #71717a !important;
+  stroke-width: 1 !important;
 }
 
 .react-flow__attribution {
