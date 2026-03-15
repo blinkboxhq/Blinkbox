@@ -1,5 +1,5 @@
-import { WorkflowDefinitionSchema } from "@blinkbox/shared-types";
-import type { WorkflowDefinition } from "@blinkbox/shared-types";
+import { WorkflowDefinitionSchema } from "../../../schemas.js";
+import type { WorkflowDefinition } from "../../../schemas.js";
 import type { Request, Response, NextFunction } from "express";
 
 /**

@@ -3,7 +3,7 @@ import type {
   NodeConfig,
   EdgeConfig,
   WorkflowDefinition,
-} from "@blinkbox/shared-types";
+} from "../schemas.js";
 
 /**
  * Node subdocument — mirrors NodeConfigSchema from @blinkbox/shared-types.

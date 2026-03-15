@@ -9,7 +9,7 @@
  */
 
 import { proxyActivities, sleep } from "@temporalio/workflow";
-import type { WorkflowDefinition } from "@blinkbox/shared-types";
+import type { WorkflowDefinition } from "../schemas.js";
 import type * as activities from "./activities.js";
 
 // ── Activity Proxies ────────────────────────────────────────────────────────────
