@@ -3,11 +3,11 @@ import { Sidebar, SidebarBody, useSidebar } from '../../../components/ui/sidebar
 import { NodeRegistry } from '../nodeRegistry';
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import logo from "../../../assets/logo.svg";
 
-const DraggableSidebarItem = ({ nodeKey, node, index }) => {
+const DraggableSidebarItem = ({ nodeKey, node }) => {
   const { open, animate } = useSidebar();
   const Icon = node.icon || Zap;
-  const accent = node.accentColor || "161,161,170";
 
   const handleDragStart = (event) => {
     const payload = { backendType: nodeKey, ...node };
@@ -16,27 +16,14 @@ const DraggableSidebarItem = ({ nodeKey, node, index }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
+    <div
       draggable
       onDragStart={handleDragStart}
-      whileHover={{
-        backgroundColor: `rgba(${accent},0.06)`,
-        x: 2,
-      }}
-      whileTap={{ scale: 0.97 }}
-      className="flex items-center justify-start gap-4 py-3 px-2 group/sidebar rounded-lg cursor-grab active:cursor-grabbing w-full overflow-hidden"
+      className="flex items-center justify-start gap-3 py-2.5 px-2 group/sidebar rounded-lg hover:bg-zinc-800/40 cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
     >
-      <motion.div
-        whileHover={{ scale: 1.15, rotate: -5 }}
-        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-        className={`shrink-0 p-2 rounded-lg ${node.bgClass} ${node.colorClass}`}
-        style={{ boxShadow: `0 0 10px rgba(${accent},0.12)` }}
-      >
-        <Icon className="w-5 h-5" />
-      </motion.div>
+      <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-zinc-800/80 ${node.colorClass}`}>
+        <Icon className="w-4 h-4" strokeWidth={1.75} />
+      </div>
 
       <motion.div
         animate={{
@@ -45,14 +32,14 @@ const DraggableSidebarItem = ({ nodeKey, node, index }) => {
         }}
         className="flex-col overflow-hidden whitespace-nowrap"
       >
-        <span className="text-zinc-200 text-[13px] font-medium tracking-tight group-hover/sidebar:translate-x-0.5 transition duration-150">
+        <span className="text-zinc-200 text-[13px] font-medium tracking-tight">
           {node.label}
         </span>
-        <span className="text-[10px] text-zinc-600 uppercase tracking-widest block">
+        <span className="text-[10px] text-zinc-600 uppercase tracking-wider block">
           {node.category}
         </span>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -65,20 +52,17 @@ export default function WorkspaceLeftSidebar() {
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
 
           {/* Logo */}
-          <div className="px-2 py-4 mb-8 flex items-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0 border border-zinc-700/50"
-            >
-              <Zap className="w-5 h-5 text-blue-400" />
-            </motion.div>
+          <div className="px-2 py-4 mb-6 flex items-center gap-3">
+            <img
+              src={logo}
+              alt="BlinkBox"
+              className="w-9 h-9 rounded-lg shrink-0 object-contain"
+            />
             {open && (
               <motion.span
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-zinc-200 font-semibold tracking-widest text-sm whitespace-nowrap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-zinc-300 font-semibold tracking-widest text-xs whitespace-nowrap"
               >
                 BLINKBOX
               </motion.span>
@@ -86,9 +70,9 @@ export default function WorkspaceLeftSidebar() {
           </div>
 
           {/* Node Palette */}
-          <div className="flex flex-col gap-1">
-            {Object.entries(NodeRegistry).map(([key, node], index) => (
-              <DraggableSidebarItem key={key} nodeKey={key} node={node} index={index} />
+          <div className="flex flex-col gap-0.5">
+            {Object.entries(NodeRegistry).map(([key, node]) => (
+              <DraggableSidebarItem key={key} nodeKey={key} node={node} />
             ))}
           </div>
 
