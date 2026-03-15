@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "../modules/auth/auth.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
+import automationRoutes from "../modules/automation/automation.routes.js";
+import executionRoutes from "../modules/execution/execution.routes.js";
+import credentialRoutes from "../modules/credentials/credential.routes.js";
+import billingRoutes from "../modules/billing/billing.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 
 const app = express();
@@ -52,6 +56,10 @@ app.get("/webhook/:automationId", handlePublicWebhook);
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/automation", automationRoutes);
+app.use("/api/execution", executionRoutes);
+app.use("/api/credentials", credentialRoutes);
+app.use("/api/billing", billingRoutes);
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // Catches anything thrown with next(err) or unhandled express errors
