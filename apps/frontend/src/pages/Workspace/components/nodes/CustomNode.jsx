@@ -1,8 +1,24 @@
 import { Handle, Position } from "@xyflow/react";
-import { Check, AlertTriangle } from "lucide-react";
+import { Check, AlertTriangle, Settings2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
+
+/** Extract a short human-readable config summary from node data */
+function getConfigHint(data) {
+  const c = data.config || {};
+  if (data.backendType === "http_request") {
+    if (c.method && c.url) return `${c.method} ${c.url}`.slice(0, 40);
+    if (c.url) return c.url.slice(0, 40);
+  }
+  if (data.backendType === "send_email" && c.to) return `To: ${c.to}`.slice(0, 36);
+  if (data.backendType === "delay" && c.seconds) return `Wait ${c.seconds}s`;
+  if (data.backendType === "ai_agent" && c.model) return c.model;
+  if (data.backendType === "webhook" && c.path) return `/${c.path}`;
+  if (data.backendType === "cron_trigger" && c.expression) return c.expression;
+  if (data.backendType === "logic_router" && c.field) return `if ${c.field}`;
+  return null;
+}
 
 export default function CustomNode({ id, data, selected }) {
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
@@ -16,6 +32,8 @@ export default function CustomNode({ id, data, selected }) {
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
+  const configHint = getConfigHint(data);
+  const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
   // --- Visual state ---
   let borderClass = "border-zinc-800/60";
@@ -30,7 +48,7 @@ export default function CustomNode({ id, data, selected }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center z-20"
+        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center z-20"
       >
         <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
       </motion.div>
@@ -42,7 +60,7 @@ export default function CustomNode({ id, data, selected }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center z-20"
+        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center z-20"
       >
         <AlertTriangle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
       </motion.div>
@@ -66,7 +84,7 @@ export default function CustomNode({ id, data, selected }) {
       {/* Accent bar */}
       <div
         className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-        style={{ backgroundColor: `rgba(${accent},0.3)` }}
+        style={{ backgroundColor: `rgba(${accent},0.35)` }}
       />
 
       {/* Input handle */}
@@ -79,7 +97,7 @@ export default function CustomNode({ id, data, selected }) {
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/40">
+      <div className="flex items-center gap-3 px-4 py-3">
         <div
           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-zinc-800/80 ${nodeDef.colorClass}`}
         >
@@ -88,7 +106,7 @@ export default function CustomNode({ id, data, selected }) {
 
         <div className="flex flex-col overflow-hidden flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[13px] font-medium text-zinc-200 tracking-tight truncate">
+            <span className="text-[13px] font-medium text-zinc-100 tracking-tight truncate">
               {data.label}
             </span>
             {hasMappingWarning && (
@@ -120,16 +138,41 @@ export default function CustomNode({ id, data, selected }) {
         </div>
       </div>
 
-      {/* Body */}
-      <div className="px-4 py-3">
-        <p className="text-[12px] text-zinc-500 leading-relaxed truncate">
-          {data.subtitle || "Configure node parameters"}
-        </p>
+      {/* Body — config details */}
+      <div className="px-4 pb-3 space-y-1.5">
+        {/* Config hint */}
+        {configHint ? (
+          <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
+            {configHint}
+          </p>
+        ) : (
+          <p className="text-[11px] text-zinc-600 truncate">
+            {data.subtitle || "Not configured"}
+          </p>
+        )}
+
         {data.error && (
-          <p className="mt-1.5 text-[10px] text-red-400/70 truncate">
+          <p className="text-[10px] text-red-400/70 truncate">
             {data.error}
           </p>
         )}
+      </div>
+
+      {/* Footer bar */}
+      <div className="flex items-center justify-between px-4 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
+        <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[140px]">
+          {id.length > 20 ? `...${id.slice(-16)}` : id}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {isConfigured ? (
+            <span className="text-[9px] text-emerald-600 uppercase tracking-wider">Ready</span>
+          ) : (
+            <span className="flex items-center gap-0.5 text-[9px] text-zinc-600 uppercase tracking-wider">
+              <Settings2 className="w-2.5 h-2.5" />
+              Setup
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Output handle */}

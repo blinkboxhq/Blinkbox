@@ -30,7 +30,7 @@ export default function ConfigurableEdge({
         className="react-flow__edge-path"
         d={edgePath}
         strokeWidth={selected ? 1.5 : 1}
-        stroke={isRunning ? "#60a5fa" : selected ? "#52525b" : "#2a2a2e"}
+        stroke={isRunning ? "#60a5fa" : selected ? "#a1a1aa" : "#52525b"}
         fill="none"
         style={{
           ...style,
