@@ -1,9 +1,8 @@
 import { Handle, Position } from "@xyflow/react";
 import {
-  Zap, Globe, Code2, Clock, CheckCircle2,
-  AlertCircle, AlertTriangle, Play, Database, Network
+  Zap, Globe, Code2, Clock,
+  AlertTriangle, Play, Database, Network
 } from "lucide-react";
-import { motion } from "framer-motion";
 import clsx from "clsx";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
@@ -15,6 +14,16 @@ const ICON_MAP = {
   cron_trigger: Clock,
   trigger: Zap,
   data_mapper: Database,
+};
+
+const COLOR_MAP = {
+  webhook: "text-green-400",
+  http_request: "text-blue-400",
+  code: "text-violet-400",
+  delay: "text-orange-400",
+  cron_trigger: "text-green-400",
+  trigger: "text-green-400",
+  data_mapper: "text-emerald-400",
 };
 
 const ACCENT_MAP = {
@@ -29,34 +38,32 @@ const ACCENT_MAP = {
 
 export default function PremiumNode({ id, data, selected, isConnectable }) {
   const Icon = ICON_MAP[data.backendType] || Play;
-  const status = data.status || "idle";
+  const colorClass = COLOR_MAP[data.backendType] || "text-zinc-400";
   const accent = ACCENT_MAP[data.backendType] || "161,161,170";
+  const status = data.status || "idle";
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   return (
-    <motion.div
-      whileHover={{
-        scale: 1.02,
-        boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 24px rgba(${accent},0.12)`,
-      }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    <div
       className={clsx(
-        "relative min-w-[260px] bg-zinc-900/80 backdrop-blur-md rounded-xl overflow-hidden",
-        "border shadow-2xl",
-        selected ? "border-zinc-600 ring-1 ring-zinc-600/30" : "border-zinc-800/50",
-        status === "failed" && "border-red-500/30",
-        status === "success" && "border-emerald-500/20",
-        hasMappingWarning && status === "idle" && "ring-2 ring-amber-500/30 animate-pulse border-amber-500/30"
+        "relative min-w-[240px] bg-zinc-900 rounded-xl transition-colors duration-150",
+        "border shadow-sm",
+        selected
+          ? "border-zinc-600"
+          : status === "failed"
+            ? "border-red-500/30"
+            : status === "success"
+              ? "border-emerald-500/30"
+              : hasMappingWarning && status === "idle"
+                ? "border-amber-500/30"
+                : "border-zinc-800/60"
       )}
     >
-      {/* Colored accent bar */}
+      {/* Accent bar */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-        style={{
-          background: `rgba(${accent},0.4)`,
-          boxShadow: `0 0 8px rgba(${accent},0.12)`,
-        }}
+        className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full"
+        style={{ backgroundColor: `rgba(${accent},0.25)` }}
       />
 
       {/* Target Handle */}
@@ -65,71 +72,66 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
           type="target"
           position={Position.Top}
           isConnectable={isConnectable}
-          className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm transition-colors hover:!border-zinc-400"
+          className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
         />
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/30">
-        <div className="flex items-center gap-2.5">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 3 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="p-1.5 bg-zinc-800/60 rounded-lg"
-            style={{ boxShadow: `0 0 10px rgba(${accent},0.12)` }}
-          >
-            <Icon className="w-3.5 h-3.5" style={{ color: `rgba(${accent},0.85)` }} />
-          </motion.div>
-          <span className="text-[13px] font-medium text-zinc-200 tracking-tight">
-            {data.label || data.backendType}
-          </span>
-          {hasMappingWarning && (
+      <div className="flex items-center gap-2.5 px-4 py-2.5">
+        <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 bg-zinc-800 ${colorClass}`}>
+          <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+        </div>
+
+        <span className="text-[13px] font-medium text-zinc-100 truncate flex-1 min-w-0">
+          {data.label || data.backendType}
+        </span>
+
+        {/* Status */}
+        <div className="shrink-0">
+          {status === "running" && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            </span>
+          )}
+          {status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+          {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
+          {hasMappingWarning && status === "idle" && (
             <div className="relative group">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 cursor-help" />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 border border-amber-500/30 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-56">
+              <AlertTriangle className="w-3 h-3 text-amber-500/70 cursor-help" strokeWidth={2} />
+              <div className="absolute bottom-full right-0 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-52">
                 {warnings.map((w, i) => (
-                  <p key={i} className="text-[10px] text-amber-300 leading-relaxed">{w}</p>
+                  <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
                 ))}
               </div>
             </div>
           )}
         </div>
-
-        {/* Status */}
-        <div className="flex items-center justify-center">
-          {status === "running" && (
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
-            </span>
-          )}
-          {status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-          {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
-          {status === "idle" && (
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `rgba(${accent},0.4)` }} />
-          )}
-        </div>
       </div>
 
       {/* Body */}
-      <div className="px-5 py-4">
-        <p className="text-[12px] text-zinc-500 leading-relaxed truncate">
-          {data.subtitle || "Configure node parameters"}
-        </p>
-        {data.error && (
-          <p className="mt-2 text-[11px] text-red-400/80 bg-red-500/5 px-3 py-1.5 rounded-md border border-red-500/10 truncate">
-            {data.error}
-          </p>
-        )}
-      </div>
+      {(data.subtitle || data.error) && (
+        <div className="px-4 pb-2.5">
+          {data.subtitle && (
+            <p className="text-[11px] text-zinc-500 leading-relaxed truncate">
+              {data.subtitle}
+            </p>
+          )}
+          {data.error && (
+            <p className="text-[10px] text-red-400/70 mt-1 truncate">
+              {data.error}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Source Handle */}
       <Handle
         type="source"
         position={Position.Bottom}
         isConnectable={isConnectable}
-        className="w-3 h-3 !bg-zinc-950 !border !border-zinc-600 !rounded-sm transition-colors hover:!border-zinc-400"
+        className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
       />
-    </motion.div>
+    </div>
   );
 }
