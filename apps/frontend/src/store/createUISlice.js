@@ -38,14 +38,14 @@ export const createUISlice = (set, get) => ({
           type: n.type === "manual" || n.type === "webhook" || n.type === "cron_trigger"
             ? "trigger"
             : "action",
-          config: n.config || {},
+          config: n.data || {},
         },
       }));
 
       const loadedEdges = workflow.edges.map((e) => ({
-        id: `edge-${e.from}-${e.to}`,
-        source: e.from,
-        target: e.to,
+        id: e.id || `edge-${e.source}-${e.target}`,
+        source: e.source,
+        target: e.target,
         type: "configurable",
         data: { conditionPath: e.conditionPath || "" },
         style: { stroke: "#3b82f6", strokeWidth: 2 },
@@ -93,13 +93,14 @@ export const createUISlice = (set, get) => ({
         nodes: state.nodes.map((n) => ({
           id: n.id,
           type: n.data.backendType,
-          config: n.data.config || {},
+          data: n.data.config || {},
           description: n.data.label,
           position: n.position,
         })),
         edges: state.edges.map((e) => ({
-          from: e.source,
-          to: e.target,
+          id: e.id,
+          source: e.source,
+          target: e.target,
           type: "onSuccess",
           conditionPath: e.data?.conditionPath || "",
         })),

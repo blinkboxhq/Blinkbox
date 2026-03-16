@@ -86,10 +86,11 @@ export const WorkflowDefinitionSchema = z.object({
   name: z.string().min(1, "Automation name is required").max(200),
   trigger: TriggerTypeSchema,
   active: z.boolean().default(true),
-  workspaceId: z.string().min(1, "Workspace ID is required"),
-  nodes: z.array(NodeConfigSchema).min(1, "At least one node is required"),
+  // Injected server-side from JWT after validation — never sent by the client
+  workspaceId: z.string().optional(),
+  nodes: z.array(NodeConfigSchema).default([]),
   edges: z.array(EdgeConfigSchema).default([]),
-  entryNodeId: z.string().min(1, "Entry node ID is required"),
+  entryNodeId: z.string().optional().default(""),
   settings: AutomationSettingsSchema.default({ maxParallel: 10 }),
   description: z.string().default(""),
 });
