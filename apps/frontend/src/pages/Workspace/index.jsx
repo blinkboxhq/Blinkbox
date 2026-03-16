@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from '@xyflow/react';
+import { Monitor, ArrowLeft } from 'lucide-react';
 import useWorkspaceStore from '../../store/workspaceStore';
+import logo from '../../assets/logo.svg';
 
 // 1. Layout Components
 import WorkspaceHeader from './components/WorkspaceHeader';
@@ -11,24 +13,57 @@ import Canvas from './components/Canvas';
 import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 
 // 🚀 SINGLE SOURCE OF TRUTH: Re-export from the centralized registry
-// Every component (LeftSidebar, RightSidebar, CustomNode) should import from here
 export { NodeRegistry } from './nodeRegistry';
+
+function MobileGate() {
+  const navigate = useNavigate();
+  return (
+    <div className="w-screen h-screen bg-zinc-950 flex flex-col items-center justify-center px-8 text-center">
+      <img src={logo} alt="BlinkBox" className="w-10 h-10 mb-8 opacity-60" />
+
+      <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6">
+        <Monitor className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
+      </div>
+
+      <h1 className="text-white text-xl font-semibold tracking-tight mb-2">
+        Open on a larger screen
+      </h1>
+      <p className="text-zinc-500 text-sm leading-relaxed max-w-[260px]">
+        The automation canvas requires a tablet or laptop. Phone screens are too small to wire up workflows.
+      </p>
+
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="mt-8 flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to dashboard
+      </button>
+    </div>
+  );
+}
 
 export default function Workspace() {
   const { id } = useParams();
   const loadEngine = useWorkspaceStore((state) => state.loadEngine);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
 
-  // 📥 Boot up the engine and fetch the data when the page loads
   useEffect(() => {
-    if (id) loadEngine(id);
-  }, [id, loadEngine]);
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  useEffect(() => {
+    if (id && !isMobile) loadEngine(id);
+  }, [id, loadEngine, isMobile]);
+
+  if (isMobile) return <MobileGate />;
 
   return (
-
     <div className="w-screen h-screen bg-zinc-950 overflow-hidden flex flex-col">
       <WorkspaceHeader />
       <div className="flex-1 w-full flex overflow-hidden">
-        {/* ReactFlowProvider MUST be the parent of Canvas and Sidebars */}
         <ReactFlowProvider>
           <WorkspaceLeftSidebar />
           <Canvas />

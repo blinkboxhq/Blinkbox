@@ -4,10 +4,14 @@ import { NodeRegistry } from '../nodeRegistry';
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import logo from "../../../assets/logo.svg";
+import useWorkspaceStore from "../../../store/workspaceStore";
+import { useReactFlow } from "@xyflow/react";
 
 const DraggableSidebarItem = ({ nodeKey, node }) => {
   const { open, animate } = useSidebar();
   const Icon = node.icon || Zap;
+  const addNode = useWorkspaceStore((s) => s.addNode);
+  const { getViewport } = useReactFlow();
 
   const handleDragStart = (event) => {
     const payload = { backendType: nodeKey, ...node };
@@ -15,10 +19,27 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
     event.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleDoubleClick = () => {
+    const { x, y, zoom } = getViewport();
+    // Convert viewport center to flow coordinates
+    const cx = (window.innerWidth / 2 - x) / zoom;
+    const cy = (window.innerHeight / 2 - y) / zoom;
+    // Slight random offset so stacked nodes are visible
+    const jitter = () => (Math.random() - 0.5) * 80;
+    addNode({
+      id: `${nodeKey}-${Date.now()}`,
+      type: 'custom',
+      position: { x: cx + jitter(), y: cy + jitter() },
+      data: { backendType: nodeKey, label: node.label, type: node.category === 'trigger' ? 'trigger' : 'action', config: {} },
+    });
+  };
+
   return (
     <div
       draggable
       onDragStart={handleDragStart}
+      onDoubleClick={handleDoubleClick}
+      title="Double-click to add to canvas"
       className="flex items-center justify-start gap-3 py-2.5 px-2 group/sidebar rounded-lg hover:bg-zinc-800/40 cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
     >
       <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-zinc-800/80 ${node.colorClass}`}>
