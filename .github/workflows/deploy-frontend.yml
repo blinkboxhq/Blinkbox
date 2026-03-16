@@ -35,8 +35,8 @@ jobs:
       - name: Build React App
         working-directory: ./apps/frontend
         env:
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID: "914837067072-6iem3t2t0t79irj6dtlano5irqqq0v7k.apps.googleusercontent.com"
+          VITE_API_URL: "https://blinkbox-backend-production.up.railway.app"
           CI: false
         run: npm run build
 
