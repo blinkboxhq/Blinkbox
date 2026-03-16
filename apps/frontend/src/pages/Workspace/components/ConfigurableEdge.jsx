@@ -29,12 +29,12 @@ export default function ConfigurableEdge({
         id={id}
         className="react-flow__edge-path"
         d={edgePath}
-        strokeWidth={selected ? 1.5 : 1}
-        stroke={isRunning ? "#60a5fa" : selected ? "#a1a1aa" : "#52525b"}
+        strokeWidth={selected ? 1.5 : 1} // Thin line
+        stroke={isRunning ? "#e4e4e7" : selected ? "#f4f4f5" : "#71717a"} // Greyish white palette
         fill="none"
         style={{
           ...style,
-          strokeDasharray: isRunning ? "5 4" : "none",
+          strokeDasharray: isRunning ? "4 4" : "none",
           animation: isRunning ? "edgeFlow 0.8s linear infinite" : "none",
           transition: "stroke 0.2s ease",
         }}

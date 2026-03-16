@@ -1,13 +1,6 @@
 import { BaseEdge, getStraightPath, getBezierPath } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AnimatedEdge — Renders a flowing dashed stroke between nodes during
-// execution.  When idle, renders a clean static bezier.
-// When the source node is "running", the dash animates (marching ants).
-// When completed, glows blue.  When failed, glows red.
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function AnimatedEdge({
   id,
   sourceX,
@@ -33,20 +26,20 @@ export default function AnimatedEdge({
   const getNodeStatus = useWorkspaceStore((s) => s.getNodeStatus);
   const sourceStatus = getNodeStatus(source);
 
-  // Determine visual state
   const isRunning = isExecutionLive && sourceStatus === "running";
   const isCompleted = sourceStatus === "completed";
   const isFailed = sourceStatus === "failed";
 
-  let strokeColor = style.stroke || "#3b82f6";
-  let strokeOpacity = 0.5;
+  // Base state (Idle)
+  let strokeColor = style.stroke || "#71717a"; // slick mid-grey
+  let strokeOpacity = 0.4;
   let dashArray = "none";
   let animationName = "none";
 
   if (isRunning) {
-    strokeColor = "#3b82f6";
-    strokeOpacity = 1;
-    dashArray = "8 4";
+    strokeColor = "#e4e4e7"; // greyish-white
+    strokeOpacity = 0.9;
+    dashArray = "4 4"; // tighter, slicker dashed line
     animationName = "edgeFlow 0.5s linear infinite";
   } else if (isCompleted) {
     strokeColor = "#22c55e";
@@ -58,24 +51,24 @@ export default function AnimatedEdge({
 
   return (
     <>
-      {/* Glow layer (behind) */}
+      {/* Subtle Glow layer */}
       {(isRunning || isCompleted || isFailed) && (
         <path
           d={edgePath}
           fill="none"
           stroke={strokeColor}
-          strokeWidth={6}
+          strokeWidth={4} // Thinned down from 6
           strokeOpacity={0.15}
-          style={{ filter: "blur(4px)" }}
+          style={{ filter: "blur(3px)" }} // Tighter glow
         />
       )}
 
-      {/* Main edge path */}
+      {/* Main thin edge path */}
       <path
         d={edgePath}
         fill="none"
         stroke={strokeColor}
-        strokeWidth={style.strokeWidth || 2}
+        strokeWidth={1} // Forced thin line
         strokeOpacity={strokeOpacity}
         strokeDasharray={dashArray}
         markerEnd={markerEnd}
@@ -85,10 +78,9 @@ export default function AnimatedEdge({
         }}
       />
 
-      {/* Keyframe injection (only once via CSS) */}
       <style>{`
         @keyframes edgeFlow {
-          to { stroke-dashoffset: -12; }
+          to { stroke-dashoffset: -8; }
         }
       `}</style>
     </>

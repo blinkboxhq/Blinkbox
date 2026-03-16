@@ -46,7 +46,7 @@ body {
 }
 
 .react-flow__connection-line {
-  stroke: #71717a !important;
+  stroke: #e4e4e7 !important;
   stroke-width: 1 !important;
 }
 
@@ -63,8 +63,15 @@ body {
 
 /* ── Node hover shimmer ──────────────────────────────────────────────────── */
 @keyframes nodeShimmer {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 /* ── Handle pulse on connection drag ─────────────────────────────────────── */
@@ -73,8 +80,15 @@ body {
 }
 
 @keyframes handlePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.3); }
-  50% { box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(228, 228, 231, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(228, 228, 231, 0.1);
+  }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
@@ -114,11 +128,25 @@ body {
   transform: translateY(0);
 }
 
-.reveal-on-scroll[data-delay="1"] { transition-delay: 0.1s; }
-.reveal-on-scroll[data-delay="2"] { transition-delay: 0.2s; }
-.reveal-on-scroll[data-delay="3"] { transition-delay: 0.3s; }
-.reveal-on-scroll[data-delay="4"] { transition-delay: 0.4s; }
-.reveal-on-scroll[data-delay="5"] { transition-delay: 0.5s; }
+.reveal-on-scroll[data-delay="1"] {
+  transition-delay: 0.1s;
+}
+
+.reveal-on-scroll[data-delay="2"] {
+  transition-delay: 0.2s;
+}
+
+.reveal-on-scroll[data-delay="3"] {
+  transition-delay: 0.3s;
+}
+
+.reveal-on-scroll[data-delay="4"] {
+  transition-delay: 0.4s;
+}
+
+.reveal-on-scroll[data-delay="5"] {
+  transition-delay: 0.5s;
+}
 
 /* ── Live Grid Background ─────────────────────────────────────────────────── */
 .live-grid {
