@@ -64,7 +64,7 @@ export const createExecutionSlice = (set, get) => ({
         if (data.executionId !== executionId) return;
         set({ liveExecutionState: data });
 
-        if (["executed", "failed", "cancelled"].includes(data.status)) {
+        if (["executed", "failed", "cancelled", "partial"].includes(data.status)) {
           set({ isRunning: false });
           socket.off("execution:update", handler);
           socket.emit("unsubscribe:execution", executionId);
@@ -72,16 +72,20 @@ export const createExecutionSlice = (set, get) => ({
       };
       socket.on("execution:update", handler);
 
-      // Fallback poll if WebSocket is slow
+      // Fallback poll if WebSocket is slow or Socket.io is blocked
       setTimeout(async () => {
         const current = get();
-        if (current.isRunning && !current.liveExecutionState) {
-          try {
-            const res = await api.get(`/api/execution/${executionId}`);
-            set({ liveExecutionState: res.data.execution });
-          } catch {
-            /* WebSocket will handle it */
+        if (!current.isRunning) return;
+        try {
+          const res = await api.get(`/api/execution/${executionId}`);
+          const execution = res.data.execution;
+          set({ liveExecutionState: execution });
+          if (["executed", "failed", "cancelled", "partial"].includes(execution?.status)) {
+            set({ isRunning: false });
+            socket.off("execution:update", handler);
           }
+        } catch {
+          /* WebSocket will handle it */
         }
       }, 3000);
     } catch (error) {

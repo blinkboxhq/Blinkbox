@@ -91,7 +91,7 @@ export const createGraphSlice = (set, get) => ({
         ...connection,
         type: "configurable",
         data: { conditionPath: "" },
-        style: { stroke: "#3b82f6", strokeWidth: 2 },
+        style: {},
       },
       edges,
     );

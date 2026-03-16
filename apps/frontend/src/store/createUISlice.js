@@ -48,7 +48,7 @@ export const createUISlice = (set, get) => ({
         target: e.target,
         type: "configurable",
         data: { conditionPath: e.conditionPath || "" },
-        style: { stroke: "#3b82f6", strokeWidth: 2 },
+        style: {},
       }));
 
       // Always guarantee at least one trigger
