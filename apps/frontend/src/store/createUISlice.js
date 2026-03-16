@@ -89,6 +89,8 @@ export const createUISlice = (set, get) => ({
         throw new Error("A Trigger node is required to save the workflow.");
 
       const payload = {
+        name: state.workflowName,
+        trigger: entryNode.data.backendType,
         entryNodeId: entryNode.id,
         nodes: state.nodes.map((n) => ({
           id: n.id,
