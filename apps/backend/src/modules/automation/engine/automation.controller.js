@@ -82,6 +82,17 @@ export async function triggerAutomation(req, res) {
       throw new Error("Engine is paused or inactive.");
     }
 
+    // Validate DAG before execution — reject cycles and malformed graphs
+    validateAutomation({
+      nodes: automation.nodes,
+      edges: automation.edges.map((e) => ({
+        source: e.source ?? e.from,
+        target: e.target ?? e.to,
+        id: e.id,
+      })),
+      entryNodeId: automation.entryNodeId,
+    });
+
     const trigger = automation.trigger;
 
     // 🛡️ FIX 1: Extract the secure User ID from the authenticated token

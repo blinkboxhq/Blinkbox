@@ -27,7 +27,7 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
     // Slight random offset so stacked nodes are visible
     const jitter = () => (Math.random() - 0.5) * 80;
     addNode({
-      id: `${nodeKey}-${Date.now()}`,
+      id: `${nodeKey}-${crypto.randomUUID()}`,
       type: 'custom',
       position: { x: cx + jitter(), y: cy + jitter() },
       data: { backendType: nodeKey, label: node.label, type: node.category === 'trigger' ? 'trigger' : 'action', config: {} },

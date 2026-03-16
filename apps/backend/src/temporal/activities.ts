@@ -16,6 +16,11 @@ import {
   telemetryService,
   type TelemetryLog,
 } from "../modules/telemetry/telemetry.service.js";
+import {
+  storePayload,
+  resolvePayload,
+  cleanupPayloads,
+} from "./payloadStore.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 
@@ -384,4 +389,34 @@ export async function emitTelemetryActivity(
       });
       break;
   }
+}
+
+// ── Payload Vault Activities ──────────────────────────────────────────────────
+// Store/resolve heavy node outputs in MongoDB so Temporal state stays lean.
+
+interface StorePayloadInput {
+  workflowId: string;
+  nodeId: string;
+  data: unknown;
+}
+
+export async function storePayloadActivity(
+  input: StorePayloadInput,
+): Promise<{ ref: string | null }> {
+  const ref = await storePayload(input.workflowId, input.nodeId, input.data);
+  return { ref };
+}
+
+export async function resolvePayloadActivity(
+  input: { ref: string },
+): Promise<{ data: unknown }> {
+  const data = await resolvePayload(input.ref);
+  return { data };
+}
+
+export async function cleanupPayloadsActivity(
+  input: { workflowId: string },
+): Promise<{ deleted: number }> {
+  const deleted = await cleanupPayloads(input.workflowId);
+  return { deleted };
 }

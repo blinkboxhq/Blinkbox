@@ -31,6 +31,17 @@ const tel = proxyActivities<Pick<typeof activities, "emitTelemetryActivity">>({
   retry: { maximumAttempts: 1 },
 });
 
+// Vault: store/resolve heavy payloads in MongoDB (keeps Temporal history lean)
+const vault = proxyActivities<
+  Pick<
+    typeof activities,
+    "storePayloadActivity" | "resolvePayloadActivity" | "cleanupPayloadsActivity"
+  >
+>({
+  startToCloseTimeout: "15s",
+  retry: { maximumAttempts: 2, initialInterval: "500ms" },
+});
+
 // ── Constants ───────────────────────────────────────────────────────────────────
 
 const TRIGGER_TYPES = new Set(["manual", "webhook", "cron_trigger"]);
@@ -104,13 +115,20 @@ export async function executeAutomationWorkflow(
       // Merge parent outputs into a single input object
       input = {};
       for (const edge of incomingEdges) {
-        const parentOutput = nodeOutputs[edge.source];
+        let parentOutput = nodeOutputs[edge.source];
+        // Resolve vault references on-demand
+        if (isPayloadRef(parentOutput)) {
+          const resolved = await vault.resolvePayloadActivity({
+            ref: (parentOutput as { _payloadRef: string })._payloadRef,
+          });
+          parentOutput = resolved.data;
+        }
         if (
           parentOutput &&
           typeof parentOutput === "object" &&
           !Array.isArray(parentOutput)
         ) {
-          Object.assign(input, parentOutput);
+          Object.assign(input, parentOutput as Record<string, unknown>);
         } else if (parentOutput !== undefined) {
           input[edge.source] = parentOutput;
         }
@@ -171,7 +189,16 @@ export async function executeAutomationWorkflow(
     }
 
     const durationMs = Date.now() - stepStart;
-    nodeOutputs[nodeId] = output;
+
+    // Vault: offload large outputs to MongoDB, keep only a pointer in state
+    const stored = await vault.storePayloadActivity({
+      workflowId: automationId,
+      nodeId,
+      data: output,
+    });
+    nodeOutputs[nodeId] = stored.ref
+      ? { _payloadRef: stored.ref }
+      : output;
     processed.add(nodeId);
 
     // ── Telemetry: node step ─────────────────────────────────────────────
@@ -224,7 +251,25 @@ export async function executeAutomationWorkflow(
     totalNodes: processed.size,
   });
 
+  // ── Cleanup vault blobs for this workflow ────────────────────────────
+  try {
+    await vault.cleanupPayloadsActivity({ workflowId: automationId });
+  } catch {
+    // Non-fatal — orphaned blobs are acceptable
+  }
+
   return nodeOutputs;
+}
+
+// ── Vault Ref Check (pure logic — no I/O) ─────────────────────────────────────
+
+function isPayloadRef(value: unknown): boolean {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "_payloadRef" in (value as Record<string, unknown>)
+  );
 }
 
 // ── Condition Evaluator (pure logic — safe for deterministic workflows) ────────

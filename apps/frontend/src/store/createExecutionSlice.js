@@ -72,22 +72,30 @@ export const createExecutionSlice = (set, get) => ({
       };
       socket.on("execution:update", handler);
 
-      // Fallback poll if WebSocket is slow or Socket.io is blocked
-      setTimeout(async () => {
-        const current = get();
-        if (!current.isRunning) return;
+      // Resilient fallback poll with exponential backoff
+      const TERMINAL = ["executed", "failed", "cancelled", "partial"];
+      const POLL_BASE = 2000;
+      const POLL_CAP = 30000;
+      const POLL_MAX = 10;
+      let attempt = 0;
+
+      const poll = async () => {
+        if (!get().isRunning) return;
         try {
           const res = await api.get(`/api/execution/${executionId}`);
           const execution = res.data.execution;
           set({ liveExecutionState: execution });
-          if (["executed", "failed", "cancelled", "partial"].includes(execution?.status)) {
+          if (TERMINAL.includes(execution?.status)) {
             set({ isRunning: false });
             socket.off("execution:update", handler);
+            socket.emit("unsubscribe:execution", executionId);
+            return;
           }
-        } catch {
-          /* WebSocket will handle it */
-        }
-      }, 3000);
+        } catch { /* continue polling */ }
+        if (++attempt >= POLL_MAX) return;
+        setTimeout(poll, Math.min(POLL_BASE * 2 ** attempt, POLL_CAP));
+      };
+      setTimeout(poll, POLL_BASE);
     } catch (error) {
       console.error("Execution failed:", error);
       set({ isRunning: false, isExecutionLive: false });

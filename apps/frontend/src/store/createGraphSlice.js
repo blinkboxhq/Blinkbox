@@ -36,11 +36,6 @@ function wouldCreateCycle(edges, source, target) {
   return false;
 }
 
-// ── Memoization key for availableVariables ──────────────────────────────────
-// We track a generation counter that bumps on every edge/schema mutation.
-// Components can use this to know if their cached variables are stale.
-let _generation = 0;
-
 export const createGraphSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   nodes: [],
@@ -66,7 +61,7 @@ export const createGraphSlice = (set, get) => ({
       edges: newEdges,
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
-      _schemaGeneration: ++_generation,
+      _schemaGeneration: get()._schemaGeneration + 1,
     });
   },
 
@@ -106,7 +101,7 @@ export const createGraphSlice = (set, get) => ({
       edges: newEdges,
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(nodes, newVars),
-      _schemaGeneration: ++_generation,
+      _schemaGeneration: get()._schemaGeneration + 1,
     });
   },
 
@@ -169,7 +164,7 @@ export const createGraphSlice = (set, get) => ({
       edges,
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(nodes, newVars),
-      _schemaGeneration: ++_generation,
+      _schemaGeneration: get()._schemaGeneration + 1,
     });
   },
 
@@ -195,7 +190,7 @@ export const createGraphSlice = (set, get) => ({
       nodeOutputSchemas: newSchemas,
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
-      _schemaGeneration: ++_generation,
+      _schemaGeneration: get()._schemaGeneration + 1,
     });
   },
 

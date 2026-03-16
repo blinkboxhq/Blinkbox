@@ -11,6 +11,7 @@
 
 import crypto from "crypto";
 import { getTemporalClient, TASK_QUEUE } from "../../temporal/client.js";
+import { validateAutomation } from "../automation/engine/automation.validator.js";
 
 /**
  * Start a Temporal workflow for the given automation.
@@ -62,6 +63,13 @@ export async function startWorkflowExecution(automation, payload = {}, options =
     settings: automation.settings ?? { maxParallel: 10 },
     description: automation.description ?? "",
   };
+
+  // Validate DAG before scheduling — rejects cycles, orphan edges, unreachable nodes
+  validateAutomation({
+    nodes: definition.nodes,
+    edges: definition.edges,
+    entryNodeId: definition.entryNodeId,
+  });
 
   // Temporal workflowId doubles as idempotency key — same ID = same execution
   const workflowId = `automation-${automation._id}-${idempotencyKey}`;

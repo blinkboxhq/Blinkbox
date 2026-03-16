@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import Automation from "../../models/automation.model.js";
 import { startWorkflowExecution } from "../execution/execution.service.js";
+import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
 
 const RATE_LIMIT = 60;
@@ -36,6 +37,20 @@ export async function handlePublicWebhook(req, res) {
     };
 
     const idempotencyKey = crypto.randomUUID();
+
+    // Validate DAG before scheduling — reject cycles and malformed graphs
+    try {
+      validateAutomation({
+        nodes: automation.nodes,
+        edges: automation.edges.map((e) => ({
+          source: e.source ?? e.from,
+          target: e.target ?? e.to,
+        })),
+        entryNodeId: automation.entryNodeId,
+      });
+    } catch (err) {
+      return res.status(400).json({ error: `Invalid workflow: ${err.message}` });
+    }
 
     // Fire-and-forget: Temporal handles retries, timeouts, and crash recovery
     startWorkflowExecution(automation, webhookData, {

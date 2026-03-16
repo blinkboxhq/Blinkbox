@@ -44,7 +44,7 @@ export default function Canvas() {
       });
 
       addNode({
-        id: `${nodeData.backendType}-${Date.now()}`,
+        id: `${nodeData.backendType}-${crypto.randomUUID()}`,
         type: "custom",
         position,
         data: { ...nodeData, config: {} },
