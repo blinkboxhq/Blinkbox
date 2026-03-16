@@ -7,8 +7,10 @@ let io = null;
 export function initSocketServer(httpServer) {
   const ALLOWED_ORIGINS = (
     process.env.CORS_ORIGINS ||
-    "http://localhost:5173,http://localhost:5174,http://localhost:3001"
-  ).split(",");
+    "http://localhost:5173,http://localhost:5174,http://localhost:3001,https://blinkbox.net,https://www.blinkbox.net"
+  )
+    .split(",")
+    .map((o) => o.trim().replace(/['"]/g, "").replace(/\/$/, ""));
 
   io = new Server(httpServer, {
     cors: {
