@@ -245,7 +245,7 @@ export default function Dashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const i = api.interceptors.response.use((r) => r, (e) => { if (e.response?.status === 401 || e.response?.status === 403) handleLogout(); return Promise.reject(e); });
+    const i = api.interceptors.response.use((r) => r, (e) => { if (e.response?.status === 401) handleLogout(); return Promise.reject(e); });
     return () => api.interceptors.response.eject(i);
   }, [handleLogout]);
 
@@ -275,15 +275,17 @@ export default function Dashboard() {
     (async () => { try { const r = await api.get('/api/billing/usage'); setBillingUsage(r.data); } catch {} })();
   }, [user]);
 
-  // Fetch stats on settings tab
+  // Fetch stats on settings tab (admin only)
   useEffect(() => {
     if (activeTab !== 'settings') return;
     const f = async () => {
-      try { const r = await api.get('/api/admin/stats'); setSystemStats(r.data.stats); } catch {}
+      if (user?.role === 'admin') {
+        try { const r = await api.get('/api/admin/stats'); setSystemStats(r.data.stats); } catch {}
+      }
       try { const r = await api.get('/api/billing/usage'); setBillingUsage(r.data); } catch {}
     };
     f(); const iv = setInterval(f, 5000); return () => clearInterval(iv);
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   // Fetch execution logs
   useEffect(() => {
