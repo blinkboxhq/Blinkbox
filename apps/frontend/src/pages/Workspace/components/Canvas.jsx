@@ -73,6 +73,10 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={{ type: "configurable" }}
         proOptions={{ hideAttribution: true }}
+        panOnDrag={[1, 2]}
+        selectionOnDrag={false}
+        panOnScroll
+        zoomOnPinch
       >
         <Background variant="dots" gap={24} size={1.5} color="#27272a" />
         <Controls

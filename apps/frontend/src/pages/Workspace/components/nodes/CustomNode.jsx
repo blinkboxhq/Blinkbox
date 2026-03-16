@@ -87,12 +87,12 @@ export default function CustomNode({ id, data, selected }) {
         style={{ backgroundColor: `rgba(${accent},0.35)` }}
       />
 
-      {/* Input handle */}
+      {/* Input handle — larger hit area for touch */}
       {!isTrigger && (
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
+          className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
         />
       )}
 
@@ -175,11 +175,11 @@ export default function CustomNode({ id, data, selected }) {
         </div>
       </div>
 
-      {/* Output handle */}
+      {/* Output handle — larger hit area for touch */}
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
+        className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
       />
     </div>
   );
