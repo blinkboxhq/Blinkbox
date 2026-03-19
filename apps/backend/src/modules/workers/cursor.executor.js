@@ -111,14 +111,14 @@ export async function processCursor({ executionId, cursorId }) {
     });
 
     // Identify inputs (auto-grab from parents or self-trigger)
-    const incomingEdges = automation.edges.filter((e) => e.to === node.id);
+    const incomingEdges = automation.edges.filter((e) => e.target === node.id);
     let inputItems = [];
 
     if (incomingEdges.length === 0) {
       inputItems = dynamicContext[node.id] || [{ json: {} }];
     } else {
       for (const edge of incomingEdges) {
-        const sourceData = dynamicContext[edge.from];
+        const sourceData = dynamicContext[edge.source];
         if (Array.isArray(sourceData)) inputItems.push(...sourceData);
       }
     }
@@ -128,7 +128,7 @@ export async function processCursor({ executionId, cursorId }) {
     // KERNEL EXECUTION: Run node with timeout guard
     for (let i = 0; i < inputItems.length; i++) {
       const item = inputItems[i];
-      const resolvedConfig = resolveConfig(node.config, item.json, dynamicContext, i);
+      const resolvedConfig = resolveConfig(node.data, item.json, dynamicContext, i);
 
       let rawOutput = await withTimeout(
         handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId }),
@@ -333,7 +333,7 @@ async function routeEdges(
   delayUntil,
 ) {
   const edges = automation.edges.filter(
-    (e) => e.from === sourceNode.id && e.type === edgeType,
+    (e) => e.source === sourceNode.id && e.type === edgeType,
   );
 
   // 3.7 Runtime cycle guard: cap total cursors
@@ -346,10 +346,10 @@ async function routeEdges(
     const evaluationContext = outputData[0]?.json || {};
 
     if (evaluateCondition(edge.condition, evaluationContext)) {
-      const targetNodeId = edge.to;
+      const targetNodeId = edge.target;
 
       // 2.2 MERGE CHECK: Re-query ExecutionData for fresh state
-      const allIncoming = automation.edges.filter((e) => e.to === targetNodeId);
+      const allIncoming = automation.edges.filter((e) => e.target === targetNodeId);
 
       if (allIncoming.length > 1) {
         const completedData = await ExecutionData.find({ executionId: execution._id });
@@ -357,7 +357,7 @@ async function routeEdges(
         completedData.forEach((doc) => { freshContext[doc.nodeId] = doc.output; });
 
         const ready = allIncoming.every(
-          (e) => e.from === sourceNode.id || freshContext[e.from] !== undefined,
+          (e) => e.source === sourceNode.id || freshContext[e.source] !== undefined,
         );
         if (!ready) continue;
       }
