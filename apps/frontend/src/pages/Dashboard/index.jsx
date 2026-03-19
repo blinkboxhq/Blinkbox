@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal, Clock, AlertTriangle, ChevronLeft, ChevronRight,
-  Copy, Trash2, Pencil, Check, X, Loader2, Globe, Bot, Mail, Webhook,
-  GitBranch, Search as SearchIcon, Timer, Database, Merge as MergeIcon,
+  Copy, Trash2, Pencil, Check, X, Loader2, Globe, Bot, Webhook,
+  GitBranch, Search as SearchIcon, Timer, Database,
   Zap, Activity, Power, ExternalLink, Play,
 } from 'lucide-react';
 import api from '../../lib/api';
@@ -16,25 +16,25 @@ import VaultManager from './components/VaultManager';
 
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
-// Node format matches backend: { id, type, description, config, position }
-// Edge format: { from, to, type: 'onSuccess', conditionPath: '' }
+// Node format matches backend: { id, type, description, data, position }
+// Edge format: { id, source, target, type: 'onSuccess', conditionPath: '' }
 
 const TEMPLATES = [
   {
     id: 'lead-enrichment',
     name: 'Lead Enrichment Pipeline',
-    desc: 'Webhook receives lead data, AI agent enriches it, HTTP request pushes to CRM.',
-    nodes: ['webhook', 'ai_agent', 'http_request'],
+    desc: 'Webhook receives lead data, AI agent enriches it, pushes to Slack.',
+    nodes: ['webhook', 'ai_agent', 'slack'],
     category: 'Sales',
     scaffold: {
       nodes: [
-        { id: 'n1', type: 'webhook', description: 'Webhook Trigger', config: { isActive: true }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'ai_agent', description: 'AI Agent', config: { prompt: 'Enrich this lead data: {{$json.body}}' }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'http_request', description: 'Push to CRM', config: { method: 'POST', url: 'https://api.yourcrm.com/leads' }, position: { x: 660, y: 300 } },
+        { id: 'n1', type: 'webhook', description: 'Webhook Trigger', data: { isActive: true }, position: { x: 100, y: 300 } },
+        { id: 'n2', type: 'ai_agent', description: 'Enrich Lead', data: { prompt: 'Enrich this lead data and return a JSON summary: {{n1.body}}' }, position: { x: 400, y: 300 } },
+        { id: 'n3', type: 'slack', description: 'Notify Sales', data: { message: 'New lead enriched: {{n2.response}}' }, position: { x: 700, y: 300 } },
       ],
       edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: '' },
+        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
+        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
       ],
       entryNodeId: 'n1',
     },
@@ -42,60 +42,60 @@ const TEMPLATES = [
   {
     id: 'price-monitor',
     name: 'Competitor Price Monitor',
-    desc: 'Cron scrapes competitor URLs every hour, logic router filters changes, email alerts.',
-    nodes: ['cron_trigger', 'advanced_scraper', 'logic_router', 'send_email'],
+    desc: 'Scrape competitor pricing page, AI detects changes, alert via Slack.',
+    nodes: ['manual', 'web_scraper', 'ai_agent', 'slack'],
     category: 'Research',
     scaffold: {
       nodes: [
-        { id: 'n1', type: 'cron_trigger', description: 'Every Hour', config: { cron: '0 * * * *' }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'advanced_scraper', description: 'Scrape Prices', config: { url: 'https://competitor.com/pricing', selector: '.price' }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'logic_router', description: 'Price Changed?', config: { routes: [{ path: 'changed', left: '{{$json.price}}', operator: '!=', right: '{{$json.prevPrice}}' }] }, position: { x: 660, y: 300 } },
-        { id: 'n4', type: 'send_email', description: 'Alert Email', config: { to: 'you@company.com', subject: 'Price change detected', body: 'New price: {{$json.price}}' }, position: { x: 940, y: 300 } },
+        { id: 'n1', type: 'manual', description: 'Manual Trigger', data: {}, position: { x: 100, y: 300 } },
+        { id: 'n2', type: 'web_scraper', description: 'Scrape Prices', data: { source: 'https://competitor.com/pricing', particularThing: 'Find all pricing tiers and features' }, position: { x: 400, y: 300 } },
+        { id: 'n3', type: 'ai_agent', description: 'Analyze Changes', data: { prompt: 'Compare these pricing details to standard market rates and highlight anomalies:\n{{n2.content}}' }, position: { x: 700, y: 300 } },
+        { id: 'n4', type: 'slack', description: 'Alert Team', data: { message: 'Price update: {{n3.response}}' }, position: { x: 1000, y: 300 } },
       ],
       edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: '' },
-        { from: 'n3', to: 'n4', type: 'onSuccess', conditionPath: 'changed' },
+        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
+        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
+        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
       ],
       entryNodeId: 'n1',
     },
   },
   {
-    id: 'form-to-sheet',
+    id: 'form-to-api',
     name: 'Form Submission Handler',
-    desc: 'Webhook captures form data, data mapper transforms fields, HTTP posts to API.',
+    desc: 'Webhook captures form data, data mapper transforms fields, HTTP posts to your API.',
     nodes: ['webhook', 'data_mapper', 'http_request'],
     category: 'Data',
     scaffold: {
       nodes: [
-        { id: 'n1', type: 'webhook', description: 'Form Webhook', config: { isActive: true }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'data_mapper', description: 'Map Fields', config: { mode: 'set', items: [{ key1: 'name', key2: '{{$json.body.name}}' }, { key1: 'email', key2: '{{$json.body.email}}' }] }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'http_request', description: 'Submit to API', config: { method: 'POST', url: 'https://api.example.com/submissions' }, position: { x: 660, y: 300 } },
+        { id: 'n1', type: 'webhook', description: 'Form Webhook', data: { isActive: true }, position: { x: 100, y: 300 } },
+        { id: 'n2', type: 'data_mapper', description: 'Map Fields', data: { mode: 'set', items: [{ key1: 'name', key2: '{{n1.body.name}}' }, { key1: 'email', key2: '{{n1.body.email}}' }] }, position: { x: 400, y: 300 } },
+        { id: 'n3', type: 'http_request', description: 'Submit to API', data: { method: 'POST', url: 'https://api.example.com/submissions' }, position: { x: 700, y: 300 } },
       ],
       edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: '' },
+        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
+        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
       ],
       entryNodeId: 'n1',
     },
   },
   {
-    id: 'daily-report',
-    name: 'Daily Digest Report',
-    desc: 'Cron triggers daily, HTTP fetches metrics, AI summarizes, email sends report.',
-    nodes: ['cron_trigger', 'http_request', 'ai_agent', 'send_email'],
+    id: 'daily-digest',
+    name: 'Daily AI Summary',
+    desc: 'Fetch metrics from an API, AI summarizes them, posts digest to Discord.',
+    nodes: ['manual', 'http_request', 'ai_agent', 'discord'],
     category: 'Reporting',
     scaffold: {
       nodes: [
-        { id: 'n1', type: 'cron_trigger', description: 'Daily 9am', config: { cron: '0 9 * * *' }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'http_request', description: 'Fetch Metrics', config: { method: 'GET', url: 'https://api.example.com/metrics' }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'ai_agent', description: 'Summarize', config: { prompt: 'Summarize these metrics into a daily digest:\n{{$json.body}}' }, position: { x: 660, y: 300 } },
-        { id: 'n4', type: 'send_email', description: 'Send Report', config: { to: 'team@company.com', subject: 'Daily Digest', body: '{{$json.summary}}' }, position: { x: 940, y: 300 } },
+        { id: 'n1', type: 'manual', description: 'Run Report', data: {}, position: { x: 100, y: 300 } },
+        { id: 'n2', type: 'http_request', description: 'Fetch Metrics', data: { method: 'GET', url: 'https://api.example.com/metrics' }, position: { x: 400, y: 300 } },
+        { id: 'n3', type: 'ai_agent', description: 'Summarize', data: { prompt: 'Write a concise daily digest from these metrics:\n{{n2.data}}' }, position: { x: 700, y: 300 } },
+        { id: 'n4', type: 'discord', description: 'Post Digest', data: { message: '{{n3.response}}' }, position: { x: 1000, y: 300 } },
       ],
       edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: '' },
-        { from: 'n3', to: 'n4', type: 'onSuccess', conditionPath: '' },
+        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
+        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
+        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
       ],
       entryNodeId: 'n1',
     },
@@ -103,41 +103,20 @@ const TEMPLATES = [
   {
     id: 'content-pipeline',
     name: 'Content Research Pipeline',
-    desc: 'Scrape trending topics, AI generates briefs, data mapper structures output.',
-    nodes: ['manual', 'advanced_scraper', 'ai_agent', 'data_mapper'],
+    desc: 'Scrape topics, AI generates content briefs, data mapper structures the output.',
+    nodes: ['manual', 'web_scraper', 'ai_agent', 'data_mapper'],
     category: 'Content',
     scaffold: {
       nodes: [
-        { id: 'n1', type: 'manual', description: 'Manual Trigger', config: {}, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'advanced_scraper', description: 'Scrape Topics', config: { url: 'https://trends.example.com', selector: '.topic' }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'ai_agent', description: 'Generate Brief', config: { prompt: 'Write a content brief for this topic: {{$json.topic}}' }, position: { x: 660, y: 300 } },
-        { id: 'n4', type: 'data_mapper', description: 'Structure Output', config: { mode: 'set', items: [{ key1: 'title', key2: '{{$json.topic}}' }, { key1: 'brief', key2: '{{$json.content}}' }] }, position: { x: 940, y: 300 } },
+        { id: 'n1', type: 'manual', description: 'Manual Trigger', data: {}, position: { x: 100, y: 300 } },
+        { id: 'n2', type: 'web_scraper', description: 'Scrape Topics', data: { source: 'https://trends.example.com', particularThing: 'trending topics and summaries' }, position: { x: 400, y: 300 } },
+        { id: 'n3', type: 'ai_agent', description: 'Generate Brief', data: { prompt: 'Write a content brief for this topic:\n{{n2.content}}' }, position: { x: 700, y: 300 } },
+        { id: 'n4', type: 'data_mapper', description: 'Structure Output', data: { mode: 'set', items: [{ key1: 'title', key2: '{{n2.title}}' }, { key1: 'brief', key2: '{{n3.response}}' }] }, position: { x: 1000, y: 300 } },
       ],
       edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: '' },
-        { from: 'n3', to: 'n4', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-  {
-    id: 'api-gateway',
-    name: 'API Routing Gateway',
-    desc: 'Webhook receives requests, logic router directs by type, parallel HTTP dispatches.',
-    nodes: ['webhook', 'logic_router', 'http_request', 'respond_webhook'],
-    category: 'Engineering',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'webhook', description: 'API Gateway', config: { isActive: true }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'logic_router', description: 'Route by Type', config: { routes: [{ path: 'create', left: '{{$json.body.action}}', operator: '==', right: 'create' }, { path: 'delete', left: '{{$json.body.action}}', operator: '==', right: 'delete' }] }, position: { x: 380, y: 300 } },
-        { id: 'n3', type: 'http_request', description: 'Create Handler', config: { method: 'POST', url: 'https://api.example.com/create' }, position: { x: 660, y: 200 } },
-        { id: 'n4', type: 'respond_webhook', description: 'Respond', config: { statusCode: 200, body: '{"ok":true}' }, position: { x: 940, y: 300 } },
-      ],
-      edges: [
-        { from: 'n1', to: 'n2', type: 'onSuccess', conditionPath: '' },
-        { from: 'n2', to: 'n3', type: 'onSuccess', conditionPath: 'create' },
-        { from: 'n3', to: 'n4', type: 'onSuccess', conditionPath: '' },
+        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
+        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
+        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
       ],
       entryNodeId: 'n1',
     },
@@ -146,8 +125,9 @@ const TEMPLATES = [
 
 const NODE_ICONS = {
   webhook: Webhook, cron_trigger: Timer, manual: Zap, http_request: Globe,
-  ai_agent: Bot, advanced_scraper: SearchIcon, logic_router: GitBranch,
-  data_mapper: Database, merge: MergeIcon, send_email: Mail, respond_webhook: Webhook, delay: Timer,
+  ai_agent: Bot, web_scraper: SearchIcon, logic_router: GitBranch,
+  data_mapper: Database, delay: Timer, loop: Zap, code: Zap,
+  slack: Webhook, discord: Webhook, stripe: Globe,
 };
 
 function timeAgo(d) {
@@ -370,7 +350,16 @@ export default function Dashboard() {
         @keyframes dbSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
-      <CreateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
+      <CreateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={handleCreate}
+        onCreateTemplate={(templateId) => {
+          const t = TEMPLATES.find((t) => t.id === templateId);
+          if (t) handleCreateTemplate(t);
+        }}
+        isLoading={isCreating}
+      />
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <main className="flex-1 overflow-y-auto">

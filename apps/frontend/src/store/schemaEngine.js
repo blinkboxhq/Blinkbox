@@ -33,7 +33,7 @@ export const DEFAULT_SCHEMAS = {
     headers: "object",
     data: "object",
   },
-  advanced_scraper: { content: "string", metadata: "object" },
+  web_scraper: { content: "string", metadata: "object" },
   ai_agent: { response: "string", usage: "object" },
   data_mapper: { _dynamic: true },
   logic_router: { _passthrough: true },
@@ -43,7 +43,9 @@ export const DEFAULT_SCHEMAS = {
   delay: { delayed: "boolean" },
   loop: { items: "array", index: "number", item: "object" },
   merge: { _passthrough: true },
-  respond_webhook: { sent: "boolean" },
+  slack: { status: "number", statusText: "string", data: "object" },
+  discord: { status: "number", statusText: "string", data: "object" },
+  stripe: { status: "number", statusText: "string", data: "object" },
 };
 
 /**
@@ -166,12 +168,10 @@ export function calculateAvailableVariables(
 
 const EXPECTED_INPUT_TYPES = {
   http_request: { body: "object", headers: "object", url: "string" },
-  send_email: { to: "string", subject: "string", body: "string" },
   data_mapper: { mappings: "object" },
   code: { input: "object" },
   ai_agent: { prompt: "string", context: "object" },
   logic_router: { conditions: "array" },
-  respond_webhook: { body: "object", statusCode: "number" },
 };
 
 /**

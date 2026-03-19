@@ -1,20 +1,20 @@
 /**
- * NODE REGISTRY — The Final 7 Bulletproof MVP Nodes
+ * NODE REGISTRY
  *
  * + supporting nodes (loop, merge, delay, code, respond_webhook)
  *
  * KILLED:  math, json_parse, send_email (raw SMTP)
  * MERGED:  set_fields + transform + filter → data_mapper
- * UPGRADED: if_condition → logic_router, informer → advanced_scraper
+ * UPGRADED: if_condition → logic_router, informer → web_scraper
  * NEW:     cron_trigger, ai_agent
  */
 
 // ── Triggers ──────────────────────────────────────────────────────────────────
 import cronTrigger from "./cronTrigger.node.js";
 
-// ── Core 7 ────────────────────────────────────────────────────────────────────
+// ── Core ──────────────────────────────────────────────────────────────────────
 import httpRequest from "./httpRequest.node.js";
-import informer from "./informer.node.js"; // Advanced Scraper v2
+import webScraper from "./webScraper.node.js";
 import aiAgent from "./aiAgent.node.js";
 import dataMapper from "./dataMapper.node.js";
 import logicRouter from "./logicRouter.node.js";
@@ -40,23 +40,29 @@ export const nodeRegistry = {
   },
   cron_trigger: cronTrigger,
 
-  // ── Core 7 MVP Nodes ───────────────────────────────────────────────────
+  // ── Core Nodes ─────────────────────────────────────────────────────────
   http_request: httpRequest,
-  advanced_scraper: informer, // Informer v2 with markdown/html/targeted modes
+  web_scraper: webScraper,
   ai_agent: aiAgent,
-  data_mapper: dataMapper, // Consolidates set_fields + transform + filter
-  logic_router: logicRouter, // Multi-path routing (replaces if_condition)
+  data_mapper: dataMapper,
+  logic_router: logicRouter,
 
   // ── Supporting Nodes ───────────────────────────────────────────────────
-  code: code, // Sandboxed JS execution (isolated-vm)
-  delay: delay, // Schedule pauses (Redis ZADD)
-  loop: loop, // Array iteration
-  merge: merge, // DAG convergence
+  code: code,
+  delay: delay,
+  loop: loop,
+  merge: merge,
   respond_webhook: respondWebhook,
+
+  // ── Integration Wrappers (execute as http_request) ──────────────────────
+  slack: httpRequest,
+  discord: httpRequest,
+  stripe: httpRequest,
 
   // ── Backward Compatibility Aliases ─────────────────────────────────────
   // Old node types map to new implementations so existing automations work.
-  informer: informer,
+  advanced_scraper: webScraper,
+  informer: webScraper,
   set_fields: dataMapper,
   transform: dataMapper,
   filter: dataMapper,

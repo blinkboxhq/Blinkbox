@@ -1,4 +1,5 @@
 import { Bot, KeyRound, MessageSquare, Settings2, Sparkles } from 'lucide-react';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 export default function AIAgentNode({ config = {}, updateConfig }) {
   const provider = config.provider || 'openai';
@@ -68,12 +69,11 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
           <span className="flex items-center gap-2"><MessageSquare className="w-3.5 h-3.5 text-blue-400" /> Instructions</span>
           <Sparkles className="w-3 h-3 text-blue-500 animate-pulse" />
         </label>
-        <textarea 
+        <SmartVariableInput
           value={config.prompt || ''}
-          onChange={(e) => updateConfig('prompt', e.target.value)}
+          onChange={(val) => updateConfig('prompt', val)}
           placeholder="e.g. Extract the pricing tiers from the input data and format them as a JSON array..."
-          rows={5}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg p-3 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-colors resize-none shadow-inner leading-relaxed placeholder-zinc-600"
+          multiline
         />
       </div>
 

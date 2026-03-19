@@ -1,4 +1,5 @@
 import { Search, Target, Globe, ShieldCheck } from 'lucide-react';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 export default function InformerNode({ config = {}, updateConfig }) {
   const source = config.source || '';
@@ -32,16 +33,10 @@ export default function InformerNode({ config = {}, updateConfig }) {
             </span>
           )}
         </label>
-        <input
-          type="text"
+        <SmartVariableInput
           value={source}
-          onChange={(e) => updateConfig('source', e.target.value)}
+          onChange={(val) => updateConfig('source', val)}
           placeholder="https://example.com/page"
-          className={`w-full bg-surface-1 border rounded-lg px-3 py-2.5 text-xs font-mono focus:outline-none transition-all placeholder-zinc-700 ${
-            isValidUrl
-              ? 'border-purple-500/30 text-purple-200 focus:border-purple-500/50'
-              : 'border-zinc-800 text-zinc-300 focus:border-purple-500/30'
-          }`}
         />
       </div>
 
@@ -50,18 +45,12 @@ export default function InformerNode({ config = {}, updateConfig }) {
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
           <Target className="w-3.5 h-3.5 text-purple-400" /> Extraction Goal
         </label>
-        <div className="relative">
-          <textarea
-            value={particularThing}
-            onChange={(e) => updateConfig('particularThing', e.target.value)}
-            placeholder="e.g. Find all pricing plans and the features included in the Pro tier..."
-            rows={4}
-            className="w-full bg-surface-1 border border-zinc-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-purple-500/30 transition-colors resize-none leading-relaxed placeholder-zinc-600"
-          />
-          <div className="absolute bottom-2.5 right-3 text-[9px] text-zinc-700 font-mono pointer-events-none uppercase">
-            Plain English
-          </div>
-        </div>
+        <SmartVariableInput
+          value={particularThing}
+          onChange={(val) => updateConfig('particularThing', val)}
+          placeholder="e.g. Find all pricing plans and the features included in the Pro tier..."
+          multiline
+        />
       </div>
     </div>
   );

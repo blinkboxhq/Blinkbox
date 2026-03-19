@@ -11,12 +11,17 @@ function getConfigHint(data) {
     if (c.method && c.url) return `${c.method} ${c.url}`.slice(0, 40);
     if (c.url) return c.url.slice(0, 40);
   }
-  if (data.backendType === "send_email" && c.to) return `To: ${c.to}`.slice(0, 36);
   if (data.backendType === "delay" && c.seconds) return `Wait ${c.seconds}s`;
+  if (data.backendType === "code" && c.code) return `${c.code}`.slice(0, 40);
+  if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
+  if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent" && c.model) return c.model;
   if (data.backendType === "webhook" && c.path) return `/${c.path}`;
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
   if (data.backendType === "logic_router" && c.field) return `if ${c.field}`;
+  if (data.backendType === "slack" && c.message) return c.message.slice(0, 40);
+  if (data.backendType === "discord" && c.message) return c.message.slice(0, 40);
+  if (data.backendType === "stripe" && c.action) return c.action.replace("_", " ");
   return null;
 }
 

@@ -1,5 +1,5 @@
 /**
- * ADVANCED SCRAPER NODE (Informer v2)
+ * WEB SCRAPER NODE
  *
  * Opens a puppeteer-cluster context, defeats basic bot detection,
  * and extracts page content in multiple formats:
@@ -29,7 +29,7 @@ export default {
       maxScrollDepth = 4000,
     } = config;
 
-    if (!source) throw new Error("Advanced Scraper: 'source' URL is required.");
+    if (!source) throw new Error("Web Scraper: 'source' URL is required.");
 
     const result = await browserCluster.execute(
       { source, outputFormat, particularThing, waitFor, maxScrollDepth },

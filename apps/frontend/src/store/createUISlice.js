@@ -28,19 +28,32 @@ export const createUISlice = (set, get) => ({
       );
       if (!workflow) throw new Error("Workflow not found");
 
-      const loadedNodes = workflow.nodes.map((n, index) => ({
-        id: n.id,
-        type: "custom",
-        position: n.position || { x: 400 + index * 250, y: 350 },
-        data: {
-          label: n.description || n.type,
-          backendType: n.type,
-          type: n.type === "manual" || n.type === "webhook" || n.type === "cron_trigger"
-            ? "trigger"
-            : "action",
-          config: n.data || {},
-        },
-      }));
+      // Normalize legacy node types to current frontend names
+      const LEGACY_TYPE_MAP = {
+        advanced_scraper: "web_scraper",
+        informer: "web_scraper",
+        set_fields: "data_mapper",
+        transform: "data_mapper",
+        filter: "data_mapper",
+        if_condition: "logic_router",
+      };
+
+      const loadedNodes = workflow.nodes.map((n, index) => {
+        const resolvedType = LEGACY_TYPE_MAP[n.type] || n.type;
+        return {
+          id: n.id,
+          type: "custom",
+          position: n.position || { x: 400 + index * 250, y: 350 },
+          data: {
+            label: n.description || resolvedType,
+            backendType: resolvedType,
+            type: resolvedType === "manual" || resolvedType === "webhook" || resolvedType === "cron_trigger"
+              ? "trigger"
+              : "action",
+            config: n.data || {},
+          },
+        };
+      });
 
       const loadedEdges = workflow.edges.map((e) => ({
         id: e.id || `edge-${e.source}-${e.target}`,

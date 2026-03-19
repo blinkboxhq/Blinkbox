@@ -1,4 +1,5 @@
 import { GitBranch, PlusCircle, Trash2 } from 'lucide-react';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 export default function LogicRouterNode({ config = {}, updateConfig }) {
   const routes = config.routes || [];
@@ -57,14 +58,13 @@ export default function LogicRouterNode({ config = {}, updateConfig }) {
                 </div>
 
                 <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center mt-1">
-                  <input 
-                    value={route.left} 
-                    onChange={(e) => updateRoute(i, 'left', e.target.value)}
-                    placeholder="{{ $json.price }}"
-                    className="w-full bg-[#111] border border-[#333] rounded-md px-2 py-1.5 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-500/50 transition-colors"
+                  <SmartVariableInput
+                    value={route.left}
+                    onChange={(val) => updateRoute(i, 'left', val)}
+                    placeholder="{{ node.field }}"
                   />
-                  <select 
-                    value={route.operator} 
+                  <select
+                    value={route.operator}
                     onChange={(e) => updateRoute(i, 'operator', e.target.value)}
                     className="bg-[#111] border border-[#333] rounded-md px-1 py-1.5 text-[10px] text-white font-bold focus:outline-none outline-none cursor-pointer"
                   >
@@ -75,11 +75,10 @@ export default function LogicRouterNode({ config = {}, updateConfig }) {
                     <option value="contains">has</option>
                     <option value="exists">exists</option>
                   </select>
-                  <input 
-                    value={route.right} 
-                    onChange={(e) => updateRoute(i, 'right', e.target.value)}
+                  <SmartVariableInput
+                    value={route.right}
+                    onChange={(val) => updateRoute(i, 'right', val)}
                     placeholder="1000"
-                    className="w-full bg-[#111] border border-[#333] rounded-md px-2 py-1.5 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-500/50 transition-colors"
                   />
                 </div>
               </div>

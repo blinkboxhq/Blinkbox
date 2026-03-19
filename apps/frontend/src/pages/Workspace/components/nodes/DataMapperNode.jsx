@@ -1,4 +1,5 @@
 import { Database, Filter, Scissors, Edit2, SlidersHorizontal, PlusCircle, Trash2 } from 'lucide-react';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const MODES = [
   { value: 'set', label: 'Set / Add Fields', icon: Edit2 },
@@ -76,12 +77,13 @@ export default function DataMapperNode({ config = {}, updateConfig }) {
                   className="w-1/2 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500 transition-colors"
                 />
                 {(mode === 'set' || mode === 'rename' || mode === 'filter') && (
-                  <input
-                    value={item.key2}
-                    onChange={(e) => updateItem(i, 'key2', e.target.value)}
-                    placeholder={mode === 'rename' ? 'New Key' : 'Value / Target'}
-                    className="w-1/2 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
+                  <div className="w-1/2">
+                    <SmartVariableInput
+                      value={item.key2}
+                      onChange={(val) => updateItem(i, 'key2', val)}
+                      placeholder={mode === 'rename' ? 'New Key' : 'Value / Target'}
+                    />
+                  </div>
                 )}
                 <button onClick={() => removeItem(i)} className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors">
                   <Trash2 className="w-4 h-4" />

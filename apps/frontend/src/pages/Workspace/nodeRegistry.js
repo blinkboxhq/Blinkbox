@@ -2,26 +2,29 @@ import {
   Zap,
   Globe,
   Hourglass,
-  Mail,
   Search,
   Database,
-  Merge,
-  SendHorizonal,
   Bot,
   GitBranch,
+  Code2,
+  Repeat,
+  MessageSquare,
+  DollarSign,
 } from "lucide-react";
 
 // ── UI Components ─────────────────────────────────────────────────────────
 import TriggerNode from "./components/nodes/TriggerNode";
 import HttpRequestNode from "./components/nodes/HttpRequestNode";
 import DelayNode from "./components/nodes/Delaynode";
-import SendEmailNode from "./components/nodes/SendEmailNode";
 import InformerNode from "./components/nodes/InformerNode";
 import AIAgentNode from "./components/nodes/AIAgentNode";
 import DataMapperNode from "./components/nodes/DataMapperNode";
 import LogicRouterNode from "./components/nodes/LogicRouterNode";
-import MergeNode from "./components/nodes/MergeNode";
-import RespondWebhookNode from "./components/nodes/RespondWebhookNode";
+import CodeNode from "./components/nodes/CodeNode";
+import LoopNode from "./components/nodes/LoopNode";
+import SlackNode from "./components/nodes/SlackNode";
+import DiscordNode from "./components/nodes/DiscordNode";
+import StripeNode from "./components/nodes/StripeNode";
 
 export const NodeRegistry = {
   // ── Triggers ─────────────────────────────────────────────────────────────
@@ -72,7 +75,7 @@ export const NodeRegistry = {
     ConfigPanel: AIAgentNode,
     category: "data",
   },
-  advanced_scraper: {
+  web_scraper: {
     label: "Web Scraper",
     icon: Search,
     bgClass: "bg-zinc-800/60",
@@ -101,15 +104,6 @@ export const NodeRegistry = {
     ConfigPanel: DataMapperNode,
     category: "flow",
   },
-  merge: {
-    label: "Merge Branches",
-    icon: Merge,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    ConfigPanel: MergeNode,
-    category: "flow",
-  },
   delay: {
     label: "Delay",
     icon: Hourglass,
@@ -119,24 +113,53 @@ export const NodeRegistry = {
     ConfigPanel: DelayNode,
     category: "flow",
   },
-
-  // ── Action ─────────────────────────────────────────────────────────
-  send_email: {
-    label: "Send Email",
-    icon: Mail,
+  loop: {
+    label: "Loop",
+    icon: Repeat,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-cyan-400",
-    accentColor: "34,211,238",
-    ConfigPanel: SendEmailNode,
-    category: "action",
+    colorClass: "text-amber-400",
+    accentColor: "251,191,36",
+    ConfigPanel: LoopNode,
+    category: "flow",
   },
-  respond_webhook: {
-    label: "Respond to Webhook",
-    icon: SendHorizonal,
+
+  // ── Code ──────────────────────────────────────────────────────────────────
+  code: {
+    label: "Run Code",
+    icon: Code2,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    ConfigPanel: RespondWebhookNode,
-    category: "action",
+    colorClass: "text-lime-400",
+    accentColor: "163,230,53",
+    ConfigPanel: CodeNode,
+    category: "code",
+  },
+
+  // ── Integrations (serialize as http_request under the hood) ─────────────
+  slack: {
+    label: "Slack",
+    icon: MessageSquare,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#E01E5A]",
+    accentColor: "224,30,90",
+    ConfigPanel: SlackNode,
+    category: "integration",
+  },
+  discord: {
+    label: "Discord",
+    icon: MessageSquare,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#5865F2]",
+    accentColor: "88,101,242",
+    ConfigPanel: DiscordNode,
+    category: "integration",
+  },
+  stripe: {
+    label: "Stripe",
+    icon: DollarSign,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#635BFF]",
+    accentColor: "99,91,255",
+    ConfigPanel: StripeNode,
+    category: "integration",
   },
 };

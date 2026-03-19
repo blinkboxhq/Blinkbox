@@ -30,7 +30,7 @@ export async function getUsage(req, res) {
         standard: 1,
         http_request: 5,
         ai_agent: 10,
-        advanced_scraper: 15,
+        web_scraper: 15,
       },
     });
   } catch (err) {

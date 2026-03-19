@@ -9,7 +9,7 @@ export const NODE_TYPES = [
   "cron_trigger",
   // Core
   "http_request",
-  "advanced_scraper",
+  "web_scraper",
   "ai_agent",
   "data_mapper",
   "logic_router",
@@ -19,7 +19,12 @@ export const NODE_TYPES = [
   "loop",
   "merge",
   "respond_webhook",
+  // Integration wrappers (execute as http_request)
+  "slack",
+  "discord",
+  "stripe",
   // Backward-compat aliases (map to new implementations at runtime)
+  "advanced_scraper",
   "informer",
   "set_fields",
   "transform",
