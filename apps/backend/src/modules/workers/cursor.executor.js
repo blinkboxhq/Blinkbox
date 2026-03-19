@@ -332,11 +332,13 @@ async function routeEdges(
   edgeType,
   delayUntil,
 ) {
-  const edges = automation.edges.filter(
-    (e) =>
-      e.source === sourceNode.id &&
-      (e.type || "onSuccess") === edgeType,
-  );
+  const edges = automation.edges.filter((e) => {
+    if (e.source !== sourceNode.id) return false;
+    // Infer if this is an error path based on UI handles or explicit type
+    const isFailurePath = e.sourceHandle === 'error' || e.sourceHandle === 'false' || e.type === 'onFailure';
+    const normalizedType = isFailurePath ? "onFailure" : "onSuccess";
+    return normalizedType === edgeType;
+  });
 
   // 3.7 Runtime cycle guard: cap total cursors
   if (execution.cursors.length >= MAX_CURSORS_PER_EXECUTION) {

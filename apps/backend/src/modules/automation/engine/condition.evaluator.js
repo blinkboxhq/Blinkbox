@@ -1,6 +1,7 @@
 export function evaluateCondition(condition, context) {
   if (!condition || condition === "always" || condition === "true") return true;
   if (condition === "false") return false;
+  if (typeof condition === "object" && Object.keys(condition).length === 0) return true;
 
   // Support v2 structured conditions with type field
   if (condition.type === "always") return true;
