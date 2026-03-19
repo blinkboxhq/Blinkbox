@@ -333,7 +333,9 @@ async function routeEdges(
   delayUntil,
 ) {
   const edges = automation.edges.filter(
-    (e) => e.source === sourceNode.id && e.type === edgeType,
+    (e) =>
+      e.source === sourceNode.id &&
+      (e.type || "onSuccess") === edgeType,
   );
 
   // 3.7 Runtime cycle guard: cap total cursors
@@ -341,6 +343,10 @@ async function routeEdges(
     console.error(`Execution ${execution._id} hit cursor limit (${MAX_CURSORS_PER_EXECUTION}). Stopping.`);
     return;
   }
+
+  // Collect cursor payloads first — we must save to MongoDB BEFORE enqueueing
+  // to prevent the race where a worker picks up a cursor that doesn't exist yet.
+  const toEnqueue = [];
 
   for (const edge of edges) {
     const evaluationContext = outputData[0]?.json || {};
@@ -372,16 +378,25 @@ async function routeEdges(
 
       execution.cursors.push(newCursor);
 
-      const cursorPayload = {
-        executionId: execution._id.toString(),
-        cursorId: execution.cursors.at(-1)._id.toString(),
-      };
+      toEnqueue.push({
+        payload: {
+          executionId: execution._id.toString(),
+          cursorId: execution.cursors.at(-1)._id.toString(),
+        },
+        delayed: !!delayUntil,
+      });
+    }
+  }
 
-      if (delayUntil) {
-        // Schedule via Redis Sorted Set (ZADD) — the delay scheduler will promote it
-        await scheduleDelay(cursorPayload, delayUntil.getTime());
+  // Save cursors to MongoDB FIRST so they exist when the worker picks them up
+  if (toEnqueue.length > 0) {
+    await execution.save();
+
+    for (const { payload, delayed } of toEnqueue) {
+      if (delayed) {
+        await scheduleDelay(payload, delayUntil.getTime());
       } else {
-        await enqueueCursor(cursorPayload);
+        await enqueueCursor(payload);
       }
     }
   }
