@@ -43,9 +43,25 @@ export const DEFAULT_SCHEMAS = {
   delay: { delayed: "boolean" },
   loop: { items: "array", index: "number", item: "object" },
   merge: { _passthrough: true },
-  slack: { status: "number", statusText: "string", data: "object" },
+  slack: { ok: "boolean", ts: "string", channel: "string", message: "object" },
   discord: { status: "number", statusText: "string", data: "object" },
   stripe: { status: "number", statusText: "string", data: "object" },
+
+  // AI Hub
+  openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
+  anthropic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
+  gemini: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
+  deepseek: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
+
+  // Comms Hub
+  telegram: { ok: "boolean", messageId: "number", chat: "object" },
+  whatsapp: { messageId: "string", contacts: "array", messages: "array" },
+
+  // Data Hub
+  airtable: { id: "string", fields: "object", createdTime: "string" },
+
+  // Web Browser
+  web_search: { answer: "string", results: "array", query: "string", responseTime: "number" },
 };
 
 /**

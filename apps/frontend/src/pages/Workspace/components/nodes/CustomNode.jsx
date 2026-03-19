@@ -22,6 +22,14 @@ function getConfigHint(data) {
   if (data.backendType === "slack" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "discord" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "stripe" && c.action) return c.action.replace("_", " ");
+  if (data.backendType === "openai" && c.model) return c.model;
+  if (data.backendType === "anthropic" && c.model) return c.model;
+  if (data.backendType === "gemini" && c.model) return c.model;
+  if (data.backendType === "deepseek" && c.model) return c.model;
+  if (data.backendType === "telegram" && c.text) return c.text.slice(0, 40);
+  if (data.backendType === "whatsapp" && c.to) return `→ ${c.to}`;
+  if (data.backendType === "airtable" && c.tableName) return `${c.action || "create"} · ${c.tableName}`;
+  if (data.backendType === "web_search" && c.query) return c.query.slice(0, 40);
   return null;
 }
 

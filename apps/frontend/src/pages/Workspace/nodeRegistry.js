@@ -10,6 +10,13 @@ import {
   Repeat,
   MessageSquare,
   DollarSign,
+  Sparkles,
+  Brain,
+  Gem,
+  Compass,
+  Send,
+  Phone,
+  Table2,
 } from "lucide-react";
 
 // ── UI Components ─────────────────────────────────────────────────────────
@@ -25,6 +32,14 @@ import LoopNode from "./components/nodes/LoopNode";
 import SlackNode from "./components/nodes/SlackNode";
 import DiscordNode from "./components/nodes/DiscordNode";
 import StripeNode from "./components/nodes/StripeNode";
+import OpenAINode from "./components/nodes/OpenAINode";
+import AnthropicNode from "./components/nodes/AnthropicNode";
+import GeminiNode from "./components/nodes/GeminiNode";
+import DeepSeekNode from "./components/nodes/DeepSeekNode";
+import TelegramNode from "./components/nodes/TelegramNode";
+import WhatsAppNode from "./components/nodes/WhatsAppNode";
+import AirtableNode from "./components/nodes/AirtableNode";
+import WebSearchNode from "./components/nodes/WebSearchNode";
 
 export const NodeRegistry = {
   // ── Triggers ─────────────────────────────────────────────────────────────
@@ -85,6 +100,44 @@ export const NodeRegistry = {
     category: "research",
   },
 
+  // ── AI Hub ───────────────────────────────────────────────────────────────
+  openai: {
+    label: "OpenAI",
+    icon: Sparkles,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-emerald-400",
+    accentColor: "52,211,153",
+    ConfigPanel: OpenAINode,
+    category: "ai",
+  },
+  anthropic: {
+    label: "Anthropic",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-orange-400",
+    accentColor: "251,146,60",
+    ConfigPanel: AnthropicNode,
+    category: "ai",
+  },
+  gemini: {
+    label: "Google Gemini",
+    icon: Gem,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-blue-400",
+    accentColor: "96,165,250",
+    ConfigPanel: GeminiNode,
+    category: "ai",
+  },
+  deepseek: {
+    label: "DeepSeek",
+    icon: Compass,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-cyan-400",
+    accentColor: "34,211,238",
+    ConfigPanel: DeepSeekNode,
+    category: "ai",
+  },
+
   // ── Logic & Flow ──────────────────────────────────────────────────────────
   logic_router: {
     label: "Logic Router",
@@ -134,7 +187,25 @@ export const NodeRegistry = {
     category: "code",
   },
 
-  // ── Integrations (serialize as http_request under the hood) ─────────────
+  // ── Comms Hub ─────────────────────────────────────────────────────────────
+  telegram: {
+    label: "Telegram",
+    icon: Send,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-sky-400",
+    accentColor: "56,189,248",
+    ConfigPanel: TelegramNode,
+    category: "integration",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    icon: Phone,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-green-400",
+    accentColor: "34,197,94",
+    ConfigPanel: WhatsAppNode,
+    category: "integration",
+  },
   slack: {
     label: "Slack",
     icon: MessageSquare,
@@ -161,5 +232,27 @@ export const NodeRegistry = {
     accentColor: "99,91,255",
     ConfigPanel: StripeNode,
     category: "integration",
+  },
+
+  // ── Data Hub ──────────────────────────────────────────────────────────────
+  airtable: {
+    label: "Airtable",
+    icon: Table2,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-yellow-400",
+    accentColor: "250,204,21",
+    ConfigPanel: AirtableNode,
+    category: "integration",
+  },
+
+  // ── Web Browser ───────────────────────────────────────────────────────────
+  web_search: {
+    label: "Web Search",
+    icon: Globe,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-indigo-400",
+    accentColor: "129,140,248",
+    ConfigPanel: WebSearchNode,
+    category: "research",
   },
 };
