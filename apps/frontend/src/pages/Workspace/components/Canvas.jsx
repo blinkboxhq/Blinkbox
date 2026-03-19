@@ -73,7 +73,7 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={{ type: "configurable" }}
         proOptions={{ hideAttribution: true }}
-        panOnDrag={[1, 2]}
+        panOnDrag
         selectionOnDrag={false}
         panOnScroll
         zoomOnPinch
