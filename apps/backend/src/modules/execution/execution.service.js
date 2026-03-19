@@ -49,16 +49,26 @@ export async function startWorkflowExecution(automation, payload = {}, options =
       position: n.position ?? { x: 0, y: 0 },
       description: n.description ?? "",
     })),
-    edges: automation.edges.map((e) => ({
-      id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
-      source: e.source ?? e.from,
-      target: e.target ?? e.to,
-      sourceHandle: e.sourceHandle ?? null,
-      targetHandle: e.targetHandle ?? null,
-      condition: e.condition ?? "always",
-      type: e.type ?? "onSuccess",
-      description: e.description ?? "",
-    })),
+    edges: automation.edges.map((e) => {
+      // Visual editors store connection state in sourceHandle (e.g. 'success',
+      // 'error', 'true', 'false') or use UI-specific type names like 'default'.
+      // Temporal's DAG routing expects strict "onSuccess" / "onFailure" keywords.
+      const isErrorPath =
+        e.sourceHandle === "error" ||
+        e.sourceHandle === "false" ||
+        e.type === "onFailure";
+
+      return {
+        id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
+        source: e.source ?? e.from,
+        target: e.target ?? e.to,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
+        condition: e.condition ?? "always",
+        type: isErrorPath ? "onFailure" : "onSuccess",
+        description: e.description ?? "",
+      };
+    }),
     entryNodeId: automation.entryNodeId,
     settings: automation.settings ?? { maxParallel: 10 },
     description: automation.description ?? "",

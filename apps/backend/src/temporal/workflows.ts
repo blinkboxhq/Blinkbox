@@ -280,7 +280,9 @@ function evaluateCondition(
 ): boolean {
   if (!condition || condition === "always" || condition === "true") return true;
   if (condition === "false") return false;
-  if (typeof condition === "string") return false;
+  // Empty objects from the DB (no operator/left/right) should pass through
+  if (typeof condition === "object" && Object.keys(condition).length === 0)
+    return true;
   if (condition["type"] === "always") return true;
 
   const { operator, left, right } = condition as {
