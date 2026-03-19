@@ -10,7 +10,7 @@ export function evaluateCondition(condition, context) {
 
   const resolve = (value) => {
     if (typeof value === "string" && value.startsWith("{{")) {
-      const path = value.replace(/[{}\s]/g, "").split(".");
+      const path = value.replace(/[{}\s\u200B-\u200D\uFEFF]/g, "").split(".");
       return path.reduce((obj, key) => obj?.[key], context);
     }
     return value;
