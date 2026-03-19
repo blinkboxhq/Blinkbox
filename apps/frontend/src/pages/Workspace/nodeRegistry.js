@@ -8,16 +8,21 @@ import {
   GitBranch,
   Code2,
   Repeat,
-  MessageSquare,
-  DollarSign,
-  Sparkles,
-  Brain,
-  Gem,
   Compass,
-  Send,
-  Phone,
-  Table2,
 } from "lucide-react";
+
+// ── Brand Logos (react-icons/si = Simple Icons) ──────────────────────────
+import {
+  SiSlack,
+  SiDiscord,
+  SiStripe,
+  SiOpenai,
+  SiTelegram,
+  SiWhatsapp,
+  SiAirtable,
+  SiGooglegemini,
+  SiAnthropic,
+} from "react-icons/si";
 
 // ── UI Components ─────────────────────────────────────────────────────────
 import TriggerNode from "./components/nodes/TriggerNode";
@@ -40,6 +45,17 @@ import TelegramNode from "./components/nodes/TelegramNode";
 import WhatsAppNode from "./components/nodes/WhatsAppNode";
 import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
+
+// ── Category Definitions (ordered for sidebar) ───────────────────────────
+export const CATEGORIES = [
+  { id: "trigger", label: "Triggers", icon: Zap },
+  { id: "ai", label: "AI Models", icon: Bot },
+  { id: "data", label: "Data & APIs", icon: Globe },
+  { id: "research", label: "Research", icon: Search },
+  { id: "flow", label: "Logic & Flow", icon: GitBranch },
+  { id: "code", label: "Code", icon: Code2 },
+  { id: "integration", label: "Integrations", icon: Database },
+];
 
 export const NodeRegistry = {
   // ── Triggers ─────────────────────────────────────────────────────────────
@@ -71,39 +87,10 @@ export const NodeRegistry = {
     category: "trigger",
   },
 
-  // ── Data & AI ────────────────────────────────────────────────────────────
-  http_request: {
-    label: "HTTP Request",
-    icon: Globe,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-blue-400",
-    accentColor: "59,130,246",
-    ConfigPanel: HttpRequestNode,
-    category: "data",
-  },
-  ai_agent: {
-    label: "AI Agent",
-    icon: Bot,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    ConfigPanel: AIAgentNode,
-    category: "data",
-  },
-  web_scraper: {
-    label: "Web Scraper",
-    icon: Search,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: InformerNode,
-    category: "research",
-  },
-
   // ── AI Hub ───────────────────────────────────────────────────────────────
   openai: {
     label: "OpenAI",
-    icon: Sparkles,
+    icon: SiOpenai,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
@@ -112,7 +99,7 @@ export const NodeRegistry = {
   },
   anthropic: {
     label: "Anthropic",
-    icon: Brain,
+    icon: SiAnthropic,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
@@ -121,7 +108,7 @@ export const NodeRegistry = {
   },
   gemini: {
     label: "Google Gemini",
-    icon: Gem,
+    icon: SiGooglegemini,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
@@ -136,6 +123,46 @@ export const NodeRegistry = {
     accentColor: "34,211,238",
     ConfigPanel: DeepSeekNode,
     category: "ai",
+  },
+  ai_agent: {
+    label: "AI Agent",
+    icon: Bot,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-violet-400",
+    accentColor: "139,92,246",
+    ConfigPanel: AIAgentNode,
+    category: "ai",
+  },
+
+  // ── Data & APIs ──────────────────────────────────────────────────────────
+  http_request: {
+    label: "HTTP Request",
+    icon: Globe,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-blue-400",
+    accentColor: "59,130,246",
+    ConfigPanel: HttpRequestNode,
+    category: "data",
+  },
+
+  // ── Research ─────────────────────────────────────────────────────────────
+  web_scraper: {
+    label: "Web Scraper",
+    icon: Search,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: InformerNode,
+    category: "research",
+  },
+  web_search: {
+    label: "Web Search",
+    icon: Globe,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-indigo-400",
+    accentColor: "129,140,248",
+    ConfigPanel: WebSearchNode,
+    category: "research",
   },
 
   // ── Logic & Flow ──────────────────────────────────────────────────────────
@@ -187,28 +214,28 @@ export const NodeRegistry = {
     category: "code",
   },
 
-  // ── Comms Hub ─────────────────────────────────────────────────────────────
+  // ── Integrations ──────────────────────────────────────────────────────────
   telegram: {
     label: "Telegram",
-    icon: Send,
+    icon: SiTelegram,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
+    colorClass: "text-[#26A5E4]",
+    accentColor: "38,165,228",
     ConfigPanel: TelegramNode,
     category: "integration",
   },
   whatsapp: {
     label: "WhatsApp",
-    icon: Phone,
+    icon: SiWhatsapp,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-green-400",
-    accentColor: "34,197,94",
+    colorClass: "text-[#25D366]",
+    accentColor: "37,211,102",
     ConfigPanel: WhatsAppNode,
     category: "integration",
   },
   slack: {
     label: "Slack",
-    icon: MessageSquare,
+    icon: SiSlack,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#E01E5A]",
     accentColor: "224,30,90",
@@ -217,7 +244,7 @@ export const NodeRegistry = {
   },
   discord: {
     label: "Discord",
-    icon: MessageSquare,
+    icon: SiDiscord,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#5865F2]",
     accentColor: "88,101,242",
@@ -226,33 +253,20 @@ export const NodeRegistry = {
   },
   stripe: {
     label: "Stripe",
-    icon: DollarSign,
+    icon: SiStripe,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#635BFF]",
     accentColor: "99,91,255",
     ConfigPanel: StripeNode,
     category: "integration",
   },
-
-  // ── Data Hub ──────────────────────────────────────────────────────────────
   airtable: {
     label: "Airtable",
-    icon: Table2,
+    icon: SiAirtable,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
+    colorClass: "text-[#18BFFF]",
+    accentColor: "24,191,255",
     ConfigPanel: AirtableNode,
     category: "integration",
-  },
-
-  // ── Web Browser ───────────────────────────────────────────────────────────
-  web_search: {
-    label: "Web Search",
-    icon: Globe,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-indigo-400",
-    accentColor: "129,140,248",
-    ConfigPanel: WebSearchNode,
-    category: "research",
   },
 };
