@@ -19,10 +19,22 @@ export const NODE_TYPES = [
   "loop",
   "merge",
   "respond_webhook",
-  // Integration wrappers (execute as http_request)
+  // Integration wrappers
   "slack",
   "discord",
   "stripe",
+  // AI Hub
+  "openai",
+  "anthropic",
+  "gemini",
+  "deepseek",
+  // Comms Hub
+  "telegram",
+  "whatsapp",
+  // Data Hub
+  "airtable",
+  // Web Browser
+  "web_search",
   // Backward-compat aliases (map to new implementations at runtime)
   "advanced_scraper",
   "informer",

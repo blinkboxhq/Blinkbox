@@ -6,7 +6,7 @@
  * KILLED:  math, json_parse, send_email (raw SMTP)
  * MERGED:  set_fields + transform + filter → data_mapper
  * UPGRADED: if_condition → logic_router, informer → web_scraper
- * NEW:     cron_trigger, ai_agent
+ * NEW:     cron_trigger, ai_agent, integrations hub
  */
 
 // ── Triggers ──────────────────────────────────────────────────────────────────
@@ -25,6 +25,23 @@ import delay from "./delay.node.js";
 import loop from "./loop.node.js";
 import merge from "./merge.node.js";
 import respondWebhook from "./respond_webhook.node.js";
+
+// ── Integrations: AI Hub ─────────────────────────────────────────────────────
+import openai from "./integrations/openai.node.js";
+import anthropic from "./integrations/anthropic.node.js";
+import gemini from "./integrations/gemini.node.js";
+import deepseek from "./integrations/deepseek.node.js";
+
+// ── Integrations: Comms Hub ──────────────────────────────────────────────────
+import telegram from "./integrations/telegram.node.js";
+import whatsapp from "./integrations/whatsapp.node.js";
+import slackReal from "./integrations/slack.node.js";
+
+// ── Integrations: Data Hub ───────────────────────────────────────────────────
+import airtable from "./integrations/airtable.node.js";
+
+// ── Integrations: Web Browser ────────────────────────────────────────────────
+import webSearch from "./integrations/webSearch.node.js";
 
 export const nodeRegistry = {
   // ── Triggers (genesis nodes) ────────────────────────────────────────────
@@ -54,10 +71,24 @@ export const nodeRegistry = {
   merge: merge,
   respond_webhook: respondWebhook,
 
-  // ── Integration Wrappers (execute as http_request) ──────────────────────
-  slack: httpRequest,
-  discord: httpRequest,
-  stripe: httpRequest,
+  // ── AI Hub ─────────────────────────────────────────────────────────────
+  openai: openai,
+  anthropic: anthropic,
+  gemini: gemini,
+  deepseek: deepseek,
+
+  // ── Comms Hub ──────────────────────────────────────────────────────────
+  telegram: telegram,
+  whatsapp: whatsapp,
+  slack: slackReal,
+  discord: httpRequest, // still http_request wrapper (webhook-based)
+  stripe: httpRequest,  // still http_request wrapper (API-based)
+
+  // ── Data Hub ───────────────────────────────────────────────────────────
+  airtable: airtable,
+
+  // ── Web Browser ────────────────────────────────────────────────────────
+  web_search: webSearch,
 
   // ── Backward Compatibility Aliases ─────────────────────────────────────
   // Old node types map to new implementations so existing automations work.

@@ -38,6 +38,26 @@ const NODE_COSTS = {
 
   // Extreme (15 credits)
   advanced_scraper: 15,
+  web_scraper:      15,
+
+  // AI Hub (10 credits — external LLM calls)
+  openai:           10,
+  anthropic:        10,
+  gemini:           10,
+  deepseek:         10,
+
+  // Comms Hub (3 credits — lightweight API calls)
+  telegram:         3,
+  whatsapp:         3,
+  slack:            3,
+  discord:          5,
+  stripe:           5,
+
+  // Data Hub (5 credits — external SaaS CRUD)
+  airtable:         5,
+
+  // Web Browser (8 credits — search API calls)
+  web_search:       8,
 
   // Backward compat aliases
   set_fields:       1,
