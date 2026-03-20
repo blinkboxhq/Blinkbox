@@ -128,7 +128,7 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
         },
       },
     },
-    { new: true, upsert: true },
+    { returnDocument: 'after', upsert: true },
   );
 
   return {

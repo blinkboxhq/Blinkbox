@@ -24,7 +24,7 @@ export async function saveAutomation(req, res) {
       automation = await Automation.findOneAndUpdate(
         { _id: req.params.id, workspaceId: req.user.id },
         req.body,
-        { new: true },
+        { returnDocument: 'after' },
       );
       if (!automation) throw new Error("Automation not found or access denied");
     }
@@ -223,7 +223,7 @@ export async function renameAutomation(req, res) {
     const automation = await Automation.findOneAndUpdate(
       { _id: req.params.id, workspaceId: req.user.id },
       { name: name.trim() },
-      { new: true },
+      { returnDocument: 'after' },
     );
     if (!automation) {
       return res.status(404).json({ success: false, message: "Not found or access denied" });

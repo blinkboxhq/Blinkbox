@@ -63,7 +63,7 @@ export async function executeAutomation(
         input: { payload: triggerItems },
       },
     },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: 'after' },
   );
 
   await emitExecutionEvent(execution._id, {

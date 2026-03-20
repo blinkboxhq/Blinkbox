@@ -84,7 +84,7 @@ export async function upgradePlan(req, res) {
         plan,
         monthlyLimit: newLimit === Infinity ? 999999999 : newLimit,
       },
-      { new: true, upsert: true },
+      { returnDocument: 'after', upsert: true },
     );
 
     res.json({
