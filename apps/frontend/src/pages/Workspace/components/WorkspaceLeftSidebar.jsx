@@ -60,7 +60,7 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
 };
 
 const CategoryFolder = ({ category, nodes }) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const { open: sidebarOpen, animate } = useSidebar();
   const CatIcon = category.icon;
   const nodeCount = nodes.length;
@@ -133,7 +133,7 @@ export default function WorkspaceLeftSidebar() {
   return (
     <Sidebar open={open} setOpen={setOpen}>
       <SidebarBody className="bg-zinc-950">
-        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll">
 
           {/* Logo */}
           <div className="px-2 py-4 mb-4 flex items-center gap-3">

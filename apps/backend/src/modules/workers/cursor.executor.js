@@ -261,6 +261,7 @@ export async function processCursor({ executionId, cursorId }) {
         );
 
         latestCursor.status = "failed";
+        latestCursor.errorMessage = executionError;
         latestCursor.lockedAt = null;
         latestCursor.lockedBy = null;
 
@@ -315,6 +316,7 @@ export async function processCursor({ executionId, cursorId }) {
 // ── Helper: instantly mark a cursor as permanently failed ─────────────────────
 async function _markCursorFailed(execution, cursor, reason) {
   cursor.status = "failed";
+  cursor.errorMessage = reason;
   cursor.lockedAt = null;
   cursor.lockedBy = null;
   execution.status = "failed";

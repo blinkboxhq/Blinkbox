@@ -22,7 +22,7 @@
  */
 
 import axios from "axios";
-import Credential from "../models/credential.model.js";
+import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
@@ -41,17 +41,8 @@ export default {
     } = config;
 
     if (!prompt) throw new Error("AI Agent: 'prompt' is required.");
-    if (!credentialId)
-      throw new Error(
-        "AI Agent: 'credentialId' is required. Add your API key to the Vault.",
-      );
-
-    // Decrypt the API key from the Vault
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("AI Agent: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt API key
+    const cred = await resolveCredential(credentialId, context.workspaceId, "AI Agent");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     // Build the context message from input data

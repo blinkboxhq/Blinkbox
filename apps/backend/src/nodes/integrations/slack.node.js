@@ -17,7 +17,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const API_URL = "https://slack.com/api/chat.postMessage";
@@ -35,15 +35,8 @@ export default {
 
     if (!text) throw new Error("Slack: 'text' is required.");
     if (!channel) throw new Error("Slack: 'channel' is required.");
-    if (!credentialId)
-      throw new Error("Slack: 'credentialId' is required. Add your Slack Bot Token to the Vault.");
-
-    // Vault: decrypt Bot OAuth token
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("Slack: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt Bot OAuth token
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Slack");
     const botToken = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const payload = {

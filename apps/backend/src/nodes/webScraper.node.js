@@ -25,7 +25,7 @@
 
 import axios from "axios";
 import { browserCluster } from "../core/browser.manager.js";
-import Credential from "../models/credential.model.js";
+import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
 const JINA_READER_URL = "https://r.jina.ai/";
@@ -53,12 +53,12 @@ export default {
 
       // Optional: authenticate for higher rate limits
       if (credentialId) {
-        const query = { _id: credentialId };
-        if (context.workspaceId) query.workspaceId = context.workspaceId;
-        const cred = await Credential.findOne(query);
-        if (cred) {
+        try {
+          const cred = await resolveCredential(credentialId, context.workspaceId, "Web Scraper");
           const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
           headers["Authorization"] = `Bearer ${apiKey}`;
+        } catch {
+          // Credential is optional for Jina Reader — continue without auth
         }
       }
 

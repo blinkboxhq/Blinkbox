@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Trash2, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
+import { Key, Plus, Trash2, Eye, EyeOff, Shield, Loader2, Copy, CheckCheck } from 'lucide-react';
 import api from '../../../lib/api';
 
 const TYPE_LABELS = {
@@ -14,6 +14,13 @@ export default function VaultManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [revealedId, setRevealedId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopyId = (id) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   // Form state
   const [name, setName] = useState('');
@@ -176,13 +183,22 @@ export default function VaultManager() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-neutral-200">{cred.name}</span>
-                  <div className="flex items-center gap-3 mt-0.5">
+                  <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
                       {TYPE_LABELS[cred.type] || cred.type}
                     </span>
-                    <span className="text-[10px] text-neutral-700 font-mono">
-                      {maskSecret(cred._id)}
+                    <span className="text-[10px] text-neutral-600 font-mono select-all">
+                      {cred._id}
                     </span>
+                    <button
+                      onClick={() => handleCopyId(cred._id)}
+                      className="p-0.5 text-neutral-600 hover:text-neutral-300 transition-colors"
+                      title="Copy credential ID"
+                    >
+                      {copiedId === cred._id
+                        ? <CheckCheck className="w-3 h-3 text-emerald-400" />
+                        : <Copy className="w-3 h-3" />}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -209,7 +225,7 @@ export default function VaultManager() {
       {/* ID copy hint */}
       {credentials.length > 0 && (
         <p className="text-[10px] text-neutral-600 mt-4 text-center">
-          Copy a credential's ID from the database to use it in HTTP Request or AI Agent nodes.
+          Click the copy icon next to a credential ID to use it in your workflow nodes.
         </p>
       )}
     </div>

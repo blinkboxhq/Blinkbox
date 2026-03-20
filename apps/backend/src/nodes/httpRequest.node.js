@@ -21,7 +21,7 @@
  */
 
 import axios from "axios";
-import Credential from "../models/credential.model.js";
+import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
@@ -45,14 +45,9 @@ export default {
     const finalHeaders = { "Content-Type": "application/json", ...headers };
     const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
 
-    // Vault: decrypt and inject credentials at runtime
+    // Vault: resolve + decrypt credentials at runtime
     if (credentialId) {
-      const query = { _id: credentialId };
-      if (context.workspaceId) query.workspaceId = context.workspaceId;
-
-      const cred = await Credential.findOne(query);
-      if (!cred) throw new Error("HTTP Request: Credential not found in Vault.");
-
+      const cred = await resolveCredential(credentialId, context.workspaceId, "HTTP Request");
       const secretValue = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
       switch (cred.type) {

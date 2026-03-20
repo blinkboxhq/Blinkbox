@@ -16,7 +16,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 export default {
@@ -31,15 +31,8 @@ export default {
     } = config;
 
     if (!prompt) throw new Error("Gemini: 'prompt' is required.");
-    if (!credentialId)
-      throw new Error("Gemini: 'credentialId' is required. Add your Google AI API key to the Vault.");
-
-    // Vault: decrypt API key
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("Gemini: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt API key
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Gemini");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     // Build content

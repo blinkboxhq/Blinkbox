@@ -16,7 +16,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const API_VERSION = "v21.0";
@@ -35,15 +35,8 @@ export default {
     if (!phoneNumberId) throw new Error("WhatsApp: 'phoneNumberId' is required.");
     if (!to) throw new Error("WhatsApp: 'to' (recipient phone number) is required.");
     if (!text && !templateName) throw new Error("WhatsApp: 'text' or 'templateName' is required.");
-    if (!credentialId)
-      throw new Error("WhatsApp: 'credentialId' is required. Add your Meta access token to the Vault.");
-
-    // Vault: decrypt access token
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("WhatsApp: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt access token
+    const cred = await resolveCredential(credentialId, context.workspaceId, "WhatsApp");
     const accessToken = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     // Build payload: template message or free-form text

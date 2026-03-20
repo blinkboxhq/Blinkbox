@@ -20,6 +20,7 @@ const CursorSchema = new mongoose.Schema(
       default: "pending",
     },
     retries: { type: Number, default: 0 },
+    errorMessage: { type: String, default: null },
     resumeAt: { type: Date, default: null, index: true },
     lockedAt: { type: Date, default: null },
     lockedBy: { type: String, default: null },

@@ -15,7 +15,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const BASE_URL = "https://api.telegram.org/bot";
@@ -32,15 +32,8 @@ export default {
 
     if (!text) throw new Error("Telegram: 'text' is required.");
     if (!chatId) throw new Error("Telegram: 'chatId' is required.");
-    if (!credentialId)
-      throw new Error("Telegram: 'credentialId' is required. Add your Bot Token to the Vault.");
-
-    // Vault: decrypt Bot Token
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("Telegram: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt Bot Token
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Telegram");
     const botToken = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const payload = {

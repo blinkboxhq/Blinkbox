@@ -125,7 +125,16 @@ export default function WorkspaceRightSidebar() {
                       </div>
                       <div className="text-[10px] text-zinc-600 font-mono mt-0.5 uppercase tracking-widest">
                         {status === 'running' && <span className="text-blue-400/70 animate-pulse">Processing...</span>}
-                        {status === 'failed' && <span className="text-red-400/70">Failed</span>}
+                        {status === 'failed' && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-red-400/70">Failed</span>
+                            {cursor?.errorMessage && (
+                              <div className="bg-red-950/30 border border-red-900/30 rounded-md px-2.5 py-1.5 mt-1 text-[11px] text-red-300 font-mono normal-case tracking-normal break-all leading-relaxed">
+                                {cursor.errorMessage}
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {status === 'completed' && <span className="text-zinc-500">Success</span>}
                       </div>
                     </div>

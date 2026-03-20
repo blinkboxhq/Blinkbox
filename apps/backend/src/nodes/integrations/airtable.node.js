@@ -31,7 +31,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const BASE_URL = "https://api.airtable.com/v0";
@@ -55,15 +55,8 @@ export default {
 
     if (!baseId) throw new Error("Airtable: 'baseId' is required.");
     if (!tableName) throw new Error("Airtable: 'tableName' is required.");
-    if (!credentialId)
-      throw new Error("Airtable: 'credentialId' is required. Add your Airtable token to the Vault.");
-
-    // Vault: decrypt Personal Access Token
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("Airtable: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt Personal Access Token
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Airtable");
     const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const headers = {

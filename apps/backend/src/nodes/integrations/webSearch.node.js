@@ -19,7 +19,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const API_URL = "https://api.tavily.com/search";
@@ -39,15 +39,8 @@ export default {
     } = config;
 
     if (!searchQuery) throw new Error("Web Search: 'query' is required.");
-    if (!credentialId)
-      throw new Error("Web Search: 'credentialId' is required. Add your Tavily API key to the Vault.");
-
-    // Vault: decrypt API key
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("Web Search: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt API key
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Web Search");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const payload = {

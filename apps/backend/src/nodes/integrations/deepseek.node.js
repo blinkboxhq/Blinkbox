@@ -16,7 +16,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const API_URL = "https://api.deepseek.com/chat/completions";
@@ -33,15 +33,8 @@ export default {
     } = config;
 
     if (!prompt) throw new Error("DeepSeek: 'prompt' is required.");
-    if (!credentialId)
-      throw new Error("DeepSeek: 'credentialId' is required. Add your API key to the Vault.");
-
-    // Vault: decrypt API key
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
-    if (!cred) throw new Error("DeepSeek: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt API key
+    const cred = await resolveCredential(credentialId, context.workspaceId, "DeepSeek");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     // Build messages

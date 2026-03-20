@@ -16,7 +16,7 @@
  */
 
 import axios from "axios";
-import Credential from "../../models/credential.model.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
 const API_URL = "https://api.anthropic.com/v1/messages";
@@ -33,20 +33,8 @@ export default {
     } = config;
 
     if (!prompt) throw new Error("Anthropic: 'prompt' is required.");
-    if (!credentialId)
-      throw new Error("Anthropic: 'credentialId' is required. Add your API key to the Vault.");
-
-    // Vault: decrypt API key
-    let cred;
-    try {
-      const query = { _id: credentialId };
-      if (context.workspaceId) query.workspaceId = context.workspaceId;
-      cred = await Credential.findOne(query);
-    } catch (err) {
-      throw new Error(`Anthropic: Invalid Credential ID format ("${credentialId}"). Expected a MongoDB ObjectId.`);
-    }
-    if (!cred) throw new Error("Anthropic: Credential not found in Vault.");
-
+    // Vault: resolve + decrypt API key
+    const cred = await resolveCredential(credentialId, context.workspaceId, "Anthropic");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     // Build messages

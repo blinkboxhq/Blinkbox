@@ -21,15 +21,38 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
       safeJson = "{}";
     }
 
+    // Flatten execution context: nodeId → first output's json
+    const flatContext = {};
+    if ($node && typeof $node === "object") {
+      for (const [nodeId, outputs] of Object.entries($node)) {
+        if (Array.isArray(outputs) && outputs.length > 0) {
+          flatContext[nodeId] = outputs[0].json || outputs[0];
+        }
+      }
+    }
+    let safeContext;
+    try {
+      safeContext = JSON.stringify(flatContext);
+    } catch {
+      safeContext = "{}";
+    }
+
     jail.setSync("__raw_json", safeJson);
+    jail.setSync("__raw_context", safeContext);
 
     const script = isolate.compileScriptSync(`
       (() => {
         const $json = JSON.parse(__raw_json);
-        const Math = globalThis.Math;
-        const Date = globalThis.Date;
+        const $ctx  = JSON.parse(__raw_context);
+        const Math  = globalThis.Math;
+        const Date  = globalThis.Date;
 
-        return ${expression};
+        const scope = new Proxy({ $json, Math, Date }, {
+          has(t, k) { return k in t || k in $ctx; },
+          get(t, k) { return k in t ? t[k] : $ctx[k]; },
+        });
+
+        with (scope) { return ${expression}; }
       })();
     `);
 
@@ -61,6 +84,9 @@ export function resolveConfig(
   if (config === null || config === undefined) return config;
 
   if (typeof config === "string") {
+    // Strip zero-width characters that copy/paste can introduce
+    config = config.replace(/[\u200B-\u200D\uFEFF]/g, "");
+
     const regex = /\{\{([\s\S]+?)\}\}/g;
 
     const exactMatch = config.match(/^\{\{([\s\S]+?)\}\}$/);

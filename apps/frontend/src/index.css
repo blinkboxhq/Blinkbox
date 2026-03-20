@@ -110,6 +110,25 @@ body {
   background: #333;
 }
 
+/* ── Sidebar invisible scrollbar (show on hover) ────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 0px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 2px;
+}
+.sidebar-scroll {
+  scrollbar-width: none;
+}
+.sidebar-scroll:hover {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
 /* ── Selection ─────────────────────────────────────────────────────────────── */
 ::selection {
   background: rgba(59, 130, 246, 0.3);
