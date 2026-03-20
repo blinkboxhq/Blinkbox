@@ -63,6 +63,38 @@ export function startExecutionResumer() {
           }
         }
       }
+      // Recover "waiting" cursors stuck for too long (Redis delay entry may have been lost)
+      const staleWaiting = new Date(Date.now() - 5 * 60 * 1000);
+      const stuckWaitingExecutions = await Execution.find({
+        status: "pending",
+        "cursors.status": "waiting",
+        "cursors.lockedAt": null,
+        updatedAt: { $lte: staleWaiting },
+      });
+
+      for (const execution of stuckWaitingExecutions) {
+        let modified = false;
+        const toEnqueue = [];
+
+        for (const cursor of execution.cursors) {
+          if (cursor.status === "waiting") {
+            console.log(`[Resumer] Recovering stuck waiting cursor: ${cursor._id}`);
+            cursor.status = "pending";
+            modified = true;
+            toEnqueue.push({
+              executionId: execution._id.toString(),
+              cursorId: cursor._id.toString(),
+            });
+          }
+        }
+
+        if (modified) {
+          await execution.save();
+          for (const job of toEnqueue) {
+            await enqueueCursor(job);
+          }
+        }
+      }
     } catch (err) {
       console.error("[Resumer] Error:", err.message);
     } finally {

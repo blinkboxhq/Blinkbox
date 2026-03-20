@@ -37,7 +37,7 @@ export async function processCursor({ executionId, cursorId }) {
       },
     },
     {
-      arrayFilters: [{ "c._id": cursorId, "c.status": "pending" }],
+      arrayFilters: [{ "c._id": cursorId, "c.status": { $in: ["pending", "waiting"] } }],
     },
   );
 
