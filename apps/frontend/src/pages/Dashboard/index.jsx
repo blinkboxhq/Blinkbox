@@ -225,7 +225,7 @@ export default function Dashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const i = api.interceptors.response.use((r) => r, (e) => { if (e.response?.status === 401) handleLogout(); return Promise.reject(e); });
+    const i = api.interceptors.response.use((r) => r, (e) => { if (e.response?.status === 401 || e.response?.status === 403) handleLogout(); return Promise.reject(e); });
     return () => api.interceptors.response.eject(i);
   }, [handleLogout]);
 
