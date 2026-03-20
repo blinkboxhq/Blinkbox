@@ -4,7 +4,7 @@
  * Dedicated Anthropic Claude node.
  *
  * Config:
- *   model        — "claude-sonnet-4-20250514" (default) | "claude-haiku-4-5-20251001" | any valid model
+ *   model        — "claude-3-5-sonnet-latest" (default) | any valid Anthropic model
  *   prompt       — Instruction prompt (already expression-resolved)
  *   credentialId — Vault reference to Anthropic API key (type: "api_key")
  *   outputFormat — "json" | "text" (default: "text")
@@ -24,7 +24,7 @@ const API_URL = "https://api.anthropic.com/v1/messages";
 export default {
   async run(config, input, context = {}) {
     const {
-      model = "claude-sonnet-4-20250514",
+      model = "claude-3-5-sonnet-latest",
       prompt,
       credentialId,
       outputFormat = "text",
@@ -37,9 +37,14 @@ export default {
       throw new Error("Anthropic: 'credentialId' is required. Add your API key to the Vault.");
 
     // Vault: decrypt API key
-    const query = { _id: credentialId };
-    if (context.workspaceId) query.workspaceId = context.workspaceId;
-    const cred = await Credential.findOne(query);
+    let cred;
+    try {
+      const query = { _id: credentialId };
+      if (context.workspaceId) query.workspaceId = context.workspaceId;
+      cred = await Credential.findOne(query);
+    } catch (err) {
+      throw new Error(`Anthropic: Invalid Credential ID format ("${credentialId}"). Expected a MongoDB ObjectId.`);
+    }
     if (!cred) throw new Error("Anthropic: Credential not found in Vault.");
 
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
@@ -101,7 +106,7 @@ export default {
     } catch (err) {
       if (err.response?.status === 401) throw new Error("Anthropic: Invalid API key.");
       if (err.response?.status === 429) throw new Error("Anthropic: Rate limit exceeded. Retry later.");
-      throw new Error(`Anthropic failed: ${err.response?.status || err.code} — ${err.message}`);
+      throw new Error(`Anthropic failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
     }
   },
 };
