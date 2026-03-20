@@ -24,7 +24,7 @@ const API_URL = "https://api.anthropic.com/v1/messages";
 export default {
   async run(config, input, context = {}) {
     const {
-      model = "claude-3-5-sonnet-latest",
+      model = "claude-sonnet-4-20250514",
       prompt,
       credentialId,
       outputFormat = "text",

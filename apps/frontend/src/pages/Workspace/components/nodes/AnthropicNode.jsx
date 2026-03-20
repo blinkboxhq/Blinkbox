@@ -1,7 +1,13 @@
 import { Brain, KeyRound, MessageSquare, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-const MODELS = ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001', 'claude-opus-4-20250514'];
+const MODELS = [
+  'claude-sonnet-4-20250514',
+  'claude-haiku-4-5-20251001',
+  'claude-opus-4-20250514',
+  'claude-3-5-sonnet-20241022',
+  'claude-3-5-haiku-20241022',
+];
 
 export default function AnthropicNode({ config = {}, updateConfig }) {
   return (

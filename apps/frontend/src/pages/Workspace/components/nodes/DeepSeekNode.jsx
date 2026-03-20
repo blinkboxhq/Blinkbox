@@ -1,7 +1,7 @@
 import { Compass, KeyRound, MessageSquare, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-const MODELS = ['deepseek-chat', 'deepseek-reasoner'];
+const MODELS = ['deepseek-chat', 'deepseek-reasoner', 'deepseek-prover'];
 
 export default function DeepSeekNode({ config = {}, updateConfig }) {
   return (
