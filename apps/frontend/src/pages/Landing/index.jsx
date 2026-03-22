@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, Zap, Globe, Bot, Search, GitBranch, Shield,
   Clock, Users, BarChart3, Check, Star, ChevronRight,
   Sparkles, Lock, Cpu, Database, Workflow, Play, Terminal,
-  Layers, MousePointerClick,
+  Layers, MousePointerClick, Menu, X,
 } from 'lucide-react';
+import { motion, useScroll } from 'framer-motion';
 import { Boxes } from '@/components/ui/background-boxes';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import logo from '../../assets/logo.svg';
@@ -41,7 +42,7 @@ function FloatingParticles() {
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className={`absolute w-1 h-1 rounded-full bg-blue-400/20 ${
+          className={`absolute w-1 h-1 rounded-full bg-neutral-500/20 ${
             i % 3 === 0 ? 'animate-float' : i % 3 === 1 ? 'animate-float-slow' : 'animate-float-slower'
           }`}
           style={{
@@ -55,16 +56,37 @@ function FloatingParticles() {
   );
 }
 
-// ── Live mesh gradient background ──────────────────────────────────────────
+// ── Mesh gradient background ──────────────────────────────────────────────
 function MeshBackground({ className = '' }) {
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
-      <div className="orb w-[500px] h-[500px] bg-blue-600/[0.07] top-1/4 -left-40 animate-float-slow" />
-      <div className="orb w-[400px] h-[400px] bg-cyan-500/[0.05] bottom-1/4 -right-32 animate-float-slower" style={{ animationDelay: '2s' }} />
-      <div className="orb w-[300px] h-[300px] bg-purple-600/[0.04] top-1/2 left-1/3 animate-float" style={{ animationDelay: '4s' }} />
+      <div className="orb w-[500px] h-[500px] bg-neutral-500/[0.04] top-1/4 -left-40 animate-float-slow" />
+      <div className="orb w-[400px] h-[400px] bg-neutral-400/[0.03] bottom-1/4 -right-32 animate-float-slower" style={{ animationDelay: '2s' }} />
+      <div className="orb w-[300px] h-[300px] bg-neutral-600/[0.03] top-1/2 left-1/3 animate-float" style={{ animationDelay: '4s' }} />
     </div>
   );
 }
+
+// ── Transition variants for hero animations ────────────────────────────────
+const transitionVariants = {
+  item: {
+    hidden: {
+      opacity: 0,
+      filter: 'blur(12px)',
+      y: 12,
+    },
+    visible: {
+      opacity: 1,
+      filter: 'blur(0px)',
+      y: 0,
+      transition: {
+        type: 'spring',
+        bounce: 0.3,
+        duration: 1.5,
+      },
+    },
+  },
+};
 
 // ── Data ────────────────────────────────────────────────────────────────────
 const FEATURES = [
@@ -177,80 +199,196 @@ const colorMap = {
   orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', glow: 'group-hover:shadow-orange-500/10' },
 };
 
+const NAV_ITEMS = [
+  { name: 'Features', href: '#features' },
+  { name: 'Compare', href: '#comparison' },
+  { name: 'Pricing', href: '#pricing' },
+];
+
+// ── Scroll-aware Header ──────────────────────────────────────────────────
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { scrollYProgress } = useScroll();
+
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on('change', (latest) => {
+      setScrolled(latest > 0.02);
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress]);
+
+  return (
+    <header>
+      <nav
+        data-state={menuOpen ? 'active' : undefined}
+        className={`group fixed top-0 z-50 w-full border-b transition-all duration-300 ${
+          scrolled
+            ? 'bg-black/70 backdrop-blur-2xl border-white/[0.06]'
+            : 'bg-transparent border-transparent'
+        }`}
+      >
+        <div className="max-w-5xl mx-auto px-6 transition-all duration-300">
+          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+            {/* Logo + mobile toggle */}
+            <div className="flex w-full items-center justify-between gap-12 lg:w-auto">
+              <Link to="/" className="flex items-center gap-3">
+                <img src={logo} alt="BlinkBox" className="w-7 h-7 object-contain" />
+                <span className="text-base font-bold tracking-widest text-white">BLINKBOX</span>
+              </Link>
+
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+                className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden"
+              >
+                <Menu className={`size-6 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-180 scale-0 opacity-0' : ''}`} />
+                <X className={`absolute inset-0 m-auto size-6 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-180 scale-0 opacity-0'}`} />
+              </button>
+
+              {/* Desktop nav links */}
+              <div className="hidden lg:block">
+                <ul className="flex gap-8 text-sm">
+                  {NAV_ITEMS.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        className="text-neutral-500 hover:text-white transition-colors duration-200"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Right side: CTA buttons + mobile menu */}
+            <div className={`bg-neutral-950 lg:bg-transparent ${menuOpen ? 'block' : 'hidden'} lg:flex mb-6 w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-neutral-800 lg:border-transparent p-6 lg:p-0 shadow-2xl shadow-black/40 lg:shadow-none lg:m-0 lg:w-fit lg:gap-6 lg:space-y-0 md:flex-nowrap`}>
+              {/* Mobile nav links */}
+              <div className="lg:hidden">
+                <ul className="space-y-6 text-base">
+                  {NAV_ITEMS.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="text-neutral-400 hover:text-white block transition-colors duration-200"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-neutral-400 border border-neutral-800 rounded-lg hover:text-white hover:border-neutral-600 transition-all duration-200 text-center"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-bold text-black bg-white rounded-lg hover:bg-neutral-200 transition-all duration-200 text-center"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
 // ── Main Landing Component ─────────────────────────────────────────────────
 export default function Landing() {
   const pageRef = useScrollReveal();
 
   return (
     <div ref={pageRef} className="bg-black min-h-screen text-white overflow-x-hidden">
-
-      {/* ━━━ NAVBAR ━━━ */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/[0.04] bg-black/60 backdrop-blur-2xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="BlinkBox" className="w-8 h-8 object-contain" />
-            <span className="text-lg font-bold tracking-widest text-white">BLINKBOX</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-            <a href="#features" className="hover:text-white transition-colors duration-300">Features</a>
-            <a href="#comparison" className="hover:text-white transition-colors duration-300">Compare</a>
-            <a href="#pricing" className="hover:text-white transition-colors duration-300">Pricing</a>
-            <Link
-              to="/login"
-              className="ml-4 relative bg-white text-black px-5 py-2 font-bold text-xs rounded-md hover:bg-neutral-200 transition-all tracking-wide uppercase hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* ━━━ HERO ━━━ */}
       <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
         {/* Background Boxes */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <Boxes className="opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20 z-10" />
+          <Boxes className="opacity-50" />
+          <div className="absolute inset-0 bg-black z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
         </div>
 
         {/* Hero content */}
-        <div className="relative z-20 max-w-4xl mx-auto px-6 text-center">
-          <AnimatedGroup preset="blur">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-neutral-800 text-neutral-400 text-xs font-semibold tracking-wide uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Now with AI Agent Nodes
-            </div>
+        <div className="relative z-20 max-w-5xl mx-auto px-6">
+          <div className="sm:mx-auto lg:mr-auto">
+            <AnimatedGroup
+              variants={{
+                container: {
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.05,
+                      delayChildren: 0.3,
+                    },
+                  },
+                },
+                ...transitionVariants,
+              }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-neutral-800 text-neutral-400 text-xs font-semibold tracking-wide uppercase">
+                <Sparkles className="w-3.5 h-3.5 text-white/60" /> Now with AI Agent Nodes
+              </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.95] mt-8 mb-8">
-              <span className="text-white">Automate</span>
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 gradient-text-animated">
-                Everything.
-              </span>
-            </h1>
+              <h1 className="mt-8 max-w-3xl text-balance text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.95]">
+                <span className="text-white">Automate </span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-200 via-neutral-400 to-neutral-600">
+                  Everything.
+                </span>
+              </h1>
 
-            <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-12">
-              The visual automation engine built for teams who refuse to do the same thing twice.
-              Connect APIs, scrape the web, deploy AI agents — all from a single canvas.
-            </p>
+              <p className="mt-8 max-w-2xl text-pretty text-lg text-neutral-400 leading-relaxed">
+                The visual automation engine built for teams who refuse to do the same thing twice.
+                Connect APIs, scrape the web, deploy AI agents — all from a single canvas.
+              </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/login"
-                className="group relative flex items-center gap-3 bg-white text-black px-8 py-4 rounded-lg font-bold text-base hover:bg-neutral-100 transition-all hover:-translate-y-1 shadow-[0_0_40px_rgba(255,255,255,0.08)] hover:shadow-[0_0_60px_rgba(255,255,255,0.15)]"
-              >
-                Start Building Free
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <a
-                href="#features"
-                className="flex items-center gap-2 px-8 py-4 text-neutral-400 hover:text-white font-semibold transition-colors"
-              >
-                See what&apos;s possible
-                <ChevronRight className="w-4 h-4" />
-              </a>
-            </div>
+              <div className="mt-12 flex items-center gap-3">
+                <div className="bg-white/[0.06] rounded-[14px] border border-white/[0.08] p-0.5">
+                  <Link
+                    to="/login"
+                    className="group flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-neutral-200 transition-all duration-200"
+                  >
+                    Start Building Free
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                </div>
+                <a
+                  href="#features"
+                  className="px-6 py-3 text-neutral-400 hover:text-white font-medium text-sm transition-colors duration-200"
+                >
+                  See what&apos;s possible
+                </a>
+              </div>
+            </AnimatedGroup>
+          </div>
+        </div>
 
-            <div className="mt-20 flex items-center justify-center gap-8 text-neutral-600 text-xs font-medium tracking-wide uppercase">
+        {/* Stats bar at bottom of hero */}
+        <div className="absolute bottom-12 left-0 right-0 z-20">
+          <AnimatedGroup
+            variants={{
+              container: {
+                visible: {
+                  transition: {
+                    staggerChildren: 0.05,
+                    delayChildren: 1.2,
+                  },
+                },
+              },
+              ...transitionVariants,
+            }}
+          >
+            <div className="max-w-5xl mx-auto px-6 flex items-center gap-8 text-neutral-600 text-xs font-medium tracking-wide uppercase">
               <span className="flex items-center gap-2"><Users className="w-4 h-4" /> 2,400+ builders</span>
               <span className="hidden sm:block w-px h-4 bg-neutral-800" />
               <span className="flex items-center gap-2"><Zap className="w-4 h-4" /> 1.2M executions/mo</span>
@@ -265,7 +403,7 @@ export default function Landing() {
       <section className="py-32 relative">
         <FloatingParticles />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">How it works</p>
+          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">How it works</p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-6 reveal-on-scroll">
             Three steps. Zero friction.
           </h2>
@@ -281,13 +419,13 @@ export default function Landing() {
             ].map((item, i) => (
               <div
                 key={item.step}
-                className="reveal-on-scroll relative p-8 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm group hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(59,130,246,0.06)]"
+                className="reveal-on-scroll relative p-8 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm group hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(255,255,255,0.02)]"
                 data-delay={i + 1}
               >
-                <span className="text-6xl font-black text-neutral-900/60 group-hover:text-blue-500/10 transition-colors duration-500 absolute top-6 right-8">{item.step}</span>
+                <span className="text-6xl font-black text-neutral-900/60 group-hover:text-neutral-800/40 transition-colors duration-500 absolute top-6 right-8">{item.step}</span>
                 <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-500/15 transition-all duration-300">
-                    <item.icon className="w-5 h-5 text-blue-400" />
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-white/[0.08] transition-all duration-300">
+                    <item.icon className="w-5 h-5 text-neutral-400" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
                   <p className="text-sm text-neutral-500 leading-relaxed">{item.desc}</p>
@@ -296,11 +434,10 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* Connecting line between steps (desktop only) */}
           <div className="hidden md:flex items-center justify-center mt-8 gap-0">
-            <div className="h-px w-1/4 bg-gradient-to-r from-transparent to-blue-500/20" />
-            <div className="h-px w-1/4 bg-blue-500/20" />
-            <div className="h-px w-1/4 bg-gradient-to-l from-transparent to-blue-500/20" />
+            <div className="h-px w-1/4 bg-gradient-to-r from-transparent to-neutral-800" />
+            <div className="h-px w-1/4 bg-neutral-800" />
+            <div className="h-px w-1/4 bg-gradient-to-l from-transparent to-neutral-800" />
           </div>
         </div>
       </section>
@@ -311,7 +448,7 @@ export default function Landing() {
         <div className="absolute inset-0 live-grid opacity-30" />
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Capabilities</p>
+          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Capabilities</p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-6 reveal-on-scroll">
             Built for serious automation.
           </h2>
@@ -344,13 +481,13 @@ export default function Landing() {
       {/* ━━━ BIG STATEMENT ━━━ */}
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="orb w-[600px] h-[600px] bg-blue-600/[0.06] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-float-slow" />
+          <div className="orb w-[600px] h-[600px] bg-neutral-500/[0.03] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-float-slow" />
         </div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight reveal-on-scroll">
             Stop paying per task.
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 gradient-text-animated">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-300 to-neutral-600">
               Start owning your automation.
             </span>
           </h2>
@@ -364,7 +501,7 @@ export default function Landing() {
       <section id="comparison" className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 live-grid opacity-20" />
         <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Compare</p>
+          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Compare</p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-16 reveal-on-scroll">
             How we stack up.
           </h2>
@@ -374,17 +511,17 @@ export default function Landing() {
               <thead>
                 <tr className="border-b border-neutral-800">
                   <th className="text-left py-4 text-neutral-500 font-medium w-1/3">Feature</th>
-                  <th className="py-4 text-blue-400 font-bold">BlinkBox</th>
+                  <th className="py-4 text-white font-bold">BlinkBox</th>
                   <th className="py-4 text-neutral-600 font-medium">Others</th>
                   <th className="py-4 text-neutral-600 font-medium">Others</th>
                   <th className="py-4 text-neutral-600 font-medium">Others</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISONS.map((row, i) => (
+                {COMPARISONS.map((row) => (
                   <tr key={row.feature} className="border-b border-neutral-900 hover:bg-white/[0.01] transition-colors">
                     <td className="py-3.5 text-neutral-300 font-medium">{row.feature}</td>
-                    <td className="text-center">{row.us ? <Check className="w-5 h-5 text-blue-400 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
+                    <td className="text-center">{row.us ? <Check className="w-5 h-5 text-white mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
                     <td className="text-center">{row.a ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
                     <td className="text-center">{row.b ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
                     <td className="text-center">{row.c ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
@@ -400,7 +537,7 @@ export default function Landing() {
       <section className="py-32 relative">
         <FloatingParticles />
         <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">What builders say</p>
+          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">What builders say</p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-16 reveal-on-scroll">
             Loved by operators.
           </h2>
@@ -409,12 +546,12 @@ export default function Landing() {
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={t.name}
-                className="reveal-on-scroll p-6 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/[0.03] group"
+                className="reveal-on-scroll p-6 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-white/[0.02] group"
                 data-delay={i + 1}
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500 group-hover:scale-110 transition-transform duration-300" style={{ transitionDelay: `${j * 50}ms` }} />
+                    <Star key={j} className="w-4 h-4 text-neutral-500 fill-neutral-500 group-hover:text-neutral-400 group-hover:fill-neutral-400 transition-all duration-300" style={{ transitionDelay: `${j * 50}ms` }} />
                   ))}
                 </div>
                 <p className="text-sm text-neutral-300 leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
@@ -430,7 +567,7 @@ export default function Landing() {
 
       {/* ━━━ SECURITY STRIP ━━━ */}
       <section className="py-20 border-y border-neutral-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/[0.02] via-transparent to-cyan-600/[0.02]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-500/[0.02] via-transparent to-neutral-500/[0.02]" />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 text-center md:text-left">
             {[
@@ -440,7 +577,7 @@ export default function Landing() {
               { icon: Workflow, label: 'Redis Queues', sub: 'Guaranteed delivery' },
             ].map((item, i) => (
               <div key={item.label} className="reveal-on-scroll flex items-center gap-4 group" data-delay={i + 1}>
-                <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500 group-hover:border-blue-500/30 group-hover:text-blue-400 transition-all duration-500">
+                <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500 group-hover:border-neutral-600 group-hover:text-neutral-300 transition-all duration-500">
                   <item.icon className="w-5 h-5" />
                 </div>
                 <div>
@@ -457,7 +594,7 @@ export default function Landing() {
       <section id="pricing" className="py-32 relative overflow-hidden">
         <MeshBackground />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Pricing</p>
+          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Pricing</p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-4 reveal-on-scroll">
             Simple, predictable pricing.
           </h2>
@@ -471,13 +608,13 @@ export default function Landing() {
                 key={plan.name}
                 className={`reveal-on-scroll relative p-8 rounded-2xl border flex flex-col transition-all duration-500 hover:-translate-y-2 ${
                   plan.highlight
-                    ? 'border-blue-500/30 bg-blue-500/5 shadow-[0_0_60px_rgba(59,130,246,0.08)] hover:shadow-[0_0_80px_rgba(59,130,246,0.15)] animate-border-glow'
+                    ? 'border-neutral-600 bg-neutral-900/50 shadow-[0_0_60px_rgba(255,255,255,0.03)] hover:shadow-[0_0_80px_rgba(255,255,255,0.06)]'
                     : 'border-neutral-900 bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-700 hover:shadow-xl'
                 }`}
                 data-delay={i + 1}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.3)]">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-full">
                     Most Popular
                   </div>
                 )}
@@ -491,7 +628,7 @@ export default function Landing() {
                 <ul className="flex flex-col gap-3 mb-8 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-3 text-sm text-neutral-400">
-                      <Check className={`w-4 h-4 shrink-0 ${plan.highlight ? 'text-blue-400' : 'text-neutral-600'}`} />
+                      <Check className={`w-4 h-4 shrink-0 ${plan.highlight ? 'text-white' : 'text-neutral-600'}`} />
                       {f}
                     </li>
                   ))}
@@ -500,7 +637,7 @@ export default function Landing() {
                   to="/login"
                   className={`w-full py-3 rounded-lg text-sm font-bold text-center transition-all duration-300 ${
                     plan.highlight
-                      ? 'bg-white text-black hover:bg-neutral-200 hover:shadow-[0_4px_20px_rgba(255,255,255,0.1)]'
+                      ? 'bg-white text-black hover:bg-neutral-200'
                       : 'bg-neutral-900 text-neutral-300 hover:bg-neutral-800 hover:text-white border border-neutral-800'
                   }`}
                 >
@@ -526,7 +663,7 @@ export default function Landing() {
               { q: 'Is my data secure?', a: 'All credentials are encrypted with AES-256-GCM. We use managed cloud databases with encryption at rest, and all traffic is TLS 1.3.' },
             ].map((faq, i) => (
               <div key={faq.q} className="reveal-on-scroll py-6 group" data-delay={i + 1}>
-                <h3 className="text-base font-bold text-white mb-2 group-hover:text-blue-400 transition-colors duration-300">{faq.q}</h3>
+                <h3 className="text-base font-bold text-white mb-2 group-hover:text-neutral-300 transition-colors duration-300">{faq.q}</h3>
                 <p className="text-sm text-neutral-500 leading-relaxed">{faq.a}</p>
               </div>
             ))}
@@ -534,12 +671,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ━━━ FINAL CTA (THE CLOSER) ━━━ */}
+      {/* ━━━ FINAL CTA ━━━ */}
       <section className="py-32 relative overflow-hidden">
         <MeshBackground />
-        {/* Animated concentric rings */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-blue-500/[0.06] animate-pulse-ring" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-cyan-500/[0.04] animate-pulse-ring" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/[0.03] animate-pulse-ring" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-white/[0.02] animate-pulse-ring" style={{ animationDelay: '1.5s' }} />
 
         <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 reveal-on-scroll">
@@ -551,7 +687,7 @@ export default function Landing() {
           <div className="reveal-on-scroll">
             <Link
               to="/login"
-              className="group inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-xl font-bold text-lg hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-1 shadow-[0_0_60px_rgba(255,255,255,0.1)] hover:shadow-[0_0_80px_rgba(255,255,255,0.2)]"
+              className="group inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-xl font-bold text-lg hover:bg-neutral-200 transition-all duration-300 hover:-translate-y-1 shadow-[0_0_60px_rgba(255,255,255,0.06)]"
             >
               Get Started Free <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
