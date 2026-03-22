@@ -6,6 +6,8 @@ import {
   Sparkles, Lock, Cpu, Database, Workflow, Play, Terminal,
   Layers, MousePointerClick,
 } from 'lucide-react';
+import { Boxes } from '@/components/ui/background-boxes';
+import { AnimatedGroup } from '@/components/ui/animated-group';
 import logo from '../../assets/logo.svg';
 
 // ── Scroll reveal hook ─────────────────────────────────────────────────────
@@ -205,79 +207,57 @@ export default function Landing() {
 
       {/* ━━━ HERO ━━━ */}
       <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-        {/* Live background */}
-        <MeshBackground />
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
+        {/* Background Boxes */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <Boxes className="opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-10" />
         </div>
-        <FloatingParticles />
 
-        {/* Animated ring behind heading */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-blue-500/[0.06] animate-pulse-ring" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-blue-500/[0.04] animate-pulse-ring" style={{ animationDelay: '1s' }} />
-
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-neutral-800 text-neutral-400 text-xs font-semibold mb-8 tracking-wide uppercase animate-fade-in animate-border-glow">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-glow-pulse" /> Now with AI Agent Nodes
-          </div>
-
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.95] mb-8 animate-reveal" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-            <span className="text-white">Automate</span>
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 gradient-text-animated">
-              Everything.
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-12 animate-reveal" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
-            The visual automation engine built for teams who refuse to do the same thing twice.
-            Connect APIs, scrape the web, deploy AI agents — all from a single canvas.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-reveal" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
-            <Link
-              to="/login"
-              className="group relative flex items-center gap-3 bg-white text-black px-8 py-4 rounded-lg font-bold text-base hover:bg-neutral-100 transition-all hover:-translate-y-1 shadow-[0_0_40px_rgba(255,255,255,0.08)] hover:shadow-[0_0_60px_rgba(255,255,255,0.15)]"
-            >
-              <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/0 via-white/0 to-cyan-400/0 group-hover:from-blue-400/5 group-hover:via-white/0 group-hover:to-cyan-400/5 transition-all duration-500" />
-              Start Building Free
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <a
-              href="#features"
-              className="flex items-center gap-2 px-8 py-4 text-neutral-400 hover:text-white font-semibold transition-colors"
-            >
-              See what&apos;s possible
-              <ChevronRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Social proof strip */}
-          <div className="mt-20 flex items-center justify-center gap-8 text-neutral-600 text-xs font-medium tracking-wide uppercase animate-reveal" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
-            <span className="flex items-center gap-2"><Users className="w-4 h-4" /> 2,400+ builders</span>
-            <span className="hidden sm:block w-px h-4 bg-neutral-800" />
-            <span className="flex items-center gap-2"><Zap className="w-4 h-4" /> 1.2M executions/mo</span>
-            <span className="hidden sm:block w-px h-4 bg-neutral-800" />
-            <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> 99.9% uptime</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━ LOGO STRIP (Infinite Marquee) ━━━ */}
-      <section className="py-16 border-y border-neutral-900 overflow-hidden">
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-center text-xs font-bold text-neutral-600 uppercase tracking-[0.2em] mb-10 reveal-on-scroll">
-            Trusted by teams building the future
-          </p>
-          <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_20%,#000_80%,transparent)]">
-            <div className="marquee-track animate-marquee">
-              {[...Array(2)].map((_, setIdx) => (
-                ['Stripe', 'Notion', 'Linear', 'Vercel', 'Supabase', 'Resend', 'Raycast', 'Cal.com'].map((name) => (
-                  <span key={`${setIdx}-${name}`} className="text-lg font-bold text-neutral-500/30 tracking-widest whitespace-nowrap">{name}</span>
-                ))
-              ))}
+        {/* Hero content */}
+        <div className="relative z-20 max-w-4xl mx-auto px-6 text-center">
+          <AnimatedGroup preset="blur">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-neutral-800 text-neutral-400 text-xs font-semibold tracking-wide uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Now with AI Agent Nodes
             </div>
-          </div>
+
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.95] mt-8 mb-8">
+              <span className="text-white">Automate</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 gradient-text-animated">
+                Everything.
+              </span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-12">
+              The visual automation engine built for teams who refuse to do the same thing twice.
+              Connect APIs, scrape the web, deploy AI agents — all from a single canvas.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/login"
+                className="group relative flex items-center gap-3 bg-white text-black px-8 py-4 rounded-lg font-bold text-base hover:bg-neutral-100 transition-all hover:-translate-y-1 shadow-[0_0_40px_rgba(255,255,255,0.08)] hover:shadow-[0_0_60px_rgba(255,255,255,0.15)]"
+              >
+                Start Building Free
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <a
+                href="#features"
+                className="flex items-center gap-2 px-8 py-4 text-neutral-400 hover:text-white font-semibold transition-colors"
+              >
+                See what&apos;s possible
+                <ChevronRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            <div className="mt-20 flex items-center justify-center gap-8 text-neutral-600 text-xs font-medium tracking-wide uppercase">
+              <span className="flex items-center gap-2"><Users className="w-4 h-4" /> 2,400+ builders</span>
+              <span className="hidden sm:block w-px h-4 bg-neutral-800" />
+              <span className="flex items-center gap-2"><Zap className="w-4 h-4" /> 1.2M executions/mo</span>
+              <span className="hidden sm:block w-px h-4 bg-neutral-800" />
+              <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> 99.9% uptime</span>
+            </div>
+          </AnimatedGroup>
         </div>
       </section>
 
