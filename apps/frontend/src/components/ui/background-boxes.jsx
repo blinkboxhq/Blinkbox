@@ -7,15 +7,15 @@ const BoxesCore = ({ className, ...rest }) => {
   const cols = new Array(60).fill(1);
 
   const colors = [
-    "rgb(40,40,40)",
-    "rgb(50,50,50)",
-    "rgb(60,60,60)",
-    "rgb(70,70,70)",
-    "rgb(80,80,80)",
-    "rgb(90,90,90)",
-    "rgb(100,100,100)",
-    "rgb(55,55,55)",
-    "rgb(65,65,65)",
+    "rgb(30,58,95)",    // dark blue
+    "rgb(55,65,80)",    // blue-grey
+    "rgb(40,40,50)",    // dark slate
+    "rgb(60,70,85)",    // steel blue
+    "rgb(35,45,60)",    // navy grey
+    "rgb(50,55,65)",    // cool grey
+    "rgb(25,50,80)",    // deep blue
+    "rgb(45,55,70)",    // muted blue
+    "rgb(70,80,95)",    // light steel
   ];
 
   const getRandomColor = () => {
@@ -36,7 +36,7 @@ const BoxesCore = ({ className, ...rest }) => {
       {rows.map((_, i) => (
         <motion.div
           key={`row` + i}
-          className="w-16 h-8 border-l border-neutral-800/50 relative"
+          className="w-16 h-8 border-l border-neutral-700/40 relative"
         >
           {cols.map((_, j) => (
             <motion.div
@@ -48,7 +48,7 @@ const BoxesCore = ({ className, ...rest }) => {
                 transition: { duration: 2 },
               }}
               key={`col` + j}
-              className="w-16 h-8 border-r border-t border-neutral-800/50 relative"
+              className="w-16 h-8 border-r border-t border-neutral-700/40 relative"
             >
               {j % 2 === 0 && i % 2 === 0 ? (
                 <svg

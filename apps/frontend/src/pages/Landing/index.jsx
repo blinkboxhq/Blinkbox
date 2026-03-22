@@ -209,8 +209,8 @@ export default function Landing() {
       <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
         {/* Background Boxes */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <Boxes className="opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-10" />
+          <Boxes className="opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20 z-10" />
         </div>
 
         {/* Hero content */}
