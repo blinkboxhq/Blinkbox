@@ -1,299 +1,281 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, Zap, Globe, Bot, Search, GitBranch, Shield,
-  Clock, Users, BarChart3, Check, Star, ChevronRight,
-  Sparkles, Lock, Cpu, Database, Workflow, Play, Terminal,
-  Layers, MousePointerClick, Menu, X,
+  ArrowRight, Bot, Search, GitBranch, Globe, Shield, Cpu,
+  Check, ChevronRight, Sparkles, Lock, Database, Workflow,
+  Play, Layers, MousePointerClick, Menu, X, Terminal,
+  Minus, Plus, Zap, Eye, Code2, Webhook, Mail,
 } from 'lucide-react';
-import { motion, useScroll } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Boxes } from '@/components/ui/background-boxes';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import logo from '../../assets/logo.svg';
 
-// ── Scroll reveal hook ─────────────────────────────────────────────────────
+// ── Hooks ──────────────────────────────────────────────────────────────────
 function useScrollReveal() {
   const ref = useRef(null);
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('revealed');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); }
+      }),
+      { threshold: 0.08, rootMargin: '0px 0px -60px 0px' }
     );
-    const els = root.querySelectorAll('.reveal-on-scroll');
-    els.forEach((el) => observer.observe(el));
+    root.querySelectorAll('.reveal-on-scroll').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
   return ref;
 }
 
-// ── Floating particles component ───────────────────────────────────────────
-function FloatingParticles() {
+// ── Animation variants ─────────────────────────────────────────────────────
+const blurUp = {
+  item: {
+    hidden: { opacity: 0, filter: 'blur(12px)', y: 16 },
+    visible: {
+      opacity: 1, filter: 'blur(0px)', y: 0,
+      transition: { type: 'spring', bounce: 0.3, duration: 1.5 },
+    },
+  },
+};
+
+const stagger = (delay = 0.3) => ({
+  container: { visible: { transition: { staggerChildren: 0.06, delayChildren: delay } } },
+  ...blurUp,
+});
+
+// ── FAQ Accordion ──────────────────────────────────────────────────────────
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(6)].map((_, i) => (
-        <div
-          key={i}
-          className={`absolute w-1 h-1 rounded-full bg-neutral-500/20 ${
-            i % 3 === 0 ? 'animate-float' : i % 3 === 1 ? 'animate-float-slow' : 'animate-float-slower'
-          }`}
-          style={{
-            left: `${15 + i * 14}%`,
-            top: `${20 + (i * 17) % 60}%`,
-            animationDelay: `${i * 0.7}s`,
-          }}
+    <div className="border-b border-white/[0.04]">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-6 text-left group"
+      >
+        <span className="text-[15px] font-semibold text-neutral-200 group-hover:text-white transition-colors pr-8">{q}</span>
+        <span className="shrink-0 w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-neutral-500 group-hover:border-white/20 transition-colors">
+          {open ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+        </span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <p className="text-sm text-neutral-500 leading-relaxed pb-6">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Animated counter ───────────────────────────────────────────────────────
+function AnimCounter({ target, suffix = '' }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const duration = 1800;
+        const start = performance.now();
+        const tick = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.floor(eased * target));
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
+
+// ── Visual node preview (mini canvas mockup) ───────────────────────────────
+function CanvasPreview() {
+  const nodes = [
+    { x: 0, y: 0, label: 'Webhook', icon: Webhook, color: '#a78bfa' },
+    { x: 200, y: -20, label: 'AI Parse', icon: Bot, color: '#60a5fa' },
+    { x: 400, y: 10, label: 'Filter', icon: GitBranch, color: '#f472b6' },
+    { x: 600, y: -30, label: 'Send Email', icon: Mail, color: '#34d399' },
+  ];
+
+  return (
+    <div className="relative w-full max-w-2xl mx-auto h-[140px] reveal-on-scroll">
+      {/* Connection lines */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 700 140" fill="none" preserveAspectRatio="xMidYMid meet">
+        <motion.path
+          d="M 70 70 C 140 70, 160 50, 230 50"
+          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.5 }}
         />
+        <motion.path
+          d="M 280 50 C 350 50, 370 80, 440 80"
+          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.8 }}
+        />
+        <motion.path
+          d="M 490 80 C 560 80, 580 40, 640 40"
+          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }} transition={{ duration: 0.8, delay: 1.1 }}
+        />
+      </svg>
+
+      {/* Nodes */}
+      {nodes.map((node, i) => (
+        <motion.div
+          key={node.label}
+          className="absolute flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-neutral-950/80 backdrop-blur-sm"
+          style={{ left: `${(node.x / 700) * 100}%`, top: `calc(50% + ${node.y}px)`, transform: 'translateY(-50%)' }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}
+        >
+          <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: `${node.color}15` }}>
+            <node.icon className="w-3.5 h-3.5" style={{ color: node.color }} />
+          </div>
+          <span className="text-xs text-neutral-400 font-medium whitespace-nowrap">{node.label}</span>
+        </motion.div>
       ))}
     </div>
   );
 }
 
-// ── Mesh gradient background ──────────────────────────────────────────────
-function MeshBackground({ className = '' }) {
-  return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
-      <div className="orb w-[500px] h-[500px] bg-neutral-500/[0.04] top-1/4 -left-40 animate-float-slow" />
-      <div className="orb w-[400px] h-[400px] bg-neutral-400/[0.03] bottom-1/4 -right-32 animate-float-slower" style={{ animationDelay: '2s' }} />
-      <div className="orb w-[300px] h-[300px] bg-neutral-600/[0.03] top-1/2 left-1/3 animate-float" style={{ animationDelay: '4s' }} />
-    </div>
-  );
-}
-
-// ── Transition variants for hero animations ────────────────────────────────
-const transitionVariants = {
-  item: {
-    hidden: {
-      opacity: 0,
-      filter: 'blur(12px)',
-      y: 12,
-    },
-    visible: {
-      opacity: 1,
-      filter: 'blur(0px)',
-      y: 0,
-      transition: {
-        type: 'spring',
-        bounce: 0.3,
-        duration: 1.5,
-      },
-    },
-  },
-};
-
 // ── Data ────────────────────────────────────────────────────────────────────
 const FEATURES = [
   {
-    icon: Bot,
-    title: 'AI-Native Agents',
-    desc: 'Plug large language models directly into your workflows. Parse unstructured data, generate content, and make decisions — all autonomously.',
-    color: 'blue',
+    icon: Bot, title: 'AI Agents',
+    desc: 'Drop an LLM into any workflow. It reads the incoming data, reasons about it, and outputs structured results. No prompt engineering degree required.',
   },
   {
-    icon: Search,
-    title: 'Headless Web Scraping',
-    desc: 'Defeat anti-bot protections, extract pricing tables, monitor competitors. Our browser pool handles JavaScript-heavy sites at scale.',
-    color: 'purple',
+    icon: Search, title: 'Headless Scraping',
+    desc: 'Full Chromium browser pool. Defeats anti-bot, renders JavaScript, extracts what you need. Schedule it or trigger it from any node.',
   },
   {
-    icon: GitBranch,
-    title: 'Visual Logic Routing',
-    desc: 'Build complex if/else trees visually. Route data down different paths based on any condition — no code required.',
-    color: 'pink',
+    icon: GitBranch, title: 'Logic Routing',
+    desc: 'If/else, switch, loops — built visually. Drag an edge, set a condition, done. Your data takes the right path every time.',
   },
   {
-    icon: Globe,
-    title: 'Universal API Connector',
-    desc: 'Connect to any REST API in seconds. Auto-inject encrypted credentials from your vault. Supports GET, POST, PUT, DELETE.',
-    color: 'cyan',
+    icon: Globe, title: 'API Connector',
+    desc: 'Hit any REST endpoint. Credentials auto-injected from your encrypted vault. Auth headers, retries, transforms — all configurable.',
   },
   {
-    icon: Shield,
-    title: 'Bank-Grade Encryption',
-    desc: 'Every API key and token is encrypted with AES-256-GCM before it touches the database. Zero plaintext secrets. Ever.',
-    color: 'emerald',
+    icon: Cpu, title: 'Code Sandbox',
+    desc: 'Write JavaScript that runs in an isolated V8 sandbox. Full power, strict memory limits, zero risk to your infra.',
   },
   {
-    icon: Cpu,
-    title: 'Sandboxed Code Execution',
-    desc: 'Run custom JavaScript in an isolated V8 sandbox with strict memory limits. Full power, zero risk to your infrastructure.',
-    color: 'orange',
-  },
-];
-
-const COMPARISONS = [
-  { feature: 'AI Agent Node (Built-in)', us: true, a: false, b: false, c: false },
-  { feature: 'Headless Browser Scraping', us: true, a: false, b: false, c: true },
-  { feature: 'Visual Logic Router', us: true, a: false, b: true, c: true },
-  { feature: 'AES-256 Credential Vault', us: true, a: true, b: true, c: false },
-  { feature: 'Sandboxed Code Execution', us: true, a: false, b: false, c: true },
-  { feature: 'Self-Hostable', us: true, a: false, b: false, c: true },
-  { feature: 'Real-time Execution Feed', us: true, a: false, b: true, c: true },
-  { feature: 'No Per-Task Pricing', us: true, a: false, b: false, c: true },
-];
-
-const TESTIMONIALS = [
-  {
-    name: 'Arjun Mehta',
-    role: 'CTO, ScaleStack',
-    quote: 'We replaced 3 paid automation tools and 2 custom scripts with a single BlinkBox workflow. The AI agent node alone saved us 40 hours a month.',
-  },
-  {
-    name: 'Sarah Chen',
-    role: 'Head of Ops, Vantage AI',
-    quote: 'The scraping + AI pipeline is insane. We monitor competitor pricing across 200 URLs and get structured JSON reports automatically.',
-  },
-  {
-    name: 'Marcus Wright',
-    role: 'Founder, DataForge',
-    quote: "Finally, an automation tool that doesn't treat developers like children. The code node with V8 sandboxing is exactly what we needed.",
+    icon: Shield, title: 'Encrypted Vault',
+    desc: 'AES-256-GCM encryption for every secret. Keys never leave the server decrypted. Access scoped per workspace.',
   },
 ];
 
 const PRICING = [
   {
-    name: 'Starter',
-    price: '$0',
-    period: 'forever',
-    desc: 'For individuals exploring automation.',
-    credits: '500 credits/mo',
-    features: ['5 workflows', '500 executions/mo', 'Community support', 'All core nodes'],
-    cta: 'Start Free',
-    highlight: false,
+    name: 'Starter', price: '$0', period: '/forever',
+    desc: 'Get your feet wet.',
+    features: ['5 workflows', '500 executions/mo', 'All core nodes', 'Community support'],
+    cta: 'Start Free', highlight: false,
   },
   {
-    name: 'Pro',
-    price: '$29',
-    period: '/month',
-    desc: 'For teams shipping fast.',
-    credits: '10,000 credits/mo',
-    features: ['Unlimited workflows', '10,000 executions/mo', 'AI Agent node', 'Priority support', 'Credential vault'],
-    cta: 'Start 14-Day Trial',
-    highlight: true,
+    name: 'Pro', price: '$29', period: '/mo',
+    desc: 'For teams that ship.',
+    features: ['Unlimited workflows', '10K executions/mo', 'AI Agent node', 'Credential vault', 'Priority support'],
+    cta: 'Start Trial', highlight: true,
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    desc: 'For organizations at scale.',
-    credits: 'Unlimited',
-    features: ['Unlimited everything', 'Dedicated infrastructure', 'SSO & RBAC', 'SLA guarantee', 'Custom integrations'],
-    cta: 'Contact Sales',
-    highlight: false,
+    name: 'Enterprise', price: 'Custom', period: '',
+    desc: 'Your infra, your rules.',
+    features: ['Unlimited everything', 'Dedicated infra', 'SSO & RBAC', 'SLA guarantee', 'Custom integrations'],
+    cta: 'Talk to Us', highlight: false,
   },
 ];
 
-const colorMap = {
-  blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', glow: 'group-hover:shadow-blue-500/10' },
-  purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', glow: 'group-hover:shadow-purple-500/10' },
-  pink: { bg: 'bg-pink-500/10', border: 'border-pink-500/20', text: 'text-pink-400', glow: 'group-hover:shadow-pink-500/10' },
-  cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400', glow: 'group-hover:shadow-cyan-500/10' },
-  emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', glow: 'group-hover:shadow-emerald-500/10' },
-  orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', glow: 'group-hover:shadow-orange-500/10' },
-};
+const FAQS = [
+  { q: 'Is it actually free?', a: 'Yes. Starter gives you 500 executions/month and 5 workflows. No credit card. No time limit. No asterisk.' },
+  { q: 'What happens when I hit the limit?', a: 'Workflows pause until the next cycle. Upgrade to Pro anytime — your workflows resume in seconds.' },
+  { q: 'Can I self-host?', a: 'Enterprise plan includes Docker images and Helm charts. Run it on your own infrastructure with full control.' },
+  { q: 'How do you handle credentials?', a: 'AES-256-GCM encryption. Secrets are encrypted before they touch the database. Decrypted only in-memory during execution, scoped to your workspace.' },
+  { q: 'What makes this different from Zapier?', a: "AI agents, headless scraping, sandboxed code execution, visual logic routing. And we don't charge per task — Pro is flat $29/mo." },
+];
 
 const NAV_ITEMS = [
   { name: 'Features', href: '#features' },
-  { name: 'Compare', href: '#comparison' },
+  { name: 'How it Works', href: '#how-it-works' },
   { name: 'Pricing', href: '#pricing' },
 ];
 
-// ── Scroll-aware Header ──────────────────────────────────────────────────
+// ── Header ─────────────────────────────────────────────────────────────────
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { scrollYProgress } = useScroll();
 
   useEffect(() => {
-    const unsubscribe = scrollYProgress.on('change', (latest) => {
-      setScrolled(latest > 0.02);
-    });
-    return () => unsubscribe();
+    const unsub = scrollYProgress.on('change', (v) => setScrolled(v > 0.02));
+    return () => unsub();
   }, [scrollYProgress]);
 
   return (
     <header>
       <nav
         data-state={menuOpen ? 'active' : undefined}
-        className={`group fixed top-0 z-50 w-full border-b transition-all duration-300 ${
-          scrolled
-            ? 'bg-black/70 backdrop-blur-2xl border-white/[0.06]'
-            : 'bg-transparent border-transparent'
+        className={`group fixed top-0 z-50 w-full border-b transition-all duration-500 ${
+          scrolled ? 'bg-black/60 backdrop-blur-2xl border-white/[0.04]' : 'bg-transparent border-transparent'
         }`}
       >
-        <div className="max-w-5xl mx-auto px-6 transition-all duration-300">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
-            {/* Logo + mobile toggle */}
-            <div className="flex w-full items-center justify-between gap-12 lg:w-auto">
-              <Link to="/" className="flex items-center gap-3">
+            <div className="flex w-full items-center justify-between lg:w-auto">
+              <Link to="/" className="flex items-center gap-2.5">
                 <img src={logo} alt="BlinkBox" className="w-7 h-7 object-contain" />
-                <span className="text-base font-bold tracking-widest text-white">BLINKBOX</span>
+                <span className="text-sm font-bold tracking-[0.15em] text-white/90">BLINKBOX</span>
               </Link>
 
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+                aria-label={menuOpen ? 'Close' : 'Open'}
                 className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden"
               >
-                <Menu className={`size-6 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-180 scale-0 opacity-0' : ''}`} />
-                <X className={`absolute inset-0 m-auto size-6 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-180 scale-0 opacity-0'}`} />
+                <Menu className={`size-5 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-180 scale-0 opacity-0' : ''}`} />
+                <X className={`absolute inset-0 m-auto size-5 text-neutral-400 transition-all duration-200 ${menuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-180 scale-0 opacity-0'}`} />
               </button>
 
-              {/* Desktop nav links */}
-              <div className="hidden lg:block">
-                <ul className="flex gap-8 text-sm">
-                  {NAV_ITEMS.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className="text-neutral-500 hover:text-white transition-colors duration-200"
-                      >
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+              <div className="hidden lg:flex items-center gap-8 ml-12">
+                {NAV_ITEMS.map((item) => (
+                  <a key={item.name} href={item.href} className="text-[13px] text-neutral-500 hover:text-white transition-colors duration-200">{item.name}</a>
+                ))}
               </div>
             </div>
 
-            {/* Right side: CTA buttons + mobile menu */}
-            <div className={`bg-neutral-950 lg:bg-transparent ${menuOpen ? 'block' : 'hidden'} lg:flex mb-6 w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-neutral-800 lg:border-transparent p-6 lg:p-0 shadow-2xl shadow-black/40 lg:shadow-none lg:m-0 lg:w-fit lg:gap-6 lg:space-y-0 md:flex-nowrap`}>
-              {/* Mobile nav links */}
-              <div className="lg:hidden">
-                <ul className="space-y-6 text-base">
-                  {NAV_ITEMS.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className="text-neutral-400 hover:text-white block transition-colors duration-200"
-                      >
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+            {/* Right side */}
+            <div className={`bg-neutral-950 lg:bg-transparent ${menuOpen ? 'block' : 'hidden'} lg:flex mb-6 w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-neutral-800 lg:border-transparent p-6 lg:p-0 shadow-2xl shadow-black/50 lg:shadow-none lg:m-0 lg:w-fit lg:gap-4 lg:space-y-0`}>
+              <div className="lg:hidden space-y-5 mb-6">
+                {NAV_ITEMS.map((item) => (
+                  <a key={item.name} href={item.href} onClick={() => setMenuOpen(false)} className="block text-neutral-400 hover:text-white transition-colors">{item.name}</a>
+                ))}
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-medium text-neutral-400 border border-neutral-800 rounded-lg hover:text-white hover:border-neutral-600 transition-all duration-200 text-center"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-bold text-black bg-white rounded-lg hover:bg-neutral-200 transition-all duration-200 text-center"
-                >
-                  Sign Up
-                </Link>
+                <Link to="/login" className="px-4 py-2 text-[13px] font-medium text-neutral-500 hover:text-white transition-colors text-center">Log in</Link>
+                <Link to="/login" className="px-4 py-2 text-[13px] font-semibold text-black bg-white rounded-lg hover:bg-neutral-200 transition-all text-center">Get Started</Link>
               </div>
             </div>
           </div>
@@ -303,286 +285,227 @@ function Header() {
   );
 }
 
-// ── Main Landing Component ─────────────────────────────────────────────────
+// ── Main ────────────────────────────────────────────────────────────────────
 export default function Landing() {
   const pageRef = useScrollReveal();
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
   return (
     <div ref={pageRef} className="bg-black min-h-screen text-white overflow-x-hidden">
       <Header />
 
-      {/* ━━━ HERO ━━━ */}
-      <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-        {/* Background Boxes */}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          HERO — full viewport, boxes background, single clear message
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+        {/* Boxes bg */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <Boxes className="opacity-50" />
-          <div className="absolute inset-0 bg-black z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
+          <Boxes />
+          <div className="absolute inset-0 z-10 bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,transparent_20%,black_100%)] pointer-events-none" />
         </div>
 
-        {/* Hero content */}
-        <div className="relative z-20 max-w-5xl mx-auto px-6">
-          <div className="sm:mx-auto lg:mr-auto">
-            <AnimatedGroup
-              variants={{
-                container: {
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.05,
-                      delayChildren: 0.3,
-                    },
-                  },
-                },
-                ...transitionVariants,
-              }}
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-neutral-800 text-neutral-400 text-xs font-semibold tracking-wide uppercase">
-                <Sparkles className="w-3.5 h-3.5 text-white/60" /> Now with AI Agent Nodes
+        {/* Content */}
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-20 max-w-6xl mx-auto px-6 pt-32 pb-20 w-full">
+          <AnimatedGroup variants={stagger(0.2)}>
+            {/* Badge */}
+            <div className="flex items-center gap-2 mb-10">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide uppercase bg-white/[0.03] border border-white/[0.06] text-neutral-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="max-w-3xl text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[1.05] tracking-tight">
+              Your workflows,{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
+                on autopilot.
+              </span>
+            </h1>
+
+            {/* Sub */}
+            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-500">
+              BlinkBox is a visual automation engine. Drag nodes, wire logic,
+              deploy AI agents — ship workflows that used to take a
+              sprint in an afternoon.
+            </p>
+
+            {/* CTA */}
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <Link
+                to="/login"
+                className="group inline-flex items-center gap-2.5 bg-white text-black pl-5 pr-4 py-3 rounded-xl font-semibold text-sm hover:bg-neutral-100 transition-all duration-200 shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_2px_20px_rgba(255,255,255,0.05)]"
+              >
+                Start Building
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center gap-1.5 px-5 py-3 text-sm font-medium text-neutral-500 hover:text-white transition-colors duration-200"
+              >
+                See how it works
+                <ChevronRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Proof strip — just numbers, no fake logos */}
+            <div className="mt-20 flex items-center gap-10 text-neutral-600">
+              <div>
+                <p className="text-2xl font-bold text-neutral-300 tabular-nums"><AnimCounter target={2400} suffix="+" /></p>
+                <p className="text-[11px] uppercase tracking-widest mt-1">builders</p>
               </div>
-
-              <h1 className="mt-8 max-w-3xl text-balance text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.95]">
-                <span className="text-white">Automate </span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-200 via-neutral-400 to-neutral-600">
-                  Everything.
-                </span>
-              </h1>
-
-              <p className="mt-8 max-w-2xl text-pretty text-lg text-neutral-400 leading-relaxed">
-                The visual automation engine built for teams who refuse to do the same thing twice.
-                Connect APIs, scrape the web, deploy AI agents — all from a single canvas.
-              </p>
-
-              <div className="mt-12 flex items-center gap-3">
-                <div className="bg-white/[0.06] rounded-[14px] border border-white/[0.08] p-0.5">
-                  <Link
-                    to="/login"
-                    className="group flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-neutral-200 transition-all duration-200"
-                  >
-                    Start Building Free
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-                <a
-                  href="#features"
-                  className="px-6 py-3 text-neutral-400 hover:text-white font-medium text-sm transition-colors duration-200"
-                >
-                  See what&apos;s possible
-                </a>
+              <div className="w-px h-8 bg-white/[0.04]" />
+              <div>
+                <p className="text-2xl font-bold text-neutral-300 tabular-nums"><AnimCounter target={1200000} suffix="" /></p>
+                <p className="text-[11px] uppercase tracking-widest mt-1">executions / mo</p>
               </div>
-            </AnimatedGroup>
-          </div>
-        </div>
-
-        {/* Stats bar at bottom of hero */}
-        <div className="absolute bottom-12 left-0 right-0 z-20">
-          <AnimatedGroup
-            variants={{
-              container: {
-                visible: {
-                  transition: {
-                    staggerChildren: 0.05,
-                    delayChildren: 1.2,
-                  },
-                },
-              },
-              ...transitionVariants,
-            }}
-          >
-            <div className="max-w-5xl mx-auto px-6 flex items-center gap-8 text-neutral-600 text-xs font-medium tracking-wide uppercase">
-              <span className="flex items-center gap-2"><Users className="w-4 h-4" /> 2,400+ builders</span>
-              <span className="hidden sm:block w-px h-4 bg-neutral-800" />
-              <span className="flex items-center gap-2"><Zap className="w-4 h-4" /> 1.2M executions/mo</span>
-              <span className="hidden sm:block w-px h-4 bg-neutral-800" />
-              <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> 99.9% uptime</span>
+              <div className="hidden sm:block w-px h-8 bg-white/[0.04]" />
+              <div className="hidden sm:block">
+                <p className="text-2xl font-bold text-neutral-300">99.9%</p>
+                <p className="text-[11px] uppercase tracking-widest mt-1">uptime</p>
+              </div>
             </div>
           </AnimatedGroup>
-        </div>
+        </motion.div>
       </section>
 
-      {/* ━━━ HOW IT WORKS ━━━ */}
-      <section className="py-32 relative">
-        <FloatingParticles />
-        <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">How it works</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-6 reveal-on-scroll">
-            Three steps. Zero friction.
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          HOW IT WORKS — 3 steps with a live-ish canvas preview
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section id="how-it-works" className="py-28 md:py-40 relative">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section label */}
+          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">How it works</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">
+            Three moves. You&apos;re live.
           </h2>
-          <p className="text-neutral-500 text-center max-w-xl mx-auto mb-20 reveal-on-scroll">
-            From idea to production automation in minutes, not weeks.
+          <p className="text-neutral-500 max-w-md mb-16 reveal-on-scroll">
+            No docs to read. No config files. Idea to production workflow in minutes.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Steps — horizontal on desktop, vertical stack on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.03] rounded-2xl overflow-hidden mb-16">
             {[
-              { step: '01', title: 'Drag & Drop', desc: 'Pull nodes onto the canvas. Triggers, API calls, AI agents, scrapers — everything is a visual block.', icon: MousePointerClick },
-              { step: '02', title: 'Connect & Configure', desc: 'Wire nodes together. Set conditions on edges. Toggle settings instead of writing YAML.', icon: Layers },
-              { step: '03', title: 'Deploy & Monitor', desc: 'Hit run. Watch execution flow through each node in real-time with live telemetry.', icon: Play },
-            ].map((item, i) => (
+              { n: '01', title: 'Drag', desc: 'Pull nodes onto the canvas — triggers, API calls, AI, scrapers. Everything is a block.', icon: MousePointerClick },
+              { n: '02', title: 'Wire', desc: 'Connect nodes with edges. Set conditions. Toggle configs. No YAML, no JSON editors.', icon: Layers },
+              { n: '03', title: 'Ship', desc: 'Hit run. Watch data flow through each node in real-time. Debug visually.', icon: Play },
+            ].map((step, i) => (
               <div
-                key={item.step}
-                className="reveal-on-scroll relative p-8 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm group hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(255,255,255,0.02)]"
+                key={step.n}
+                className="reveal-on-scroll bg-black p-8 md:p-10 group hover:bg-white/[0.01] transition-colors duration-500"
                 data-delay={i + 1}
               >
-                <span className="text-6xl font-black text-neutral-900/60 group-hover:text-neutral-800/40 transition-colors duration-500 absolute top-6 right-8">{item.step}</span>
-                <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-white/[0.08] transition-all duration-300">
-                    <item.icon className="w-5 h-5 text-neutral-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{item.desc}</p>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-[11px] font-bold text-neutral-700 tracking-widest">{step.n}</span>
+                  <div className="h-px flex-1 bg-white/[0.04]" />
+                  <step.icon className="w-4 h-4 text-neutral-700 group-hover:text-neutral-500 transition-colors" />
                 </div>
+                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center justify-center mt-8 gap-0">
-            <div className="h-px w-1/4 bg-gradient-to-r from-transparent to-neutral-800" />
-            <div className="h-px w-1/4 bg-neutral-800" />
-            <div className="h-px w-1/4 bg-gradient-to-l from-transparent to-neutral-800" />
-          </div>
+          {/* Mini canvas */}
+          <CanvasPreview />
         </div>
       </section>
 
-      {/* ━━━ FEATURES ━━━ */}
-      <section id="features" className="py-32 relative overflow-hidden">
-        <MeshBackground />
-        <div className="absolute inset-0 live-grid opacity-30" />
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          FEATURES — 2-column offset grid, asymmetric, not the usual 3x2
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section id="features" className="py-28 md:py-40 relative">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+            {/* Left — sticky label */}
+            <div className="lg:sticky lg:top-32">
+              <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">Capabilities</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">
+                Everything you need.<br />
+                Nothing you don&apos;t.
+              </h2>
+              <p className="text-neutral-500 max-w-sm reveal-on-scroll">
+                Every node is built to solve a real problem. No filler features, no marketing fluff.
+              </p>
 
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Capabilities</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-6 reveal-on-scroll">
-            Built for serious automation.
-          </h2>
-          <p className="text-neutral-500 text-center max-w-xl mx-auto mb-20 reveal-on-scroll">
-            Every feature designed to eliminate repetitive work and give your team superhuman speed.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((f, i) => {
-              const c = colorMap[f.color];
-              const Icon = f.icon;
-              return (
-                <div
-                  key={f.title}
-                  className={`reveal-on-scroll p-6 rounded-2xl border border-neutral-900 bg-black/60 backdrop-blur-sm hover:border-neutral-700 transition-all duration-500 group hover:-translate-y-1 hover:shadow-xl ${c.glow}`}
-                  data-delay={i + 1}
+              <div className="mt-8 reveal-on-scroll">
+                <Link
+                  to="/login"
+                  className="group inline-flex items-center gap-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
                 >
-                  <div className={`w-11 h-11 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-300`}>
-                    <Icon className={`w-5 h-5 ${c.text}`} />
+                  Explore all nodes
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right — feature cards */}
+            <div className="space-y-4">
+              {FEATURES.map((f, i) => {
+                const Icon = f.icon;
+                return (
+                  <div
+                    key={f.title}
+                    className="reveal-on-scroll group p-6 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.08] transition-all duration-400"
+                    data-delay={(i % 3) + 1}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="mt-0.5 w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover:bg-white/[0.06] transition-colors">
+                        <Icon className="w-4 h-4 text-neutral-500 group-hover:text-neutral-300 transition-colors" />
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-bold text-white mb-1.5">{f.title}</h3>
+                        <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ━━━ BIG STATEMENT ━━━ */}
-      <section className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="orb w-[600px] h-[600px] bg-neutral-500/[0.03] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-float-slow" />
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          INTERSTITIAL — the "why" statement
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-28 md:py-40 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="orb w-[500px] h-[500px] bg-white/[0.015] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-float-slow" />
         </div>
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight reveal-on-scroll">
-            Stop paying per task.
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-300 to-neutral-600">
-              Start owning your automation.
-            </span>
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight reveal-on-scroll">
+            Other tools charge per task.
           </h2>
-          <p className="text-neutral-500 mt-8 text-lg max-w-2xl mx-auto leading-relaxed reveal-on-scroll">
-            Others charge you per task — at scale, that bleeds thousands a month. With BlinkBox Pro, it&apos;s a flat $29. Do the math.
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight mt-2 reveal-on-scroll text-transparent bg-clip-text bg-gradient-to-b from-neutral-400 to-neutral-700">
+            At scale, that kills your margin.
+          </h2>
+          <p className="text-neutral-500 mt-6 text-base max-w-lg mx-auto leading-relaxed reveal-on-scroll">
+            BlinkBox Pro is a flat $29/mo. Run 10,000 executions. Run 10 million lines of data through those executions. Same price.
           </p>
         </div>
       </section>
 
-      {/* ━━━ COMPARISON TABLE ━━━ */}
-      <section id="comparison" className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0 live-grid opacity-20" />
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Compare</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-16 reveal-on-scroll">
-            How we stack up.
-          </h2>
-
-          <div className="overflow-x-auto reveal-on-scroll">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-neutral-800">
-                  <th className="text-left py-4 text-neutral-500 font-medium w-1/3">Feature</th>
-                  <th className="py-4 text-white font-bold">BlinkBox</th>
-                  <th className="py-4 text-neutral-600 font-medium">Others</th>
-                  <th className="py-4 text-neutral-600 font-medium">Others</th>
-                  <th className="py-4 text-neutral-600 font-medium">Others</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISONS.map((row) => (
-                  <tr key={row.feature} className="border-b border-neutral-900 hover:bg-white/[0.01] transition-colors">
-                    <td className="py-3.5 text-neutral-300 font-medium">{row.feature}</td>
-                    <td className="text-center">{row.us ? <Check className="w-5 h-5 text-white mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
-                    <td className="text-center">{row.a ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
-                    <td className="text-center">{row.b ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
-                    <td className="text-center">{row.c ? <Check className="w-5 h-5 text-neutral-600 mx-auto" /> : <span className="text-neutral-700">—</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━ TESTIMONIALS ━━━ */}
-      <section className="py-32 relative">
-        <FloatingParticles />
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">What builders say</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-16 reveal-on-scroll">
-            Loved by operators.
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={t.name}
-                className="reveal-on-scroll p-6 rounded-2xl border border-neutral-900 bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-white/[0.02] group"
-                data-delay={i + 1}
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-neutral-500 fill-neutral-500 group-hover:text-neutral-400 group-hover:fill-neutral-400 transition-all duration-300" style={{ transitionDelay: `${j * 50}ms` }} />
-                  ))}
-                </div>
-                <p className="text-sm text-neutral-300 leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
-                <div>
-                  <p className="text-sm font-bold text-white">{t.name}</p>
-                  <p className="text-xs text-neutral-600">{t.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━ SECURITY STRIP ━━━ */}
-      <section className="py-20 border-y border-neutral-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-500/[0.02] via-transparent to-neutral-500/[0.02]" />
-        <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 text-center md:text-left">
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          SECURITY — horizontal strip, no fluff
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-16 border-y border-white/[0.03]">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
-              { icon: Lock, label: 'AES-256-GCM', sub: 'Credential encryption' },
-              { icon: Shield, label: 'SOC 2 Ready', sub: 'Enterprise compliance' },
-              { icon: Database, label: 'Cloud Atlas', sub: 'Managed infrastructure' },
+              { icon: Lock, label: 'AES-256-GCM', sub: 'Encryption at rest' },
+              { icon: Shield, label: 'Workspace Isolation', sub: 'Per-user scoping' },
+              { icon: Database, label: 'MongoDB Atlas', sub: 'Managed & replicated' },
               { icon: Workflow, label: 'Redis Queues', sub: 'Guaranteed delivery' },
             ].map((item, i) => (
-              <div key={item.label} className="reveal-on-scroll flex items-center gap-4 group" data-delay={i + 1}>
-                <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500 group-hover:border-neutral-600 group-hover:text-neutral-300 transition-all duration-500">
-                  <item.icon className="w-5 h-5" />
+              <div key={item.label} className="reveal-on-scroll flex items-center gap-3 group" data-delay={i + 1}>
+                <div className="w-8 h-8 rounded-lg bg-white/[0.02] border border-white/[0.04] flex items-center justify-center shrink-0 group-hover:border-white/[0.08] transition-colors">
+                  <item.icon className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-400 transition-colors" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">{item.label}</p>
-                  <p className="text-xs text-neutral-600">{item.sub}</p>
+                  <p className="text-xs font-semibold text-neutral-300">{item.label}</p>
+                  <p className="text-[11px] text-neutral-600">{item.sub}</p>
                 </div>
               </div>
             ))}
@@ -590,55 +513,55 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ━━━ PRICING ━━━ */}
-      <section id="pricing" className="py-32 relative overflow-hidden">
-        <MeshBackground />
-        <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 text-center reveal-on-scroll">Pricing</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mb-4 reveal-on-scroll">
-            Simple, predictable pricing.
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          PRICING — 3 cards, Pro highlighted
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section id="pricing" className="py-28 md:py-40 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 text-center reveal-on-scroll">Pricing</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight mb-3 reveal-on-scroll">
+            Predictable. Simple.
           </h2>
-          <p className="text-neutral-500 text-center max-w-xl mx-auto mb-16 reveal-on-scroll">
-            No per-task fees. No hidden costs. Pay for the plan, use it without limits.
+          <p className="text-neutral-500 text-center max-w-md mx-auto mb-14 reveal-on-scroll">
+            No per-task fees. No surprise invoices.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PRICING.map((plan, i) => (
               <div
                 key={plan.name}
-                className={`reveal-on-scroll relative p-8 rounded-2xl border flex flex-col transition-all duration-500 hover:-translate-y-2 ${
+                className={`reveal-on-scroll relative p-7 rounded-2xl border flex flex-col transition-all duration-500 hover:-translate-y-1 ${
                   plan.highlight
-                    ? 'border-neutral-600 bg-neutral-900/50 shadow-[0_0_60px_rgba(255,255,255,0.03)] hover:shadow-[0_0_80px_rgba(255,255,255,0.06)]'
-                    : 'border-neutral-900 bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-700 hover:shadow-xl'
+                    ? 'border-white/[0.1] bg-white/[0.02] shadow-[0_0_80px_rgba(255,255,255,0.02)]'
+                    : 'border-white/[0.04] bg-white/[0.01] hover:border-white/[0.06]'
                 }`}
                 data-delay={i + 1}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-full">
-                    Most Popular
+                  <div className="absolute -top-3 left-6 px-3 py-0.5 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-full">
+                    Popular
                   </div>
                 )}
-                <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
-                <p className="text-xs text-neutral-500 mb-6">{plan.desc}</p>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-4xl font-extrabold text-white">{plan.price}</span>
-                  {plan.period && <span className="text-sm text-neutral-500">{plan.period}</span>}
+                <h3 className="text-base font-bold text-white">{plan.name}</h3>
+                <p className="text-xs text-neutral-600 mt-1 mb-5">{plan.desc}</p>
+                <div className="flex items-baseline gap-0.5 mb-6">
+                  <span className="text-3xl font-extrabold text-white">{plan.price}</span>
+                  {plan.period && <span className="text-xs text-neutral-600">{plan.period}</span>}
                 </div>
-                <p className="text-xs text-neutral-600 mb-8">{plan.credits}</p>
-                <ul className="flex flex-col gap-3 mb-8 flex-1">
+                <ul className="flex flex-col gap-2.5 mb-8 flex-1">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-neutral-400">
-                      <Check className={`w-4 h-4 shrink-0 ${plan.highlight ? 'text-white' : 'text-neutral-600'}`} />
+                    <li key={f} className="flex items-center gap-2.5 text-[13px] text-neutral-400">
+                      <Check className={`w-3.5 h-3.5 shrink-0 ${plan.highlight ? 'text-white' : 'text-neutral-700'}`} />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   to="/login"
-                  className={`w-full py-3 rounded-lg text-sm font-bold text-center transition-all duration-300 ${
+                  className={`w-full py-2.5 rounded-lg text-sm font-semibold text-center transition-all duration-300 ${
                     plan.highlight
                       ? 'bg-white text-black hover:bg-neutral-200'
-                      : 'bg-neutral-900 text-neutral-300 hover:bg-neutral-800 hover:text-white border border-neutral-800'
+                      : 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.06] border border-white/[0.06]'
                   }`}
                 >
                   {plan.cta}
@@ -649,65 +572,61 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ━━━ FAQ ━━━ */}
-      <section className="py-32 relative">
-        <div className="absolute inset-0 live-grid opacity-15" />
-        <div className="max-w-3xl mx-auto px-6 relative z-10">
-          <h2 className="text-3xl font-extrabold text-center tracking-tight mb-16 reveal-on-scroll">Frequently asked questions</h2>
-          <div className="flex flex-col divide-y divide-neutral-900">
-            {[
-              { q: 'Is BlinkBox really free to start?', a: 'Yes. The Starter plan includes 500 credits per month and 5 workflows. No credit card required.' },
-              { q: 'What happens when I run out of credits?', a: 'Your workflows pause until the next billing cycle. You can upgrade to Pro at any time to resume immediately.' },
-              { q: 'Can I self-host BlinkBox?', a: 'Yes. BlinkBox is designed to run on your own infrastructure. Docker images and Helm charts are available for Enterprise customers.' },
-              { q: 'How is this different from other tools?', a: "BlinkBox gives you AI agents, headless scraping, sandboxed code execution, and visual logic routing — features most platforms don't offer. And we don't charge per task." },
-              { q: 'Is my data secure?', a: 'All credentials are encrypted with AES-256-GCM. We use managed cloud databases with encryption at rest, and all traffic is TLS 1.3.' },
-            ].map((faq, i) => (
-              <div key={faq.q} className="reveal-on-scroll py-6 group" data-delay={i + 1}>
-                <h3 className="text-base font-bold text-white mb-2 group-hover:text-neutral-300 transition-colors duration-300">{faq.q}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          FAQ — accordion style, not just text blocks
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-28 md:py-40 relative">
+        <div className="max-w-2xl mx-auto px-6">
+          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">FAQ</p>
+          <h2 className="text-3xl font-extrabold tracking-tight mb-12 reveal-on-scroll">
+            Questions? Answers.
+          </h2>
+          <div className="reveal-on-scroll">
+            {FAQS.map((faq) => <FaqItem key={faq.q} q={faq.q} a={faq.a} />)}
           </div>
         </div>
       </section>
 
-      {/* ━━━ FINAL CTA ━━━ */}
-      <section className="py-32 relative overflow-hidden">
-        <MeshBackground />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/[0.03] animate-pulse-ring" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-white/[0.02] animate-pulse-ring" style={{ animationDelay: '1.5s' }} />
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          FINAL CTA — cinematic, minimal
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-28 md:py-40 relative overflow-hidden">
+        {/* Subtle radial glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.01] blur-[100px]" />
+        </div>
 
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 reveal-on-scroll">
-            Ready to automate?
+        <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 reveal-on-scroll">
+            Ready?
           </h2>
-          <p className="text-lg text-neutral-400 max-w-xl mx-auto mb-10 leading-relaxed reveal-on-scroll">
-            Join 2,400+ teams already building smarter workflows. Start free — no credit card, no time limit, no catch.
+          <p className="text-neutral-500 text-base max-w-sm mx-auto mb-10 leading-relaxed reveal-on-scroll">
+            Free forever on Starter. No credit card. Set up your first workflow in 3 minutes.
           </p>
           <div className="reveal-on-scroll">
             <Link
               to="/login"
-              className="group inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-xl font-bold text-lg hover:bg-neutral-200 transition-all duration-300 hover:-translate-y-1 shadow-[0_0_60px_rgba(255,255,255,0.06)]"
+              className="group inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-base hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 shadow-[0_0_60px_rgba(255,255,255,0.04)]"
             >
-              Get Started Free <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              Get Started Free
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <p className="mt-6 text-xs text-neutral-600 reveal-on-scroll">No credit card required. Free forever on Starter.</p>
         </div>
       </section>
 
       {/* ━━━ FOOTER ━━━ */}
-      <footer className="py-12 border-t border-neutral-900">
+      <footer className="py-10 border-t border-white/[0.03]">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="BlinkBox" className="w-6 h-6 object-contain" />
-            <span className="text-sm font-bold text-neutral-500 tracking-widest">BLINKBOX</span>
+          <div className="flex items-center gap-2.5">
+            <img src={logo} alt="BlinkBox" className="w-5 h-5 object-contain opacity-50" />
+            <span className="text-xs font-semibold text-neutral-600 tracking-[0.12em]">BLINKBOX</span>
           </div>
-          <div className="flex items-center gap-8 text-xs text-neutral-600">
-            <a href="#features" className="hover:text-neutral-300 transition-colors duration-300">Features</a>
-            <a href="#pricing" className="hover:text-neutral-300 transition-colors duration-300">Pricing</a>
-            <a href="#comparison" className="hover:text-neutral-300 transition-colors duration-300">Compare</a>
-            <span>&copy; {new Date().getFullYear()} BlinkBox. All rights reserved.</span>
+          <div className="flex items-center gap-8 text-[11px] text-neutral-600">
+            <a href="#features" className="hover:text-neutral-400 transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-neutral-400 transition-colors">Pricing</a>
+            <a href="#how-it-works" className="hover:text-neutral-400 transition-colors">How it Works</a>
+            <span>&copy; {new Date().getFullYear()} BlinkBox</span>
           </div>
         </div>
       </footer>

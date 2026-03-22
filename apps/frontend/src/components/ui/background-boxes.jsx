@@ -3,19 +3,19 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const BoxesCore = ({ className, ...rest }) => {
-  const rows = new Array(50).fill(1);
-  const cols = new Array(70).fill(1);
+  const rows = new Array(150).fill(1);
+  const cols = new Array(100).fill(1);
 
   const colors = [
-    "rgb(38,38,38)",    // neutral-800
-    "rgb(30,30,30)",    // dark grey
-    "rgb(45,45,45)",    // medium grey
-    "rgb(24,24,27)",    // zinc-900
-    "rgb(35,35,40)",    // cool dark
-    "rgb(50,50,55)",    // lighter grey
-    "rgb(28,28,32)",    // near-black
-    "rgb(42,42,48)",    // steel
-    "rgb(55,55,60)",    // silver-dark
+    "rgb(23,23,23)",
+    "rgb(30,30,30)",
+    "rgb(38,38,38)",
+    "rgb(20,20,22)",
+    "rgb(35,35,38)",
+    "rgb(28,28,30)",
+    "rgb(42,42,45)",
+    "rgb(18,18,20)",
+    "rgb(32,32,36)",
   ];
 
   const getRandomColor = () => {
@@ -36,7 +36,7 @@ const BoxesCore = ({ className, ...rest }) => {
       {rows.map((_, i) => (
         <motion.div
           key={`row` + i}
-          className="w-16 h-8 border-l border-white/[0.03] relative"
+          className="w-16 h-8 border-l border-white/[0.025] relative"
         >
           {cols.map((_, j) => (
             <motion.div
@@ -48,7 +48,7 @@ const BoxesCore = ({ className, ...rest }) => {
                 transition: { duration: 2 },
               }}
               key={`col` + j}
-              className="w-16 h-8 border-r border-t border-white/[0.03] relative"
+              className="w-16 h-8 border-r border-t border-white/[0.025] relative"
             >
               {j % 2 === 0 && i % 2 === 0 ? (
                 <svg
@@ -57,7 +57,7 @@ const BoxesCore = ({ className, ...rest }) => {
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
                   stroke="currentColor"
-                  className="absolute h-6 w-10 -top-[14px] -left-[22px] text-white/[0.04] stroke-[1px] pointer-events-none"
+                  className="absolute h-6 w-10 -top-[14px] -left-[22px] text-white/[0.03] stroke-[1px] pointer-events-none"
                 >
                   <path
                     strokeLinecap="round"
