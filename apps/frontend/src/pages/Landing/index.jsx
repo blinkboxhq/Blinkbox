@@ -10,6 +10,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { BackgroundPaths } from '@/components/ui/background-paths';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { FeatureCard } from '@/components/ui/grid-feature-cards';
+import { BGPattern } from '@/components/ui/bg-pattern';
 import logo from '../../assets/logo.svg';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
@@ -345,7 +346,8 @@ export default function Landing() {
           HOW IT WORKS — 3 steps with a live-ish canvas preview
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section id="how-it-works" className="py-28 md:py-40 relative">
-        <div className="max-w-6xl mx-auto px-6">
+        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.04)" />
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           {/* Section label */}
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">How it works</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">
@@ -467,7 +469,8 @@ export default function Landing() {
           PRICING — 3 cards, Pro highlighted
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section id="pricing" className="py-28 md:py-40 relative">
-        <div className="max-w-5xl mx-auto px-6">
+        <BGPattern variant="dots" mask="fade-edges" size={24} fill="rgba(255,255,255,0.03)" />
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 text-center reveal-on-scroll">Pricing</p>
           <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight mb-3 reveal-on-scroll">
             Predictable. Simple.
@@ -526,7 +529,8 @@ export default function Landing() {
           FAQ — accordion style, not just text blocks
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-28 md:py-40 relative">
-        <div className="max-w-2xl mx-auto px-6">
+        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.03)" />
+        <div className="max-w-2xl mx-auto px-6 relative z-10">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">FAQ</p>
           <h2 className="text-3xl font-extrabold tracking-tight mb-12 reveal-on-scroll">
             Questions? Answers.
@@ -541,6 +545,7 @@ export default function Landing() {
           FINAL CTA — cinematic, minimal
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-28 md:py-40 relative overflow-hidden">
+        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.035)" />
         {/* Subtle radial glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.01] blur-[100px]" />
