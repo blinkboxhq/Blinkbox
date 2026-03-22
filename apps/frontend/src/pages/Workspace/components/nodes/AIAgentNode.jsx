@@ -1,5 +1,6 @@
-import { Bot, KeyRound, MessageSquare, Settings2, Sparkles } from 'lucide-react';
+import { Bot, MessageSquare, Settings2, Sparkles } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function AIAgentNode({ config = {}, updateConfig }) {
   const provider = config.provider || 'openai';
@@ -78,18 +79,13 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
       </div>
 
       {/* Vault Credential */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-          <KeyRound className="w-3.5 h-3.5 text-blue-400" /> Vault Credential ID
-        </label>
-        <input 
-          type="text"
-          value={config.credentialId || ''}
-          onChange={(e) => updateConfig('credentialId', e.target.value)}
-          placeholder="Paste API Key Credential ID here"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors shadow-inner"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="blue"
+        label="API Key"
+        placeholder="Select API credential..."
+      />
     </div>
   );
 }

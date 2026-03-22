@@ -1,16 +1,8 @@
-import { Sparkles, KeyRound, MessageSquare, Settings2 } from 'lucide-react';
+import { Sparkles, MessageSquare, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
-const MODELS = [
-  'gpt-4o-mini',
-  'gpt-4.1-mini',
-  'gpt-4.1-nano',
-  'gpt-4o',
-  'gpt-4.1',
-  'gpt-4-turbo',
-  'gpt-3.5-turbo',
-  'o4-mini',
-];
+const MODELS = ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'];
 
 export default function OpenAINode({ config = {}, updateConfig }) {
   return (
@@ -69,18 +61,13 @@ export default function OpenAINode({ config = {}, updateConfig }) {
       </div>
 
       {/* Credential */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-          <KeyRound className="w-3.5 h-3.5 text-emerald-400" /> Vault Credential ID
-        </label>
-        <input
-          type="text"
-          value={config.credentialId || ''}
-          onChange={(e) => updateConfig('credentialId', e.target.value)}
-          placeholder="Paste your OpenAI API Key credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="emerald"
+        label="OpenAI API Key"
+        placeholder="Select OpenAI credential..."
+      />
     </div>
   );
 }

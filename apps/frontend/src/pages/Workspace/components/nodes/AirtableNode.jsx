@@ -1,5 +1,6 @@
-import { Table2, KeyRound, Settings2, PlusCircle, Search, Pencil, Trash2 } from 'lucide-react';
+import { Table2, Settings2, PlusCircle, Search, Pencil, Trash2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const ACTIONS = [
   { value: 'create', label: 'Create Record', icon: PlusCircle },
@@ -159,18 +160,13 @@ export default function AirtableNode({ config = {}, updateConfig }) {
       )}
 
       {/* Credential */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-          <KeyRound className="w-3.5 h-3.5 text-yellow-400" /> Vault Credential ID
-        </label>
-        <input
-          type="text"
-          value={config.credentialId || ''}
-          onChange={(e) => updateConfig('credentialId', e.target.value)}
-          placeholder="Paste your Airtable Personal Access Token credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-yellow-500/50 transition-colors shadow-inner"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="yellow"
+        label="Airtable Token"
+        placeholder="Select Airtable credential..."
+      />
     </div>
   );
 }

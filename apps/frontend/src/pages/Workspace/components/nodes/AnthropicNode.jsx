@@ -1,13 +1,8 @@
-import { Brain, KeyRound, MessageSquare, Settings2 } from 'lucide-react';
+import { Brain, MessageSquare, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
-const MODELS = [
-  'claude-sonnet-4-20250514',
-  'claude-haiku-4-5-20251001',
-  'claude-opus-4-20250514',
-  'claude-3-5-sonnet-20241022',
-  'claude-3-5-haiku-20241022',
-];
+const MODELS = ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001', 'claude-opus-4-20250514'];
 
 export default function AnthropicNode({ config = {}, updateConfig }) {
   return (
@@ -66,18 +61,13 @@ export default function AnthropicNode({ config = {}, updateConfig }) {
       </div>
 
       {/* Credential */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-          <KeyRound className="w-3.5 h-3.5 text-orange-400" /> Vault Credential ID
-        </label>
-        <input
-          type="text"
-          value={config.credentialId || ''}
-          onChange={(e) => updateConfig('credentialId', e.target.value)}
-          placeholder="Paste your Anthropic API Key credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-orange-500/50 transition-colors shadow-inner"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="orange"
+        label="Anthropic API Key"
+        placeholder="Select Anthropic credential..."
+      />
     </div>
   );
 }
