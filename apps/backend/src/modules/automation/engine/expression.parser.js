@@ -3,6 +3,25 @@ import ivm from "isolated-vm";
 const MAX_RESOLVE_DEPTH = 20;
 
 /**
+ * Rewrites expressions that reference hyphenated node IDs into valid JS.
+ * e.g. "anthropic-abc-123.result" → '$ctx["anthropic-abc-123"].result'
+ * This is needed because hyphens are subtraction operators in JS.
+ */
+function rewriteHyphenatedRefs(expr, nodeIds) {
+  // Sort longest first so more specific IDs match before prefixes
+  const sorted = [...nodeIds].sort((a, b) => b.length - a.length);
+  let rewritten = expr;
+  for (const id of sorted) {
+    if (!id.includes("-")) continue;
+    // Match the node ID when followed by a dot (property access) or end of expression
+    const escaped = id.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[|\\)))`, "g");
+    rewritten = rewritten.replace(pattern, `$ctx["${id}"]`);
+  }
+  return rewritten;
+}
+
+/**
  * Executes the string as JavaScript within a heavily restricted V8 Isolate
  */
 function evaluateExpression(expression, $json, $node, $runIndex) {
@@ -40,6 +59,10 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
     jail.setSync("__raw_json", safeJson);
     jail.setSync("__raw_context", safeContext);
 
+    // Rewrite hyphenated node ID refs into bracket notation before eval
+    const nodeIds = ($node && typeof $node === "object") ? Object.keys($node) : [];
+    const safeExpression = rewriteHyphenatedRefs(expression, nodeIds);
+
     const script = isolate.compileScriptSync(`
       (() => {
         const $json = JSON.parse(__raw_json);
@@ -52,7 +75,7 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
           get(t, k) { return k in t ? t[k] : $ctx[k]; },
         });
 
-        with (scope) { return ${expression}; }
+        with (scope) { return ${safeExpression}; }
       })();
     `);
 
