@@ -92,8 +92,14 @@ export default {
         provider: "anthropic",
       };
     } catch (err) {
-      if (err.response?.status === 401) throw new Error("Anthropic: Invalid API key.");
+      if (err.response?.status === 401) throw new Error("Anthropic: Invalid API key. Check your credential in the Vault.");
       if (err.response?.status === 429) throw new Error("Anthropic: Rate limit exceeded. Retry later.");
+      if (err.response?.status === 404) {
+        throw new Error(
+          `Anthropic: Model "${model}" not found. It may have been deprecated. ` +
+          `Try: claude-sonnet-4-20250514, claude-haiku-4-5-20251001, or claude-opus-4-20250514.`
+        );
+      }
       throw new Error(`Anthropic failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
     }
   },

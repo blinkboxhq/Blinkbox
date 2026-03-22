@@ -43,7 +43,7 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
             <span className="text-xs font-bold text-zinc-500 w-16">Model</span>
             <input 
               type="text"
-              value={config.model || (provider === 'openai' ? 'gpt-4o-mini' : 'claude-3-haiku-20240307')}
+              value={config.model || (provider === 'openai' ? 'gpt-4o-mini' : 'claude-haiku-4-5-20251001')}
               onChange={(e) => updateConfig('model', e.target.value)}
               className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-blue-300 font-mono focus:outline-none focus:border-blue-500/50 transition-colors"
             />
