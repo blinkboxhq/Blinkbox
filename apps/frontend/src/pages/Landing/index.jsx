@@ -293,13 +293,13 @@ export default function Landing() {
             {/* Headline */}
             <h1 className="max-w-3xl text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[1.05] tracking-tight">
               Your workflows,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-400">
                 on autopilot.
               </span>
             </h1>
 
             {/* Sub */}
-            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-500">
+            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-400">
               BlinkBox is a visual automation engine. Drag nodes, wire logic,
               deploy AI agents — ship workflows that used to take a
               sprint in an afternoon.

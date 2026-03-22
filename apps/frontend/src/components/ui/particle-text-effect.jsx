@@ -136,9 +136,8 @@ export function ParticleTextEffect({ words = [] }) {
         b: 200 + Math.floor(Math.random() * 55),
       };
 
-      const step = Math.max(4, Math.round(6 * (1000 / W)));
       const coords = [];
-      for (let i = 0; i < pixels.length; i += step * 4) {
+      for (let i = 0; i < pixels.length; i += 6 * 4) {
         coords.push(i);
       }
       for (let i = coords.length - 1; i > 0; i--) {
