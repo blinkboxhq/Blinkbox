@@ -347,22 +347,20 @@ export default function Landing() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           PARTICLE TEXT — automation ideas cycling below hero
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-12 md:py-20 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-6 text-center reveal-on-scroll">What will you automate?</p>
-          <ParticleTextEffect
-            words={[
-              'SCRAPE COMPETITORS',
-              'DEPLOY AI AGENTS',
-              'MONITOR PRICES',
-              'PARSE INVOICES',
-              'SYNC DATABASES',
-              'SEND ALERTS',
-              'GENERATE REPORTS',
-              'ENRICH LEADS',
-            ]}
-          />
-        </div>
+      <section className="relative overflow-hidden">
+        <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-6 text-center reveal-on-scroll pt-12 md:pt-20">What will you automate?</p>
+        <ParticleTextEffect
+          words={[
+            'SCRAPE COMPETITORS',
+            'DEPLOY AI AGENTS',
+            'MONITOR PRICES',
+            'PARSE INVOICES',
+            'SYNC DATABASES',
+            'SEND ALERTS',
+            'GENERATE REPORTS',
+            'ENRICH LEADS',
+          ]}
+        />
       </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

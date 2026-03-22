@@ -84,6 +84,7 @@ class Particle {
 
 export function ParticleTextEffect({ words = [] }) {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
   const particlesRef = useRef([]);
   const animationRef = useRef();
   const frameRef = useRef(0);
@@ -91,45 +92,55 @@ export function ParticleTextEffect({ words = [] }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    canvas.width = 1000;
-    canvas.height = 300;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
     const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = rect.height;
 
     const genRandomPos = (cx, cy, mag) => {
       const angle = Math.random() * Math.PI * 2;
       return { x: cx + Math.cos(angle) * mag, y: cy + Math.sin(angle) * mag };
     };
 
+    const fontSize = Math.min(Math.max(W * 0.06, 36), 120);
+
     const nextWord = (word) => {
       const off = document.createElement('canvas');
-      off.width = canvas.width;
-      off.height = canvas.height;
+      off.width = W;
+      off.height = H;
       const offCtx = off.getContext('2d');
 
       offCtx.fillStyle = 'white';
-      offCtx.font = 'bold 72px Arial';
+      offCtx.font = `bold ${fontSize}px Arial`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(word, canvas.width / 2, canvas.height / 2);
+      offCtx.fillText(word, W / 2, H / 2);
 
-      const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const imageData = offCtx.getImageData(0, 0, W, H);
       const pixels = imageData.data;
       const particles = particlesRef.current;
 
-      // White with slight variation
       const newColor = {
         r: 200 + Math.floor(Math.random() * 55),
         g: 200 + Math.floor(Math.random() * 55),
         b: 200 + Math.floor(Math.random() * 55),
       };
 
+      const step = Math.max(4, Math.round(6 * (1000 / W)));
       const coords = [];
-      for (let i = 0; i < pixels.length; i += 6 * 4) {
+      for (let i = 0; i < pixels.length; i += step * 4) {
         coords.push(i);
       }
-      // Shuffle
       for (let i = coords.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -138,8 +149,8 @@ export function ParticleTextEffect({ words = [] }) {
       let pIdx = 0;
       for (const ci of coords) {
         if (pixels[ci + 3] > 0) {
-          const x = (ci / 4) % canvas.width;
-          const y = Math.floor(ci / 4 / canvas.width);
+          const x = (ci / 4) % W;
+          const y = Math.floor(ci / 4 / W);
 
           let p;
           if (pIdx < particles.length) {
@@ -148,7 +159,7 @@ export function ParticleTextEffect({ words = [] }) {
             pIdx++;
           } else {
             p = new Particle();
-            const rp = genRandomPos(canvas.width / 2, canvas.height / 2, (canvas.width + canvas.height) / 2);
+            const rp = genRandomPos(W / 2, H / 2, (W + H) / 2);
             p.pos.x = rp.x;
             p.pos.y = rp.y;
             p.maxSpeed = Math.random() * 6 + 4;
@@ -171,20 +182,20 @@ export function ParticleTextEffect({ words = [] }) {
       }
 
       for (let i = pIdx; i < particles.length; i++) {
-        particles[i].kill(canvas.width, canvas.height);
+        particles[i].kill(W, H);
       }
     };
 
     const animate = () => {
-      const particles = particlesRef.current;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, W, H);
 
+      const particles = particlesRef.current;
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.move();
         p.draw(ctx);
-        if (p.isKilled && (p.pos.x < -50 || p.pos.x > canvas.width + 50 || p.pos.y < -50 || p.pos.y > canvas.height + 50)) {
+        if (p.isKilled && (p.pos.x < -50 || p.pos.x > W + 50 || p.pos.y < -50 || p.pos.y > H + 50)) {
           particles.splice(i, 1);
         }
       }
@@ -207,10 +218,8 @@ export function ParticleTextEffect({ words = [] }) {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full max-w-4xl mx-auto"
-      style={{ height: 'auto', aspectRatio: '10/3' }}
-    />
+    <div ref={containerRef} className="w-full" style={{ height: '300px' }}>
+      <canvas ref={canvasRef} className="block" />
+    </div>
   );
 }
