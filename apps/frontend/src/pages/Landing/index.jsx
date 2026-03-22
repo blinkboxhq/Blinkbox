@@ -291,11 +291,8 @@ export default function Landing() {
             </div>
 
             {/* Headline */}
-            <h1 className="max-w-3xl text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[1.05] tracking-tight">
-              Your workflows,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-400">
-                on autopilot.
-              </span>
+            <h1 className="max-w-3xl text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[1.05] tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-neutral-500">
+              Your workflows, on autopilot.
             </h1>
 
             {/* Sub */}
