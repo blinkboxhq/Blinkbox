@@ -9,6 +9,7 @@ import {
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { BackgroundPaths } from '@/components/ui/background-paths';
 import { AnimatedGroup } from '@/components/ui/animated-group';
+import { FeatureCard } from '@/components/ui/grid-feature-cards';
 import logo from '../../assets/logo.svg';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
@@ -134,27 +135,27 @@ function CanvasPreview() {
 const FEATURES = [
   {
     icon: Bot, title: 'AI Agents',
-    desc: 'Drop an LLM into any workflow. It reads the incoming data, reasons about it, and outputs structured results. No prompt engineering degree required.',
+    description: 'Drop an LLM into any workflow. It reads incoming data, reasons about it, and outputs structured results.',
   },
   {
     icon: Search, title: 'Headless Scraping',
-    desc: 'Full Chromium browser pool. Defeats anti-bot, renders JavaScript, extracts what you need. Schedule it or trigger it from any node.',
+    description: 'Full Chromium browser pool. Defeats anti-bot, renders JavaScript, extracts what you need.',
   },
   {
     icon: GitBranch, title: 'Logic Routing',
-    desc: 'If/else, switch, loops — built visually. Drag an edge, set a condition, done. Your data takes the right path every time.',
+    description: 'If/else, switch, loops — built visually. Drag an edge, set a condition, done.',
   },
   {
     icon: Globe, title: 'API Connector',
-    desc: 'Hit any REST endpoint. Credentials auto-injected from your encrypted vault. Auth headers, retries, transforms — all configurable.',
+    description: 'Hit any REST endpoint. Credentials auto-injected from your encrypted vault.',
   },
   {
     icon: Cpu, title: 'Code Sandbox',
-    desc: 'Write JavaScript that runs in an isolated V8 sandbox. Full power, strict memory limits, zero risk to your infra.',
+    description: 'Write JavaScript in an isolated V8 sandbox. Full power, strict memory limits, zero risk.',
   },
   {
     icon: Shield, title: 'Encrypted Vault',
-    desc: 'AES-256-GCM encryption for every secret. Keys never leave the server decrypted. Access scoped per workspace.',
+    description: 'AES-256-GCM encryption for every secret. Keys never leave the server decrypted.',
   },
 ];
 
@@ -383,57 +384,36 @@ export default function Landing() {
       </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          FEATURES — 2-column offset grid, asymmetric, not the usual 3x2
+          FEATURES — grid cards with pattern overlay
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section id="features" className="py-28 md:py-40 relative">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
-            {/* Left — sticky label */}
-            <div className="lg:sticky lg:top-32">
-              <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">Capabilities</p>
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">
-                Everything you need.<br />
-                Nothing you don&apos;t.
-              </h2>
-              <p className="text-neutral-500 max-w-sm reveal-on-scroll">
-                Every node is built to solve a real problem. No filler features, no marketing fluff.
-              </p>
+      <section id="features" className="py-16 md:py-32">
+        <div className="mx-auto w-full max-w-5xl space-y-8 px-4">
+          <motion.div
+            initial={{ filter: 'blur(4px)', translateY: -8, opacity: 0 }}
+            whileInView={{ filter: 'blur(0px)', translateY: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.8 }}
+            className="mx-auto max-w-3xl text-center"
+          >
+            <h2 className="text-3xl font-bold tracking-wide text-balance md:text-4xl lg:text-5xl xl:font-extrabold">
+              Every node solves a real problem.
+            </h2>
+            <p className="text-neutral-500 mt-4 text-sm tracking-wide text-balance md:text-base">
+              No filler features. No marketing fluff. Just what you need to automate.
+            </p>
+          </motion.div>
 
-              <div className="mt-8 reveal-on-scroll">
-                <Link
-                  to="/login"
-                  className="group inline-flex items-center gap-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
-                >
-                  Explore all nodes
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Right — feature cards */}
-            <div className="space-y-4">
-              {FEATURES.map((f, i) => {
-                const Icon = f.icon;
-                return (
-                  <div
-                    key={f.title}
-                    className="reveal-on-scroll group p-6 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.08] transition-all duration-400"
-                    data-delay={(i % 3) + 1}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="mt-0.5 w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover:bg-white/[0.06] transition-colors">
-                        <Icon className="w-4 h-4 text-neutral-500 group-hover:text-neutral-300 transition-colors" />
-                      </div>
-                      <div>
-                        <h3 className="text-[15px] font-bold text-white mb-1.5">{f.title}</h3>
-                        <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <motion.div
+            initial={{ filter: 'blur(4px)', translateY: -8, opacity: 0 }}
+            whileInView={{ filter: 'blur(0px)', translateY: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="grid grid-cols-1 divide-x divide-y divide-dashed divide-white/[0.06] border border-dashed border-white/[0.06] sm:grid-cols-2 md:grid-cols-3"
+          >
+            {FEATURES.map((feature, i) => (
+              <FeatureCard key={i} feature={feature} />
+            ))}
+          </motion.div>
         </div>
       </section>
 
