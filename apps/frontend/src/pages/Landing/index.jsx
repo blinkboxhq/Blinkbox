@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, Bot, Search, GitBranch, Globe, Shield, Cpu,
@@ -74,36 +74,6 @@ function FaqItem({ q, a }) {
       </AnimatePresence>
     </div>
   );
-}
-
-// ── Animated counter ───────────────────────────────────────────────────────
-function AnimCounter({ target, suffix = '' }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const started = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
-        started.current = true;
-        const duration = 1800;
-        const start = performance.now();
-        const tick = (now) => {
-          const progress = Math.min((now - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          setCount(Math.floor(eased * target));
-          if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      }
-    }, { threshold: 0.5 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [target]);
-
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
 // ── Visual node preview (mini canvas mockup) ───────────────────────────────
@@ -349,21 +319,21 @@ export default function Landing() {
               </a>
             </div>
 
-            {/* Proof strip — just numbers, no fake logos */}
-            <div className="mt-20 flex items-center gap-10 text-neutral-600">
-              <div>
-                <p className="text-2xl font-bold text-neutral-300 tabular-nums"><AnimCounter target={2400} suffix="+" /></p>
-                <p className="text-[11px] uppercase tracking-widest mt-1">builders</p>
+            {/* Trust strip — real facts only */}
+            <div className="mt-16 flex items-center gap-6 text-neutral-600">
+              <div className="flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5" />
+                <span className="text-[11px] uppercase tracking-widest">AES-256 Encrypted</span>
               </div>
-              <div className="w-px h-8 bg-white/[0.04]" />
-              <div>
-                <p className="text-2xl font-bold text-neutral-300 tabular-nums"><AnimCounter target={1200000} suffix="" /></p>
-                <p className="text-[11px] uppercase tracking-widest mt-1">executions / mo</p>
+              <div className="w-px h-4 bg-white/[0.04]" />
+              <div className="flex items-center gap-2">
+                <Shield className="w-3.5 h-3.5" />
+                <span className="text-[11px] uppercase tracking-widest">Self-Hostable</span>
               </div>
-              <div className="hidden sm:block w-px h-8 bg-white/[0.04]" />
-              <div className="hidden sm:block">
-                <p className="text-2xl font-bold text-neutral-300">99.9%</p>
-                <p className="text-[11px] uppercase tracking-widest mt-1">uptime</p>
+              <div className="hidden sm:block w-px h-4 bg-white/[0.04]" />
+              <div className="hidden sm:flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5" />
+                <span className="text-[11px] uppercase tracking-widest">Free Forever Plan</span>
               </div>
             </div>
           </AnimatedGroup>
