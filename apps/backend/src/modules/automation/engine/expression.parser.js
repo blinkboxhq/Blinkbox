@@ -13,9 +13,9 @@ function rewriteHyphenatedRefs(expr, nodeIds) {
   let rewritten = expr;
   for (const id of sorted) {
     if (!id.includes("-")) continue;
-    // Match the node ID when followed by a dot (property access) or end of expression
-    const escaped = id.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[|\\)))`, "g");
+    // Node IDs are alphanumeric + hyphens, only escape the hyphens
+    const escaped = id.replace(/-/g, "\\-");
+    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[)`, "g");
     rewritten = rewritten.replace(pattern, `$ctx["${id}"]`);
   }
   return rewritten;
