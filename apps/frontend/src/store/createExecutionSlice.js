@@ -4,9 +4,11 @@ import { getSocket } from "../lib/socket";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Execution Slice — owns all live telemetry, WebSocket streaming, and
-// run/cancel lifecycle.  Canvas never re-renders from execution state changes
-// because this slice is subscribed separately via selectors.
+// run/cancel/retry lifecycle.  Canvas never re-renders from execution state
+// changes because this slice is subscribed separately via selectors.
 // ─────────────────────────────────────────────────────────────────────────────
+
+const TERMINAL = ["executed", "failed", "cancelled", "partial"];
 
 export const createExecutionSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
@@ -14,6 +16,7 @@ export const createExecutionSlice = (set, get) => ({
   isExecutionLive: false,
   isTraceSidebarOpen: false,
   liveExecutionState: null,
+  executionError: null,
 
   // ── Derived helper: per-node status map for O(1) lookups ─────────────────
   getNodeStatus: (nodeId) => {
@@ -30,24 +33,58 @@ export const createExecutionSlice = (set, get) => ({
     if (state.liveExecutionState?._id) {
       socket.emit("unsubscribe:execution", state.liveExecutionState._id);
     }
-    set({ isExecutionLive: false, isTraceSidebarOpen: false, liveExecutionState: null });
+    set({ isExecutionLive: false, isTraceSidebarOpen: false, liveExecutionState: null, executionError: null });
   },
 
   closeTraceSidebar: () => set({ isTraceSidebarOpen: false }),
 
+  // ── Run Engine ────────────────────────────────────────────────────────────
   runEngine: async (automationId) => {
-    set({ isRunning: true, isExecutionLive: true, isTraceSidebarOpen: true, liveExecutionState: null });
+    const state = get();
+
+    // Guard: don't double-run
+    if (state.isRunning) {
+      toast.info("Execution already in progress.");
+      return;
+    }
+
+    // Guard: need a trigger node
+    const triggerNode = state.nodes.find((n) => n.data.type === "trigger");
+    if (!triggerNode) {
+      toast.error("No trigger node found. Add a trigger to start.");
+      return;
+    }
+
+    // Guard: need at least 2 nodes
+    if (state.nodes.length < 2) {
+      toast.error("Add at least one node after the trigger to run.");
+      return;
+    }
+
+    set({
+      isRunning: true,
+      isExecutionLive: true,
+      isTraceSidebarOpen: true,
+      liveExecutionState: null,
+      executionError: null,
+    });
 
     try {
-      const state = get();
-      const entryNode = state.nodes.find((n) => n.data.type === "trigger");
-
+      // Parse test payload with helpful error
       let testPayload = {};
       try {
-        const raw = entryNode?.data?.config?.mockPayload;
-        testPayload = raw ? JSON.parse(raw) : { status: "empty_test" };
-      } catch {
-        throw new Error("Invalid JSON in test payload.");
+        const raw = triggerNode?.data?.config?.mockPayload;
+        testPayload = raw ? JSON.parse(raw) : { _test: true, triggeredAt: new Date().toISOString() };
+      } catch (parseErr) {
+        throw new Error(
+          `Invalid JSON in test payload: ${parseErr.message}. Fix the JSON in your trigger's "Test JSON Payload" field.`
+        );
+      }
+
+      // Auto-save before running
+      const saveEngine = get().saveEngine;
+      if (saveEngine) {
+        try { await saveEngine(automationId); } catch { /* don't block execution */ }
       }
 
       const response = await api.post(
@@ -56,53 +93,116 @@ export const createExecutionSlice = (set, get) => ({
         { headers: { "Idempotency-Key": `manual-test-${Date.now()}` } },
       );
 
+      if (!response.data?.execution?._id) {
+        throw new Error("Server returned invalid execution response.");
+      }
+
       const executionId = response.data.execution._id;
-      const socket = getSocket();
-      socket.emit("subscribe:execution", executionId);
+      set({ liveExecutionState: response.data.execution });
 
-      const handler = (data) => {
-        if (data.executionId !== executionId) return;
-        set({ liveExecutionState: data });
-
-        if (["executed", "failed", "cancelled", "partial"].includes(data.status)) {
-          set({ isRunning: false });
-          socket.off("execution:update", handler);
-          socket.emit("unsubscribe:execution", executionId);
-        }
-      };
-      socket.on("execution:update", handler);
-
-      // Resilient fallback poll with exponential backoff
-      const TERMINAL = ["executed", "failed", "cancelled", "partial"];
-      const POLL_BASE = 2000;
-      const POLL_CAP = 30000;
-      const POLL_MAX = 10;
-      let attempt = 0;
-
-      const poll = async () => {
-        if (!get().isRunning) return;
-        try {
-          const res = await api.get(`/api/execution/${executionId}`);
-          const execution = res.data.execution;
-          set({ liveExecutionState: execution });
-          if (TERMINAL.includes(execution?.status)) {
-            set({ isRunning: false });
-            socket.off("execution:update", handler);
-            socket.emit("unsubscribe:execution", executionId);
-            return;
-          }
-        } catch { /* continue polling */ }
-        if (++attempt >= POLL_MAX) return;
-        setTimeout(poll, Math.min(POLL_BASE * 2 ** attempt, POLL_CAP));
-      };
-      setTimeout(poll, POLL_BASE);
+      _subscribeToExecution(set, get, executionId);
     } catch (error) {
       console.error("Execution failed:", error);
-      set({ isRunning: false, isExecutionLive: false });
-      toast.error(
-        "Execution failed: " +
-          (error.response?.data?.message || error.message),
-      );
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Unknown error";
+      set({ isRunning: false, executionError: errorMsg });
+      toast.error(`Execution failed: ${errorMsg}`);
+    }
+  },
+
+  // ── Retry Failed Execution ────────────────────────────────────────────────
+  retryExecution: async () => {
+    const state = get();
+    const executionId = state.liveExecutionState?._id;
+    if (!executionId) {
+      toast.error("No execution to retry.");
+      return;
+    }
+
+    set({ isRunning: true, executionError: null });
+
+    try {
+      const response = await api.post(`/api/execution/retry/${executionId}`);
+      toast.success(response.data.message || "Retrying failed nodes...");
+      _subscribeToExecution(set, get, executionId);
+    } catch (error) {
+      set({ isRunning: false });
+      toast.error(error.response?.data?.message || "Retry failed.");
+    }
+  },
+
+  // ── Cancel Running Execution ──────────────────────────────────────────────
+  cancelExecution: async () => {
+    const state = get();
+    const executionId = state.liveExecutionState?._id;
+    if (!executionId) return;
+
+    try {
+      await api.post(`/api/execution/cancel/${executionId}`);
+      set({ isRunning: false });
+      toast.info("Execution cancelled.");
+
+      const res = await api.get(`/api/execution/${executionId}`);
+      if (res.data.execution) {
+        set({ liveExecutionState: res.data.execution });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Could not cancel.");
     }
   },
 });
+
+// ── Shared WebSocket subscription + fallback polling ─────────────────────────
+function _subscribeToExecution(set, get, executionId) {
+  const socket = getSocket();
+  socket.emit("subscribe:execution", executionId);
+
+  const handler = (data) => {
+    if (data.executionId !== executionId) return;
+    set({ liveExecutionState: data });
+
+    if (TERMINAL.includes(data.status)) {
+      set({ isRunning: false });
+      socket.off("execution:update", handler);
+      socket.emit("unsubscribe:execution", executionId);
+
+      if (data.status === "executed") {
+        toast.success("Execution completed successfully.");
+      } else if (data.status === "failed") {
+        const failedCursors = data.cursors?.filter((c) => c.status === "failed") || [];
+        const firstError = failedCursors[0]?.errorMessage;
+        toast.error(firstError ? `Failed: ${firstError.slice(0, 120)}` : "Execution failed. Check trace.");
+      }
+    }
+  };
+  socket.on("execution:update", handler);
+
+  // Fallback poll
+  const POLL_BASE = 2000;
+  const POLL_CAP = 15000;
+  const POLL_MAX = 15;
+  let attempt = 0;
+
+  const poll = async () => {
+    if (!get().isRunning) return;
+    try {
+      const res = await api.get(`/api/execution/${executionId}`);
+      const execution = res.data.execution;
+      if (execution) {
+        set({ liveExecutionState: execution });
+        if (TERMINAL.includes(execution.status)) {
+          set({ isRunning: false });
+          socket.off("execution:update", handler);
+          socket.emit("unsubscribe:execution", executionId);
+          return;
+        }
+      }
+    } catch { /* continue polling */ }
+    if (++attempt >= POLL_MAX) {
+      set({ isRunning: false });
+      toast.error("Execution is taking too long. Check trace sidebar.");
+      return;
+    }
+    setTimeout(poll, Math.min(POLL_BASE * Math.pow(1.5, attempt), POLL_CAP));
+  };
+  setTimeout(poll, POLL_BASE);
+}

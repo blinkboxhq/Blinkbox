@@ -20,13 +20,105 @@ const RETRY_BASE_MS = 1000;
 const MAX_CURSORS_PER_EXECUTION = 500;
 
 /**
+ * Classify an error and generate a human-readable fix hint.
+ */
+function classifyError(err, nodeType, config) {
+  const msg = err.message || String(err);
+  const lower = msg.toLowerCase();
+
+  // Timeout errors
+  if (lower.includes("timeout") || lower.includes("exceeded") || lower.includes("etimedout")) {
+    return {
+      category: "timeout",
+      message: msg,
+      hint: nodeType === "web_scraper"
+        ? "The page took too long to load. Try a simpler URL or increase the timeout in node config."
+        : nodeType === "http_request"
+        ? `The API at "${config?.url || "unknown"}" did not respond in time. Check the URL is correct and the server is reachable.`
+        : "This node took too long. Try simplifying the operation or breaking it into smaller steps.",
+    };
+  }
+
+  // Network errors
+  if (lower.includes("enotfound") || lower.includes("econnrefused") || lower.includes("econnreset") || lower.includes("fetch failed")) {
+    const url = config?.url || "unknown";
+    return {
+      category: "network",
+      message: msg,
+      hint: `Cannot reach "${url}". Check: (1) URL is correct, (2) server is running, (3) no firewall blocking the request.`,
+    };
+  }
+
+  // Auth/credential errors
+  if (lower.includes("401") || lower.includes("403") || lower.includes("unauthorized") || lower.includes("forbidden")) {
+    return {
+      category: "auth",
+      message: msg,
+      hint: "Authentication failed. Check your credentials in the encrypted vault — API key may be expired or incorrect.",
+    };
+  }
+
+  // Rate limiting
+  if (lower.includes("429") || lower.includes("rate limit") || lower.includes("too many")) {
+    return {
+      category: "rate_limit",
+      message: msg,
+      hint: "You've hit a rate limit on the external API. The system will auto-retry with backoff. If it persists, add a Delay node before this one.",
+    };
+  }
+
+  // JSON parse errors
+  if (lower.includes("json") && (lower.includes("parse") || lower.includes("unexpected"))) {
+    return {
+      category: "parse",
+      message: msg,
+      hint: "The response wasn't valid JSON. If this is an API call, check the URL returns JSON, not HTML. If it's test data, fix the JSON syntax.",
+    };
+  }
+
+  // Expression/template errors
+  if (lower.includes("expression") || lower.includes("{{") || lower.includes("undefined is not")) {
+    return {
+      category: "expression",
+      message: msg,
+      hint: "A {{ expression }} in this node's config couldn't resolve. Check that the referenced field exists in the upstream node's output.",
+    };
+  }
+
+  // Code sandbox errors
+  if (nodeType === "code" && (lower.includes("syntaxerror") || lower.includes("referenceerror") || lower.includes("typeerror"))) {
+    return {
+      category: "code",
+      message: msg,
+      hint: "Your code has a JavaScript error. Check the Code node for syntax issues, undefined variables, or type mismatches.",
+    };
+  }
+
+  // Memory/resource errors
+  if (lower.includes("memory") || lower.includes("heap") || lower.includes("allocation")) {
+    return {
+      category: "resource",
+      message: msg,
+      hint: "This node used too much memory. Try processing smaller data batches or simplifying the operation.",
+    };
+  }
+
+  // Generic fallback
+  return {
+    category: "unknown",
+    message: msg,
+    hint: "Check the node configuration and upstream data. If the issue persists, try removing and re-adding the node.",
+  };
+}
+
+/**
  * Core cursor processor with atomic locking, retry logic, and crash recovery.
  */
 export async function processCursor({ executionId, cursorId }) {
   const startTime = performance.now();
   const cellId = process.pid;
 
-  // 2.1 ATOMIC LOCK: Only claim cursor if it's still "pending"
+  // ATOMIC LOCK: Only claim cursor if it's still "pending"
   const lockResult = await Execution.updateOne(
     { _id: executionId },
     {
@@ -55,22 +147,22 @@ export async function processCursor({ executionId, cursorId }) {
 
   const automation = await Automation.findById(execution.automationId);
   if (!automation) {
-    await _markCursorFailed(execution, cursor, "CRITICAL: Automation Blueprint Missing");
+    await _markCursorFailed(execution, cursor, "Automation blueprint not found. It may have been deleted.", "config");
     return;
   }
 
   const node = automation.nodes.find((n) => n.id === cursor.nodeId);
   if (!node) {
-    await _markCursorFailed(execution, cursor, `Node [${cursor.nodeId}] not found in blueprint.`);
+    await _markCursorFailed(execution, cursor, `Node [${cursor.nodeId}] not found in blueprint. Save your workflow and try again.`, "config");
     return;
   }
 
   const handler = nodeRegistry[node.type];
   if (!handler) {
     await _markCursorFailed(
-      execution,
-      cursor,
-      `FATAL: Node type [${node.type}] is missing from the Registry.`,
+      execution, cursor,
+      `Node type "${node.type}" is not supported. Remove this node and replace it with a supported one.`,
+      "config",
     );
     return;
   }
@@ -81,14 +173,13 @@ export async function processCursor({ executionId, cursorId }) {
     await emitExecutionEvent(execution._id, {
       type: "quota_exceeded",
       nodeId: node.id,
-      message: `Credit limit reached (${creditCheck.creditsUsed}/${creditCheck.monthlyLimit}). ` +
-        `Node "${node.type}" costs ${creditCheck.cost} credits. Upgrade plan to continue.`,
+      message: `Credit limit reached (${creditCheck.creditsUsed}/${creditCheck.monthlyLimit}). Node "${node.type}" costs ${creditCheck.cost} credits.`,
       meta: { plan: creditCheck.plan, remaining: creditCheck.remaining, cost: creditCheck.cost },
     });
     await _markCursorFailed(
-      execution,
-      cursor,
-      `Quota exceeded: ${creditCheck.remaining} credits remaining, need ${creditCheck.cost}`,
+      execution, cursor,
+      `Credit quota exceeded: ${creditCheck.remaining} remaining, need ${creditCheck.cost}. Upgrade your plan to continue.`,
+      "quota",
     );
     return;
   }
@@ -96,12 +187,15 @@ export async function processCursor({ executionId, cursorId }) {
   let finalOutputs = [];
   let nodeDelayUntil = null;
   let executionError = null;
+  let errorClassification = null;
   let dynamicContext = {};
+  let resolvedInput = null;
 
   try {
     await emitExecutionEvent(execution._id, {
       type: "node_started",
       nodeId: node.id,
+      message: `Executing ${node.type} node "${node.data?.label || node.id}"`,
     });
 
     // VAULT RECONSTRUCTION: Retrieve all historical data for this execution
@@ -125,10 +219,19 @@ export async function processCursor({ executionId, cursorId }) {
 
     if (inputItems.length === 0) inputItems = [{ json: {} }];
 
+    // Store what went into this node for diagnostics
+    resolvedInput = inputItems[0]?.json || {};
+
     // KERNEL EXECUTION: Run node with timeout guard
     for (let i = 0; i < inputItems.length; i++) {
       const item = inputItems[i];
-      const resolvedConfig = resolveConfig(node.data, item.json, dynamicContext, i);
+
+      let resolvedConfig;
+      try {
+        resolvedConfig = resolveConfig(node.data, item.json, dynamicContext, i);
+      } catch (configErr) {
+        throw new Error(`Config resolution failed: ${configErr.message}. Check {{ expressions }} in this node's settings.`);
+      }
 
       let rawOutput = await withTimeout(
         handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId }),
@@ -148,7 +251,8 @@ export async function processCursor({ executionId, cursorId }) {
       finalOutputs.push(...formatted);
     }
   } catch (err) {
-    executionError = err.message;
+    errorClassification = classifyError(err, node.type, node.data);
+    executionError = errorClassification.message;
   }
 
   // ATOMIC MERGE GATE: Prevent parallel race conditions via Redis
@@ -174,6 +278,7 @@ export async function processCursor({ executionId, cursorId }) {
   try {
     const latestExecution = await Execution.findById(executionId);
     const latestCursor = latestExecution.cursors.id(cursorId);
+    const duration = (performance.now() - startTime).toFixed(2);
 
     if (!executionError) {
       // SUCCESS PATH
@@ -184,7 +289,8 @@ export async function processCursor({ executionId, cursorId }) {
           log: {
             nodeType: node.type,
             status: "success",
-            duration: (performance.now() - startTime).toFixed(2),
+            input: resolvedInput,
+            duration,
           },
         },
         { upsert: true },
@@ -204,24 +310,26 @@ export async function processCursor({ executionId, cursorId }) {
       await emitExecutionEvent(latestExecution._id, {
         type: "node_completed",
         nodeId: node.id,
+        meta: { duration },
       });
 
       await routeEdges(
-        automation,
-        latestExecution,
-        node,
-        finalOutputs,
-        "onSuccess",
-        nodeDelayUntil,
+        automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
       );
     } else {
       // FAILURE PATH — check retry budget
       const currentRetries = latestCursor.retries || 0;
+      const category = errorClassification?.category || "unknown";
+      const hint = errorClassification?.hint || "";
 
-      if (currentRetries < MAX_RETRIES) {
+      // Don't auto-retry config/auth errors — they won't self-fix
+      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota"];
+      const shouldRetry = currentRetries < MAX_RETRIES && !noRetryCategories.includes(category);
+
+      if (shouldRetry) {
         const backoffMs = RETRY_BASE_MS * Math.pow(2, currentRetries);
         console.warn(
-          `[Retry ${currentRetries + 1}/${MAX_RETRIES}] Node [${node.id}] failed. ` +
+          `[Retry ${currentRetries + 1}/${MAX_RETRIES}] Node [${node.id}] failed (${category}). ` +
           `Retrying in ${backoffMs}ms... Error: ${executionError}`,
         );
 
@@ -230,7 +338,6 @@ export async function processCursor({ executionId, cursorId }) {
         latestCursor.lockedAt = null;
         latestCursor.lockedBy = null;
 
-        // Schedule retry via Redis Sorted Set (ZADD) instead of MongoDB resumeAt
         await scheduleDelay(
           { executionId: executionId.toString(), cursorId: cursorId.toString() },
           Date.now() + backoffMs,
@@ -239,13 +346,15 @@ export async function processCursor({ executionId, cursorId }) {
         await emitExecutionEvent(latestExecution._id, {
           type: "node_retrying",
           nodeId: node.id,
-          message: `Retry ${currentRetries + 1}/${MAX_RETRIES} in ${backoffMs}ms`,
+          message: `Retry ${currentRetries + 1}/${MAX_RETRIES} in ${backoffMs}ms — ${category} error`,
+          meta: { category, hint, retryIn: backoffMs },
         });
       } else {
-        console.error(
-          `[Dead] Node [${node.id}] permanently failed after ${MAX_RETRIES} retries. ` +
-          `Error: ${executionError}`,
-        );
+        const reason = noRetryCategories.includes(category)
+          ? `${executionError} [${category} error — auto-retry skipped, fix required]`
+          : `${executionError} [failed after ${MAX_RETRIES} retries]`;
+
+        console.error(`[Dead] Node [${node.id}] permanently failed: ${reason}`);
 
         await ExecutionData.findOneAndUpdate(
           { executionId: latestExecution._id, nodeId: node.id },
@@ -254,14 +363,18 @@ export async function processCursor({ executionId, cursorId }) {
               nodeType: node.type,
               status: "failed",
               error: executionError,
-              retriesExhausted: true,
+              input: resolvedInput,
+              errorCategory: category,
+              hint,
+              retriesExhausted: shouldRetry ? false : true,
+              duration,
             },
           },
           { upsert: true },
         );
 
         latestCursor.status = "failed";
-        latestCursor.errorMessage = executionError;
+        latestCursor.errorMessage = hint ? `${executionError} — ${hint}` : executionError;
         latestCursor.lockedAt = null;
         latestCursor.lockedBy = null;
 
@@ -269,16 +382,14 @@ export async function processCursor({ executionId, cursorId }) {
           type: "node_failed",
           nodeId: node.id,
           message: executionError,
+          meta: { category, hint, duration },
         });
 
         // Route to onFailure edges if any
         await routeEdges(
-          automation,
-          latestExecution,
-          node,
-          [{ json: { error: executionError } }],
-          "onFailure",
-          null,
+          automation, latestExecution, node,
+          [{ json: { error: executionError, category, hint } }],
+          "onFailure", null,
         );
       }
     }
@@ -289,12 +400,17 @@ export async function processCursor({ executionId, cursorId }) {
     );
 
     if (!stillActive) {
-      latestExecution.status = latestExecution.cursors.some((c) => c.status === "failed")
-        ? "failed"
-        : "executed";
+      const hasFailed = latestExecution.cursors.some((c) => c.status === "failed");
+      latestExecution.status = hasFailed ? "failed" : "executed";
       latestExecution.completedAt = new Date();
 
-      await emitExecutionEvent(latestExecution._id, { type: "execution_completed" });
+      await emitExecutionEvent(latestExecution._id, {
+        type: "execution_completed",
+        meta: {
+          status: latestExecution.status,
+          totalDuration: (performance.now() - startTime).toFixed(2),
+        },
+      });
     }
 
     await latestExecution.save();
@@ -314,7 +430,7 @@ export async function processCursor({ executionId, cursorId }) {
 }
 
 // ── Helper: instantly mark a cursor as permanently failed ─────────────────────
-async function _markCursorFailed(execution, cursor, reason) {
+async function _markCursorFailed(execution, cursor, reason, category = "unknown") {
   cursor.status = "failed";
   cursor.errorMessage = reason;
   cursor.lockedAt = null;
@@ -322,7 +438,15 @@ async function _markCursorFailed(execution, cursor, reason) {
   execution.status = "failed";
   execution.completedAt = new Date();
   await execution.save();
-  console.error(`[Fatal] Cursor ${cursor._id} killed: ${reason}`);
+
+  emitExecutionUpdate(execution._id.toString(), {
+    executionId: execution._id.toString(),
+    status: "failed",
+    cursors: execution.cursors,
+    completedAt: execution.completedAt,
+  });
+
+  console.error(`[Fatal] Cursor ${cursor._id} killed (${category}): ${reason}`);
 }
 
 // ── Edge router with fresh merge check ───────────────────────────────────────
@@ -336,20 +460,17 @@ async function routeEdges(
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
-    // Infer if this is an error path based on UI handles or explicit type
     const isFailurePath = e.sourceHandle === 'error' || e.sourceHandle === 'false' || e.type === 'onFailure';
     const normalizedType = isFailurePath ? "onFailure" : "onSuccess";
     return normalizedType === edgeType;
   });
 
-  // 3.7 Runtime cycle guard: cap total cursors
+  // Runtime cycle guard: cap total cursors
   if (execution.cursors.length >= MAX_CURSORS_PER_EXECUTION) {
     console.error(`Execution ${execution._id} hit cursor limit (${MAX_CURSORS_PER_EXECUTION}). Stopping.`);
     return;
   }
 
-  // Collect cursor payloads first — we must save to MongoDB BEFORE enqueueing
-  // to prevent the race where a worker picks up a cursor that doesn't exist yet.
   const toEnqueue = [];
 
   for (const edge of edges) {
@@ -358,7 +479,7 @@ async function routeEdges(
     if (evaluateCondition(edge.condition, evaluationContext)) {
       const targetNodeId = edge.target;
 
-      // 2.2 MERGE CHECK: Re-query ExecutionData for fresh state
+      // MERGE CHECK: Re-query ExecutionData for fresh state
       const allIncoming = automation.edges.filter((e) => e.target === targetNodeId);
 
       if (allIncoming.length > 1) {

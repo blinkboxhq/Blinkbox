@@ -1,6 +1,7 @@
 import { Handle, Position } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2 } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
@@ -34,6 +35,7 @@ function getConfigHint(data) {
 }
 
 export default function CustomNode({ id, data, selected }) {
+  const { id: automationId } = useParams();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
   const Icon = nodeDef.icon;
   const accent = nodeDef.accentColor || "161,161,170";
@@ -41,6 +43,8 @@ export default function CustomNode({ id, data, selected }) {
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore((s) => s.getNodeStatus);
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
+  const isRunning = useWorkspaceStore((s) => s.isRunning);
+  const runEngine = useWorkspaceStore((s) => s.runEngine);
   const status = isExecutionLive ? getNodeStatus(id) : null;
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
@@ -88,6 +92,114 @@ export default function CustomNode({ id, data, selected }) {
     borderClass = "border-zinc-600";
   }
 
+  // ── TRIGGER NODE — distinct shape ──────────────────────────────────────
+  if (isTrigger) {
+    const triggerBorder = status === "running" ? "border-blue-500/40" :
+      status === "completed" ? "border-emerald-500/30" :
+      status === "failed" ? "border-red-500/30" :
+      selected ? "border-emerald-500/40" : "border-emerald-600/20";
+
+    const handlePlay = (e) => {
+      e.stopPropagation();
+      if (!isRunning && automationId) {
+        runEngine(automationId);
+      }
+    };
+
+    return (
+      <div className="relative flex items-center gap-0">
+        {/* Main trigger body — rounded-left pill shape */}
+        <div
+          className={`relative border ${triggerBorder} rounded-2xl min-w-[220px] bg-zinc-950 transition-all duration-200 overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.04)]`}
+        >
+          {badge}
+
+          {/* Green accent glow top */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/10 border border-emerald-500/20">
+              <Icon className="w-4.5 h-4.5 text-emerald-400" strokeWidth={1.75} />
+            </div>
+
+            <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+              <span className="text-[13px] font-semibold text-zinc-100 tracking-tight truncate">
+                {data.label}
+              </span>
+              <span className="text-[10px] text-emerald-500/70 uppercase tracking-wider mt-0.5 font-medium">
+                Trigger
+              </span>
+            </div>
+
+            {/* Live status */}
+            <div className="shrink-0">
+              {status === "running" && (
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
+                </span>
+              )}
+              {status === "completed" && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+              {status === "failed" && <div className="w-2.5 h-2.5 rounded-full bg-red-500" />}
+            </div>
+          </div>
+
+          {/* Config hint */}
+          <div className="px-4 pb-2">
+            {configHint ? (
+              <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
+                {configHint}
+              </p>
+            ) : (
+              <p className="text-[10px] text-zinc-600">
+                {data.config?.isActive !== false ? "Listening" : "Paused"}
+              </p>
+            )}
+          </div>
+
+          {/* Footer with play button */}
+          <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800/40 bg-zinc-950/50">
+            <span className="text-[9px] text-zinc-600 font-mono">
+              {data.config?.isActive !== false ? "ACTIVE" : "INACTIVE"}
+            </span>
+
+            {/* PLAY BUTTON — starts execution */}
+            <button
+              onClick={handlePlay}
+              disabled={isRunning}
+              className={`group flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                isRunning
+                  ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
+                  : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 active:scale-95"
+              }`}
+            >
+              {isRunning ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Running
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3 fill-current" />
+                  Run
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Output handle */}
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-4 !h-4 !bg-emerald-600 !border-2 !border-zinc-950 !rounded-full hover:!bg-emerald-400 active:!bg-emerald-300 transition-colors touch-none"
+        />
+      </div>
+    );
+  }
+
+  // ── REGULAR NODE — unchanged shape ─────────────────────────────────────
   return (
     <div
       className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
@@ -100,14 +212,12 @@ export default function CustomNode({ id, data, selected }) {
         style={{ backgroundColor: `rgba(${accent},0.35)` }}
       />
 
-      {/* Input handle — larger hit area for touch */}
-      {!isTrigger && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
-        />
-      )}
+      {/* Input handle */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+      />
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
@@ -153,7 +263,6 @@ export default function CustomNode({ id, data, selected }) {
 
       {/* Body — config details */}
       <div className="px-4 pb-3 space-y-1.5">
-        {/* Config hint */}
         {configHint ? (
           <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
             {configHint}
@@ -188,7 +297,7 @@ export default function CustomNode({ id, data, selected }) {
         </div>
       </div>
 
-      {/* Output handle — larger hit area for touch */}
+      {/* Output handle */}
       <Handle
         type="source"
         position={Position.Right}

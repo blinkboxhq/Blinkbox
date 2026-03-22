@@ -14,7 +14,8 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
   const status = cursor ? cursor.status : (isLive ? "pending" : "idle");
   const hasFailed = status === "failed";
   const isCompleted = status === "completed";
-  const isRunning = status === "running" || status === "waiting";
+  const isWaiting = status === "waiting";
+  const isRunning = status === "running" || isWaiting;
 
   // Build diff data for failed steps
   const failedDiff = hasFailed ? buildFailedDiff(node, cursor) : null;
@@ -78,7 +79,8 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
 
         {/* Status subtitle */}
         <p className="text-[10px] font-mono uppercase tracking-widest mt-0.5 ml-[18px]">
-          {isRunning && <span className="text-blue-400 animate-pulse">Processing...</span>}
+          {isRunning && !isWaiting && <span className="text-blue-400 animate-pulse">Processing...</span>}
+          {isWaiting && <span className="text-amber-400 animate-pulse">Retrying...</span>}
           {isCompleted && <span className="text-emerald-500/70">Payload received</span>}
           {hasFailed && <span className="text-red-400">FAILED</span>}
           {(status === "pending" || status === "idle") && (
@@ -106,8 +108,21 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
           </div>
         )}
 
-        {/* Error message for failed steps */}
-        {hasFailed && cursor?.error && !failedDiff && (
+        {/* Error message for failed steps — split error and hint */}
+        {hasFailed && cursor?.errorMessage && !failedDiff && (
+          <div className="mt-2 ml-[18px] bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2.5 space-y-1.5">
+            <p className="text-[10px] text-red-300 font-mono leading-relaxed">
+              {cursor.errorMessage.split(" — ")[0]}
+            </p>
+            {cursor.errorMessage.includes(" — ") && (
+              <p className="text-[10px] text-amber-400/80 leading-relaxed flex items-start gap-1">
+                <span className="shrink-0 mt-px">💡</span>
+                <span>{cursor.errorMessage.split(" — ").slice(1).join(" — ")}</span>
+              </p>
+            )}
+          </div>
+        )}
+        {hasFailed && cursor?.error && !cursor?.errorMessage && !failedDiff && (
           <div className="mt-2 ml-[18px] bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
             <p className="text-[10px] text-red-300 font-mono leading-relaxed">{cursor.error}</p>
           </div>
