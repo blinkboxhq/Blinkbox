@@ -11,6 +11,7 @@ import { BackgroundPaths } from '@/components/ui/background-paths';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { FeatureCard } from '@/components/ui/grid-feature-cards';
 import { BGPattern } from '@/components/ui/bg-pattern';
+import { DottedSurface } from '@/components/ui/dotted-surface';
 import logo from '../../assets/logo.svg';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
@@ -545,11 +546,9 @@ export default function Landing() {
           FINAL CTA — cinematic, minimal
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-28 md:py-40 relative overflow-hidden">
-        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.035)" />
-        {/* Subtle radial glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.01] blur-[100px]" />
-        </div>
+        <DottedSurface />
+        {/* Fade overlay so dots blend into black edges */}
+        <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black via-transparent to-black" />
 
         <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 reveal-on-scroll">
