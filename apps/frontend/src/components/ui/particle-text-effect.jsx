@@ -218,7 +218,7 @@ export function ParticleTextEffect({ words = [] }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-[60vh] md:h-[70vh]">
+    <div ref={containerRef} className="w-full h-[60vh] md:h-[70vh]" style={{ maskImage: 'radial-gradient(ellipse 70% 70% at center, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 70% 70% at center, black 40%, transparent 100%)' }}>
       <canvas ref={canvasRef} className="block" />
     </div>
   );
