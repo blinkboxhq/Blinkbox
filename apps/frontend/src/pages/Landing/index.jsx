@@ -12,6 +12,7 @@ import { AnimatedGroup } from '@/components/ui/animated-group';
 import { FeatureCard } from '@/components/ui/grid-feature-cards';
 import { BGPattern } from '@/components/ui/bg-pattern';
 import { DottedSurface } from '@/components/ui/dotted-surface';
+import { ParticleTextEffect } from '@/components/ui/particle-text-effect';
 import logo from '../../assets/logo.svg';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
@@ -341,6 +342,27 @@ export default function Landing() {
             </div>
           </AnimatedGroup>
         </motion.div>
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          PARTICLE TEXT — automation ideas cycling below hero
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-12 md:py-20 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-6 text-center reveal-on-scroll">What will you automate?</p>
+          <ParticleTextEffect
+            words={[
+              'SCRAPE COMPETITORS',
+              'DEPLOY AI AGENTS',
+              'MONITOR PRICES',
+              'PARSE INVOICES',
+              'SYNC DATABASES',
+              'SEND ALERTS',
+              'GENERATE REPORTS',
+              'ENRICH LEADS',
+            ]}
+          />
+        </div>
       </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
