@@ -218,7 +218,7 @@ export function ParticleTextEffect({ words = [] }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full" style={{ height: '300px' }}>
+    <div ref={containerRef} className="w-full h-[60vh] md:h-[70vh]">
       <canvas ref={canvasRef} className="block" />
     </div>
   );

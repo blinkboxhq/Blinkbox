@@ -348,7 +348,7 @@ export default function Landing() {
           PARTICLE TEXT — automation ideas cycling below hero
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="relative overflow-hidden">
-        <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-6 text-center reveal-on-scroll pt-12 md:pt-20">What will you automate?</p>
+        <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-0 text-center reveal-on-scroll pt-10">What will you automate?</p>
         <ParticleTextEffect
           words={[
             'SCRAPE COMPETITORS',
