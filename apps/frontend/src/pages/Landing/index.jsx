@@ -7,7 +7,7 @@ import {
   Minus, Plus, Zap, Eye, Code2, Webhook, Mail,
 } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Boxes } from '@/components/ui/background-boxes';
+import { BackgroundPaths } from '@/components/ui/background-paths';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import logo from '../../assets/logo.svg';
 
@@ -299,10 +299,10 @@ export default function Landing() {
           HERO — full viewport, boxes background, single clear message
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
-        {/* Boxes bg */}
+        {/* Animated paths bg */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <Boxes />
-          <div className="absolute inset-0 z-10 bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,transparent_20%,black_100%)] pointer-events-none" />
+          <BackgroundPaths />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
         </div>
 
         {/* Content */}
