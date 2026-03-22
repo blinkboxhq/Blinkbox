@@ -53,13 +53,13 @@ const stagger = (delay = 0.3) => ({
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-white/[0.04]">
+    <div className="border-b border-white/[0.08]">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-6 text-left group"
       >
         <span className="text-[15px] font-semibold text-neutral-200 group-hover:text-white transition-colors pr-8">{q}</span>
-        <span className="shrink-0 w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-neutral-500 group-hover:border-white/20 transition-colors">
+        <span className="shrink-0 w-6 h-6 rounded-full border border-white/15 flex items-center justify-center text-neutral-400 group-hover:border-white/25 transition-colors">
           {open ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
         </span>
       </button>
@@ -72,7 +72,7 @@ function FaqItem({ q, a }) {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <p className="text-sm text-neutral-500 leading-relaxed pb-6">{a}</p>
+            <p className="text-sm text-neutral-400 leading-relaxed pb-6">{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -95,19 +95,19 @@ function CanvasPreview() {
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 700 140" fill="none" preserveAspectRatio="xMidYMid meet">
         <motion.path
           d="M 70 70 C 140 70, 160 50, 230 50"
-          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          stroke="white" strokeOpacity="0.12" strokeWidth="1.5"
           initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
           viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.5 }}
         />
         <motion.path
           d="M 280 50 C 350 50, 370 80, 440 80"
-          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          stroke="white" strokeOpacity="0.12" strokeWidth="1.5"
           initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
           viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.8 }}
         />
         <motion.path
           d="M 490 80 C 560 80, 580 40, 640 40"
-          stroke="white" strokeOpacity="0.06" strokeWidth="1.5"
+          stroke="white" strokeOpacity="0.12" strokeWidth="1.5"
           initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
           viewport={{ once: true }} transition={{ duration: 0.8, delay: 1.1 }}
         />
@@ -117,7 +117,7 @@ function CanvasPreview() {
       {nodes.map((node, i) => (
         <motion.div
           key={node.label}
-          className="absolute flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-neutral-950/80 backdrop-blur-sm"
+          className="absolute flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.1] bg-neutral-900/80 backdrop-blur-sm"
           style={{ left: `${(node.x / 700) * 100}%`, top: `calc(50% + ${node.y}px)`, transform: 'translateY(-50%)' }}
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -127,7 +127,7 @@ function CanvasPreview() {
           <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: `${node.color}15` }}>
             <node.icon className="w-3.5 h-3.5" style={{ color: node.color }} />
           </div>
-          <span className="text-xs text-neutral-400 font-medium whitespace-nowrap">{node.label}</span>
+          <span className="text-xs text-neutral-300 font-medium whitespace-nowrap">{node.label}</span>
         </motion.div>
       ))}
     </div>
@@ -324,12 +324,12 @@ export default function Landing() {
             </div>
 
             {/* Trust strip — real facts only */}
-            <div className="mt-16 flex items-center gap-6 text-neutral-600">
+            <div className="mt-16 flex items-center gap-6 text-neutral-500">
               <div className="flex items-center gap-2">
                 <Lock className="w-3.5 h-3.5" />
                 <span className="text-[11px] uppercase tracking-widest">AES-256 Encrypted</span>
               </div>
-              <div className="w-px h-4 bg-white/[0.04]" />
+              <div className="w-px h-4 bg-white/[0.08]" />
               <div className="flex items-center gap-2">
                 <Shield className="w-3.5 h-3.5" />
                 <span className="text-[11px] uppercase tracking-widest">Self-Hostable</span>
@@ -348,7 +348,7 @@ export default function Landing() {
           PARTICLE TEXT — automation ideas cycling below hero
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="relative overflow-hidden">
-        <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-0 text-center reveal-on-scroll pt-10">What will you automate?</p>
+        <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-0 text-center reveal-on-scroll pt-10">What will you automate?</p>
         <ParticleTextEffect
           words={[
             'SCRAPE COMPETITORS',
@@ -367,10 +367,10 @@ export default function Landing() {
           HOW IT WORKS — 3 steps with a live-ish canvas preview
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section id="how-it-works" className="py-28 md:py-40 relative">
-        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.04)" />
+        <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.06)" />
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           {/* Section label */}
-          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">How it works</p>
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">How it works</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">
             Three moves. You&apos;re live.
           </h2>
@@ -379,7 +379,7 @@ export default function Landing() {
           </p>
 
           {/* Steps — horizontal on desktop, vertical stack on mobile */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.03] rounded-2xl overflow-hidden mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.06] rounded-2xl overflow-hidden mb-16">
             {[
               { n: '01', title: 'Drag', desc: 'Pull nodes onto the canvas — triggers, API calls, AI, scrapers. Everything is a block.', icon: MousePointerClick },
               { n: '02', title: 'Wire', desc: 'Connect nodes with edges. Set conditions. Toggle configs. No YAML, no JSON editors.', icon: Layers },
@@ -387,13 +387,13 @@ export default function Landing() {
             ].map((step, i) => (
               <div
                 key={step.n}
-                className="reveal-on-scroll bg-black p-8 md:p-10 group hover:bg-white/[0.01] transition-colors duration-500"
+                className="reveal-on-scroll bg-black p-8 md:p-10 group hover:bg-white/[0.03] transition-colors duration-500"
                 data-delay={i + 1}
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="text-[11px] font-bold text-neutral-700 tracking-widest">{step.n}</span>
-                  <div className="h-px flex-1 bg-white/[0.04]" />
-                  <step.icon className="w-4 h-4 text-neutral-700 group-hover:text-neutral-500 transition-colors" />
+                  <span className="text-[11px] font-bold text-neutral-500 tracking-widest">{step.n}</span>
+                  <div className="h-px flex-1 bg-white/[0.08]" />
+                  <step.icon className="w-4 h-4 text-neutral-500 group-hover:text-neutral-300 transition-colors" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
                 <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
@@ -431,7 +431,7 @@ export default function Landing() {
             whileInView={{ filter: 'blur(0px)', translateY: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="grid grid-cols-1 divide-x divide-y divide-dashed divide-white/[0.06] border border-dashed border-white/[0.06] sm:grid-cols-2 md:grid-cols-3"
+            className="grid grid-cols-1 divide-x divide-y divide-dashed divide-white/[0.1] border border-dashed border-white/[0.1] sm:grid-cols-2 md:grid-cols-3"
           >
             {FEATURES.map((feature, i) => (
               <FeatureCard key={i} feature={feature} />
@@ -463,7 +463,7 @@ export default function Landing() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           SECURITY — horizontal strip, no fluff
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-16 border-y border-white/[0.03]">
+      <section className="py-16 border-y border-white/[0.08]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
@@ -473,12 +473,12 @@ export default function Landing() {
               { icon: Workflow, label: 'Redis Queues', sub: 'Guaranteed delivery' },
             ].map((item, i) => (
               <div key={item.label} className="reveal-on-scroll flex items-center gap-3 group" data-delay={i + 1}>
-                <div className="w-8 h-8 rounded-lg bg-white/[0.02] border border-white/[0.04] flex items-center justify-center shrink-0 group-hover:border-white/[0.08] transition-colors">
-                  <item.icon className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-400 transition-colors" />
+                <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:border-white/[0.12] transition-colors">
+                  <item.icon className="w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-300 transition-colors" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-300">{item.label}</p>
-                  <p className="text-[11px] text-neutral-600">{item.sub}</p>
+                  <p className="text-[11px] text-neutral-500">{item.sub}</p>
                 </div>
               </div>
             ))}
@@ -492,7 +492,7 @@ export default function Landing() {
       <section id="pricing" className="py-28 md:py-40 relative">
         <BGPattern variant="dots" mask="fade-edges" size={24} fill="rgba(255,255,255,0.03)" />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 text-center reveal-on-scroll">Pricing</p>
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-3 text-center reveal-on-scroll">Pricing</p>
           <h2 className="text-3xl md:text-4xl font-extrabold text-center tracking-tight mb-3 reveal-on-scroll">
             Predictable. Simple.
           </h2>
@@ -506,8 +506,8 @@ export default function Landing() {
                 key={plan.name}
                 className={`reveal-on-scroll relative p-7 rounded-2xl border flex flex-col transition-all duration-500 hover:-translate-y-1 ${
                   plan.highlight
-                    ? 'border-white/[0.1] bg-white/[0.02] shadow-[0_0_80px_rgba(255,255,255,0.02)]'
-                    : 'border-white/[0.04] bg-white/[0.01] hover:border-white/[0.06]'
+                    ? 'border-white/[0.15] bg-white/[0.04] shadow-[0_0_80px_rgba(255,255,255,0.03)]'
+                    : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.12]'
                 }`}
                 data-delay={i + 1}
               >
@@ -517,15 +517,15 @@ export default function Landing() {
                   </div>
                 )}
                 <h3 className="text-base font-bold text-white">{plan.name}</h3>
-                <p className="text-xs text-neutral-600 mt-1 mb-5">{plan.desc}</p>
+                <p className="text-xs text-neutral-500 mt-1 mb-5">{plan.desc}</p>
                 <div className="flex items-baseline gap-0.5 mb-6">
                   <span className="text-3xl font-extrabold text-white">{plan.price}</span>
-                  {plan.period && <span className="text-xs text-neutral-600">{plan.period}</span>}
+                  {plan.period && <span className="text-xs text-neutral-500">{plan.period}</span>}
                 </div>
                 <ul className="flex flex-col gap-2.5 mb-8 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-[13px] text-neutral-400">
-                      <Check className={`w-3.5 h-3.5 shrink-0 ${plan.highlight ? 'text-white' : 'text-neutral-700'}`} />
+                      <Check className={`w-3.5 h-3.5 shrink-0 ${plan.highlight ? 'text-white' : 'text-neutral-500'}`} />
                       {f}
                     </li>
                   ))}
@@ -535,7 +535,7 @@ export default function Landing() {
                   className={`w-full py-2.5 rounded-lg text-sm font-semibold text-center transition-all duration-300 ${
                     plan.highlight
                       ? 'bg-white text-black hover:bg-neutral-200'
-                      : 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.06] border border-white/[0.06]'
+                      : 'bg-white/[0.06] text-neutral-300 hover:bg-white/[0.1] border border-white/[0.08]'
                   }`}
                 >
                   {plan.cta}
@@ -552,7 +552,7 @@ export default function Landing() {
       <section className="py-28 md:py-40 relative">
         <BGPattern variant="dots" mask="fade-edges" size={20} fill="rgba(255,255,255,0.03)" />
         <div className="max-w-2xl mx-auto px-6 relative z-10">
-          <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">FAQ</p>
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">FAQ</p>
           <h2 className="text-3xl font-extrabold tracking-tight mb-12 reveal-on-scroll">
             Questions? Answers.
           </h2>
