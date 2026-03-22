@@ -5,6 +5,7 @@ import adminRoutes from "../modules/admin/admin.routes.js";
 import automationRoutes from "../modules/automation/automation.routes.js";
 import executionRoutes from "../modules/execution/execution.routes.js";
 import credentialRoutes from "../modules/credentials/credential.routes.js";
+import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 
@@ -59,6 +60,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/execution", executionRoutes);
 app.use("/api/credentials", credentialRoutes);
+app.use("/api/oauth", oauthRoutes);
 app.use("/api/billing", billingRoutes);
 
 // ── Global error handler ──────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { Table2, Settings2, PlusCircle, Search, Pencil, Trash2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 
 const ACTIONS = [
   { value: 'create', label: 'Create Record', icon: PlusCircle },
@@ -159,7 +160,18 @@ export default function AirtableNode({ config = {}, updateConfig }) {
         </div>
       )}
 
-      {/* Credential */}
+      {/* Authorization */}
+      <OAuthConnectButton
+        provider="airtable"
+        providerLabel="Airtable"
+        accentColor="yellow"
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        icon={Table2}
+      />
+      <p className="text-[10px] text-zinc-600 -mt-3">
+        Or use an existing credential:
+      </p>
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

@@ -5,7 +5,7 @@ export async function listCredentials(req, res) {
   try {
     const credentials = await Credential.find(
       { workspaceId: req.user.id },
-      { encryptedData: 0, iv: 0, authTag: 0 },
+      { encryptedData: 0, iv: 0, authTag: 0, refreshToken: 0, refreshIv: 0, refreshAuthTag: 0 },
     ).sort({ createdAt: -1 });
 
     res.json({ credentials });
@@ -23,8 +23,8 @@ export async function createCredential(req, res) {
       return res.status(400).json({ message: "Name, type, and secret are required." });
     }
 
-    if (!["bearer", "api_key", "basic"].includes(type)) {
-      return res.status(400).json({ message: "Type must be bearer, api_key, or basic." });
+    if (!["bearer", "api_key", "basic", "oauth"].includes(type)) {
+      return res.status(400).json({ message: "Type must be bearer, api_key, basic, or oauth." });
     }
 
     if (name.length > 100) {

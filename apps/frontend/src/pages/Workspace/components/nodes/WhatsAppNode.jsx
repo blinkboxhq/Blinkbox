@@ -1,6 +1,7 @@
 import { Phone, MessageSquare, Hash } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 
 export default function WhatsAppNode({ config = {}, updateConfig }) {
   const useTemplate = !!config.templateName;
@@ -90,7 +91,18 @@ export default function WhatsAppNode({ config = {}, updateConfig }) {
         </div>
       )}
 
-      {/* Credential */}
+      {/* Authorization */}
+      <OAuthConnectButton
+        provider="meta"
+        providerLabel="WhatsApp (Meta)"
+        accentColor="green"
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        icon={Phone}
+      />
+      <p className="text-[10px] text-zinc-600 -mt-3">
+        Or use an existing credential:
+      </p>
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

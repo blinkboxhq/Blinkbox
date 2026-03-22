@@ -20,3 +20,4 @@ if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 32) {
 
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+export const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
