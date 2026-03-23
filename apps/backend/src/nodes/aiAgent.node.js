@@ -77,6 +77,8 @@ const DEFAULT_MODELS = {
 const MAX_INPUT_BYTES = 30000;
 const MAX_ITERATIONS_CEILING = 15;
 const REQUEST_TIMEOUT = 120000;
+const MAX_TOOL_OUTPUT_BYTES = 15000;
+const TOOL_TIMEOUT_MS = 30000;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // AGENT TYPE SYSTEM PROMPTS
@@ -666,7 +668,15 @@ async function executeToolCall(toolCall, toolDefs) {
 
   if (def && typeof def.execute === "function") {
     try {
-      const result = await def.execute(toolCall.arguments);
+      const result = await Promise.race([
+        def.execute(toolCall.arguments),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Tool "${toolCall.name}" timed out after ${TOOL_TIMEOUT_MS / 1000}s`)),
+            TOOL_TIMEOUT_MS,
+          ),
+        ),
+      ]);
       return result;
     } catch (err) {
       // Feed the error back to the LLM instead of crashing
@@ -710,6 +720,22 @@ function buildAssistantToolCallMessage(response, provider) {
     return { role: "assistant", content };
   }
 
+  if (provider === "gemini") {
+    const parts = [];
+    if (response.text) {
+      parts.push({ text: response.text });
+    }
+    for (const tc of response.toolCalls) {
+      parts.push({
+        functionCall: {
+          name: tc.name,
+          args: tc.arguments,
+        },
+      });
+    }
+    return { role: "model", parts };
+  }
+
   // OpenAI / DeepSeek format
   return {
     role: "assistant",
@@ -727,10 +753,10 @@ function buildAssistantToolCallMessage(response, provider) {
 
 /**
  * Build a tool result message to feed back into the conversation.
+ * Uses safeStringify to prevent context window explosions from massive payloads.
  */
 function buildToolResultMessage(toolCall, result, provider) {
-  const resultStr =
-    typeof result === "string" ? result : JSON.stringify(result);
+  const resultStr = safeStringify(result);
 
   if (provider === "anthropic") {
     return {
@@ -740,6 +766,20 @@ function buildToolResultMessage(toolCall, result, provider) {
           type: "tool_result",
           tool_use_id: toolCall.id,
           content: resultStr,
+        },
+      ],
+    };
+  }
+
+  if (provider === "gemini") {
+    return {
+      role: "function",
+      parts: [
+        {
+          functionResponse: {
+            name: toolCall.name,
+            response: { result: resultStr },
+          },
         },
       ],
     };
@@ -756,6 +796,38 @@ function buildToolResultMessage(toolCall, result, provider) {
 // ═════════════════════════════════════════════════════════════════════════════
 // UTILITIES
 // ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Safely stringify a value, handling circular references and enforcing
+ * a byte-size ceiling to prevent context window explosions.
+ */
+function safeStringify(obj) {
+  let str;
+  if (typeof obj === "string") {
+    str = obj;
+  } else {
+    const seen = new WeakSet();
+    try {
+      str = JSON.stringify(obj, (_key, value) => {
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) return "[Circular]";
+          seen.add(value);
+        }
+        return value;
+      });
+    } catch {
+      str = String(obj);
+    }
+  }
+
+  if (str.length > MAX_TOOL_OUTPUT_BYTES) {
+    return (
+      str.slice(0, MAX_TOOL_OUTPUT_BYTES) +
+      "\n\n...[TRUNCATED: Tool output exceeded limit. Use your other tools to refine the search.]"
+    );
+  }
+  return str;
+}
 
 function parseJsonResponse(text) {
   if (!text || typeof text !== "string") return text;
