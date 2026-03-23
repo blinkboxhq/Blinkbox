@@ -13,31 +13,6 @@ export default function DiscordNode({ config = {}, updateConfig }) {
   const message = config.message || "";
   const username = config.username || "";
 
-  const syncHttp = (newUrl, newMessage, newUsername) => {
-    updateConfig("url", newUrl);
-    updateConfig("method", "POST");
-    updateConfig("headers", { "Content-Type": "application/json" });
-    const body = {};
-    if (newMessage) body.content = newMessage;
-    if (newUsername) body.username = newUsername;
-    updateConfig("body", JSON.stringify(body));
-  };
-
-  const handleWebhookUrl = (val) => {
-    updateConfig("webhookUrl", val);
-    syncHttp(val, message, username);
-  };
-
-  const handleMessage = (val) => {
-    updateConfig("message", val);
-    syncHttp(webhookUrl, val, username);
-  };
-
-  const handleUsername = (val) => {
-    updateConfig("username", val);
-    syncHttp(webhookUrl, message, val);
-  };
-
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header */}
@@ -60,7 +35,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
         </label>
         <SmartVariableInput
           value={webhookUrl}
-          onChange={handleWebhookUrl}
+          onChange={(val) => updateConfig("webhookUrl", val)}
           placeholder="https://discord.com/api/webhooks/..."
         />
         <p className="text-[10px] text-zinc-600">
@@ -75,7 +50,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
         </label>
         <input
           value={username}
-          onChange={(e) => handleUsername(e.target.value)}
+          onChange={(e) => updateConfig("username", e.target.value)}
           placeholder="BlinkBox Bot"
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-[#5865F2]/50 transition-colors"
         />
@@ -88,7 +63,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
         </label>
         <SmartVariableInput
           value={message}
-          onChange={handleMessage}
+          onChange={(val) => updateConfig("message", val)}
           placeholder="Alert: {{trigger.data.event}} just happened!"
           multiline
         />

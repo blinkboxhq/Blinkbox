@@ -36,6 +36,10 @@ import deepseek from "./integrations/deepseek.node.js";
 import telegram from "./integrations/telegram.node.js";
 import whatsapp from "./integrations/whatsapp.node.js";
 import slackReal from "./integrations/slack.node.js";
+import discord from "./integrations/discord.node.js";
+
+// ── Integrations: Payments Hub ───────────────────────────────────────────────
+import stripe from "./integrations/stripe.node.js";
 
 // ── Integrations: Data Hub ───────────────────────────────────────────────────
 import airtable from "./integrations/airtable.node.js";
@@ -81,8 +85,10 @@ export const nodeRegistry = {
   telegram: telegram,
   whatsapp: whatsapp,
   slack: slackReal,
-  discord: httpRequest, // still http_request wrapper (webhook-based)
-  stripe: httpRequest,  // still http_request wrapper (API-based)
+  discord: discord,
+
+  // ── Payments Hub ───────────────────────────────────────────────────────
+  stripe: stripe,
 
   // ── Data Hub ───────────────────────────────────────────────────────────
   airtable: airtable,

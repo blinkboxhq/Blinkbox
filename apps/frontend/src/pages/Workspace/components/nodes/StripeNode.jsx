@@ -1,5 +1,5 @@
-import { useState } from "react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 function StripeIcon({ className }) {
   return (
@@ -10,49 +10,14 @@ function StripeIcon({ className }) {
 }
 
 const ACTIONS = [
-  { value: "create_customer", label: "Create Customer", method: "POST", path: "/v1/customers" },
-  { value: "create_charge", label: "Create Charge", method: "POST", path: "/v1/charges" },
-  { value: "list_customers", label: "List Customers", method: "GET", path: "/v1/customers" },
-  { value: "create_invoice", label: "Create Invoice", method: "POST", path: "/v1/invoices" },
+  { value: "create_customer", label: "Create Customer" },
+  { value: "create_charge", label: "Create Charge" },
+  { value: "list_customers", label: "List Customers" },
+  { value: "create_invoice", label: "Create Invoice" },
 ];
 
 export default function StripeNode({ config = {}, updateConfig }) {
   const action = config.action || "create_customer";
-  const apiKey = config.apiKey || "";
-  const selectedAction = ACTIONS.find((a) => a.value === action) || ACTIONS[0];
-
-  // Action-specific fields
-  const email = config.email || "";
-  const name = config.customerName || "";
-  const amount = config.amount || "";
-  const currency = config.currency || "usd";
-
-  const syncHttp = (updates = {}) => {
-    const merged = { action, apiKey, email, name, amount, currency, ...updates };
-    const act = ACTIONS.find((a) => a.value === merged.action) || ACTIONS[0];
-
-    updateConfig("url", `https://api.stripe.com${act.path}`);
-    updateConfig("method", act.method);
-    updateConfig("headers", {
-      Authorization: merged.apiKey ? `Bearer ${merged.apiKey}` : "",
-      "Content-Type": "application/x-www-form-urlencoded",
-    });
-
-    // Build form body based on action
-    let body = "";
-    if (merged.action === "create_customer") {
-      const parts = [];
-      if (merged.email) parts.push(`email=${merged.email}`);
-      if (merged.name) parts.push(`name=${merged.name}`);
-      body = parts.join("&");
-    } else if (merged.action === "create_charge") {
-      const parts = [];
-      if (merged.amount) parts.push(`amount=${merged.amount}`);
-      if (merged.currency) parts.push(`currency=${merged.currency}`);
-      body = parts.join("&");
-    }
-    updateConfig("body", body);
-  };
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -69,25 +34,14 @@ export default function StripeNode({ config = {}, updateConfig }) {
         </div>
       </div>
 
-      {/* API Key */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Secret API Key
-        </label>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => {
-            updateConfig("apiKey", e.target.value);
-            syncHttp({ apiKey: e.target.value });
-          }}
-          placeholder="sk_live_..."
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-[#635BFF]/50 transition-colors font-mono"
-        />
-        <p className="text-[10px] text-zinc-600">
-          Find at <span className="text-zinc-400">dashboard.stripe.com/apikeys</span>
-        </p>
-      </div>
+      {/* Credential Picker */}
+      <CredentialPicker
+        value={config.credentialId || ""}
+        onChange={(id) => updateConfig("credentialId", id)}
+        accentColor="purple"
+        label="Secret API Key"
+        placeholder="Select Stripe secret key..."
+      />
 
       {/* Action Selector */}
       <div className="flex flex-col gap-2">
@@ -96,10 +50,7 @@ export default function StripeNode({ config = {}, updateConfig }) {
         </label>
         <select
           value={action}
-          onChange={(e) => {
-            updateConfig("action", e.target.value);
-            syncHttp({ action: e.target.value });
-          }}
+          onChange={(e) => updateConfig("action", e.target.value)}
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#635BFF]/50 transition-colors cursor-pointer appearance-none"
         >
           {ACTIONS.map((a) => (
@@ -111,27 +62,21 @@ export default function StripeNode({ config = {}, updateConfig }) {
       </div>
 
       {/* Dynamic Fields */}
-      {(action === "create_customer") && (
+      {action === "create_customer" && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Customer Email</label>
             <SmartVariableInput
-              value={email}
-              onChange={(val) => {
-                updateConfig("email", val);
-                syncHttp({ email: val });
-              }}
+              value={config.email || ""}
+              onChange={(val) => updateConfig("email", val)}
               placeholder="{{trigger.data.email}}"
             />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Customer Name</label>
             <SmartVariableInput
-              value={name}
-              onChange={(val) => {
-                updateConfig("customerName", val);
-                syncHttp({ name: val });
-              }}
+              value={config.customerName || ""}
+              onChange={(val) => updateConfig("customerName", val)}
               placeholder="{{trigger.data.name}}"
             />
           </div>
@@ -143,22 +88,16 @@ export default function StripeNode({ config = {}, updateConfig }) {
           <div className="flex flex-col gap-2 flex-1">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Amount (cents)</label>
             <SmartVariableInput
-              value={amount}
-              onChange={(val) => {
-                updateConfig("amount", val);
-                syncHttp({ amount: val });
-              }}
+              value={config.amount || ""}
+              onChange={(val) => updateConfig("amount", val)}
               placeholder="2000"
             />
           </div>
           <div className="flex flex-col gap-2 w-24">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Currency</label>
             <select
-              value={currency}
-              onChange={(e) => {
-                updateConfig("currency", e.target.value);
-                syncHttp({ currency: e.target.value });
-              }}
+              value={config.currency || "usd"}
+              onChange={(e) => updateConfig("currency", e.target.value)}
               className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-3 text-sm text-white outline-none focus:border-[#635BFF]/50 transition-colors cursor-pointer appearance-none"
             >
               <option value="usd">USD</option>
@@ -183,10 +122,7 @@ export default function StripeNode({ config = {}, updateConfig }) {
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Customer ID</label>
           <SmartVariableInput
             value={config.customerId || ""}
-            onChange={(val) => {
-              updateConfig("customerId", val);
-              syncHttp({ customerId: val });
-            }}
+            onChange={(val) => updateConfig("customerId", val)}
             placeholder="cus_..."
           />
         </div>
