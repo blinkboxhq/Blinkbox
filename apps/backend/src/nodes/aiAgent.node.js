@@ -26,7 +26,7 @@
  *
  * Config (from frontend panel):
  *   agentType              — "tools_agent" | "conversational" | "react"
- *   provider               — "openai" | "anthropic" | "gemini" | "deepseek"
+ *   provider               — "openai" | "anthropic" | "gemini" | "deepseek" | "openrouter" | "together" | "perplexity" | "xai" | "fireworks" | "cerebras" | "ollama" | "novita" | "deepinfra" | "hyperbolic"
  *   model                  — Model ID string
  *   prompt                 — User instruction (expression-resolved)
  *   systemPrompt           — Custom persona / system prompt
@@ -63,6 +63,16 @@ const ENDPOINTS = {
   anthropic: "https://api.anthropic.com/v1/messages",
   gemini: "https://generativelanguage.googleapis.com/v1beta/models",
   deepseek: "https://api.deepseek.com/v1/chat/completions",
+  openrouter: "https://openrouter.ai/api/v1/chat/completions",
+  together: "https://api.together.xyz/v1/chat/completions",
+  perplexity: "https://api.perplexity.ai/chat/completions",
+  xai: "https://api.x.ai/v1/chat/completions",
+  fireworks: "https://api.fireworks.ai/inference/v1/chat/completions",
+  cerebras: "https://api.cerebras.ai/v1/chat/completions",
+  ollama: "http://localhost:11434/v1/chat/completions",
+  novita: "https://api.novita.ai/v3/openai/chat/completions",
+  deepinfra: "https://api.deepinfra.com/v1/openai/chat/completions",
+  hyperbolic: "https://api.hyperbolic.xyz/v1/chat/completions",
 };
 
 // ── Default Models ───────────────────────────────────────────────────────────
@@ -71,6 +81,16 @@ const DEFAULT_MODELS = {
   anthropic: "claude-sonnet-4-20250514",
   gemini: "gemini-2.0-flash",
   deepseek: "deepseek-chat",
+  openrouter: "anthropic/claude-3.5-sonnet",
+  together: "meta-llama/Llama-3-70b-chat-hf",
+  perplexity: "llama-3-sonar-large-32k-online",
+  xai: "grok-beta",
+  fireworks: "accounts/fireworks/models/firefunction-v2",
+  cerebras: "llama3.1-70b",
+  ollama: "llama3",
+  novita: "meta-llama/llama-3-70b-instruct",
+  deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
+  hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
 };
 
 // ── Hard Limits ──────────────────────────────────────────────────────────────
@@ -429,6 +449,56 @@ async function callProvider({
         apiKey, model, system, messages, temperature, maxTokens, tools,
         ENDPOINTS.deepseek, "DeepSeek"
       );
+    case "openrouter":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.openrouter, "OpenRouter"
+      );
+    case "together":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.together, "Together AI"
+      );
+    case "perplexity":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.perplexity, "Perplexity"
+      );
+    case "xai":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.xai, "xAI"
+      );
+    case "fireworks":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.fireworks, "Fireworks AI"
+      );
+    case "cerebras":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.cerebras, "Cerebras"
+      );
+    case "ollama":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.ollama, "Ollama"
+      );
+    case "novita":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.novita, "Novita AI"
+      );
+    case "deepinfra":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.deepinfra, "DeepInfra"
+      );
+    case "hyperbolic":
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.hyperbolic, "Hyperbolic"
+      );
     case "openai":
     default:
       return callOpenAICompat(
@@ -438,7 +508,7 @@ async function callProvider({
   }
 }
 
-// ── OpenAI-Compatible (OpenAI + DeepSeek) ────────────────────────────────────
+// ── OpenAI-Compatible (OpenAI, DeepSeek, and 10 additional providers) ─────────
 
 async function callOpenAICompat(
   apiKey, model, system, messages, temperature, maxTokens, tools,

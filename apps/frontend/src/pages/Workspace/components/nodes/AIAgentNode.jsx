@@ -92,6 +92,105 @@ const PROVIDERS = [
     ],
     defaultModel: "deepseek-chat",
   },
+  {
+    value: "openrouter",
+    label: "OpenRouter",
+    color: "#3b82f6",
+    models: [
+      { value: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet" },
+      { value: "google/gemini-pro-1.5", label: "Gemini Pro 1.5" },
+      { value: "liquid/lfm-40b", label: "LFM 40B" },
+    ],
+    defaultModel: "anthropic/claude-3.5-sonnet",
+  },
+  {
+    value: "together",
+    label: "Together AI",
+    color: "#0ea5e9",
+    models: [
+      { value: "meta-llama/Llama-3-70b-chat-hf", label: "Llama 3 70B" },
+      { value: "mistralai/Mixtral-8x7B-Instruct-v0.1", label: "Mixtral 8x7B" },
+    ],
+    defaultModel: "meta-llama/Llama-3-70b-chat-hf",
+  },
+  {
+    value: "perplexity",
+    label: "Perplexity",
+    color: "#22d3ee",
+    models: [
+      { value: "llama-3-sonar-large-32k-online", label: "Sonar Large 32K" },
+      { value: "llama-3-sonar-small-32k-chat", label: "Sonar Small 32K" },
+    ],
+    defaultModel: "llama-3-sonar-large-32k-online",
+  },
+  {
+    value: "xai",
+    label: "xAI (Grok)",
+    color: "#ffffff",
+    models: [
+      { value: "grok-beta", label: "Grok Beta" },
+      { value: "grok-2", label: "Grok 2" },
+    ],
+    defaultModel: "grok-beta",
+  },
+  {
+    value: "fireworks",
+    label: "Fireworks AI",
+    color: "#f43f5e",
+    models: [
+      { value: "accounts/fireworks/models/firefunction-v2", label: "FireFunction v2" },
+      { value: "accounts/fireworks/models/llama-v3-70b-instruct", label: "Llama 3 70B" },
+    ],
+    defaultModel: "accounts/fireworks/models/firefunction-v2",
+  },
+  {
+    value: "cerebras",
+    label: "Cerebras",
+    color: "#f97316",
+    models: [
+      { value: "llama3.1-70b", label: "Llama 3.1 70B" },
+      { value: "llama3.1-8b", label: "Llama 3.1 8B" },
+    ],
+    defaultModel: "llama3.1-70b",
+  },
+  {
+    value: "ollama",
+    label: "Ollama (Local)",
+    color: "#94a3b8",
+    models: [
+      { value: "llama3", label: "Llama 3" },
+      { value: "mistral", label: "Mistral" },
+      { value: "gemma", label: "Gemma" },
+    ],
+    defaultModel: "llama3",
+  },
+  {
+    value: "novita",
+    label: "Novita AI",
+    color: "#8b5cf6",
+    models: [
+      { value: "meta-llama/llama-3-70b-instruct", label: "Llama 3 70B" },
+    ],
+    defaultModel: "meta-llama/llama-3-70b-instruct",
+  },
+  {
+    value: "deepinfra",
+    label: "DeepInfra",
+    color: "#10b981",
+    models: [
+      { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
+    ],
+    defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
+  },
+  {
+    value: "hyperbolic",
+    label: "Hyperbolic",
+    color: "#fbbf24",
+    models: [
+      { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
+    ],
+    defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
+  },
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -288,12 +387,12 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Provider
           </label>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
             {PROVIDERS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => handleProviderChange(p.value)}
-                className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all duration-150 ${
+                className={`px-2 py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all duration-150 ${
                   provider === p.value
                     ? "border-violet-500/40 bg-violet-500/10 text-violet-300"
                     : "border-zinc-800 bg-zinc-900/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
