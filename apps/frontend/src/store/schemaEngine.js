@@ -34,7 +34,14 @@ export const DEFAULT_SCHEMAS = {
     data: "object",
   },
   web_scraper: { content: "string", metadata: "object" },
-  ai_agent: { response: "string", usage: "object" },
+  ai_agent: {
+    result: "object",
+    model: "string",
+    tokensUsed: "number",
+    provider: "string",
+    toolCalls: "array",
+    rounds: "number",
+  },
   data_mapper: { _dynamic: true },
   logic_router: { _passthrough: true },
 
@@ -186,7 +193,7 @@ const EXPECTED_INPUT_TYPES = {
   http_request: { body: "object", headers: "object", url: "string" },
   data_mapper: { mappings: "object" },
   code: { input: "object" },
-  ai_agent: { prompt: "string", context: "object" },
+  ai_agent: { prompt: "string", systemPrompt: "string", parentSource: "string", memory: "array", tools: "array" },
   logic_router: { conditions: "array" },
 };
 

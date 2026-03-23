@@ -1,9 +1,20 @@
 import { Handle, Position } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2 } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Brain } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
+
+// ── AI Agent Multi-Handle Definitions ────────────────────────────────────────
+// Color-coded handles with tooltips for the AI Agent's specialized I/O ports.
+const AI_AGENT_LEFT_HANDLES = [
+  { id: "memory",  label: "Memory",  color: "#a855f7", top: "30%" },
+  { id: "context", label: "Context", color: "#14b8a6", top: "50%" },
+  { id: "tools",   label: "Tools",   color: "#f97316", top: "70%" },
+];
+const AI_AGENT_RIGHT_HANDLES = [
+  { id: "tool_call", label: "Tool Call", color: "#f97316", top: "65%" },
+];
 
 /** Extract a short human-readable config summary from node data */
 function getConfigHint(data) {
@@ -16,7 +27,12 @@ function getConfigHint(data) {
   if (data.backendType === "code" && c.code) return `${c.code}`.slice(0, 40);
   if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
-  if (data.backendType === "ai_agent" && c.model) return c.model;
+  if (data.backendType === "ai_agent") {
+    const parts = [];
+    if (c.provider) parts.push(c.provider);
+    if (c.model) parts.push(c.model);
+    if (parts.length > 0) return parts.join(" · ");
+  }
   if (data.backendType === "webhook" && c.path) return `/${c.path}`;
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
   if (data.backendType === "logic_router" && c.field) return `if ${c.field}`;
@@ -49,6 +65,7 @@ export default function CustomNode({ id, data, selected }) {
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
+  const isAgent = data.backendType === "ai_agent";
   const configHint = getConfigHint(data);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
@@ -101,24 +118,48 @@ export default function CustomNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
+      className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden ${
+        isAgent && status === "running" ? "ring-1 ring-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.15)]" : ""
+      }`}
     >
       {badge}
 
-      {/* Accent bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-        style={{ backgroundColor: `rgba(${accent},0.35)` }}
-      />
+      {/* Accent bar — animated gradient for AI Agent */}
+      {isAgent ? (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl bg-gradient-to-b from-violet-500 via-indigo-500 to-purple-500"
+          style={{ opacity: status === "running" ? 0.8 : 0.4 }}
+        />
+      ) : (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
+          style={{ backgroundColor: `rgba(${accent},0.35)` }}
+        />
+      )}
 
       {/* Input handle — hidden for triggers */}
       {!isTrigger && (
         <Handle
           type="target"
           position={Position.Left}
+          id="input"
           className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+          style={isAgent ? { top: "15%" } : undefined}
         />
       )}
+
+      {/* AI Agent — extra input handles (Memory, Context, Tools) */}
+      {isAgent && AI_AGENT_LEFT_HANDLES.map((h) => (
+        <Handle
+          key={h.id}
+          type="target"
+          position={Position.Left}
+          id={h.id}
+          className="!w-3 !h-3 !border-2 !border-zinc-900 !rounded-full transition-colors touch-none"
+          style={{ top: h.top, backgroundColor: h.color }}
+          title={h.label}
+        />
+      ))}
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
@@ -218,8 +259,24 @@ export default function CustomNode({ id, data, selected }) {
       <Handle
         type="source"
         position={Position.Right}
+        id="output"
         className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+        style={isAgent ? { top: "35%", backgroundColor: "#10b981" } : undefined}
+        title={isAgent ? "Output" : undefined}
       />
+
+      {/* AI Agent — extra output handle (Tool Call) */}
+      {isAgent && AI_AGENT_RIGHT_HANDLES.map((h) => (
+        <Handle
+          key={h.id}
+          type="source"
+          position={Position.Right}
+          id={h.id}
+          className="!w-3 !h-3 !border-2 !border-zinc-900 !rounded-full transition-colors touch-none"
+          style={{ top: h.top, backgroundColor: h.color }}
+          title={h.label}
+        />
+      ))}
     </div>
   );
 }
