@@ -3,55 +3,41 @@ import { Handle, Position, useReactFlow } from "@xyflow/react";
 import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
-import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
+import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// ── AI Agent Bottom Handle Definitions ───────────────────────────────────────
-// n8n-style: dependency handles sit along the bottom edge as diamond shapes.
-// Each has a label, color, and a "+" button that opens a node picker.
+// ── AI Agent Bottom Handles ──────────────────────────────────────────────────
 const AI_AGENT_BOTTOM_HANDLES = [
   {
     id: "chat_model",
-    label: "Chat Model",
-    color: "#6366f1",
+    label: "Model",
     allowedTypes: ["openai", "anthropic", "gemini", "deepseek"],
-    position: "25%",
   },
   {
     id: "memory",
     label: "Memory",
-    color: "#a855f7",
     allowedTypes: [],
-    position: "50%",
   },
   {
     id: "tools",
-    label: "Tools",
-    color: "#f97316",
+    label: "Tool",
     allowedTypes: [
       "http_request", "web_scraper", "web_search", "code",
       "slack", "discord", "telegram", "whatsapp",
       "stripe", "airtable",
     ],
-    position: "75%",
   },
 ];
 
 // ── Node Picker Popover ──────────────────────────────────────────────────────
-// Opens when a user clicks the "+" button on a bottom handle.
-// Shows a filtered list of node types that can be attached to that handle.
 function NodePickerPopover({ handle, parentNodeId, onClose }) {
   const addNode = useWorkspaceStore((s) => s.addNode);
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const { getNode } = useReactFlow();
 
-  // Build the list of nodes to show. If handle has allowedTypes, filter to those.
-  // Otherwise show all non-trigger nodes.
   const entries = Object.entries(NodeRegistry).filter(([key, def]) => {
     if (def.category === "trigger") return false;
-    if (handle.allowedTypes.length > 0) {
-      return handle.allowedTypes.includes(key);
-    }
+    if (handle.allowedTypes.length > 0) return handle.allowedTypes.includes(key);
     return true;
   });
 
@@ -59,8 +45,6 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
     const parentNode = getNode(parentNodeId);
     if (!parentNode) return;
 
-    // Position the new node below the parent, offset by handle position
-    const offsetX = parseFloat(handle.position) / 100 * 260 - 130;
     const newId = `${nodeKey}-${crypto.randomUUID()}`;
     const nodeDef = NodeRegistry[nodeKey];
 
@@ -68,8 +52,8 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
       id: newId,
       type: "custom",
       position: {
-        x: parentNode.position.x + offsetX,
-        y: parentNode.position.y + 180,
+        x: parentNode.position.x,
+        y: parentNode.position.y + 200,
       },
       data: {
         backendType: nodeKey,
@@ -79,8 +63,6 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
       },
     });
 
-    // Auto-connect: new node's output → parent's bottom handle
-    // The new sub-node feeds INTO the AI Agent's handle
     setTimeout(() => {
       onConnect({
         source: newId,
@@ -95,34 +77,26 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+      initial={{ opacity: 0, y: -4, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -4, scale: 0.95 }}
-      transition={{ duration: 0.15 }}
+      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+      transition={{ duration: 0.12 }}
       className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50
-        w-52 max-h-60 overflow-y-auto
-        bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-2xl shadow-black/40"
+        w-48 max-h-56 overflow-y-auto
+        bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl shadow-black/50"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/60">
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/60">
+        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
           {handle.label}
         </span>
-        <button
-          onClick={onClose}
-          className="text-zinc-600 hover:text-zinc-300 transition-colors"
-        >
+        <button onClick={onClose} className="text-zinc-600 hover:text-zinc-400 transition-colors">
           <X className="w-3 h-3" />
         </button>
       </div>
-
-      {/* Node list */}
-      <div className="py-1">
+      <div className="py-0.5">
         {entries.length === 0 ? (
-          <p className="px-3 py-2 text-[10px] text-zinc-600">
-            No compatible nodes available
-          </p>
+          <p className="px-3 py-2 text-[10px] text-zinc-600">No nodes available</p>
         ) : (
           entries.map(([key, def]) => {
             const Icon = def.icon;
@@ -130,14 +104,12 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
               <button
                 key={key}
                 onClick={() => handleSelect(key)}
-                className="flex items-center gap-2.5 w-full px-3 py-2 hover:bg-zinc-800/50 transition-colors text-left"
+                className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-zinc-800/60 transition-colors text-left"
               >
-                <div className={`w-5 h-5 rounded flex items-center justify-center bg-zinc-800/80 ${def.colorClass} shrink-0`}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center bg-zinc-800 ${def.colorClass} shrink-0`}>
                   <Icon className="w-3 h-3" />
                 </div>
-                <span className="text-[11px] text-zinc-300 truncate">
-                  {def.label}
-                </span>
+                <span className="text-[11px] text-zinc-400 truncate">{def.label}</span>
               </button>
             );
           })
@@ -147,52 +119,39 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
   );
 }
 
-// ── Bottom Diamond Handle with + Button ──────────────────────────────────────
+// ── Single Bottom Handle ─────────────────────────────────────────────────────
 function AgentBottomHandle({ handle, parentNodeId, hasConnection }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
-    <div
-      className="absolute flex flex-col items-center"
-      style={{ left: handle.position, bottom: -1, transform: "translateX(-50%)" }}
-    >
-      {/* React Flow Handle (the diamond) */}
+    <div className="relative flex flex-col items-center">
+      {/* The React Flow connectable handle (diamond) */}
       <Handle
         type="target"
         position={Position.Bottom}
         id={handle.id}
-        className="!w-[14px] !h-[14px] !rounded-[3px] !border-2 !border-zinc-800 !rotate-45 hover:!brightness-125 transition-all touch-none"
-        style={{ backgroundColor: handle.color, bottom: -7, position: "absolute" }}
+        className="!w-[12px] !h-[12px] !rounded-[2px] !border-[1.5px] !border-zinc-700 !bg-zinc-800 !rotate-45 hover:!bg-zinc-600 transition-colors touch-none !relative !transform-none !left-auto !top-auto"
       />
 
-      {/* Label below the diamond */}
-      <span
-        className="absolute text-[8px] font-bold uppercase tracking-widest whitespace-nowrap select-none pointer-events-none"
-        style={{ color: handle.color, top: 16, opacity: 0.7 }}
-      >
+      {/* Label */}
+      <span className="text-[8px] text-zinc-600 mt-1.5 select-none pointer-events-none whitespace-nowrap">
         {handle.label}
       </span>
 
-      {/* "+" button — only shown when nothing is connected to this handle */}
+      {/* + button */}
       {!hasConnection && (
-        <div className="relative" style={{ marginTop: 28 }}>
+        <div className="relative mt-1">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setPickerOpen(!pickerOpen);
             }}
-            className="w-5 h-5 rounded-full flex items-center justify-center transition-all duration-150 hover:scale-110"
-            style={{
-              backgroundColor: `${handle.color}20`,
-              border: `1.5px solid ${handle.color}40`,
-              color: handle.color,
-            }}
+            className="w-4 h-4 rounded-full border border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 transition-colors"
             title={`Add ${handle.label}`}
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-2.5 h-2.5" />
           </button>
 
-          {/* Picker popover */}
           <AnimatePresence>
             {pickerOpen && (
               <NodePickerPopover
@@ -268,11 +227,9 @@ export default function CustomNode({ id, data, selected }) {
   const configHint = getConfigHint(data);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
-  // Check which bottom handles have connections
   const getHandleConnected = (handleId) =>
     edges.some((e) => e.target === id && e.targetHandle === handleId);
 
-  // --- Visual state ---
   let borderClass = "border-zinc-800/60";
   let badge = null;
 
@@ -304,49 +261,29 @@ export default function CustomNode({ id, data, selected }) {
     );
   }
 
-  if (hasMappingWarning && !status) {
-    borderClass = "border-amber-500/25";
-  }
-
-  if (selected) {
-    borderClass = "border-zinc-600";
-  }
+  if (hasMappingWarning && !status) borderClass = "border-amber-500/25";
+  if (selected) borderClass = "border-zinc-600";
 
   const handlePlay = (e) => {
     e.stopPropagation();
-    if (!isRunning && automationId) {
-      runEngine(automationId);
-    }
+    if (!isRunning && automationId) runEngine(automationId);
   };
 
   return (
-    <div
-      className={`relative ${isAgent ? "pb-10" : ""}`}
-    >
-      {/* ── Main Node Card ──────────────────────────────────────────────── */}
+    <div className="relative">
+      {/* ── Main Card ───────────────────────────────────────────────────── */}
       <div
-        className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden ${
-          isAgent && status === "running"
-            ? "ring-1 ring-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
-            : ""
-        }`}
+        className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
       >
         {badge}
 
         {/* Accent bar */}
-        {isAgent ? (
-          <div
-            className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl bg-gradient-to-b from-violet-500 via-indigo-500 to-purple-500"
-            style={{ opacity: status === "running" ? 0.8 : 0.4 }}
-          />
-        ) : (
-          <div
-            className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-            style={{ backgroundColor: `rgba(${accent},0.35)` }}
-          />
-        )}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
+          style={{ backgroundColor: `rgba(${accent},0.35)` }}
+        />
 
-        {/* Input handle — hidden for triggers */}
+        {/* Input handle */}
         {!isTrigger && (
           <Handle
             type="target"
@@ -380,16 +317,14 @@ export default function CustomNode({ id, data, selected }) {
                 </div>
               )}
             </div>
-            {/* Subtitle: show agent type for AI Agent, category for others */}
             <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
               {isAgent
-                ? (data.config?.agentType || "tools_agent").replace(/_/g, " ")
-                : nodeDef.category
-              }
+                ? (data.config?.agentType || "tools agent").replace(/_/g, " ")
+                : nodeDef.category}
             </span>
           </div>
 
-          {/* Status */}
+          {/* Status indicator */}
           <div className="shrink-0">
             {status === "running" && (
               <span className="relative flex h-2 w-2">
@@ -402,7 +337,7 @@ export default function CustomNode({ id, data, selected }) {
           </div>
         </div>
 
-        {/* Body — config details */}
+        {/* Body */}
         <div className="px-4 pb-3 space-y-1.5">
           {configHint ? (
             <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
@@ -413,15 +348,12 @@ export default function CustomNode({ id, data, selected }) {
               {data.subtitle || "Not configured"}
             </p>
           )}
-
           {data.error && (
-            <p className="text-[10px] text-red-400/70 truncate">
-              {data.error}
-            </p>
+            <p className="text-[10px] text-red-400/70 truncate">{data.error}</p>
           )}
         </div>
 
-        {/* Footer bar */}
+        {/* Footer */}
         <div className="flex items-center justify-between px-4 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
           <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[140px]">
             {id.length > 20 ? `...${id.slice(-16)}` : id}
@@ -463,9 +395,9 @@ export default function CustomNode({ id, data, selected }) {
         />
       </div>
 
-      {/* ── AI Agent Bottom Handles (n8n-style diamonds with + buttons) ── */}
+      {/* ── Bottom Handles — floating freely below the node ─────────────── */}
       {isAgent && (
-        <div className="relative w-full" style={{ height: 48 }}>
+        <div className="flex items-start justify-center gap-6 mt-3">
           {AI_AGENT_BOTTOM_HANDLES.map((h) => (
             <AgentBottomHandle
               key={h.id}
