@@ -220,8 +220,8 @@ export async function processCursor({ executionId, cursorId }) {
     if (inputItems.length === 0) inputItems = [{ json: {} }];
 
     // HANDLE-AWARE ROUTING: For AI Agent nodes, separate handle-tagged
-    // edge data into dedicated dependency fields (_memory, _tools).
-    // Edges with targetHandle "memory" or "tools" feed into config, not input.
+    // edge data into dedicated dependency fields (_memory, _tools, _chatModel).
+    // Edges targeting named handles feed into config, not the standard input array.
     let handleDeps = null;
     if (node.data?.backendType === "ai_agent" && incomingEdges.length > 0) {
       handleDeps = {};
@@ -236,6 +236,8 @@ export async function processCursor({ executionId, cursorId }) {
             // Tools handle can receive from multiple edges — collect all
             if (!handleDeps._tools) handleDeps._tools = [];
             if (firstOutput) handleDeps._tools.push(firstOutput);
+          } else if (handle === "chat_model") {
+            handleDeps._chatModel = firstOutput;
           }
         }
       }

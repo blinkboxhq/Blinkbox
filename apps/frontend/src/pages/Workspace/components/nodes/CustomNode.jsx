@@ -1,22 +1,215 @@
-import { Handle, Position } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2, Brain } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { Handle, Position, useReactFlow } from "@xyflow/react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
-import { NodeRegistry } from "../../nodeRegistry";
+import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// ── AI Agent Multi-Handle Definitions ────────────────────────────────────────
-// n8n-style dependency routing: each handle represents a specific input/output
-// type that the AI Agent's backend resolves during execution.
-const AI_AGENT_LEFT_HANDLES = [
-  { id: "memory", label: "Memory", color: "#a855f7", top: "45%" },
-  { id: "tools",  label: "Tools",  color: "#f97316", top: "70%" },
-];
-const AI_AGENT_RIGHT_HANDLES = [
-  { id: "steps", label: "Intermediate Steps", color: "#f59e0b", top: "65%" },
+// ── AI Agent Bottom Handle Definitions ───────────────────────────────────────
+// n8n-style: dependency handles sit along the bottom edge as diamond shapes.
+// Each has a label, color, and a "+" button that opens a node picker.
+const AI_AGENT_BOTTOM_HANDLES = [
+  {
+    id: "chat_model",
+    label: "Chat Model",
+    color: "#6366f1",
+    allowedTypes: ["openai", "anthropic", "gemini", "deepseek"],
+    position: "25%",
+  },
+  {
+    id: "memory",
+    label: "Memory",
+    color: "#a855f7",
+    allowedTypes: [],
+    position: "50%",
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    color: "#f97316",
+    allowedTypes: [
+      "http_request", "web_scraper", "web_search", "code",
+      "slack", "discord", "telegram", "whatsapp",
+      "stripe", "airtable",
+    ],
+    position: "75%",
+  },
 ];
 
-/** Extract a short human-readable config summary from node data */
+// ── Node Picker Popover ──────────────────────────────────────────────────────
+// Opens when a user clicks the "+" button on a bottom handle.
+// Shows a filtered list of node types that can be attached to that handle.
+function NodePickerPopover({ handle, parentNodeId, onClose }) {
+  const addNode = useWorkspaceStore((s) => s.addNode);
+  const onConnect = useWorkspaceStore((s) => s.onConnect);
+  const { getNode } = useReactFlow();
+
+  // Build the list of nodes to show. If handle has allowedTypes, filter to those.
+  // Otherwise show all non-trigger nodes.
+  const entries = Object.entries(NodeRegistry).filter(([key, def]) => {
+    if (def.category === "trigger") return false;
+    if (handle.allowedTypes.length > 0) {
+      return handle.allowedTypes.includes(key);
+    }
+    return true;
+  });
+
+  const handleSelect = useCallback((nodeKey) => {
+    const parentNode = getNode(parentNodeId);
+    if (!parentNode) return;
+
+    // Position the new node below the parent, offset by handle position
+    const offsetX = parseFloat(handle.position) / 100 * 260 - 130;
+    const newId = `${nodeKey}-${crypto.randomUUID()}`;
+    const nodeDef = NodeRegistry[nodeKey];
+
+    addNode({
+      id: newId,
+      type: "custom",
+      position: {
+        x: parentNode.position.x + offsetX,
+        y: parentNode.position.y + 180,
+      },
+      data: {
+        backendType: nodeKey,
+        label: nodeDef?.label || nodeKey,
+        type: "action",
+        config: {},
+      },
+    });
+
+    // Auto-connect: new node's output → parent's bottom handle
+    // The new sub-node feeds INTO the AI Agent's handle
+    setTimeout(() => {
+      onConnect({
+        source: newId,
+        sourceHandle: "output",
+        target: parentNodeId,
+        targetHandle: handle.id,
+      });
+    }, 50);
+
+    onClose();
+  }, [parentNodeId, handle, addNode, onConnect, getNode, onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -4, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50
+        w-52 max-h-60 overflow-y-auto
+        bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-2xl shadow-black/40"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/60">
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+          {handle.label}
+        </span>
+        <button
+          onClick={onClose}
+          className="text-zinc-600 hover:text-zinc-300 transition-colors"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Node list */}
+      <div className="py-1">
+        {entries.length === 0 ? (
+          <p className="px-3 py-2 text-[10px] text-zinc-600">
+            No compatible nodes available
+          </p>
+        ) : (
+          entries.map(([key, def]) => {
+            const Icon = def.icon;
+            return (
+              <button
+                key={key}
+                onClick={() => handleSelect(key)}
+                className="flex items-center gap-2.5 w-full px-3 py-2 hover:bg-zinc-800/50 transition-colors text-left"
+              >
+                <div className={`w-5 h-5 rounded flex items-center justify-center bg-zinc-800/80 ${def.colorClass} shrink-0`}>
+                  <Icon className="w-3 h-3" />
+                </div>
+                <span className="text-[11px] text-zinc-300 truncate">
+                  {def.label}
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Bottom Diamond Handle with + Button ──────────────────────────────────────
+function AgentBottomHandle({ handle, parentNodeId, hasConnection }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  return (
+    <div
+      className="absolute flex flex-col items-center"
+      style={{ left: handle.position, bottom: -1, transform: "translateX(-50%)" }}
+    >
+      {/* React Flow Handle (the diamond) */}
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id={handle.id}
+        className="!w-[14px] !h-[14px] !rounded-[3px] !border-2 !border-zinc-800 !rotate-45 hover:!brightness-125 transition-all touch-none"
+        style={{ backgroundColor: handle.color, bottom: -7, position: "absolute" }}
+      />
+
+      {/* Label below the diamond */}
+      <span
+        className="absolute text-[8px] font-bold uppercase tracking-widest whitespace-nowrap select-none pointer-events-none"
+        style={{ color: handle.color, top: 16, opacity: 0.7 }}
+      >
+        {handle.label}
+      </span>
+
+      {/* "+" button — only shown when nothing is connected to this handle */}
+      {!hasConnection && (
+        <div className="relative" style={{ marginTop: 28 }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setPickerOpen(!pickerOpen);
+            }}
+            className="w-5 h-5 rounded-full flex items-center justify-center transition-all duration-150 hover:scale-110"
+            style={{
+              backgroundColor: `${handle.color}20`,
+              border: `1.5px solid ${handle.color}40`,
+              color: handle.color,
+            }}
+            title={`Add ${handle.label}`}
+          >
+            <Plus className="w-3 h-3" />
+          </button>
+
+          {/* Picker popover */}
+          <AnimatePresence>
+            {pickerOpen && (
+              <NodePickerPopover
+                handle={handle}
+                parentNodeId={parentNodeId}
+                onClose={() => setPickerOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Config Hint ──────────────────────────────────────────────────────────────
+
 function getConfigHint(data) {
   const c = data.config || {};
   if (data.backendType === "http_request") {
@@ -51,6 +244,10 @@ function getConfigHint(data) {
   return null;
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN NODE COMPONENT
+// ═════════════════════════════════════════════════════════════════════════════
+
 export default function CustomNode({ id, data, selected }) {
   const { id: automationId } = useParams();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
@@ -62,6 +259,7 @@ export default function CustomNode({ id, data, selected }) {
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const isRunning = useWorkspaceStore((s) => s.isRunning);
   const runEngine = useWorkspaceStore((s) => s.runEngine);
+  const edges = useWorkspaceStore((s) => s.edges);
   const status = isExecutionLive ? getNodeStatus(id) : null;
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
@@ -69,6 +267,10 @@ export default function CustomNode({ id, data, selected }) {
   const isAgent = data.backendType === "ai_agent";
   const configHint = getConfigHint(data);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
+
+  // Check which bottom handles have connections
+  const getHandleConnected = (handleId) =>
+    edges.some((e) => e.target === id && e.targetHandle === handleId);
 
   // --- Visual state ---
   let borderClass = "border-zinc-800/60";
@@ -119,165 +321,161 @@ export default function CustomNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden ${
-        isAgent && status === "running" ? "ring-1 ring-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.15)]" : ""
-      }`}
+      className={`relative ${isAgent ? "pb-10" : ""}`}
     >
-      {badge}
+      {/* ── Main Node Card ──────────────────────────────────────────────── */}
+      <div
+        className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden ${
+          isAgent && status === "running"
+            ? "ring-1 ring-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
+            : ""
+        }`}
+      >
+        {badge}
 
-      {/* Accent bar — animated gradient for AI Agent */}
-      {isAgent ? (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl bg-gradient-to-b from-violet-500 via-indigo-500 to-purple-500"
-          style={{ opacity: status === "running" ? 0.8 : 0.4 }}
-        />
-      ) : (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-          style={{ backgroundColor: `rgba(${accent},0.35)` }}
-        />
-      )}
+        {/* Accent bar */}
+        {isAgent ? (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl bg-gradient-to-b from-violet-500 via-indigo-500 to-purple-500"
+            style={{ opacity: status === "running" ? 0.8 : 0.4 }}
+          />
+        ) : (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
+            style={{ backgroundColor: `rgba(${accent},0.35)` }}
+          />
+        )}
 
-      {/* Input handle — hidden for triggers */}
-      {!isTrigger && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="input"
-          className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
-          style={isAgent ? { top: "15%" } : undefined}
-        />
-      )}
+        {/* Input handle — hidden for triggers */}
+        {!isTrigger && (
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+          />
+        )}
 
-      {/* AI Agent — extra input handles (Memory, Context, Tools) */}
-      {isAgent && AI_AGENT_LEFT_HANDLES.map((h) => (
-        <Handle
-          key={h.id}
-          type="target"
-          position={Position.Left}
-          id={h.id}
-          className="!w-3 !h-3 !border-2 !border-zinc-900 !rounded-full transition-colors touch-none"
-          style={{ top: h.top, backgroundColor: h.color }}
-          title={h.label}
-        />
-      ))}
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-zinc-800/80 ${nodeDef.colorClass}`}
+          >
+            <Icon className="w-4 h-4" strokeWidth={1.75} />
+          </div>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-zinc-800/80 ${nodeDef.colorClass}`}
-        >
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
+          <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] font-medium text-zinc-100 tracking-tight truncate">
+                {data.label}
+              </span>
+              {hasMappingWarning && (
+                <div className="relative group">
+                  <AlertTriangle className="w-3 h-3 text-amber-500/70 shrink-0 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-52">
+                    {warnings.map((w, i) => (
+                      <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Subtitle: show agent type for AI Agent, category for others */}
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
+              {isAgent
+                ? (data.config?.agentType || "tools_agent").replace(/_/g, " ")
+                : nodeDef.category
+              }
+            </span>
+          </div>
+
+          {/* Status */}
+          <div className="shrink-0">
+            {status === "running" && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              </span>
+            )}
+            {status === "completed" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+            {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
+          </div>
         </div>
 
-        <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+        {/* Body — config details */}
+        <div className="px-4 pb-3 space-y-1.5">
+          {configHint ? (
+            <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
+              {configHint}
+            </p>
+          ) : (
+            <p className="text-[11px] text-zinc-600 truncate">
+              {data.subtitle || "Not configured"}
+            </p>
+          )}
+
+          {data.error && (
+            <p className="text-[10px] text-red-400/70 truncate">
+              {data.error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer bar */}
+        <div className="flex items-center justify-between px-4 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
+          <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[140px]">
+            {id.length > 20 ? `...${id.slice(-16)}` : id}
+          </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[13px] font-medium text-zinc-100 tracking-tight truncate">
-              {data.label}
-            </span>
-            {hasMappingWarning && (
-              <div className="relative group">
-                <AlertTriangle className="w-3 h-3 text-amber-500/70 shrink-0 cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-52">
-                  {warnings.map((w, i) => (
-                    <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
-                  ))}
-                </div>
-              </div>
+            {isTrigger ? (
+              <button
+                onClick={handlePlay}
+                disabled={isRunning}
+                className={`group flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                  isRunning
+                    ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
+                    : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 active:scale-95"
+                }`}
+              >
+                {isRunning ? (
+                  <><Loader2 className="w-2.5 h-2.5 animate-spin" />Running</>
+                ) : (
+                  <><Play className="w-2.5 h-2.5 fill-current" />Run</>
+                )}
+              </button>
+            ) : isConfigured ? (
+              <span className="text-[9px] text-emerald-600 uppercase tracking-wider">Ready</span>
+            ) : (
+              <span className="flex items-center gap-0.5 text-[9px] text-zinc-600 uppercase tracking-wider">
+                <Settings2 className="w-2.5 h-2.5" />
+                Setup
+              </span>
             )}
           </div>
-          <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
-            {nodeDef.category}
-          </span>
         </div>
 
-        {/* Status */}
-        <div className="shrink-0">
-          {status === "running" && (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-            </span>
-          )}
-          {status === "completed" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-          {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
-        </div>
-      </div>
-
-      {/* Body — config details */}
-      <div className="px-4 pb-3 space-y-1.5">
-        {configHint ? (
-          <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
-            {configHint}
-          </p>
-        ) : (
-          <p className="text-[11px] text-zinc-600 truncate">
-            {data.subtitle || "Not configured"}
-          </p>
-        )}
-
-        {data.error && (
-          <p className="text-[10px] text-red-400/70 truncate">
-            {data.error}
-          </p>
-        )}
-      </div>
-
-      {/* Footer bar */}
-      <div className="flex items-center justify-between px-4 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
-        <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[140px]">
-          {id.length > 20 ? `...${id.slice(-16)}` : id}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {isTrigger ? (
-            <button
-              onClick={handlePlay}
-              disabled={isRunning}
-              className={`group flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${
-                isRunning
-                  ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
-                  : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 active:scale-95"
-              }`}
-            >
-              {isRunning ? (
-                <><Loader2 className="w-2.5 h-2.5 animate-spin" />Running</>
-              ) : (
-                <><Play className="w-2.5 h-2.5 fill-current" />Run</>
-              )}
-            </button>
-          ) : isConfigured ? (
-            <span className="text-[9px] text-emerald-600 uppercase tracking-wider">Ready</span>
-          ) : (
-            <span className="flex items-center gap-0.5 text-[9px] text-zinc-600 uppercase tracking-wider">
-              <Settings2 className="w-2.5 h-2.5" />
-              Setup
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Output handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
-        style={isAgent ? { top: "35%", backgroundColor: "#10b981" } : undefined}
-        title={isAgent ? "Output" : undefined}
-      />
-
-      {/* AI Agent — extra output handle (Tool Call) */}
-      {isAgent && AI_AGENT_RIGHT_HANDLES.map((h) => (
+        {/* Output handle */}
         <Handle
-          key={h.id}
           type="source"
           position={Position.Right}
-          id={h.id}
-          className="!w-3 !h-3 !border-2 !border-zinc-900 !rounded-full transition-colors touch-none"
-          style={{ top: h.top, backgroundColor: h.color }}
-          title={h.label}
+          id="output"
+          className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
         />
-      ))}
+      </div>
+
+      {/* ── AI Agent Bottom Handles (n8n-style diamonds with + buttons) ── */}
+      {isAgent && (
+        <div className="relative w-full" style={{ height: 48 }}>
+          {AI_AGENT_BOTTOM_HANDLES.map((h) => (
+            <AgentBottomHandle
+              key={h.id}
+              handle={h}
+              parentNodeId={id}
+              hasConnection={getHandleConnected(h.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
