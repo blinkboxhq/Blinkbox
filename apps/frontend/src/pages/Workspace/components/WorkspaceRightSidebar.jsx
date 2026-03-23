@@ -7,6 +7,7 @@ export default function WorkspaceRightSidebar() {
   const selectedNodeId = useWorkspaceStore((state) => state.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((state) => state.setSelectedNodeId);
   const nodes = useWorkspaceStore((state) => state.nodes);
+  const edges = useWorkspaceStore((state) => state.edges);
   const updateNodeConfig = useWorkspaceStore((state) => state.updateNodeConfig);
 
   const isExecutionLive = useWorkspaceStore((state) => state.isExecutionLive);
@@ -83,6 +84,8 @@ export default function WorkspaceRightSidebar() {
               <ConfigPanel
                 config={selectedNode.data?.config || {}}
                 updateConfig={(key, value) => updateNodeConfig(selectedNode.id, key, value)}
+                nodeId={selectedNode.id}
+                edges={edges}
               />
             ) : (
               <p className="text-xs text-zinc-500">No configuration required.</p>

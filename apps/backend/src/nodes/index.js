@@ -42,6 +42,13 @@ import novita from "./integrations/novita.node.js";
 import deepinfra from "./integrations/deepinfra.node.js";
 import hyperbolic from "./integrations/hyperbolic.node.js";
 
+// ── Memory Nodes ────────────────────────────────────────────────────────────
+import windowBufferMemory from "./memory/windowBufferMemory.node.js";
+import redisMemory from "./memory/redisMemory.node.js";
+import postgresMemory from "./memory/postgresMemory.node.js";
+import vectorMemory from "./memory/vectorMemory.node.js";
+import mem0 from "./memory/mem0.node.js";
+
 // ── Integrations: Comms Hub ──────────────────────────────────────────────────
 import telegram from "./integrations/telegram.node.js";
 import whatsapp from "./integrations/whatsapp.node.js";
@@ -100,6 +107,13 @@ export const nodeRegistry = {
   novita: novita,
   deepinfra: deepinfra,
   hyperbolic: hyperbolic,
+
+  // ── Memory ────────────────────────────────────────────────────────────
+  window_buffer_memory: windowBufferMemory,
+  redis_memory: redisMemory,
+  postgres_memory: postgresMemory,
+  vector_memory: vectorMemory,
+  mem0: mem0,
 
   // ── Comms Hub ──────────────────────────────────────────────────────────
   telegram: telegram,

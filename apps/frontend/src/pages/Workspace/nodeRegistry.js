@@ -17,6 +17,7 @@ import {
   Cloud,
   CircuitBoard,
   Sparkles,
+  Brain,
 } from "lucide-react";
 
 // ── Brand Logos (react-icons/si = Simple Icons) ──────────────────────────
@@ -56,6 +57,13 @@ import WhatsAppNode from "./components/nodes/WhatsAppNode";
 import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
+
+// ── Memory Nodes ─────────────────────────────────────────────────────────
+import WindowBufferMemoryNode from "./components/nodes/WindowBufferMemoryNode";
+import RedisMemoryNode from "./components/nodes/RedisMemoryNode";
+import PostgresMemoryNode from "./components/nodes/PostgresMemoryNode";
+import VectorMemoryNode from "./components/nodes/VectorMemoryNode";
+import Mem0Node from "./components/nodes/Mem0Node";
 
 // ── Generated Config Panels for OpenAI-Compatible Providers ─────────────
 const OpenRouterNode = makeOpenAICompatNode({
@@ -146,6 +154,7 @@ export const CATEGORIES = [
   { id: "research", label: "Research", icon: Search },
   { id: "flow", label: "Logic & Flow", icon: GitBranch },
   { id: "code", label: "Code", icon: Code2 },
+  { id: "memory", label: "Memory", icon: Brain },
   { id: "integration", label: "Integrations", icon: Database },
 ];
 
@@ -394,6 +403,53 @@ export const NodeRegistry = {
     accentColor: "163,230,53",
     ConfigPanel: CodeNode,
     category: "code",
+  },
+
+  // ── Memory ───────────────────────────────────────────────────────────────
+  window_buffer_memory: {
+    label: "Window Buffer",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: WindowBufferMemoryNode,
+    category: "memory",
+  },
+  redis_memory: {
+    label: "Redis Memory",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: RedisMemoryNode,
+    category: "memory",
+  },
+  postgres_memory: {
+    label: "Postgres Memory",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: PostgresMemoryNode,
+    category: "memory",
+  },
+  vector_memory: {
+    label: "Vector Memory",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: VectorMemoryNode,
+    category: "memory",
+  },
+  mem0: {
+    label: "Mem0",
+    icon: Brain,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-purple-400",
+    accentColor: "168,85,247",
+    ConfigPanel: Mem0Node,
+    category: "memory",
   },
 
   // ── Integrations ──────────────────────────────────────────────────────────

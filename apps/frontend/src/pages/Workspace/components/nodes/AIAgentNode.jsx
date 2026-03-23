@@ -10,6 +10,8 @@ import {
   Wrench,
   BookOpen,
   ListTree,
+  AlertTriangle,
+  Search,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
@@ -43,6 +45,27 @@ const AGENT_TYPES = [
     color: "#a855f7",
   },
 ];
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL-CALLING SUPPORT MAP — Providers with native function calling
+// ═════════════════════════════════════════════════════════════════════════════
+
+const TOOL_CALLING_SUPPORT = {
+  openai: true,
+  anthropic: true,
+  gemini: true,
+  deepseek: true,
+  openrouter: true,
+  xai: true,
+  fireworks: true,
+  together: false,
+  perplexity: false,
+  cerebras: false,
+  ollama: false,
+  novita: false,
+  deepinfra: false,
+  hyperbolic: false,
+};
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PROVIDER / MODEL CATALOG
@@ -266,11 +289,15 @@ function DependencySlot({ label, color, description, required, connected }) {
 // MAIN COMPONENT — n8n-Style AI Agent Configuration Panel
 // ═════════════════════════════════════════════════════════════════════════════
 
-export default function AIAgentNode({ config = {}, updateConfig }) {
+export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges = [] }) {
   const agentType = config.agentType || "tools_agent";
   const provider = config.provider || "openai";
   const providerDef = PROVIDERS.find((p) => p.value === provider) || PROVIDERS[0];
   const outputFormat = config.outputFormat || "text";
+
+  // Check which handles have active edge connections
+  const isHandleConnected = (handleId) =>
+    edges.some((e) => e.target === nodeId && e.targetHandle === handleId);
 
   // When provider changes, reset model to that provider's default
   const handleProviderChange = (newProvider) => {
@@ -349,26 +376,36 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
             color="#6366f1"
             description="Connect an LLM node (OpenAI, Anthropic, etc.) — or configure below"
             required
-            connected={!!config.credentialId}
+            connected={isHandleConnected("chat_model") || !!config.credentialId}
           />
           <DependencySlot
             label="Memory"
             color="#a855f7"
             description="Connect a memory buffer for multi-turn conversation context"
             required={agentType === "conversational"}
-            connected={false}
+            connected={isHandleConnected("memory")}
           />
           <DependencySlot
             label="Tools"
             color="#f97316"
             description="Connect tool/action nodes the agent can invoke autonomously"
             required={agentType === "tools_agent"}
-            connected={false}
+            connected={isHandleConnected("tools")}
           />
         </div>
         <p className="text-[9px] text-zinc-600 leading-relaxed">
           Connect nodes to the colored handles on the left side of this node. Each handle accepts a specific dependency type.
         </p>
+
+        {agentType === "tools_agent" && !TOOL_CALLING_SUPPORT[provider] && (
+          <div className="flex items-start gap-2 px-3 py-2 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+            <span className="text-[9px] text-amber-400/80 leading-relaxed">
+              <strong>{providerDef.label}</strong> may not support native function calling.
+              Consider switching to <strong>ReAct</strong> agent type, or use OpenAI / Anthropic / Gemini for reliable tool use.
+            </span>
+          </div>
+        )}
       </Section>
 
       {/* ─── CHAT MODEL CONFIG ──────────────────────────────────────────── */}
@@ -551,6 +588,48 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
             />
           </button>
         </div>
+      </Section>
+
+      {/* ─── BUILT-IN TOOLS ─────────────────────────────────────────────── */}
+      <Section title="Built-in Tools" icon={Wrench} iconColor="#f97316" defaultOpen={false}>
+        {/* Web Search toggle */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+              <Search className="w-3 h-3 text-orange-400" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[11px] text-zinc-300 font-medium">Web Search</span>
+              <span className="text-[9px] text-zinc-600 leading-relaxed">
+                Search the internet via Tavily
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => updateConfig("builtinWebSearch", !config.builtinWebSearch)}
+            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+              config.builtinWebSearch ? "bg-orange-500/80" : "bg-zinc-700"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                config.builtinWebSearch ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        {config.builtinWebSearch && (
+          <div className="ml-8">
+            <CredentialPicker
+              value={config.webSearchCredentialId || ""}
+              onChange={(id) => updateConfig("webSearchCredentialId", id)}
+              accentColor="orange"
+              label="Tavily API Key"
+              placeholder="Select Tavily credential..."
+            />
+          </div>
+        )}
       </Section>
 
       {/* ─── HANDLE LEGEND ──────────────────────────────────────────────── */}

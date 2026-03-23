@@ -3,6 +3,18 @@ import ivm from "isolated-vm";
 const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024; // 5MB hard limit
 
 export default {
+  toolDefinition: {
+    name: "run_code",
+    description: "Execute sandboxed JavaScript code in an isolated V8 environment. Input is available as $input, output via $output. No filesystem or network access.",
+    parameters: {
+      type: "object",
+      properties: {
+        code: { type: "string", description: "JavaScript code to execute. Use $input for input data and assign result to $output." },
+      },
+      required: ["code"],
+    },
+  },
+
   async run(config, input) {
     const { code } = config;
 

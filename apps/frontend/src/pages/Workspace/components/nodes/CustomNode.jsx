@@ -20,7 +20,10 @@ const AI_AGENT_BOTTOM_HANDLES = [
   {
     id: "memory",
     label: "Memory",
-    allowedTypes: [],
+    allowedTypes: [
+      "window_buffer_memory", "redis_memory", "postgres_memory",
+      "vector_memory", "mem0",
+    ],
   },
   {
     id: "tools",

@@ -233,9 +233,29 @@ export async function processCursor({ executionId, cursorId }) {
           if (handle === "memory") {
             handleDeps._memory = firstOutput;
           } else if (handle === "tools") {
-            // Tools handle can receive from multiple edges — collect all
+            // Tools handle: build callable tool definitions with execute closures.
+            // If the source node exports a toolDefinition, wrap it with an execute()
+            // closure that calls the node's run() on demand during the agent's ReAct loop.
+            // Otherwise, fall back to passing the node's static output.
             if (!handleDeps._tools) handleDeps._tools = [];
-            if (firstOutput) handleDeps._tools.push(firstOutput);
+            const sourceNode = automation.nodes.find((n) => n.id === edge.source);
+            if (sourceNode) {
+              const toolType = sourceNode.type;
+              const toolHandler = nodeRegistry[toolType];
+              if (toolHandler?.toolDefinition) {
+                const toolDef = { ...toolHandler.toolDefinition };
+                const savedConfig = sourceNode.data || {};
+                toolDef.execute = async (agentArgs) => {
+                  const mergedConfig = { ...savedConfig, ...agentArgs };
+                  return toolHandler.run(mergedConfig, agentArgs, {
+                    workspaceId: execution.workspaceId,
+                  });
+                };
+                handleDeps._tools.push(toolDef);
+              } else if (firstOutput) {
+                handleDeps._tools.push(firstOutput);
+              }
+            }
           } else if (handle === "chat_model") {
             handleDeps._chatModel = firstOutput;
           }

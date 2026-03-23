@@ -26,6 +26,21 @@ const API_URL = "https://api.tavily.com/search";
 const MAX_RESULTS_LIMIT = 20;
 
 export default {
+  toolDefinition: {
+    name: "web_search",
+    description: "Search the internet for current information using Tavily. Returns titles, URLs, content snippets, and an AI-generated answer.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The search query" },
+        searchDepth: { type: "string", enum: ["basic", "advanced"], description: "Search depth — basic is faster, advanced is deeper" },
+        maxResults: { type: "number", description: "Number of results to return (1-20, default 5)" },
+        topic: { type: "string", enum: ["general", "news", "finance"], description: "Search topic category" },
+      },
+      required: ["query"],
+    },
+  },
+
   async run(config, input, context = {}) {
     const {
       credentialId,

@@ -101,6 +101,35 @@ const MAX_TOOL_OUTPUT_BYTES = 15000;
 const TOOL_TIMEOUT_MS = 30000;
 
 // ═════════════════════════════════════════════════════════════════════════════
+// BUILT-IN TOOL DEFINITIONS
+// ═════════════════════════════════════════════════════════════════════════════
+
+const BUILTIN_TOOLS = {
+  web_search: {
+    name: "web_search",
+    description:
+      "Search the internet for current information using Tavily. " +
+      "Returns titles, URLs, content snippets, and an AI-generated answer.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The search query" },
+        searchDepth: {
+          type: "string",
+          enum: ["basic", "advanced"],
+          description: "Search depth — basic is faster, advanced is deeper",
+        },
+        maxResults: {
+          type: "number",
+          description: "Number of results to return (1-20, default 5)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
 // AGENT TYPE SYSTEM PROMPTS
 // ═════════════════════════════════════════════════════════════════════════════
 // Each agent type gets a strategy-specific system prompt prefix that shapes
@@ -150,6 +179,10 @@ export default {
       // Handle-routed dependencies (injected by cursor executor)
       _memory,
       _tools,
+
+      // Built-in tools (toggled from config panel)
+      builtinWebSearch = false,
+      webSearchCredentialId,
     } = config;
 
     // ── Validation ─────────────────────────────────────────────────────
@@ -180,16 +213,70 @@ export default {
 
     // Tools: array of tool definitions from the Tools handle
     const toolDefs = resolveTools(_tools);
+
+    // ── Built-in Tools ──────────────────────────────────────────────
+    if (builtinWebSearch && webSearchCredentialId) {
+      try {
+        const searchCred = await resolveCredential(
+          webSearchCredentialId,
+          context.workspaceId,
+          "Web Search (built-in)"
+        );
+        const searchApiKey = decrypt(searchCred.encryptedData, searchCred.iv, searchCred.authTag);
+
+        toolDefs.push({
+          ...BUILTIN_TOOLS.web_search,
+          execute: async (args) => {
+            const res = await axios.post(
+              "https://api.tavily.com/search",
+              {
+                api_key: searchApiKey,
+                query: args.query,
+                search_depth: args.searchDepth || "basic",
+                max_results: Math.min(args.maxResults || 5, 20),
+                include_answer: true,
+              },
+              { timeout: 30000 }
+            );
+            return {
+              answer: res.data.answer || null,
+              results: (res.data.results || []).map((r) => ({
+                title: r.title,
+                url: r.url,
+                content: r.content,
+                score: r.score,
+              })),
+              query: res.data.query,
+            };
+          },
+        });
+      } catch (err) {
+        // Non-fatal: built-in tool credential resolution failed — continue without it
+        console.warn(`AI Agent: Built-in web_search skipped — ${err.message}`);
+      }
+    }
+
     const formattedTools =
       toolDefs.length > 0
         ? formatToolsForProvider(toolDefs, provider)
         : null;
 
+    // ── Robustness: tools_agent with no tools → conversational fallback
+    let effectiveAgentType = agentType;
+    if (agentType === "tools_agent" && toolDefs.length === 0) {
+      effectiveAgentType = "conversational";
+    }
+
+    // ── Robustness: cap memory to prevent context overflow
+    if (memoryMessages.length > 200) {
+      memoryMessages.splice(0, memoryMessages.length - 200);
+    }
+
     // ── Build System Prompt ────────────────────────────────────────────
     // Layer 1: Agent strategy prompt (based on agentType)
     // Layer 2: User's custom system prompt (persona/constraints)
     // Layer 3: Output format instruction (if JSON requested)
-    let system = AGENT_STRATEGY_PROMPTS[agentType] || AGENT_STRATEGY_PROMPTS.tools_agent;
+    let system = AGENT_STRATEGY_PROMPTS[effectiveAgentType] || AGENT_STRATEGY_PROMPTS.tools_agent;
 
     if (systemPrompt) {
       system += `\n\n--- User Instructions ---\n${systemPrompt}`;
@@ -293,10 +380,13 @@ export default {
         model: response.model || resolvedModel,
         tokensUsed: totalTokens,
         provider,
-        agentType,
+        agentType: effectiveAgentType,
         iterations: iteration,
         intermediateSteps,
         returnIntermediateSteps,
+        warning: effectiveAgentType !== agentType
+          ? `tools_agent downgraded to conversational — no tools connected`
+          : undefined,
       });
     }
 
@@ -319,7 +409,7 @@ export default {
       model: resolvedModel,
       tokensUsed: totalTokens,
       provider,
-      agentType,
+      agentType: effectiveAgentType,
       iterations: iteration,
       intermediateSteps,
       returnIntermediateSteps,
@@ -339,6 +429,18 @@ export default {
  */
 function resolveMemory(raw) {
   if (!raw) return [];
+
+  // Memory node wrapper format: { messages: [...], sessionId, ... }
+  if (typeof raw === "object" && !Array.isArray(raw) && Array.isArray(raw.messages)) {
+    return raw.messages.filter(
+      (m) =>
+        m &&
+        typeof m === "object" &&
+        m.role &&
+        m.content &&
+        typeof m.content === "string"
+    );
+  }
 
   // Already a proper messages array
   if (Array.isArray(raw)) {

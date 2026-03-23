@@ -31,6 +31,21 @@ import { decrypt } from "../utils/crypto.js";
 const JINA_READER_URL = "https://r.jina.ai/";
 
 export default {
+  toolDefinition: {
+    name: "web_scraper",
+    description: "Scrape and extract content from a web page. Supports browser rendering (Puppeteer) and fast reader (Jina) engines. Returns page content as markdown, text, or HTML.",
+    parameters: {
+      type: "object",
+      properties: {
+        source: { type: "string", description: "The URL of the page to scrape" },
+        engine: { type: "string", enum: ["browser", "reader"], description: "Extraction engine — browser for JS-rendered pages, reader for fast markdown (default: browser)" },
+        outputFormat: { type: "string", enum: ["markdown", "text", "html", "targeted"], description: "Output format (default: markdown)" },
+        extractionGoal: { type: "string", description: "What to extract from the page (for targeted extraction)" },
+      },
+      required: ["source"],
+    },
+  },
+
   async run(config, input, context = {}) {
     const {
       source,

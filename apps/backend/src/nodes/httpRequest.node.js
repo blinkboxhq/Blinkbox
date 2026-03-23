@@ -28,6 +28,21 @@ const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_TIMEOUT_MS = 60000;
 
 export default {
+  toolDefinition: {
+    name: "http_request",
+    description: "Make an HTTP request to an external API or URL. Supports GET, POST, PUT, PATCH, DELETE methods with custom headers and body.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "The URL to request" },
+        method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"], description: "HTTP method (default: GET)" },
+        body: { type: "object", description: "Request body for POST/PUT/PATCH" },
+        headers: { type: "object", description: "Custom request headers as key-value pairs" },
+      },
+      required: ["url"],
+    },
+  },
+
   async run(config, input, context = {}) {
     const {
       url,
