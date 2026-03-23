@@ -39,8 +39,9 @@ export const DEFAULT_SCHEMAS = {
     model: "string",
     tokensUsed: "number",
     provider: "string",
-    toolCalls: "array",
-    rounds: "number",
+    agentType: "string",
+    iterations: "number",
+    intermediateSteps: "array",
   },
   data_mapper: { _dynamic: true },
   logic_router: { _passthrough: true },
@@ -193,7 +194,7 @@ const EXPECTED_INPUT_TYPES = {
   http_request: { body: "object", headers: "object", url: "string" },
   data_mapper: { mappings: "object" },
   code: { input: "object" },
-  ai_agent: { prompt: "string", systemPrompt: "string", parentSource: "string", memory: "array", tools: "array" },
+  ai_agent: { prompt: "string", systemPrompt: "string" },
   logic_router: { conditions: "array" },
 };
 

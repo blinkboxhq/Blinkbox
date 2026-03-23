@@ -6,14 +6,14 @@ import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
 // ── AI Agent Multi-Handle Definitions ────────────────────────────────────────
-// Color-coded handles with tooltips for the AI Agent's specialized I/O ports.
+// n8n-style dependency routing: each handle represents a specific input/output
+// type that the AI Agent's backend resolves during execution.
 const AI_AGENT_LEFT_HANDLES = [
-  { id: "memory",  label: "Memory",  color: "#a855f7", top: "30%" },
-  { id: "context", label: "Context", color: "#14b8a6", top: "50%" },
-  { id: "tools",   label: "Tools",   color: "#f97316", top: "70%" },
+  { id: "memory", label: "Memory", color: "#a855f7", top: "45%" },
+  { id: "tools",  label: "Tools",  color: "#f97316", top: "70%" },
 ];
 const AI_AGENT_RIGHT_HANDLES = [
-  { id: "tool_call", label: "Tool Call", color: "#f97316", top: "65%" },
+  { id: "steps", label: "Intermediate Steps", color: "#f59e0b", top: "65%" },
 ];
 
 /** Extract a short human-readable config summary from node data */
@@ -29,8 +29,9 @@ function getConfigHint(data) {
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent") {
     const parts = [];
-    if (c.provider) parts.push(c.provider);
+    if (c.agentType) parts.push(c.agentType.replace(/_/g, " "));
     if (c.model) parts.push(c.model);
+    else if (c.provider) parts.push(c.provider);
     if (parts.length > 0) return parts.join(" · ");
   }
   if (data.backendType === "webhook" && c.path) return `/${c.path}`;

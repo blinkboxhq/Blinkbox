@@ -1,50 +1,55 @@
 /**
  * AI AGENT NODE — Autonomous Cognitive Engine
  *
- * The crown jewel of BlinkBox's execution engine. Supports true agentic loops
- * with tool-calling, memory injection, context augmentation, and multi-provider
- * routing across OpenAI, Anthropic, Gemini, and DeepSeek.
+ * n8n-style modular architecture. The agent receives its dependencies
+ * (Chat Model, Memory, Tools) from handle-routed edges, resolves them,
+ * and enters an autonomous reasoning loop until it produces a final answer
+ * or exhausts its iteration budget.
  *
  * ┌──────────────────────────────────────────────────────────────────────────┐
- * │ AGENTIC LOOP                                                            │
+ * │  AGENT LOOP (runs up to maxIterations)                                  │
  * │                                                                          │
- * │  User Prompt + Input + Context                                           │
- * │         ↓                                                                │
- * │  ┌─── LLM Call ───┐                                                     │
- * │  │                 │── text response ──→ Return final output             │
- * │  │                 │── tool_call ──→ Execute tool → append result → loop │
- * │  └─────────────────┘                                                     │
- * │         ↑                                                                │
- * │    (repeat up to maxToolRounds)                                          │
+ * │  ① Build messages: system + memory + user prompt + input data            │
+ * │  ② Call LLM with tool definitions attached                               │
+ * │  ③ If LLM returns text → break, return final output                      │
+ * │  ④ If LLM returns tool_call:                                             │
+ * │     a. Log the call as an intermediate step                              │
+ * │     b. Execute the tool (or inject error on failure)                      │
+ * │     c. Append tool result to messages                                    │
+ * │     d. Continue loop → back to ②                                         │
  * └──────────────────────────────────────────────────────────────────────────┘
  *
- * Config:
- *   provider       — "openai" | "anthropic" | "gemini" | "deepseek"
- *   model          — Model ID string
- *   prompt         — User instruction prompt (expression-resolved)
- *   systemPrompt   — Custom system prompt (optional, expression-resolved)
- *   credentialId   — Vault reference to encrypted API key
- *   outputFormat   — "json" | "text" (default: "text")
- *   temperature    — 0-2 (default: 0.3)
- *   maxTokens      — Max response tokens (default: 4000)
- *   enableTools    — boolean — activate agentic tool-calling loop
- *   enableMemory   — boolean — inject memory messages into conversation
- *   maxToolRounds  — Max agentic loop iterations (default: 3, max: 10)
- *   parentSource   — RAG/context string injected into system prompt
- *   tools          — Array of tool definitions (from connected tool nodes)
- *   memory         — Array of {role, content} messages (from memory handle)
+ * Agent Types:
+ *   "tools_agent"    — Native function-calling via provider APIs
+ *   "conversational" — Chat-optimized, memory-first, single-turn tool use
+ *   "react"          — Reason+Act: injects chain-of-thought into prompts
  *
- * Input:
- *   The full $json from the previous node is injected as context.
+ * Config (from frontend panel):
+ *   agentType              — "tools_agent" | "conversational" | "react"
+ *   provider               — "openai" | "anthropic" | "gemini" | "deepseek"
+ *   model                  — Model ID string
+ *   prompt                 — User instruction (expression-resolved)
+ *   systemPrompt           — Custom persona / system prompt
+ *   credentialId           — Vault reference to encrypted API key
+ *   outputFormat           — "json" | "text"
+ *   temperature            — 0-2 (default 0.3)
+ *   maxTokens              — Response token limit (default 4000)
+ *   maxIterations          — Agent loop ceiling (default 5, max 15)
+ *   returnIntermediateSteps — Include thought/tool log in output
+ *
+ * Config (injected by cursor executor via handle routing):
+ *   _memory  — Array of {role, content} from Memory handle
+ *   _tools   — Array of tool definitions from Tools handle
  *
  * Output:
  *   {
- *     result:      <parsed JSON or text>,
- *     model:       <model ID used>,
- *     tokensUsed:  <total tokens consumed across all rounds>,
- *     provider:    <provider string>,
- *     toolCalls:   <array of tool invocations made (if any)>,
- *     rounds:      <number of agentic loop iterations>,
+ *     result,            — Final text or parsed JSON
+ *     model,             — Model ID used
+ *     tokensUsed,        — Total tokens across all iterations
+ *     provider,          — Provider string
+ *     agentType,         — Which strategy ran
+ *     iterations,        — How many loops executed
+ *     intermediateSteps, — (optional) Array of {thought, tool, input, output}
  *   }
  */
 
@@ -69,13 +74,46 @@ const DEFAULT_MODELS = {
 };
 
 // ── Hard Limits ──────────────────────────────────────────────────────────────
-const MAX_INPUT_BYTES = 30000;   // 30KB input cap
-const MAX_TOOL_ROUNDS = 10;      // Absolute ceiling for agentic loops
-const REQUEST_TIMEOUT = 120000;  // 2 minute timeout per LLM call
+const MAX_INPUT_BYTES = 30000;
+const MAX_ITERATIONS_CEILING = 15;
+const REQUEST_TIMEOUT = 120000;
+
+// ═════════════════════════════════════════════════════════════════════════════
+// AGENT TYPE SYSTEM PROMPTS
+// ═════════════════════════════════════════════════════════════════════════════
+// Each agent type gets a strategy-specific system prompt prefix that shapes
+// how the LLM reasons about tool usage and response structure.
+
+const AGENT_STRATEGY_PROMPTS = {
+  tools_agent:
+    "You are an autonomous AI agent with access to tools. " +
+    "When a user asks a question, decide which tool(s) to call to gather the information needed. " +
+    "Call tools as needed, then synthesize the results into a clear final answer. " +
+    "Only respond with your final answer when you have all the information you need.",
+
+  conversational:
+    "You are a conversational AI assistant. You maintain context from prior messages. " +
+    "Respond naturally and helpfully. If tools are available and would help answer the user's question, " +
+    "use them — but prefer direct answers when you already have the information.",
+
+  react:
+    "You are a ReAct (Reason + Act) agent. For each step:\n" +
+    "1. THOUGHT: Explain your reasoning about what to do next.\n" +
+    "2. ACTION: Call a tool if needed, or provide your final answer.\n" +
+    "3. OBSERVATION: After receiving tool results, reflect on what you learned.\n" +
+    "Continue this Thought → Action → Observation loop until you can provide a definitive final answer. " +
+    "When you have enough information, respond with your final answer directly.",
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN ENTRY POINT
+// ═════════════════════════════════════════════════════════════════════════════
 
 export default {
   async run(config, input, context = {}) {
+    // ── Extract Config ─────────────────────────────────────────────────
     const {
+      agentType = "tools_agent",
       provider = "openai",
       model,
       prompt,
@@ -84,77 +122,95 @@ export default {
       outputFormat = "text",
       temperature = 0.3,
       maxTokens = 4000,
-      enableTools = false,
-      enableMemory = false,
-      maxToolRounds = 3,
-      parentSource,
-      tools: toolDefs,
-      memory,
+      maxIterations = 5,
+      returnIntermediateSteps = false,
+
+      // Handle-routed dependencies (injected by cursor executor)
+      _memory,
+      _tools,
     } = config;
 
-    // ── Validation ─────────────────────────────────────────────────────────
+    // ── Validation ─────────────────────────────────────────────────────
     if (!prompt) {
-      throw new Error("AI Agent: 'prompt' is required. Add an instruction in the Instructions field.");
+      throw new Error(
+        "AI Agent: 'prompt' is required. Add an instruction in the Instructions field."
+      );
     }
-
     if (!ENDPOINTS[provider]) {
-      throw new Error(`AI Agent: Unknown provider "${provider}". Supported: ${Object.keys(ENDPOINTS).join(", ")}`);
+      throw new Error(
+        `AI Agent: Unknown provider "${provider}". Supported: ${Object.keys(ENDPOINTS).join(", ")}`
+      );
     }
 
     const resolvedModel = model || DEFAULT_MODELS[provider];
 
-    // ── Credential Resolution ──────────────────────────────────────────────
-    const cred = await resolveCredential(credentialId, context.workspaceId, "AI Agent");
+    // ── Resolve Credential ─────────────────────────────────────────────
+    const cred = await resolveCredential(
+      credentialId,
+      context.workspaceId,
+      "AI Agent"
+    );
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
-    // ── Build Input Context ────────────────────────────────────────────────
+    // ── Resolve Dependencies ───────────────────────────────────────────
+    // Memory: array of {role, content} from the Memory handle
+    const memoryMessages = resolveMemory(_memory);
+
+    // Tools: array of tool definitions from the Tools handle
+    const toolDefs = resolveTools(_tools);
+    const formattedTools =
+      toolDefs.length > 0
+        ? formatToolsForProvider(toolDefs, provider)
+        : null;
+
+    // ── Build System Prompt ────────────────────────────────────────────
+    // Layer 1: Agent strategy prompt (based on agentType)
+    // Layer 2: User's custom system prompt (persona/constraints)
+    // Layer 3: Output format instruction (if JSON requested)
+    let system = AGENT_STRATEGY_PROMPTS[agentType] || AGENT_STRATEGY_PROMPTS.tools_agent;
+
+    if (systemPrompt) {
+      system += `\n\n--- User Instructions ---\n${systemPrompt}`;
+    }
+
+    if (outputFormat === "json") {
+      system +=
+        "\n\nIMPORTANT: Your final answer must be valid JSON. No markdown fences, no explanations — just the JSON object or array.";
+    }
+
+    // ── Build Input Context ────────────────────────────────────────────
     const inputSummary =
       typeof input === "string"
         ? input.substring(0, MAX_INPUT_BYTES)
         : JSON.stringify(input, null, 2).substring(0, MAX_INPUT_BYTES);
 
-    // ── Build System Prompt ────────────────────────────────────────────────
-    let system = systemPrompt || buildDefaultSystemPrompt(outputFormat);
-
-    // Inject RAG/parent context into system prompt if provided
-    if (parentSource) {
-      const contextStr = typeof parentSource === "string"
-        ? parentSource
-        : JSON.stringify(parentSource, null, 2);
-      system += `\n\n--- Reference Context ---\n${contextStr.substring(0, MAX_INPUT_BYTES)}`;
-    }
-
-    // ── Build Initial Messages ─────────────────────────────────────────────
+    // ── Build Initial Message Array ────────────────────────────────────
     const messages = [];
 
-    // Inject memory (conversation history) if enabled
-    if (enableMemory && memory && Array.isArray(memory)) {
-      for (const msg of memory) {
-        if (msg.role && msg.content) {
-          messages.push({ role: msg.role, content: msg.content });
-        }
-      }
+    // Inject memory (conversation history) first
+    for (const msg of memoryMessages) {
+      messages.push(msg);
     }
 
     // User message: instruction + input data
-    const userMessage = inputSummary
+    const userContent = inputSummary
       ? `${prompt}\n\n---\nInput Data:\n${inputSummary}`
       : prompt;
-    messages.push({ role: "user", content: userMessage });
+    messages.push({ role: "user", content: userContent });
 
-    // ── Build Tool Definitions ─────────────────────────────────────────────
-    const formattedTools = enableTools ? formatToolsForProvider(toolDefs, provider) : null;
-
-    // ── Agentic Execution Loop ─────────────────────────────────────────────
-    const clampedMaxRounds = Math.min(Math.max(maxToolRounds, 1), MAX_TOOL_ROUNDS);
-    const toolCallLog = [];
+    // ── Agentic Execution Loop ─────────────────────────────────────────
+    const maxIter = Math.min(
+      Math.max(maxIterations, 1),
+      MAX_ITERATIONS_CEILING
+    );
+    const intermediateSteps = [];
     let totalTokens = 0;
-    let round = 0;
+    let iteration = 0;
 
-    while (round < clampedMaxRounds) {
-      round++;
+    while (iteration < maxIter) {
+      iteration++;
 
-      // Call the LLM
+      // ── Call LLM ───────────────────────────────────────────────────
       const response = await callProvider({
         provider,
         apiKey,
@@ -168,89 +224,224 @@ export default {
 
       totalTokens += response.tokensUsed;
 
-      // ── Check for Tool Calls ───────────────────────────────────────────
-      if (response.toolCalls && response.toolCalls.length > 0 && enableTools) {
-        // Append assistant's tool-call message to conversation
+      // ── Check: Did the LLM request tool calls? ─────────────────────
+      if (
+        response.toolCalls &&
+        response.toolCalls.length > 0 &&
+        formattedTools
+      ) {
+        // Append the assistant's tool-call message to the conversation
         messages.push(buildAssistantToolCallMessage(response, provider));
 
         // Process each tool call
         for (const tc of response.toolCalls) {
-          toolCallLog.push({
-            round,
-            tool: tc.name,
-            arguments: tc.arguments,
+          // Log intermediate step (thought + action)
+          intermediateSteps.push({
+            iteration,
+            thought: response.text || null,
+            action: tc.name,
+            actionInput: tc.arguments,
           });
 
-          // Execute the tool via the node registry (simulated — actual execution
-          // happens through the cursor engine's edge routing). For now, we append
-          // a placeholder that tells the agent the tool was dispatched.
+          // Execute the tool. On failure, the error message is fed
+          // back to the LLM so it can adapt — NOT thrown.
           const toolResult = await executeToolCall(tc, toolDefs);
 
-          // Append tool result to conversation for next LLM round
+          // Record the observation
+          intermediateSteps[intermediateSteps.length - 1].observation =
+            toolResult;
+
+          // Append tool result to conversation for the next LLM turn
           messages.push(buildToolResultMessage(tc, toolResult, provider));
         }
 
-        // Continue the loop — let the LLM see the tool results
+        // Continue loop → LLM sees tool results in next iteration
         continue;
       }
 
-      // ── No Tool Calls — Final Response ─────────────────────────────────
+      // ── No Tool Calls → Final Response ─────────────────────────────
       let result = response.text;
 
-      // Parse JSON if requested
       if (outputFormat === "json") {
         result = parseJsonResponse(result);
       }
 
-      return {
+      return buildOutput({
         result,
         model: response.model || resolvedModel,
         tokensUsed: totalTokens,
         provider,
-        toolCalls: toolCallLog.length > 0 ? toolCallLog : undefined,
-        rounds: round,
-      };
+        agentType,
+        iterations: iteration,
+        intermediateSteps,
+        returnIntermediateSteps,
+      });
     }
 
-    // ── Max Rounds Exhausted ───────────────────────────────────────────────
-    // The agent hit the loop ceiling. Return whatever the last response was.
-    return {
-      result: `AI Agent completed ${round} tool-calling rounds without producing a final answer. Consider increasing maxToolRounds or simplifying the task.`,
+    // ── Max Iterations Exhausted ───────────────────────────────────────
+    // The agent couldn't produce a final answer within the budget.
+    // Return the last assistant message content if available.
+    const lastAssistantMsg = [...messages]
+      .reverse()
+      .find((m) => m.role === "assistant");
+    const fallbackResult =
+      lastAssistantMsg?.content ||
+      `Agent completed ${iteration} iterations without a final answer. ` +
+      `Consider increasing Max Iterations or simplifying the task.`;
+
+    return buildOutput({
+      result:
+        outputFormat === "json"
+          ? parseJsonResponse(fallbackResult)
+          : fallbackResult,
       model: resolvedModel,
       tokensUsed: totalTokens,
       provider,
-      toolCalls: toolCallLog,
-      rounds: round,
-      warning: "max_rounds_exhausted",
-    };
+      agentType,
+      iterations: iteration,
+      intermediateSteps,
+      returnIntermediateSteps,
+      warning: "max_iterations_exhausted",
+    });
   },
 };
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DEPENDENCY RESOLUTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Resolve memory from the _memory handle input.
+ * Accepts: array of {role, content}, single object, or raw string.
+ * Returns: array of {role, content} messages.
+ */
+function resolveMemory(raw) {
+  if (!raw) return [];
+
+  // Already a proper messages array
+  if (Array.isArray(raw)) {
+    return raw.filter(
+      (m) =>
+        m &&
+        typeof m === "object" &&
+        m.role &&
+        m.content &&
+        typeof m.content === "string"
+    );
+  }
+
+  // Single message object
+  if (typeof raw === "object" && raw.role && raw.content) {
+    return [{ role: raw.role, content: raw.content }];
+  }
+
+  // Raw string → treat as a user message for context
+  if (typeof raw === "string" && raw.trim()) {
+    return [{ role: "user", content: raw.trim() }];
+  }
+
+  return [];
+}
+
+/**
+ * Resolve tools from the _tools handle input.
+ * Accepts: array of tool definitions or a single tool definition.
+ * Each tool must have at minimum: { name, description }.
+ * Returns: array of normalized tool definitions.
+ */
+function resolveTools(raw) {
+  if (!raw) return [];
+
+  const arr = Array.isArray(raw) ? raw : [raw];
+
+  return arr
+    .filter((t) => t && typeof t === "object" && t.name)
+    .map((t) => ({
+      name: t.name,
+      description: t.description || `Execute the ${t.name} tool`,
+      parameters: t.parameters || { type: "object", properties: {} },
+      execute: typeof t.execute === "function" ? t.execute : null,
+    }));
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// OUTPUT BUILDER
+// ═════════════════════════════════════════════════════════════════════════════
+
+function buildOutput({
+  result,
+  model,
+  tokensUsed,
+  provider,
+  agentType,
+  iterations,
+  intermediateSteps,
+  returnIntermediateSteps,
+  warning,
+}) {
+  const output = {
+    result,
+    model,
+    tokensUsed,
+    provider,
+    agentType,
+    iterations,
+  };
+
+  if (returnIntermediateSteps && intermediateSteps.length > 0) {
+    output.intermediateSteps = intermediateSteps;
+  }
+
+  if (warning) {
+    output.warning = warning;
+  }
+
+  return output;
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PROVIDER DISPATCH
 // ═════════════════════════════════════════════════════════════════════════════
 
-/**
- * Unified LLM call dispatcher. Routes to the correct provider's API format.
- * Returns a normalized response: { text, model, tokensUsed, toolCalls }
- */
-async function callProvider({ provider, apiKey, model, system, messages, temperature, maxTokens, tools }) {
+async function callProvider({
+  provider,
+  apiKey,
+  model,
+  system,
+  messages,
+  temperature,
+  maxTokens,
+  tools,
+}) {
   switch (provider) {
     case "anthropic":
-      return callAnthropic(apiKey, model, system, messages, temperature, maxTokens, tools);
+      return callAnthropic(
+        apiKey, model, system, messages, temperature, maxTokens, tools
+      );
     case "gemini":
-      return callGemini(apiKey, model, system, messages, temperature, maxTokens, tools);
+      return callGemini(
+        apiKey, model, system, messages, temperature, maxTokens, tools
+      );
     case "deepseek":
-      return callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, ENDPOINTS.deepseek, "DeepSeek");
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.deepseek, "DeepSeek"
+      );
     case "openai":
     default:
-      return callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, ENDPOINTS.openai, "OpenAI");
+      return callOpenAICompat(
+        apiKey, model, system, messages, temperature, maxTokens, tools,
+        ENDPOINTS.openai, "OpenAI"
+      );
   }
 }
 
 // ── OpenAI-Compatible (OpenAI + DeepSeek) ────────────────────────────────────
 
-async function callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, endpoint, providerName) {
+async function callOpenAICompat(
+  apiKey, model, system, messages, temperature, maxTokens, tools,
+  endpoint, providerName
+) {
   const body = {
     model,
     messages: [{ role: "system", content: system }, ...messages],
@@ -258,7 +449,6 @@ async function callOpenAICompat(apiKey, model, system, messages, temperature, ma
     max_tokens: maxTokens,
   };
 
-  // Attach tools if provided
   if (tools && tools.length > 0) {
     body.tools = tools;
     body.tool_choice = "auto";
@@ -277,12 +467,12 @@ async function callOpenAICompat(apiKey, model, system, messages, temperature, ma
     const choice = response.data.choices?.[0];
     const msg = choice?.message;
 
-    // Extract tool calls if present
-    const toolCalls = msg?.tool_calls?.map((tc) => ({
-      id: tc.id,
-      name: tc.function?.name,
-      arguments: safeParse(tc.function?.arguments),
-    })) || null;
+    const toolCalls =
+      msg?.tool_calls?.map((tc) => ({
+        id: tc.id,
+        name: tc.function?.name,
+        arguments: safeParse(tc.function?.arguments),
+      })) || null;
 
     return {
       text: msg?.content || "",
@@ -297,7 +487,9 @@ async function callOpenAICompat(apiKey, model, system, messages, temperature, ma
 
 // ── Anthropic ────────────────────────────────────────────────────────────────
 
-async function callAnthropic(apiKey, model, system, messages, temperature, maxTokens, tools) {
+async function callAnthropic(
+  apiKey, model, system, messages, temperature, maxTokens, tools
+) {
   const body = {
     model,
     max_tokens: maxTokens,
@@ -306,7 +498,6 @@ async function callAnthropic(apiKey, model, system, messages, temperature, maxTo
     temperature,
   };
 
-  // Attach tools in Anthropic format
   if (tools && tools.length > 0) {
     body.tools = tools;
   }
@@ -326,7 +517,6 @@ async function callAnthropic(apiKey, model, system, messages, temperature, maxTo
     let text = "";
     let toolCalls = null;
 
-    // Anthropic returns content blocks — can mix text and tool_use
     if (Array.isArray(data.content)) {
       const textBlocks = data.content.filter((b) => b.type === "text");
       const toolBlocks = data.content.filter((b) => b.type === "tool_use");
@@ -345,7 +535,8 @@ async function callAnthropic(apiKey, model, system, messages, temperature, maxTo
     return {
       text,
       model: data.model,
-      tokensUsed: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+      tokensUsed:
+        (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
       toolCalls,
     };
   } catch (err) {
@@ -355,13 +546,14 @@ async function callAnthropic(apiKey, model, system, messages, temperature, maxTo
 
 // ── Google Gemini ────────────────────────────────────────────────────────────
 
-async function callGemini(apiKey, model, system, messages, temperature, maxTokens, tools) {
+async function callGemini(
+  apiKey, model, system, messages, temperature, maxTokens, tools
+) {
   const endpoint = `${ENDPOINTS.gemini}/${model}:generateContent?key=${apiKey}`;
 
-  // Convert OpenAI-style messages to Gemini contents format
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
+    parts: [{ text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }],
   }));
 
   const body = {
@@ -373,15 +565,19 @@ async function callGemini(apiKey, model, system, messages, temperature, maxToken
     },
   };
 
-  // Attach tools in Gemini format
   if (tools && tools.length > 0) {
-    body.tools = [{
-      functionDeclarations: tools.map((t) => ({
-        name: t.name || t.function?.name,
-        description: t.description || t.function?.description || "",
-        parameters: t.parameters || t.function?.parameters || { type: "OBJECT", properties: {} },
-      })),
-    }];
+    body.tools = [
+      {
+        functionDeclarations: tools.map((t) => ({
+          name: t.name || t.function?.name,
+          description: t.description || t.function?.description || "",
+          parameters: t.parameters || t.function?.parameters || {
+            type: "OBJECT",
+            properties: {},
+          },
+        })),
+      },
+    ];
   }
 
   try {
@@ -413,7 +609,8 @@ async function callGemini(apiKey, model, system, messages, temperature, maxToken
     return {
       text,
       model,
-      tokensUsed: (usage?.promptTokenCount || 0) + (usage?.candidatesTokenCount || 0),
+      tokensUsed:
+        (usage?.promptTokenCount || 0) + (usage?.candidatesTokenCount || 0),
       toolCalls,
     };
   } catch (err) {
@@ -422,95 +619,93 @@ async function callGemini(apiKey, model, system, messages, temperature, maxToken
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// TOOL CALLING HELPERS
+// TOOL CALLING
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Format tool definitions into the native format required by each provider.
- * Accepts tools in a generic format:
- *   [{ name, description, parameters: { type: "object", properties: {...} } }]
- *
- * For OpenAI/DeepSeek: wraps in { type: "function", function: {...} }
- * For Anthropic: uses { name, description, input_schema: {...} }
- * For Gemini: handled inline in the callGemini function
+ * Format tool definitions into each provider's native format.
  */
 function formatToolsForProvider(toolDefs, provider) {
-  if (!toolDefs || !Array.isArray(toolDefs) || toolDefs.length === 0) return null;
-
-  // Normalize: if tools arrive as strings (node IDs), skip them
-  const valid = toolDefs.filter((t) => t && typeof t === "object" && t.name);
-  if (valid.length === 0) return null;
+  if (!toolDefs || toolDefs.length === 0) return null;
 
   switch (provider) {
     case "anthropic":
-      return valid.map((t) => ({
+      return toolDefs.map((t) => ({
         name: t.name,
-        description: t.description || `Execute the ${t.name} tool`,
-        input_schema: t.parameters || { type: "object", properties: {} },
+        description: t.description,
+        input_schema: t.parameters,
       }));
 
     case "gemini":
-      // Gemini formatting is handled in callGemini — pass through as-is
-      return valid;
+      // Gemini formatting handled in callGemini — pass through
+      return toolDefs;
 
     case "openai":
     case "deepseek":
     default:
-      return valid.map((t) => ({
+      return toolDefs.map((t) => ({
         type: "function",
         function: {
           name: t.name,
-          description: t.description || `Execute the ${t.name} tool`,
-          parameters: t.parameters || { type: "object", properties: {} },
+          description: t.description,
+          parameters: t.parameters,
         },
       }));
   }
 }
 
 /**
- * Execute a tool call. In the current architecture, tools connected to the
- * AI Agent are resolved by the cursor executor via edge routing. Within the
- * node itself, we simulate tool execution for tools defined inline in config.
+ * Execute a tool call. If the tool has an inline executor, call it.
+ * If not, return a descriptive error that the LLM can reason about.
  *
- * If no matching tool handler exists, returns a graceful failure message
- * so the agent can adapt rather than crashing the workflow.
+ * CRITICAL: Errors are caught and returned as messages, never thrown.
+ * This lets the agent self-correct: "Tool X failed because Y, let me try Z."
  */
 async function executeToolCall(toolCall, toolDefs) {
-  // Look for an executor function in the tool definitions
-  if (toolDefs && Array.isArray(toolDefs)) {
-    const def = toolDefs.find((t) => t.name === toolCall.name);
-    if (def && typeof def.execute === "function") {
-      try {
-        return await def.execute(toolCall.arguments);
-      } catch (err) {
-        return {
-          error: true,
-          message: `Tool "${toolCall.name}" failed: ${err.message}`,
-        };
-      }
+  const def = toolDefs.find((t) => t.name === toolCall.name);
+
+  if (def && typeof def.execute === "function") {
+    try {
+      const result = await def.execute(toolCall.arguments);
+      return result;
+    } catch (err) {
+      // Feed the error back to the LLM instead of crashing
+      return {
+        error: true,
+        tool: toolCall.name,
+        message: `Tool "${toolCall.name}" failed: ${err.message}. You may try a different approach.`,
+      };
     }
   }
 
-  // No executor found — return informative message to the LLM
+  // Tool not found or no executor — inform the LLM
+  const available = toolDefs.map((t) => t.name).join(", ") || "none";
   return {
     error: true,
-    message: `Tool "${toolCall.name}" is not available in this execution context. Available tools: ${
-      toolDefs?.map((t) => t.name).join(", ") || "none"
-    }`,
+    tool: toolCall.name,
+    message:
+      `Tool "${toolCall.name}" is not available. ` +
+      `Available tools: ${available}. ` +
+      `Please use one of the available tools or provide your answer directly.`,
   };
 }
 
 /**
  * Build the assistant message containing tool calls for conversation history.
- * Format differs by provider.
  */
 function buildAssistantToolCallMessage(response, provider) {
   if (provider === "anthropic") {
-    // Anthropic expects content blocks with type: "tool_use"
     const content = [];
-    if (response.text) content.push({ type: "text", text: response.text });
+    if (response.text) {
+      content.push({ type: "text", text: response.text });
+    }
     for (const tc of response.toolCalls) {
-      content.push({ type: "tool_use", id: tc.id, name: tc.name, input: tc.arguments });
+      content.push({
+        type: "tool_use",
+        id: tc.id,
+        name: tc.name,
+        input: tc.arguments,
+      });
     }
     return { role: "assistant", content };
   }
@@ -522,7 +717,10 @@ function buildAssistantToolCallMessage(response, provider) {
     tool_calls: response.toolCalls.map((tc) => ({
       id: tc.id,
       type: "function",
-      function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
+      function: {
+        name: tc.name,
+        arguments: JSON.stringify(tc.arguments),
+      },
     })),
   };
 }
@@ -531,16 +729,19 @@ function buildAssistantToolCallMessage(response, provider) {
  * Build a tool result message to feed back into the conversation.
  */
 function buildToolResultMessage(toolCall, result, provider) {
-  const resultStr = typeof result === "string" ? result : JSON.stringify(result);
+  const resultStr =
+    typeof result === "string" ? result : JSON.stringify(result);
 
   if (provider === "anthropic") {
     return {
       role: "user",
-      content: [{
-        type: "tool_result",
-        tool_use_id: toolCall.id,
-        content: resultStr,
-      }],
+      content: [
+        {
+          type: "tool_result",
+          tool_use_id: toolCall.id,
+          content: resultStr,
+        },
+      ],
     };
   }
 
@@ -553,27 +754,18 @@ function buildToolResultMessage(toolCall, result, provider) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// UTILITY FUNCTIONS
+// UTILITIES
 // ═════════════════════════════════════════════════════════════════════════════
 
-/** Build a sensible default system prompt based on output format. */
-function buildDefaultSystemPrompt(outputFormat) {
-  if (outputFormat === "json") {
-    return "You are a data processing agent. Always respond with valid JSON. No markdown fences, no explanations — just the JSON object or array.";
-  }
-  return "You are a highly capable AI agent. Respond clearly, concisely, and accurately. When tools are available, use them proactively to gather information before answering.";
-}
-
-/** Parse LLM output as JSON, stripping markdown fences if needed. */
 function parseJsonResponse(text) {
   if (!text || typeof text !== "string") return text;
 
-  // Direct parse
   try {
     return JSON.parse(text);
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
 
-  // Strip markdown code fences
   const stripped = text
     .replace(/^```(?:json)?\s*\n?/i, "")
     .replace(/\n?\s*```\s*$/i, "")
@@ -581,13 +773,13 @@ function parseJsonResponse(text) {
 
   try {
     return JSON.parse(stripped);
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
 
-  // Return raw text if JSON parsing fails entirely
   return text;
 }
 
-/** Safely parse a JSON string, returning the original on failure. */
 function safeParse(str) {
   if (typeof str !== "string") return str;
   try {
@@ -597,39 +789,46 @@ function safeParse(str) {
   }
 }
 
-/**
- * Unified error handler for all providers.
- * Throws semantic, user-friendly errors that the cursor executor
- * can classify for retry/no-retry decisions.
- */
 function handleProviderError(err, providerName, model) {
   const status = err.response?.status;
   const data = err.response?.data;
   const msg = data?.error?.message || data?.error?.type || err.message;
 
   if (status === 401) {
-    throw new Error(`${providerName}: Invalid API key. Check your credential in the Vault.`);
+    throw new Error(
+      `${providerName}: Invalid API key. Check your credential in the Vault.`
+    );
   }
   if (status === 403) {
-    throw new Error(`${providerName}: Access denied. Your API key may lack permissions for model "${model}".`);
+    throw new Error(
+      `${providerName}: Access denied. Your key may lack permissions for "${model}".`
+    );
   }
   if (status === 404) {
     throw new Error(
-      `${providerName}: Model "${model}" not found. It may have been deprecated or the model ID is incorrect.`
+      `${providerName}: Model "${model}" not found. It may be deprecated or misspelled.`
     );
   }
   if (status === 429) {
-    throw new Error(`${providerName}: Rate limit exceeded. Retry later or upgrade your API plan.`);
+    throw new Error(
+      `${providerName}: Rate limit exceeded. Retry later or upgrade your API plan.`
+    );
   }
   if (status === 400) {
     throw new Error(`${providerName}: Bad request — ${msg}`);
   }
   if (status === 413 || status === 422) {
-    throw new Error(`${providerName}: Input too large for model "${model}". Reduce input size or use a model with a larger context window.`);
+    throw new Error(
+      `${providerName}: Input too large for "${model}". Reduce input size or use a larger-context model.`
+    );
   }
   if (err.code === "ECONNABORTED") {
-    throw new Error(`${providerName}: Request timed out after ${REQUEST_TIMEOUT / 1000}s. The model may be overloaded.`);
+    throw new Error(
+      `${providerName}: Timed out after ${REQUEST_TIMEOUT / 1000}s. Model may be overloaded.`
+    );
   }
 
-  throw new Error(`${providerName} failed: ${status || err.code || "unknown"} — ${msg}`);
+  throw new Error(
+    `${providerName} failed: ${status || err.code || "unknown"} — ${msg}`
+  );
 }

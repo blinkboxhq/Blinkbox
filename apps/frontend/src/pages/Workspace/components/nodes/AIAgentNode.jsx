@@ -1,20 +1,53 @@
 import { useState } from "react";
 import {
   Brain,
-  Cpu,
+  ChevronDown,
+  ChevronRight,
   MessageSquare,
   Settings2,
   Sparkles,
-  ChevronDown,
-  ChevronRight,
+  Cpu,
   Wrench,
   BookOpen,
-  Zap,
+  ListTree,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
-// ── Provider / Model Definitions ─────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// AGENT TYPE DEFINITIONS
+// ═════════════════════════════════════════════════════════════════════════════
+// Each agent type defines a reasoning strategy. The backend's agentic loop
+// adapts its system prompt and tool-handling behavior based on this selection.
+
+const AGENT_TYPES = [
+  {
+    value: "tools_agent",
+    label: "Tools Agent",
+    description: "Uses native function-calling to invoke tools. Best for structured tasks.",
+    icon: Wrench,
+    color: "#f97316",
+  },
+  {
+    value: "conversational",
+    label: "Conversational Agent",
+    description: "Chat-optimized with memory. Ideal for multi-turn dialogue flows.",
+    icon: MessageSquare,
+    color: "#818cf8",
+  },
+  {
+    value: "react",
+    label: "ReAct Agent",
+    description: "Reason + Act loop. Thinks step-by-step before each tool call.",
+    icon: Brain,
+    color: "#a855f7",
+  },
+];
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PROVIDER / MODEL CATALOG
+// ═════════════════════════════════════════════════════════════════════════════
+
 const PROVIDERS = [
   {
     value: "openai",
@@ -61,37 +94,84 @@ const PROVIDERS = [
   },
 ];
 
-// ── Collapsible Section ──────────────────────────────────────────────────────
-function Section({ title, icon: Icon, iconColor, defaultOpen = true, children }) {
+// ═════════════════════════════════════════════════════════════════════════════
+// COLLAPSIBLE SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+function Section({ title, icon: Icon, iconColor, defaultOpen = true, badge, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border border-zinc-800/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 py-2 text-left group"
+        className="flex items-center gap-2 px-3 py-2.5 bg-zinc-900/50 text-left group hover:bg-zinc-800/30 transition-colors"
       >
         {open ? (
-          <ChevronDown className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+          <ChevronDown className="w-3 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
         ) : (
-          <ChevronRight className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+          <ChevronRight className="w-3 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
         )}
-        <Icon className="w-3.5 h-3.5" style={{ color: iconColor || "#a78bfa" }} />
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover:text-zinc-200 transition-colors">
+        <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: iconColor || "#a78bfa" }} />
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover:text-zinc-200 transition-colors flex-1">
           {title}
         </span>
+        {badge}
       </button>
-      {open && <div className="flex flex-col gap-4 pb-2 pl-1">{children}</div>}
+      {open && (
+        <div className="flex flex-col gap-4 px-3 py-3 bg-zinc-950/30">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Main Component ───────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// DEPENDENCY SLOT — Visual indicator for handle connections (n8n-style)
+// ═════════════════════════════════════════════════════════════════════════════
+
+function DependencySlot({ label, color, description, required, connected }) {
+  return (
+    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-150 ${
+      connected
+        ? "border-emerald-500/20 bg-emerald-500/5"
+        : required
+          ? "border-amber-500/20 bg-amber-500/5"
+          : "border-zinc-800/50 bg-zinc-900/30"
+    }`}>
+      {/* Color-coded dot matching the handle */}
+      <div className="shrink-0 relative">
+        <div
+          className="w-3 h-3 rounded-full border-2 border-zinc-900"
+          style={{ backgroundColor: color }}
+        />
+        {connected && (
+          <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-zinc-900" />
+        )}
+      </div>
+
+      <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-medium text-zinc-300">{label}</span>
+          {required && !connected && (
+            <span className="text-[8px] font-bold text-amber-500/80 uppercase">required</span>
+          )}
+        </div>
+        <span className="text-[9px] text-zinc-600 leading-tight">{description}</span>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT — n8n-Style AI Agent Configuration Panel
+// ═════════════════════════════════════════════════════════════════════════════
+
 export default function AIAgentNode({ config = {}, updateConfig }) {
+  const agentType = config.agentType || "tools_agent";
   const provider = config.provider || "openai";
   const providerDef = PROVIDERS.find((p) => p.value === provider) || PROVIDERS[0];
   const outputFormat = config.outputFormat || "text";
-  const enableTools = config.enableTools || false;
-  const enableMemory = config.enableMemory || false;
 
   // When provider changes, reset model to that provider's default
   const handleProviderChange = (newProvider) => {
@@ -101,14 +181,13 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      {/* ── Animated Header ─────────────────────────────────────────────── */}
+    <div className="flex flex-col gap-3 w-full">
+
+      {/* ─── HEADER ─────────────────────────────────────────────────────── */}
       <div className="relative flex items-center gap-3 p-4 rounded-xl overflow-hidden border border-violet-500/20 bg-gradient-to-br from-violet-950/40 via-zinc-900/80 to-indigo-950/40">
-        {/* Animated glow orbs */}
         <div className="absolute -top-8 -right-8 w-28 h-28 bg-violet-500/15 rounded-full blur-2xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" style={{ animationDelay: "1.5s" }} />
 
-        {/* Brain icon with ring */}
         <div className="relative shrink-0 z-10">
           <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
             <Brain className="w-5 h-5 text-violet-400" />
@@ -116,14 +195,11 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
           <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-violet-300 animate-pulse" />
         </div>
 
-        {/* Title + inline model selector */}
-        <div className="flex flex-col gap-1 z-10 flex-1 min-w-0">
+        <div className="flex flex-col gap-0.5 z-10 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-violet-300 tracking-wide">
-              AI Agent
-            </span>
+            <span className="text-sm font-bold text-violet-300 tracking-wide">AI Agent</span>
             <span className="px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest bg-violet-500/20 text-violet-400 rounded-md border border-violet-500/30">
-              Agentic
+              {AGENT_TYPES.find((t) => t.value === agentType)?.label || "Agent"}
             </span>
           </div>
           <span className="text-[10px] text-zinc-500 leading-relaxed truncate">
@@ -132,9 +208,82 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
         </div>
       </div>
 
-      {/* ── Provider & Model ────────────────────────────────────────────── */}
-      <Section title="Model Config" icon={Cpu} iconColor={providerDef.color}>
-        {/* Provider */}
+      {/* ─── AGENT TYPE SELECTOR ────────────────────────────────────────── */}
+      <Section title="Agent Type" icon={Brain} iconColor="#a855f7">
+        <div className="flex flex-col gap-1.5">
+          {AGENT_TYPES.map((type) => {
+            const TypeIcon = type.icon;
+            const isSelected = agentType === type.value;
+            return (
+              <button
+                key={type.value}
+                onClick={() => updateConfig("agentType", type.value)}
+                className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${
+                  isSelected
+                    ? "border-violet-500/30 bg-violet-500/8"
+                    : "border-zinc-800/50 bg-zinc-900/20 hover:border-zinc-700/50 hover:bg-zinc-800/20"
+                }`}
+              >
+                <TypeIcon
+                  className="w-4 h-4 shrink-0 mt-0.5"
+                  style={{ color: isSelected ? type.color : "#52525b" }}
+                />
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className={`text-[11px] font-bold ${isSelected ? "text-violet-300" : "text-zinc-400"}`}>
+                    {type.label}
+                  </span>
+                  <span className="text-[9px] text-zinc-600 leading-relaxed">
+                    {type.description}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* ─── DEPENDENCY SLOTS (n8n-style visual routing) ────────────────── */}
+      <Section title="Dependencies" icon={ListTree} iconColor="#14b8a6">
+        <div className="flex flex-col gap-2">
+          <DependencySlot
+            label="Chat Model"
+            color="#6366f1"
+            description="Connect an LLM node (OpenAI, Anthropic, etc.) — or configure below"
+            required
+            connected={!!config.credentialId}
+          />
+          <DependencySlot
+            label="Memory"
+            color="#a855f7"
+            description="Connect a memory buffer for multi-turn conversation context"
+            required={agentType === "conversational"}
+            connected={false}
+          />
+          <DependencySlot
+            label="Tools"
+            color="#f97316"
+            description="Connect tool/action nodes the agent can invoke autonomously"
+            required={agentType === "tools_agent"}
+            connected={false}
+          />
+        </div>
+        <p className="text-[9px] text-zinc-600 leading-relaxed">
+          Connect nodes to the colored handles on the left side of this node. Each handle accepts a specific dependency type.
+        </p>
+      </Section>
+
+      {/* ─── CHAT MODEL CONFIG ──────────────────────────────────────────── */}
+      <Section
+        title="Chat Model"
+        icon={Cpu}
+        iconColor={providerDef.color}
+        badge={
+          <span className="text-[9px] text-zinc-600 font-mono">
+            {config.model || providerDef.defaultModel}
+          </span>
+        }
+      >
+        {/* Provider grid */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Provider
@@ -156,7 +305,7 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
           </div>
         </div>
 
-        {/* Model */}
+        {/* Model dropdown */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Model
@@ -174,7 +323,42 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
           </select>
         </div>
 
-        {/* Output Format */}
+        {/* Credential */}
+        <CredentialPicker
+          value={config.credentialId || ""}
+          onChange={(id) => updateConfig("credentialId", id)}
+          accentColor="purple"
+          label="API Key"
+          placeholder="Select API credential..."
+        />
+      </Section>
+
+      {/* ─── SYSTEM PROMPT / PERSONA ────────────────────────────────────── */}
+      <Section title="System Prompt" icon={MessageSquare} iconColor="#818cf8">
+        <SmartVariableInput
+          value={config.systemPrompt || ""}
+          onChange={(val) => updateConfig("systemPrompt", val)}
+          placeholder="You are a senior data analyst. Extract structured insights from the provided data and format them clearly..."
+          multiline
+        />
+        <p className="text-[9px] text-zinc-600">
+          Defines the agent's persona, role, and behavioral constraints. This becomes the system-level instruction.
+        </p>
+      </Section>
+
+      {/* ─── USER PROMPT / INSTRUCTIONS ─────────────────────────────────── */}
+      <Section title="Instructions" icon={BookOpen} iconColor="#c084fc">
+        <SmartVariableInput
+          value={config.prompt || ""}
+          onChange={(val) => updateConfig("prompt", val)}
+          placeholder="Analyze the input data and return the top 5 key findings..."
+          multiline
+        />
+      </Section>
+
+      {/* ─── ADVANCED SETTINGS ──────────────────────────────────────────── */}
+      <Section title="Advanced" icon={Settings2} iconColor="#71717a" defaultOpen={false}>
+        {/* Output format */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Output Format
@@ -198,105 +382,23 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
             ))}
           </div>
         </div>
-      </Section>
 
-      {/* ── System Prompt ───────────────────────────────────────────────── */}
-      <Section title="System Prompt" icon={MessageSquare} iconColor="#818cf8">
-        <SmartVariableInput
-          value={config.systemPrompt || ""}
-          onChange={(val) => updateConfig("systemPrompt", val)}
-          placeholder="You are a senior data analyst. Extract structured insights from the provided data..."
-          multiline
-        />
-      </Section>
-
-      {/* ── Instructions / User Prompt ──────────────────────────────────── */}
-      <Section title="Instructions" icon={BookOpen} iconColor="#c084fc">
-        <SmartVariableInput
-          value={config.prompt || ""}
-          onChange={(val) => updateConfig("prompt", val)}
-          placeholder="Analyze the input and return the top 5 key findings..."
-          multiline
-        />
-      </Section>
-
-      {/* ── Tool Calling Toggle ─────────────────────────────────────────── */}
-      <Section title="Tool Calling" icon={Wrench} iconColor="#f97316" defaultOpen={enableTools}>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[11px] text-zinc-300 font-medium">Enable Tools</span>
-            <span className="text-[9px] text-zinc-600 leading-relaxed">
-              Agent can call connected tool nodes autonomously
-            </span>
-          </div>
-          <button
-            onClick={() => updateConfig("enableTools", !enableTools)}
-            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
-              enableTools ? "bg-orange-500/80" : "bg-zinc-700"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                enableTools ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </div>
-        {enableTools && (
-          <div className="flex flex-col gap-1.5">
+        {/* Max Iterations + Temperature row */}
+        <div className="flex gap-3">
+          <div className="flex flex-col gap-1.5 flex-1">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              Max Tool Rounds
+              Max Iterations
             </label>
             <select
-              value={config.maxToolRounds || 3}
-              onChange={(e) => updateConfig("maxToolRounds", Number(e.target.value))}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-orange-500/50 transition-colors cursor-pointer appearance-none"
+              value={config.maxIterations || 5}
+              onChange={(e) => updateConfig("maxIterations", Number(e.target.value))}
+              className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-xs text-zinc-300 outline-none focus:border-violet-500/50 transition-colors cursor-pointer appearance-none"
             >
-              {[1, 2, 3, 5, 8, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n} round{n > 1 ? "s" : ""}
-                </option>
+              {[1, 2, 3, 5, 8, 10, 15].map((n) => (
+                <option key={n} value={n}>{n}</option>
               ))}
             </select>
-            <p className="text-[9px] text-zinc-600">
-              Connect tool nodes to the Tools handle (orange). The agent will loop until satisfied or max rounds.
-            </p>
           </div>
-        )}
-      </Section>
-
-      {/* ── Memory Toggle ───────────────────────────────────────────────── */}
-      <Section title="Memory" icon={Zap} iconColor="#a855f7" defaultOpen={enableMemory}>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[11px] text-zinc-300 font-medium">Enable Memory</span>
-            <span className="text-[9px] text-zinc-600 leading-relaxed">
-              Inject conversation history from the Memory handle
-            </span>
-          </div>
-          <button
-            onClick={() => updateConfig("enableMemory", !enableMemory)}
-            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
-              enableMemory ? "bg-purple-500/80" : "bg-zinc-700"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                enableMemory ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </div>
-        {enableMemory && (
-          <p className="text-[9px] text-zinc-600">
-            Connect a memory source to the Memory handle (purple). Messages array will be prepended to the conversation.
-          </p>
-        )}
-      </Section>
-
-      {/* ── Advanced Parameters ──────────────────────────────────────────── */}
-      <Section title="Advanced Parameters" icon={Settings2} iconColor="#71717a" defaultOpen={false}>
-        <div className="flex gap-3">
           <div className="flex flex-col gap-1.5 flex-1">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
               Temperature
@@ -311,50 +413,51 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
               className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none focus:border-violet-500/50 transition-colors"
             />
           </div>
-          <div className="flex flex-col gap-1.5 flex-1">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              Max Tokens
-            </label>
-            <input
-              type="number"
-              min="100"
-              max="128000"
-              step="100"
-              value={config.maxTokens ?? 4000}
-              onChange={(e) => updateConfig("maxTokens", parseInt(e.target.value, 10))}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none focus:border-violet-500/50 transition-colors"
-            />
-          </div>
         </div>
+
+        {/* Max Tokens */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Context Injection
+            Max Tokens
           </label>
-          <SmartVariableInput
-            value={config.parentSource || ""}
-            onChange={(val) => updateConfig("parentSource", val)}
-            placeholder="{{rag_node.documents}} or {{web_search.results}}"
-            multiline
+          <input
+            type="number"
+            min="100"
+            max="128000"
+            step="100"
+            value={config.maxTokens ?? 4000}
+            onChange={(e) => updateConfig("maxTokens", parseInt(e.target.value, 10))}
+            className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none focus:border-violet-500/50 transition-colors"
           />
-          <p className="text-[9px] text-zinc-600">
-            RAG documents or external context injected into the system prompt.
-          </p>
+        </div>
+
+        {/* Return intermediate steps toggle */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[11px] text-zinc-300 font-medium">Return Intermediate Steps</span>
+            <span className="text-[9px] text-zinc-600 leading-relaxed">
+              Include the agent's thought process and tool calls in output
+            </span>
+          </div>
+          <button
+            onClick={() => updateConfig("returnIntermediateSteps", !config.returnIntermediateSteps)}
+            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+              config.returnIntermediateSteps ? "bg-violet-500/80" : "bg-zinc-700"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                config.returnIntermediateSteps ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </Section>
 
-      {/* ── Credential ──────────────────────────────────────────────────── */}
-      <CredentialPicker
-        value={config.credentialId || ""}
-        onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="purple"
-        label="API Key"
-        placeholder="Select API credential..."
-      />
-
-      {/* ── Handle Legend (visual reference) ─────────────────────────────── */}
-      <div className="flex flex-col gap-2 p-3 bg-zinc-900/50 border border-zinc-800/50 rounded-xl">
+      {/* ─── HANDLE LEGEND ──────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2 p-3 bg-zinc-900/50 border border-zinc-800/40 rounded-xl">
         <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
-          Handle Guide
+          Handles
         </span>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
           <div className="flex items-center gap-1.5">
@@ -370,15 +473,11 @@ export default function AIAgentNode({ config = {}, updateConfig }) {
             <span className="text-[9px] text-zinc-500">Memory (left)</span>
           </div>
           <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-[9px] text-zinc-500">Steps (right)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-orange-500" />
-            <span className="text-[9px] text-zinc-500">Tool Call (right)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-teal-500" />
-            <span className="text-[9px] text-zinc-500">Context (left)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-orange-400" />
             <span className="text-[9px] text-zinc-500">Tools (left)</span>
           </div>
         </div>

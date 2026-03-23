@@ -219,6 +219,28 @@ export async function processCursor({ executionId, cursorId }) {
 
     if (inputItems.length === 0) inputItems = [{ json: {} }];
 
+    // HANDLE-AWARE ROUTING: For AI Agent nodes, separate handle-tagged
+    // edge data into dedicated dependency fields (_memory, _tools).
+    // Edges with targetHandle "memory" or "tools" feed into config, not input.
+    let handleDeps = null;
+    if (node.data?.backendType === "ai_agent" && incomingEdges.length > 0) {
+      handleDeps = {};
+      for (const edge of incomingEdges) {
+        const handle = edge.targetHandle;
+        if (handle && handle !== "input") {
+          const sourceData = dynamicContext[edge.source];
+          const firstOutput = Array.isArray(sourceData) ? sourceData[0]?.json : null;
+          if (handle === "memory") {
+            handleDeps._memory = firstOutput;
+          } else if (handle === "tools") {
+            // Tools handle can receive from multiple edges — collect all
+            if (!handleDeps._tools) handleDeps._tools = [];
+            if (firstOutput) handleDeps._tools.push(firstOutput);
+          }
+        }
+      }
+    }
+
     // Store what went into this node for diagnostics
     resolvedInput = inputItems[0]?.json || {};
 
@@ -231,6 +253,11 @@ export async function processCursor({ executionId, cursorId }) {
         resolvedConfig = resolveConfig(node.data, item.json, dynamicContext, i);
       } catch (configErr) {
         throw new Error(`Config resolution failed: ${configErr.message}. Check {{ expressions }} in this node's settings.`);
+      }
+
+      // Inject handle-routed dependencies into config for AI Agent
+      if (handleDeps) {
+        Object.assign(resolvedConfig, handleDeps);
       }
 
       let rawOutput = await withTimeout(
