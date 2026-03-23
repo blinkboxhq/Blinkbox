@@ -11,7 +11,11 @@ const AI_AGENT_BOTTOM_HANDLES = [
   {
     id: "chat_model",
     label: "Model",
-    allowedTypes: ["openai", "anthropic", "gemini", "deepseek"],
+    allowedTypes: [
+      "openai", "anthropic", "gemini", "deepseek",
+      "openrouter", "together", "perplexity", "xai", "fireworks",
+      "cerebras", "ollama", "novita", "deepinfra", "hyperbolic",
+    ],
   },
   {
     id: "memory",
@@ -82,7 +86,7 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
       exit={{ opacity: 0, y: -4, scale: 0.96 }}
       transition={{ duration: 0.12 }}
       className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50
-        w-48 max-h-56 overflow-y-auto
+        w-48 max-h-72 overflow-y-auto overscroll-contain
         bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl shadow-black/50"
       onClick={(e) => e.stopPropagation()}
     >
@@ -196,6 +200,16 @@ function getConfigHint(data) {
   if (data.backendType === "anthropic" && c.model) return c.model;
   if (data.backendType === "gemini" && c.model) return c.model;
   if (data.backendType === "deepseek" && c.model) return c.model;
+  if (data.backendType === "openrouter" && c.model) return c.model;
+  if (data.backendType === "together" && c.model) return c.model;
+  if (data.backendType === "perplexity" && c.model) return c.model;
+  if (data.backendType === "xai" && c.model) return c.model;
+  if (data.backendType === "fireworks" && c.model) return c.model;
+  if (data.backendType === "cerebras" && c.model) return c.model;
+  if (data.backendType === "ollama" && c.model) return c.model;
+  if (data.backendType === "novita" && c.model) return c.model;
+  if (data.backendType === "deepinfra" && c.model) return c.model;
+  if (data.backendType === "hyperbolic" && c.model) return c.model;
   if (data.backendType === "telegram" && c.text) return c.text.slice(0, 40);
   if (data.backendType === "whatsapp" && c.to) return `→ ${c.to}`;
   if (data.backendType === "airtable" && c.tableName) return `${c.action || "create"} · ${c.tableName}`;
