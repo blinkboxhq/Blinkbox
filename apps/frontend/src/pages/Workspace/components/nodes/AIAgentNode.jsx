@@ -1,26 +1,34 @@
 import { useState } from "react";
 import {
-  Brain,
   ChevronDown,
   ChevronRight,
   MessageSquare,
   Settings2,
-  Sparkles,
-  Cpu,
   Wrench,
   BookOpen,
   ListTree,
   AlertTriangle,
   Search,
+  Sparkles,
+  Cpu,
+  Link2,
+  Unlink,
 } from "lucide-react";
+import { LuBrainCircuit, LuWrench, LuDatabase } from "react-icons/lu";
+import {
+  SiOpenai,
+  SiAnthropic,
+  SiGooglegemini,
+  SiPerplexity,
+  SiOllama,
+} from "react-icons/si";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
+import useWorkspaceStore from "../../../../store/workspaceStore";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // AGENT TYPE DEFINITIONS
 // ═════════════════════════════════════════════════════════════════════════════
-// Each agent type defines a reasoning strategy. The backend's agentic loop
-// adapts its system prompt and tool-handling behavior based on this selection.
 
 const AGENT_TYPES = [
   {
@@ -41,180 +49,81 @@ const AGENT_TYPES = [
     value: "react",
     label: "ReAct Agent",
     description: "Reason + Act loop. Thinks step-by-step before each tool call.",
-    icon: Brain,
+    icon: LuBrainCircuit,
     color: "#a855f7",
   },
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
-// TOOL-CALLING SUPPORT MAP — Providers with native function calling
+// BRAND ICON MAP — Resolves backendType → brand icon for connected nodes
 // ═════════════════════════════════════════════════════════════════════════════
 
-const TOOL_CALLING_SUPPORT = {
-  openai: true,
-  anthropic: true,
-  gemini: true,
-  deepseek: true,
-  openrouter: true,
-  xai: true,
-  fireworks: true,
-  together: false,
-  perplexity: false,
-  cerebras: false,
-  ollama: false,
-  novita: false,
-  deepinfra: false,
-  hyperbolic: false,
+const BRAND_ICONS = {
+  openai: SiOpenai,
+  anthropic: SiAnthropic,
+  gemini: SiGooglegemini,
+  deepseek: Cpu,
+  openrouter: Link2,
+  together: Cpu,
+  perplexity: SiPerplexity,
+  xai: Sparkles,
+  fireworks: Cpu,
+  cerebras: Cpu,
+  ollama: SiOllama,
+  novita: Cpu,
+  deepinfra: Cpu,
+  hyperbolic: Cpu,
+};
+
+const MEMORY_ICONS = {
+  window_buffer_memory: LuDatabase,
+  redis_memory: LuDatabase,
+  postgres_memory: LuDatabase,
+  vector_memory: LuDatabase,
+  mem0: LuDatabase,
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-// PROVIDER / MODEL CATALOG
+// TOOL-CALLING SUPPORT — Providers with native function-calling
 // ═════════════════════════════════════════════════════════════════════════════
 
-const PROVIDERS = [
-  {
-    value: "openai",
-    label: "OpenAI",
-    color: "#10A37F",
-    models: [
-      { value: "gpt-4o", label: "GPT-4o" },
-      { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-      { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
-      { value: "o3-mini", label: "o3-mini" },
-    ],
-    defaultModel: "gpt-4o-mini",
-  },
-  {
-    value: "anthropic",
-    label: "Anthropic",
-    color: "#D4C1B3",
-    models: [
-      { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4" },
-      { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
-      { value: "claude-opus-4-20250514", label: "Claude Opus 4" },
-    ],
-    defaultModel: "claude-sonnet-4-20250514",
-  },
-  {
-    value: "gemini",
-    label: "Google Gemini",
-    color: "#4285F4",
-    models: [
-      { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-      { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
-    ],
-    defaultModel: "gemini-2.0-flash",
-  },
-  {
-    value: "deepseek",
-    label: "DeepSeek",
-    color: "#22D3EE",
-    models: [
-      { value: "deepseek-chat", label: "DeepSeek Chat" },
-      { value: "deepseek-reasoner", label: "DeepSeek Reasoner" },
-    ],
-    defaultModel: "deepseek-chat",
-  },
-  {
-    value: "openrouter",
-    label: "OpenRouter",
-    color: "#3b82f6",
-    models: [
-      { value: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet" },
-      { value: "google/gemini-pro-1.5", label: "Gemini Pro 1.5" },
-      { value: "liquid/lfm-40b", label: "LFM 40B" },
-    ],
-    defaultModel: "anthropic/claude-3.5-sonnet",
-  },
-  {
-    value: "together",
-    label: "Together AI",
-    color: "#0ea5e9",
-    models: [
-      { value: "meta-llama/Llama-3-70b-chat-hf", label: "Llama 3 70B" },
-      { value: "mistralai/Mixtral-8x7B-Instruct-v0.1", label: "Mixtral 8x7B" },
-    ],
-    defaultModel: "meta-llama/Llama-3-70b-chat-hf",
-  },
-  {
-    value: "perplexity",
-    label: "Perplexity",
-    color: "#22d3ee",
-    models: [
-      { value: "llama-3-sonar-large-32k-online", label: "Sonar Large 32K" },
-      { value: "llama-3-sonar-small-32k-chat", label: "Sonar Small 32K" },
-    ],
-    defaultModel: "llama-3-sonar-large-32k-online",
-  },
-  {
-    value: "xai",
-    label: "xAI (Grok)",
-    color: "#ffffff",
-    models: [
-      { value: "grok-beta", label: "Grok Beta" },
-      { value: "grok-2", label: "Grok 2" },
-    ],
-    defaultModel: "grok-beta",
-  },
-  {
-    value: "fireworks",
-    label: "Fireworks AI",
-    color: "#f43f5e",
-    models: [
-      { value: "accounts/fireworks/models/firefunction-v2", label: "FireFunction v2" },
-      { value: "accounts/fireworks/models/llama-v3-70b-instruct", label: "Llama 3 70B" },
-    ],
-    defaultModel: "accounts/fireworks/models/firefunction-v2",
-  },
-  {
-    value: "cerebras",
-    label: "Cerebras",
-    color: "#f97316",
-    models: [
-      { value: "llama3.1-70b", label: "Llama 3.1 70B" },
-      { value: "llama3.1-8b", label: "Llama 3.1 8B" },
-    ],
-    defaultModel: "llama3.1-70b",
-  },
-  {
-    value: "ollama",
-    label: "Ollama (Local)",
-    color: "#94a3b8",
-    models: [
-      { value: "llama3", label: "Llama 3" },
-      { value: "mistral", label: "Mistral" },
-      { value: "gemma", label: "Gemma" },
-    ],
-    defaultModel: "llama3",
-  },
-  {
-    value: "novita",
-    label: "Novita AI",
-    color: "#8b5cf6",
-    models: [
-      { value: "meta-llama/llama-3-70b-instruct", label: "Llama 3 70B" },
-    ],
-    defaultModel: "meta-llama/llama-3-70b-instruct",
-  },
-  {
-    value: "deepinfra",
-    label: "DeepInfra",
-    color: "#10b981",
-    models: [
-      { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
-    ],
-    defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
-  },
-  {
-    value: "hyperbolic",
-    label: "Hyperbolic",
-    color: "#fbbf24",
-    models: [
-      { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
-    ],
-    defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
-  },
-];
+const TOOL_CALLING_PROVIDERS = new Set([
+  "openai", "anthropic", "gemini", "deepseek", "openrouter", "xai", "fireworks",
+]);
+
+// ═════════════════════════════════════════════════════════════════════════════
+// HELPER — Resolve connected node info from edges + store
+// ═════════════════════════════════════════════════════════════════════════════
+
+function getConnectedNodeInfo(edges, nodes, nodeId, handleId) {
+  const edge = edges.find((e) => e.target === nodeId && e.targetHandle === handleId);
+  if (!edge) return null;
+  const sourceNode = nodes.find((n) => n.id === edge.source);
+  if (!sourceNode) return null;
+  const bt = sourceNode.data?.backendType;
+  const cfg = sourceNode.data?.config || {};
+  return {
+    label: sourceNode.data?.label || bt,
+    backendType: bt,
+    model: cfg.model || null,
+    nodeId: sourceNode.id,
+  };
+}
+
+function getConnectedTools(edges, nodes, nodeId) {
+  return edges
+    .filter((e) => e.target === nodeId && e.targetHandle === "tools")
+    .map((e) => {
+      const src = nodes.find((n) => n.id === e.source);
+      if (!src) return null;
+      return {
+        label: src.data?.label || src.data?.backendType,
+        backendType: src.data?.backendType,
+        nodeId: src.id,
+      };
+    })
+    .filter(Boolean);
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // COLLAPSIBLE SECTION
@@ -249,39 +158,92 @@ function Section({ title, icon: Icon, iconColor, defaultOpen = true, badge, chil
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// DEPENDENCY SLOT — Visual indicator for handle connections (n8n-style)
+// DEPENDENCY SLOT — Connection-aware indicator with brand icons
 // ═════════════════════════════════════════════════════════════════════════════
 
-function DependencySlot({ label, color, description, required, connected }) {
+function DependencySlot({ label, color, description, required, connected, connectedInfo, icon: SlotIcon, onSelect }) {
+  const BrandIcon = connectedInfo ? (BRAND_ICONS[connectedInfo.backendType] || MEMORY_ICONS[connectedInfo.backendType] || Cpu) : null;
+
   return (
-    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-150 ${
-      connected
-        ? "border-emerald-500/20 bg-emerald-500/5"
-        : required
-          ? "border-amber-500/20 bg-amber-500/5"
-          : "border-zinc-800/50 bg-zinc-900/30"
-    }`}>
-      {/* Color-coded dot matching the handle */}
+    <button
+      onClick={connectedInfo && onSelect ? () => onSelect(connectedInfo.nodeId) : undefined}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-150 text-left w-full ${
+        connected
+          ? "border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/30"
+          : required
+            ? "border-amber-500/20 bg-amber-500/5"
+            : "border-zinc-800/50 bg-zinc-900/30"
+      }`}
+    >
+      {/* Icon area */}
       <div className="shrink-0 relative">
-        <div
-          className="w-3 h-3 rounded-full border-2 border-zinc-900"
-          style={{ backgroundColor: color }}
-        />
+        {connected && BrandIcon ? (
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center border"
+            style={{ borderColor: `${color}30`, backgroundColor: `${color}10` }}
+          >
+            <BrandIcon className="w-3.5 h-3.5" style={{ color }} />
+          </div>
+        ) : (
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center border border-zinc-800 bg-zinc-900"
+          >
+            <SlotIcon className="w-3.5 h-3.5 text-zinc-600" />
+          </div>
+        )}
+        {/* Connection indicator dot */}
         {connected && (
-          <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-zinc-900" />
+          <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-zinc-900" />
         )}
       </div>
 
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-medium text-zinc-300">{label}</span>
+          <span className={`text-[11px] font-medium ${connected ? "text-zinc-200" : "text-zinc-400"}`}>
+            {label}
+          </span>
           {required && !connected && (
             <span className="text-[8px] font-bold text-amber-500/80 uppercase">required</span>
           )}
+          {connected && (
+            <Link2 className="w-2.5 h-2.5 text-emerald-500/60" />
+          )}
         </div>
-        <span className="text-[9px] text-zinc-600 leading-tight">{description}</span>
+        {connected && connectedInfo ? (
+          <span className="text-[10px] text-emerald-400/70 leading-tight truncate">
+            {connectedInfo.label}{connectedInfo.model ? ` — ${connectedInfo.model}` : ""}
+          </span>
+        ) : (
+          <span className="text-[9px] text-zinc-600 leading-tight">{description}</span>
+        )}
       </div>
-    </div>
+
+      {/* Connection status icon */}
+      <div className="shrink-0">
+        {connected ? (
+          <Link2 className="w-3 h-3 text-emerald-500/50" />
+        ) : (
+          <Unlink className="w-3 h-3 text-zinc-700" />
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL CHIP — Small pill for connected tool nodes
+// ═════════════════════════════════════════════════════════════════════════════
+
+function ToolChip({ tool, onSelect }) {
+  const Icon = BRAND_ICONS[tool.backendType] || LuWrench;
+  return (
+    <button
+      onClick={() => onSelect?.(tool.nodeId)}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-emerald-500/15 bg-emerald-500/5 hover:border-emerald-500/25 transition-colors"
+    >
+      <Icon className="w-3 h-3 text-orange-400/70" />
+      <span className="text-[9px] text-zinc-400 truncate max-w-[100px]">{tool.label}</span>
+    </button>
   );
 }
 
@@ -290,20 +252,27 @@ function DependencySlot({ label, color, description, required, connected }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges = [] }) {
+  const nodes = useWorkspaceStore((s) => s.nodes);
+  const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+
   const agentType = config.agentType || "tools_agent";
-  const provider = config.provider || "openai";
-  const providerDef = PROVIDERS.find((p) => p.value === provider) || PROVIDERS[0];
   const outputFormat = config.outputFormat || "text";
 
-  // Check which handles have active edge connections
-  const isHandleConnected = (handleId) =>
-    edges.some((e) => e.target === nodeId && e.targetHandle === handleId);
+  // Resolve connected dependencies
+  const modelInfo = getConnectedNodeInfo(edges, nodes, nodeId, "chat_model");
+  const memoryInfo = getConnectedNodeInfo(edges, nodes, nodeId, "memory");
+  const connectedTools = getConnectedTools(edges, nodes, nodeId);
 
-  // When provider changes, reset model to that provider's default
-  const handleProviderChange = (newProvider) => {
-    const def = PROVIDERS.find((p) => p.value === newProvider);
-    updateConfig("provider", newProvider);
-    updateConfig("model", def?.defaultModel || "");
+  const isModelConnected = !!modelInfo;
+  const isMemoryConnected = !!memoryInfo;
+  const hasTools = connectedTools.length > 0;
+
+  // Derive tool-calling support from connected model
+  const connectedProvider = modelInfo?.backendType;
+  const supportsToolCalling = connectedProvider ? TOOL_CALLING_PROVIDERS.has(connectedProvider) : true;
+
+  const handleSelectNode = (targetNodeId) => {
+    if (setSelectedNodeId) setSelectedNodeId(targetNodeId);
   };
 
   return (
@@ -316,7 +285,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges =
 
         <div className="relative shrink-0 z-10">
           <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-violet-400" />
+            <LuBrainCircuit className="w-5 h-5 text-violet-400" />
           </div>
           <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-violet-300 animate-pulse" />
         </div>
@@ -335,7 +304,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges =
       </div>
 
       {/* ─── AGENT TYPE SELECTOR ────────────────────────────────────────── */}
-      <Section title="Agent Type" icon={Brain} iconColor="#a855f7">
+      <Section title="Agent Type" icon={LuBrainCircuit} iconColor="#a855f7">
         <div className="flex flex-col gap-1.5">
           {AGENT_TYPES.map((type) => {
             const TypeIcon = type.icon;
@@ -368,105 +337,71 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges =
         </div>
       </Section>
 
-      {/* ─── DEPENDENCY SLOTS (n8n-style visual routing) ────────────────── */}
+      {/* ─── DEPENDENCIES (connection-aware) ─────────────────────────────── */}
       <Section title="Dependencies" icon={ListTree} iconColor="#14b8a6">
         <div className="flex flex-col gap-2">
           <DependencySlot
             label="Chat Model"
             color="#6366f1"
-            description="Connect an LLM node (OpenAI, Anthropic, etc.) — or configure below"
+            description="Connect an LLM node (OpenAI, Anthropic, etc.) via the Model handle"
             required
-            connected={isHandleConnected("chat_model") || !!config.credentialId}
+            connected={isModelConnected}
+            connectedInfo={modelInfo}
+            icon={Cpu}
+            onSelect={handleSelectNode}
           />
           <DependencySlot
             label="Memory"
             color="#a855f7"
-            description="Connect a memory buffer for multi-turn conversation context"
+            description="Connect a memory node for multi-turn conversation context"
             required={agentType === "conversational"}
-            connected={isHandleConnected("memory")}
+            connected={isMemoryConnected}
+            connectedInfo={memoryInfo}
+            icon={LuDatabase}
+            onSelect={handleSelectNode}
           />
           <DependencySlot
             label="Tools"
             color="#f97316"
-            description="Connect tool/action nodes the agent can invoke autonomously"
+            description="Connect tool nodes the agent can invoke autonomously"
             required={agentType === "tools_agent"}
-            connected={isHandleConnected("tools")}
+            connected={hasTools}
+            connectedInfo={hasTools ? { label: `${connectedTools.length} tool${connectedTools.length > 1 ? "s" : ""} connected`, backendType: connectedTools[0]?.backendType } : null}
+            icon={LuWrench}
           />
         </div>
+
+        {/* Connected tools list */}
+        {hasTools && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {connectedTools.map((tool) => (
+              <ToolChip key={tool.nodeId} tool={tool} onSelect={handleSelectNode} />
+            ))}
+          </div>
+        )}
+
         <p className="text-[9px] text-zinc-600 leading-relaxed">
-          Connect nodes to the colored handles on the left side of this node. Each handle accepts a specific dependency type.
+          Connect nodes to the colored handles on the left side of this node.
         </p>
 
-        {agentType === "tools_agent" && !TOOL_CALLING_SUPPORT[provider] && (
+        {agentType === "tools_agent" && isModelConnected && !supportsToolCalling && (
           <div className="flex items-start gap-2 px-3 py-2 bg-amber-500/5 border border-amber-500/20 rounded-lg">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
             <span className="text-[9px] text-amber-400/80 leading-relaxed">
-              <strong>{providerDef.label}</strong> may not support native function calling.
-              Consider switching to <strong>ReAct</strong> agent type, or use OpenAI / Anthropic / Gemini for reliable tool use.
+              <strong>{modelInfo.label}</strong> may not support native function calling.
+              Consider switching to <strong>ReAct</strong> agent type, or connect OpenAI / Anthropic / Gemini for reliable tool use.
             </span>
           </div>
         )}
-      </Section>
 
-      {/* ─── CHAT MODEL CONFIG ──────────────────────────────────────────── */}
-      <Section
-        title="Chat Model"
-        icon={Cpu}
-        iconColor={providerDef.color}
-        badge={
-          <span className="text-[9px] text-zinc-600 font-mono">
-            {config.model || providerDef.defaultModel}
-          </span>
-        }
-      >
-        {/* Provider grid */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Provider
-          </label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {PROVIDERS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => handleProviderChange(p.value)}
-                className={`px-2 py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all duration-150 ${
-                  provider === p.value
-                    ? "border-violet-500/40 bg-violet-500/10 text-violet-300"
-                    : "border-zinc-800 bg-zinc-900/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+        {!isModelConnected && (
+          <div className="flex items-start gap-2 px-3 py-2 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
+            <Cpu className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+            <span className="text-[9px] text-indigo-400/80 leading-relaxed">
+              No model connected. Drag an <strong>OpenAI</strong>, <strong>Anthropic</strong>, or other LLM node and connect it to the <strong>Model</strong> handle.
+            </span>
           </div>
-        </div>
-
-        {/* Model dropdown */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Model
-          </label>
-          <select
-            value={config.model || providerDef.defaultModel}
-            onChange={(e) => updateConfig("model", e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-2.5 text-xs text-violet-300 font-mono outline-none focus:border-violet-500/50 transition-colors cursor-pointer appearance-none"
-          >
-            {providerDef.models.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Credential */}
-        <CredentialPicker
-          value={config.credentialId || ""}
-          onChange={(id) => updateConfig("credentialId", id)}
-          accentColor="purple"
-          label="API Key"
-          placeholder="Select API credential..."
-        />
+        )}
       </Section>
 
       {/* ─── SYSTEM PROMPT / PERSONA ────────────────────────────────────── */}
@@ -591,7 +526,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges =
       </Section>
 
       {/* ─── BUILT-IN TOOLS ─────────────────────────────────────────────── */}
-      <Section title="Built-in Tools" icon={Wrench} iconColor="#f97316" defaultOpen={false}>
+      <Section title="Built-in Tools" icon={LuWrench} iconColor="#f97316" defaultOpen={false}>
         {/* Web Search toggle */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -647,12 +582,12 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges =
             <span className="text-[9px] text-zinc-500">Output (right)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-purple-500" />
-            <span className="text-[9px] text-zinc-500">Memory (left)</span>
+            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+            <span className="text-[9px] text-zinc-500">Model (left)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span className="text-[9px] text-zinc-500">Steps (right)</span>
+            <span className="w-2 h-2 rounded-full bg-purple-500" />
+            <span className="text-[9px] text-zinc-500">Memory (left)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-orange-500" />

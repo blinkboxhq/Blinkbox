@@ -6,11 +6,13 @@ import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// ── AI Agent Bottom Handles ──────────────────────────────────────────────────
-const AI_AGENT_BOTTOM_HANDLES = [
+// ── AI Agent Left-Side Handles ───────────────────────────────────────────────
+const AI_AGENT_LEFT_HANDLES = [
   {
     id: "chat_model",
     label: "Model",
+    color: "#6366f1",
+    top: "35%",
     allowedTypes: [
       "openai", "anthropic", "gemini", "deepseek",
       "openrouter", "together", "perplexity", "xai", "fireworks",
@@ -20,6 +22,8 @@ const AI_AGENT_BOTTOM_HANDLES = [
   {
     id: "memory",
     label: "Memory",
+    color: "#a855f7",
+    top: "55%",
     allowedTypes: [
       "window_buffer_memory", "redis_memory", "postgres_memory",
       "vector_memory", "mem0",
@@ -28,6 +32,8 @@ const AI_AGENT_BOTTOM_HANDLES = [
   {
     id: "tools",
     label: "Tool",
+    color: "#f97316",
+    top: "75%",
     allowedTypes: [
       "http_request", "web_scraper", "web_search", "code",
       "slack", "discord", "telegram", "whatsapp",
@@ -59,8 +65,8 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
       id: newId,
       type: "custom",
       position: {
-        x: parentNode.position.x,
-        y: parentNode.position.y + 200,
+        x: parentNode.position.x - 300,
+        y: parentNode.position.y + 80,
       },
       data: {
         backendType: nodeKey,
@@ -84,11 +90,11 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -4, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+      initial={{ opacity: 0, x: 4, scale: 0.96 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 4, scale: 0.96 }}
       transition={{ duration: 0.12 }}
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50
+      className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50
         w-48 max-h-72 overflow-y-auto overscroll-contain
         bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl shadow-black/50"
       onClick={(e) => e.stopPropagation()}
@@ -126,28 +132,32 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
   );
 }
 
-// ── Single Bottom Handle ─────────────────────────────────────────────────────
-function AgentBottomHandle({ handle, parentNodeId, hasConnection }) {
+// ── Single Left-Side Handle ──────────────────────────────────────────────────
+function AgentLeftHandle({ handle, parentNodeId, hasConnection }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
-    <div className="relative flex flex-col items-center">
-      {/* The React Flow connectable handle (diamond) */}
+    <div className="absolute left-0 z-10" style={{ top: handle.top, transform: "translateY(-50%)" }}>
+      {/* The React Flow connectable handle */}
       <Handle
         type="target"
-        position={Position.Bottom}
+        position={Position.Left}
         id={handle.id}
-        className="!w-[12px] !h-[12px] !rounded-[2px] !border-[1.5px] !border-zinc-700 !bg-zinc-800 !rotate-45 hover:!bg-zinc-600 transition-colors touch-none !relative !transform-none !left-auto !top-auto"
+        className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-zinc-900 hover:!brightness-125 transition-colors touch-none"
+        style={{ backgroundColor: hasConnection ? "#10b981" : handle.color }}
       />
 
-      {/* Label */}
-      <span className="text-[8px] text-zinc-600 mt-1.5 select-none pointer-events-none whitespace-nowrap">
+      {/* Label inside the card */}
+      <span
+        className="absolute left-5 top-1/2 -translate-y-1/2 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap select-none pointer-events-none"
+        style={{ color: hasConnection ? "#6ee7b7" : handle.color, opacity: 0.7 }}
+      >
         {handle.label}
       </span>
 
-      {/* + button */}
+      {/* + button when not connected */}
       {!hasConnection && (
-        <div className="relative mt-1">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[22px]">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -187,11 +197,7 @@ function getConfigHint(data) {
   if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent") {
-    const parts = [];
-    if (c.agentType) parts.push(c.agentType.replace(/_/g, " "));
-    if (c.model) parts.push(c.model);
-    else if (c.provider) parts.push(c.provider);
-    if (parts.length > 0) return parts.join(" · ");
+    if (c.agentType) return c.agentType.replace(/_/g, " ");
   }
   if (data.backendType === "webhook" && c.path) return `/${c.path}`;
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
@@ -290,7 +296,7 @@ export default function CustomNode({ id, data, selected }) {
     <div className="relative">
       {/* ── Main Card ───────────────────────────────────────────────────── */}
       <div
-        className={`relative border ${borderClass} rounded-xl min-w-[260px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
+        className={`relative border ${borderClass} rounded-xl min-w-[260px] ${isAgent ? "min-h-[180px]" : ""} bg-zinc-900 transition-colors duration-150 overflow-hidden`}
       >
         {badge}
 
@@ -307,8 +313,19 @@ export default function CustomNode({ id, data, selected }) {
             position={Position.Left}
             id="input"
             className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+            style={isAgent ? { top: "15%" } : undefined}
           />
         )}
+
+        {/* Agent left-side dependency handles */}
+        {isAgent && AI_AGENT_LEFT_HANDLES.map((h) => (
+          <AgentLeftHandle
+            key={h.id}
+            handle={h}
+            parentNodeId={id}
+            hasConnection={getHandleConnected(h.id)}
+          />
+        ))}
 
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3">
@@ -412,19 +429,6 @@ export default function CustomNode({ id, data, selected }) {
         />
       </div>
 
-      {/* ── Bottom Handles — floating freely below the node ─────────────── */}
-      {isAgent && (
-        <div className="flex items-start justify-center gap-6 mt-3">
-          {AI_AGENT_BOTTOM_HANDLES.map((h) => (
-            <AgentBottomHandle
-              key={h.id}
-              handle={h}
-              parentNodeId={id}
-              hasConnection={getHandleConnected(h.id)}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
