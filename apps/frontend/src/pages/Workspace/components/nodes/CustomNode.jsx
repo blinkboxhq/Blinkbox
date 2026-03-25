@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -12,7 +12,7 @@ const AI_AGENT_LEFT_HANDLES = [
     id: "chat_model",
     label: "Model",
     color: "#6366f1",
-    top: "35%",
+    top: "30%",
     allowedTypes: [
       "openai", "anthropic", "gemini", "deepseek",
       "openrouter", "together", "perplexity", "xai", "fireworks",
@@ -23,7 +23,7 @@ const AI_AGENT_LEFT_HANDLES = [
     id: "memory",
     label: "Memory",
     color: "#a855f7",
-    top: "55%",
+    top: "52%",
     allowedTypes: [
       "window_buffer_memory", "redis_memory", "postgres_memory",
       "vector_memory", "mem0",
@@ -31,9 +31,9 @@ const AI_AGENT_LEFT_HANDLES = [
   },
   {
     id: "tools",
-    label: "Tool",
+    label: "Tools",
     color: "#f97316",
-    top: "75%",
+    top: "74%",
     allowedTypes: [
       "http_request", "web_scraper", "web_search", "code",
       "slack", "discord", "telegram", "whatsapp",
@@ -47,10 +47,12 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
   const addNode = useWorkspaceStore((s) => s.addNode);
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const { getNode } = useReactFlow();
+  const [search, setSearch] = useState("");
 
   const entries = Object.entries(NodeRegistry).filter(([key, def]) => {
     if (def.category === "trigger") return false;
-    if (handle.allowedTypes.length > 0) return handle.allowedTypes.includes(key);
+    if (handle.allowedTypes.length > 0 && !handle.allowedTypes.includes(key)) return false;
+    if (search && !def.label.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -65,8 +67,8 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
       id: newId,
       type: "custom",
       position: {
-        x: parentNode.position.x - 300,
-        y: parentNode.position.y + 80,
+        x: parentNode.position.x - 280,
+        y: parentNode.position.y + 60,
       },
       data: {
         backendType: nodeKey,
@@ -90,26 +92,46 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 4, scale: 0.96 }}
+      initial={{ opacity: 0, x: 6, scale: 0.97 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 4, scale: 0.96 }}
-      transition={{ duration: 0.12 }}
-      className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50
-        w-48 max-h-72 overflow-y-auto overscroll-contain
-        bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl shadow-black/50"
+      exit={{ opacity: 0, x: 6, scale: 0.97 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
+      className="absolute right-full top-1/2 -translate-y-1/2 mr-3 z-50
+        w-52 max-h-80 overflow-hidden
+        bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-2xl shadow-black/60"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/60">
-        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-          {handle.label}
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/60">
+        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+          Add {handle.label}
         </span>
-        <button onClick={onClose} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+        <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
           <X className="w-3 h-3" />
         </button>
       </div>
-      <div className="py-0.5">
+
+      {/* Search */}
+      {handle.allowedTypes.length > 5 && (
+        <div className="px-2.5 py-1.5 border-b border-zinc-800/40">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800/50 rounded-md">
+            <Search className="w-3 h-3 text-zinc-600" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-transparent text-[10px] text-zinc-300 outline-none placeholder:text-zinc-600"
+              autoFocus
+            />
+          </div>
+        </div>
+      )}
+
+      {/* List */}
+      <div className="py-1 max-h-60 overflow-y-auto overscroll-contain">
         {entries.length === 0 ? (
-          <p className="px-3 py-2 text-[10px] text-zinc-600">No nodes available</p>
+          <p className="px-3 py-3 text-[10px] text-zinc-600 text-center">No matching nodes</p>
         ) : (
           entries.map(([key, def]) => {
             const Icon = def.icon;
@@ -117,12 +139,12 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
               <button
                 key={key}
                 onClick={() => handleSelect(key)}
-                className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-zinc-800/60 transition-colors text-left"
+                className="flex items-center gap-2.5 w-full px-3 py-2 hover:bg-zinc-800/60 transition-colors text-left group"
               >
-                <div className={`w-5 h-5 rounded flex items-center justify-center bg-zinc-800 ${def.colorClass} shrink-0`}>
+                <div className={`w-6 h-6 rounded-md flex items-center justify-center bg-zinc-800/80 ${def.colorClass} shrink-0 group-hover:bg-zinc-700/80 transition-colors`}>
                   <Icon className="w-3 h-3" />
                 </div>
-                <span className="text-[11px] text-zinc-400 truncate">{def.label}</span>
+                <span className="text-[11px] text-zinc-400 group-hover:text-zinc-200 truncate transition-colors">{def.label}</span>
               </button>
             );
           })
@@ -132,7 +154,7 @@ function NodePickerPopover({ handle, parentNodeId, onClose }) {
   );
 }
 
-// ── Single Left-Side Handle ──────────────────────────────────────────────────
+// ── Single Left-Side Handle (Handle = Button when disconnected) ──────────────
 function AgentLeftHandle({ handle, parentNodeId, hasConnection }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -143,50 +165,56 @@ function AgentLeftHandle({ handle, parentNodeId, hasConnection }) {
         type="target"
         position={Position.Left}
         id={handle.id}
-        className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-zinc-900 hover:!brightness-125 transition-colors touch-none"
-        style={{ backgroundColor: hasConnection ? "#10b981" : handle.color }}
+        className={`!w-3 !h-3 !rounded-full !border-2 !border-zinc-900 transition-all duration-200 touch-none ${
+          hasConnection ? "" : "!cursor-pointer"
+        }`}
+        style={{
+          backgroundColor: hasConnection ? "#10b981" : handle.color,
+          boxShadow: hasConnection ? "0 0 6px rgba(16,185,129,0.3)" : "none",
+        }}
       />
 
-      {/* Label inside the card */}
-      <span
-        className="absolute left-5 top-1/2 -translate-y-1/2 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap select-none pointer-events-none"
-        style={{ color: hasConnection ? "#6ee7b7" : handle.color, opacity: 0.7 }}
-      >
-        {handle.label}
-      </span>
-
-      {/* + button when not connected */}
+      {/* Clickable + overlay when disconnected */}
       {!hasConnection && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[22px]">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setPickerOpen(!pickerOpen);
-            }}
-            className="w-4 h-4 rounded-full border border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 transition-colors"
-            title={`Add ${handle.label}`}
-          >
-            <Plus className="w-2.5 h-2.5" />
-          </button>
-
-          <AnimatePresence>
-            {pickerOpen && (
-              <NodePickerPopover
-                handle={handle}
-                parentNodeId={parentNodeId}
-                onClose={() => setPickerOpen(false)}
-              />
-            )}
-          </AnimatePresence>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setPickerOpen(!pickerOpen);
+          }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[1px] w-3 h-3 rounded-full flex items-center justify-center z-20 group"
+          title={`Add ${handle.label}`}
+        >
+          <Plus className="w-2 h-2 text-white opacity-80 group-hover:opacity-100 transition-opacity" strokeWidth={3} />
+        </button>
       )}
+
+      {/* Label tooltip on hover */}
+      <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
+        <span
+          className="text-[8px] font-bold uppercase tracking-widest whitespace-nowrap select-none opacity-0 group-hover:opacity-60 transition-opacity"
+          style={{ color: handle.color }}
+        >
+          {handle.label}
+        </span>
+      </div>
+
+      {/* Picker popover */}
+      <AnimatePresence>
+        {pickerOpen && (
+          <NodePickerPopover
+            handle={handle}
+            parentNodeId={parentNodeId}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 // ── Config Hint ──────────────────────────────────────────────────────────────
 
-function getConfigHint(data) {
+function getConfigHint(data, edges, nodeId) {
   const c = data.config || {};
   if (data.backendType === "http_request") {
     if (c.method && c.url) return `${c.method} ${c.url}`.slice(0, 40);
@@ -197,7 +225,22 @@ function getConfigHint(data) {
   if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent") {
+    // Show connected model name if available
+    if (edges && nodeId) {
+      const modelEdge = edges.find((e) => e.target === nodeId && e.targetHandle === "chat_model");
+      if (modelEdge) {
+        const nodes = useWorkspaceStore.getState().nodes;
+        const modelNode = nodes.find((n) => n.id === modelEdge.source);
+        if (modelNode?.data?.config?.model) {
+          return modelNode.data.config.model;
+        }
+        if (modelNode?.data?.label) {
+          return modelNode.data.label;
+        }
+      }
+    }
     if (c.agentType) return c.agentType.replace(/_/g, " ");
+    return "tools agent";
   }
   if (data.backendType === "webhook" && c.path) return `/${c.path}`;
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
@@ -247,7 +290,7 @@ export default function CustomNode({ id, data, selected }) {
 
   const isTrigger = data.type === "trigger";
   const isAgent = data.backendType === "ai_agent";
-  const configHint = getConfigHint(data);
+  const configHint = getConfigHint(data, edges, id);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
   const getHandleConnected = (handleId) =>
@@ -292,18 +335,26 @@ export default function CustomNode({ id, data, selected }) {
     if (!isRunning && automationId) runEngine(automationId);
   };
 
+  // Agent connection status dots for footer
+  const agentHandleStatus = isAgent
+    ? AI_AGENT_LEFT_HANDLES.map((h) => ({
+        ...h,
+        connected: getHandleConnected(h.id),
+      }))
+    : [];
+
   return (
-    <div className="relative">
+    <div className="relative group">
       {/* ── Main Card ───────────────────────────────────────────────────── */}
       <div
-        className={`relative border ${borderClass} rounded-xl min-w-[260px] ${isAgent ? "min-h-[180px]" : ""} bg-zinc-900 transition-colors duration-150 overflow-hidden`}
+        className={`relative border ${borderClass} rounded-xl min-w-[240px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
       >
         {badge}
 
         {/* Accent bar */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-          style={{ backgroundColor: `rgba(${accent},0.35)` }}
+          style={{ backgroundColor: `rgba(${accent},0.4)` }}
         />
 
         {/* Input handle */}
@@ -312,8 +363,8 @@ export default function CustomNode({ id, data, selected }) {
             type="target"
             position={Position.Left}
             id="input"
-            className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
-            style={isAgent ? { top: "15%" } : undefined}
+            className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 transition-colors touch-none"
+            style={isAgent ? { top: "12%" } : undefined}
           />
         )}
 
@@ -328,22 +379,23 @@ export default function CustomNode({ id, data, selected }) {
         ))}
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5">
           <div
-            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-zinc-800/80 ${nodeDef.colorClass}`}
+            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${nodeDef.colorClass}`}
+            style={{ backgroundColor: `rgba(${accent},0.12)` }}
           >
-            <Icon className="w-4 h-4" strokeWidth={1.75} />
+            <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
           </div>
 
           <div className="flex flex-col overflow-hidden flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-[13px] font-medium text-zinc-100 tracking-tight truncate">
+              <span className="text-[12px] font-medium text-zinc-200 tracking-tight truncate">
                 {data.label}
               </span>
               {hasMappingWarning && (
-                <div className="relative group">
+                <div className="relative group/warn">
                   <AlertTriangle className="w-3 h-3 text-amber-500/70 shrink-0 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-52">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover/warn:opacity-100 transition-opacity pointer-events-none z-50 w-52">
                     {warnings.map((w, i) => (
                       <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
                     ))}
@@ -351,11 +403,9 @@ export default function CustomNode({ id, data, selected }) {
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
-              {isAgent
-                ? (data.config?.agentType || "tools agent").replace(/_/g, " ")
-                : nodeDef.category}
-            </span>
+            {configHint && (
+              <span className="text-[10px] text-zinc-500 truncate font-mono">{configHint}</span>
+            )}
           </div>
 
           {/* Status indicator */}
@@ -371,64 +421,65 @@ export default function CustomNode({ id, data, selected }) {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="px-4 pb-3 space-y-1.5">
-          {configHint ? (
-            <p className="text-[11px] text-zinc-400 font-mono truncate bg-zinc-800/50 rounded px-2 py-1">
-              {configHint}
-            </p>
-          ) : (
-            <p className="text-[11px] text-zinc-600 truncate">
-              {data.subtitle || "Not configured"}
-            </p>
-          )}
-          {data.error && (
-            <p className="text-[10px] text-red-400/70 truncate">{data.error}</p>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
-          <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[140px]">
-            {id.length > 20 ? `...${id.slice(-16)}` : id}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {isTrigger ? (
-              <button
-                onClick={handlePlay}
-                disabled={isRunning}
-                className={`group flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${
-                  isRunning
-                    ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
-                    : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 active:scale-95"
-                }`}
-              >
-                {isRunning ? (
-                  <><Loader2 className="w-2.5 h-2.5 animate-spin" />Running</>
-                ) : (
-                  <><Play className="w-2.5 h-2.5 fill-current" />Run</>
-                )}
-              </button>
-            ) : isConfigured ? (
-              <span className="text-[9px] text-emerald-600 uppercase tracking-wider">Ready</span>
-            ) : (
-              <span className="flex items-center gap-0.5 text-[9px] text-zinc-600 uppercase tracking-wider">
-                <Settings2 className="w-2.5 h-2.5" />
-                Setup
-              </span>
-            )}
+        {/* Agent connection indicators in footer */}
+        {isAgent && (
+          <div className="flex items-center gap-3 px-3.5 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
+            {agentHandleStatus.map((h) => (
+              <div key={h.id} className="flex items-center gap-1">
+                <div
+                  className="w-1.5 h-1.5 rounded-full transition-colors"
+                  style={{ backgroundColor: h.connected ? "#10b981" : "#3f3f46" }}
+                />
+                <span className={`text-[8px] uppercase tracking-wider ${h.connected ? "text-zinc-500" : "text-zinc-700"}`}>
+                  {h.label}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* Footer (non-agent) */}
+        {!isAgent && (
+          <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
+            <span className="text-[9px] text-zinc-700 font-mono truncate max-w-[120px]">
+              {data.backendType}
+            </span>
+            <div className="flex items-center gap-1.5">
+              {isTrigger ? (
+                <button
+                  onClick={handlePlay}
+                  disabled={isRunning}
+                  className={`group flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                    isRunning
+                      ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
+                      : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-95"
+                  }`}
+                >
+                  {isRunning ? (
+                    <><Loader2 className="w-2.5 h-2.5 animate-spin" />Run</>
+                  ) : (
+                    <><Play className="w-2.5 h-2.5 fill-current" />Run</>
+                  )}
+                </button>
+              ) : isConfigured ? (
+                <span className="text-[8px] text-emerald-600/80 uppercase tracking-wider">Ready</span>
+              ) : (
+                <span className="flex items-center gap-0.5 text-[8px] text-zinc-600 uppercase tracking-wider">
+                  <Settings2 className="w-2.5 h-2.5" />Setup
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Output handle */}
         <Handle
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-4 !h-4 !bg-zinc-700 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 active:!bg-zinc-300 transition-colors touch-none"
+          className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 transition-colors touch-none"
         />
       </div>
-
     </div>
   );
 }
