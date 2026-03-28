@@ -2,15 +2,16 @@ import { useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  MessageSquare,
-  Settings2,
-  Wrench,
-  BookOpen,
+  Globe,
   Search,
+  Database,
+  Calculator,
+  FileJson2,
   Cpu,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
-import { LuBrainCircuit, LuWrench, LuDatabase } from "react-icons/lu";
+import { LuBrainCircuit, LuWrench } from "react-icons/lu";
 import {
   SiOpenai,
   SiAnthropic,
@@ -22,30 +23,62 @@ import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// ── Agent Types ──────────────────────────────────────────────────────────────
+// ── Tool Definitions (must match backend agentTools.registry.js IDs exactly) ─
 
-const AGENT_TYPES = [
+const AGENT_TOOLS = [
   {
-    value: "tools_agent",
-    label: "Tools Agent",
-    desc: "Uses function-calling to invoke tools",
-    icon: Wrench,
+    id: "web_search",
+    label: "Web Search",
+    desc: "Search the internet in real-time",
+    icon: Search,
+    color: "#f97316",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+    activeRing: "ring-orange-500/30",
   },
   {
-    value: "conversational",
-    label: "Conversational",
-    desc: "Chat-optimized with memory support",
-    icon: MessageSquare,
+    id: "http_request",
+    label: "API Calls",
+    desc: "Call any external API",
+    icon: Globe,
+    color: "#3b82f6",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    activeRing: "ring-blue-500/30",
   },
   {
-    value: "react",
-    label: "ReAct",
-    desc: "Reason + Act loop, step-by-step",
-    icon: LuBrainCircuit,
+    id: "workspace_memory",
+    label: "Memory",
+    desc: "Remember data across runs",
+    icon: Database,
+    color: "#a855f7",
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/20",
+    activeRing: "ring-purple-500/30",
+  },
+  {
+    id: "math_calculator",
+    label: "Calculator",
+    desc: "Solve math problems",
+    icon: Calculator,
+    color: "#10b981",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    activeRing: "ring-emerald-500/30",
+  },
+  {
+    id: "data_extractor",
+    label: "Data Extractor",
+    desc: "Parse & extract from JSON",
+    icon: FileJson2,
+    color: "#06b6d4",
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/20",
+    activeRing: "ring-cyan-500/30",
   },
 ];
 
-// ── Brand Icons ──────────────────────────────────────────────────────────────
+// ── Brand icons for connected model nodes ───────────────────────────────────
 
 const BRAND_ICONS = {
   openai: SiOpenai,
@@ -64,14 +97,12 @@ const BRAND_ICONS = {
   hyperbolic: Cpu,
 };
 
-const TOOL_CALLING_PROVIDERS = new Set([
-  "openai", "anthropic", "gemini", "deepseek", "openrouter", "xai", "fireworks",
-]);
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 function getConnectedNodeInfo(edges, nodes, nodeId, handleId) {
-  const edge = edges.find((e) => e.target === nodeId && e.targetHandle === handleId);
+  const edge = edges.find(
+    (e) => e.target === nodeId && e.targetHandle === handleId
+  );
   if (!edge) return null;
   const src = nodes.find((n) => n.id === edge.source);
   if (!src) return null;
@@ -98,73 +129,63 @@ function getConnectedTools(edges, nodes, nodeId) {
     .filter(Boolean);
 }
 
-// ── Collapsible Section ──────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL TOGGLE CARD
+// ═════════════════════════════════════════════════════════════════════════════
 
-function Section({ title, defaultOpen = true, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="flex flex-col">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 py-2 text-left group"
-      >
-        {open ? (
-          <ChevronDown className="w-3 h-3 text-zinc-600" />
-        ) : (
-          <ChevronRight className="w-3 h-3 text-zinc-600" />
-        )}
-        <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider group-hover:text-zinc-200 transition-colors">
-          {title}
-        </span>
-      </button>
-      {open && <div className="flex flex-col gap-3 pb-1">{children}</div>}
-    </div>
-  );
-}
-
-// ── Connection Row ───────────────────────────────────────────────────────────
-
-function ConnectionRow({ label, color, connected, info, required, onSelect }) {
-  const BrandIcon = info ? (BRAND_ICONS[info.backendType] || Cpu) : null;
+function ToolToggle({ tool, active, onToggle }) {
+  const Icon = tool.icon;
 
   return (
     <button
-      onClick={info && onSelect ? () => onSelect(info.nodeId) : undefined}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-left w-full ${
-        connected
-          ? "bg-zinc-800/40 hover:bg-zinc-800/60"
-          : "bg-zinc-900/30"
-      }`}
+      onClick={onToggle}
+      className={`
+        relative flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200
+        ${
+          active
+            ? `${tool.bg} ${tool.border} ring-1 ${tool.activeRing}`
+            : "bg-zinc-900/40 border-zinc-800/60 hover:bg-zinc-800/40 hover:border-zinc-700/60"
+        }
+      `}
     >
-      {/* Status dot */}
+      {/* Icon */}
       <div
-        className="w-2 h-2 rounded-full shrink-0"
-        style={{ backgroundColor: connected ? "#10b981" : required ? "#ef4444" : "#3f3f46" }}
-      />
-
-      {/* Label + info */}
-      <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[11px] font-medium ${connected ? "text-zinc-200" : "text-zinc-500"}`}>
-            {label}
-          </span>
-          {required && !connected && (
-            <span className="text-[8px] font-bold text-red-500/70 uppercase">required</span>
-          )}
-        </div>
-        {connected && info ? (
-          <span className="text-[10px] text-zinc-500 truncate">
-            {info.label}{info.model ? ` · ${info.model}` : ""}
-          </span>
-        ) : (
-          <span className="text-[9px] text-zinc-700">Not connected</span>
-        )}
+        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200 ${
+          active ? tool.bg : "bg-zinc-800/60"
+        }`}
+      >
+        <Icon
+          className="w-4 h-4 transition-colors duration-200"
+          style={{ color: active ? tool.color : "#52525b" }}
+        />
       </div>
 
-      {/* Brand icon */}
-      {connected && BrandIcon && (
-        <BrandIcon className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-      )}
+      {/* Label + description */}
+      <div className="flex flex-col text-left min-w-0 flex-1">
+        <span
+          className={`text-[11px] font-semibold transition-colors duration-200 ${
+            active ? "text-zinc-200" : "text-zinc-500"
+          }`}
+        >
+          {tool.label}
+        </span>
+        <span className="text-[9px] text-zinc-600 leading-snug">
+          {tool.desc}
+        </span>
+      </div>
+
+      {/* Toggle pill */}
+      <div
+        className={`w-8 h-[18px] rounded-full shrink-0 transition-colors duration-200 ${
+          active ? "bg-violet-500" : "bg-zinc-700"
+        }`}
+      >
+        <div
+          className={`w-[14px] h-[14px] rounded-full bg-white mt-[2px] transition-transform duration-200 ${
+            active ? "translate-x-[16px]" : "translate-x-[2px]"
+          }`}
+        />
+      </div>
     </button>
   );
 }
@@ -173,290 +194,301 @@ function ConnectionRow({ label, color, connected, info, required, onSelect }) {
 // MAIN CONFIG PANEL
 // ═════════════════════════════════════════════════════════════════════════════
 
-export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges = [] }) {
+export default function AIAgentNode({
+  config = {},
+  updateConfig,
+  nodeId,
+  edges = [],
+}) {
   const nodes = useWorkspaceStore((s) => s.nodes);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const agentType = config.agentType || "tools_agent";
-  const outputFormat = config.outputFormat || "text";
+  const enabledToolIds = config.enabledToolIds || [];
 
-  // Resolve connections
+  // Connection info
   const modelInfo = getConnectedNodeInfo(edges, nodes, nodeId, "chat_model");
   const memoryInfo = getConnectedNodeInfo(edges, nodes, nodeId, "memory");
   const connectedTools = getConnectedTools(edges, nodes, nodeId);
 
-  const isModelConnected = !!modelInfo;
-  const isMemoryConnected = !!memoryInfo;
-  const hasTools = connectedTools.length > 0;
-
-  const connectedProvider = modelInfo?.backendType;
-  const supportsToolCalling = connectedProvider ? TOOL_CALLING_PROVIDERS.has(connectedProvider) : true;
-
-  const handleSelectNode = (id) => setSelectedNodeId?.(id);
+  // ── Tool toggle handler ─────────────────────────────────────────────────
+  function toggleTool(toolId) {
+    const current = config.enabledToolIds || [];
+    const next = current.includes(toolId)
+      ? current.filter((id) => id !== toolId)
+      : [...current, toolId];
+    updateConfig("enabledToolIds", next);
+  }
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-
+    <div className="flex flex-col gap-5 w-full">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 pb-3 border-b border-zinc-800/50">
-        <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-          <LuBrainCircuit className="w-4 h-4 text-violet-400" />
+        <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
+          <LuBrainCircuit className="w-5 h-5 text-violet-400" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[13px] font-semibold text-zinc-200">AI Agent</span>
+          <span className="text-[13px] font-semibold text-zinc-200">
+            AI Agent
+          </span>
           <span className="text-[10px] text-zinc-600">
-            {AGENT_TYPES.find((t) => t.value === agentType)?.label || "Agent"}
+            Tell it what to do. It figures out the rest.
           </span>
         </div>
       </div>
 
-      {/* ── Agent Type ──────────────────────────────────────────────────── */}
-      <Section title="Agent Type">
-        <div className="flex flex-col gap-1">
-          {AGENT_TYPES.map((type) => {
-            const TypeIcon = type.icon;
-            const isSelected = agentType === type.value;
+      {/* ── Connection Status (compact) ─────────────────────────────────── */}
+      {(modelInfo || memoryInfo || connectedTools.length > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {modelInfo && (
+            <button
+              onClick={() => setSelectedNodeId?.(modelInfo.nodeId)}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-indigo-500/8 border border-indigo-500/15 hover:bg-indigo-500/15 transition-colors"
+            >
+              {(() => {
+                const BIcon = BRAND_ICONS[modelInfo.backendType] || Cpu;
+                return <BIcon className="w-3 h-3 text-indigo-400" />;
+              })()}
+              <span className="text-[10px] font-medium text-indigo-300">
+                {modelInfo.model || modelInfo.label}
+              </span>
+            </button>
+          )}
+          {memoryInfo && (
+            <button
+              onClick={() => setSelectedNodeId?.(memoryInfo.nodeId)}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/8 border border-purple-500/15 hover:bg-purple-500/15 transition-colors"
+            >
+              <Database className="w-3 h-3 text-purple-400" />
+              <span className="text-[10px] font-medium text-purple-300">
+                {memoryInfo.label}
+              </span>
+            </button>
+          )}
+          {connectedTools.map((tool) => {
+            const TIcon = BRAND_ICONS[tool.backendType] || LuWrench;
             return (
               <button
-                key={type.value}
-                onClick={() => updateConfig("agentType", type.value)}
-                className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all ${
-                  isSelected
-                    ? "border-violet-500/30 bg-violet-500/5"
-                    : "border-transparent hover:bg-zinc-800/30"
-                }`}
+                key={tool.nodeId}
+                onClick={() => setSelectedNodeId?.(tool.nodeId)}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-orange-500/8 border border-orange-500/15 hover:bg-orange-500/15 transition-colors"
               >
-                <TypeIcon
-                  className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: isSelected ? "#a78bfa" : "#52525b" }}
-                />
-                <div className="flex flex-col min-w-0">
-                  <span className={`text-[11px] font-medium ${isSelected ? "text-violet-300" : "text-zinc-400"}`}>
-                    {type.label}
-                  </span>
-                  <span className="text-[9px] text-zinc-600 leading-snug">{type.desc}</span>
-                </div>
+                <TIcon className="w-3 h-3 text-orange-400" />
+                <span className="text-[10px] font-medium text-orange-300">
+                  {tool.label}
+                </span>
               </button>
             );
           })}
         </div>
-      </Section>
+      )}
 
-      {/* ── Connections ──────────────────────────────────────────────────── */}
-      <Section title="Connections">
-        <div className="flex flex-col gap-1">
-          <ConnectionRow
-            label="Model"
-            color="#6366f1"
-            connected={isModelConnected}
-            info={modelInfo}
-            required
-            onSelect={handleSelectNode}
-          />
-          <ConnectionRow
-            label="Memory"
-            color="#a855f7"
-            connected={isMemoryConnected}
-            info={memoryInfo}
-            required={agentType === "conversational"}
-            onSelect={handleSelectNode}
-          />
-          <ConnectionRow
-            label="Tools"
-            color="#f97316"
-            connected={hasTools}
-            info={hasTools ? { label: `${connectedTools.length} tool${connectedTools.length > 1 ? "s" : ""}`, backendType: connectedTools[0]?.backendType, nodeId: connectedTools[0]?.nodeId } : null}
-            required={agentType === "tools_agent"}
-            onSelect={handleSelectNode}
-          />
+      {!modelInfo && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500/60 shrink-0 mt-0.5" />
+          <span className="text-[10px] text-amber-500/70 leading-relaxed">
+            Connect a Model node to the{" "}
+            <span className="font-semibold text-amber-400/80">Model</span>{" "}
+            handle on the left side.
+          </span>
         </div>
+      )}
 
-        {/* Connected tools list */}
-        {hasTools && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {connectedTools.map((tool) => {
-              const TIcon = BRAND_ICONS[tool.backendType] || LuWrench;
-              return (
-                <button
-                  key={tool.nodeId}
-                  onClick={() => handleSelectNode(tool.nodeId)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
-                >
-                  <TIcon className="w-2.5 h-2.5 text-orange-400/60" />
-                  <span className="text-[9px] text-zinc-500">{tool.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Warnings */}
-        {agentType === "tools_agent" && isModelConnected && !supportsToolCalling && (
-          <p className="text-[9px] text-amber-500/70 flex items-start gap-1.5 mt-1">
-            <AlertTriangle className="w-3 h-3 shrink-0 mt-px" />
-            {modelInfo.label} may not support function calling. Consider ReAct agent type.
-          </p>
-        )}
-
-        {!isModelConnected && (
-          <p className="text-[9px] text-zinc-600 mt-1">
-            Connect a model node to the Model handle on the left side of this node.
-          </p>
-        )}
-      </Section>
-
-      {/* ── System Prompt ───────────────────────────────────────────────── */}
-      <Section title="System Prompt">
-        <SmartVariableInput
-          value={config.systemPrompt || ""}
-          onChange={(val) => updateConfig("systemPrompt", val)}
-          placeholder="You are a helpful assistant..."
-          multiline
-        />
-        <p className="text-[9px] text-zinc-700">
-          Defines the agent's persona and behavioral constraints.
-        </p>
-      </Section>
-
-      {/* ── Instructions ────────────────────────────────────────────────── */}
-      <Section title="Instructions">
+      {/* ═══════════════════════════════════════════════════════════════════
+          ELEMENT 1: Goal (What do you want me to do?)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+          What should the agent do?
+        </label>
         <SmartVariableInput
           value={config.prompt || ""}
           onChange={(val) => updateConfig("prompt", val)}
-          placeholder="Analyze the input data and..."
+          placeholder='e.g. "Find the latest news about AI and summarize it"'
           multiline
+          nodeId={nodeId}
         />
-      </Section>
+      </div>
 
-      {/* ── Options ─────────────────────────────────────────────────────── */}
-      <Section title="Options" defaultOpen={false}>
-        {/* Output format */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          ELEMENT 2: Give Agent Access To (visual tool toggles)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col gap-2.5">
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+          Give agent access to
+        </label>
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-            Output Format
-          </label>
-          <div className="flex gap-1">
-            {["text", "json"].map((f) => (
-              <button
-                key={f}
-                onClick={() => updateConfig("outputFormat", f)}
-                className={`flex-1 px-3 py-1.5 rounded-md text-[10px] font-medium uppercase tracking-wider border transition-all ${
-                  outputFormat === f
-                    ? "border-violet-500/30 bg-violet-500/8 text-violet-300"
-                    : "border-zinc-800 bg-zinc-900/50 text-zinc-600 hover:text-zinc-400 hover:border-zinc-700"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Max Iterations + Temperature */}
-        <div className="flex gap-2">
-          <div className="flex flex-col gap-1.5 flex-1">
-            <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-              Max Iterations
-            </label>
-            <select
-              value={config.maxIterations || 5}
-              onChange={(e) => updateConfig("maxIterations", Number(e.target.value))}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 outline-none focus:border-violet-500/40 transition-colors cursor-pointer appearance-none"
-            >
-              {[1, 2, 3, 5, 8, 10, 15].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5 flex-1">
-            <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-              Temperature
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="2"
-              step="0.1"
-              value={config.temperature ?? 0.3}
-              onChange={(e) => updateConfig("temperature", parseFloat(e.target.value))}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 font-mono outline-none focus:border-violet-500/40 transition-colors"
+          {AGENT_TOOLS.map((tool) => (
+            <ToolToggle
+              key={tool.id}
+              tool={tool}
+              active={enabledToolIds.includes(tool.id)}
+              onToggle={() => toggleTool(tool.id)}
             />
-          </div>
+          ))}
         </div>
 
-        {/* Max Tokens */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-            Max Tokens
-          </label>
-          <input
-            type="number"
-            min="100"
-            max="128000"
-            step="100"
-            value={config.maxTokens ?? 4000}
-            onChange={(e) => updateConfig("maxTokens", parseInt(e.target.value, 10))}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 font-mono outline-none focus:border-violet-500/40 transition-colors"
-          />
-        </div>
-
-        {/* Return intermediate steps */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[11px] text-zinc-300">Intermediate Steps</span>
-            <span className="text-[9px] text-zinc-600">Include reasoning & tool calls in output</span>
-          </div>
-          <button
-            onClick={() => updateConfig("returnIntermediateSteps", !config.returnIntermediateSteps)}
-            className={`relative w-8 h-[18px] rounded-full transition-colors duration-200 ${
-              config.returnIntermediateSteps ? "bg-violet-500" : "bg-zinc-700"
-            }`}
-          >
-            <span
-              className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] rounded-full bg-white transition-transform duration-200 ${
-                config.returnIntermediateSteps ? "translate-x-[14px]" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </div>
-      </Section>
-
-      {/* ── Built-in Tools ──────────────────────────────────────────────── */}
-      <Section title="Built-in Tools" defaultOpen={false}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-orange-400/60" />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-zinc-300">Web Search</span>
-              <span className="text-[9px] text-zinc-600">Search via Tavily API</span>
-            </div>
-          </div>
-          <button
-            onClick={() => updateConfig("builtinWebSearch", !config.builtinWebSearch)}
-            className={`relative w-8 h-[18px] rounded-full transition-colors duration-200 ${
-              config.builtinWebSearch ? "bg-orange-500" : "bg-zinc-700"
-            }`}
-          >
-            <span
-              className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] rounded-full bg-white transition-transform duration-200 ${
-                config.builtinWebSearch ? "translate-x-[14px]" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </div>
-
-        {config.builtinWebSearch && (
-          <div className="ml-6">
-            <CredentialPicker
-              value={config.webSearchCredentialId || ""}
-              onChange={(id) => updateConfig("webSearchCredentialId", id)}
-              accentColor="orange"
-              label="Tavily API Key"
-              placeholder="Select credential..."
-            />
+        {/* Active tool count badge */}
+        {enabledToolIds.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <Sparkles className="w-3 h-3 text-violet-400/60" />
+            <span className="text-[10px] text-zinc-600">
+              {enabledToolIds.length} tool
+              {enabledToolIds.length !== 1 ? "s" : ""} enabled — agent will
+              decide when to use them
+            </span>
           </div>
         )}
-      </Section>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          ELEMENT 3: Advanced Accordion (hidden by default)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col border-t border-zinc-800/40 pt-3">
+        <button
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+          className="flex items-center gap-2 py-1.5 text-left group"
+        >
+          {advancedOpen ? (
+            <ChevronDown className="w-3 h-3 text-zinc-600" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-zinc-600" />
+          )}
+          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-zinc-300 transition-colors">
+            Advanced
+          </span>
+        </button>
+
+        {advancedOpen && (
+          <div className="flex flex-col gap-4 pt-2 pb-1">
+            {/* System Prompt */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                System Prompt
+              </label>
+              <SmartVariableInput
+                value={config.systemPrompt || ""}
+                onChange={(val) => updateConfig("systemPrompt", val)}
+                placeholder="You are a helpful assistant that..."
+                multiline
+                nodeId={nodeId}
+              />
+              <p className="text-[9px] text-zinc-700">
+                Define the agent's persona, tone, and constraints.
+              </p>
+            </div>
+
+            {/* Output Format */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                Output Format
+              </label>
+              <div className="flex gap-1">
+                {["text", "json"].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => updateConfig("outputFormat", f)}
+                    className={`flex-1 px-3 py-1.5 rounded-md text-[10px] font-medium uppercase tracking-wider border transition-all ${
+                      (config.outputFormat || "text") === f
+                        ? "border-violet-500/30 bg-violet-500/8 text-violet-300"
+                        : "border-zinc-800 bg-zinc-900/50 text-zinc-600 hover:text-zinc-400 hover:border-zinc-700"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Max Iterations + Temperature row */}
+            <div className="flex gap-2">
+              <div className="flex flex-col gap-1.5 flex-1">
+                <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                  Max Iterations
+                </label>
+                <select
+                  value={config.maxIterations || 5}
+                  onChange={(e) =>
+                    updateConfig("maxIterations", Number(e.target.value))
+                  }
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 outline-none focus:border-violet-500/40 transition-colors cursor-pointer appearance-none"
+                >
+                  {[1, 2, 3, 5, 8, 10, 15].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-1">
+                <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                  Temperature
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={config.temperature ?? 0.3}
+                  onChange={(e) =>
+                    updateConfig("temperature", parseFloat(e.target.value))
+                  }
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 font-mono outline-none focus:border-violet-500/40 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Max Tokens */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                Max Tokens
+              </label>
+              <input
+                type="number"
+                min="100"
+                max="128000"
+                step="100"
+                value={config.maxTokens ?? 4096}
+                onChange={(e) =>
+                  updateConfig("maxTokens", parseInt(e.target.value, 10))
+                }
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 font-mono outline-none focus:border-violet-500/40 transition-colors"
+              />
+            </div>
+
+            {/* Intermediate Steps toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[11px] text-zinc-300">
+                  Show Reasoning
+                </span>
+                <span className="text-[9px] text-zinc-600">
+                  Include step-by-step thought process in output
+                </span>
+              </div>
+              <button
+                onClick={() =>
+                  updateConfig(
+                    "returnIntermediateSteps",
+                    !config.returnIntermediateSteps
+                  )
+                }
+                className={`relative w-8 h-[18px] rounded-full transition-colors duration-200 ${
+                  config.returnIntermediateSteps ? "bg-violet-500" : "bg-zinc-700"
+                }`}
+              >
+                <span
+                  className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] rounded-full bg-white transition-transform duration-200 ${
+                    config.returnIntermediateSteps
+                      ? "translate-x-[14px]"
+                      : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
