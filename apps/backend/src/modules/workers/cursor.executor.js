@@ -13,6 +13,7 @@ import { emitExecutionUpdate } from "../../infra/socket.server.js";
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
+import toolRegistry from "../../nodes/agentTools.registry.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
 const MAX_RETRIES = 3;
@@ -283,7 +284,7 @@ export async function processCursor({ executionId, cursorId }) {
       }
 
       let rawOutput = await withTimeout(
-        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId }),
+        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry }),
         NODE_TIMEOUT_MS,
       );
 
