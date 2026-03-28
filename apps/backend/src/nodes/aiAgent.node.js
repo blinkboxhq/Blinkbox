@@ -1,63 +1,59 @@
 /**
- * AI AGENT NODE — Autonomous Cognitive Engine
+ * AI AGENT NODE — Universal ReAct Cognitive Engine
  *
- * n8n-style modular architecture. The agent receives its dependencies
- * (Chat Model, Memory, Tools) from handle-routed edges, resolves them,
- * and enters an autonomous reasoning loop until it produces a final answer
- * or exhausts its iteration budget.
+ * A production-grade autonomous agent that uses a generic ReAct
+ * (Reason + Act) loop to accomplish goals. Stateless per-invocation:
+ * all context arrives via config, all large payloads survive Temporal's
+ * 32 KB event history limit by flowing through the Vault.
  *
  * ┌──────────────────────────────────────────────────────────────────────────┐
- * │  AGENT LOOP (runs up to maxIterations)                                  │
+ * │  ReAct LOOP (max N iterations)                                          │
  * │                                                                          │
- * │  ① Build messages: system + memory + user prompt + input data            │
- * │  ② Call LLM with tool definitions attached                               │
- * │  ③ If LLM returns text → break, return final output                      │
- * │  ④ If LLM returns tool_call:                                             │
- * │     a. Log the call as an intermediate step                              │
- * │     b. Execute the tool (or inject error on failure)                      │
- * │     c. Append tool result to messages                                    │
- * │     d. Continue loop → back to ②                                         │
+ * │  ① THINK  — LLM reasons about the goal, decides next action             │
+ * │  ② ACT    — Execute a tool from the ToolRegistry (or respond)           │
+ * │  ③ OBSERVE — Feed tool result back into conversation                    │
+ * │  ④ REPEAT — Until LLM emits a final answer or budget exhausted         │
  * └──────────────────────────────────────────────────────────────────────────┘
  *
- * Agent Types:
- *   "tools_agent"    — Native function-calling via provider APIs
- *   "conversational" — Chat-optimized, memory-first, single-turn tool use
- *   "react"          — Reason+Act: injects chain-of-thought into prompts
+ * Tool Resolution:
+ *   Tools are NOT hardcoded. They arrive from two sources:
+ *     1. Handle-routed edges  (_tools) — nodes with toolDefinition + execute closures
+ *     2. Enabled tool IDs     (enabledToolIds) — resolved at runtime via ToolRegistry
+ *   Both are merged into a single unified tool surface.
  *
  * Config (from frontend panel):
- *   agentType              — "tools_agent" | "conversational" | "react"
- *   provider               — "openai" | "anthropic" | "gemini" | "deepseek" | "openrouter" | "together" | "perplexity" | "xai" | "fireworks" | "cerebras" | "ollama" | "novita" | "deepinfra" | "hyperbolic"
- *   model                  — Model ID string
- *   prompt                 — User instruction (expression-resolved)
- *   systemPrompt           — Custom persona / system prompt
- *   credentialId           — Vault reference to encrypted API key
+ *   provider               — LLM provider key
+ *   model                  — Model ID (falls back to provider default)
+ *   prompt                 — The user's goal / instruction
+ *   systemPrompt           — Custom persona / constraints layered on top
+ *   credentialId           — Vault reference to encrypted LLM API key
+ *   enabledToolIds         — Array of tool IDs to resolve from ToolRegistry
  *   outputFormat           — "json" | "text"
  *   temperature            — 0-2 (default 0.3)
- *   maxTokens              — Response token limit (default 4000)
- *   maxIterations          — Agent loop ceiling (default 5, max 15)
- *   returnIntermediateSteps — Include thought/tool log in output
+ *   maxTokens              — Response token limit (default 4096)
+ *   maxIterations          — ReAct loop ceiling (default 5, hard max 15)
+ *   returnIntermediateSteps — Include full reasoning trace in output
  *
  * Config (injected by cursor executor via handle routing):
- *   _memory  — Array of {role, content} from Memory handle
- *   _tools   — Array of tool definitions from Tools handle
+ *   _memory                — Array of {role, content} from Memory handle
+ *   _tools                 — Array of tool definitions from Tools handle
+ *
+ * Built-in tools:
+ *   builtinWebSearch       — Toggle for Tavily web search
+ *   webSearchCredentialId  — Vault ref for Tavily API key
  *
  * Output:
- *   {
- *     result,            — Final text or parsed JSON
- *     model,             — Model ID used
- *     tokensUsed,        — Total tokens across all iterations
- *     provider,          — Provider string
- *     agentType,         — Which strategy ran
- *     iterations,        — How many loops executed
- *     intermediateSteps, — (optional) Array of {thought, tool, input, output}
- *   }
+ *   { result, model, tokensUsed, provider, iterations, intermediateSteps?, warning? }
  */
 
 import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
-// ── API Endpoints ────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═════════════════════════════════════════════════════════════════════════════
+
 const ENDPOINTS = {
   openai: "https://api.openai.com/v1/chat/completions",
   anthropic: "https://api.anthropic.com/v1/messages",
@@ -75,7 +71,6 @@ const ENDPOINTS = {
   hyperbolic: "https://api.hyperbolic.xyz/v1/chat/completions",
 };
 
-// ── Default Models ───────────────────────────────────────────────────────────
 const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
   anthropic: "claude-sonnet-4-20250514",
@@ -93,12 +88,12 @@ const DEFAULT_MODELS = {
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
 };
 
-// ── Hard Limits ──────────────────────────────────────────────────────────────
-const MAX_INPUT_BYTES = 30000;
+const MAX_INPUT_BYTES = 30_000;
 const MAX_ITERATIONS_CEILING = 15;
-const REQUEST_TIMEOUT = 120000;
-const MAX_TOOL_OUTPUT_BYTES = 15000;
-const TOOL_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 120_000;
+const MAX_TOOL_OUTPUT_BYTES = 15_000;
+const TOOL_TIMEOUT_MS = 30_000;
+const MAX_MEMORY_MESSAGES = 200;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BUILT-IN TOOL DEFINITIONS
@@ -130,31 +125,26 @@ const BUILTIN_TOOLS = {
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-// AGENT TYPE SYSTEM PROMPTS
+// ReAct SYSTEM PROMPT
 // ═════════════════════════════════════════════════════════════════════════════
-// Each agent type gets a strategy-specific system prompt prefix that shapes
-// how the LLM reasons about tool usage and response structure.
+// A single, focused prompt that enforces the Think → Act → Observe cycle.
+// The LLM receives this as its identity; the user's custom systemPrompt
+// is layered on top as domain-specific constraints.
 
-const AGENT_STRATEGY_PROMPTS = {
-  tools_agent:
-    "You are an autonomous AI agent with access to tools. " +
-    "When a user asks a question, decide which tool(s) to call to gather the information needed. " +
-    "Call tools as needed, then synthesize the results into a clear final answer. " +
-    "Only respond with your final answer when you have all the information you need.",
-
-  conversational:
-    "You are a conversational AI assistant. You maintain context from prior messages. " +
-    "Respond naturally and helpfully. If tools are available and would help answer the user's question, " +
-    "use them — but prefer direct answers when you already have the information.",
-
-  react:
-    "You are a ReAct (Reason + Act) agent. For each step:\n" +
-    "1. THOUGHT: Explain your reasoning about what to do next.\n" +
-    "2. ACTION: Call a tool if needed, or provide your final answer.\n" +
-    "3. OBSERVATION: After receiving tool results, reflect on what you learned.\n" +
-    "Continue this Thought → Action → Observation loop until you can provide a definitive final answer. " +
-    "When you have enough information, respond with your final answer directly.",
-};
+const REACT_SYSTEM_PROMPT =
+  `You are a ReAct (Reason + Act) agent. You solve problems through an iterative loop of reasoning and action.\n` +
+  `\n` +
+  `For each step, follow this cycle:\n` +
+  `  THINK:   Explain your reasoning — what do you know, what do you need, what should you do next?\n` +
+  `  ACT:     Call a tool to gather information or perform an action. Choose the best tool for the job.\n` +
+  `  OBSERVE: After receiving the tool result, analyze what you learned before deciding your next step.\n` +
+  `\n` +
+  `Rules:\n` +
+  `  - Call ONE tool at a time. Wait for its result before deciding the next action.\n` +
+  `  - If a tool fails, reason about WHY it failed and try a different approach.\n` +
+  `  - When you have enough information to fully answer the user's goal, respond with your final answer directly (no tool call).\n` +
+  `  - Never fabricate tool results. If you don't have enough information, use a tool to get it.\n` +
+  `  - Be concise in your reasoning. The user sees your final answer, not your intermediate thoughts.`;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN ENTRY POINT
@@ -162,17 +152,16 @@ const AGENT_STRATEGY_PROMPTS = {
 
 export default {
   async run(config, input, context = {}) {
-    // ── Extract Config ─────────────────────────────────────────────────
     const {
-      agentType = "tools_agent",
       provider = "openai",
       model,
       prompt,
       systemPrompt,
       credentialId,
+      enabledToolIds,
       outputFormat = "text",
       temperature = 0.3,
-      maxTokens = 4000,
+      maxTokens = 4096,
       maxIterations = 5,
       returnIntermediateSteps = false,
 
@@ -183,6 +172,9 @@ export default {
       // Built-in tools (toggled from config panel)
       builtinWebSearch = false,
       webSearchCredentialId,
+
+      // Legacy compat — old configs may still send agentType
+      agentType: _legacyAgentType,
     } = config;
 
     // ── Validation ─────────────────────────────────────────────────────
@@ -199,7 +191,7 @@ export default {
 
     const resolvedModel = model || DEFAULT_MODELS[provider];
 
-    // ── Resolve Credential ─────────────────────────────────────────────
+    // ── Resolve LLM Credential ─────────────────────────────────────────
     const cred = await resolveCredential(
       credentialId,
       context.workspaceId,
@@ -207,79 +199,44 @@ export default {
     );
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
-    // ── Resolve Dependencies ───────────────────────────────────────────
-    // Memory: array of {role, content} from the Memory handle
-    const memoryMessages = resolveMemory(_memory);
-
-    // Tools: array of tool definitions from the Tools handle
-    const toolDefs = resolveTools(_tools);
-
-    // ── Built-in Tools ──────────────────────────────────────────────
-    if (builtinWebSearch && webSearchCredentialId) {
-      try {
-        const searchCred = await resolveCredential(
-          webSearchCredentialId,
-          context.workspaceId,
-          "Web Search (built-in)"
-        );
-        const searchApiKey = decrypt(searchCred.encryptedData, searchCred.iv, searchCred.authTag);
-
-        toolDefs.push({
-          ...BUILTIN_TOOLS.web_search,
-          execute: async (args) => {
-            const res = await axios.post(
-              "https://api.tavily.com/search",
-              {
-                api_key: searchApiKey,
-                query: args.query,
-                search_depth: args.searchDepth || "basic",
-                max_results: Math.min(args.maxResults || 5, 20),
-                include_answer: true,
-              },
-              { timeout: 30000 }
-            );
-            return {
-              answer: res.data.answer || null,
-              results: (res.data.results || []).map((r) => ({
-                title: r.title,
-                url: r.url,
-                content: r.content,
-                score: r.score,
-              })),
-              query: res.data.query,
-            };
-          },
-        });
-      } catch (err) {
-        // Non-fatal: built-in tool credential resolution failed — continue without it
-        console.warn(`AI Agent: Built-in web_search skipped — ${err.message}`);
-      }
-    }
+    // ── Assemble Tool Surface ──────────────────────────────────────────
+    // Three sources merged into one flat array:
+    //   1. Handle-routed tools (_tools from connected nodes)
+    //   2. Registry-resolved tools (enabledToolIds from config panel)
+    //   3. Built-in tools (web_search if toggled on)
+    const tools = await assembleTools({
+      handleTools: _tools,
+      enabledToolIds,
+      builtinWebSearch,
+      webSearchCredentialId,
+      workspaceId: context.workspaceId,
+      toolRegistry: context.toolRegistry || null,
+    });
 
     const formattedTools =
-      toolDefs.length > 0
-        ? formatToolsForProvider(toolDefs, provider)
-        : null;
+      tools.length > 0 ? formatToolsForProvider(tools, provider) : null;
 
-    // ── Robustness: tools_agent with no tools → conversational fallback
-    let effectiveAgentType = agentType;
-    if (agentType === "tools_agent" && toolDefs.length === 0) {
-      effectiveAgentType = "conversational";
-    }
-
-    // ── Robustness: cap memory to prevent context overflow
-    if (memoryMessages.length > 200) {
-      memoryMessages.splice(0, memoryMessages.length - 200);
+    // ── Resolve Memory ─────────────────────────────────────────────────
+    const memoryMessages = resolveMemory(_memory);
+    if (memoryMessages.length > MAX_MEMORY_MESSAGES) {
+      memoryMessages.splice(0, memoryMessages.length - MAX_MEMORY_MESSAGES);
     }
 
     // ── Build System Prompt ────────────────────────────────────────────
-    // Layer 1: Agent strategy prompt (based on agentType)
-    // Layer 2: User's custom system prompt (persona/constraints)
-    // Layer 3: Output format instruction (if JSON requested)
-    let system = AGENT_STRATEGY_PROMPTS[effectiveAgentType] || AGENT_STRATEGY_PROMPTS.tools_agent;
+    let system = REACT_SYSTEM_PROMPT;
 
     if (systemPrompt) {
       system += `\n\n--- User Instructions ---\n${systemPrompt}`;
+    }
+
+    if (tools.length > 0) {
+      system +=
+        `\n\nYou have ${tools.length} tool(s) available: ` +
+        tools.map((t) => `"${t.name}"`).join(", ") +
+        ".";
+    } else {
+      system +=
+        "\n\nNo tools are available. Answer the user's goal directly from your own knowledge.";
     }
 
     if (outputFormat === "json") {
@@ -291,27 +248,24 @@ export default {
     const inputSummary =
       typeof input === "string"
         ? input.substring(0, MAX_INPUT_BYTES)
-        : JSON.stringify(input, null, 2).substring(0, MAX_INPUT_BYTES);
+        : JSON.stringify(input, null, 2)?.substring(0, MAX_INPUT_BYTES) ?? "";
 
     // ── Build Initial Message Array ────────────────────────────────────
     const messages = [];
 
-    // Inject memory (conversation history) first
     for (const msg of memoryMessages) {
       messages.push(msg);
     }
 
-    // User message: instruction + input data
     const userContent = inputSummary
       ? `${prompt}\n\n---\nInput Data:\n${inputSummary}`
       : prompt;
     messages.push({ role: "user", content: userContent });
 
-    // ── Agentic Execution Loop ─────────────────────────────────────────
-    const maxIter = Math.min(
-      Math.max(maxIterations, 1),
-      MAX_ITERATIONS_CEILING
-    );
+    // ══════════════════════════════════════════════════════════════════
+    // ReAct EXECUTION LOOP — Think → Act → Observe → Repeat
+    // ══════════════════════════════════════════════════════════════════
+    const maxIter = Math.min(Math.max(maxIterations, 1), MAX_ITERATIONS_CEILING);
     const intermediateSteps = [];
     let totalTokens = 0;
     let iteration = 0;
@@ -319,7 +273,7 @@ export default {
     while (iteration < maxIter) {
       iteration++;
 
-      // ── Call LLM ───────────────────────────────────────────────────
+      // ── THINK: Call LLM ──────────────────────────────────────────
       const response = await callProvider({
         provider,
         apiKey,
@@ -333,18 +287,14 @@ export default {
 
       totalTokens += response.tokensUsed;
 
-      // ── Check: Did the LLM request tool calls? ─────────────────────
-      if (
-        response.toolCalls &&
-        response.toolCalls.length > 0 &&
-        formattedTools
-      ) {
-        // Append the assistant's tool-call message to the conversation
+      // ── ACT: Did the LLM request tool calls? ─────────────────────
+      if (response.toolCalls && response.toolCalls.length > 0 && formattedTools) {
+        // Append the assistant's tool-call message to conversation history
         messages.push(buildAssistantToolCallMessage(response, provider));
 
-        // Process each tool call
+        // Process each tool call sequentially (ReAct = one action at a time,
+        // but we honor batched calls from providers that support parallel tool use)
         for (const tc of response.toolCalls) {
-          // Log intermediate step (thought + action)
           intermediateSteps.push({
             iteration,
             thought: response.text || null,
@@ -352,23 +302,22 @@ export default {
             actionInput: tc.arguments,
           });
 
-          // Execute the tool. On failure, the error message is fed
-          // back to the LLM so it can adapt — NOT thrown.
-          const toolResult = await executeToolCall(tc, toolDefs);
+          // ── OBSERVE: Execute the tool ────────────────────────────
+          // Errors are caught and returned as messages so the agent
+          // can self-correct: "Tool X failed because Y, let me try Z."
+          const observation = await executeToolCall(tc, tools);
 
-          // Record the observation
-          intermediateSteps[intermediateSteps.length - 1].observation =
-            toolResult;
+          intermediateSteps[intermediateSteps.length - 1].observation = observation;
 
-          // Append tool result to conversation for the next LLM turn
-          messages.push(buildToolResultMessage(tc, toolResult, provider));
+          // Feed observation back into conversation for next iteration
+          messages.push(buildToolResultMessage(tc, observation, provider));
         }
 
-        // Continue loop → LLM sees tool results in next iteration
+        // Loop back → LLM sees tool results in the next THINK step
         continue;
       }
 
-      // ── No Tool Calls → Final Response ─────────────────────────────
+      // ── FINAL ANSWER: No tool calls → agent is done ──────────────
       let result = response.text;
 
       if (outputFormat === "json") {
@@ -380,36 +329,31 @@ export default {
         model: response.model || resolvedModel,
         tokensUsed: totalTokens,
         provider,
-        agentType: effectiveAgentType,
         iterations: iteration,
         intermediateSteps,
         returnIntermediateSteps,
-        warning: effectiveAgentType !== agentType
-          ? `tools_agent downgraded to conversational — no tools connected`
-          : undefined,
       });
     }
 
-    // ── Max Iterations Exhausted ───────────────────────────────────────
-    // The agent couldn't produce a final answer within the budget.
-    // Return the last assistant message content if available.
+    // ── Budget Exhausted ───────────────────────────────────────────────
+    // Agent couldn't converge within maxIterations. Return best effort.
     const lastAssistantMsg = [...messages]
       .reverse()
       .find((m) => m.role === "assistant");
-    const fallbackResult =
+
+    const fallbackText =
       lastAssistantMsg?.content ||
       `Agent completed ${iteration} iterations without a final answer. ` +
-      `Consider increasing Max Iterations or simplifying the task.`;
+        `Consider increasing Max Iterations or simplifying the task.`;
+
+    const fallbackResult =
+      outputFormat === "json" ? parseJsonResponse(fallbackText) : fallbackText;
 
     return buildOutput({
-      result:
-        outputFormat === "json"
-          ? parseJsonResponse(fallbackResult)
-          : fallbackResult,
+      result: fallbackResult,
       model: resolvedModel,
       tokensUsed: totalTokens,
       provider,
-      agentType: effectiveAgentType,
       iterations: iteration,
       intermediateSteps,
       returnIntermediateSteps,
@@ -419,65 +363,109 @@ export default {
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-// DEPENDENCY RESOLUTION
+// TOOL ASSEMBLY
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Resolve memory from the _memory handle input.
- * Accepts: array of {role, content}, single object, or raw string.
- * Returns: array of {role, content} messages.
+ * Merge tools from all three sources into a single deduplicated array.
+ * Each tool in the final array has: { name, description, parameters, execute }.
  */
-function resolveMemory(raw) {
-  if (!raw) return [];
+async function assembleTools({
+  handleTools,
+  enabledToolIds,
+  builtinWebSearch,
+  webSearchCredentialId,
+  workspaceId,
+  toolRegistry,
+}) {
+  const tools = [];
+  const seen = new Set();
 
-  // Memory node wrapper format: { messages: [...], sessionId, ... }
-  if (typeof raw === "object" && !Array.isArray(raw) && Array.isArray(raw.messages)) {
-    return raw.messages.filter(
-      (m) =>
-        m &&
-        typeof m === "object" &&
-        m.role &&
-        m.content &&
-        typeof m.content === "string"
-    );
+  // Source 1: Handle-routed tools (from connected nodes via cursor executor)
+  const fromHandles = resolveHandleTools(handleTools);
+  for (const t of fromHandles) {
+    if (!seen.has(t.name)) {
+      seen.add(t.name);
+      tools.push(t);
+    }
   }
 
-  // Already a proper messages array
-  if (Array.isArray(raw)) {
-    return raw.filter(
-      (m) =>
-        m &&
-        typeof m === "object" &&
-        m.role &&
-        m.content &&
-        typeof m.content === "string"
-    );
+  // Source 2: ToolRegistry — resolve tool IDs to executable definitions
+  if (toolRegistry && Array.isArray(enabledToolIds) && enabledToolIds.length > 0) {
+    for (const toolId of enabledToolIds) {
+      if (seen.has(toolId)) continue;
+
+      const resolved = await toolRegistry.resolve(toolId, { workspaceId });
+      if (resolved && resolved.name) {
+        seen.add(resolved.name);
+        tools.push({
+          name: resolved.name,
+          description: resolved.description || `Execute the ${resolved.name} tool`,
+          parameters: resolved.parameters || { type: "object", properties: {} },
+          execute: typeof resolved.execute === "function" ? resolved.execute : null,
+        });
+      }
+    }
   }
 
-  // Single message object
-  if (typeof raw === "object" && raw.role && raw.content) {
-    return [{ role: raw.role, content: raw.content }];
+  // Source 3: Built-in web_search (Tavily)
+  if (builtinWebSearch && webSearchCredentialId && !seen.has("web_search")) {
+    try {
+      const searchCred = await resolveCredential(
+        webSearchCredentialId,
+        workspaceId,
+        "Web Search (built-in)"
+      );
+      const searchApiKey = decrypt(
+        searchCred.encryptedData,
+        searchCred.iv,
+        searchCred.authTag
+      );
+
+      tools.push({
+        ...BUILTIN_TOOLS.web_search,
+        execute: async (args) => {
+          const res = await axios.post(
+            "https://api.tavily.com/search",
+            {
+              api_key: searchApiKey,
+              query: args.query,
+              search_depth: args.searchDepth || "basic",
+              max_results: Math.min(args.maxResults || 5, 20),
+              include_answer: true,
+            },
+            { timeout: TOOL_TIMEOUT_MS }
+          );
+          return {
+            answer: res.data.answer || null,
+            results: (res.data.results || []).map((r) => ({
+              title: r.title,
+              url: r.url,
+              content: r.content,
+              score: r.score,
+            })),
+            query: res.data.query,
+          };
+        },
+      });
+      seen.add("web_search");
+    } catch (err) {
+      // Non-fatal: continue without built-in search
+      console.warn(`AI Agent: Built-in web_search skipped — ${err.message}`);
+    }
   }
 
-  // Raw string → treat as a user message for context
-  if (typeof raw === "string" && raw.trim()) {
-    return [{ role: "user", content: raw.trim() }];
-  }
-
-  return [];
+  return tools;
 }
 
 /**
- * Resolve tools from the _tools handle input.
+ * Normalize tools arriving from the _tools handle.
  * Accepts: array of tool definitions or a single tool definition.
- * Each tool must have at minimum: { name, description }.
- * Returns: array of normalized tool definitions.
+ * Each tool must have at minimum: { name }.
  */
-function resolveTools(raw) {
+function resolveHandleTools(raw) {
   if (!raw) return [];
-
   const arr = Array.isArray(raw) ? raw : [raw];
-
   return arr
     .filter((t) => t && typeof t === "object" && t.name)
     .map((t) => ({
@@ -489,6 +477,51 @@ function resolveTools(raw) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// MEMORY RESOLUTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Resolve memory from the _memory handle input.
+ * Accepts: array of {role, content}, wrapper with .messages, or raw string.
+ */
+function resolveMemory(raw) {
+  if (!raw) return [];
+
+  // Memory node wrapper: { messages: [...], sessionId, ... }
+  if (
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    Array.isArray(raw.messages)
+  ) {
+    return raw.messages.filter(isValidMessage);
+  }
+
+  if (Array.isArray(raw)) {
+    return raw.filter(isValidMessage);
+  }
+
+  if (typeof raw === "object" && raw.role && raw.content) {
+    return [{ role: raw.role, content: raw.content }];
+  }
+
+  if (typeof raw === "string" && raw.trim()) {
+    return [{ role: "user", content: raw.trim() }];
+  }
+
+  return [];
+}
+
+function isValidMessage(m) {
+  return (
+    m &&
+    typeof m === "object" &&
+    m.role &&
+    m.content &&
+    typeof m.content === "string"
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // OUTPUT BUILDER
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -497,7 +530,6 @@ function buildOutput({
   model,
   tokensUsed,
   provider,
-  agentType,
   iterations,
   intermediateSteps,
   returnIntermediateSteps,
@@ -508,7 +540,7 @@ function buildOutput({
     model,
     tokensUsed,
     provider,
-    agentType,
+    agentType: "react",
     iterations,
   };
 
@@ -521,6 +553,55 @@ function buildOutput({
   }
 
   return output;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL EXECUTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Execute a single tool call. Errors are caught and returned as structured
+ * messages so the LLM can self-correct rather than crashing the loop.
+ */
+async function executeToolCall(toolCall, tools) {
+  const def = tools.find((t) => t.name === toolCall.name);
+
+  if (def && typeof def.execute === "function") {
+    try {
+      const result = await Promise.race([
+        def.execute(toolCall.arguments),
+        new Promise((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `Tool "${toolCall.name}" timed out after ${TOOL_TIMEOUT_MS / 1000}s`
+                )
+              ),
+            TOOL_TIMEOUT_MS
+          )
+        ),
+      ]);
+      return result;
+    } catch (err) {
+      return {
+        error: true,
+        tool: toolCall.name,
+        message: `Tool "${toolCall.name}" failed: ${err.message}. You may try a different approach.`,
+      };
+    }
+  }
+
+  // Tool not found or has no executor
+  const available = tools.map((t) => t.name).join(", ") || "none";
+  return {
+    error: true,
+    tool: toolCall.name,
+    message:
+      `Tool "${toolCall.name}" is not available. ` +
+      `Available tools: ${available}. ` +
+      `Please use one of the available tools or provide your answer directly.`,
+  };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -537,80 +618,21 @@ async function callProvider({
   maxTokens,
   tools,
 }) {
-  switch (provider) {
-    case "anthropic":
-      return callAnthropic(
-        apiKey, model, system, messages, temperature, maxTokens, tools
-      );
-    case "gemini":
-      return callGemini(
-        apiKey, model, system, messages, temperature, maxTokens, tools
-      );
-    case "deepseek":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.deepseek, "DeepSeek"
-      );
-    case "openrouter":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.openrouter, "OpenRouter"
-      );
-    case "together":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.together, "Together AI"
-      );
-    case "perplexity":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.perplexity, "Perplexity"
-      );
-    case "xai":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.xai, "xAI"
-      );
-    case "fireworks":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.fireworks, "Fireworks AI"
-      );
-    case "cerebras":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.cerebras, "Cerebras"
-      );
-    case "ollama":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.ollama, "Ollama"
-      );
-    case "novita":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.novita, "Novita AI"
-      );
-    case "deepinfra":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.deepinfra, "DeepInfra"
-      );
-    case "hyperbolic":
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.hyperbolic, "Hyperbolic"
-      );
-    case "openai":
-    default:
-      return callOpenAICompat(
-        apiKey, model, system, messages, temperature, maxTokens, tools,
-        ENDPOINTS.openai, "OpenAI"
-      );
+  if (provider === "anthropic") {
+    return callAnthropic(apiKey, model, system, messages, temperature, maxTokens, tools);
   }
+  if (provider === "gemini") {
+    return callGemini(apiKey, model, system, messages, temperature, maxTokens, tools);
+  }
+
+  // All other providers use OpenAI-compatible API
+  const endpoint = ENDPOINTS[provider] || ENDPOINTS.openai;
+  const label =
+    provider.charAt(0).toUpperCase() + provider.slice(1).replace(/([A-Z])/g, " $1");
+  return callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, endpoint, label);
 }
 
-// ── OpenAI-Compatible (OpenAI, DeepSeek, and 10 additional providers) ─────────
+// ── OpenAI-Compatible ───────────────────────────────────────────────────────
 
 async function callOpenAICompat(
   apiKey, model, system, messages, temperature, maxTokens, tools,
@@ -634,7 +656,7 @@ async function callOpenAICompat(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      timeout: REQUEST_TIMEOUT,
+      timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
     });
 
@@ -659,7 +681,7 @@ async function callOpenAICompat(
   }
 }
 
-// ── Anthropic ────────────────────────────────────────────────────────────────
+// ── Anthropic ───────────────────────────────────────────────────────────────
 
 async function callAnthropic(
   apiKey, model, system, messages, temperature, maxTokens, tools
@@ -683,7 +705,7 @@ async function callAnthropic(
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      timeout: REQUEST_TIMEOUT,
+      timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
     });
 
@@ -718,7 +740,7 @@ async function callAnthropic(
   }
 }
 
-// ── Google Gemini ────────────────────────────────────────────────────────────
+// ── Google Gemini ───────────────────────────────────────────────────────────
 
 async function callGemini(
   apiKey, model, system, messages, temperature, maxTokens, tools
@@ -727,7 +749,14 @@ async function callGemini(
 
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }],
+    parts: [
+      {
+        text:
+          typeof m.content === "string"
+            ? m.content
+            : JSON.stringify(m.content),
+      },
+    ],
   }));
 
   const body = {
@@ -757,7 +786,7 @@ async function callGemini(
   try {
     const response = await axios.post(endpoint, body, {
       headers: { "Content-Type": "application/json" },
-      timeout: REQUEST_TIMEOUT,
+      timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
     });
 
@@ -793,12 +822,9 @@ async function callGemini(
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// TOOL CALLING
+// TOOL FORMATTING (per-provider wire format)
 // ═════════════════════════════════════════════════════════════════════════════
 
-/**
- * Format tool definitions into each provider's native format.
- */
 function formatToolsForProvider(toolDefs, provider) {
   if (!toolDefs || toolDefs.length === 0) return null;
 
@@ -811,7 +837,7 @@ function formatToolsForProvider(toolDefs, provider) {
       }));
 
     case "gemini":
-      // Gemini formatting handled in callGemini — pass through
+      // Gemini formatting handled inside callGemini — pass through
       return toolDefs;
 
     case "openai":
@@ -828,49 +854,9 @@ function formatToolsForProvider(toolDefs, provider) {
   }
 }
 
-/**
- * Execute a tool call. If the tool has an inline executor, call it.
- * If not, return a descriptive error that the LLM can reason about.
- *
- * CRITICAL: Errors are caught and returned as messages, never thrown.
- * This lets the agent self-correct: "Tool X failed because Y, let me try Z."
- */
-async function executeToolCall(toolCall, toolDefs) {
-  const def = toolDefs.find((t) => t.name === toolCall.name);
-
-  if (def && typeof def.execute === "function") {
-    try {
-      const result = await Promise.race([
-        def.execute(toolCall.arguments),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error(`Tool "${toolCall.name}" timed out after ${TOOL_TIMEOUT_MS / 1000}s`)),
-            TOOL_TIMEOUT_MS,
-          ),
-        ),
-      ]);
-      return result;
-    } catch (err) {
-      // Feed the error back to the LLM instead of crashing
-      return {
-        error: true,
-        tool: toolCall.name,
-        message: `Tool "${toolCall.name}" failed: ${err.message}. You may try a different approach.`,
-      };
-    }
-  }
-
-  // Tool not found or no executor — inform the LLM
-  const available = toolDefs.map((t) => t.name).join(", ") || "none";
-  return {
-    error: true,
-    tool: toolCall.name,
-    message:
-      `Tool "${toolCall.name}" is not available. ` +
-      `Available tools: ${available}. ` +
-      `Please use one of the available tools or provide your answer directly.`,
-  };
-}
+// ═════════════════════════════════════════════════════════════════════════════
+// MESSAGE BUILDERS (provider-specific conversation history format)
+// ═════════════════════════════════════════════════════════════════════════════
 
 /**
  * Build the assistant message containing tool calls for conversation history.
@@ -899,16 +885,13 @@ function buildAssistantToolCallMessage(response, provider) {
     }
     for (const tc of response.toolCalls) {
       parts.push({
-        functionCall: {
-          name: tc.name,
-          args: tc.arguments,
-        },
+        functionCall: { name: tc.name, args: tc.arguments },
       });
     }
     return { role: "model", parts };
   }
 
-  // OpenAI / DeepSeek format
+  // OpenAI-compatible format
   return {
     role: "assistant",
     content: response.text || null,
@@ -925,7 +908,7 @@ function buildAssistantToolCallMessage(response, provider) {
 
 /**
  * Build a tool result message to feed back into the conversation.
- * Uses safeStringify to prevent context window explosions from massive payloads.
+ * Uses safeStringify to prevent context window explosions.
  */
 function buildToolResultMessage(toolCall, result, provider) {
   const resultStr = safeStringify(result);
@@ -957,7 +940,7 @@ function buildToolResultMessage(toolCall, result, provider) {
     };
   }
 
-  // OpenAI / DeepSeek format
+  // OpenAI-compatible format
   return {
     role: "tool",
     tool_call_id: toolCall.id,
@@ -970,8 +953,8 @@ function buildToolResultMessage(toolCall, result, provider) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Safely stringify a value, handling circular references and enforcing
- * a byte-size ceiling to prevent context window explosions.
+ * Safely stringify a value with circular-reference detection and a byte
+ * ceiling to prevent context window explosions from massive tool outputs.
  */
 function safeStringify(obj) {
   let str;
@@ -1068,7 +1051,7 @@ function handleProviderError(err, providerName, model) {
   }
   if (err.code === "ECONNABORTED") {
     throw new Error(
-      `${providerName}: Timed out after ${REQUEST_TIMEOUT / 1000}s. Model may be overloaded.`
+      `${providerName}: Timed out after ${REQUEST_TIMEOUT_MS / 1000}s. Model may be overloaded.`
     );
   }
 
