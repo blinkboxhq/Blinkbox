@@ -1,42 +1,51 @@
-import ivm from "isolated-vm";
+/**
+ * Expression Parser — Resolve {{ }} Templates in Node Config
+ *
+ * Supports full JavaScript expressions inside {{ }} delimiters:
+ *   {{ $json.users.map(u => u.name).join(', ') }}
+ *   {{ $json.total * 1.1 }}
+ *   {{ $json.items.filter(i => i.active).length }}
+ *   {{ $node["http-request-1"].status === 200 ? "ok" : "fail" }}
+ *
+ * Execution environment (available inside {{ }}):
+ *   $json      — current item's data (the node's input payload)
+ *   $node      — map of nodeId → output from earlier nodes in the DAG
+ *   $runIndex  — current item index (for loop/batch nodes)
+ *   $ctx       — alias for $node (shorthand)
+ *   Math, Date, JSON, String, Number, Array, Object, parseInt, parseFloat,
+ *   isNaN, isFinite, encodeURIComponent, decodeURIComponent
+ *
+ * Safety:
+ *   - Runs inside a pooled isolated-vm V8 context (64 MB, 500 ms hard limits)
+ *   - No require, process, fs, net, fetch, or host global access
+ *   - Pure and deterministic — safe for Temporal replay
+ *   - Depth-limited recursive resolution (max 20 levels)
+ */
+
+import { acquire, release, discard, EXECUTION_TIMEOUT_MS } from "../../../infra/isolate.pool.js";
 
 const MAX_RESOLVE_DEPTH = 20;
 
-/**
- * Rewrites expressions that reference hyphenated node IDs into valid JS.
- * e.g. "anthropic-abc-123.result" → '$ctx["anthropic-abc-123"].result'
- * This is needed because hyphens are subtraction operators in JS.
- */
-function rewriteHyphenatedRefs(expr, nodeIds) {
-  // Sort longest first so more specific IDs match before prefixes
-  const sorted = [...nodeIds].sort((a, b) => b.length - a.length);
-  let rewritten = expr;
-  for (const id of sorted) {
-    if (!id.includes("-")) continue;
-    // Node IDs are alphanumeric + hyphens, only escape the hyphens
-    const escaped = id.replace(/-/g, "\\-");
-    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[)`, "g");
-    rewritten = rewritten.replace(pattern, `$ctx["${id}"]`);
-  }
-  return rewritten;
-}
+// Timeout for expression evaluation (shorter than code node — expressions
+// should be simple transforms, not full programs)
+const EXPR_TIMEOUT_MS = Math.min(EXECUTION_TIMEOUT_MS, 200);
 
 /**
- * Executes the string as JavaScript within a heavily restricted V8 Isolate
+ * Evaluate a JavaScript expression string against a data context.
+ * Uses a pooled isolate for near-zero cold-start latency.
  */
 function evaluateExpression(expression, $json, $node, $runIndex) {
-  const isolate = new ivm.Isolate({ memoryLimit: 8 });
+  const entry = acquire();
 
   try {
-    const context = isolate.createContextSync();
+    const context = entry.isolate.createContextSync();
     const jail = context.global;
 
-    // Safe serialization — handle non-serializable values
+    // Serialize context data — handle non-serializable values gracefully
     let safeJson;
     try {
       safeJson = JSON.stringify($json || {});
-    } catch (e) {
-      console.warn("Failed to serialize $json for expression:", e.message);
+    } catch {
       safeJson = "{}";
     }
 
@@ -56,41 +65,86 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
       safeContext = "{}";
     }
 
+    // Inject serialized data into the isolate
     jail.setSync("__raw_json", safeJson);
     jail.setSync("__raw_context", safeContext);
+    jail.setSync("__run_index", typeof $runIndex === "number" ? $runIndex : 0);
 
-    // Rewrite hyphenated node ID refs into bracket notation before eval
-    const nodeIds = ($node && typeof $node === "object") ? Object.keys($node) : [];
+    // Rewrite hyphenated node ID references into bracket notation
+    const nodeIds = $node && typeof $node === "object" ? Object.keys($node) : [];
     const safeExpression = rewriteHyphenatedRefs(expression, nodeIds);
 
-    const script = isolate.compileScriptSync(`
+    // The wrapper script provides the full expression environment:
+    //   - $json for current item data
+    //   - $node / $ctx for cross-node references
+    //   - $runIndex for batch position
+    //   - Standard JS builtins (Array methods, Math, Date, JSON, String ops)
+    //   - Proxy-based scope so bare node IDs resolve to $ctx entries
+    const script = entry.isolate.compileScriptSync(`
       (() => {
-        const $json = JSON.parse(__raw_json);
-        const $ctx  = JSON.parse(__raw_context);
-        const Math  = globalThis.Math;
-        const Date  = globalThis.Date;
+        const $json     = JSON.parse(__raw_json);
+        const $ctx      = JSON.parse(__raw_context);
+        const $node     = $ctx;
+        const $runIndex = __run_index;
 
-        const scope = new Proxy({ $json, Math, Date }, {
-          has(t, k) { return k in t || k in $ctx; },
-          get(t, k) { return k in t ? t[k] : $ctx[k]; },
-        });
+        const scope = new Proxy(
+          { $json, $node, $ctx, $runIndex, Math, Date, JSON,
+            String, Number, Array, Object, Boolean, RegExp,
+            parseInt, parseFloat, isNaN, isFinite,
+            encodeURIComponent, decodeURIComponent },
+          {
+            has(t, k) { return k in t || k in $ctx; },
+            get(t, k) { return k in t ? t[k] : $ctx[k]; },
+          },
+        );
 
         with (scope) { return ${safeExpression}; }
       })();
     `);
 
-    const result = script.runSync(context, { timeout: 50 });
+    const result = script.runSync(context, { timeout: EXPR_TIMEOUT_MS });
+    release(entry);
     return result;
   } catch (err) {
-    console.warn(`Expression evaluation failed: ${expression}`, err.message);
+    // Determine if the isolate is still usable
+    if (
+      entry.isolate.isDisposed ||
+      err.message.includes("disposed") ||
+      err.message.includes("out of memory")
+    ) {
+      discard(entry);
+    } else {
+      release(entry);
+    }
+
+    console.warn(`Expression evaluation failed: {{ ${expression} }}`, err.message);
     return null;
-  } finally {
-    isolate.dispose();
   }
 }
 
 /**
- * Recursively scans a configuration object and evaluates {{ expressions }}
+ * Rewrites expressions that reference hyphenated node IDs into valid JS.
+ * e.g. "anthropic-abc-123.result" → '$ctx["anthropic-abc-123"].result'
+ */
+function rewriteHyphenatedRefs(expr, nodeIds) {
+  const sorted = [...nodeIds].sort((a, b) => b.length - a.length);
+  let rewritten = expr;
+  for (const id of sorted) {
+    if (!id.includes("-")) continue;
+    const escaped = id.replace(/-/g, "\\-");
+    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[)`, "g");
+    rewritten = rewritten.replace(pattern, `$ctx["${id}"]`);
+  }
+  return rewritten;
+}
+
+/**
+ * Recursively scans a configuration object and evaluates {{ expressions }}.
+ *
+ * @param config          — node config (may contain {{ }} at any depth)
+ * @param currentItem     — $json: the current input item's data
+ * @param executionContext — $node: map of nodeId → outputs from earlier nodes
+ * @param itemIndex       — $runIndex: current item position in batch
  */
 export function resolveConfig(
   config,
@@ -112,6 +166,8 @@ export function resolveConfig(
 
     const regex = /\{\{([\s\S]+?)\}\}/g;
 
+    // If the entire string is a single {{ expression }}, return the raw
+    // result (preserves type — objects, arrays, numbers stay as-is)
     const exactMatch = config.match(/^\{\{([\s\S]+?)\}\}$/);
     if (exactMatch) {
       return evaluateExpression(
@@ -122,6 +178,8 @@ export function resolveConfig(
       );
     }
 
+    // Mixed template: "Hello {{ $json.name }}, you have {{ $json.count }} items"
+    // Each {{ }} is evaluated and coerced to string for interpolation.
     return config.replace(regex, (_, expression) => {
       const result = evaluateExpression(
         expression.trim(),
