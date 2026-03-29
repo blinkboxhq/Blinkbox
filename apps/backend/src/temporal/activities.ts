@@ -21,6 +21,7 @@ import {
   storePayload,
   resolvePayload,
   cleanupPayloads,
+  flushWorkflowPayloads,
 } from "./payloadStore.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────────
@@ -420,6 +421,18 @@ export async function cleanupPayloadsActivity(
 ): Promise<{ deleted: number }> {
   const deleted = await cleanupPayloads(input.workflowId);
   return { deleted };
+}
+
+/**
+ * Flush workflow payloads from Redis → MongoDB for long-term storage.
+ * Called as the final activity in a workflow execution. This ensures
+ * payloads are persisted to MongoDB before the Redis TTL expires.
+ */
+export async function flushPayloadsActivity(
+  input: { workflowId: string },
+): Promise<{ flushed: number }> {
+  const flushed = await flushWorkflowPayloads(input.workflowId);
+  return { flushed };
 }
 
 // ── Approval Notification Activity ──────────────────────────────────────────────

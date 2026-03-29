@@ -63,11 +63,14 @@ const tel = proxyActivities<Pick<typeof activities, "emitTelemetryActivity">>({
   retry: { maximumAttempts: 1 },
 });
 
-// Vault: store/resolve heavy payloads in MongoDB (keeps Temporal history lean)
+// Vault: store/resolve heavy payloads in Redis (keeps Temporal history lean)
 const vault = proxyActivities<
   Pick<
     typeof activities,
-    "storePayloadActivity" | "resolvePayloadActivity" | "cleanupPayloadsActivity"
+    | "storePayloadActivity"
+    | "resolvePayloadActivity"
+    | "cleanupPayloadsActivity"
+    | "flushPayloadsActivity"
   >
 >({
   startToCloseTimeout: "15s",
@@ -484,11 +487,14 @@ export async function executeAutomationWorkflow(
     }
   }
 
-  // ── Cleanup vault blobs for this workflow ────────────────────────────
+  // ── Flush vault payloads: Redis → MongoDB for long-term logging ──────
+  // This eagerly persists payloads to MongoDB so they survive Redis TTL
+  // expiry. The background flusher is a safety net for workflows that
+  // crash before reaching this point.
   try {
-    await vault.cleanupPayloadsActivity({ workflowId: automationId });
+    await vault.flushPayloadsActivity({ workflowId: automationId });
   } catch {
-    // Non-fatal — orphaned blobs are acceptable
+    // Non-fatal — background flusher will catch it within 60s
   }
 
   // Include __webhookResponse at the top level so callers using

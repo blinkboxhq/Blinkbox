@@ -6,6 +6,7 @@ import { startWebhookWorker } from "../modules/workers/webhook.worker.js";
 import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
+import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { initSocketServer } from "../infra/socket.server.js";
 
 export async function startServer() {
@@ -33,7 +34,10 @@ export async function startServer() {
   // 6. Start telemetry flusher (Redis → MongoDB batch insert)
   startTelemetryFlusher();
 
-  // 7. Start HTTP + WebSocket server
+  // 7. Start payload flusher (Redis → MongoDB for vault blobs)
+  startPayloadFlusher();
+
+  // 8. Start HTTP + WebSocket server
   httpServer.listen(PORT, () => {
     console.log(`BlinkBox API online on Port ${PORT} (PID: ${process.pid})`);
   });
