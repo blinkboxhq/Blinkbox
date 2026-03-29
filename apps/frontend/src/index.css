@@ -61,6 +61,22 @@ body {
   }
 }
 
+/* Completed edge: green flash then fade back to idle */
+@keyframes edgeFadeToIdle {
+  0% {
+    stroke: #10b981;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+  }
+  60% {
+    stroke: #10b981;
+    filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
+  }
+  100% {
+    stroke: #52525b;
+    filter: none;
+  }
+}
+
 /* ── Node hover shimmer ──────────────────────────────────────────────────── */
 @keyframes nodeShimmer {
 

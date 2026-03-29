@@ -46,6 +46,15 @@ export function initSocketServer(httpServer) {
       socket.leave(`execution:${executionId}`);
     });
 
+    // Granular node-level telemetry (canvas animation)
+    socket.on("subscribe:automation", (automationId) => {
+      socket.join(`automation:${automationId}`);
+    });
+
+    socket.on("unsubscribe:automation", (automationId) => {
+      socket.leave(`automation:${automationId}`);
+    });
+
     socket.on("disconnect", () => {
       // Cleanup handled by socket.io automatically
     });
@@ -63,6 +72,13 @@ export function getIO() {
 export function emitExecutionUpdate(executionId, data) {
   if (!io) return;
   io.to(`execution:${executionId}`).emit("execution:update", data);
+}
+
+// Emit granular per-node lifecycle events for canvas animation.
+// Payload: { automationId, nodeId, nodeType, status, durationMs?, error? }
+export function emitNodeStatus(automationId, data) {
+  if (!io) return;
+  io.to(`automation:${automationId}`).emit("node:status", data);
 }
 
 // Emit workspace-level events (e.g. admin stats push)

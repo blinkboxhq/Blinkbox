@@ -4,11 +4,24 @@ import { getSocket } from "../lib/socket";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Execution Slice — owns all live telemetry, WebSocket streaming, and
-// run/cancel/retry lifecycle.  Canvas never re-renders from execution state
-// changes because this slice is subscribed separately via selectors.
+// run/cancel/retry lifecycle.
+//
+// Two socket channels work in parallel:
+//   1. execution:{executionId}  → coarse "execution:update" with full cursor array
+//   2. automation:{automationId} → granular "node:status" per-node lifecycle events
+//
+// The granular channel drives real-time canvas animation (edge flow, node badges)
+// while the coarse channel handles terminal state transitions and trace sidebar.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TERMINAL = ["executed", "failed", "cancelled", "partial"];
+
+// Status mapping: Temporal → canvas display
+const STATUS_MAP = {
+  started: "running",
+  completed: "completed",
+  failed: "failed",
+};
 
 export const createExecutionSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
@@ -18,8 +31,16 @@ export const createExecutionSlice = (set, get) => ({
   liveExecutionState: null,
   executionError: null,
 
-  // ── Derived helper: per-node status map for O(1) lookups ─────────────────
+  // Granular per-node status map — populated by node:status socket events.
+  // Shape: { [nodeId]: "running" | "completed" | "failed" }
+  nodeStatuses: {},
+
+  // ── Derived helper: per-node status for O(1) lookups ───────────────────
+  // Prefers the granular live map (instant), falls back to cursor array.
   getNodeStatus: (nodeId) => {
+    const live = get().nodeStatuses[nodeId];
+    if (live) return live;
+
     const state = get().liveExecutionState;
     if (!state?.cursors) return null;
     const cursor = state.cursors.find((c) => c.nodeId === nodeId);
@@ -33,7 +54,17 @@ export const createExecutionSlice = (set, get) => ({
     if (state.liveExecutionState?._id) {
       socket.emit("unsubscribe:execution", state.liveExecutionState._id);
     }
-    set({ isExecutionLive: false, isTraceSidebarOpen: false, liveExecutionState: null, executionError: null });
+    if (state._subscribedAutomationId) {
+      socket.emit("unsubscribe:automation", state._subscribedAutomationId);
+    }
+    set({
+      isExecutionLive: false,
+      isTraceSidebarOpen: false,
+      liveExecutionState: null,
+      executionError: null,
+      nodeStatuses: {},
+      _subscribedAutomationId: null,
+    });
   },
 
   closeTraceSidebar: () => set({ isTraceSidebarOpen: false }),
@@ -67,6 +98,7 @@ export const createExecutionSlice = (set, get) => ({
       isTraceSidebarOpen: true,
       liveExecutionState: null,
       executionError: null,
+      nodeStatuses: {},
     });
 
     try {
@@ -100,7 +132,9 @@ export const createExecutionSlice = (set, get) => ({
       const executionId = response.data.execution._id;
       set({ liveExecutionState: response.data.execution });
 
-      _subscribeToExecution(set, get, executionId);
+      // Subscribe to both channels
+      _subscribeToNodeStatus(set, get, automationId);
+      _subscribeToExecution(set, get, executionId, automationId);
     } catch (error) {
       console.error("Execution failed:", error);
       const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Unknown error";
@@ -118,12 +152,15 @@ export const createExecutionSlice = (set, get) => ({
       return;
     }
 
-    set({ isRunning: true, executionError: null });
+    set({ isRunning: true, executionError: null, nodeStatuses: {} });
 
     try {
       const response = await api.post(`/api/execution/retry/${executionId}`);
       toast.success(response.data.message || "Retrying failed nodes...");
-      _subscribeToExecution(set, get, executionId);
+
+      const automationId = state._subscribedAutomationId;
+      if (automationId) _subscribeToNodeStatus(set, get, automationId);
+      _subscribeToExecution(set, get, executionId, automationId);
     } catch (error) {
       set({ isRunning: false });
       toast.error(error.response?.data?.message || "Retry failed.");
@@ -151,8 +188,33 @@ export const createExecutionSlice = (set, get) => ({
   },
 });
 
-// ── Shared WebSocket subscription + fallback polling ─────────────────────────
-function _subscribeToExecution(set, get, executionId) {
+// ── Granular node:status subscription (canvas animation) ────────────────────
+
+function _subscribeToNodeStatus(set, get, automationId) {
+  const socket = getSocket();
+  socket.emit("subscribe:automation", automationId);
+  set({ _subscribedAutomationId: automationId });
+
+  const handler = (data) => {
+    if (data.automationId !== automationId) return;
+
+    const displayStatus = STATUS_MAP[data.status] || data.status;
+    set((prev) => ({
+      nodeStatuses: { ...prev.nodeStatuses, [data.nodeId]: displayStatus },
+    }));
+  };
+
+  // Remove any stale listener before adding
+  socket.off("node:status", handler);
+  socket.on("node:status", handler);
+
+  // Store handler ref for cleanup
+  set({ _nodeStatusHandler: handler });
+}
+
+// ── Coarse execution:update subscription + fallback polling ─────────────────
+
+function _subscribeToExecution(set, get, executionId, automationId) {
   const socket = getSocket();
   socket.emit("subscribe:execution", executionId);
 
@@ -164,6 +226,13 @@ function _subscribeToExecution(set, get, executionId) {
       set({ isRunning: false });
       socket.off("execution:update", handler);
       socket.emit("unsubscribe:execution", executionId);
+
+      // Clean up node:status listener after a brief delay so final animations land
+      setTimeout(() => {
+        const nodeHandler = get()._nodeStatusHandler;
+        if (nodeHandler) socket.off("node:status", nodeHandler);
+        if (automationId) socket.emit("unsubscribe:automation", automationId);
+      }, 2000);
 
       if (data.status === "executed") {
         toast.success("Execution completed successfully.");

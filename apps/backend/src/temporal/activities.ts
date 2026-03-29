@@ -30,6 +30,7 @@ import {
   cleanupWorkflowBinaries,
   type BinaryMetadata,
 } from "../infra/binary.store.js";
+import { emitNodeStatus } from "../infra/socket.server.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 
@@ -425,6 +426,35 @@ export async function cleanupWorkflowBinariesActivity(
 ): Promise<{ deleted: number }> {
   const deleted = await cleanupWorkflowBinaries(input.workflowId);
   return { deleted };
+}
+
+// ── Node Status Socket Activity ────────────────────────────────────────────────
+// Fires granular per-node lifecycle events over Socket.IO so the frontend canvas
+// can animate edges and update node badges in real-time without polling.
+// Best-effort: failures are swallowed — the workflow never blocks on a missed
+// socket event.
+
+interface NodeStatusInput {
+  automationId: string;
+  nodeId: string;
+  nodeType: string;
+  status: "started" | "completed" | "failed";
+  durationMs?: number;
+  error?: string;
+}
+
+export async function emitNodeStatusActivity(
+  input: NodeStatusInput,
+): Promise<void> {
+  emitNodeStatus(input.automationId, {
+    automationId: input.automationId,
+    nodeId: input.nodeId,
+    nodeType: input.nodeType,
+    status: input.status,
+    durationMs: input.durationMs,
+    error: input.error,
+    ts: Date.now(),
+  });
 }
 
 // ── Approval Notification Activity ──────────────────────────────────────────────

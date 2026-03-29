@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useMemo } from "react";
 import {
   ReactFlow,
   Controls,
@@ -25,6 +25,26 @@ export default function Canvas() {
   const isValidConnection = useWorkspaceStore((s) => s.isValidConnection);
   const addNode = useWorkspaceStore((s) => s.addNode);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
+  const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
+
+  // Derive edge statuses from their source node's live status.
+  // When a source node is "running", the outgoing edge animates.
+  // When a source node is "completed", the edge shows a completed pulse.
+  // When a source node is "failed", the edge shows failure state.
+  const liveEdges = useMemo(() => {
+    if (!isExecutionLive || Object.keys(nodeStatuses).length === 0) return edges;
+
+    return edges.map((edge) => {
+      const sourceStatus = nodeStatuses[edge.source];
+      if (!sourceStatus) return edge;
+
+      return {
+        ...edge,
+        data: { ...edge.data, status: sourceStatus },
+      };
+    });
+  }, [edges, nodeStatuses, isExecutionLive]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -62,7 +82,7 @@ export default function Canvas() {
     >
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={liveEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

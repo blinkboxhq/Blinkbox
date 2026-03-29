@@ -63,6 +63,15 @@ const tel = proxyActivities<Pick<typeof activities, "emitTelemetryActivity">>({
   retry: { maximumAttempts: 1 },
 });
 
+// Live canvas: push per-node status to Socket.IO for real-time edge animation.
+// Same fire-and-forget semantics as telemetry — never blocks the critical path.
+const live = proxyActivities<
+  Pick<typeof activities, "emitNodeStatusActivity">
+>({
+  startToCloseTimeout: "3s",
+  retry: { maximumAttempts: 1 },
+});
+
 // Vault: store/resolve heavy payloads in Redis (keeps Temporal history lean)
 const vault = proxyActivities<
   Pick<
@@ -113,6 +122,17 @@ async function emitTelemetry(
     await tel.emitTelemetryActivity(...args);
   } catch {
     // Telemetry failure is non-fatal — swallow silently
+  }
+}
+
+/** Fire-and-forget live canvas status — pushes node lifecycle to Socket.IO. */
+async function emitLiveStatus(
+  ...args: Parameters<typeof live.emitNodeStatusActivity>
+): Promise<void> {
+  try {
+    await live.emitNodeStatusActivity(...args);
+  } catch {
+    // Socket failure is non-fatal — canvas just won't animate this node
   }
 }
 
@@ -405,10 +425,28 @@ export async function executeAutomationWorkflow(
     // Collect merged input from all parent nodes
     const input = await collectInput(nodeId);
 
+    // Live canvas: mark node as running
+    await emitLiveStatus({
+      automationId,
+      nodeId,
+      nodeType: node.type,
+      status: "started",
+    });
+
     // Execute the node
     const stepStart = Date.now();
     const { output, failed, errorMsg } = await executeNode(node, nodeId, input);
     const durationMs = Date.now() - stepStart;
+
+    // Live canvas: mark node as completed or failed
+    await emitLiveStatus({
+      automationId,
+      nodeId,
+      nodeType: node.type,
+      status: failed ? "failed" : "completed",
+      durationMs,
+      error: errorMsg,
+    });
 
     // Vault: offload large outputs, keep only a pointer in state
     const stored = await vault.storePayloadActivity({
@@ -421,7 +459,7 @@ export async function executeAutomationWorkflow(
       : output;
     processed.add(nodeId);
 
-    // Telemetry: node step
+    // Telemetry: node step (Redis queue for batch flush — separate from live socket)
     await emitTelemetry({
       action: "node_step",
       workflowId: automationId,
