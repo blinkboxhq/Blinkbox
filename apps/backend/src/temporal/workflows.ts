@@ -126,19 +126,28 @@ export async function executeAutomationWorkflow(
   const nodeMap = new Map(definition.nodes.map((n) => [n.id, n]));
   const nodeOutputs: Record<string, unknown> = {};
   const processed = new Set<string>();
-  const queue: string[] = [definition.entryNodeId];
+  const inflight = new Set<string>(); // prevents double-dispatch at merge points
+
+  // Pre-compute adjacency maps for O(1) lookups during traversal
+  const incomingEdgesMap = new Map<string, typeof definition.edges>();
+  const outgoingEdgesMap = new Map<string, typeof definition.edges>();
+  for (const edge of definition.edges) {
+    const inc = incomingEdgesMap.get(edge.target) ?? [];
+    inc.push(edge);
+    incomingEdgesMap.set(edge.target, inc);
+
+    const out = outgoingEdgesMap.get(edge.source) ?? [];
+    out.push(edge);
+    outgoingEdgesMap.set(edge.source, out);
+  }
 
   // Seed the entry node with trigger data
   nodeOutputs[definition.entryNodeId] = triggerData;
 
   // ── Approval Signal State ──────────────────────────────────────────────
-  // Map of nodeId → approval decision. When a signal arrives, it writes here.
-  // The approval node's condition() check reads from here to unblock.
   const approvalDecisions: Record<string, ApprovalSignalPayload> = {};
 
   setHandler(approvalSignal, (payload: ApprovalSignalPayload) => {
-    // Store the decision keyed by nodeId so the correct approval node wakes up.
-    // Multiple approval nodes in the same DAG each wait on their own nodeId.
     approvalDecisions[payload.nodeId] = payload;
   });
 
@@ -154,70 +163,60 @@ export async function executeAutomationWorkflow(
   let iterations = 0;
   let anyFailed = false;
 
-  while (queue.length > 0) {
-    if (++iterations > MAX_ITERATIONS) {
-      throw new Error(
-        `Execution exceeded ${MAX_ITERATIONS} iteration limit (cycle guard)`,
+  // ── Inner Functions ──────────────────────────────────────────────────────
+
+  /** Gather and merge outputs from all parent nodes, resolving vault refs. */
+  async function collectInput(
+    nodeId: string,
+  ): Promise<Record<string, unknown>> {
+    const incomingEdges = incomingEdgesMap.get(nodeId) ?? [];
+
+    if (incomingEdges.length === 0) {
+      return (
+        (nodeOutputs[nodeId] as Record<string, unknown>) ?? triggerData
       );
     }
 
-    const nodeId = queue.shift()!;
-    if (processed.has(nodeId)) continue;
-
-    const node = nodeMap.get(nodeId);
-    if (!node) {
-      throw new Error(`Node "${nodeId}" not found in workflow definition`);
-    }
-
-    // ── Collect input from parent nodes ───────────────────────────────────
-    const incomingEdges = definition.edges.filter((e) => e.target === nodeId);
-    let input: Record<string, unknown>;
-
-    if (incomingEdges.length === 0) {
-      // Entry / trigger node — use seeded data
-      input =
-        (nodeOutputs[nodeId] as Record<string, unknown>) ?? triggerData;
-    } else {
-      // Merge parent outputs into a single input object
-      input = {};
-      for (const edge of incomingEdges) {
-        let parentOutput = nodeOutputs[edge.source];
-        // Resolve vault references on-demand
-        if (isPayloadRef(parentOutput)) {
-          const resolved = await vault.resolvePayloadActivity({
-            ref: (parentOutput as { _payloadRef: string })._payloadRef,
-          });
-          parentOutput = resolved.data;
-        }
-        if (
-          parentOutput &&
-          typeof parentOutput === "object" &&
-          !Array.isArray(parentOutput)
-        ) {
-          Object.assign(input, parentOutput as Record<string, unknown>);
-        } else if (parentOutput !== undefined) {
-          input[edge.source] = parentOutput;
-        }
+    const input: Record<string, unknown> = {};
+    for (const edge of incomingEdges) {
+      let parentOutput = nodeOutputs[edge.source];
+      if (isPayloadRef(parentOutput)) {
+        const resolved = await vault.resolvePayloadActivity({
+          ref: (parentOutput as { _payloadRef: string })._payloadRef,
+        });
+        parentOutput = resolved.data;
+      }
+      if (
+        parentOutput &&
+        typeof parentOutput === "object" &&
+        !Array.isArray(parentOutput)
+      ) {
+        Object.assign(input, parentOutput as Record<string, unknown>);
+      } else if (parentOutput !== undefined) {
+        input[edge.source] = parentOutput;
       }
     }
+    return input;
+  }
 
-    // ── Execute the node ──────────────────────────────────────────────────
+  /** Dispatch a single node by type and return its result. */
+  async function executeNode(
+    node: (typeof definition.nodes)[number],
+    nodeId: string,
+    input: Record<string, unknown>,
+  ): Promise<{ output: unknown; failed: boolean; errorMsg?: string }> {
     let output: unknown;
     let failed = false;
     let errorMsg: string | undefined;
-    const stepStart = Date.now();
 
     try {
       if (TRIGGER_TYPES.has(node.type)) {
-        // Trigger nodes are pass-through — data already seeded
         output = input;
       } else if (node.type === "delay") {
-        // Use Temporal's deterministic sleep instead of setTimeout
         const delayMs = (node.data["ms"] as number) ?? 60_000;
         await sleep(delayMs);
         output = input;
       } else if (node.type === "http_request") {
-        // Dedicated activity with full Vault credential support
         output = await acts.executeHttpRequestActivity({
           url: (node.data["url"] as string) ?? "",
           method: node.data["method"] as string | undefined,
@@ -232,18 +231,12 @@ export async function executeAutomationWorkflow(
           followRedirects: node.data["followRedirects"] as boolean | undefined,
         });
       } else if (node.type === "code") {
-        // Hard-isolated V8 sandbox — 32MB memory, 500ms timeout
         const codeResult = await acts.executeSecureCodeActivity({
           code: (node.data["code"] as string) ?? "",
           variables: input,
         });
         output = codeResult.result;
       } else if (node.type === "approval") {
-        // ── The Governor: Human-in-the-Loop Approval ───────────────
-        // 1. Fire a notification activity (email/Slack) with approve/reject links
-        // 2. Sleep indefinitely until the approvalSignal arrives for this nodeId
-        // 3. Route output down onSuccess (approved) or onFailure (rejected)
-
         await notify.sendApprovalNotificationActivity({
           workflowId: automationId,
           nodeId,
@@ -257,7 +250,6 @@ export async function executeAutomationWorkflow(
           workspaceId: definition.workspaceId ?? "",
         });
 
-        // Telemetry: node is now waiting for human input
         await emitTelemetry({
           action: "node_step",
           workflowId: automationId,
@@ -269,9 +261,6 @@ export async function executeAutomationWorkflow(
           input,
         });
 
-        // Block until signal arrives or timeout expires.
-        // condition() returns true when the predicate is satisfied.
-        // If timeout fires first, condition() returns false.
         const timeoutMs =
           (node.data["timeoutMs"] as number) ?? DEFAULT_APPROVAL_TIMEOUT_MS;
 
@@ -281,7 +270,6 @@ export async function executeAutomationWorkflow(
         );
 
         if (!signalReceived) {
-          // Timeout — treat as rejection
           output = {
             approved: false,
             status: "timeout",
@@ -289,7 +277,6 @@ export async function executeAutomationWorkflow(
             message: `Approval timed out after ${Math.round(timeoutMs / 3600000)}h with no response.`,
           };
           failed = true;
-          anyFailed = true;
           errorMsg = (output as { message: string }).message;
         } else {
           const decision = approvalDecisions[nodeId];
@@ -306,16 +293,10 @@ export async function executeAutomationWorkflow(
 
           if (!isApproved) {
             failed = true;
-            anyFailed = true;
             errorMsg = `Approval rejected${decision.comment ? `: ${decision.comment}` : ""}`;
           }
         }
       } else if (node.type === "sub_workflow") {
-        // ── Sub-Workflow: Fractal DAG Composition ─────────────────
-        // 1. Load the target automation definition via activity (I/O)
-        // 2. Dispatch as a Child Workflow using executeChild()
-        // 3. Parent blocks until child completes, captures full output
-
         const targetAutomationId = (node.data["targetAutomationId"] as string) ?? "";
         if (!targetAutomationId) {
           throw new Error(
@@ -328,7 +309,6 @@ export async function executeAutomationWorkflow(
           workspaceId: definition.workspaceId ?? "",
         });
 
-        // Build trigger data: merge parent input with explicit payload
         const explicitPayload = (node.data["payload"] as Record<string, unknown>) ?? {};
         const childTriggerData = {
           ...input,
@@ -340,8 +320,6 @@ export async function executeAutomationWorkflow(
           },
         };
 
-        // Dispatch the child automation as a Temporal Child Workflow.
-        // Uses the same executeAutomationWorkflow entry point — full recursion.
         const childResult = await executeChild("executeAutomationWorkflow", {
           args: [
             childDef.automationId,
@@ -359,18 +337,12 @@ export async function executeAutomationWorkflow(
             childTriggerData,
           ],
           workflowId: `sub-${automationId}-${nodeId}-${Date.now()}`,
-          taskQueue: undefined, // inherit parent's task queue
+          taskQueue: undefined,
           workflowExecutionTimeout: "60m",
         });
 
-        // The child returns its full nodeOutputs map.
-        // Pass it through as this node's output so downstream nodes can access it.
         output = childResult;
       } else if (node.type === "aiAgent") {
-        // ── AI Agent: Child Workflow (not a blocking activity) ──────
-        // The ReAct loop is decomposed into micro-activities inside
-        // the child workflow so the Temporal worker thread yields
-        // during long LLM/API waits instead of blocking.
         output = await executeChild("executeAiAgentWorkflow", {
           args: [
             {
@@ -382,13 +354,10 @@ export async function executeAutomationWorkflow(
             },
           ],
           workflowId: `${automationId}-aiAgent-${nodeId}`,
-          // Child inherits the parent's task queue
           taskQueue: undefined,
-          // Total budget: 15 iterations * 2min each + overhead
           workflowExecutionTimeout: "35m",
         });
       } else {
-        // All other node types — dispatch via the generic activity
         output = await acts.executeNodeActivity({
           nodeType: node.type,
           config: node.data as Record<string, unknown>,
@@ -398,14 +367,46 @@ export async function executeAutomationWorkflow(
       }
     } catch (err) {
       failed = true;
-      anyFailed = true;
       errorMsg = (err as Error).message;
       output = { error: errorMsg };
     }
 
+    if (failed) anyFailed = true;
+    return { output, failed, errorMsg };
+  }
+
+  /**
+   * Recursive DAG traversal with parallel fan-out.
+   * When a node has multiple outgoing onSuccess edges, all ready downstream
+   * targets are dispatched concurrently via Promise.all. Merge nodes act as
+   * natural wait-all barriers — they only become "ready" when every incoming
+   * source has been processed.
+   */
+  async function processNode(nodeId: string): Promise<void> {
+    // Guard: already processed or currently being processed by another branch
+    if (processed.has(nodeId) || inflight.has(nodeId)) return;
+    inflight.add(nodeId);
+
+    if (++iterations > MAX_ITERATIONS) {
+      throw new Error(
+        `Execution exceeded ${MAX_ITERATIONS} iteration limit (cycle guard)`,
+      );
+    }
+
+    const node = nodeMap.get(nodeId);
+    if (!node) {
+      throw new Error(`Node "${nodeId}" not found in workflow definition`);
+    }
+
+    // Collect merged input from all parent nodes
+    const input = await collectInput(nodeId);
+
+    // Execute the node
+    const stepStart = Date.now();
+    const { output, failed, errorMsg } = await executeNode(node, nodeId, input);
     const durationMs = Date.now() - stepStart;
 
-    // Vault: offload large outputs to MongoDB, keep only a pointer in state
+    // Vault: offload large outputs, keep only a pointer in state
     const stored = await vault.storePayloadActivity({
       workflowId: automationId,
       nodeId,
@@ -416,7 +417,7 @@ export async function executeAutomationWorkflow(
       : output;
     processed.add(nodeId);
 
-    // ── Telemetry: node step ─────────────────────────────────────────────
+    // Telemetry: node step
     await emitTelemetry({
       action: "node_step",
       workflowId: automationId,
@@ -430,12 +431,13 @@ export async function executeAutomationWorkflow(
       error: errorMsg,
     });
 
-    // ── Route to downstream nodes via edges ───────────────────────────────
+    // ── Route to downstream nodes ──────────────────────────────────────
     const edgeType = failed ? "onFailure" : "onSuccess";
-    const outgoing = definition.edges.filter(
-      (e) => e.source === nodeId && e.type === edgeType,
+    const outgoing = (outgoingEdgesMap.get(nodeId) ?? []).filter(
+      (e) => e.type === edgeType,
     );
 
+    const readyTargets: string[] = [];
     for (const edge of outgoing) {
       const evalContext =
         typeof output === "object" && output !== null
@@ -445,17 +447,27 @@ export async function executeAutomationWorkflow(
       if (!evaluateCondition(edge.condition, evalContext)) continue;
 
       const target = edge.target;
-      if (processed.has(target)) continue;
+      if (processed.has(target) || inflight.has(target)) continue;
 
       // Merge gate: all incoming sources for this target must be processed
-      const allIncoming = definition.edges.filter((e) => e.target === target);
+      const allIncoming = incomingEdgesMap.get(target) ?? [];
       const ready = allIncoming.every(
         (e) => e.source === nodeId || processed.has(e.source),
       );
 
-      if (ready) queue.push(target);
+      if (ready) readyTargets.push(target);
+    }
+
+    // Fan-out: execute ready downstream nodes in parallel
+    if (readyTargets.length === 1) {
+      await processNode(readyTargets[0]);
+    } else if (readyTargets.length > 1) {
+      await Promise.all(readyTargets.map((t) => processNode(t)));
     }
   }
+
+  // ── Start DAG traversal from the entry node ──────────────────────────────
+  await processNode(definition.entryNodeId);
 
   // ── Telemetry: execution ended ──────────────────────────────────────────
   await emitTelemetry({
