@@ -399,11 +399,38 @@ export async function executeAutomationWorkflow(
     totalNodes: processed.size,
   });
 
+  // ── Extract respond_webhook output for synchronous callers ──────────
+  // If the DAG contains a respond_webhook node, its __webhookResponse
+  // payload becomes the top-level return so the webhook controller can
+  // send it back to the waiting HTTP client.
+  let webhookResponse: unknown = undefined;
+  for (const nId of processed) {
+    const n = nodeMap.get(nId);
+    if (n?.type !== "respond_webhook") continue;
+    let out = nodeOutputs[nId];
+    if (isPayloadRef(out)) {
+      const resolved = await vault.resolvePayloadActivity({
+        ref: (out as { _payloadRef: string })._payloadRef,
+      });
+      out = resolved.data;
+    }
+    if (out && typeof out === "object" && "__webhookResponse" in (out as Record<string, unknown>)) {
+      webhookResponse = (out as Record<string, unknown>).__webhookResponse;
+      break; // First respond_webhook wins
+    }
+  }
+
   // ── Cleanup vault blobs for this workflow ────────────────────────────
   try {
     await vault.cleanupPayloadsActivity({ workflowId: automationId });
   } catch {
     // Non-fatal — orphaned blobs are acceptable
+  }
+
+  // Include __webhookResponse at the top level so callers using
+  // client.workflow.execute() can extract the custom HTTP response.
+  if (webhookResponse !== undefined) {
+    (nodeOutputs as Record<string, unknown>).__webhookResponse = webhookResponse;
   }
 
   return nodeOutputs;

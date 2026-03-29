@@ -95,3 +95,81 @@ export async function startWorkflowExecution(automation, payload = {}, options =
     runId: handle.firstExecutionRunId,
   };
 }
+
+/**
+ * Start a Temporal workflow and AWAIT its completion (synchronous bridge).
+ *
+ * Used by the webhook controller when ?wait=true — the HTTP connection stays
+ * open until the workflow finishes and returns its full output (including any
+ * __webhookResponse from a respond_webhook node).
+ *
+ * @param {object} automation - Mongoose Automation document
+ * @param {object|array} payload - Trigger data
+ * @param {object} options
+ * @param {string} options.workspaceId
+ * @param {string} [options.idempotencyKey]
+ * @returns {Promise<Record<string, unknown>>} Full workflow output
+ */
+export async function startAndAwaitWorkflowExecution(automation, payload = {}, options = {}) {
+  const {
+    workspaceId = "default",
+    idempotencyKey = crypto.randomUUID(),
+  } = options;
+
+  const client = await getTemporalClient();
+
+  const triggerData = Array.isArray(payload)
+    ? { items: payload.map((item) => (item.json ? item : { json: item })) }
+    : payload;
+
+  const definition = {
+    name: automation.name,
+    trigger: automation.trigger,
+    active: automation.active,
+    workspaceId,
+    nodes: automation.nodes.map((n) => ({
+      id: n.id,
+      type: n.type,
+      data: n.data ?? n.config ?? {},
+      position: n.position ?? { x: 0, y: 0 },
+      description: n.description ?? "",
+    })),
+    edges: automation.edges.map((e) => {
+      const isErrorPath =
+        e.sourceHandle === "error" ||
+        e.sourceHandle === "false" ||
+        e.type === "onFailure";
+
+      return {
+        id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
+        source: e.source ?? e.from,
+        target: e.target ?? e.to,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
+        condition: e.condition ?? "always",
+        type: isErrorPath ? "onFailure" : "onSuccess",
+        description: e.description ?? "",
+      };
+    }),
+    entryNodeId: automation.entryNodeId,
+    settings: automation.settings ?? { maxParallel: 10 },
+    description: automation.description ?? "",
+  };
+
+  validateAutomation({
+    nodes: definition.nodes,
+    edges: definition.edges,
+    entryNodeId: definition.entryNodeId,
+  });
+
+  const workflowId = `automation-${automation._id}-${idempotencyKey}`;
+
+  // execute() starts the workflow AND awaits its completion, returning the result.
+  const result = await client.workflow.execute("executeAutomationWorkflow", {
+    taskQueue: TASK_QUEUE,
+    workflowId,
+    args: [automation._id.toString(), definition, triggerData],
+  });
+
+  return result;
+}

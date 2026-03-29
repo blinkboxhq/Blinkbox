@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import Automation from "../../models/automation.model.js";
-import { startWorkflowExecution } from "../execution/execution.service.js";
+import {
+  startWorkflowExecution,
+  startAndAwaitWorkflowExecution,
+} from "../execution/execution.service.js";
 import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
 
@@ -52,7 +55,43 @@ export async function handlePublicWebhook(req, res) {
       return res.status(400).json({ error: `Invalid workflow: ${err.message}` });
     }
 
-    // Fire-and-forget: Temporal handles retries, timeouts, and crash recovery
+    const isSynchronous = req.query.wait === "true";
+
+    if (isSynchronous) {
+      // ── Synchronous mode: hold the HTTP connection until the DAG completes ──
+      // The caller gets the respond_webhook node's output as the HTTP response.
+      try {
+        const result = await startAndAwaitWorkflowExecution(automation, webhookData, {
+          idempotencyKey,
+          workspaceId: automation.workspaceId,
+        });
+
+        // If the DAG contains a respond_webhook node, use its response
+        if (result && result.__webhookResponse) {
+          const { statusCode = 200, body, contentType } = result.__webhookResponse;
+          if (contentType === "text") {
+            return res.status(statusCode).type("text/plain").send(String(body ?? ""));
+          }
+          return res.status(statusCode).json(body ?? {});
+        }
+
+        // No respond_webhook node — return the full workflow output
+        return res.status(200).json({
+          success: true,
+          message: "Workflow completed",
+          workflowKey: idempotencyKey,
+          output: result,
+        });
+      } catch (err) {
+        console.error(`[Webhook Sync] Workflow error for ${automationId}:`, err.message);
+        return res.status(500).json({
+          error: "Workflow execution failed",
+          detail: err.message,
+        });
+      }
+    }
+
+    // ── Async mode (default): fire-and-forget ────────────────────────────────
     startWorkflowExecution(automation, webhookData, {
       idempotencyKey,
       workspaceId: automation.workspaceId,
