@@ -21,6 +21,7 @@ import logicRouter from "./logicRouter.node.js";
 
 // ── Flow Control ────────────────────────────────────────────────────────────
 import approval from "./approval.node.js";
+import subWorkflow from "./subWorkflow.node.js";
 
 // ── Supporting Nodes ─────────────────────────────────────────────────────────
 import code from "./code.node.js";
@@ -90,6 +91,7 @@ export const nodeRegistry = {
 
   // ── Flow Control ───────────────────────────────────────────────────────
   approval: approval,
+  sub_workflow: subWorkflow,
 
   // ── Supporting Nodes ───────────────────────────────────────────────────
   code: code,

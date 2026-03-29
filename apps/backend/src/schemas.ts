@@ -37,6 +37,7 @@ export const NODE_TYPES = [
   "web_search",
   // Flow Control
   "approval",
+  "sub_workflow",
   // Backward-compat aliases (map to new implementations at runtime)
   "advanced_scraper",
   "informer",

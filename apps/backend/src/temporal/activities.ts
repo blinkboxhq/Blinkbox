@@ -10,6 +10,7 @@ import axios from "axios";
 import ivm from "isolated-vm";
 import nodemailer from "nodemailer";
 import Credential from "../models/credential.model.js";
+import Automation from "../models/automation.model.js";
 import { decrypt } from "../utils/crypto.js";
 import { nodeRegistry } from "../nodes/index.js";
 import {
@@ -650,6 +651,113 @@ interface AiAgentThinkOutput {
  *
  * Returns the updated messages array with the assistant response appended.
  */
+// ── Sub-Workflow: Load Target Automation ────────────────────────────────────────
+
+interface LoadSubWorkflowInput {
+  targetAutomationId: string;
+  workspaceId: string;
+}
+
+interface SubWorkflowDefinition {
+  automationId: string;
+  name: string;
+  trigger: string;
+  active: boolean;
+  workspaceId: string;
+  nodes: Array<{
+    id: string;
+    type: string;
+    data: Record<string, unknown>;
+    position: { x: number; y: number };
+    description: string;
+  }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle: string | null;
+    targetHandle: string | null;
+    condition: unknown;
+    type: string;
+    description: string;
+  }>;
+  entryNodeId: string;
+  settings: Record<string, unknown>;
+  description: string;
+}
+
+/**
+ * Load a target automation from MongoDB and build a WorkflowDefinition
+ * that can be passed to executeChild() in the workflow layer.
+ *
+ * Security: Validates that the target automation belongs to the same
+ * workspace as the parent, preventing cross-workspace data leakage.
+ */
+export async function loadSubWorkflowDefinitionActivity(
+  input: LoadSubWorkflowInput,
+): Promise<SubWorkflowDefinition> {
+  const { targetAutomationId, workspaceId } = input;
+
+  const automation = await (Automation as any).findById(targetAutomationId).lean();
+
+  if (!automation) {
+    throw new Error(
+      `Sub-Workflow: Target automation "${targetAutomationId}" not found.`,
+    );
+  }
+
+  if (!automation.active) {
+    throw new Error(
+      `Sub-Workflow: Target automation "${automation.name}" is inactive.`,
+    );
+  }
+
+  // Workspace isolation: child must belong to the same workspace as parent
+  if (automation.workspaceId !== workspaceId) {
+    throw new Error(
+      `Sub-Workflow: Target automation belongs to a different workspace. ` +
+        `Cross-workspace sub-workflows are not allowed.`,
+    );
+  }
+
+  // Build the normalized definition (same shape as execution.service.js)
+  return {
+    automationId: automation._id.toString(),
+    name: automation.name,
+    trigger: automation.trigger,
+    active: automation.active,
+    workspaceId,
+    nodes: (automation.nodes ?? []).map((n: any) => ({
+      id: n.id,
+      type: n.type,
+      data: n.data ?? n.config ?? {},
+      position: n.position ?? { x: 0, y: 0 },
+      description: n.description ?? "",
+    })),
+    edges: (automation.edges ?? []).map((e: any) => {
+      const isErrorPath =
+        e.sourceHandle === "error" ||
+        e.sourceHandle === "false" ||
+        e.type === "onFailure";
+      return {
+        id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
+        source: e.source ?? e.from,
+        target: e.target ?? e.to,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
+        condition: e.condition ?? "always",
+        type: isErrorPath ? "onFailure" : "onSuccess",
+        description: e.description ?? "",
+      };
+    }),
+    entryNodeId: automation.entryNodeId ?? "",
+    settings: automation.settings ?? { maxParallel: 10 },
+    description: automation.description ?? "",
+  };
+}
+
+// ── AI Agent Micro-Activities ──────────────────────────────────────────────────
+
 export async function aiAgentThinkActivity(
   input: AiAgentThinkInput,
 ): Promise<AiAgentThinkOutput> {

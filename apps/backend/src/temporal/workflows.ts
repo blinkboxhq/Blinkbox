@@ -82,6 +82,14 @@ const notify = proxyActivities<
   retry: { maximumAttempts: 3, initialInterval: "1s", backoffCoefficient: 2 },
 });
 
+// Sub-Workflow: load the target automation definition from MongoDB
+const subWf = proxyActivities<
+  Pick<typeof activities, "loadSubWorkflowDefinitionActivity">
+>({
+  startToCloseTimeout: "15s",
+  retry: { maximumAttempts: 2, initialInterval: "500ms" },
+});
+
 // ── Constants ───────────────────────────────────────────────────────────────────
 
 const TRIGGER_TYPES = new Set(["manual", "webhook", "cron_trigger"]);
@@ -299,6 +307,62 @@ export async function executeAutomationWorkflow(
             errorMsg = `Approval rejected${decision.comment ? `: ${decision.comment}` : ""}`;
           }
         }
+      } else if (node.type === "sub_workflow") {
+        // ── Sub-Workflow: Fractal DAG Composition ─────────────────
+        // 1. Load the target automation definition via activity (I/O)
+        // 2. Dispatch as a Child Workflow using executeChild()
+        // 3. Parent blocks until child completes, captures full output
+
+        const targetAutomationId = (node.data["targetAutomationId"] as string) ?? "";
+        if (!targetAutomationId) {
+          throw new Error(
+            `Sub-Workflow node "${nodeId}": Missing targetAutomationId in config.`,
+          );
+        }
+
+        const childDef = await subWf.loadSubWorkflowDefinitionActivity({
+          targetAutomationId,
+          workspaceId: definition.workspaceId ?? "",
+        });
+
+        // Build trigger data: merge parent input with explicit payload
+        const explicitPayload = (node.data["payload"] as Record<string, unknown>) ?? {};
+        const childTriggerData = {
+          ...input,
+          ...explicitPayload,
+          __parentContext: {
+            triggeredBy: "sub_workflow",
+            parentWorkflowId: automationId,
+            parentNodeId: nodeId,
+          },
+        };
+
+        // Dispatch the child automation as a Temporal Child Workflow.
+        // Uses the same executeAutomationWorkflow entry point — full recursion.
+        const childResult = await executeChild("executeAutomationWorkflow", {
+          args: [
+            childDef.automationId,
+            {
+              name: childDef.name,
+              trigger: childDef.trigger,
+              active: childDef.active,
+              workspaceId: childDef.workspaceId,
+              nodes: childDef.nodes,
+              edges: childDef.edges,
+              entryNodeId: childDef.entryNodeId,
+              settings: childDef.settings,
+              description: childDef.description,
+            },
+            childTriggerData,
+          ],
+          workflowId: `sub-${automationId}-${nodeId}-${Date.now()}`,
+          taskQueue: undefined, // inherit parent's task queue
+          workflowExecutionTimeout: "60m",
+        });
+
+        // The child returns its full nodeOutputs map.
+        // Pass it through as this node's output so downstream nodes can access it.
+        output = childResult;
       } else if (node.type === "aiAgent") {
         // ── AI Agent: Child Workflow (not a blocking activity) ──────
         // The ReAct loop is decomposed into micro-activities inside
