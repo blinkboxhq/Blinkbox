@@ -1,11 +1,9 @@
 import crypto from "crypto";
 import Automation from "../../models/automation.model.js";
-import {
-  startWorkflowExecution,
-  startAndAwaitWorkflowExecution,
-} from "../execution/execution.service.js";
+import { startAndAwaitWorkflowExecution } from "../execution/execution.service.js";
 import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
+import { webhookQueue } from "../../infra/webhook.queue.js";
 
 const RATE_LIMIT = 60;
 const RATE_WINDOW_SECONDS = 60;
@@ -91,15 +89,21 @@ export async function handlePublicWebhook(req, res) {
       }
     }
 
-    // ── Async mode (default): fire-and-forget ────────────────────────────────
-    startWorkflowExecution(automation, webhookData, {
-      idempotencyKey,
-      workspaceId: automation.workspaceId,
-    }).catch((err) => {
-      console.error(`[Webhook] Temporal start error for ${automationId}:`, err.message);
-    });
+    // ── Async mode (default): push to BullMQ shock absorber ────────────────
+    // The webhook worker drains this queue with concurrency limits,
+    // protecting the Temporal client from traffic spikes.
+    await webhookQueue.add(
+      "webhook-trigger",
+      {
+        automationId,
+        webhookData,
+        idempotencyKey,
+        workspaceId: automation.workspaceId,
+      },
+      { jobId: idempotencyKey },
+    );
 
-    return res.status(200).json({
+    return res.status(202).json({
       success: true,
       message: "Webhook accepted",
       workflowKey: idempotencyKey,
