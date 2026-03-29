@@ -8,6 +8,7 @@ import credentialRoutes from "../modules/credentials/credential.routes.js";
 import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
+import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 
 const app = express();
 
@@ -53,6 +54,11 @@ app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 // Supports both POST (form/JSON payloads) and GET (query-param triggers)
 app.post("/webhook/:automationId", handlePublicWebhook);
 app.get("/webhook/:automationId", handlePublicWebhook);
+
+// ── Public approval signal endpoint (no auth — the workflowId is the capability token)
+// GET for one-click email links, POST for API/Slack interactive payloads
+app.get("/api/automations/signal/:workflowId", handleApprovalSignal);
+app.post("/api/automations/signal/:workflowId", handleApprovalSignal);
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);

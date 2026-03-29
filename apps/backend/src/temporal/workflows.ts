@@ -19,6 +19,9 @@ import {
   proxyActivities,
   executeChild,
   sleep,
+  defineSignal,
+  setHandler,
+  condition,
 } from "@temporalio/workflow";
 import type { WorkflowDefinition } from "../schemas.js";
 import type * as activities from "./activities.js";
@@ -26,6 +29,20 @@ import type * as activities from "./activities.js";
 // Re-export the AI Agent Child Workflow so Temporal's bundler registers it.
 // The parent workflow dispatches it via executeChild("executeAiAgentWorkflow", ...).
 export { executeAiAgentWorkflow } from "./aiAgentWorkflow.js";
+
+// ── Approval Signal ─────────────────────────────────────────────────────────────
+// External systems (email links, Slack buttons, API calls) fire this signal
+// to wake a sleeping approval node. The payload identifies which node to
+// unblock and whether the human approved or rejected.
+
+export interface ApprovalSignalPayload {
+  nodeId: string;
+  status: "approved" | "rejected";
+  reviewerEmail?: string;
+  comment?: string;
+}
+
+export const approvalSignal = defineSignal<[ApprovalSignalPayload]>("approvalSignal");
 
 // ── Activity Proxies ────────────────────────────────────────────────────────────
 
@@ -57,10 +74,22 @@ const vault = proxyActivities<
   retry: { maximumAttempts: 2, initialInterval: "500ms" },
 });
 
+// Approval notification: send email/Slack with approve/reject links
+const notify = proxyActivities<
+  Pick<typeof activities, "sendApprovalNotificationActivity">
+>({
+  startToCloseTimeout: "30s",
+  retry: { maximumAttempts: 3, initialInterval: "1s", backoffCoefficient: 2 },
+});
+
 // ── Constants ───────────────────────────────────────────────────────────────────
 
 const TRIGGER_TYPES = new Set(["manual", "webhook", "cron_trigger"]);
 const MAX_ITERATIONS = 500;
+
+// Approval nodes can sleep for up to 30 days waiting for human input.
+// After that, the workflow times out — configurable per-node via data.timeoutMs.
+const DEFAULT_APPROVAL_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
@@ -90,6 +119,17 @@ export async function executeAutomationWorkflow(
 
   // Seed the entry node with trigger data
   nodeOutputs[definition.entryNodeId] = triggerData;
+
+  // ── Approval Signal State ──────────────────────────────────────────────
+  // Map of nodeId → approval decision. When a signal arrives, it writes here.
+  // The approval node's condition() check reads from here to unblock.
+  const approvalDecisions: Record<string, ApprovalSignalPayload> = {};
+
+  setHandler(approvalSignal, (payload: ApprovalSignalPayload) => {
+    // Store the decision keyed by nodeId so the correct approval node wakes up.
+    // Multiple approval nodes in the same DAG each wait on their own nodeId.
+    approvalDecisions[payload.nodeId] = payload;
+  });
 
   // ── Telemetry: execution started ────────────────────────────────────────
   await emitTelemetry({
@@ -187,6 +227,78 @@ export async function executeAutomationWorkflow(
           variables: input,
         });
         output = codeResult.result;
+      } else if (node.type === "approval") {
+        // ── The Governor: Human-in-the-Loop Approval ───────────────
+        // 1. Fire a notification activity (email/Slack) with approve/reject links
+        // 2. Sleep indefinitely until the approvalSignal arrives for this nodeId
+        // 3. Route output down onSuccess (approved) or onFailure (rejected)
+
+        await notify.sendApprovalNotificationActivity({
+          workflowId: automationId,
+          nodeId,
+          nodeLabel: (node.data["label"] as string) ?? "Approval Required",
+          notifyChannels: (node.data["notifyChannels"] as string[]) ?? ["email"],
+          notifyTo: (node.data["notifyTo"] as string) ?? "",
+          smtpCredentialId: (node.data["smtpCredentialId"] as string) ?? "",
+          slackCredentialId: (node.data["slackCredentialId"] as string) ?? "",
+          slackChannel: (node.data["slackChannel"] as string) ?? "",
+          contextSummary: JSON.stringify(input).slice(0, 2000),
+          workspaceId: definition.workspaceId ?? "",
+        });
+
+        // Telemetry: node is now waiting for human input
+        await emitTelemetry({
+          action: "node_step",
+          workflowId: automationId,
+          automationId,
+          nodeId,
+          nodeType: "approval",
+          status: "waiting",
+          durationMs: 0,
+          input,
+        });
+
+        // Block until signal arrives or timeout expires.
+        // condition() returns true when the predicate is satisfied.
+        // If timeout fires first, condition() returns false.
+        const timeoutMs =
+          (node.data["timeoutMs"] as number) ?? DEFAULT_APPROVAL_TIMEOUT_MS;
+
+        const signalReceived = await condition(
+          () => approvalDecisions[nodeId] !== undefined,
+          timeoutMs,
+        );
+
+        if (!signalReceived) {
+          // Timeout — treat as rejection
+          output = {
+            approved: false,
+            status: "timeout",
+            nodeId,
+            message: `Approval timed out after ${Math.round(timeoutMs / 3600000)}h with no response.`,
+          };
+          failed = true;
+          anyFailed = true;
+          errorMsg = (output as { message: string }).message;
+        } else {
+          const decision = approvalDecisions[nodeId];
+          const isApproved = decision.status === "approved";
+
+          output = {
+            approved: isApproved,
+            status: decision.status,
+            reviewerEmail: decision.reviewerEmail ?? null,
+            comment: decision.comment ?? null,
+            nodeId,
+            decidedAt: Date.now(),
+          };
+
+          if (!isApproved) {
+            failed = true;
+            anyFailed = true;
+            errorMsg = `Approval rejected${decision.comment ? `: ${decision.comment}` : ""}`;
+          }
+        }
       } else if (node.type === "aiAgent") {
         // ── AI Agent: Child Workflow (not a blocking activity) ──────
         // The ReAct loop is decomposed into micro-activities inside

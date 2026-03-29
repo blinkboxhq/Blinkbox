@@ -19,6 +19,9 @@ import aiAgent from "./aiAgent.node.js";
 import dataMapper from "./dataMapper.node.js";
 import logicRouter from "./logicRouter.node.js";
 
+// ── Flow Control ────────────────────────────────────────────────────────────
+import approval from "./approval.node.js";
+
 // ── Supporting Nodes ─────────────────────────────────────────────────────────
 import code from "./code.node.js";
 import delay from "./delay.node.js";
@@ -84,6 +87,9 @@ export const nodeRegistry = {
   ai_agent: aiAgent,
   data_mapper: dataMapper,
   logic_router: logicRouter,
+
+  // ── Flow Control ───────────────────────────────────────────────────────
+  approval: approval,
 
   // ── Supporting Nodes ───────────────────────────────────────────────────
   code: code,

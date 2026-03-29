@@ -35,6 +35,8 @@ export const NODE_TYPES = [
   "airtable",
   // Web Browser
   "web_search",
+  // Flow Control
+  "approval",
   // Backward-compat aliases (map to new implementations at runtime)
   "advanced_scraper",
   "informer",
