@@ -74,6 +74,22 @@ export const EdgeConfigSchema = z.object({
   description: z.string().default(""),
 });
 
+// ── Binary Metadata ────────────────────────────────────────────────────────────
+// Pointer for file outputs (images, PDFs, etc.) stored in S3 or local disk.
+// Flows through execution state without the actual file bytes.
+
+export const BinaryMetadataSchema = z.object({
+  type: z.literal("binary"),
+  fileId: z.string(),
+  mimeType: z.string(),
+  fileName: z.string(),
+  fileSize: z.number(),
+  storageKey: z.string(),
+  storedAt: z.enum(["s3", "local"]),
+});
+
+export type BinaryMetadata = z.infer<typeof BinaryMetadataSchema>;
+
 // ── Automation Settings ─────────────────────────────────────────────────────────
 
 export const AutomationSettingsSchema = z.object({

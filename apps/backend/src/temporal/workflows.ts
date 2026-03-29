@@ -71,6 +71,7 @@ const vault = proxyActivities<
     | "resolvePayloadActivity"
     | "cleanupPayloadsActivity"
     | "flushPayloadsActivity"
+    | "cleanupWorkflowBinariesActivity"
   >
 >({
   startToCloseTimeout: "15s",
@@ -229,6 +230,9 @@ export async function executeAutomationWorkflow(
             | undefined,
           timeout: node.data["timeout"] as number | undefined,
           followRedirects: node.data["followRedirects"] as boolean | undefined,
+          responseType: (node.data["responseType"] as "auto" | "json" | "binary") ?? "auto",
+          workflowId: automationId,
+          nodeId,
         });
       } else if (node.type === "code") {
         const codeResult = await acts.executeSecureCodeActivity({
@@ -508,6 +512,13 @@ export async function executeAutomationWorkflow(
   } catch {
     // Non-fatal — background flusher will catch it within 60s
   }
+
+  // ── Cleanup binary files for completed workflows ───────────────────
+  // Binary files in S3/local disk are ephemeral — they should be cleaned
+  // up after the workflow completes. Downstream consumers (webhook responses,
+  // UI previews) must retrieve binaries before the workflow finishes.
+  // TODO: Make cleanup opt-in via workflow settings if retention is needed.
+  // For now, binaries persist until explicit cleanup or TTL-based expiry.
 
   // Include __webhookResponse at the top level so callers using
   // client.workflow.execute() can extract the custom HTTP response.

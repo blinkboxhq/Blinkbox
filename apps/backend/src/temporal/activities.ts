@@ -23,10 +23,17 @@ import {
   flushWorkflowPayloads,
 } from "./payloadStore.js";
 import { executeInPool } from "../infra/isolate.pool.js";
+import {
+  storeBinary,
+  retrieveBinary,
+  isBinaryContentType,
+  cleanupWorkflowBinaries,
+  type BinaryMetadata,
+} from "../infra/binary.store.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 
-const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 25 * 1024 * 1024; // 25 MB — binary files stream to object storage, not Temporal state
 const MAX_TIMEOUT_MS = 60_000;
 
 // ── Input / Output Types ────────────────────────────────────────────────────────
@@ -41,6 +48,9 @@ interface HttpRequestInput {
   queryParams?: Record<string, string>;
   timeout?: number;
   followRedirects?: boolean;
+  responseType?: "auto" | "json" | "binary";
+  workflowId?: string;
+  nodeId?: string;
 }
 
 interface HttpRequestOutput {
@@ -48,6 +58,7 @@ interface HttpRequestOutput {
   statusText: string;
   headers: Record<string, string>;
   data: unknown;
+  binary?: boolean;
 }
 
 interface SendEmailInput {
@@ -115,6 +126,9 @@ export async function executeHttpRequestActivity(
     queryParams = {},
     timeout = 15_000,
     followRedirects = true,
+    responseType = "auto",
+    workflowId = "unknown",
+    nodeId = "http_request",
   } = input;
 
   if (!url) {
@@ -155,6 +169,8 @@ export async function executeHttpRequestActivity(
   }
 
   const upperMethod = method.toUpperCase();
+  const forceBinary = responseType === "binary";
+  const forceJson = responseType === "json";
 
   try {
     const response = await axios({
@@ -167,13 +183,49 @@ export async function executeHttpRequestActivity(
       maxContentLength: MAX_RESPONSE_BYTES,
       maxRedirects: followRedirects ? 5 : 0,
       validateStatus: () => true,
+      // Request as arraybuffer so we can detect binary content
+      responseType: forceJson ? "json" : "arraybuffer",
     });
+
+    const contentType = (response.headers["content-type"] as string) || "";
+    const shouldStoreBinary =
+      forceBinary || (!forceJson && isBinaryContentType(contentType));
+
+    if (shouldStoreBinary && Buffer.isBuffer(response.data)) {
+      // Stream binary to object storage — return metadata pointer only
+      const binaryMeta = await storeBinary(
+        workflowId,
+        nodeId,
+        response.data,
+        contentType.split(";")[0].trim(),
+        response.headers as Record<string, string>,
+      );
+
+      return {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+        data: binaryMeta,
+        binary: true,
+      };
+    }
+
+    // Non-binary: parse arraybuffer back to text/JSON
+    let data: unknown = response.data;
+    if (Buffer.isBuffer(data) || data instanceof ArrayBuffer) {
+      const text = Buffer.from(data).toString("utf-8");
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+    }
 
     return {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers as Record<string, string>,
-      data: response.data,
+      data,
     };
   } catch (err: unknown) {
     const axiosErr = err as { code?: string; response?: { status?: number }; message: string };
@@ -354,6 +406,25 @@ export async function flushPayloadsActivity(
 ): Promise<{ flushed: number }> {
   const flushed = await flushWorkflowPayloads(input.workflowId);
   return { flushed };
+}
+
+// ── Binary Store Activities ────────────────────────────────────────────────────
+// Store/retrieve/cleanup binary files (images, PDFs, etc.) in S3 or local disk.
+// Binary metadata pointers flow through Temporal state; actual bytes never do.
+
+export async function retrieveBinaryActivity(
+  input: { storageKey: string; storedAt: string },
+): Promise<{ buffer: string }> {
+  const buf = await retrieveBinary(input.storageKey, input.storedAt);
+  // Return as base64 for Temporal serialization (only used for download endpoints)
+  return { buffer: buf.toString("base64") };
+}
+
+export async function cleanupWorkflowBinariesActivity(
+  input: { workflowId: string },
+): Promise<{ deleted: number }> {
+  const deleted = await cleanupWorkflowBinaries(input.workflowId);
+  return { deleted };
 }
 
 // ── Approval Notification Activity ──────────────────────────────────────────────

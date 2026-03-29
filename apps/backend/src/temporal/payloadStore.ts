@@ -38,14 +38,36 @@ interface PayloadBlob {
 }
 
 /**
+ * Check if a value is a binary metadata pointer.
+ * Binary refs flow through the DAG as-is — they should never be
+ * resolved as payload refs or have their bytes inlined into state.
+ */
+export function isBinaryRef(value: unknown): boolean {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    (value as Record<string, unknown>).type === "binary" &&
+    typeof (value as Record<string, unknown>).fileId === "string" &&
+    typeof (value as Record<string, unknown>).storageKey === "string"
+  );
+}
+
+/**
  * Store a node output if it exceeds the inline threshold.
  * Writes to Redis with 24h TTL. Returns a reference ID, or null if inline.
+ * Binary metadata pointers are always kept inline (they're tiny JSON objects
+ * that reference files in S3/local disk — the actual bytes are never here).
  */
 export async function storePayload(
   workflowId: string,
   nodeId: string,
   data: unknown,
 ): Promise<string | null> {
+  // Binary metadata pointers are small and must remain inline so downstream
+  // nodes can inspect the type/mimeType fields without a vault round-trip.
+  if (isBinaryRef(data)) return null;
+
   const serialized = JSON.stringify(data);
   if (Buffer.byteLength(serialized, "utf-8") < INLINE_THRESHOLD_BYTES) {
     return null; // keep inline
@@ -91,8 +113,12 @@ export async function resolvePayload(ref: string): Promise<unknown> {
 
 /**
  * Check if a value is a payload reference and resolve it if so.
+ * Binary metadata pointers are passed through untouched.
  */
 export async function resolveIfRef(value: unknown): Promise<unknown> {
+  // Binary metadata pointers should flow through as-is
+  if (isBinaryRef(value)) return value;
+
   if (
     value &&
     typeof value === "object" &&
