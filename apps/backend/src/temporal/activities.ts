@@ -420,3 +420,114 @@ export async function cleanupPayloadsActivity(
   const deleted = await cleanupPayloads(input.workflowId);
   return { deleted };
 }
+
+// ── AI Agent Micro-Activities ───────────────────────────────────────────────────
+// These are the decomposed steps of the ReAct loop, invoked by the
+// executeAiAgentWorkflow child workflow. Each is a stateless activity that
+// receives the full conversation state and returns the updated state.
+//
+// This architecture prevents the Temporal worker thread from blocking for
+// the entire duration of a multi-iteration agent run. Instead, the thread
+// yields between each micro-step.
+
+import aiAgentNode from "../nodes/aiAgent.node.js";
+
+// Re-export the internal helpers we need. The aiAgent node exports its
+// run() method as default; the micro-activities call into its internals
+// which we extract here to avoid duplicating provider/tool logic.
+
+interface AiAgentThinkInput {
+  nodeConfig: Record<string, unknown>;
+  inputData: Record<string, unknown>;
+  messages: Array<Record<string, unknown>> | null;
+  systemPrompt: string | null;
+  toolDefs: Array<Record<string, unknown>> | null;
+  workspaceId: string;
+  isFirstCall: boolean;
+}
+
+interface AiAgentThinkOutput {
+  messages: Array<Record<string, unknown>>;
+  toolCalls: Array<{ id: string; name: string; arguments: unknown }> | null;
+  text: string;
+  tokensUsed: number;
+  systemPrompt: string;
+  toolDefs: Array<Record<string, unknown>> | null;
+  provider: string;
+  resolvedModel: string;
+}
+
+/**
+ * THINK micro-activity: Send the current conversation to the LLM and get
+ * back either a tool call request or a final answer.
+ *
+ * On the first call (isFirstCall=true), this activity also performs setup:
+ *   - Resolves LLM credentials from the Vault
+ *   - Assembles the tool surface (handle-routed + registry + built-in)
+ *   - Builds the system prompt
+ *   - Initializes the messages array with memory + user prompt
+ *
+ * Returns the updated messages array with the assistant response appended.
+ */
+export async function aiAgentThinkActivity(
+  input: AiAgentThinkInput,
+): Promise<AiAgentThinkOutput> {
+  // Delegate to the node's internal think function
+  const result = await aiAgentNode._think(input);
+  return result;
+}
+
+interface AiAgentActInput {
+  toolName: string;
+  toolArguments: unknown;
+  toolDefs: Array<Record<string, unknown>>;
+  workspaceId: string;
+  nodeConfig: Record<string, unknown>;
+}
+
+interface AiAgentActOutput {
+  observation: unknown;
+  messages: Array<Record<string, unknown>>;
+}
+
+/**
+ * ACT micro-activity: Execute a single tool call and return the observation.
+ *
+ * The activity resolves the tool from the tool definitions, executes it with
+ * a 30s timeout, and returns the observation along with the updated messages
+ * array (tool result message appended).
+ */
+export async function aiAgentActActivity(
+  input: AiAgentActInput & { messages?: Array<Record<string, unknown>> },
+): Promise<AiAgentActOutput> {
+  const result = await aiAgentNode._act(input);
+  return result;
+}
+
+interface AiAgentSummarizeInput {
+  nodeConfig: Record<string, unknown>;
+  messages: Array<Record<string, unknown>>;
+  systemPrompt: string;
+  workspaceId: string;
+}
+
+interface AiAgentSummarizeOutput {
+  messages: Array<Record<string, unknown>>;
+  tokensUsed: number;
+}
+
+/**
+ * SUMMARIZE micro-activity: Compress the conversation scratchpad when
+ * token count exceeds the safe threshold (~80k tokens).
+ *
+ * Strategy: Take all messages between the initial user prompt and the latest
+ * assistant message, summarize them into a single condensed message, and
+ * replace the middle section. This preserves the system context and recent
+ * interactions while compressing bulky tool outputs (raw HTML, large JSON).
+ */
+export async function aiAgentSummarizeActivity(
+  input: AiAgentSummarizeInput,
+): Promise<AiAgentSummarizeOutput> {
+  const result = await aiAgentNode._summarize(input);
+  return result;
+}

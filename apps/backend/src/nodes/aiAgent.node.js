@@ -95,6 +95,11 @@ const MAX_TOOL_OUTPUT_BYTES = 15_000;
 const TOOL_TIMEOUT_MS = 30_000;
 const MAX_MEMORY_MESSAGES = 200;
 
+// ── Token Summarizer Constants ────────────────────────────────────────────────
+// ~80k tokens * ~4 chars/token = 320k chars. When the messages array exceeds
+// this, we compress the scratchpad before the next LLM call.
+const SUMMARIZE_CHAR_THRESHOLD = 320_000;
+
 // ═════════════════════════════════════════════════════════════════════════════
 // BUILT-IN TOOL DEFINITIONS
 // ═════════════════════════════════════════════════════════════════════════════
@@ -150,7 +155,7 @@ const REACT_SYSTEM_PROMPT =
 // MAIN ENTRY POINT
 // ═════════════════════════════════════════════════════════════════════════════
 
-export default {
+const agentNode = {
   async run(config, input, context = {}) {
     const {
       provider = "openai",
@@ -272,6 +277,22 @@ export default {
 
     while (iteration < maxIter) {
       iteration++;
+
+      // ── TOKEN GUARD: Summarize scratchpad if context is too large ─
+      if (estimateCharCount(messages) > SUMMARIZE_CHAR_THRESHOLD) {
+        const summarizeResult = await summarizeScratchpad({
+          provider,
+          apiKey,
+          model: resolvedModel,
+          system,
+          messages,
+          temperature: 0.1,
+          maxTokens: 2048,
+        });
+        messages.length = 0;
+        messages.push(...summarizeResult.messages);
+        totalTokens += summarizeResult.tokensUsed;
+      }
 
       // ── THINK: Call LLM ──────────────────────────────────────────
       const response = await callProvider({
@@ -1059,3 +1080,390 @@ function handleProviderError(err, providerName, model) {
     `${providerName} failed: ${status || err.code || "unknown"} — ${msg}`
   );
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CHARACTER COUNT ESTIMATOR
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Estimate total character count across all messages.
+ * Used as a proxy for token count (~4 chars/token) to decide when to
+ * trigger scratchpad summarization.
+ */
+function estimateCharCount(messages) {
+  let total = 0;
+  for (const msg of messages) {
+    const content = msg.content;
+    if (typeof content === "string") {
+      total += content.length;
+    } else if (Array.isArray(content)) {
+      for (const block of content) {
+        if (block && typeof block === "object") {
+          if (typeof block.text === "string") total += block.text.length;
+          if (typeof block.content === "string") total += block.content.length;
+          if (typeof block.input === "object") {
+            total += JSON.stringify(block.input).length;
+          }
+        }
+      }
+    }
+  }
+  return total;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ROLLING TOKEN SUMMARIZER
+// ═════════════════════════════════════════════════════════════════════════════
+
+const SUMMARIZE_SYSTEM_PROMPT =
+  "You are an internal memory compressor for a ReAct agent. " +
+  "You will receive a conversation scratchpad containing the agent's thoughts, " +
+  "tool calls, and tool results (which may include raw HTML, large JSON, etc.). " +
+  "Your job is to produce a SHORT, dense summary of what has been accomplished, " +
+  "what key facts were discovered, and what the agent was about to do next. " +
+  "Preserve all actionable data (URLs, IDs, values, error messages) but discard " +
+  "raw HTML, formatting, and verbose content. Output ONLY the summary.";
+
+/**
+ * Compress the scratchpad when it exceeds the token threshold.
+ *
+ * Strategy:
+ *   1. Keep the first user message (the original goal) intact
+ *   2. Take all intermediate messages (assistant thoughts, tool calls, tool results)
+ *   3. Ask the LLM to summarize them into a single condensed message
+ *   4. Replace the intermediate section with the summary
+ *   5. Return the compressed messages array
+ */
+async function summarizeScratchpad({
+  provider,
+  apiKey,
+  model,
+  system,
+  messages,
+  temperature,
+  maxTokens,
+}) {
+  // Keep the first user message (original goal/prompt)
+  const firstUserIdx = messages.findIndex((m) => m.role === "user");
+  const firstUserMsg = firstUserIdx >= 0 ? messages[firstUserIdx] : null;
+
+  // Keep the last 4 messages (most recent context) — these are likely
+  // the latest tool call + result + assistant response
+  const recentCount = Math.min(4, messages.length);
+  const recentMessages = messages.slice(-recentCount);
+
+  // Everything in between gets summarized
+  const middleStart = firstUserIdx >= 0 ? firstUserIdx + 1 : 0;
+  const middleEnd = messages.length - recentCount;
+
+  if (middleEnd <= middleStart) {
+    // Nothing to summarize — context is already compact
+    return { messages, tokensUsed: 0 };
+  }
+
+  const middleMessages = messages.slice(middleStart, middleEnd);
+
+  // Build a condensed text representation of the middle section
+  const scratchpadText = middleMessages
+    .map((m, i) => {
+      const role = m.role || "unknown";
+      let content = "";
+      if (typeof m.content === "string") {
+        content = m.content;
+      } else if (Array.isArray(m.content)) {
+        content = m.content
+          .map((block) => {
+            if (typeof block === "string") return block;
+            if (block?.text) return block.text;
+            if (block?.content) return block.content;
+            if (block?.type === "tool_use") {
+              return `[Tool Call: ${block.name}(${JSON.stringify(block.input).slice(0, 500)})]`;
+            }
+            if (block?.type === "tool_result") {
+              return `[Tool Result: ${(block.content || "").slice(0, 1000)}]`;
+            }
+            return JSON.stringify(block).slice(0, 500);
+          })
+          .join("\n");
+      }
+      // Truncate individual messages to prevent the summarization prompt itself
+      // from being too large (summarize request must fit in context)
+      if (content.length > 3000) {
+        content = content.slice(0, 3000) + "\n...[truncated for summarization]";
+      }
+      return `[${i + 1}] ${role}: ${content}`;
+    })
+    .join("\n\n");
+
+  try {
+    const response = await callProvider({
+      provider,
+      apiKey,
+      model,
+      system: SUMMARIZE_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content:
+            `Summarize the following agent scratchpad (${middleMessages.length} messages). ` +
+            `Preserve all key facts, values, and next-step intentions:\n\n` +
+            scratchpadText,
+        },
+      ],
+      temperature,
+      maxTokens,
+      tools: null,
+    });
+
+    const summaryText =
+      response.text ||
+      "[Scratchpad was summarized but no summary was produced]";
+
+    // Rebuild messages: original user prompt + summary + recent messages
+    const compressed = [];
+    if (firstUserMsg) {
+      compressed.push(firstUserMsg);
+    }
+    compressed.push({
+      role: "assistant",
+      content:
+        `[SCRATCHPAD SUMMARY — ${middleMessages.length} messages compressed]\n\n` +
+        summaryText,
+    });
+    compressed.push(...recentMessages);
+
+    return {
+      messages: compressed,
+      tokensUsed: response.tokensUsed || 0,
+    };
+  } catch (err) {
+    // Summarization failure is non-fatal — continue with the original messages
+    // but aggressively truncate tool outputs to buy headroom
+    const truncated = messages.map((m) => {
+      if (typeof m.content === "string" && m.content.length > 2000) {
+        return {
+          ...m,
+          content:
+            m.content.slice(0, 2000) +
+            "\n...[truncated: summarization failed]",
+        };
+      }
+      return m;
+    });
+    return { messages: truncated, tokensUsed: 0 };
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TEMPORAL MICRO-ACTIVITY FUNCTIONS
+// ═════════════════════════════════════════════════════════════════════════════
+// These are called by the Temporal activities (activities.ts) to decompose
+// the ReAct loop into yieldable micro-steps. They share all the provider/tool
+// logic above but operate on serializable state passed in/out.
+
+/**
+ * _think: Perform one LLM call. On first invocation, initializes the full
+ * conversation context (credentials, tools, memory, system prompt).
+ */
+agentNode._think = async function ({
+  nodeConfig,
+  inputData,
+  messages,
+  systemPrompt: existingSystemPrompt,
+  toolDefs: existingToolDefs,
+  workspaceId,
+  isFirstCall,
+}) {
+  const provider = nodeConfig.provider || "openai";
+  const resolvedModel =
+    nodeConfig.model || DEFAULT_MODELS[provider];
+
+  // ── Resolve credentials ─────────────────────────────────────────
+  const cred = await resolveCredential(
+    nodeConfig.credentialId,
+    workspaceId,
+    "AI Agent"
+  );
+  const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+
+  let systemPromptFinal = existingSystemPrompt;
+  let toolDefsFinal = existingToolDefs;
+  let formattedTools = null;
+
+  if (isFirstCall) {
+    // ── Assemble tool surface ───────────────────────────────────────
+    const tools = await assembleTools({
+      handleTools: nodeConfig._tools,
+      enabledToolIds: nodeConfig.enabledToolIds,
+      builtinWebSearch: nodeConfig.builtinWebSearch || false,
+      webSearchCredentialId: nodeConfig.webSearchCredentialId,
+      workspaceId,
+      toolRegistry: null, // Registry tools resolved via enabledToolIds
+    });
+
+    toolDefsFinal = tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+      // execute is a function — we can't serialize it for Temporal.
+      // Tool execution happens in _act via re-resolution.
+      hasExecutor: typeof t.execute === "function",
+    }));
+
+    // ── Build system prompt ─────────────────────────────────────────
+    let system = REACT_SYSTEM_PROMPT;
+    if (nodeConfig.systemPrompt) {
+      system += `\n\n--- User Instructions ---\n${nodeConfig.systemPrompt}`;
+    }
+    if (tools.length > 0) {
+      system +=
+        `\n\nYou have ${tools.length} tool(s) available: ` +
+        tools.map((t) => `"${t.name}"`).join(", ") +
+        ".";
+    } else {
+      system +=
+        "\n\nNo tools are available. Answer the user's goal directly from your own knowledge.";
+    }
+    if (nodeConfig.outputFormat === "json") {
+      system +=
+        "\n\nIMPORTANT: Your final answer must be valid JSON. No markdown fences, no explanations — just the JSON object or array.";
+    }
+    systemPromptFinal = system;
+
+    // ── Build initial messages ──────────────────────────────────────
+    const memoryMessages = resolveMemory(nodeConfig._memory);
+    if (memoryMessages.length > MAX_MEMORY_MESSAGES) {
+      memoryMessages.splice(0, memoryMessages.length - MAX_MEMORY_MESSAGES);
+    }
+
+    const inputSummary =
+      typeof inputData === "string"
+        ? inputData.substring(0, MAX_INPUT_BYTES)
+        : JSON.stringify(inputData, null, 2)?.substring(0, MAX_INPUT_BYTES) ??
+          "";
+
+    messages = [...memoryMessages];
+    const userContent = inputSummary
+      ? `${nodeConfig.prompt}\n\n---\nInput Data:\n${inputSummary}`
+      : nodeConfig.prompt;
+    messages.push({ role: "user", content: userContent });
+  }
+
+  // ── Format tools for the provider wire format ─────────────────────
+  if (toolDefsFinal && toolDefsFinal.length > 0) {
+    formattedTools = formatToolsForProvider(toolDefsFinal, provider);
+  }
+
+  // ── Call the LLM ──────────────────────────────────────────────────
+  const response = await callProvider({
+    provider,
+    apiKey,
+    model: resolvedModel,
+    system: systemPromptFinal,
+    messages,
+    temperature: nodeConfig.temperature ?? 0.3,
+    maxTokens: nodeConfig.maxTokens ?? 4096,
+    tools: formattedTools,
+  });
+
+  // ── Append assistant response to messages ─────────────────────────
+  const updatedMessages = [...messages];
+
+  if (response.toolCalls && response.toolCalls.length > 0) {
+    updatedMessages.push(
+      buildAssistantToolCallMessage(response, provider)
+    );
+  } else {
+    updatedMessages.push({
+      role: "assistant",
+      content: response.text || "",
+    });
+  }
+
+  return {
+    messages: updatedMessages,
+    toolCalls: response.toolCalls || null,
+    text: response.text || "",
+    tokensUsed: response.tokensUsed || 0,
+    systemPrompt: systemPromptFinal,
+    toolDefs: toolDefsFinal,
+    provider,
+    resolvedModel,
+  };
+};
+
+/**
+ * _act: Execute a single tool call and return the observation + updated messages.
+ */
+agentNode._act = async function ({
+  toolName,
+  toolArguments,
+  toolDefs,
+  workspaceId,
+  nodeConfig,
+  messages,
+}) {
+  // Re-assemble the live tools (with execute functions) for this activity.
+  // We can't serialize closures across Temporal, so we re-resolve them here.
+  const liveTools = await assembleTools({
+    handleTools: nodeConfig._tools,
+    enabledToolIds: nodeConfig.enabledToolIds,
+    builtinWebSearch: nodeConfig.builtinWebSearch || false,
+    webSearchCredentialId: nodeConfig.webSearchCredentialId,
+    workspaceId,
+    toolRegistry: null,
+  });
+
+  const toolCall = {
+    id: `tc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: toolName,
+    arguments: toolArguments,
+  };
+
+  const observation = await executeToolCall(toolCall, liveTools);
+
+  // Append tool result to messages
+  const provider = nodeConfig.provider || "openai";
+  const updatedMessages = messages ? [...messages] : [];
+  updatedMessages.push(buildToolResultMessage(toolCall, observation, provider));
+
+  return {
+    observation,
+    messages: updatedMessages,
+  };
+};
+
+/**
+ * _summarize: Compress the scratchpad when token count exceeds threshold.
+ */
+agentNode._summarize = async function ({
+  nodeConfig,
+  messages,
+  systemPrompt,
+  workspaceId,
+}) {
+  const provider = nodeConfig.provider || "openai";
+  const resolvedModel =
+    nodeConfig.model || DEFAULT_MODELS[provider];
+
+  const cred = await resolveCredential(
+    nodeConfig.credentialId,
+    workspaceId,
+    "AI Agent"
+  );
+  const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+
+  const result = await summarizeScratchpad({
+    provider,
+    apiKey,
+    model: resolvedModel,
+    system: systemPrompt,
+    messages,
+    temperature: 0.1,
+    maxTokens: 2048,
+  });
+
+  return result;
+};
+
+export default agentNode;

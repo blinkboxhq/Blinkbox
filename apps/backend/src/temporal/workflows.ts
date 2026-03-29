@@ -6,11 +6,26 @@
  *   - All side effects go through proxyActivities
  *   - Use Temporal's sleep() instead of setTimeout
  *   - Condition evaluation is pure logic (inlined below)
+ *
+ * AI AGENT ARCHITECTURE:
+ *   The aiAgent node is dispatched as a Child Workflow (not a single activity).
+ *   This prevents thread-blocking: each ReAct micro-step (Think, Act, Observe)
+ *   is a separate activity, allowing the Temporal worker thread to yield during
+ *   long LLM/API waits. The parent workflow awaits the child's result like any
+ *   other node output.
  */
 
-import { proxyActivities, sleep } from "@temporalio/workflow";
+import {
+  proxyActivities,
+  executeChild,
+  sleep,
+} from "@temporalio/workflow";
 import type { WorkflowDefinition } from "../schemas.js";
 import type * as activities from "./activities.js";
+
+// Re-export the AI Agent Child Workflow so Temporal's bundler registers it.
+// The parent workflow dispatches it via executeChild("executeAiAgentWorkflow", ...).
+export { executeAiAgentWorkflow } from "./aiAgentWorkflow.js";
 
 // ── Activity Proxies ────────────────────────────────────────────────────────────
 
@@ -172,6 +187,27 @@ export async function executeAutomationWorkflow(
           variables: input,
         });
         output = codeResult.result;
+      } else if (node.type === "aiAgent") {
+        // ── AI Agent: Child Workflow (not a blocking activity) ──────
+        // The ReAct loop is decomposed into micro-activities inside
+        // the child workflow so the Temporal worker thread yields
+        // during long LLM/API waits instead of blocking.
+        output = await executeChild("executeAiAgentWorkflow", {
+          args: [
+            {
+              nodeConfig: node.data as Record<string, unknown>,
+              inputData: input,
+              workspaceId: definition.workspaceId ?? "",
+              parentWorkflowId: automationId,
+              nodeId,
+            },
+          ],
+          workflowId: `${automationId}-aiAgent-${nodeId}`,
+          // Child inherits the parent's task queue
+          taskQueue: undefined,
+          // Total budget: 15 iterations * 2min each + overhead
+          workflowExecutionTimeout: "35m",
+        });
       } else {
         // All other node types — dispatch via the generic activity
         output = await acts.executeNodeActivity({
