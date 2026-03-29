@@ -7,7 +7,6 @@
  */
 
 import axios from "axios";
-import ivm from "isolated-vm";
 import nodemailer from "nodemailer";
 import Credential from "../models/credential.model.js";
 import Automation from "../models/automation.model.js";
@@ -23,6 +22,7 @@ import {
   cleanupPayloads,
   flushWorkflowPayloads,
 } from "./payloadStore.js";
+import { executeInPool } from "../infra/isolate.pool.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 
@@ -234,15 +234,12 @@ export async function executeSendEmailActivity(
 }
 
 // ── Secure Code Execution Activity ──────────────────────────────────────────────
-// Hard-isolated V8 sandbox via isolated-vm.
-//   - 32 MB memory ceiling (OOM → isolate killed, worker survives)
+// Hard-isolated V8 sandbox via pooled isolated-vm contexts.
+//   - 64 MB memory ceiling per isolate (OOM → isolate killed, worker survives)
 //   - 500 ms wall-clock timeout (infinite loops → killed)
 //   - No require, process, fs, net, or host global access
-//   - Variables injected via ivm.Reference (no JSON bridge escape hatch)
-
-const CODE_MEMORY_LIMIT_MB = 32;
-const CODE_TIMEOUT_MS = 500;
-const MAX_VARIABLES_BYTES = 5 * 1024 * 1024; // 5 MB payload guard
+//   - Warm pool of 5–10 isolates eliminates cold-start latency (~50ms saved/call)
+//   - Variables injected via ivm.ExternalCopy (no JSON bridge escape hatch)
 
 export async function executeSecureCodeActivity(
   input: SecureCodeInput,
@@ -253,84 +250,8 @@ export async function executeSecureCodeActivity(
     throw new Error("Code Node: 'code' string is required.");
   }
 
-  // Pre-flight: reject oversized variable payloads before allocating an isolate
-  const serialized = JSON.stringify(variables ?? {});
-  if (Buffer.byteLength(serialized, "utf-8") > MAX_VARIABLES_BYTES) {
-    throw new Error(
-      "Code Node: Variables payload exceeds 5 MB limit. Reduce input size upstream.",
-    );
-  }
-
-  const isolate = new ivm.Isolate({ memoryLimit: CODE_MEMORY_LIMIT_MB });
-
-  try {
-    const context = await isolate.createContext();
-    const jail = context.global;
-
-    // Inject variables into the sandbox via ivm.Reference.
-    // Each top-level key becomes a frozen global inside the isolate.
-    // Using copyInto() deep-copies the value into V8 heap — no host references leak in.
-    await jail.set(
-      "__vars",
-      new ivm.ExternalCopy(variables ?? {}).copyInto(),
-    );
-
-    // Wrapper script:
-    //   1. Spreads __vars into individual globals ($input, $output, + any user keys)
-    //   2. Provides a no-op console to prevent crashes on console.log()
-    //   3. Runs user code synchronously
-    //   4. Returns $output serialized as JSON (only way to cross the isolate boundary)
-    const wrapper = `
-      (function () {
-        const $input  = __vars;
-        let   $output = JSON.parse(JSON.stringify(__vars));
-        const console = { log() {}, warn() {}, error() {}, info() {} };
-
-        ${code}
-
-        return JSON.stringify($output);
-      })()
-    `;
-
-    const script = await isolate.compileScript(wrapper);
-
-    // runSync: blocks the activity thread (fine — Temporal schedules activities on
-    // a thread pool) and guarantees the 500 ms hard kill via V8's wall-clock timer.
-    const resultStr = script.runSync(context, { timeout: CODE_TIMEOUT_MS });
-
-    if (typeof resultStr !== "string") {
-      throw new Error(
-        "Code Node: Script must return a value via $output. Got undefined.",
-      );
-    }
-
-    return { result: JSON.parse(resultStr) };
-  } catch (err: unknown) {
-    const error = err as Error;
-
-    // Translate isolate-specific errors into structured messages
-    if (error.message.includes("Script execution timed out")) {
-      throw new Error(
-        `Code Node: Execution timed out after ${CODE_TIMEOUT_MS}ms. ` +
-        "Check for infinite loops or expensive operations.",
-      );
-    }
-    if (error.message.includes("disposed")) {
-      throw new Error(
-        `Code Node: Isolate killed — exceeded ${CODE_MEMORY_LIMIT_MB}MB memory limit.`,
-      );
-    }
-    if (error.message.includes("CompileError") || error.message.includes("SyntaxError")) {
-      throw new Error(`Code Node: Compilation failed — ${error.message}`);
-    }
-
-    throw new Error(`Code Node: Execution failed — ${error.message}`);
-  } finally {
-    // Always free the C++ isolate memory, even on error
-    if (!isolate.isDisposed) {
-      isolate.dispose();
-    }
-  }
+  const result = await executeInPool(code, variables ?? {});
+  return { result };
 }
 
 // ── Telemetry Activity ──────────────────────────────────────────────────────────
