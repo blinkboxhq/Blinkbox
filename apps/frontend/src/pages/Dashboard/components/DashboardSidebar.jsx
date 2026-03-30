@@ -52,9 +52,9 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bg-neutral-950 border-r border-neutral-900/80 flex flex-col shrink-0 relative z-20 transition-all duration-200`}>
+      <aside className={`${w} bg-neutral-900 border-r border-neutral-700/40 flex flex-col shrink-0 relative z-20 transition-all duration-200`}>
         {/* Header */}
-        <div className={`h-[52px] flex items-center border-b border-neutral-900/80 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+        <div className={`h-[52px] flex items-center border-b border-neutral-700/40 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
@@ -86,7 +86,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           {expanded && <p className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          <div className={`border-t border-neutral-900/60 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
+          <div className={`border-t border-neutral-700/40 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
@@ -94,7 +94,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {/* Usage meter */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="p-3 rounded-lg bg-neutral-950 border border-neutral-900/60">
+            <div className="p-3 rounded-lg bg-neutral-800/50 border border-neutral-700/40">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Usage</span>
                 <span className="text-[10px] text-neutral-600">{usedPct}%</span>
@@ -111,7 +111,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         )}
 
         {/* User */}
-        <div className={`border-t border-neutral-900/80 ${expanded ? 'p-3' : 'p-2'}`}>
+        <div className={`border-t border-neutral-700/40 ${expanded ? 'p-3' : 'p-2'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-1">
               <UserAvatar />

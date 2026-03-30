@@ -26,7 +26,7 @@ export default function DashboardHeader({ onInitialize, search, setSearch, statu
       {/* Filter row: tabs + search + view toggle */}
       <div className="flex items-center gap-3">
         {/* Status tabs */}
-        <div className="flex items-center bg-neutral-950 border border-neutral-900/80 rounded-md p-0.5">
+        <div className="flex items-center bg-neutral-900 border border-neutral-700/50 rounded-md p-0.5">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -50,7 +50,7 @@ export default function DashboardHeader({ onInitialize, search, setSearch, statu
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name..."
-            className="w-full pl-8 pr-3 py-[6px] bg-neutral-950 border border-neutral-900/80 rounded-md text-[12px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-colors"
+            className="w-full pl-8 pr-3 py-[6px] bg-neutral-900 border border-neutral-700/50 rounded-md text-[12px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-colors"
           />
         </div>
 
@@ -58,7 +58,7 @@ export default function DashboardHeader({ onInitialize, search, setSearch, statu
         <div className="flex-1" />
 
         {/* View toggle */}
-        <div className="flex items-center bg-neutral-950 border border-neutral-900/80 rounded-md p-0.5">
+        <div className="flex items-center bg-neutral-900 border border-neutral-700/50 rounded-md p-0.5">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}

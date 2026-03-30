@@ -60,7 +60,7 @@ export default function GlobalHeader({ user }) {
   };
 
   return (
-    <header className="w-full h-12 bg-neutral-950 border-b border-neutral-800/60 flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-12 bg-neutral-900 border-b border-neutral-700/40 flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Logo + Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
