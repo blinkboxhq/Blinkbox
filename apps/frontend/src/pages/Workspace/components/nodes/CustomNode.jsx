@@ -440,32 +440,27 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────────
   if (isTrigger) {
-    const isSchedule = data.backendType === "cron_trigger";
-    const themeClasses = isSchedule
-      ? { iconBg: "bg-blue-500/10", iconText: "text-blue-400", iconBorder: "border-blue-500/20" }
-      : { iconBg: "bg-purple-500/10", iconText: "text-purple-400", iconBorder: "border-purple-500/20" };
-
     return (
       <div className="relative group">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`relative w-[280px] flex items-center justify-between p-2.5 bg-[#18181B] border border-zinc-800 rounded-xl shadow-xl transition-all duration-300 ${glowClass}`}
+          className={`relative w-[260px] flex items-center justify-between p-2.5 bg-[#18181B] border border-zinc-800 rounded-xl shadow-xl transition-all duration-300 ${glowClass}`}
           style={borderStyle}
         >
           {badge}
 
           {/* Left: Icon + Text */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${themeClasses.iconBg} ${themeClasses.iconBorder}`}>
-              <Icon className={`w-5 h-5 ${themeClasses.iconText}`} strokeWidth={1.75} />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <Icon className="w-5 h-5" strokeWidth={1.75} />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-zinc-100 tracking-tight truncate">
+              <span className="text-sm font-medium text-zinc-100 tracking-tight leading-tight truncate">
                 {data.label}
               </span>
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
                 TRIGGER
               </span>
             </div>
