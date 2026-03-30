@@ -358,7 +358,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full w-full relative bg-[#272727]"
+      className="flex-1 h-full w-full relative bg-[#333333]"
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
@@ -381,7 +381,7 @@ export default function Canvas() {
         panOnScroll
         zoomOnPinch
       >
-        <Background variant="dots" gap={20} size={1} color="#3a3a3a" />
+        <Background variant="dots" gap={20} size={1} color="#444" />
         <Controls
           className="!bg-zinc-900/90 !backdrop-blur-sm !border-zinc-800/50 !rounded-xl !shadow-lg !shadow-black/20
             [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800/50 [&>button]:!text-zinc-500
