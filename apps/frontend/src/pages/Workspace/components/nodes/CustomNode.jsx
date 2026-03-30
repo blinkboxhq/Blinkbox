@@ -441,32 +441,33 @@ export default function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE (n8n-style square card) ────────────────────────────────────
   if (isTrigger) {
     return (
-      <div className="relative group flex flex-col items-center">
+      <div className="relative group" style={{ width: 120, height: 148 }}>
         {/* Floating lightning bolt */}
-        <div className="absolute -left-8 top-6">
-          <Zap className="w-4 h-4 text-orange-400 fill-orange-400" strokeWidth={2} />
-        </div>
+        <Zap
+          className="absolute text-orange-400 fill-orange-400 w-[14px] h-[14px]"
+          style={{ left: -22, top: 38 }}
+          strokeWidth={2.5}
+        />
 
+        {/* Square card */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`relative w-[100px] h-[100px] flex items-center justify-center
-            bg-[#1E1E22] border border-zinc-700/50 rounded-[22px]
-            shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]
+          className={`absolute left-[10px] top-0 w-[100px] h-[100px] flex items-center justify-center
+            bg-[#232326] border border-zinc-700/40 rounded-[20px]
+            shadow-[0_8px_30px_rgba(0,0,0,0.45)]
             transition-all duration-300 ${glowClass}`}
           style={borderStyle}
         >
           {badge}
 
-          {/* Inner icon container */}
-          <div
-            className="w-[72px] h-[72px] rounded-[16px] flex items-center justify-center bg-[#28282C] border border-zinc-600/30"
-          >
+          {/* Inner icon area */}
+          <div className="w-[64px] h-[64px] rounded-[14px] flex items-center justify-center bg-[#2a2a2e] border border-zinc-600/20">
             {nodeDef.logoUrl ? (
-              <img src={nodeDef.logoUrl} alt={data.label} className="w-9 h-9 object-contain" loading="lazy" />
+              <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain" loading="lazy" />
             ) : (
-              <Icon className={`w-9 h-9 ${nodeDef.colorClass}`} strokeWidth={1.5} />
+              <Icon className={`w-8 h-8 ${nodeDef.colorClass}`} strokeWidth={1.5} />
             )}
           </div>
 
@@ -475,18 +476,22 @@ export default function CustomNode({ id, data, selected }) {
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-3.5 !h-3.5 !bg-zinc-500 !border-[3px] !border-[#1E1E22] !rounded-full !right-[-7px] !opacity-100"
+            className="!w-3 !h-3 !bg-zinc-500 !border-[3px] !border-[#232326] !rounded-full !opacity-100"
+            style={{ right: -6 }}
           />
         </motion.div>
 
-        {/* Label below the card */}
-        <span className="mt-2.5 text-[13px] font-semibold text-zinc-300 tracking-tight text-center max-w-[140px] leading-tight">
-          {data.label}
-        </span>
+        {/* Label below card */}
+        <div className="absolute left-[10px] top-[108px] w-[100px] text-center">
+          <span className="text-[12px] font-semibold text-zinc-300 leading-tight block truncate">
+            {data.label}
+          </span>
+        </div>
 
-        {/* Add-next button (repositioned for square layout) */}
-        <div className="absolute top-1/2 -right-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30"
-          style={{ top: "50px" }}
+        {/* Add-next button */}
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-all duration-200 z-30"
+          style={{ right: -28, top: 36 }}
         >
           <motion.button
             whileHover={{ scale: 1.15 }}
