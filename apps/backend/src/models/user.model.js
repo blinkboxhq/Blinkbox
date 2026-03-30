@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     // Track how they signed up
     authProvider: { type: String, enum: ["local", "google"], default: "local" },
     googleId: { type: String, unique: true, sparse: true },
+    picture: { type: String, default: "" },
 
     role: { type: String, enum: ["admin", "user"], default: "user" },
   },

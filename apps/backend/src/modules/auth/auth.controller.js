@@ -19,7 +19,7 @@ export async function googleLogin(req, res) {
       return res.status(400).json({ message: "Google credential missing." });
     }
 
-    let googleId, email, name, given_name;
+    let googleId, email, name, given_name, picture;
 
     if (credential) {
       // Flow 1: GoogleLogin component sends a JWT credential (ID token)
@@ -32,13 +32,15 @@ export async function googleLogin(req, res) {
       email = payload.email;
       name = payload.name;
       given_name = payload.given_name;
+      picture = payload.picture || "";
     } else {
       // Flow 2: Legacy popup flow with access_token
       const googleResponse = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         { headers: { Authorization: `Bearer ${access_token}` } },
       );
-      ({ sub: googleId, email, name, given_name } = googleResponse.data);
+      ({ sub: googleId, email, name, given_name, picture } = googleResponse.data);
+      picture = picture || "";
     }
     const safeName = name || given_name || email.split("@")[0];
 
@@ -51,6 +53,7 @@ export async function googleLogin(req, res) {
         email,
         authProvider: "google",
         googleId,
+        picture,
         role: "user",
       });
     } else if (!user.googleId) {
@@ -68,6 +71,12 @@ export async function googleLogin(req, res) {
       });
     }
 
+    // Keep profile picture up to date on each login
+    if (picture && user.picture !== picture) {
+      user.picture = picture;
+      await user.save();
+    }
+
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
       expiresIn: "24h",
     });
@@ -80,6 +89,7 @@ export async function googleLogin(req, res) {
         name: user.name,
         email: user.email,
         role: user.role,
+        picture: user.picture,
       },
     });
   } catch (error) {

@@ -44,49 +44,60 @@ export default function GlobalHeader({ user }) {
     executionStatus === 'failed' ? 'bg-red-500/5 border-red-500/20 text-red-400' :
     executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
     executionStatus === 'running' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
-    'bg-zinc-800/50 border-zinc-700/50 text-zinc-500';
+    'bg-neutral-900/50 border-neutral-800 text-neutral-500';
 
   const displayName = user?.name || 'User';
 
+  const UserAvatar = () => {
+    if (user?.picture) {
+      return <img src={user.picture} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />;
+    }
+    return (
+      <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-[9px] font-semibold text-neutral-300 uppercase shrink-0">
+        {displayName.charAt(0)}
+      </div>
+    );
+  };
+
   return (
-    <header className="w-full h-12 bg-[#161b22] border-b border-zinc-800 flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-12 bg-neutral-950 border-b border-neutral-800/60 flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Logo + Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
-        <img src={logo} alt="B" className="w-5 h-5 object-contain shrink-0" />
+        <button onClick={() => navigate('/dashboard')} className="shrink-0 hover:opacity-80 transition-opacity" title="Back to Dashboard">
+          <img src={logo} alt="B" className="w-5 h-5 object-contain" />
+        </button>
 
         <nav className="flex items-center gap-1.5 text-sm min-w-0">
           {/* User segment */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="w-5 h-5 rounded-full bg-zinc-700 flex items-center justify-center text-[9px] font-semibold text-zinc-300 uppercase">
-              {displayName.charAt(0)}
-            </div>
+            <UserAvatar />
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-zinc-400 hover:text-zinc-200 transition-colors text-sm"
+              className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
             >
               {displayName}
             </button>
           </div>
 
-          <span className="text-zinc-600 text-sm">/</span>
+          <span className="text-neutral-600 text-sm">/</span>
 
           {/* Context segment */}
           {isWorkspace ? (
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="text-zinc-400 hover:text-zinc-200 transition-colors text-sm"
+                className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
               >
                 Workflows
               </button>
-              <span className="text-zinc-600 text-sm">/</span>
-              <span className="text-zinc-100 font-semibold text-sm truncate max-w-[200px]" title={workflowName}>
+              <span className="text-neutral-600 text-sm">/</span>
+              <span className="text-neutral-100 font-semibold text-sm truncate max-w-[200px]" title={workflowName}>
                 {workflowName || 'Untitled'}
               </span>
             </>
           ) : (
-            <span className="text-zinc-100 font-semibold text-sm">Dashboard</span>
+            <span className="text-neutral-100 font-semibold text-sm">Dashboard</span>
           )}
         </nav>
       </div>
@@ -95,9 +106,9 @@ export default function GlobalHeader({ user }) {
       {isWorkspace && (
         <div className="flex items-center gap-3">
           {/* Node count */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800/50 border border-zinc-700/50 rounded-md">
-            <Zap className="w-3 h-3 text-zinc-500" />
-            <span className="text-[11px] font-mono text-zinc-400">{nodeCount} nodes</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900/50 border border-neutral-800 rounded-md">
+            <Zap className="w-3 h-3 text-neutral-500" />
+            <span className="text-[11px] font-mono text-neutral-400">{nodeCount} nodes</span>
           </div>
 
           {/* Execution status */}
@@ -110,7 +121,7 @@ export default function GlobalHeader({ user }) {
           </div>
 
           {/* Save indicator */}
-          <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+          <div className="flex items-center gap-1 text-[10px] text-neutral-500">
             {isSaving ? (
               <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving</span></>
             ) : (
@@ -123,7 +134,7 @@ export default function GlobalHeader({ user }) {
             onClick={() => saveEngine(id)}
             disabled={isSaving}
             title="Save (Cmd+S)"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md text-[11px] font-semibold text-zinc-300 hover:text-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[11px] font-semibold text-neutral-300 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
@@ -134,7 +145,7 @@ export default function GlobalHeader({ user }) {
             onClick={() => runEngine(id)}
             disabled={isRunning || nodeCount === 0}
             title="Run (Cmd+Enter)"
-            className="flex items-center gap-1.5 px-3 py-1 bg-zinc-100 hover:bg-white text-zinc-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-white text-neutral-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
             Run Test

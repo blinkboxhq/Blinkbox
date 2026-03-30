@@ -341,10 +341,10 @@ export default function Dashboard() {
   if (statusFilter !== 'all') filtered = filtered.filter((w) => (w.status || 'draft') === statusFilter);
   if (search) filtered = filtered.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (!user) return <div className="h-screen w-screen bg-[#0d1117] flex items-center justify-center"><Loader2 className="w-5 h-5 text-zinc-600 animate-spin" /></div>;
+  if (!user) return <div className="h-screen w-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>;
 
   return (
-    <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden">
+    <div className="flex h-screen bg-neutral-950 text-white overflow-hidden">
       <style>{`
         @keyframes dbFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes dbScaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
