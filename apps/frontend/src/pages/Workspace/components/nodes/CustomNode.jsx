@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search, Brain, Database } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search, Brain, Database, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -438,55 +438,35 @@ export default function CustomNode({ id, data, selected }) {
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
   const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
 
-  // ── TRIGGER NODE ────────────────────────────────────────────────────────────
+  // ── TRIGGER NODE (n8n-style square card) ────────────────────────────────────
   if (isTrigger) {
     return (
-      <div className="relative group">
+      <div className="relative group flex flex-col items-center">
+        {/* Floating lightning bolt */}
+        <div className="absolute -left-8 top-6">
+          <Zap className="w-4 h-4 text-orange-400 fill-orange-400" strokeWidth={2} />
+        </div>
+
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`relative w-[260px] flex items-center justify-between p-2.5 bg-[#18181B] border border-zinc-800 rounded-xl shadow-xl transition-all duration-300 ${glowClass}`}
+          className={`relative w-[100px] h-[100px] flex items-center justify-center
+            bg-[#1E1E22] border border-zinc-700/50 rounded-[22px]
+            shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]
+            transition-all duration-300 ${glowClass}`}
           style={borderStyle}
         >
           {badge}
 
-          {/* Left: Icon + Text */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-              <Icon className="w-5 h-5" strokeWidth={1.75} />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-zinc-100 tracking-tight leading-tight truncate">
-                {data.label}
-              </span>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-                TRIGGER
-              </span>
-            </div>
-          </div>
-
-          {/* Right: Play / Status */}
-          <div className="shrink-0">
-            {status === "running" ? (
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
-              </span>
+          {/* Inner icon container */}
+          <div
+            className="w-[72px] h-[72px] rounded-[16px] flex items-center justify-center bg-[#28282C] border border-zinc-600/30"
+          >
+            {nodeDef.logoUrl ? (
+              <img src={nodeDef.logoUrl} alt={data.label} className="w-9 h-9 object-contain" loading="lazy" />
             ) : (
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handlePlay}
-                disabled={isRunning}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isRunning ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-              </motion.button>
+              <Icon className={`w-9 h-9 ${nodeDef.colorClass}`} strokeWidth={1.5} />
             )}
           </div>
 
@@ -495,11 +475,31 @@ export default function CustomNode({ id, data, selected }) {
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-3 !h-3 !bg-blue-500 !border-2 !border-[#18181B] !rounded-full !right-[-6px] !opacity-100"
+            className="!w-3.5 !h-3.5 !bg-zinc-500 !border-[3px] !border-[#1E1E22] !rounded-full !right-[-7px] !opacity-100"
           />
         </motion.div>
 
-        {addNextButton}
+        {/* Label below the card */}
+        <span className="mt-2.5 text-[13px] font-semibold text-zinc-300 tracking-tight text-center max-w-[140px] leading-tight">
+          {data.label}
+        </span>
+
+        {/* Add-next button (repositioned for square layout) */}
+        <div className="absolute top-1/2 -right-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30"
+          style={{ top: "50px" }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleAddNext}
+            className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-600/50 flex items-center justify-center
+              hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all duration-200
+              shadow-lg shadow-black/50"
+            title="Add next step"
+          >
+            <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
+          </motion.button>
+        </div>
       </div>
     );
   }
