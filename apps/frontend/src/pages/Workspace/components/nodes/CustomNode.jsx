@@ -438,88 +438,69 @@ export default function CustomNode({ id, data, selected }) {
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
   const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
 
-  // ── TRIGGER NODE (Pill Shape) ──────────────────────────────────────────────
+  // ── TRIGGER NODE ────────────────────────────────────────────────────────────
   if (isTrigger) {
+    const isSchedule = data.backendType === "cron_trigger";
+    const themeClasses = isSchedule
+      ? { iconBg: "bg-blue-500/10", iconText: "text-blue-400", iconBorder: "border-blue-500/20" }
+      : { iconBg: "bg-purple-500/10", iconText: "text-purple-400", iconBorder: "border-purple-500/20" };
+
     return (
       <div className="relative group">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`relative border border-emerald-500/20 bg-zinc-900/90 backdrop-blur-sm
-            rounded-full min-w-[220px] transition-all duration-300 ${glowClass}`}
-          style={{
-            ...borderStyle,
-            background: "linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(9,9,11,0.95) 50%)",
-          }}
+          className={`relative w-[280px] flex items-center justify-between p-2.5 bg-[#18181B] border border-zinc-800 rounded-xl shadow-xl transition-all duration-300 ${glowClass}`}
+          style={borderStyle}
         >
           {badge}
 
-          {/* Subtle animated ring for trigger */}
-          {!status && (
-            <div className="absolute inset-0 rounded-full border border-emerald-500/10 animate-pulse pointer-events-none" />
-          )}
-
-          {/* Inner content */}
-          <div className="flex items-center gap-3 px-5 py-3.5">
-            {/* Icon circle with accent glow */}
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 relative"
-              style={{
-                backgroundColor: "rgba(16,185,129,0.12)",
-                boxShadow: "0 0 20px rgba(16,185,129,0.1), inset 0 0 12px rgba(16,185,129,0.05)",
-              }}
-            >
-              <Icon className="w-4.5 h-4.5 text-emerald-400" strokeWidth={1.75} />
+          {/* Left: Icon + Text */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${themeClasses.iconBg} ${themeClasses.iconBorder}`}>
+              <Icon className={`w-5 h-5 ${themeClasses.iconText}`} strokeWidth={1.75} />
             </div>
-
-            <div className="flex flex-col overflow-hidden flex-1 min-w-0">
-              <span className="text-[13px] font-semibold text-zinc-100 tracking-tight truncate">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium text-zinc-100 tracking-tight truncate">
                 {data.label}
               </span>
-              {configHint ? (
-                <span className="text-[10px] text-zinc-500 truncate font-mono">{configHint}</span>
-              ) : (
-                <span className="text-[10px] text-emerald-500/50 font-medium">Starts workflow</span>
-              )}
-            </div>
-
-            {/* Run button or status */}
-            <div className="shrink-0 ml-1">
-              {status === "running" ? (
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
-                </span>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={handlePlay}
-                  disabled={isRunning}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
-                    isRunning
-                      ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
-                      : "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20 hover:border-emerald-500/40"
-                  }`}
-                >
-                  {isRunning ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Play className="w-3 h-3 fill-current" />
-                  )}
-                  {isRunning ? "..." : "Run"}
-                </motion.button>
-              )}
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                TRIGGER
+              </span>
             </div>
           </div>
 
-          {/* Output handle — hidden by default */}
+          {/* Right: Play / Status */}
+          <div className="shrink-0">
+            {status === "running" ? (
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+              </span>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handlePlay}
+                disabled={isRunning}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isRunning ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+              </motion.button>
+            )}
+          </div>
+
+          {/* Output handle */}
           <Handle
             type="source"
             position={Position.Right}
             id="output"
-            className={`${handleBaseClass} !bg-emerald-500/60 group-hover:!bg-emerald-400`}
+            className="!w-3 !h-3 !bg-blue-500 !border-2 !border-[#18181B] !rounded-full !right-[-6px] !opacity-100"
           />
         </motion.div>
 
