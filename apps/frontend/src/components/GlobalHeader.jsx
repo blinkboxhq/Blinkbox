@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Loader2, Check, Save, Play, Zap } from 'lucide-react';
+import { Loader2, Save, Play } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
 
 export default function GlobalHeader({ user }) {
@@ -17,10 +17,8 @@ export default function GlobalHeader({ user }) {
   const saveEngine = useWorkspaceStore((s) => s.saveEngine);
   const runEngine = useWorkspaceStore((s) => s.runEngine);
   const nodes = useWorkspaceStore((s) => s.nodes);
-  const liveExecutionState = useWorkspaceStore((s) => s.liveExecutionState);
 
   const nodeCount = nodes.length;
-  const executionStatus = liveExecutionState?.status || (isRunning ? 'running' : 'idle');
 
   // Keyboard shortcuts (workspace only)
   useEffect(() => {
@@ -39,12 +37,6 @@ export default function GlobalHeader({ user }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWorkspace, id, saveEngine, runEngine]);
 
-  const statusBadgeColor =
-    executionStatus === 'failed' ? 'bg-red-500/5 border-red-500/20 text-red-400' :
-    executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
-    executionStatus === 'running' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
-    'bg-neutral-900/50 border-neutral-800 text-neutral-500';
-
   const displayName = user?.name || 'User';
 
   const UserAvatar = () => {
@@ -59,25 +51,11 @@ export default function GlobalHeader({ user }) {
   };
 
   return (
-    <header className="w-full h-12 bg-neutral-950 border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-12 bg-neutral-950 border-b border-zinc-800/50 flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         <nav className="flex items-center gap-1.5 text-sm min-w-0">
-          {/* User segment */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <UserAvatar />
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
-            >
-              {displayName}
-            </button>
-          </div>
-
-          <span className="text-neutral-600 text-sm">/</span>
-
-          {/* Context segment */}
           {isWorkspace ? (
             <>
               <button
@@ -97,56 +75,37 @@ export default function GlobalHeader({ user }) {
         </nav>
       </div>
 
-      {/* Right: Workspace actions (only in workspace) */}
-      {isWorkspace && (
-        <div className="flex items-center gap-3">
-          {/* Node count */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900/50 border border-neutral-800 rounded-md">
-            <Zap className="w-3 h-3 text-neutral-500" />
-            <span className="text-[11px] font-mono text-neutral-400">{nodeCount} nodes</span>
-          </div>
+      {/* Right: Actions + Avatar */}
+      <div className="flex items-center gap-3">
+        {isWorkspace && (
+          <>
+            {/* Save button */}
+            <button
+              onClick={() => saveEngine(id)}
+              disabled={isSaving}
+              title="Save (Cmd+S)"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[11px] font-semibold text-neutral-300 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Save
+            </button>
 
-          {/* Execution status */}
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-md transition-colors ${statusBadgeColor}`}>
-            {executionStatus === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
-            {executionStatus === 'executed' && <Check className="w-3 h-3" />}
-            <span className="text-[11px] font-semibold uppercase tracking-widest">
-              {executionStatus === 'executed' ? 'Success' : executionStatus === 'running' ? 'Running' : executionStatus === 'failed' ? 'Failed' : 'Idle'}
-            </span>
-          </div>
+            {/* Run button */}
+            <button
+              onClick={() => runEngine(id)}
+              disabled={isRunning || nodeCount === 0}
+              title="Run (Cmd+Enter)"
+              className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-white text-neutral-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Run
+            </button>
+          </>
+        )}
 
-          {/* Save indicator */}
-          <div className="flex items-center gap-1 text-[10px] text-neutral-500">
-            {isSaving ? (
-              <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving</span></>
-            ) : (
-              <><Check className="w-3 h-3 text-emerald-500/70" /><span>Saved</span></>
-            )}
-          </div>
-
-          {/* Save button */}
-          <button
-            onClick={() => saveEngine(id)}
-            disabled={isSaving}
-            title="Save (Cmd+S)"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[11px] font-semibold text-neutral-300 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
-          </button>
-
-          {/* Run button */}
-          <button
-            onClick={() => runEngine(id)}
-            disabled={isRunning || nodeCount === 0}
-            title="Run (Cmd+Enter)"
-            className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-white text-neutral-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Run Test
-          </button>
-        </div>
-      )}
+        {/* User avatar */}
+        <UserAvatar />
+      </div>
     </header>
   );
 }
