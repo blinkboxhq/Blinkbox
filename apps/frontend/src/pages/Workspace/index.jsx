@@ -62,7 +62,7 @@ export default function Workspace() {
   if (isMobile) return <MobileGate />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#161616]">
+    <div className="flex h-screen overflow-hidden bg-[#1E1E20]">
       <DashboardSidebar
         user={{ name: 'User', email: '' }}
         onLogout={() => navigate('/login')}
