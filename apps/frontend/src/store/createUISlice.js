@@ -13,10 +13,15 @@ export const createUISlice = (set, get) => ({
   workflowName: "Loading...",
   isSaving: false,
   isLoading: true,
+  addNodeSource: null,       // nodeId that triggered "Add Next Step" modal
+  insertEdgeId: null,        // edgeId when inserting node between two nodes
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
   setWorkflowName: (name) => set({ workflowName: name }),
+  setAddNodeSource: (nodeId) => set({ addNodeSource: nodeId, insertEdgeId: null }),
+  setInsertOnEdge: (edgeId) => set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
+  clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null }),
 
   // ── API: Load Workflow ───────────────────────────────────────────────────
   loadEngine: async (automationId) => {

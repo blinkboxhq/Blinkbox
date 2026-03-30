@@ -158,6 +158,10 @@ export const CATEGORIES = [
   { id: "integration", label: "Integrations", icon: Database },
 ];
 
+// ── Logo URL helper (Simple Icons CDN) ─────────────────────────────────
+const siLogo = (slug, color) =>
+  `https://cdn.simpleicons.org/${slug}/${color || "white"}`;
+
 export const NodeRegistry = {
   // ── Triggers ─────────────────────────────────────────────────────────────
   manual: {
@@ -195,6 +199,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#10A37F]",
     accentColor: "16,163,127",
+    logoUrl: siLogo("openai", "10A37F"),
     ConfigPanel: OpenAINode,
     category: "ai",
   },
@@ -204,6 +209,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#D4C1B3]",
     accentColor: "212,193,179",
+    logoUrl: siLogo("anthropic", "D4C1B3"),
     ConfigPanel: AnthropicNode,
     category: "ai",
   },
@@ -213,6 +219,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
+    logoUrl: siLogo("googlegemini", "4285F4"),
     ConfigPanel: GeminiNode,
     category: "ai",
   },
@@ -222,6 +229,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
+    logoUrl: siLogo("deepseek", "22D3EE"),
     ConfigPanel: DeepSeekNode,
     category: "ai",
   },
@@ -249,6 +257,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#22d3ee]",
     accentColor: "34,211,238",
+    logoUrl: siLogo("perplexity", "22D3EE"),
     ConfigPanel: PerplexityNode,
     category: "ai",
   },
@@ -285,6 +294,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#94a3b8]",
     accentColor: "148,163,184",
+    logoUrl: siLogo("ollama", "94A3B8"),
     ConfigPanel: OllamaNode,
     category: "ai",
   },
@@ -459,6 +469,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#26A5E4]",
     accentColor: "38,165,228",
+    logoUrl: siLogo("telegram", "26A5E4"),
     ConfigPanel: TelegramNode,
     category: "integration",
   },
@@ -468,6 +479,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#25D366]",
     accentColor: "37,211,102",
+    logoUrl: siLogo("whatsapp", "25D366"),
     ConfigPanel: WhatsAppNode,
     category: "integration",
   },
@@ -477,6 +489,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#E01E5A]",
     accentColor: "224,30,90",
+    logoUrl: siLogo("slack", "E01E5A"),
     ConfigPanel: SlackNode,
     category: "integration",
   },
@@ -486,6 +499,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#5865F2]",
     accentColor: "88,101,242",
+    logoUrl: siLogo("discord", "5865F2"),
     ConfigPanel: DiscordNode,
     category: "integration",
   },
@@ -495,6 +509,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#635BFF]",
     accentColor: "99,91,255",
+    logoUrl: siLogo("stripe", "635BFF"),
     ConfigPanel: StripeNode,
     category: "integration",
   },
@@ -504,6 +519,7 @@ export const NodeRegistry = {
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#F65858]",
     accentColor: "246,88,88",
+    logoUrl: siLogo("airtable", "F65858"),
     ConfigPanel: AirtableNode,
     category: "integration",
   },

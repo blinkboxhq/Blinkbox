@@ -1,4 +1,6 @@
-import { getBezierPath, EdgeLabelRenderer } from "@xyflow/react";
+import { getSmoothStepPath, EdgeLabelRenderer } from "@xyflow/react";
+import { Plus } from "lucide-react";
+import useWorkspaceStore from "../../../store/workspaceStore";
 
 export default function ConfigurableEdge({
   id,
@@ -12,13 +14,16 @@ export default function ConfigurableEdge({
   data,
   selected,
 }) {
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
+
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 16,
   });
 
   const status = data?.status;
@@ -26,29 +31,37 @@ export default function ConfigurableEdge({
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
 
-  // Color palette: running = blue glow, completed = emerald pulse, failed = red, idle = zinc
-  let stroke = selected ? "#a1a1aa" : "#52525b";
-  let strokeWidth = selected ? 1.5 : 1;
-  let strokeDasharray = "none";
-  let animation = "none";
+  // Color palette
+  let stroke = selected ? "#71717a" : "#3f3f46";
+  let strokeWidth = selected ? 1.8 : 1.2;
+  let strokeDasharray = "6 4";
+  let animation = "edgeFlow 1.2s linear infinite";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#3b82f6";
-    strokeWidth = 1.5;
+    strokeWidth = 2;
     strokeDasharray = "6 4";
-    animation = "edgeFlow 0.6s linear infinite";
-    filter = "drop-shadow(0 0 3px rgba(59,130,246,0.5))";
+    animation = "edgeFlow 0.5s linear infinite";
+    filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 1.5;
+    strokeWidth = 1.8;
+    strokeDasharray = "none";
     animation = "edgeFadeToIdle 1.5s ease-out forwards";
-    filter = "drop-shadow(0 0 2px rgba(16,185,129,0.4))";
+    filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    strokeWidth = 1.5;
+    strokeWidth = 1.8;
+    strokeDasharray = "none";
+    animation = "none";
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
   }
+
+  const handleInsert = (e) => {
+    e.stopPropagation();
+    setInsertOnEdge(id);
+  };
 
   return (
     <>
@@ -56,11 +69,11 @@ export default function ConfigurableEdge({
       {isRunning && (
         <path
           d={edgePath}
-          strokeWidth={4}
+          strokeWidth={5}
           stroke="#3b82f6"
           fill="none"
-          opacity={0.15}
-          style={{ filter: "blur(3px)" }}
+          opacity={0.12}
+          style={{ filter: "blur(4px)" }}
         />
       )}
 
@@ -82,26 +95,48 @@ export default function ConfigurableEdge({
 
       {/* Traveling dot for running edges */}
       {isRunning && (
-        <circle r="2.5" fill="#60a5fa" filter="drop-shadow(0 0 3px rgba(96,165,250,0.8))">
-          <animateMotion dur="1.2s" repeatCount="indefinite" path={edgePath} />
+        <circle r="2.5" fill="#60a5fa" filter="drop-shadow(0 0 4px rgba(96,165,250,0.9))">
+          <animateMotion dur="1s" repeatCount="indefinite" path={edgePath} />
         </circle>
       )}
 
-      {/* Condition Label */}
-      {data?.condition && (
-        <EdgeLabelRenderer>
+      {/* Inline + button on the edge midpoint */}
+      <EdgeLabelRenderer>
+        {/* Insert node button */}
+        <div
+          style={{
+            position: "absolute",
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: "all",
+          }}
+          className="nodrag nopan"
+        >
+          <button
+            onClick={handleInsert}
+            className="w-5 h-5 rounded-full bg-zinc-800 border border-zinc-600/40 flex items-center justify-center
+              opacity-0 hover:opacity-100 focus:opacity-100 transition-all duration-200
+              hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:scale-110
+              shadow-md shadow-black/40 group/edge-btn"
+            title="Insert node here"
+          >
+            <Plus className="w-2.5 h-2.5 text-zinc-400 group-hover/edge-btn:text-emerald-400 transition-colors" strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Condition Label */}
+        {data?.condition && (
           <div
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              transform: `translate(-50%, -120%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "all",
             }}
-            className="nodrag nopan bg-zinc-900 border border-zinc-800 text-zinc-500 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded"
+            className="nodrag nopan bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/40 text-zinc-500 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md"
           >
             {data.condition.operator ? "Condition" : "Pass"}
           </div>
-        </EdgeLabelRenderer>
-      )}
+        )}
+      </EdgeLabelRenderer>
     </>
   );
 }

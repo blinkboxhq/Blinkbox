@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search, Brain, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -225,7 +225,6 @@ function getConfigHint(data, edges, nodeId) {
   if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent") {
-    // Show connected model name if available
     if (edges && nodeId) {
       const modelEdge = edges.find((e) => e.target === nodeId && e.targetHandle === "chat_model");
       if (modelEdge) {
@@ -263,10 +262,64 @@ function getConfigHint(data, edges, nodeId) {
   if (data.backendType === "deepinfra" && c.model) return c.model;
   if (data.backendType === "hyperbolic" && c.model) return c.model;
   if (data.backendType === "telegram" && c.text) return c.text.slice(0, 40);
-  if (data.backendType === "whatsapp" && c.to) return `→ ${c.to}`;
-  if (data.backendType === "airtable" && c.tableName) return `${c.action || "create"} · ${c.tableName}`;
+  if (data.backendType === "whatsapp" && c.to) return `\u2192 ${c.to}`;
+  if (data.backendType === "airtable" && c.tableName) return `${c.action || "create"} \u00b7 ${c.tableName}`;
   if (data.backendType === "web_search" && c.query) return c.query.slice(0, 40);
   return null;
+}
+
+// ── Node Shape Helpers ──────────────────────────────────────────────────────
+
+const MEMORY_TYPES = ["window_buffer_memory", "redis_memory", "postgres_memory", "vector_memory", "mem0"];
+const AI_TYPES = [
+  "openai", "anthropic", "gemini", "deepseek", "openrouter", "together",
+  "perplexity", "xai", "fireworks", "cerebras", "ollama", "novita",
+  "deepinfra", "hyperbolic", "ai_agent",
+];
+
+function isMemoryNode(backendType) {
+  return MEMORY_TYPES.includes(backendType);
+}
+
+function isAINode(backendType) {
+  return AI_TYPES.includes(backendType);
+}
+
+// ── Node Icon with optional Logo URL ────────────────────────────────────────
+function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
+  const Icon = nodeDef.icon;
+  const sizeMap = {
+    sm: { box: "w-7 h-7", icon: "w-3.5 h-3.5", img: "w-3.5 h-3.5" },
+    md: { box: "w-9 h-9", icon: "w-4 h-4", img: "w-4 h-4" },
+    lg: { box: "w-10 h-10", icon: "w-5 h-5", img: "w-5 h-5" },
+  };
+  const s = sizeMap[size];
+
+  return (
+    <div
+      className={`${s.box} rounded-xl flex items-center justify-center shrink-0 relative`}
+      style={{
+        backgroundColor: `rgba(${accent},0.12)`,
+        ...(glow ? { boxShadow: `0 0 16px rgba(${accent},0.15), 0 0 4px rgba(${accent},0.1)` } : {}),
+      }}
+    >
+      {nodeDef.logoUrl ? (
+        <img
+          src={nodeDef.logoUrl}
+          alt={nodeDef.label}
+          className={`${s.img} object-contain`}
+          loading="lazy"
+          onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+        />
+      ) : null}
+      {/* Fallback icon — always rendered, hidden if logo loads */}
+      <div
+        className={`${nodeDef.logoUrl ? "hidden" : "flex"} items-center justify-center ${nodeDef.colorClass}`}
+      >
+        <Icon className={s.icon} strokeWidth={1.75} />
+      </div>
+    </div>
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -285,54 +338,74 @@ export default function CustomNode({ id, data, selected }) {
   const isRunning = useWorkspaceStore((s) => s.isRunning);
   const runEngine = useWorkspaceStore((s) => s.runEngine);
   const edges = useWorkspaceStore((s) => s.edges);
+  const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
   const status = isExecutionLive ? getNodeStatus(id) : null;
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
   const isAgent = data.backendType === "ai_agent";
+  const isMemory = isMemoryNode(data.backendType);
+  const isAI = isAINode(data.backendType);
   const configHint = getConfigHint(data, edges, id);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
   const getHandleConnected = (handleId) =>
     edges.some((e) => e.target === id && e.targetHandle === handleId);
 
-  let borderClass = "border-zinc-800/60";
+  // ── Status badge ───────────────────────────────────────────────────────────
   let badge = null;
-
-  if (status === "running") {
-    borderClass = "border-blue-500/30";
-  } else if (status === "completed") {
-    borderClass = "border-emerald-500/25";
+  if (status === "completed") {
     badge = (
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center z-20"
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center z-20 shadow-lg shadow-emerald-500/30"
       >
-        <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+        <Check className="w-3 h-3 text-white" strokeWidth={3} />
       </motion.div>
     );
   } else if (status === "failed") {
-    borderClass = "border-red-500/25";
     badge = (
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center z-20"
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center z-20 shadow-lg shadow-red-500/30"
       >
-        <AlertTriangle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+        <AlertTriangle className="w-3 h-3 text-white" strokeWidth={3} />
       </motion.div>
     );
   }
 
-  if (hasMappingWarning && !status) borderClass = "border-amber-500/25";
-  if (selected) borderClass = "border-zinc-600";
+  // ── Border & glow based on status ──────────────────────────────────────────
+  let borderStyle = {};
+  let glowClass = "";
+
+  if (status === "running") {
+    borderStyle = { borderColor: "rgba(59,130,246,0.4)" };
+    glowClass = "shadow-[0_0_20px_rgba(59,130,246,0.15)]";
+  } else if (status === "completed") {
+    borderStyle = { borderColor: "rgba(16,185,129,0.3)" };
+    glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.1)]";
+  } else if (status === "failed") {
+    borderStyle = { borderColor: "rgba(239,68,68,0.3)" };
+    glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.1)]";
+  } else if (hasMappingWarning) {
+    borderStyle = { borderColor: "rgba(245,158,11,0.25)" };
+  } else if (selected) {
+    borderStyle = { borderColor: `rgba(${accent},0.5)` };
+    glowClass = `shadow-[0_0_24px_rgba(${accent},0.1)]`;
+  }
 
   const handlePlay = (e) => {
     e.stopPropagation();
     if (!isRunning && automationId) runEngine(automationId);
+  };
+
+  const handleAddNext = (e) => {
+    e.stopPropagation();
+    if (setAddNodeSource) setAddNodeSource(id);
   };
 
   // Agent connection status dots for footer
@@ -343,19 +416,173 @@ export default function CustomNode({ id, data, selected }) {
       }))
     : [];
 
+  // ── Shared hover + button ─────────────────────────────────────────────────
+  const addNextButton = (
+    <div className="absolute top-1/2 -right-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30">
+      <motion.button
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleAddNext}
+        className="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-600/50 flex items-center justify-center
+          hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all duration-200
+          shadow-lg shadow-black/50"
+        title="Add next step"
+      >
+        <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
+      </motion.button>
+    </div>
+  );
+
+  // ── Handle styles (hidden by default, visible on hover) ────────────────────
+  const handleBaseClass = "!w-2.5 !h-2.5 !rounded-full !border-2 !border-zinc-900 transition-all duration-200 touch-none !opacity-0 group-hover:!opacity-100";
+  const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
+  const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
+
+  // ── TRIGGER NODE (Pill Shape) ──────────────────────────────────────────────
+  if (isTrigger) {
+    return (
+      <div className="relative group">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+          className={`relative border border-emerald-500/20 bg-zinc-900/90 backdrop-blur-sm
+            rounded-full min-w-[220px] transition-all duration-300 ${glowClass}`}
+          style={{
+            ...borderStyle,
+            background: "linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(9,9,11,0.95) 50%)",
+          }}
+        >
+          {badge}
+
+          {/* Subtle animated ring for trigger */}
+          {!status && (
+            <div className="absolute inset-0 rounded-full border border-emerald-500/10 animate-pulse pointer-events-none" />
+          )}
+
+          {/* Inner content */}
+          <div className="flex items-center gap-3 px-5 py-3.5">
+            {/* Icon circle with accent glow */}
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 relative"
+              style={{
+                backgroundColor: "rgba(16,185,129,0.12)",
+                boxShadow: "0 0 20px rgba(16,185,129,0.1), inset 0 0 12px rgba(16,185,129,0.05)",
+              }}
+            >
+              <Icon className="w-4.5 h-4.5 text-emerald-400" strokeWidth={1.75} />
+            </div>
+
+            <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+              <span className="text-[13px] font-semibold text-zinc-100 tracking-tight truncate">
+                {data.label}
+              </span>
+              {configHint ? (
+                <span className="text-[10px] text-zinc-500 truncate font-mono">{configHint}</span>
+              ) : (
+                <span className="text-[10px] text-emerald-500/50 font-medium">Starts workflow</span>
+              )}
+            </div>
+
+            {/* Run button or status */}
+            <div className="shrink-0 ml-1">
+              {status === "running" ? (
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+                </span>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.92 }}
+                  onClick={handlePlay}
+                  disabled={isRunning}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                    isRunning
+                      ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
+                      : "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20 hover:border-emerald-500/40"
+                  }`}
+                >
+                  {isRunning ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Play className="w-3 h-3 fill-current" />
+                  )}
+                  {isRunning ? "..." : "Run"}
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* Output handle — hidden by default */}
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output"
+            className={`${handleBaseClass} !bg-emerald-500/60 group-hover:!bg-emerald-400`}
+          />
+        </motion.div>
+
+        {addNextButton}
+      </div>
+    );
+  }
+
+  // ── AI / MEMORY NODE (Glassmorphism with glow) ─────────────────────────────
+  const isGlassmorphic = isAI || isMemory;
+
   return (
     <div className="relative group">
-      {/* ── Main Card ───────────────────────────────────────────────────── */}
-      <div
-        className={`relative border ${borderClass} rounded-xl min-w-[240px] bg-zinc-900 transition-colors duration-150 overflow-hidden`}
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className={`relative border min-w-[240px] max-w-[280px] transition-all duration-300 overflow-hidden
+          ${isGlassmorphic
+            ? "rounded-2xl bg-zinc-900/70 backdrop-blur-xl border-zinc-700/20"
+            : "rounded-2xl bg-zinc-900/95 border-zinc-800/40"
+          }
+          ${glowClass}
+        `}
+        style={{
+          ...borderStyle,
+          ...(isGlassmorphic ? {
+            boxShadow: `${glowClass ? "" : `0 0 24px rgba(${accent},0.08), 0 0 8px rgba(${accent},0.04), `}inset 0 1px 0 rgba(255,255,255,0.04)`,
+          } : {
+            boxShadow: glowClass ? undefined : "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
+          }),
+        }}
       >
         {badge}
 
-        {/* Accent bar */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
-          style={{ backgroundColor: `rgba(${accent},0.4)` }}
-        />
+        {/* Gradient overlay for AI/Memory nodes */}
+        {isGlassmorphic && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-2xl"
+            style={{
+              background: `radial-gradient(ellipse at 30% -20%, rgba(${accent},0.08) 0%, transparent 60%)`,
+            }}
+          />
+        )}
+
+        {/* Glowing accent line on left for AI/Memory */}
+        {isGlassmorphic && (
+          <div
+            className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full"
+            style={{
+              backgroundColor: `rgba(${accent},0.4)`,
+              boxShadow: `0 0 8px rgba(${accent},0.3)`,
+            }}
+          />
+        )}
+
+        {/* Accent bar (standard nodes) */}
+        {!isGlassmorphic && (
+          <div
+            className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full"
+            style={{ backgroundColor: `rgba(${accent},0.35)` }}
+          />
+        )}
 
         {/* Input handle */}
         {!isTrigger && (
@@ -363,8 +590,11 @@ export default function CustomNode({ id, data, selected }) {
             type="target"
             position={Position.Left}
             id="input"
-            className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 transition-colors touch-none"
-            style={isAgent ? { top: "12%" } : undefined}
+            className={`${handleBaseClass} group-hover:!opacity-100`}
+            style={{
+              backgroundColor: `rgba(${accent},0.5)`,
+              ...(isAgent ? { top: "12%" } : {}),
+            }}
           />
         )}
 
@@ -379,19 +609,22 @@ export default function CustomNode({ id, data, selected }) {
         ))}
 
         {/* Header */}
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5">
-          <div
-            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${nodeDef.colorClass}`}
-            style={{ backgroundColor: `rgba(${accent},0.12)` }}
-          >
-            <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-          </div>
+        <div className="relative flex items-center gap-3 px-4 py-3.5">
+          {/* Icon */}
+          <NodeIcon nodeDef={nodeDef} accent={accent} size="md" glow={isGlassmorphic} />
 
           <div className="flex flex-col overflow-hidden flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-[12px] font-medium text-zinc-200 tracking-tight truncate">
+              <span className="text-[12px] font-semibold text-zinc-100 tracking-tight truncate">
                 {data.label}
               </span>
+              {/* Memory badge */}
+              {isMemory && (
+                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">
+                  <Database className="w-2.5 h-2.5 text-purple-400" />
+                  <span className="text-[7px] font-bold text-purple-400 uppercase tracking-wider">Mem</span>
+                </div>
+              )}
               {hasMappingWarning && (
                 <div className="relative group/warn">
                   <AlertTriangle className="w-3 h-3 text-amber-500/70 shrink-0 cursor-help" />
@@ -404,26 +637,26 @@ export default function CustomNode({ id, data, selected }) {
               )}
             </div>
             {configHint && (
-              <span className="text-[10px] text-zinc-500 truncate font-mono">{configHint}</span>
+              <span className="text-[10px] text-zinc-500 truncate font-mono mt-0.5">{configHint}</span>
             )}
           </div>
 
           {/* Status indicator */}
           <div className="shrink-0">
             {status === "running" && (
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
               </span>
             )}
-            {status === "completed" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-            {status === "failed" && <div className="w-2 h-2 rounded-full bg-red-500" />}
+            {status === "completed" && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />}
+            {status === "failed" && <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]" />}
           </div>
         </div>
 
         {/* Agent connection indicators in footer */}
         {isAgent && (
-          <div className="flex items-center gap-3 px-3.5 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
+          <div className="flex items-center gap-3 px-4 py-2 border-t border-zinc-800/30 bg-zinc-950/30">
             {agentHandleStatus.map((h) => (
               <div key={h.id} className="flex items-center gap-1">
                 <div
@@ -440,33 +673,23 @@ export default function CustomNode({ id, data, selected }) {
 
         {/* Footer (non-agent) */}
         {!isAgent && (
-          <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30">
-            <span className="text-[9px] text-zinc-700 font-mono truncate max-w-[120px]">
+          <div className={`flex items-center justify-between px-4 py-2 border-t bg-zinc-950/30 ${
+            isGlassmorphic ? "border-zinc-700/15" : "border-zinc-800/30"
+          }`}>
+            <span className="text-[9px] text-zinc-600 font-mono truncate max-w-[120px]">
               {data.backendType}
             </span>
             <div className="flex items-center gap-1.5">
-              {isTrigger ? (
-                <button
-                  onClick={handlePlay}
-                  disabled={isRunning}
-                  className={`group flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${
-                    isRunning
-                      ? "bg-blue-500/10 text-blue-400 cursor-not-allowed"
-                      : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-95"
-                  }`}
-                >
-                  {isRunning ? (
-                    <><Loader2 className="w-2.5 h-2.5 animate-spin" />Run</>
-                  ) : (
-                    <><Play className="w-2.5 h-2.5 fill-current" />Run</>
-                  )}
-                </button>
-              ) : isConfigured ? (
-                <span className="text-[8px] text-emerald-600/80 uppercase tracking-wider">Ready</span>
+              {isConfigured ? (
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[8px] text-emerald-400/80 uppercase tracking-wider font-semibold">Ready</span>
+                </div>
               ) : (
-                <span className="flex items-center gap-0.5 text-[8px] text-zinc-600 uppercase tracking-wider">
-                  <Settings2 className="w-2.5 h-2.5" />Setup
-                </span>
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-800/50">
+                  <Settings2 className="w-2.5 h-2.5 text-zinc-600" />
+                  <span className="text-[8px] text-zinc-600 uppercase tracking-wider">Setup</span>
+                </div>
               )}
             </div>
           </div>
@@ -477,9 +700,12 @@ export default function CustomNode({ id, data, selected }) {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !rounded-full hover:!bg-zinc-400 transition-colors touch-none"
+          className={`${handleBaseClass} group-hover:!opacity-100`}
+          style={{ backgroundColor: `rgba(${accent},0.5)` }}
         />
-      </div>
+      </motion.div>
+
+      {addNextButton}
     </div>
   );
 }
