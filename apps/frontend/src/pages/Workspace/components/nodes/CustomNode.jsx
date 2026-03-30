@@ -441,69 +441,67 @@ export default function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE (n8n-style square card) ────────────────────────────────────
   if (isTrigger) {
     return (
-      <div className="relative group" style={{ width: 120, height: 148 }}>
-        {/* Floating lightning bolt */}
-        <Zap
-          className="absolute text-orange-400 fill-orange-400 w-[14px] h-[14px]"
-          style={{ left: -22, top: 38 }}
-          strokeWidth={2.5}
-        />
+      <div className="relative group" style={{ width: 180, height: 160 }}>
 
-        {/* Square card */}
+        {/* ── Square card ── */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`absolute left-[10px] top-0 w-[100px] h-[100px] flex items-center justify-center
-            bg-[#232326] border border-zinc-700/40 rounded-[20px]
-            shadow-[0_8px_30px_rgba(0,0,0,0.45)]
-            transition-all duration-300 ${glowClass}`}
+          className={`absolute top-0 left-0 w-[110px] h-[110px] flex items-center justify-center
+            bg-[#2A2A2E] rounded-[22px]
+            border border-zinc-600/30
+            shadow-[0_10px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)]
+            transition-all duration-300 cursor-pointer ${glowClass}`}
           style={borderStyle}
         >
           {badge}
 
-          {/* Inner icon area */}
-          <div className="w-[64px] h-[64px] rounded-[14px] flex items-center justify-center bg-[#2a2a2e] border border-zinc-600/20">
+          {/* Inner recessed icon box */}
+          <div className="w-[70px] h-[70px] rounded-[16px] flex items-center justify-center bg-[#1C1C20] border border-zinc-700/40 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]">
             {nodeDef.logoUrl ? (
-              <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain" loading="lazy" />
+              <img src={nodeDef.logoUrl} alt={data.label} className="w-9 h-9 object-contain" loading="lazy" />
             ) : (
-              <Icon className={`w-8 h-8 ${nodeDef.colorClass}`} strokeWidth={1.5} />
+              <Icon className={`w-9 h-9 ${nodeDef.colorClass}`} strokeWidth={1.5} />
             )}
           </div>
 
-          {/* Output handle */}
+          {/* Output handle (centered on right edge) */}
           <Handle
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-3 !h-3 !bg-zinc-500 !border-[3px] !border-[#232326] !rounded-full !opacity-100"
-            style={{ right: -6 }}
+            className="!w-[11px] !h-[11px] !bg-[#6B6B76] !border-[2.5px] !border-[#2A2A2E] !rounded-full !opacity-100"
+            style={{ right: -5 }}
           />
         </motion.div>
 
-        {/* Label below card */}
-        <div className="absolute left-[10px] top-[108px] w-[100px] text-center">
-          <span className="text-[12px] font-semibold text-zinc-300 leading-tight block truncate">
-            {data.label}
-          </span>
-        </div>
-
-        {/* Add-next button */}
+        {/* ── Connector line + Add button ── */}
         <div
-          className="absolute opacity-0 group-hover:opacity-100 transition-all duration-200 z-30"
-          style={{ right: -28, top: 36 }}
+          className="absolute flex items-center"
+          style={{ left: 116, top: 49 }}
         >
+          {/* Horizontal line */}
+          <div className="w-[22px] h-[2px] bg-zinc-600/60" />
+          {/* + button */}
           <motion.button
-            whileHover={{ scale: 1.15 }}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleAddNext}
-            className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-600/50 flex items-center justify-center
-              hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all duration-200
-              shadow-lg shadow-black/50"
+            className="w-[28px] h-[28px] rounded-[8px] bg-[#2A2A2E] border border-zinc-600/40 flex items-center justify-center
+              hover:bg-zinc-700 hover:border-zinc-500/60 transition-all duration-150
+              shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
             title="Add next step"
           >
-            <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
+            <Plus className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2.5} />
           </motion.button>
+        </div>
+
+        {/* ── Label below card ── */}
+        <div className="absolute top-[118px] left-0 w-[110px] text-center">
+          <span className="text-[13px] font-medium text-zinc-400 leading-snug block">
+            {data.label}
+          </span>
         </div>
       </div>
     );
