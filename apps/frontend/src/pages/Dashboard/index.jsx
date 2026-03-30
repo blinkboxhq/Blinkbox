@@ -366,7 +366,7 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <GlobalHeader user={user} />
-        <main className="flex-1 overflow-y-auto bg-[#333333]">
+        <main className="flex-1 overflow-y-auto bg-[#161616]">
         <div className="p-8 max-w-[1100px] mx-auto">
 
           {systemError && (
