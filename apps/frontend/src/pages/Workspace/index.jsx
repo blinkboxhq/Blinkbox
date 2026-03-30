@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Monitor, ArrowLeft } from 'lucide-react';
 import useWorkspaceStore from '../../store/workspaceStore';
@@ -45,6 +45,7 @@ function MobileGate() {
 
 export default function Workspace() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const loadEngine = useWorkspaceStore((state) => state.loadEngine);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
 
@@ -64,10 +65,10 @@ export default function Workspace() {
     <div className="flex h-screen overflow-hidden bg-[#272727]">
       <DashboardSidebar
         user={{ name: 'User', email: '' }}
-        onLogout={() => {}}
+        onLogout={() => navigate('/login')}
         activeTab="workflows"
-        setActiveTab={() => {}}
-        usage={{ creditsUsed: 0, monthlyLimit: 1000 }}
+        setActiveTab={(tab) => navigate(`/dashboard?tab=${tab}`)}
+        usage={null}
       />
       <div className="flex-1 flex flex-col relative overflow-hidden">
         <GlobalHeader user={{ name: 'User' }} />

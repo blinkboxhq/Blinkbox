@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MoreHorizontal, Clock, AlertTriangle, ChevronLeft, ChevronRight,
   Copy, Trash2, Pencil, Check, X, Loader2, Globe, Bot, Webhook,
@@ -198,9 +198,10 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('workflows');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'workflows');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [workflows, setWorkflows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -365,7 +366,7 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <GlobalHeader user={user} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-[#272727]">
         <div className="p-8 max-w-[1100px] mx-auto">
 
           {systemError && (
