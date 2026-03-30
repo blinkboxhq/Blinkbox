@@ -1,24 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import {
-  Loader2,
-  Check,
-  Save,
-  Play,
-  Workflow,
-  Activity,
-  KeyRound,
-  Settings,
-} from 'lucide-react';
+import { Loader2, Check, Save, Play, Zap } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
-
-// ── Navigation items ────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { id: 'editor',      label: 'Editor',      icon: Workflow },
-  { id: 'executions',  label: 'Executions',  icon: Activity },
-  { id: 'credentials', label: 'Credentials', icon: KeyRound },
-  { id: 'settings',    label: 'Settings',    icon: Settings },
-];
 
 export default function GlobalHeader({ user }) {
   const navigate = useNavigate();
@@ -27,47 +10,17 @@ export default function GlobalHeader({ user }) {
 
   const isWorkspace = location.pathname.startsWith('/workspace');
 
-  // Workspace store selectors
-  const workflowName    = useWorkspaceStore((s) => s.workflowName);
-  const isSaving        = useWorkspaceStore((s) => s.isSaving);
-  const isRunning       = useWorkspaceStore((s) => s.isRunning);
-  const saveEngine      = useWorkspaceStore((s) => s.saveEngine);
-  const runEngine       = useWorkspaceStore((s) => s.runEngine);
-  const nodes           = useWorkspaceStore((s) => s.nodes);
+  // Workspace-specific store selectors (safe to call unconditionally)
+  const workflowName = useWorkspaceStore((s) => s.workflowName);
+  const isSaving = useWorkspaceStore((s) => s.isSaving);
+  const isRunning = useWorkspaceStore((s) => s.isRunning);
+  const saveEngine = useWorkspaceStore((s) => s.saveEngine);
+  const runEngine = useWorkspaceStore((s) => s.runEngine);
+  const nodes = useWorkspaceStore((s) => s.nodes);
   const liveExecutionState = useWorkspaceStore((s) => s.liveExecutionState);
-  const isTraceSidebarOpen = useWorkspaceStore((s) => s.isTraceSidebarOpen);
-  const setSelectedNodeId  = useWorkspaceStore((s) => s.setSelectedNodeId);
 
-  const nodeCount       = nodes.length;
+  const nodeCount = nodes.length;
   const executionStatus = liveExecutionState?.status || (isRunning ? 'running' : 'idle');
-
-  // Derive active tab from current workspace state
-  const activeTab = useMemo(() => {
-    if (!isWorkspace) return null;
-    if (isTraceSidebarOpen) return 'executions';
-    return 'editor';
-  }, [isWorkspace, isTraceSidebarOpen]);
-
-  // Handle tab clicks
-  const handleTabClick = (tabId) => {
-    if (!isWorkspace) return;
-
-    if (tabId === 'editor') {
-      // Close trace sidebar, deselect node → clean canvas
-      const store = useWorkspaceStore.getState();
-      if (store.closeTraceSidebar) store.closeTraceSidebar();
-      setSelectedNodeId(null);
-    } else if (tabId === 'executions') {
-      const store = useWorkspaceStore.getState();
-      if (store.openTraceSidebar) {
-        store.openTraceSidebar();
-      } else {
-        // Fallback: set isTraceSidebarOpen directly
-        useWorkspaceStore.setState({ isTraceSidebarOpen: true });
-      }
-    }
-    // credentials / settings are placeholders for now
-  };
 
   // Keyboard shortcuts (workspace only)
   useEffect(() => {
@@ -86,83 +39,86 @@ export default function GlobalHeader({ user }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWorkspace, id, saveEngine, runEngine]);
 
+  const statusBadgeColor =
+    executionStatus === 'failed' ? 'bg-red-500/5 border-red-500/20 text-red-400' :
+    executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
+    executionStatus === 'running' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
+    'bg-neutral-900/50 border-neutral-800 text-neutral-500';
+
   const displayName = user?.name || 'User';
 
+  const UserAvatar = () => {
+    if (user?.picture) {
+      return <img src={user.picture} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />;
+    }
+    return (
+      <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-[9px] font-semibold text-neutral-300 uppercase shrink-0">
+        {displayName.charAt(0)}
+      </div>
+    );
+  };
+
   return (
-    <header className="w-full h-12 bg-[#161616]/80 backdrop-blur-md border-b border-zinc-800/50 flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-12 bg-neutral-950 border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-50">
 
-      {/* ── Left: Breadcrumbs ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      {/* Left: Breadcrumbs */}
+      <div className="flex items-center gap-3 min-w-0">
         <nav className="flex items-center gap-1.5 text-sm min-w-0">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors duration-200 text-sm"
-          >
-            {displayName}
-          </button>
+          {/* User segment */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <UserAvatar />
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
+            >
+              {displayName}
+            </button>
+          </div>
 
-          <span className="text-zinc-700 text-xs">/</span>
+          <span className="text-neutral-600 text-sm">/</span>
 
+          {/* Context segment */}
           {isWorkspace ? (
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="text-zinc-500 hover:text-zinc-300 transition-colors duration-200 text-sm"
+                className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
               >
                 Workflows
               </button>
-              <span className="text-zinc-700 text-xs">/</span>
-              <span
-                className="text-zinc-100 font-semibold text-sm truncate max-w-[180px]"
-                title={workflowName}
-              >
+              <span className="text-neutral-600 text-sm">/</span>
+              <span className="text-neutral-100 font-semibold text-sm truncate max-w-[200px]" title={workflowName}>
                 {workflowName || 'Untitled'}
               </span>
             </>
           ) : (
-            <span className="text-zinc-100 font-semibold text-sm">Dashboard</span>
+            <span className="text-neutral-100 font-semibold text-sm">Dashboard</span>
           )}
         </nav>
       </div>
 
-      {/* ── Center: Navigation tabs (workspace only) ───────────────────── */}
+      {/* Right: Workspace actions (only in workspace) */}
       {isWorkspace && (
-        <div className="flex items-center gap-1">
-          {NAV_ITEMS.map(({ id: tabId, label, icon: Icon }) => {
-            const isActive = activeTab === tabId;
-            const isDisabled = tabId === 'credentials' || tabId === 'settings';
+        <div className="flex items-center gap-3">
+          {/* Node count */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900/50 border border-neutral-800 rounded-md">
+            <Zap className="w-3 h-3 text-neutral-500" />
+            <span className="text-[11px] font-mono text-neutral-400">{nodeCount} nodes</span>
+          </div>
 
-            return (
-              <button
-                key={tabId}
-                onClick={() => !isDisabled && handleTabClick(tabId)}
-                disabled={isDisabled}
-                className={`
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                  transition-all duration-200
-                  ${isActive
-                    ? 'text-zinc-100 bg-zinc-800 border border-zinc-700/50 shadow-sm'
-                    : isDisabled
-                      ? 'text-zinc-600 cursor-not-allowed'
-                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                  }
-                `}
-              >
-                <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+          {/* Execution status */}
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-md transition-colors ${statusBadgeColor}`}>
+            {executionStatus === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+            {executionStatus === 'executed' && <Check className="w-3 h-3" />}
+            <span className="text-[11px] font-semibold uppercase tracking-widest">
+              {executionStatus === 'executed' ? 'Success' : executionStatus === 'running' ? 'Running' : executionStatus === 'failed' ? 'Failed' : 'Idle'}
+            </span>
+          </div>
 
-      {/* ── Right: Actions (workspace only) ────────────────────────────── */}
-      {isWorkspace ? (
-        <div className="flex items-center gap-2.5">
-          {/* Save status indicator */}
-          <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+          {/* Save indicator */}
+          <div className="flex items-center gap-1 text-[10px] text-neutral-500">
             {isSaving ? (
-              <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving…</span></>
+              <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving</span></>
             ) : (
               <><Check className="w-3 h-3 text-emerald-500/70" /><span>Saved</span></>
             )}
@@ -172,12 +128,8 @@ export default function GlobalHeader({ user }) {
           <button
             onClick={() => saveEngine(id)}
             disabled={isSaving}
-            title="Save (⌘S)"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium
-              bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 hover:border-zinc-700/60
-              text-zinc-400 hover:text-zinc-200
-              transition-all duration-200
-              disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Save (Cmd+S)"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[11px] font-semibold text-neutral-300 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
@@ -187,19 +139,13 @@ export default function GlobalHeader({ user }) {
           <button
             onClick={() => runEngine(id)}
             disabled={isRunning || nodeCount === 0}
-            title="Run (⌘↵)"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold
-              bg-zinc-100 hover:bg-white text-zinc-950
-              transition-all duration-200
-              disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Run (Cmd+Enter)"
+            className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-white text-neutral-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Run
+            Run Test
           </button>
         </div>
-      ) : (
-        /* Spacer to keep breadcrumbs left-aligned on dashboard */
-        <div />
       )}
     </header>
   );
