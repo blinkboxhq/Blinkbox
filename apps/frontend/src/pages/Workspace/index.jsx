@@ -6,22 +6,22 @@ import useWorkspaceStore from '../../store/workspaceStore';
 import logo from '../../assets/logo.svg';
 
 // 1. Layout Components
-import WorkspaceHeader from './components/WorkspaceHeader';
+import GlobalHeader from '../../components/GlobalHeader';
 import DashboardSidebar from '../Dashboard/components/DashboardSidebar';
 import WorkspaceRightSidebar from './components/WorkspaceRightSidebar';
 import Canvas from './components/Canvas';
 import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 
-// 🚀 SINGLE SOURCE OF TRUTH: Re-export from the centralized registry
+// Re-export from the centralized registry
 export { NodeRegistry } from './nodeRegistry';
 
 function MobileGate() {
   const navigate = useNavigate();
   return (
-    <div className="w-screen h-screen bg-zinc-950 flex flex-col items-center justify-center px-8 text-center">
+    <div className="w-screen h-screen bg-zinc-900 flex flex-col items-center justify-center px-8 text-center">
       <img src={logo} alt="BlinkBox" className="w-10 h-10 mb-8 opacity-60" />
 
-      <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6">
+      <div className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
         <Monitor className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
       </div>
 
@@ -61,7 +61,7 @@ export default function Workspace() {
   if (isMobile) return <MobileGate />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-950">
+    <div className="flex h-screen overflow-hidden bg-[#0d1117]">
       <DashboardSidebar
         user={{ name: 'User', email: '' }}
         onLogout={() => {}}
@@ -70,7 +70,7 @@ export default function Workspace() {
         usage={{ creditsUsed: 0, monthlyLimit: 1000 }}
       />
       <div className="flex-1 flex flex-col relative overflow-hidden">
-        <WorkspaceHeader />
+        <GlobalHeader user={{ name: 'User' }} />
         <div className="flex-1 w-full flex overflow-hidden">
           <ReactFlowProvider>
             <Canvas />

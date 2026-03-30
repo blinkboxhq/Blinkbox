@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 
+import GlobalHeader from '../../components/GlobalHeader';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardHeader from './components/DashboardHeader';
 import EmptyState from './components/EmptyState';
@@ -157,10 +158,10 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
 
   if (mode === 'rename') {
     return (
-      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-neutral-800 rounded-lg shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
         <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider px-1 mb-1.5">Rename</p>
         <div className="flex items-center gap-1.5">
-          <input autoFocus value={val} onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())} className="flex-1 bg-black border border-neutral-800 rounded px-2 py-1 text-[12px] text-white focus:outline-none focus:border-neutral-600" />
+          <input autoFocus value={val} onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())} className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[12px] text-white focus:outline-none focus:border-neutral-600" />
           <button onClick={() => val.trim() && exec(onRename, wf._id || wf.id, val.trim())} disabled={busy} className="p-1 text-neutral-400 hover:text-white disabled:opacity-50"><Check className="w-3.5 h-3.5" /></button>
           <button onClick={() => setMode('menu')} className="p-1 text-neutral-600 hover:text-white"><X className="w-3.5 h-3.5" /></button>
         </div>
@@ -170,7 +171,7 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
 
   if (mode === 'confirmDelete') {
     return (
-      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-neutral-800 rounded-lg shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
         <p className="text-[12px] text-neutral-300 mb-3">Delete <strong>{wf.name}</strong>? This cannot be undone.</p>
         <div className="flex items-center gap-2 justify-end">
           <button onClick={() => setMode('menu')} className="text-[12px] text-neutral-500 hover:text-white px-2 py-1">Cancel</button>
@@ -183,12 +184,12 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
   }
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-44 bg-[#111] border border-neutral-800 rounded-lg shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
+    <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-44 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
       <button onClick={() => setMode('rename')} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"><Pencil className="w-3.5 h-3.5" /> Rename</button>
       <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors disabled:opacity-50">
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />} Duplicate
       </button>
-      <div className="border-t border-neutral-800/60 my-1" />
+      <div className="border-t border-zinc-700/60 my-1" />
       <button onClick={() => setMode('confirmDelete')} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
     </div>
   );
@@ -340,10 +341,10 @@ export default function Dashboard() {
   if (statusFilter !== 'all') filtered = filtered.filter((w) => (w.status || 'draft') === statusFilter);
   if (search) filtered = filtered.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (!user) return <div className="h-screen w-screen bg-black flex items-center justify-center"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>;
+  if (!user) return <div className="h-screen w-screen bg-[#0d1117] flex items-center justify-center"><Loader2 className="w-5 h-5 text-zinc-600 animate-spin" /></div>;
 
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
+    <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden">
       <style>{`
         @keyframes dbFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes dbScaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
@@ -362,11 +363,13 @@ export default function Dashboard() {
       />
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
-      <main className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <GlobalHeader user={user} />
+        <main className="flex-1 overflow-y-auto">
         <div className="p-8 max-w-[1100px] mx-auto">
 
           {systemError && (
-            <div className="mb-5 px-3 py-2 rounded-md border border-neutral-900 bg-neutral-950 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
+            <div className="mb-5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
               <AlertTriangle className="w-4 h-4 shrink-0" /> {systemError}
             </div>
           )}
@@ -386,10 +389,10 @@ export default function Dashboard() {
                 <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
               ) : viewMode === 'list' ? (
                 /* ── LIST VIEW ── */
-                <div className="border border-neutral-900/80 rounded-lg overflow-hidden">
+                <div className="border border-zinc-800/80 rounded-lg overflow-hidden">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-neutral-950/50">
+                      <tr className="bg-zinc-900/50">
                         <th className="w-10" />
                         <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Name</th>
                         <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
@@ -403,7 +406,7 @@ export default function Dashboard() {
                         <tr
                           key={wf._id || wf.id}
                           onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                          className="group border-t border-neutral-900/50 hover:bg-white/[0.015] cursor-pointer transition-colors"
+                          className="group border-t border-zinc-800/50 hover:bg-white/[0.015] cursor-pointer transition-colors"
                           style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}
                         >
                           {/* Toggle */}
@@ -450,7 +453,7 @@ export default function Dashboard() {
                     <div
                       key={wf._id || wf.id}
                       onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-lg border border-neutral-900/80 bg-neutral-950/50 hover:border-neutral-800 cursor-pointer transition-all duration-150"
+                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 cursor-pointer transition-all duration-150"
                       style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -477,7 +480,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <p className="text-[11px] text-neutral-600 mb-auto line-clamp-2 min-h-[2rem]">{wf.description || 'No description'}</p>
-                      <div className="flex items-center justify-between text-[10px] text-neutral-700 pt-3 mt-3 border-t border-neutral-900/60">
+                      <div className="flex items-center justify-between text-[10px] text-neutral-700 pt-3 mt-3 border-t border-zinc-800/60">
                         <span className="capitalize">{wf.trigger || 'manual'}</span>
                         <span>{timeAgo(wf.updatedAt)}</span>
                       </div>
@@ -489,9 +492,9 @@ export default function Dashboard() {
               {/* Pagination */}
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 mt-6">
-                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-neutral-900 rounded hover:bg-neutral-950 transition-all disabled:opacity-30"><ChevronLeft className="w-3 h-3" /> Prev</button>
+                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-zinc-800 rounded hover:bg-zinc-900 transition-all disabled:opacity-30"><ChevronLeft className="w-3 h-3" /> Prev</button>
                   <span className="text-[11px] text-neutral-700 font-mono">{pagination.page} / {pagination.totalPages}</span>
-                  <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-neutral-900 rounded hover:bg-neutral-950 transition-all disabled:opacity-30">Next <ChevronRight className="w-3 h-3" /></button>
+                  <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-zinc-800 rounded hover:bg-zinc-900 transition-all disabled:opacity-30">Next <ChevronRight className="w-3 h-3" /></button>
                 </div>
               )}
             </div>
@@ -506,15 +509,15 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {TEMPLATES.map((t, i) => (
-                  <div key={t.id} className="group flex flex-col p-4 rounded-lg border border-neutral-900/80 bg-neutral-950/50 hover:border-neutral-800 transition-all duration-150" style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
+                  <div key={t.id} className="group flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 transition-all duration-150" style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
                     <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider mb-2">{t.category}</span>
                     <h3 className="text-[13px] font-medium text-neutral-200 mb-1">{t.name}</h3>
                     <p className="text-[11px] text-neutral-600 mb-4 flex-1">{t.desc}</p>
                     <div className="flex items-center gap-1 mb-3">
-                      {t.nodes.map((n, j) => { const I = NODE_ICONS[n] || Zap; return <div key={`${n}-${j}`} className="w-5 h-5 rounded bg-neutral-900 border border-neutral-800/60 flex items-center justify-center" title={n}><I className="w-2.5 h-2.5 text-neutral-500" /></div>; })}
+                      {t.nodes.map((n, j) => { const I = NODE_ICONS[n] || Zap; return <div key={`${n}-${j}`} className="w-5 h-5 rounded bg-neutral-900 border border-zinc-700/60 flex items-center justify-center" title={n}><I className="w-2.5 h-2.5 text-neutral-500" /></div>; })}
                       {t.nodes.length > 1 && <span className="text-[9px] text-neutral-700 ml-1">{t.nodes.length} nodes</span>}
                     </div>
-                    <button onClick={() => handleCreateTemplate(t)} disabled={isCreating} className="w-full py-1.5 text-[12px] font-medium text-neutral-500 border border-neutral-900 rounded hover:text-white hover:border-neutral-700 hover:bg-neutral-900/50 transition-all disabled:opacity-50">Use Template</button>
+                    <button onClick={() => handleCreateTemplate(t)} disabled={isCreating} className="w-full py-1.5 text-[12px] font-medium text-neutral-500 border border-zinc-800 rounded hover:text-white hover:border-neutral-700 hover:bg-neutral-900/50 transition-all disabled:opacity-50">Use Template</button>
                   </div>
                 ))}
               </div>
@@ -537,9 +540,9 @@ export default function Dashboard() {
                   <p className="text-[11px] text-neutral-700 mt-1">Run a workflow to see history here.</p>
                 </div>
               ) : (
-                <div className="border border-neutral-900/80 rounded-lg overflow-hidden">
+                <div className="border border-zinc-800/80 rounded-lg overflow-hidden">
                   <table className="w-full">
-                    <thead><tr className="bg-neutral-950/50">
+                    <thead><tr className="bg-zinc-900/50">
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Workflow</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
@@ -550,7 +553,7 @@ export default function Dashboard() {
                       {executions.map((ex, i) => {
                         const sc = { executed: 'bg-emerald-500', completed: 'bg-emerald-500', failed: 'bg-red-500', pending: 'bg-yellow-500', cancelled: 'bg-neutral-600' };
                         return (
-                          <tr key={ex._id} className="border-t border-neutral-900/50 hover:bg-white/[0.015] transition-colors" style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}>
+                          <tr key={ex._id} className="border-t border-zinc-800/50 hover:bg-white/[0.015] transition-colors" style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}>
                             <td className="px-4 py-2.5"><div className="flex items-center gap-1.5"><span className={`w-1.5 h-1.5 rounded-full ${sc[ex.status] || 'bg-neutral-700'}`} /><span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span></div></td>
                             <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.name || '—'}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{ex.trigger || 'manual'}</td>
@@ -578,7 +581,7 @@ export default function Dashboard() {
               </div>
 
               {/* Profile */}
-              <section className="mb-4 p-5 border border-neutral-900/80 rounded-lg bg-neutral-950/30">
+              <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
                 <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Profile</h3>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-semibold text-neutral-400 uppercase">{user?.name?.charAt(0) || '?'}</div>
@@ -586,13 +589,13 @@ export default function Dashboard() {
                     <p className="text-[13px] font-medium text-white">{user?.name}</p>
                     <p className="text-[11px] text-neutral-600">{user?.email}</p>
                   </div>
-                  <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-neutral-800/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
+                  <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-zinc-700/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
                 </div>
               </section>
 
               {/* Usage */}
               {billingUsage && (
-                <section className="mb-4 p-5 border border-neutral-900/80 rounded-lg bg-neutral-950/30">
+                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
                   <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Plan & Usage</h3>
                   <div className="grid grid-cols-4 gap-4">
                     <div><p className="text-[10px] text-neutral-600 mb-0.5">Plan</p><p className="text-[13px] font-medium text-white capitalize">{billingUsage.plan || 'Free'}</p></div>
@@ -610,7 +613,7 @@ export default function Dashboard() {
 
               {/* System */}
               {systemStats && (
-                <section className="mb-4 p-5 border border-neutral-900/80 rounded-lg bg-neutral-950/30">
+                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">System</h3>
                     <button onClick={handleToggleWorkers} disabled={isTogglingPause} className={`text-[11px] font-medium px-3 py-1 rounded border transition-all ${systemStats.status.includes('OFFLINE') ? 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10' : 'text-red-400 border-red-500/20 hover:bg-red-500/10'}`}>
@@ -626,7 +629,7 @@ export default function Dashboard() {
               )}
 
               {/* Danger */}
-              <section className="p-5 border border-red-500/10 rounded-lg bg-neutral-950/30">
+              <section className="p-5 border border-red-500/10 rounded-lg bg-zinc-900/30">
                 <h3 className="text-[10px] font-medium text-red-400/50 uppercase tracking-wider mb-3">Danger Zone</h3>
                 <div className="flex items-center justify-between">
                   <div><p className="text-[13px] text-neutral-300">End session</p><p className="text-[11px] text-neutral-700 mt-0.5">Log out of your account.</p></div>
@@ -638,6 +641,7 @@ export default function Dashboard() {
 
         </div>
       </main>
+      </div>
     </div>
   );
 }
