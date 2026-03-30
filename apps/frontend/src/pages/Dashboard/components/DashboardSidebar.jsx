@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Network, Activity, Key, Settings, LogOut, LayoutTemplate, ChevronLeft, ChevronRight } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
@@ -52,16 +53,18 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bg-neutral-950 border-r border-neutral-900/80 flex flex-col shrink-0 relative z-20 transition-all duration-200`}>
-        {/* Header */}
-        <div className={`h-[52px] flex items-center border-b border-neutral-900/80 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+      <aside className={`${w} bg-neutral-950 border-r border-[#333] flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+        {/* Header — logo links to dashboard */}
+        <div className={`h-[52px] flex items-center border-b border-[#333] shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (
-            <div className="flex items-center gap-2.5">
+            <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
               <span className="text-[13px] font-semibold tracking-[0.1em] text-white">BLINKBOX</span>
-            </div>
+            </Link>
           ) : (
-            <img src={logo} alt="B" className="w-5 h-5 object-contain" />
+            <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
+              <img src={logo} alt="B" className="w-5 h-5 object-contain" />
+            </Link>
           )}
           <button
             onClick={() => setExpanded(!expanded)}
@@ -86,7 +89,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           {expanded && <p className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          <div className={`border-t border-neutral-900/60 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
+          <div className={`border-t border-[#333] my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
@@ -94,12 +97,12 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {/* Usage meter */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="p-3 rounded-lg bg-neutral-950 border border-neutral-900/60">
+            <div className="p-3 rounded-lg bg-neutral-900 border border-[#333]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Usage</span>
                 <span className="text-[10px] text-neutral-600">{usedPct}%</span>
               </div>
-              <div className="w-full bg-neutral-900 rounded-full h-1">
+              <div className="w-full bg-neutral-800 rounded-full h-1">
                 <div
                   className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-yellow-400' : 'bg-white'}`}
                   style={{ width: `${usedPct}%` }}
@@ -111,7 +114,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         )}
 
         {/* User */}
-        <div className={`border-t border-neutral-900/80 ${expanded ? 'p-3' : 'p-2'}`}>
+        <div className={`border-t border-[#333] ${expanded ? 'p-3' : 'p-2'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-1">
               <UserAvatar />

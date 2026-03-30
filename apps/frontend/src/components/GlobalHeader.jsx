@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Loader2, Check, Save, Play, Zap } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
-import logo from '../assets/logo.svg';
 
 export default function GlobalHeader({ user }) {
   const navigate = useNavigate();
@@ -60,14 +59,10 @@ export default function GlobalHeader({ user }) {
   };
 
   return (
-    <header className="w-full h-12 bg-neutral-950 border-b border-neutral-800/60 flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-12 bg-neutral-950 border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-50">
 
-      {/* Left: Logo + Breadcrumbs */}
+      {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
-        <button onClick={() => navigate('/dashboard')} className="shrink-0 hover:opacity-80 transition-opacity" title="Back to Dashboard">
-          <img src={logo} alt="B" className="w-5 h-5 object-contain" />
-        </button>
-
         <nav className="flex items-center gap-1.5 text-sm min-w-0">
           {/* User segment */}
           <div className="flex items-center gap-1.5 shrink-0">
