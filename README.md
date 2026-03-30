@@ -1,6 +1,3 @@
-# BlinkBox
+# BLINKBOX
 
-BlinkBox is a scalable automation platform.
-
-Status: MVP (V0)
-Focus: Webhook-based automations
+blinkbox is a automation engine which focuses on letting people automate thier tasks
