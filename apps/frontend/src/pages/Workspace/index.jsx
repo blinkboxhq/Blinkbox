@@ -7,7 +7,7 @@ import logo from '../../assets/logo.svg';
 
 // 1. Layout Components
 import WorkspaceHeader from './components/WorkspaceHeader';
-import WorkspaceLeftSidebar from './components/WorkspaceLeftSidebar';
+import DashboardSidebar from '../Dashboard/components/DashboardSidebar';
 import WorkspaceRightSidebar from './components/WorkspaceRightSidebar';
 import Canvas from './components/Canvas';
 import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
@@ -61,15 +61,23 @@ export default function Workspace() {
   if (isMobile) return <MobileGate />;
 
   return (
-    <div className="w-screen h-screen bg-zinc-950 overflow-hidden flex flex-col">
-      <WorkspaceHeader />
-      <div className="flex-1 w-full flex overflow-hidden">
-        <ReactFlowProvider>
-          <WorkspaceLeftSidebar />
-          <Canvas />
-          <WorkspaceRightSidebar />
-          <ExecutionTraceSidebar />
-        </ReactFlowProvider>
+    <div className="flex h-screen overflow-hidden bg-zinc-950">
+      <DashboardSidebar
+        user={{ name: 'User', email: '' }}
+        onLogout={() => {}}
+        activeTab="workflows"
+        setActiveTab={() => {}}
+        usage={{ creditsUsed: 0, monthlyLimit: 1000 }}
+      />
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        <WorkspaceHeader />
+        <div className="flex-1 w-full flex overflow-hidden">
+          <ReactFlowProvider>
+            <Canvas />
+            <WorkspaceRightSidebar />
+            <ExecutionTraceSidebar />
+          </ReactFlowProvider>
+        </div>
       </div>
     </div>
   );
