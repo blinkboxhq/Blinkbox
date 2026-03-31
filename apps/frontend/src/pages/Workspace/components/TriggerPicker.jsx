@@ -6,7 +6,6 @@ import {
   Clock,
   AppWindow,
   MessageSquare,
-  Play,
   FolderOpen,
   ArrowRight,
   ClipboardList,
@@ -24,26 +23,6 @@ const TRIGGER_OPTIONS = [
     label: "Trigger manually",
     description:
       "Runs the flow on clicking a button. Good for getting started quickly",
-    color: "text-green-400",
-    bgColor: "bg-green-500/10",
-  },
-  {
-    id: "webhook",
-    backendType: "webhook",
-    icon: Webhook,
-    label: "On webhook call",
-    description: "Runs the flow on receiving an HTTP request",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
-  },
-  {
-    id: "cron",
-    backendType: "cron_trigger",
-    icon: Clock,
-    label: "On a schedule",
-    description: "Runs the flow every day, hour, or custom interval",
-    color: "text-amber-400",
-    bgColor: "bg-amber-500/10",
   },
   {
     id: "app_event",
@@ -53,8 +32,20 @@ const TRIGGER_OPTIONS = [
     description:
       "Runs the flow when something happens in an app like Telegram, Slack or Airtable",
     hasArrow: true,
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/10",
+  },
+  {
+    id: "cron",
+    backendType: "cron_trigger",
+    icon: Clock,
+    label: "On a schedule",
+    description: "Runs the flow every day, hour, or custom interval",
+  },
+  {
+    id: "webhook",
+    backendType: "webhook",
+    icon: Webhook,
+    label: "On webhook call",
+    description: "Runs the flow on receiving an HTTP request",
   },
   {
     id: "form",
@@ -62,8 +53,6 @@ const TRIGGER_OPTIONS = [
     icon: ClipboardList,
     label: "On form submission",
     description: "Receive form data via webhook and pass responses to the workflow",
-    color: "text-pink-400",
-    bgColor: "bg-pink-500/10",
   },
   {
     id: "sub_workflow",
@@ -72,8 +61,6 @@ const TRIGGER_OPTIONS = [
     label: "When called by another workflow",
     description:
       "Runs the flow when called by another workflow via HTTP request",
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-500/10",
   },
   {
     id: "chat",
@@ -82,8 +69,6 @@ const TRIGGER_OPTIONS = [
     label: "On chat message",
     description:
       "Runs the flow when a user sends a chat message. For use with AI nodes",
-    color: "text-indigo-400",
-    bgColor: "bg-indigo-500/10",
   },
   {
     id: "test",
@@ -91,8 +76,6 @@ const TRIGGER_OPTIONS = [
     icon: FlaskConical,
     label: "When running evaluation",
     description: "Run a dataset through your workflow to test performance",
-    color: "text-teal-400",
-    bgColor: "bg-teal-500/10",
   },
   {
     id: "other",
@@ -101,8 +84,6 @@ const TRIGGER_OPTIONS = [
     label: "Other ways...",
     description: "Runs the flow on workflow errors, file changes, etc.",
     hasArrow: true,
-    color: "text-zinc-400",
-    bgColor: "bg-zinc-500/10",
   },
 ];
 
@@ -187,17 +168,17 @@ export default function TriggerPicker() {
                 >
                   {/* Icon */}
                   <div
-                    className={`w-10 h-10 rounded-xl ${trigger.bgColor} flex items-center justify-center shrink-0 mt-0.5`}
+                    className="w-10 h-10 flex items-center justify-center shrink-0 mt-0.5"
                   >
                     <Icon
-                      className={`w-5 h-5 ${trigger.color}`}
+                      className="w-5 h-5 text-zinc-400 group-hover:text-zinc-200 transition-colors"
                       strokeWidth={1.75}
                     />
                   </div>
 
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-zinc-200 group-hover:text-white transition-colors">
+                    <div className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
                       {trigger.label}
                     </div>
                     <div className="text-xs text-zinc-500 mt-0.5 leading-relaxed group-hover:text-zinc-400 transition-colors">
