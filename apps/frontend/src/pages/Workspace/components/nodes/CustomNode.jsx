@@ -475,7 +475,6 @@ export default function CustomNode({ id, data, selected }) {
   if (isTrigger) {
     const cardW = 140;
     const cardH = 140;
-    const dotSize = 14;
 
     // Status-aware card border
     const cardBorder = status === 'running'
@@ -565,33 +564,21 @@ export default function CustomNode({ id, data, selected }) {
             strokeWidth={1.25}
           />
 
-          {/* ── Output dot — attached to the right edge of the card ── */}
-          <div
-            className="absolute flex items-center justify-center"
-            style={{ right: -(dotSize / 2), top: '50%', transform: 'translateY(-50%)', width: dotSize, height: dotSize, zIndex: 10 }}
-          >
-            <div
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: dotSize,
-                height: dotSize,
-                backgroundColor: dotColor,
-                border: '3px solid #1C1C20',
-                boxShadow: status === 'running'
-                  ? '0 0 8px rgba(59,130,246,0.4)'
-                  : status === 'completed'
-                  ? '0 0 8px rgba(16,185,129,0.4)'
-                  : 'none',
-              }}
-            />
-            {/* Invisible React Flow handle on top of dot */}
-            <Handle
-              type="source"
-              position={Position.Right}
-              id="output"
-              className="!absolute !inset-0 !w-full !h-full !rounded-full !opacity-0 !border-0 !bg-transparent"
-            />
-          </div>
+          {/* ── Output handle — standard React Flow handle on right edge ── */}
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output"
+            className="!w-3.5 !h-3.5 !rounded-full !border-[3px] !border-[#1C1C20] transition-all duration-300 touch-none"
+            style={{
+              backgroundColor: dotColor,
+              boxShadow: status === 'running'
+                ? '0 0 8px rgba(59,130,246,0.4)'
+                : status === 'completed'
+                ? '0 0 8px rgba(16,185,129,0.4)'
+                : 'none',
+            }}
+          />
         </motion.div>
 
         {/* ── Label below card ── */}
