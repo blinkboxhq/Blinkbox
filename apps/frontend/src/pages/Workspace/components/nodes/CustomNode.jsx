@@ -453,8 +453,8 @@ export default function CustomNode({ id, data, selected }) {
       }))
     : [];
 
-  // ── Handle styles (always visible, n8n-style dots) ─────────────────────────
-  const handleBaseClass = "!w-3 !h-3 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none";
+  // ── Handle styles (always visible, large dots) ─────────────────────────────
+  const handleBaseClass = "!w-4 !h-4 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none";
 
   // ── NodeToolbar (shared between trigger and action nodes) ──────────────────
   const toolbar = (
@@ -569,7 +569,7 @@ export default function CustomNode({ id, data, selected }) {
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-3.5 !h-3.5 !rounded-full !border-[3px] !border-[#1C1C20] transition-all duration-300 touch-none"
+            className="!w-4 !h-4 !rounded-full !border-[3px] !border-[#1C1C20] transition-all duration-300 touch-none"
             style={{
               backgroundColor: dotColor,
               boxShadow: status === 'running'

@@ -21,6 +21,10 @@ export default function ConfigurableEdge({
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
   const { deleteElements } = useReactFlow();
 
+  // Soft cursive curvature — gentle bend that avoids going under nodes
+  const dx = Math.abs(targetX - sourceX);
+  const curvature = Math.max(0.25, Math.min(0.5, dx / 800));
+
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -28,6 +32,7 @@ export default function ConfigurableEdge({
     targetX,
     targetY,
     targetPosition,
+    curvature,
   });
 
   // ── Status-driven styling ─────────────────────────────────────────────────
@@ -36,30 +41,27 @@ export default function ConfigurableEdge({
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
 
-  // n8n-matched: solid #52525b, 2.5px. Clean and visible against #0d0d0f.
-  let stroke = "#3f3f46";
-  let strokeWidth = 4;
+  // Dark grey, bold, uniform
+  let stroke = "#2e2e33";
+  let strokeWidth = 5;
   let strokeDasharray = "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#3b82f6";
-    strokeWidth = 4;
     strokeDasharray = "6 4";
     animation = "edgeFlow 0.5s linear infinite";
     filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 4;
     animation = "edgeFadeToIdle 1.5s ease-out forwards";
     filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    strokeWidth = 4;
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
   } else if (selected) {
-    stroke = "#71717a";
+    stroke = "#52525b";
   }
 
   const handleInsert = (e) => {
@@ -78,7 +80,7 @@ export default function ConfigurableEdge({
       {isRunning && (
         <path
           d={edgePath}
-          strokeWidth={6}
+          strokeWidth={8}
           stroke="#3b82f6"
           fill="none"
           opacity={0.1}
@@ -102,6 +104,7 @@ export default function ConfigurableEdge({
         d={edgePath}
         strokeWidth={strokeWidth}
         stroke={stroke}
+        strokeLinecap="round"
         fill="none"
         markerEnd={markerEnd}
         style={{
@@ -120,7 +123,7 @@ export default function ConfigurableEdge({
         </circle>
       )}
 
-      {/* ── Midpoint + button (n8n style: single centered button) ─────────── */}
+      {/* ── Midpoint buttons (+ and trash, shown on hover) ─────────────────── */}
       <EdgeLabelRenderer>
         <div
           style={{
@@ -130,7 +133,7 @@ export default function ConfigurableEdge({
           }}
           className="nodrag nopan"
         >
-          <div className="opacity-0 edge-action-buttons transition-all duration-150">
+          <div className="opacity-0 edge-action-buttons transition-all duration-150 flex items-center gap-1.5">
             <button
               onClick={handleInsert}
               className="w-7 h-7 rounded-lg bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
@@ -139,6 +142,15 @@ export default function ConfigurableEdge({
               title="Add step"
             >
               <Plus className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-200" strokeWidth={2.5} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="w-7 h-7 rounded-lg bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
+                hover:bg-red-500/20 hover:border-red-500/40 active:scale-95 transition-all duration-150
+                shadow-lg shadow-black/50"
+              title="Delete connection"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-zinc-400 hover:text-red-400" strokeWidth={2.5} />
             </button>
           </div>
         </div>
