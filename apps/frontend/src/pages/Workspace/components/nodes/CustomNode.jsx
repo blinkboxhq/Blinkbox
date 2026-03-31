@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search, Brain, Database } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Play, Loader2, Plus, X, Search, Brain, Database, MousePointer2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -443,13 +443,25 @@ export default function CustomNode({ id, data, selected }) {
     return (
       <div className="relative group" style={{ width: 220, height: 200 }}>
 
-        {/* ── Left notch tab ── */}
-        <div
-          className="absolute"
+        {/* ── Left notch — Run Automation switch ── */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handlePlay}
+          disabled={isRunning}
+          title={isRunning ? 'Running…' : 'Run automation'}
+          className="absolute flex items-center justify-center
+            bg-[#2A2A2E] rounded-l-[18px] border-l border-t border-b border-zinc-600/25
+            hover:bg-[#333338] hover:border-zinc-500/30 transition-all duration-200
+            cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ left: 0, top: 30, width: 28, height: 80 }}
         >
-          <div className="w-full h-full bg-[#2A2A2E] rounded-l-[18px] border-l border-t border-b border-zinc-600/25" />
-        </div>
+          {isRunning ? (
+            <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
+          ) : (
+            <MousePointer2 className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 transition-colors" strokeWidth={1.75} />
+          )}
+        </motion.button>
 
         {/* ── Main square card ── */}
         <motion.div
