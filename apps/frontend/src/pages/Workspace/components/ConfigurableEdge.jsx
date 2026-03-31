@@ -38,28 +38,30 @@ export default function ConfigurableEdge({
   const isFailed = status === "failed";
   const isActive = isRunning || isCompleted || isFailed;
 
-  // Solid lines by default. Dashed ONLY when running.
-  let stroke = selected ? "#52525b" : "#3f3f46";
-  let strokeWidth = 2;
+  // Solid bold lines. Dashed ONLY when running.
+  let stroke = "#71717a";
+  let strokeWidth = 3;
   let strokeDasharray = "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#3b82f6";
-    strokeWidth = 2.5;
+    strokeWidth = 3;
     strokeDasharray = "6 4";
     animation = "edgeFlow 0.5s linear infinite";
     filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 2;
+    strokeWidth = 3;
     animation = "edgeFadeToIdle 1.5s ease-out forwards";
     filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    strokeWidth = 2;
+    strokeWidth = 3;
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
+  } else if (selected) {
+    stroke = "#a1a1aa";
   }
 
   const handleInsert = (e) => {

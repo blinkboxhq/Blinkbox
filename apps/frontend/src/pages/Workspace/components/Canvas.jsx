@@ -3,6 +3,7 @@ import {
   ReactFlow,
   Controls,
   Background,
+  BackgroundVariant,
   useReactFlow,
   MarkerType,
 } from "@xyflow/react";
@@ -18,14 +19,14 @@ const nodeTypes = { custom: CustomNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
 // ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
-const EDGE_COLOR = "#3f3f46";
+const EDGE_COLOR = "#71717a";
 const defaultEdgeOptions = {
   type: "configurable",
-  style: { strokeWidth: 2 },
+  style: { strokeWidth: 3 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 16,
-    height: 16,
+    width: 20,
+    height: 20,
     color: EDGE_COLOR,
   },
 };
@@ -353,8 +354,8 @@ export default function Canvas() {
         data: { ...edge.data, ...(sourceStatus ? { status: sourceStatus } : {}) },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 16,
-          height: 16,
+          width: 20,
+          height: 20,
           color: arrowColor,
         },
       };
@@ -408,12 +409,14 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={{ hideAttribution: true }}
+        snapToGrid
+        snapGrid={[20, 20]}
         panOnDrag
         selectionOnDrag={false}
         panOnScroll
         zoomOnPinch
       >
-        <Background variant="dots" gap={24} size={1} color="rgba(255, 255, 255, 0.06)" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} color="#52525b" />
         <Controls
           className="!bg-zinc-900/90 !backdrop-blur-sm !border-zinc-800/50 !rounded-xl !shadow-lg !shadow-black/20
             [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800/50 [&>button]:!text-zinc-500
