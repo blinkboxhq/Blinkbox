@@ -471,14 +471,11 @@ export default function CustomNode({ id, data, selected }) {
     </NodeToolbar>
   );
 
-  // ── TRIGGER NODE (n8n-style card · click=run · dot on edge · connector to +) ─
+  // ── TRIGGER NODE (n8n-style card · click=run · output handle only) ──────────
   if (isTrigger) {
     const cardW = 140;
     const cardH = 140;
     const dotSize = 14;
-    const lineLen = 48;
-    const plusSize = 32;
-    const totalW = cardW + dotSize / 2 + lineLen + plusSize + 4;
 
     // Status-aware card border
     const cardBorder = status === 'running'
@@ -501,12 +498,6 @@ export default function CustomNode({ id, data, selected }) {
       ? '0 0 20px rgba(161,161,170,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
       : '0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)';
 
-    const lineColor = status === 'running'
-      ? 'rgba(59,130,246,0.3)'
-      : status === 'completed'
-      ? 'rgba(16,185,129,0.3)'
-      : 'rgba(63,63,70,0.5)';
-
     const dotColor = status === 'completed'
       ? '#10b981'
       : status === 'running'
@@ -517,8 +508,8 @@ export default function CustomNode({ id, data, selected }) {
 
     return (
       <div
-        className="relative group flex items-center"
-        style={{ width: totalW, height: cardH + 54 }}
+        className="relative group"
+        style={{ width: cardW, height: cardH + 54 }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -602,34 +593,6 @@ export default function CustomNode({ id, data, selected }) {
             />
           </div>
         </motion.div>
-
-        {/* ── Line + Plus button (starts from dot edge) ── */}
-        <div className="flex items-center" style={{ height: cardH, marginLeft: dotSize / 2 }}>
-          {/* Connector line */}
-          <div
-            className="transition-colors duration-300"
-            style={{ width: lineLen, height: 2, background: lineColor }}
-          />
-
-          {/* Plus button — add next node */}
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.94 }}
-            onClick={handleAddNext}
-            className="flex items-center justify-center transition-all duration-200"
-            style={{
-              width: plusSize,
-              height: plusSize,
-              borderRadius: 10,
-              backgroundColor: '#232328',
-              border: '1px solid rgba(63,63,70,0.5)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-            }}
-            title="Add next step"
-          >
-            <Plus className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-200" strokeWidth={2.5} />
-          </motion.button>
-        </div>
 
         {/* ── Label below card ── */}
         <div
