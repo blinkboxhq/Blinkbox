@@ -17,26 +17,12 @@ import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 
 // ── Placeholder node rendered when canvas is empty ─────────────────────────
 function PlaceholderNode() {
-  const addNode = useWorkspaceStore((s) => s.addNode);
-
-  const handleClick = () => {
-    addNode({
-      id: `manual-${crypto.randomUUID()}`,
-      type: "custom",
-      position: { x: 400, y: 300 },
-      data: {
-        backendType: "manual",
-        label: "Trigger manually",
-        type: "trigger",
-        config: {},
-      },
-    });
-  };
+  const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
 
   return (
     <div className="flex flex-col items-center gap-3 select-none">
       <button
-        onClick={handleClick}
+        onClick={() => setTriggerPickerOpen(true)}
         className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 transition-all duration-200 hover:bg-zinc-800/40 cursor-pointer"
       >
         <Plus className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
