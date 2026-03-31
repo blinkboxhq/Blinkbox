@@ -46,8 +46,8 @@ body {
 }
 
 .react-flow__connection-line {
-  stroke: #52525b !important;
-  stroke-width: 2 !important;
+  stroke: #3f3f46 !important;
+  stroke-width: 3 !important;
 }
 
 .react-flow__attribution {
@@ -93,7 +93,7 @@ body {
     filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
   }
   100% {
-    stroke: #52525b;
+    stroke: #3f3f46;
     filter: none;
   }
 }

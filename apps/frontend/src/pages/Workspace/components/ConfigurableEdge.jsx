@@ -38,26 +38,26 @@ export default function ConfigurableEdge({
   const isFailed = status === "failed";
 
   // n8n-matched: solid #52525b, 2.5px. Clean and visible against #0d0d0f.
-  let stroke = "#52525b";
-  let strokeWidth = 2.5;
+  let stroke = "#3f3f46";
+  let strokeWidth = 4;
   let strokeDasharray = "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#3b82f6";
-    strokeWidth = 2.5;
+    strokeWidth = 4;
     strokeDasharray = "6 4";
     animation = "edgeFlow 0.5s linear infinite";
     filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 2.5;
+    strokeWidth = 4;
     animation = "edgeFadeToIdle 1.5s ease-out forwards";
     filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    strokeWidth = 2.5;
+    strokeWidth = 4;
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
   } else if (selected) {
     stroke = "#71717a";

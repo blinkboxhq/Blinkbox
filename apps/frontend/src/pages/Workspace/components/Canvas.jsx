@@ -19,10 +19,10 @@ const nodeTypes = { custom: CustomNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
 // ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
-const EDGE_COLOR = "#52525b";
+const EDGE_COLOR = "#3f3f46";
 const defaultEdgeOptions = {
   type: "configurable",
-  style: { strokeWidth: 2.5 },
+  style: { strokeWidth: 4 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
     width: 18,
