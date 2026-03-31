@@ -28,7 +28,7 @@ export default function ConfigurableEdge({
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 12,
+    borderRadius: 16,
   });
 
   // ── Status-driven styling ─────────────────────────────────────────────────
@@ -36,32 +36,31 @@ export default function ConfigurableEdge({
   const isRunning = status === "running";
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
-  const isActive = isRunning || isCompleted || isFailed;
 
-  // Solid bold lines. Dashed ONLY when running.
-  let stroke = "#3f3f46";
-  let strokeWidth = 3.5;
+  // n8n-matched: solid #52525b, 2.5px. Clean and visible against #0d0d0f.
+  let stroke = "#52525b";
+  let strokeWidth = 2.5;
   let strokeDasharray = "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#3b82f6";
-    strokeWidth = 3.5;
+    strokeWidth = 2.5;
     strokeDasharray = "6 4";
     animation = "edgeFlow 0.5s linear infinite";
     filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 3.5;
+    strokeWidth = 2.5;
     animation = "edgeFadeToIdle 1.5s ease-out forwards";
     filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    strokeWidth = 3.5;
+    strokeWidth = 2.5;
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
   } else if (selected) {
-    stroke = "#52525b";
+    stroke = "#71717a";
   }
 
   const handleInsert = (e) => {
@@ -91,7 +90,7 @@ export default function ConfigurableEdge({
       {/* Wide invisible hit area for hover detection */}
       <path
         d={edgePath}
-        strokeWidth={24}
+        strokeWidth={28}
         stroke="transparent"
         fill="none"
         className="react-flow__edge-interaction"
@@ -122,7 +121,7 @@ export default function ConfigurableEdge({
         </circle>
       )}
 
-      {/* ── Midpoint action buttons (+ and delete) ───────────────────────── */}
+      {/* ── Midpoint + button (n8n style: single centered button) ─────────── */}
       <EdgeLabelRenderer>
         <div
           style={{
@@ -132,26 +131,15 @@ export default function ConfigurableEdge({
           }}
           className="nodrag nopan"
         >
-          <div className="flex items-center gap-1 opacity-0 edge-action-buttons transition-all duration-150">
-            {/* Insert node */}
+          <div className="opacity-0 edge-action-buttons transition-all duration-150">
             <button
               onClick={handleInsert}
-              className="w-8 h-8 rounded-lg bg-[#1e1e22] border border-zinc-700/60 flex items-center justify-center
-                hover:bg-zinc-700 hover:border-zinc-500/70 active:scale-95 transition-all duration-150
-                shadow-lg shadow-black/60"
-              title="Insert node"
+              className="w-7 h-7 rounded-lg bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
+                hover:bg-zinc-700 hover:border-zinc-500 active:scale-95 transition-all duration-150
+                shadow-lg shadow-black/50"
+              title="Add step"
             >
-              <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
-            </button>
-            {/* Delete edge */}
-            <button
-              onClick={handleDelete}
-              className="w-8 h-8 rounded-lg bg-[#1e1e22] border border-zinc-700/60 flex items-center justify-center
-                hover:bg-red-950/60 hover:border-red-500/40 active:scale-95 transition-all duration-150
-                shadow-lg shadow-black/60 group/del"
-              title="Delete connection"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-zinc-400 group-hover/del:text-red-400 transition-colors" strokeWidth={2} />
+              <Plus className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-200" strokeWidth={2.5} />
             </button>
           </div>
         </div>

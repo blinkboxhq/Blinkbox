@@ -453,8 +453,8 @@ export default function CustomNode({ id, data, selected }) {
       }))
     : [];
 
-  // ── Handle styles (hidden by default, visible on hover) ────────────────────
-  const handleBaseClass = "!w-2.5 !h-2.5 !rounded-full !border-2 !border-zinc-900 transition-all duration-200 touch-none !opacity-0 group-hover:!opacity-100";
+  // ── Handle styles (always visible, n8n-style dots) ─────────────────────────
+  const handleBaseClass = "!w-3 !h-3 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none";
 
   // ── NodeToolbar (shared between trigger and action nodes) ──────────────────
   const toolbar = (
@@ -678,11 +678,8 @@ export default function CustomNode({ id, data, selected }) {
             type="target"
             position={Position.Left}
             id="input"
-            className={`${handleBaseClass} group-hover:!opacity-100`}
-            style={{
-              backgroundColor: `rgba(${accent},0.5)`,
-              ...(isAgent ? { top: "12%" } : {}),
-            }}
+            className={handleBaseClass}
+            style={isAgent ? { top: "12%" } : {}}
           />
         )}
 
@@ -788,8 +785,7 @@ export default function CustomNode({ id, data, selected }) {
           type="source"
           position={Position.Right}
           id="output"
-          className={`${handleBaseClass} group-hover:!opacity-100`}
-          style={{ backgroundColor: `rgba(${accent},0.5)` }}
+          className={handleBaseClass}
         />
       </motion.div>
 
