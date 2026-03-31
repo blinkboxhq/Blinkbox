@@ -339,33 +339,6 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
   );
 }
 
-// ── Output Connector (line + plus button on right side of node) ─────────────
-function OutputPlusButton({ nodeId, hasConnection, onAdd }) {
-  return (
-    <div
-      className={`absolute top-1/2 -translate-y-1/2 flex items-center z-10 nodrag nopan ${
-        hasConnection ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-      } transition-opacity duration-200`}
-      style={{ left: "100%" }}
-    >
-      {/* Connector line */}
-      <div
-        className="h-[5px] rounded-full"
-        style={{ width: 48, backgroundColor: "#3f3f46" }}
-      />
-      {/* Plus button */}
-      <button
-        onClick={onAdd}
-        className="w-8 h-8 rounded-xl bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
-          hover:bg-zinc-700 hover:border-zinc-500 active:scale-95 transition-all duration-150
-          shadow-lg shadow-black/50 -ml-[1px]"
-        title="Add next step"
-      >
-        <Plus className="w-4 h-4 text-zinc-400 hover:text-zinc-200" strokeWidth={2.5} />
-      </button>
-    </div>
-  );
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
@@ -385,7 +358,7 @@ export default function CustomNode({ id, data, selected }) {
   const isRunning = useWorkspaceStore((s) => s.isRunning);
   const runEngine = useWorkspaceStore((s) => s.runEngine);
   const edges = useWorkspaceStore((s) => s.edges);
-  const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
+  const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource); // kept for toolbar "add next"
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const duplicateNode = useWorkspaceStore((s) => s.duplicateNode);
   const status = isExecutionLive ? getNodeStatus(id) : null;
@@ -400,9 +373,6 @@ export default function CustomNode({ id, data, selected }) {
 
   const getHandleConnected = (handleId) =>
     edges.some((e) => e.target === id && e.targetHandle === handleId);
-
-  // Check if this node has an outgoing connection from "output"
-  const hasOutputConnection = edges.some((e) => e.source === id && e.sourceHandle === "output");
 
   // ── Toolbar handlers ────────────────────────────────────────────────────────
   const handlePlay = (e) => {
@@ -611,8 +581,6 @@ export default function CustomNode({ id, data, selected }) {
             }}
           />
 
-          {/* ── Output plus button ── */}
-          <OutputPlusButton nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} />
         </motion.div>
 
         {/* ── Label below card ── */}
@@ -810,8 +778,6 @@ export default function CustomNode({ id, data, selected }) {
         />
       </motion.div>
 
-      {/* ── Output plus button ── */}
-      <OutputPlusButton nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} />
     </div>
   );
 }
