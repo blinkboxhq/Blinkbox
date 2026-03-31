@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Timer, Settings, MoreHorizontal, Clock, ShieldAlert, Zap, AlertTriangle } from 'lucide-react';
+import { Timer, Settings, MoreHorizontal, Clock, ShieldAlert, Zap, AlertTriangle, Plus } from 'lucide-react';
 import { Handle, Position } from '@xyflow/react';
 import SmartJsonEditor from '../../../../components/ui/SmartJsonEditor';
 
@@ -12,12 +12,15 @@ export default function TriggerNode({ config = {}, updateConfig, selected }) {
   return (
     <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border transition-colors shadow-2xl font-sans group ${selected ? 'border-orange-500/50' : 'border-[#2A2A2A]'}`}>
 
-      {/* React Flow Source Handle */}
+      {/* FIXED HANDLE: Locked to the header, acts as a '+' button on hover */}
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-orange-500 border-2 border-[#0A0A0A]"
-      />
+        className="!w-5 !h-5 flex items-center justify-center !bg-[#111111] !border !border-[#2A2A2A] !rounded-full opacity-0 group-hover:opacity-100 transition-all hover:!bg-orange-500 hover:!border-orange-500 text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
+        style={{ top: '22px', right: '-10px' }}
+      >
+        <Plus className="w-3 h-3" />
+      </Handle>
 
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
@@ -31,7 +34,7 @@ export default function TriggerNode({ config = {}, updateConfig, selected }) {
         </div>
 
         {/* Action Buttons (Visible on hover) */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button className="p-1.5 hover:bg-[#2A2A2A] rounded-md text-zinc-500 hover:text-zinc-200 transition-colors">
             <Settings className="w-3.5 h-3.5" />
           </button>
@@ -44,7 +47,7 @@ export default function TriggerNode({ config = {}, updateConfig, selected }) {
       {/* Body Container */}
       <div className="flex p-3">
 
-        {/* LEFT COLUMN: Dot + Line indicator (Now naturally flexed) */}
+        {/* LEFT COLUMN: Dot + Line indicator */}
         <div className="flex flex-col items-center mr-3 w-2.5 shrink-0 mt-1">
           <div className="w-2 h-2 rounded-full bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.5)] ring-[3px] ring-[#0A0A0A] shrink-0" />
           <div className="w-[1.5px] h-full bg-[#2A2A2A] rounded-full mt-1.5" />
@@ -75,7 +78,7 @@ export default function TriggerNode({ config = {}, updateConfig, selected }) {
             </button>
           </div>
 
-          {/* Tab Contents (Now natively blocks, no absolute positioning) */}
+          {/* Tab Contents */}
           <div className="flex flex-col w-full">
 
             {/* Schedule Tab */}
