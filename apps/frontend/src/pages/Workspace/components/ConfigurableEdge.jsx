@@ -1,5 +1,5 @@
-import { getSmoothStepPath, EdgeLabelRenderer } from "@xyflow/react";
-import { Plus } from "lucide-react";
+import { getSmoothStepPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
+import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
 export default function ConfigurableEdge({
@@ -15,6 +15,8 @@ export default function ConfigurableEdge({
   selected,
 }) {
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
+  const onEdgesChange = useWorkspaceStore((s) => s.onEdgesChange);
+  const { deleteElements } = useReactFlow();
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -31,7 +33,6 @@ export default function ConfigurableEdge({
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
 
-  // Color palette
   let stroke = selected ? "#71717a" : "#3f3f46";
   let strokeWidth = selected ? 1.8 : 1.2;
   let strokeDasharray = "6 4";
@@ -63,6 +64,11 @@ export default function ConfigurableEdge({
     setInsertOnEdge(id);
   };
 
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    deleteElements({ edges: [{ id }] });
+  };
+
   return (
     <>
       {/* Glow underlay for running edges */}
@@ -76,6 +82,15 @@ export default function ConfigurableEdge({
           style={{ filter: "blur(4px)" }}
         />
       )}
+
+      {/* Wide invisible hit area so hover works anywhere on the line */}
+      <path
+        d={edgePath}
+        strokeWidth={20}
+        stroke="transparent"
+        fill="none"
+        className="react-flow__edge-interaction"
+      />
 
       <path
         id={id}
@@ -100,27 +115,36 @@ export default function ConfigurableEdge({
         </circle>
       )}
 
-      {/* Inline + button on the edge midpoint */}
       <EdgeLabelRenderer>
-        {/* Insert node button */}
+        {/* + and delete buttons — shown on edge hover via CSS group */}
         <div
           style={{
             position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: "all",
           }}
-          className="nodrag nopan"
+          className="nodrag nopan edge-action-group"
         >
-          <button
-            onClick={handleInsert}
-            className="w-5 h-5 rounded-full bg-zinc-800 border border-zinc-600/40 flex items-center justify-center
-              opacity-0 hover:opacity-100 focus:opacity-100 transition-all duration-200
-              hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:scale-110
-              shadow-md shadow-black/40 group/edge-btn"
-            title="Insert node here"
-          >
-            <Plus className="w-2.5 h-2.5 text-zinc-400 group-hover/edge-btn:text-emerald-400 transition-colors" strokeWidth={2.5} />
-          </button>
+          <div className="flex items-center gap-1.5 opacity-0 edge-action-buttons transition-opacity duration-150">
+            <button
+              onClick={handleInsert}
+              className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center
+                hover:bg-zinc-700 hover:border-zinc-500/60 transition-all duration-150
+                shadow-lg shadow-black/50"
+              title="Insert node"
+            >
+              <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center
+                hover:bg-red-500/20 hover:border-red-500/40 transition-all duration-150
+                shadow-lg shadow-black/50"
+              title="Delete edge"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-zinc-400 hover:text-red-400 transition-colors" strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
         {/* Condition Label */}

@@ -54,6 +54,12 @@ body {
   display: none !important;
 }
 
+/* ── Edge hover action buttons ─────────────────────────────────────────────── */
+.react-flow__edge:hover .edge-action-buttons,
+.react-flow__edge.selected .edge-action-buttons {
+  opacity: 1 !important;
+}
+
 /* ── Edge flow animation ───────────────────────────────────────────────────── */
 @keyframes edgeFlow {
   to {
