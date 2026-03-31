@@ -438,63 +438,77 @@ export default function CustomNode({ id, data, selected }) {
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
   const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
 
-  // ── TRIGGER NODE (compact pill) ──────────────────────────────────────────────
+  // ── TRIGGER NODE (n8n-style square card with notch) ─────────────────────────
   if (isTrigger) {
     return (
-      <div className="relative group">
+      <div className="relative group" style={{ width: 220, height: 200 }}>
+
+        {/* ── Left notch tab ── */}
+        <div
+          className="absolute"
+          style={{ left: 0, top: 30, width: 28, height: 80 }}
+        >
+          <div className="w-full h-full bg-[#2A2A2E] rounded-l-[18px] border-l border-t border-b border-zinc-600/25" />
+        </div>
+
+        {/* ── Main square card ── */}
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className={`relative flex items-center gap-3 p-2.5 bg-[#18181B] rounded-xl
-            border border-zinc-800 transition-all duration-300 cursor-pointer ${glowClass}`}
-          style={borderStyle}
+          className={`absolute flex items-center justify-center
+            bg-[#2A2A2E] rounded-[20px]
+            border border-zinc-600/25
+            shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]
+            transition-all duration-300 cursor-pointer ${glowClass}`}
+          style={{ left: 20, top: 0, width: 130, height: 140, ...borderStyle }}
         >
           {badge}
 
-          {/* Icon container — glass effect */}
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{
-              backgroundColor: `rgba(${accent},0.1)`,
-              border: `1px solid rgba(${accent},0.2)`,
-            }}
-          >
+          {/* Large centered icon */}
+          <div className="w-[60px] h-[60px] flex items-center justify-center">
             {nodeDef.logoUrl ? (
-              <img src={nodeDef.logoUrl} alt={data.label} className="w-5 h-5 object-contain" loading="lazy" />
+              <img src={nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-50" loading="lazy" />
             ) : (
-              <Icon className={`w-5 h-5 ${nodeDef.colorClass}`} strokeWidth={1.75} />
+              <Icon className="w-12 h-12 text-zinc-500" strokeWidth={1.25} />
             )}
           </div>
 
-          {/* Label + subtitle */}
-          <div className="flex flex-col min-w-0 mr-2">
-            <span className="text-[13px] font-semibold text-zinc-200 truncate leading-tight">
-              {data.label}
-            </span>
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-              Trigger
-            </span>
-          </div>
-
-          {/* Run Step button */}
-          <button
-            onClick={handleAddNext}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors cursor-pointer ml-auto"
-          >
-            <Play className="w-3.5 h-3.5" strokeWidth={2} />
-            <span className="text-[11px] font-medium">Run Step</span>
-          </button>
-
-          {/* Output handle */}
+          {/* Output handle on right edge */}
           <Handle
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-2.5 !h-2.5 !rounded-full !border-2 !border-[#18181B] !opacity-0 group-hover:!opacity-100 transition-all duration-200"
-            style={{ right: -5, backgroundColor: `rgba(${accent},0.6)` }}
+            className="!w-[12px] !h-[12px] !bg-[#6B6B76] !border-[2.5px] !border-[#2A2A2E] !rounded-full !opacity-100"
+            style={{ right: -6 }}
           />
         </motion.div>
+
+        {/* ── Connector line + Add button ── */}
+        <div
+          className="absolute flex items-center"
+          style={{ left: 156, top: 64 }}
+        >
+          <div className="w-[32px] h-[2px] bg-zinc-600/50" />
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleAddNext}
+            className="w-[30px] h-[30px] rounded-[8px] bg-[#2A2A2E] border border-zinc-600/40 flex items-center justify-center
+              hover:bg-zinc-700 hover:border-zinc-500/60 transition-all duration-150
+              shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+            title="Add next step"
+          >
+            <Plus className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2.5} />
+          </motion.button>
+        </div>
+
+        {/* ── Label below card ── */}
+        <div className="absolute left-[20px] w-[130px] text-center" style={{ top: 148 }}>
+          <span className="text-[13px] font-medium text-zinc-400 leading-snug block">
+            {data.label}
+          </span>
+        </div>
       </div>
     );
   }
