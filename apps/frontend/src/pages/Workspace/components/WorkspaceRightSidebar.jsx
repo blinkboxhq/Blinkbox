@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import { NodeRegistry } from '../../Workspace/nodeRegistry';
 import { Settings2, Activity, X, Check, ArrowRight } from 'lucide-react';
+import TriggerPicker from './TriggerPicker';
 
 
 export default function WorkspaceRightSidebar() {
   const selectedNodeId = useWorkspaceStore((state) => state.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((state) => state.setSelectedNodeId);
-  const isRightSidebarOpen = useWorkspaceStore((state) => state.isRightSidebarOpen); // <-- Add this
-  const setRightSidebarOpen = useWorkspaceStore((state) => state.setRightSidebarOpen); // <-- Add this
+  const isRightSidebarOpen = useWorkspaceStore((state) => state.isRightSidebarOpen);
+  const setRightSidebarOpen = useWorkspaceStore((state) => state.setRightSidebarOpen);
+  const isTriggerPickerOpen = useWorkspaceStore((state) => state.isTriggerPickerOpen);
+  const setTriggerPickerOpen = useWorkspaceStore((state) => state.setTriggerPickerOpen);
   const nodes = useWorkspaceStore((state) => state.nodes);
   const edges = useWorkspaceStore((state) => state.edges);
   const updateNodeConfig = useWorkspaceStore((state) => state.updateNodeConfig);
@@ -35,7 +38,16 @@ export default function WorkspaceRightSidebar() {
     if (!selectedNodeId) setSelectedNodeId(null);
   };
 
-  const isOpen = selectedNodeId || activeTab === 'logs';
+  const isOpen = selectedNodeId || activeTab === 'logs' || isTriggerPickerOpen;
+
+  // ── Trigger Picker Mode ──────────────────────────────────────────────────
+  if (isTriggerPickerOpen) {
+    return (
+      <aside className={`w-[400px] h-full bg-zinc-950 border-l border-zinc-800/60 flex flex-col z-20 transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full absolute right-0 opacity-0 pointer-events-none'}`}>
+        <TriggerPicker />
+      </aside>
+    );
+  }
 
   return (
     <aside className={`w-[400px] h-full bg-zinc-950 border-l border-zinc-800/60 flex flex-col z-20 transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full absolute right-0 opacity-0 pointer-events-none'}`}>

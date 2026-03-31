@@ -10,7 +10,8 @@ import { toast } from "sonner";
 export const createUISlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   selectedNodeId: null,
-  isRightSidebarOpen: false, // <-- Add this
+  isRightSidebarOpen: false,
+  isTriggerPickerOpen: false,
   workflowName: "Loading...",
   isSaving: false,
   isLoading: true,
@@ -20,6 +21,7 @@ export const createUISlice = (set, get) => ({
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
   setRightSidebarOpen: (isOpen) => set({ isRightSidebarOpen: isOpen }),
+  setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen }),
   setWorkflowName: (name) => set({ workflowName: name }),
   setAddNodeSource: (nodeId) =>
     set({ addNodeSource: nodeId, insertEdgeId: null }),

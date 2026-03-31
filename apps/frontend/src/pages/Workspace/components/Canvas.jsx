@@ -322,7 +322,7 @@ function AddNodeModal() {
 function EmptyCanvasState() {
   const nodes = useWorkspaceStore((s) => s.nodes);
   const isLoading = useWorkspaceStore((s) => s.isLoading);
-  const setRightSidebarOpen = useWorkspaceStore((s) => s.setRightSidebarOpen);
+  const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
 
   // Only show if loading is done AND the canvas is completely empty
   if (isLoading || nodes.length > 0) return null;
@@ -331,7 +331,7 @@ function EmptyCanvasState() {
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
       <div className="pointer-events-auto flex flex-col items-center gap-3">
         <button
-          onClick={() => setRightSidebarOpen(true)}
+          onClick={() => setTriggerPickerOpen(true)}
           className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 transition-all duration-200 hover:bg-zinc-800/40"
         >
           <Plus className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
