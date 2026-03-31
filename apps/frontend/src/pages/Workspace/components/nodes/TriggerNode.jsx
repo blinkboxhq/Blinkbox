@@ -12,14 +12,20 @@ export default function TriggerNode({ config = {}, updateConfig, selected }) {
   return (
     <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border transition-colors shadow-2xl font-sans group ${selected ? 'border-orange-500/50' : 'border-[#2A2A2A]'}`}>
 
-      {/* FIXED HANDLE: Locked to the header, acts as a '+' button on hover */}
+      {/* BULLETPROOF HANDLE: !opacity forces visibility, transform fixes the thread origin, pointer-events-none stops drag hijacking */}
+      {/* BULLETPROOF HANDLE */}
       <Handle
+        id="output"  
         type="source"
         position={Position.Right}
-        className="!w-5 !h-5 flex items-center justify-center !bg-[#111111] !border !border-[#2A2A2A] !rounded-full opacity-0 group-hover:opacity-100 transition-all hover:!bg-orange-500 hover:!border-orange-500 text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
-        style={{ top: '22px', right: '-10px' }}
+        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-orange-500 hover:!border-orange-500 text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
+        style={{ 
+          top: '20px', 
+          right: '-10px',
+          transform: 'translateY(-50%)' 
+        }}
       >
-        <Plus className="w-3 h-3" />
+        <Plus className="w-3 h-3 pointer-events-none" />
       </Handle>
 
       {/* Header */}
