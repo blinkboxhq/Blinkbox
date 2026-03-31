@@ -1,3 +1,4 @@
+import { Search, X, Plus, Zap } from "lucide-react"; // <-- Add Zap here
 import React, { useCallback, useRef, useMemo, useState } from "react";
 import {
   ReactFlow,
@@ -9,7 +10,6 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Plus } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import CustomNode from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
@@ -318,6 +318,27 @@ function AddNodeModal() {
   );
 }
 
+// ── Empty Canvas State ───────────────────────────────────────────────────
+function EmptyCanvasState() {
+  const nodes = useWorkspaceStore((s) => s.nodes);
+  const isLoading = useWorkspaceStore((s) => s.isLoading);
+  const setRightSidebarOpen = useWorkspaceStore((s) => s.setRightSidebarOpen);
+
+  // Only show if loading is done AND the canvas is completely empty
+  if (isLoading || nodes.length > 0) return null;
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+      <button
+        onClick={() => setRightSidebarOpen(true)}
+        className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-[#18181b]/90 backdrop-blur-md hover:bg-zinc-800 border border-zinc-700/80 rounded-xl text-sm font-medium text-zinc-300 hover:text-white transition-all shadow-xl shadow-black/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+      >
+        <Plus className="w-4 h-4 text-zinc-400" strokeWidth={2.5} />
+        Add your first step
+      </button>
+    </div>
+  );
+}
 // ── Canvas Component ────────────────────────────────────────────────────────
 
 export default function Canvas() {
@@ -426,6 +447,7 @@ export default function Canvas() {
       </ReactFlow>
 
       {/* Add Node Modal overlay */}
+      <EmptyCanvasState /> {/* <-- Use the new component here */}
       <AddNodeModal />
     </div>
   );

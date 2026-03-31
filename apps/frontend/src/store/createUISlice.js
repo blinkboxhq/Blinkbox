@@ -10,17 +10,21 @@ import { toast } from "sonner";
 export const createUISlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   selectedNodeId: null,
+  isRightSidebarOpen: false, // <-- Add this
   workflowName: "Loading...",
   isSaving: false,
   isLoading: true,
-  addNodeSource: null,       // nodeId that triggered "Add Next Step" modal
-  insertEdgeId: null,        // edgeId when inserting node between two nodes
+  addNodeSource: null, // nodeId that triggered "Add Next Step" modal
+  insertEdgeId: null, // edgeId when inserting node between two nodes
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
+  setRightSidebarOpen: (isOpen) => set({ isRightSidebarOpen: isOpen }),
   setWorkflowName: (name) => set({ workflowName: name }),
-  setAddNodeSource: (nodeId) => set({ addNodeSource: nodeId, insertEdgeId: null }),
-  setInsertOnEdge: (edgeId) => set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
+  setAddNodeSource: (nodeId) =>
+    set({ addNodeSource: nodeId, insertEdgeId: null }),
+  setInsertOnEdge: (edgeId) =>
+    set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
   clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null }),
 
   // ── API: Load Workflow ───────────────────────────────────────────────────
@@ -52,9 +56,12 @@ export const createUISlice = (set, get) => ({
           data: {
             label: n.description || resolvedType,
             backendType: resolvedType,
-            type: resolvedType === "manual" || resolvedType === "webhook" || resolvedType === "cron_trigger"
-              ? "trigger"
-              : "action",
+            type:
+              resolvedType === "manual" ||
+              resolvedType === "webhook" ||
+              resolvedType === "cron_trigger"
+                ? "trigger"
+                : "action",
             config: n.data || {},
           },
         };
@@ -70,21 +77,6 @@ export const createUISlice = (set, get) => ({
         data: { conditionPath: e.conditionPath || "" },
         style: {},
       }));
-
-      // Always guarantee at least one trigger
-      if (loadedNodes.length === 0) {
-        loadedNodes.push({
-          id: "trigger-1",
-          type: "custom",
-          position: { x: 400, y: 350 },
-          data: {
-            label: "Manual Trigger",
-            backendType: "manual",
-            type: "trigger",
-            config: {},
-          },
-        });
-      }
 
       // Cross-slice write: update graph + UI in one atomic set
       set({

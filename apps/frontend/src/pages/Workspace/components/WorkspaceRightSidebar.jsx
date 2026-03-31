@@ -3,9 +3,12 @@ import useWorkspaceStore from '../../../store/workspaceStore';
 import { NodeRegistry } from '../../Workspace/nodeRegistry';
 import { Settings2, Activity, X, Check, ArrowRight } from 'lucide-react';
 
+
 export default function WorkspaceRightSidebar() {
   const selectedNodeId = useWorkspaceStore((state) => state.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((state) => state.setSelectedNodeId);
+  const isRightSidebarOpen = useWorkspaceStore((state) => state.isRightSidebarOpen); // <-- Add this
+  const setRightSidebarOpen = useWorkspaceStore((state) => state.setRightSidebarOpen); // <-- Add this
   const nodes = useWorkspaceStore((state) => state.nodes);
   const edges = useWorkspaceStore((state) => state.edges);
   const updateNodeConfig = useWorkspaceStore((state) => state.updateNodeConfig);
