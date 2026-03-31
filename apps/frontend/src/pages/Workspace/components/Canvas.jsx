@@ -4,6 +4,7 @@ import {
   Controls,
   Background,
   useReactFlow,
+  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +16,19 @@ import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = { configurable: ConfigurableEdge };
+
+// ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
+const EDGE_COLOR = "#3f3f46";
+const defaultEdgeOptions = {
+  type: "configurable",
+  style: { strokeWidth: 2 },
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 16,
+    height: 16,
+    color: EDGE_COLOR,
+  },
+};
 
 // ── Add Node Modal ──────────────────────────────────────────────────────────
 function AddNodeModal() {
@@ -28,7 +42,7 @@ function AddNodeModal() {
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const edges = useWorkspaceStore((s) => s.edges);
   const onEdgesChange = useWorkspaceStore((s) => s.onEdgesChange);
-  const { getNode } = useReactFlow();
+  const { getNode, fitView } = useReactFlow();
 
   const isOpen = !!addNodeSource;
 
@@ -98,13 +112,17 @@ function AddNodeModal() {
             target: edge.target,
             targetHandle: edge.targetHandle || "input",
           });
+          // Smooth fitView after insertion
+          setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
         }, 30);
       }, 30);
     } else {
-      // ── APPEND AFTER A NODE ────────────────────────────────────────────
+      // ── APPEND AFTER A NODE (deterministic spacing) ────────────────────
       const sourceNode = getNode(addNodeSource);
+      const parentW = sourceNode?.measured?.width || 250;
+      const gap = 100;
       const pos = sourceNode
-        ? { x: sourceNode.position.x + 320, y: sourceNode.position.y }
+        ? { x: sourceNode.position.x + parentW + gap, y: sourceNode.position.y }
         : { x: 500, y: 350 };
 
       addNode({
@@ -127,13 +145,15 @@ function AddNodeModal() {
           target: newId,
           targetHandle: "input",
         });
+        // Smooth fitView to include the new node
+        setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
       }, 30);
     }
 
     clearAddNodeModal();
     setSearch("");
     setActiveCategory(null);
-  }, [addNodeSource, insertEdgeId, edges, addNode, onConnect, onEdgesChange, getNode, clearAddNodeModal]);
+  }, [addNodeSource, insertEdgeId, edges, addNode, onConnect, onEdgesChange, getNode, clearAddNodeModal, fitView]);
 
   const handleClose = () => {
     clearAddNodeModal();
@@ -314,17 +334,29 @@ export default function Canvas() {
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
 
-  // Derive edge statuses from their source node's live status.
+  // Derive edge statuses + arrow markers from their source node's live status.
   const liveEdges = useMemo(() => {
-    if (!isExecutionLive || Object.keys(nodeStatuses).length === 0) return edges;
-
     return edges.map((edge) => {
-      const sourceStatus = nodeStatuses[edge.source];
-      if (!sourceStatus) return edge;
+      const sourceStatus = isExecutionLive ? nodeStatuses[edge.source] : null;
+
+      // Arrow color matches edge status
+      const arrowColor = sourceStatus === "running"
+        ? "#3b82f6"
+        : sourceStatus === "completed"
+        ? "#10b981"
+        : sourceStatus === "failed"
+        ? "#ef4444"
+        : EDGE_COLOR;
 
       return {
         ...edge,
-        data: { ...edge.data, status: sourceStatus },
+        data: { ...edge.data, ...(sourceStatus ? { status: sourceStatus } : {}) },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 16,
+          height: 16,
+          color: arrowColor,
+        },
       };
     });
   }, [edges, nodeStatuses, isExecutionLive]);
@@ -358,7 +390,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full w-full relative bg-[#1E1E20]"
+      className="flex-1 h-full w-full relative bg-[#0d0d0f]"
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
@@ -374,14 +406,14 @@ export default function Canvas() {
         onPaneClick={() => setSelectedNodeId(null)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        defaultEdgeOptions={{ type: "configurable" }}
+        defaultEdgeOptions={defaultEdgeOptions}
         proOptions={{ hideAttribution: true }}
         panOnDrag
         selectionOnDrag={false}
         panOnScroll
         zoomOnPinch
       >
-        <Background variant="dots" gap={24} size={1.5} color="rgba(255, 255, 255, 0.25)" />
+        <Background variant="dots" gap={24} size={1} color="rgba(255, 255, 255, 0.06)" />
         <Controls
           className="!bg-zinc-900/90 !backdrop-blur-sm !border-zinc-800/50 !rounded-xl !shadow-lg !shadow-black/20
             [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800/50 [&>button]:!text-zinc-500

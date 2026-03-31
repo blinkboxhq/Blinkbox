@@ -13,7 +13,7 @@ body {
 
 /* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
 .react-flow__background {
-  background-color: #09090b !important;
+  background-color: #0d0d0f !important;
 }
 
 .react-flow__minimap {
@@ -42,12 +42,12 @@ body {
 }
 
 .react-flow__edge-path {
-  transition: stroke 0.3s ease, stroke-opacity 0.3s ease;
+  transition: stroke 0.3s ease, stroke-opacity 0.3s ease, stroke-width 0.2s ease;
 }
 
 .react-flow__connection-line {
-  stroke: #e4e4e7 !important;
-  stroke-width: 1 !important;
+  stroke: #71717a !important;
+  stroke-width: 2 !important;
 }
 
 .react-flow__attribution {
@@ -59,6 +59,15 @@ body {
 .react-flow__edge.selected .edge-action-buttons {
   opacity: 1 !important;
 }
+
+/* ── NodeToolbar reset ─────────────────────────────────────────────────────── */
+.react-flow__node-toolbar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 
 /* ── Edge flow animation ───────────────────────────────────────────────────── */
 @keyframes edgeFlow {

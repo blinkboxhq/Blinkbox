@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2 } from "lucide-react";
+import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -322,12 +322,31 @@ function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
   );
 }
 
+// ── Toolbar button helper ────────────────────────────────────────────────────
+function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150
+        ${danger
+          ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+          : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/60"
+        }`}
+      title={label}
+    >
+      <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+    </button>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
 
 export default function CustomNode({ id, data, selected }) {
+  const [isHovered, setIsHovered] = useState(false);
   const { id: automationId } = useParams();
+  const { deleteElements } = useReactFlow();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
   const Icon = nodeDef.icon;
   const accent = nodeDef.accentColor || "161,161,170";
@@ -339,6 +358,8 @@ export default function CustomNode({ id, data, selected }) {
   const runEngine = useWorkspaceStore((s) => s.runEngine);
   const edges = useWorkspaceStore((s) => s.edges);
   const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
+  const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const duplicateNode = useWorkspaceStore((s) => s.duplicateNode);
   const status = isExecutionLive ? getNodeStatus(id) : null;
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
@@ -351,6 +372,32 @@ export default function CustomNode({ id, data, selected }) {
 
   const getHandleConnected = (handleId) =>
     edges.some((e) => e.target === id && e.targetHandle === handleId);
+
+  // ── Toolbar handlers ────────────────────────────────────────────────────────
+  const handlePlay = (e) => {
+    e.stopPropagation();
+    if (!isRunning && automationId) runEngine(automationId);
+  };
+
+  const handleAddNext = (e) => {
+    e.stopPropagation();
+    if (setAddNodeSource) setAddNodeSource(id);
+  };
+
+  const handleOpenConfig = (e) => {
+    e.stopPropagation();
+    setSelectedNodeId(id);
+  };
+
+  const handleDuplicate = (e) => {
+    e.stopPropagation();
+    if (duplicateNode) duplicateNode(id);
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    deleteElements({ nodes: [{ id }] });
+  };
 
   // ── Status badge ───────────────────────────────────────────────────────────
   let badge = null;
@@ -398,16 +445,6 @@ export default function CustomNode({ id, data, selected }) {
     glowClass = `shadow-[0_0_24px_rgba(${accent},0.1)]`;
   }
 
-  const handlePlay = (e) => {
-    e.stopPropagation();
-    if (!isRunning && automationId) runEngine(automationId);
-  };
-
-  const handleAddNext = (e) => {
-    e.stopPropagation();
-    if (setAddNodeSource) setAddNodeSource(id);
-  };
-
   // Agent connection status dots for footer
   const agentHandleStatus = isAgent
     ? AI_AGENT_LEFT_HANDLES.map((h) => ({
@@ -418,8 +455,21 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── Handle styles (hidden by default, visible on hover) ────────────────────
   const handleBaseClass = "!w-2.5 !h-2.5 !rounded-full !border-2 !border-zinc-900 transition-all duration-200 touch-none !opacity-0 group-hover:!opacity-100";
-  const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
-  const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
+
+  // ── NodeToolbar (shared between trigger and action nodes) ──────────────────
+  const toolbar = (
+    <NodeToolbar
+      isVisible={selected || isHovered}
+      position={Position.Top}
+      offset={8}
+      className="!bg-[#1a1a1e] !border !border-zinc-700/50 !rounded-xl !shadow-xl !shadow-black/50 !p-1 !flex !items-center !gap-0.5"
+    >
+      <ToolbarButton icon={Play} label="Run workflow" onClick={handlePlay} />
+      <ToolbarButton icon={Settings} label="Configure" onClick={handleOpenConfig} />
+      {!isTrigger && <ToolbarButton icon={Copy} label="Duplicate" onClick={handleDuplicate} />}
+      {!isTrigger && <ToolbarButton icon={Trash2} label="Delete" onClick={handleDelete} danger />}
+    </NodeToolbar>
+  );
 
   // ── TRIGGER NODE (n8n-style card · click=run · dot on edge · connector to +) ─
   if (isTrigger) {
@@ -466,7 +516,13 @@ export default function CustomNode({ id, data, selected }) {
       : '#52525b';
 
     return (
-      <div className="relative group flex items-center" style={{ width: totalW, height: cardH + 54 }}>
+      <div
+        className="relative group flex items-center"
+        style={{ width: totalW, height: cardH + 54 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {toolbar}
 
         {/* ── Main card — click to run automation ── */}
         <motion.div
@@ -595,7 +651,13 @@ export default function CustomNode({ id, data, selected }) {
   const isGlassmorphic = isAI || isMemory;
 
   return (
-    <div className="relative group">
+    <div
+      className="relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {toolbar}
+
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
