@@ -15,7 +15,24 @@ import CustomNode from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 
-const nodeTypes = { custom: CustomNode };
+// ── Placeholder node rendered when canvas is empty ─────────────────────────
+function PlaceholderNode() {
+  const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
+
+  return (
+    <div className="flex flex-col items-center gap-3 select-none">
+      <button
+        onClick={() => setTriggerPickerOpen(true)}
+        className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 transition-all duration-200 hover:bg-zinc-800/40 cursor-pointer"
+      >
+        <Plus className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
+      </button>
+      <span className="text-sm text-zinc-500 font-medium">Add first step...</span>
+    </div>
+  );
+}
+
+const nodeTypes = { custom: CustomNode, placeholder: PlaceholderNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
 // ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
@@ -318,37 +335,25 @@ function AddNodeModal() {
   );
 }
 
-// ── Empty Canvas State ───────────────────────────────────────────────────
-function EmptyCanvasState() {
-  const nodes = useWorkspaceStore((s) => s.nodes);
-  const isLoading = useWorkspaceStore((s) => s.isLoading);
-  const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
+// ── Placeholder node injected into ReactFlow when canvas is empty ────────
+const PLACEHOLDER_NODE = {
+  id: "__placeholder__",
+  type: "placeholder",
+  position: { x: 400, y: 300 },
+  data: {},
+  selectable: false,
+  draggable: false,
+};
 
-  // Only show if loading is done AND the canvas is completely empty
-  if (isLoading || nodes.length > 0) return null;
-
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-      <div className="pointer-events-auto flex flex-col items-center gap-3">
-        <button
-          onClick={() => setTriggerPickerOpen(true)}
-          className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 transition-all duration-200 hover:bg-zinc-800/40"
-        >
-          <Plus className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
-        </button>
-        <span className="text-sm text-zinc-500 font-medium">Add first step...</span>
-      </div>
-    </div>
-  );
-}
 // ── Canvas Component ────────────────────────────────────────────────────────
 
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
 
-  const nodes = useWorkspaceStore((s) => s.nodes);
+  const storeNodes = useWorkspaceStore((s) => s.nodes);
   const edges = useWorkspaceStore((s) => s.edges);
+  const isLoading = useWorkspaceStore((s) => s.isLoading);
   const onNodesChange = useWorkspaceStore((s) => s.onNodesChange);
   const onEdgesChange = useWorkspaceStore((s) => s.onEdgesChange);
   const onConnect = useWorkspaceStore((s) => s.onConnect);
@@ -357,6 +362,12 @@ export default function Canvas() {
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
+
+  // Show placeholder node on canvas when empty (stitched to canvas, not floating)
+  const nodes = useMemo(() => {
+    if (!isLoading && storeNodes.length === 0) return [PLACEHOLDER_NODE];
+    return storeNodes;
+  }, [storeNodes, isLoading]);
 
   // Derive edge statuses + arrow markers from their source node's live status.
   const liveEdges = useMemo(() => {
@@ -422,11 +433,14 @@ export default function Canvas() {
       <ReactFlow
         nodes={nodes}
         edges={liveEdges}
-        onNodesChange={onNodesChange}
+        onNodesChange={(changes) => {
+          const real = changes.filter((c) => c.id !== "__placeholder__");
+          if (real.length) onNodesChange(real);
+        }}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}
-        onNodeClick={(e, node) => setSelectedNodeId(node.id)}
+        onNodeClick={(e, node) => { if (node.id !== "__placeholder__") setSelectedNodeId(node.id); }}
         onPaneClick={() => setSelectedNodeId(null)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -448,8 +462,6 @@ export default function Canvas() {
         />
       </ReactFlow>
 
-      {/* Add Node Modal overlay */}
-      <EmptyCanvasState /> {/* <-- Use the new component here */}
       <AddNodeModal />
     </div>
   );
