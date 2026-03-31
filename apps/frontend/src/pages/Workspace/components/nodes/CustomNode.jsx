@@ -438,96 +438,178 @@ export default function CustomNode({ id, data, selected }) {
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
   const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
 
-  // ── TRIGGER NODE (diamond shape with cursor icon) ──────────────────────────
+  // ── TRIGGER NODE (n8n-style square card with cursor + connector) ────────────
   if (isTrigger) {
-    const diamondSize = 100;
-    const halfSize = diamondSize / 2;
+    const cardW = 140;
+    const cardH = 140;
+    const connectorLen = 44;
+    const dotSize = 14;
+    const plusSize = 32;
+    const totalW = cardW + connectorLen + dotSize + connectorLen + plusSize + 8;
+
+    // Status-aware card border
+    const cardBorder = status === 'running'
+      ? '1.5px solid rgba(59,130,246,0.5)'
+      : status === 'completed'
+      ? '1.5px solid rgba(16,185,129,0.4)'
+      : status === 'failed'
+      ? '1.5px solid rgba(239,68,68,0.4)'
+      : selected
+      ? '1.5px solid rgba(161,161,170,0.4)'
+      : '1px solid rgba(55,55,60,0.6)';
+
+    const cardShadow = status === 'running'
+      ? '0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)'
+      : status === 'completed'
+      ? '0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)'
+      : status === 'failed'
+      ? '0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)'
+      : selected
+      ? '0 0 20px rgba(161,161,170,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+      : '0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)';
 
     return (
-      <div className="relative group flex flex-col items-center" style={{ width: diamondSize + 80, height: diamondSize + 50 }}>
+      <div className="relative group flex items-center" style={{ width: totalW, height: cardH + 60 }}>
 
-        {/* ── Diamond shape container ── */}
+        {/* ── Main card ── */}
         <motion.div
-          initial={{ scale: 0.85, opacity: 0, rotate: 45 }}
-          animate={{ scale: 1, opacity: 1, rotate: 45 }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleAddNext}
-          className={`relative cursor-pointer transition-all duration-300 ${glowClass}`}
+          className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
           style={{
-            width: diamondSize,
-            height: diamondSize,
-            marginLeft: 0,
-            marginTop: 10,
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #1E1E22 0%, #2A2A2E 50%, #1E1E22 100%)',
-            border: selected
-              ? '1.5px solid rgba(34,197,94,0.5)'
-              : '1px solid rgba(63,63,70,0.4)',
-            boxShadow: status === 'running'
-              ? '0 0 24px rgba(59,130,246,0.2), 0 8px 32px rgba(0,0,0,0.5)'
-              : status === 'completed'
-              ? '0 0 20px rgba(16,185,129,0.15), 0 8px 32px rgba(0,0,0,0.5)'
-              : status === 'failed'
-              ? '0 0 20px rgba(239,68,68,0.15), 0 8px 32px rgba(0,0,0,0.5)'
-              : '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)',
-            ...borderStyle,
+            width: cardW,
+            height: cardH,
+            borderRadius: 24,
+            background: 'linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)',
+            border: cardBorder,
+            boxShadow: cardShadow,
           }}
         >
-          {/* Inner glow ring on hover */}
+          {/* Subtle inner highlight */}
           <div
-            className="absolute inset-[3px] rounded-[17px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            className="absolute inset-0 rounded-[23px] pointer-events-none"
             style={{
-              border: '1px solid rgba(34,197,94,0.15)',
-              background: 'radial-gradient(circle at center, rgba(34,197,94,0.04) 0%, transparent 70%)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)',
             }}
           />
 
-          {/* Centered content — counter-rotate to keep icon upright */}
+          {/* Hover overlay */}
           <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ transform: 'rotate(-45deg)' }}
-          >
-            {/* Cursor icon */}
-            <div className="flex flex-col items-center gap-1">
-              <MousePointer2
-                className="w-7 h-7 text-zinc-500 group-hover:text-green-400 transition-colors duration-300"
-                strokeWidth={1.5}
-              />
-              {status === 'running' && (
-                <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
-              )}
-            </div>
-          </div>
-
-          {/* Status badge — counter-rotate */}
-          <div style={{ transform: 'rotate(-45deg)' }}>
-            {badge}
-          </div>
-
-          {/* Output handle — positioned at right vertex of diamond */}
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output"
-            className="!w-[10px] !h-[10px] !rounded-full !border-2 !border-[#1E1E22] !opacity-100 transition-colors duration-200"
+            className="absolute inset-0 rounded-[23px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{
-              backgroundColor: status === 'completed' ? '#10b981' : '#52525b',
-              right: -5,
-              top: '50%',
-              transform: 'translateY(-50%)',
+              background: 'radial-gradient(circle at 50% 40%, rgba(161,161,170,0.04) 0%, transparent 70%)',
             }}
+          />
+
+          {/* Status badge */}
+          {badge}
+
+          {/* Running spinner overlay */}
+          {status === 'running' && (
+            <div className="absolute top-3 right-3">
+              <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+            </div>
+          )}
+
+          {/* Cursor icon — large, bold, n8n style */}
+          <MousePointer2
+            className="w-12 h-12 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-300 drop-shadow-sm"
+            strokeWidth={1.25}
           />
         </motion.div>
 
-        {/* ── Label below the diamond ── */}
+        {/* ── Connector: dot + line + plus button ── */}
+        <div className="flex items-center" style={{ height: cardH }}>
+          {/* Connector line from card to dot */}
+          <div
+            className="transition-colors duration-300"
+            style={{
+              width: connectorLen,
+              height: 2,
+              background: status === 'running'
+                ? 'rgba(59,130,246,0.3)'
+                : status === 'completed'
+                ? 'rgba(16,185,129,0.3)'
+                : 'rgba(63,63,70,0.5)',
+            }}
+          />
+
+          {/* Output dot — the React Flow handle lives here */}
+          <div className="relative flex items-center justify-center" style={{ width: dotSize, height: dotSize }}>
+            <div
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: dotSize,
+                height: dotSize,
+                backgroundColor: status === 'completed'
+                  ? '#10b981'
+                  : status === 'running'
+                  ? '#3b82f6'
+                  : status === 'failed'
+                  ? '#ef4444'
+                  : '#52525b',
+                border: '3px solid #1C1C20',
+                boxShadow: status === 'running'
+                  ? '0 0 8px rgba(59,130,246,0.4)'
+                  : status === 'completed'
+                  ? '0 0 8px rgba(16,185,129,0.4)'
+                  : 'none',
+              }}
+            />
+            {/* Invisible React Flow handle layered on top */}
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="output"
+              className="!absolute !w-full !h-full !rounded-full !opacity-0 !border-0 !bg-transparent"
+              style={{ right: 0, top: 0 }}
+            />
+          </div>
+
+          {/* Connector line from dot to plus */}
+          <div
+            className="transition-colors duration-300"
+            style={{
+              width: connectorLen,
+              height: 2,
+              background: status === 'running'
+                ? 'rgba(59,130,246,0.3)'
+                : status === 'completed'
+                ? 'rgba(16,185,129,0.3)'
+                : 'rgba(63,63,70,0.5)',
+            }}
+          />
+
+          {/* Plus button — add next node */}
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={handleAddNext}
+            className="flex items-center justify-center transition-all duration-200"
+            style={{
+              width: plusSize,
+              height: plusSize,
+              borderRadius: 10,
+              backgroundColor: '#232328',
+              border: '1px solid rgba(63,63,70,0.5)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            }}
+            title="Add next step"
+          >
+            <Plus className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-200" strokeWidth={2.5} />
+          </motion.button>
+        </div>
+
+        {/* ── Label below card ── */}
         <div
-          className="text-center mt-3 select-none"
-          style={{ width: diamondSize + 40 }}
+          className="absolute text-center select-none"
+          style={{ left: 0, width: cardW, top: cardH + 8 }}
         >
-          <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300 transition-colors duration-200 leading-snug block">
+          <span className="text-[13px] font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors duration-200 leading-snug block">
             {data.label}
           </span>
-          <span className="text-[10px] text-zinc-600 block mt-0.5">
+          <span className="text-[10px] text-zinc-600 mt-0.5 block">
             Click to add trigger
           </span>
         </div>
