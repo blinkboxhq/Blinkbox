@@ -19,14 +19,14 @@ const nodeTypes = { custom: CustomNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
 // ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
-const EDGE_COLOR = "#2e2e33";
+const EDGE_COLOR = "#3f3f46";
 const defaultEdgeOptions = {
   type: "configurable",
   style: { strokeWidth: 5 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
     color: EDGE_COLOR,
   },
 };
@@ -354,8 +354,8 @@ export default function Canvas() {
         data: { ...edge.data, ...(sourceStatus ? { status: sourceStatus } : {}) },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
+          width: 24,
+          height: 24,
           color: arrowColor,
         },
       };

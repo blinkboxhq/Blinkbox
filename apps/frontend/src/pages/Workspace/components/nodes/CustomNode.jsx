@@ -348,10 +348,10 @@ function OutputPlusButton({ nodeId, hasConnection, onAdd }) {
       } transition-opacity duration-200`}
       style={{ left: "100%" }}
     >
-      {/* Short connector line */}
+      {/* Connector line */}
       <div
         className="h-[5px] rounded-full"
-        style={{ width: 28, backgroundColor: "#2e2e33" }}
+        style={{ width: 48, backgroundColor: "#3f3f46" }}
       />
       {/* Plus button */}
       <button

@@ -42,7 +42,7 @@ export default function ConfigurableEdge({
   const isFailed = status === "failed";
 
   // Dark grey, bold, uniform
-  let stroke = "#2e2e33";
+  let stroke = "#3f3f46";
   let strokeWidth = 5;
   let strokeDasharray = "none";
   let animation = "none";
