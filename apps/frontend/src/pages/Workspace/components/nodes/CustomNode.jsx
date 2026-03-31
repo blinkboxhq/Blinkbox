@@ -438,14 +438,14 @@ export default function CustomNode({ id, data, selected }) {
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
   const handleHoverStyle = { backgroundColor: `rgba(${accent},1)` };
 
-  // ── TRIGGER NODE (n8n-style square card with cursor + connector) ────────────
+  // ── TRIGGER NODE (n8n-style card · click=run · dot on edge · connector to +) ─
   if (isTrigger) {
     const cardW = 140;
     const cardH = 140;
-    const connectorLen = 44;
     const dotSize = 14;
+    const lineLen = 48;
     const plusSize = 32;
-    const totalW = cardW + connectorLen + dotSize + connectorLen + plusSize + 8;
+    const totalW = cardW + dotSize / 2 + lineLen + plusSize + 4;
 
     // Status-aware card border
     const cardBorder = status === 'running'
@@ -468,15 +468,32 @@ export default function CustomNode({ id, data, selected }) {
       ? '0 0 20px rgba(161,161,170,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
       : '0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)';
 
-    return (
-      <div className="relative group flex items-center" style={{ width: totalW, height: cardH + 60 }}>
+    const lineColor = status === 'running'
+      ? 'rgba(59,130,246,0.3)'
+      : status === 'completed'
+      ? 'rgba(16,185,129,0.3)'
+      : 'rgba(63,63,70,0.5)';
 
-        {/* ── Main card ── */}
+    const dotColor = status === 'completed'
+      ? '#10b981'
+      : status === 'running'
+      ? '#3b82f6'
+      : status === 'failed'
+      ? '#ef4444'
+      : '#52525b';
+
+    return (
+      <div className="relative group flex items-center" style={{ width: totalW, height: cardH + 54 }}>
+
+        {/* ── Main card — click to run automation ── */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
+          onClick={handlePlay}
+          className={`relative flex flex-col items-center justify-center transition-all duration-300 ${
+            isRunning ? 'cursor-wait' : 'cursor-pointer'
+          }`}
           style={{
             width: cardW,
             height: cardH,
@@ -512,43 +529,23 @@ export default function CustomNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* Cursor icon — large, bold, n8n style */}
+          {/* Cursor icon */}
           <MousePointer2
             className="w-12 h-12 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-300 drop-shadow-sm"
             strokeWidth={1.25}
           />
-        </motion.div>
 
-        {/* ── Connector: dot + line + plus button ── */}
-        <div className="flex items-center" style={{ height: cardH }}>
-          {/* Connector line from card to dot */}
+          {/* ── Output dot — attached to the right edge of the card ── */}
           <div
-            className="transition-colors duration-300"
-            style={{
-              width: connectorLen,
-              height: 2,
-              background: status === 'running'
-                ? 'rgba(59,130,246,0.3)'
-                : status === 'completed'
-                ? 'rgba(16,185,129,0.3)'
-                : 'rgba(63,63,70,0.5)',
-            }}
-          />
-
-          {/* Output dot — the React Flow handle lives here */}
-          <div className="relative flex items-center justify-center" style={{ width: dotSize, height: dotSize }}>
+            className="absolute flex items-center justify-center"
+            style={{ right: -(dotSize / 2), top: '50%', transform: 'translateY(-50%)', width: dotSize, height: dotSize, zIndex: 10 }}
+          >
             <div
               className="rounded-full transition-all duration-300"
               style={{
                 width: dotSize,
                 height: dotSize,
-                backgroundColor: status === 'completed'
-                  ? '#10b981'
-                  : status === 'running'
-                  ? '#3b82f6'
-                  : status === 'failed'
-                  ? '#ef4444'
-                  : '#52525b',
+                backgroundColor: dotColor,
                 border: '3px solid #1C1C20',
                 boxShadow: status === 'running'
                   ? '0 0 8px rgba(59,130,246,0.4)'
@@ -557,28 +554,22 @@ export default function CustomNode({ id, data, selected }) {
                   : 'none',
               }}
             />
-            {/* Invisible React Flow handle layered on top */}
+            {/* Invisible React Flow handle on top of dot */}
             <Handle
               type="source"
               position={Position.Right}
               id="output"
-              className="!absolute !w-full !h-full !rounded-full !opacity-0 !border-0 !bg-transparent"
-              style={{ right: 0, top: 0 }}
+              className="!absolute !inset-0 !w-full !h-full !rounded-full !opacity-0 !border-0 !bg-transparent"
             />
           </div>
+        </motion.div>
 
-          {/* Connector line from dot to plus */}
+        {/* ── Line + Plus button (starts from dot edge) ── */}
+        <div className="flex items-center" style={{ height: cardH, marginLeft: dotSize / 2 }}>
+          {/* Connector line */}
           <div
             className="transition-colors duration-300"
-            style={{
-              width: connectorLen,
-              height: 2,
-              background: status === 'running'
-                ? 'rgba(59,130,246,0.3)'
-                : status === 'completed'
-                ? 'rgba(16,185,129,0.3)'
-                : 'rgba(63,63,70,0.5)',
-            }}
+            style={{ width: lineLen, height: 2, background: lineColor }}
           />
 
           {/* Plus button — add next node */}
@@ -610,7 +601,7 @@ export default function CustomNode({ id, data, selected }) {
             {data.label}
           </span>
           <span className="text-[10px] text-zinc-600 mt-0.5 block">
-            Click to add trigger
+            Click to run
           </span>
         </div>
       </div>
