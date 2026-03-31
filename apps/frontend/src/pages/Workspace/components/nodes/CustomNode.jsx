@@ -416,23 +416,6 @@ export default function CustomNode({ id, data, selected }) {
       }))
     : [];
 
-  // ── Shared hover + button ─────────────────────────────────────────────────
-  const addNextButton = (
-    <div className="absolute top-1/2 -right-10 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30">
-      <motion.button
-        whileHover={{ scale: 1.15 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={handleAddNext}
-        className="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-600/50 flex items-center justify-center
-          hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all duration-200
-          shadow-lg shadow-black/50"
-        title="Add next step"
-      >
-        <Plus className="w-3.5 h-3.5 text-zinc-300" strokeWidth={2.5} />
-      </motion.button>
-    </div>
-  );
-
   // ── Handle styles (hidden by default, visible on hover) ────────────────────
   const handleBaseClass = "!w-2.5 !h-2.5 !rounded-full !border-2 !border-zinc-900 transition-all duration-200 touch-none !opacity-0 group-hover:!opacity-100";
   const handleStyle = { backgroundColor: `rgba(${accent},0.6)` };
@@ -445,10 +428,7 @@ export default function CustomNode({ id, data, selected }) {
     const dotSize = 14;
     const lineLen = 48;
     const plusSize = 32;
-    const hasOutgoingEdge = edges.some((e) => e.source === id);
-    const totalW = hasOutgoingEdge
-      ? cardW + dotSize / 2
-      : cardW + dotSize / 2 + lineLen + plusSize + 4;
+    const totalW = cardW + dotSize / 2 + lineLen + plusSize + 4;
 
     // Status-aware card border
     const cardBorder = status === 'running'
@@ -567,35 +547,33 @@ export default function CustomNode({ id, data, selected }) {
           </div>
         </motion.div>
 
-        {/* ── Line + Plus button — only shown when no outgoing edge ── */}
-        {!hasOutgoingEdge && (
-          <div className="flex items-center" style={{ height: cardH, marginLeft: dotSize / 2 }}>
-            {/* Connector line */}
-            <div
-              className="transition-colors duration-300"
-              style={{ width: lineLen, height: 2, background: lineColor }}
-            />
+        {/* ── Line + Plus button (starts from dot edge) ── */}
+        <div className="flex items-center" style={{ height: cardH, marginLeft: dotSize / 2 }}>
+          {/* Connector line */}
+          <div
+            className="transition-colors duration-300"
+            style={{ width: lineLen, height: 2, background: lineColor }}
+          />
 
-            {/* Plus button — add next node */}
-            <motion.button
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={handleAddNext}
-              className="flex items-center justify-center transition-all duration-200"
-              style={{
-                width: plusSize,
-                height: plusSize,
-                borderRadius: 10,
-                backgroundColor: '#232328',
-                border: '1px solid rgba(63,63,70,0.5)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              }}
-              title="Add next step"
-            >
-              <Plus className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-200" strokeWidth={2.5} />
-            </motion.button>
-          </div>
-        )}
+          {/* Plus button — add next node */}
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={handleAddNext}
+            className="flex items-center justify-center transition-all duration-200"
+            style={{
+              width: plusSize,
+              height: plusSize,
+              borderRadius: 10,
+              backgroundColor: '#232328',
+              border: '1px solid rgba(63,63,70,0.5)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            }}
+            title="Add next step"
+          >
+            <Plus className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-200" strokeWidth={2.5} />
+          </motion.button>
+        </div>
 
         {/* ── Label below card ── */}
         <div
@@ -790,7 +768,6 @@ export default function CustomNode({ id, data, selected }) {
         />
       </motion.div>
 
-      {addNextButton}
     </div>
   );
 }
