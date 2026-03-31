@@ -1,4 +1,4 @@
-import { getSmoothStepPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyflow/react";
+import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyflow/react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -21,14 +21,13 @@ export default function ConfigurableEdge({
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
   const { deleteElements } = useReactFlow();
 
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 16,
   });
 
   // ── Status-driven styling ─────────────────────────────────────────────────
