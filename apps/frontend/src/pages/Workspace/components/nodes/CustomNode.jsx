@@ -515,7 +515,7 @@ export default function CustomNode({ id, data, selected }) {
       : status === 'failed'
       ? '1.5px solid rgba(239,68,68,0.4)'
       : selected
-      ? '1.5px solid rgba(161,161,170,0.4)'
+      ? `1.5px solid rgba(${accent},0.45)`
       : '1px solid rgba(55,55,60,0.6)';
 
     const cardShadow = status === 'running'
@@ -525,7 +525,7 @@ export default function CustomNode({ id, data, selected }) {
       : status === 'failed'
       ? '0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)'
       : selected
-      ? '0 0 20px rgba(161,161,170,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+      ? `0 0 20px rgba(${accent},0.08), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
       : '0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)';
 
     const dotColor = status === 'completed'
@@ -589,11 +589,16 @@ export default function CustomNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* Cursor icon */}
-          <MousePointer2
-            className="w-12 h-12 text-zinc-500 group-hover:text-zinc-300 transition-colors duration-300 drop-shadow-sm"
-            strokeWidth={1.25}
-          />
+          {/* Trigger icon — uses registry icon for this backendType */}
+          <div
+            className="flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300"
+            style={{ backgroundColor: `rgba(${accent},0.08)` }}
+          >
+            <Icon
+              className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
+              strokeWidth={1.25}
+            />
+          </div>
 
           {/* ── Output handle — standard React Flow handle on right edge ── */}
           <Handle

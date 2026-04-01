@@ -18,6 +18,9 @@ import {
   CircuitBoard,
   Sparkles,
   Brain,
+  MousePointerClick,
+  Webhook,
+  Clock,
 } from "lucide-react";
 
 // ── Brand Logos (react-icons/si = Simple Icons) ──────────────────────────
@@ -37,6 +40,8 @@ import {
 
 // ── UI Components ─────────────────────────────────────────────────────────
 import TriggerNode from "./components/nodes/TriggerNode";
+import WebhookTriggerNode from "./components/nodes/WebhookTriggerNode";
+import ScheduleTriggerNode from "./components/nodes/ScheduleTriggerNode";
 import HttpRequestNode from "./components/nodes/HttpRequestNode";
 import DelayNode from "./components/nodes/Delaynode";
 import InformerNode from "./components/nodes/InformerNode";
@@ -166,7 +171,7 @@ export const NodeRegistry = {
   // ── Triggers ─────────────────────────────────────────────────────────────
   manual: {
     label: "Manual Trigger",
-    icon: Zap,
+    icon: MousePointerClick,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-green-400",
     accentColor: "34,197,94",
@@ -175,20 +180,20 @@ export const NodeRegistry = {
   },
   webhook: {
     label: "Webhook Trigger",
-    icon: Zap,
+    icon: Webhook,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-green-400",
-    accentColor: "34,197,94",
-    ConfigPanel: TriggerNode,
+    colorClass: "text-blue-400",
+    accentColor: "59,130,246",
+    ConfigPanel: WebhookTriggerNode,
     category: "trigger",
   },
   cron_trigger: {
-    label: "Schedule (Cron)",
-    icon: Hourglass,
+    label: "Schedule Trigger",
+    icon: Clock,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-green-400",
-    accentColor: "34,197,94",
-    ConfigPanel: null,
+    colorClass: "text-amber-400",
+    accentColor: "251,191,36",
+    ConfigPanel: ScheduleTriggerNode,
     category: "trigger",
   },
 
