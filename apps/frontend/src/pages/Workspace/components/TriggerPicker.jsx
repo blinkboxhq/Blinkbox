@@ -104,7 +104,7 @@ export default function TriggerPicker() {
     : TRIGGER_OPTIONS;
 
   const handleSelect = (trigger) => {
-    const newId = `${trigger.backendType}-${crypto.randomUUID()}`;
+    const newId = `${trigger.id}-${crypto.randomUUID()}`;
 
     addNode({
       id: newId,
@@ -114,7 +114,9 @@ export default function TriggerPicker() {
         backendType: trigger.backendType,
         label: trigger.label,
         type: "trigger",
-        config: {},
+        config: {
+          triggerVariant: trigger.id,
+        },
       },
     });
 

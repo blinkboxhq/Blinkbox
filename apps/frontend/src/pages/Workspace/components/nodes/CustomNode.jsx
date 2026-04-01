@@ -4,6 +4,7 @@ import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Datab
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
+import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
 // ── AI Agent Left-Side Handles ───────────────────────────────────────────────
@@ -241,7 +242,14 @@ function getConfigHint(data, edges, nodeId) {
     if (c.agentType) return c.agentType.replace(/_/g, " ");
     return "tools agent";
   }
-  if (data.backendType === "webhook" && c.path) return `/${c.path}`;
+  if (data.backendType === "webhook") {
+    const v = c.triggerVariant;
+    if (v === "form") return c.expectedFields?.length ? `${c.expectedFields.length} fields` : "form";
+    if (v === "chat") return c.systemPrompt ? c.systemPrompt.slice(0, 28) : "chat endpoint";
+    if (v === "sub_workflow") return "sub-workflow";
+    if (v === "app_event") return c.expectedEvents || "app events";
+    return "webhook";
+  }
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
   if (data.backendType === "logic_router" && c.field) return `if ${c.field}`;
   if (data.backendType === "slack" && c.message) return c.message.slice(0, 40);
@@ -376,8 +384,12 @@ export default function CustomNode({ id, data, selected }) {
   const { id: automationId } = useParams();
   const { deleteElements } = useReactFlow();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
-  const Icon = nodeDef.icon;
-  const accent = nodeDef.accentColor || "161,161,170";
+  // For trigger nodes, prefer the variant def (per-flavor icon/color) over the generic registry entry
+  const variantDef = (data.type === "trigger" && data.config?.triggerVariant)
+    ? TRIGGER_VARIANTS[data.config.triggerVariant]
+    : null;
+  const Icon = (variantDef || nodeDef).icon;
+  const accent = (variantDef?.accentColor || nodeDef.accentColor) || "161,161,170";
 
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore((s) => s.getNodeStatus);
@@ -589,13 +601,13 @@ export default function CustomNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* Trigger icon — uses registry icon for this backendType */}
+          {/* Trigger icon — uses variant def icon if available, falls back to registry */}
           <div
             className="flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300"
             style={{ backgroundColor: `rgba(${accent},0.08)` }}
           >
             <Icon
-              className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
+              className={`w-8 h-8 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
               strokeWidth={1.25}
             />
           </div>

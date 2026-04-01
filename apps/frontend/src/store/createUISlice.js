@@ -102,10 +102,19 @@ export const createUISlice = (set, get) => ({
       if (!entryNode)
         throw new Error("A Trigger node is required to save the workflow.");
 
+      const isCron = entryNode.data.backendType === 'cron_trigger';
+      const cronExpression = isCron
+        ? (entryNode.data.config?.schedule || entryNode.data.config?.customCron || '0 9 * * *')
+        : undefined;
+
       const payload = {
         name: state.workflowName,
         trigger: entryNode.data.backendType,
         entryNodeId: entryNode.id,
+        settings: {
+          maxParallel: 10,
+          ...(cronExpression ? { cronExpression } : {}),
+        },
         nodes: state.nodes.map((n) => ({
           id: n.id,
           type: n.data.backendType,

@@ -96,7 +96,7 @@ export async function syncCronJobs() {
 
   // Find all active cron automations
   const cronAutomations = await Automation.find({
-    trigger: "cron",
+    trigger: "cron_trigger",
     active: true,
   });
 

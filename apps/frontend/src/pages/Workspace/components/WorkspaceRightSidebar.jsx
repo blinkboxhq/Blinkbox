@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import { NodeRegistry } from '../../Workspace/nodeRegistry';
+import { TRIGGER_VARIANTS } from '../../Workspace/triggerVariants';
 import { Settings2, Activity, X, Check, ArrowRight } from 'lucide-react';
 import TriggerPicker from './TriggerPicker';
 
@@ -28,7 +29,12 @@ export default function WorkspaceRightSidebar() {
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const nodeDef = selectedNode ? NodeRegistry[selectedNode.data.backendType] : null;
-  const ConfigPanel = nodeDef?.ConfigPanel;
+  // Prefer variant-specific ConfigPanel (and icon/color) for trigger nodes with a triggerVariant
+  const variantDef = selectedNode?.data?.config?.triggerVariant
+    ? TRIGGER_VARIANTS[selectedNode.data.config.triggerVariant]
+    : null;
+  const displayDef = variantDef || nodeDef;
+  const ConfigPanel = displayDef?.ConfigPanel;
 
   const overallStatus = liveExecutionState?.status || (isExecutionLive ? 'starting' : 'idle');
 
@@ -57,8 +63,8 @@ export default function WorkspaceRightSidebar() {
         <div className="flex items-center justify-between px-6 py-4">
           {selectedNode ? (
             <div className="flex items-center gap-3">
-              <div className={`p-1.5 rounded-lg ${nodeDef?.bgClass} ${nodeDef?.colorClass}`}>
-                {nodeDef && <nodeDef.icon className="w-4 h-4" />}
+              <div className={`p-1.5 rounded-lg ${displayDef?.bgClass || 'bg-zinc-800/60'} ${displayDef?.colorClass || 'text-zinc-400'}`}>
+                {displayDef && <displayDef.icon className="w-4 h-4" />}
               </div>
               <h2 className="text-[13px] font-medium text-zinc-200 tracking-tight">{selectedNode.data.label}</h2>
             </div>

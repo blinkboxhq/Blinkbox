@@ -30,6 +30,24 @@ export async function handlePublicWebhook(req, res) {
       return res.status(404).json({ error: "Webhook not found or inactive" });
     }
 
+    // ── Enforce trigger config: allowed methods + auth ──────────────────────
+    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const triggerConfig = entryNode?.data || {};
+
+    if (triggerConfig.allowedMethods && triggerConfig.allowedMethods.length > 0) {
+      if (!triggerConfig.allowedMethods.includes(req.method)) {
+        return res.status(405).json({ error: `Method ${req.method} not allowed` });
+      }
+    }
+
+    if (triggerConfig.authEnabled && triggerConfig.secret) {
+      const authHeader = req.headers["authorization"] || "";
+      const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      if (token !== triggerConfig.secret) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+    }
+
     const webhookData = {
       body:    req.body    || {},
       query:   req.query   || {},
