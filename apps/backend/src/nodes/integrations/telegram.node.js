@@ -30,15 +30,18 @@ export default {
       silent = false,
     } = config;
 
-    if (!text) throw new Error("Telegram: 'text' is required.");
-    if (!chatId) throw new Error("Telegram: 'chatId' is required.");
+    const trimmedChatId = typeof chatId === "string" ? chatId.trim() : chatId;
+    const trimmedText = typeof text === "string" ? text.trim() : text;
+
+    if (!trimmedText) throw new Error("Telegram: 'text' is required.");
+    if (!trimmedChatId) throw new Error("Telegram: 'chatId' is required.");
     // Vault: resolve + decrypt Bot Token
     const cred = await resolveCredential(credentialId, context.workspaceId, "Telegram");
     const botToken = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const payload = {
-      chat_id: chatId,
-      text,
+      chat_id: trimmedChatId,
+      text: trimmedText,
       disable_notification: silent,
     };
 

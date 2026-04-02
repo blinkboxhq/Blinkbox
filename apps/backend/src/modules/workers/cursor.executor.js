@@ -51,11 +51,20 @@ function classifyError(err, nodeType, config) {
   }
 
   // Auth/credential errors
-  if (lower.includes("401") || lower.includes("403") || lower.includes("unauthorized") || lower.includes("forbidden")) {
+  if (lower.includes("401") || lower.includes("403") || lower.includes("unauthorized") || lower.includes("forbidden") || lower.includes("invalid bot token")) {
     return {
       category: "auth",
       message: msg,
       hint: "Authentication failed. Check your credentials in the encrypted vault — API key may be expired or incorrect.",
+    };
+  }
+
+  // Bad request / config errors — permanent, no retry
+  if (lower.includes("bad request") || lower.includes("chat not found") || lower.includes("invalid chat") || lower.includes("user not found") || lower.includes("400")) {
+    return {
+      category: "config",
+      message: msg,
+      hint: "The request was rejected due to invalid configuration (e.g. wrong chat ID, missing field). Fix the node config and re-run.",
     };
   }
 
