@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Trash2, Eye, EyeOff, Shield, Loader2, Copy, CheckCheck } from 'lucide-react';
+import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil } from 'lucide-react';
 import api from '../../../lib/api';
 
 const TYPE_LABELS = {
@@ -13,20 +13,23 @@ export default function VaultManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [revealedId, setRevealedId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editSecret, setEditSecret] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editError, setEditError] = useState(null);
+
+  // Create form state
+  const [name, setName] = useState('');
+  const [type, setType] = useState('bearer');
+  const [secret, setSecret] = useState('');
+  const [error, setError] = useState(null);
 
   const handleCopyId = (id) => {
     navigator.clipboard.writeText(id);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
-
-  // Form state
-  const [name, setName] = useState('');
-  const [type, setType] = useState('bearer');
-  const [secret, setSecret] = useState('');
-  const [error, setError] = useState(null);
 
   const fetchCredentials = useCallback(async () => {
     try {
@@ -67,6 +70,24 @@ export default function VaultManager() {
     }
   };
 
+  const handleUpdate = async (id) => {
+    if (!editSecret.trim()) {
+      setEditError('Secret is required.');
+      return;
+    }
+    setIsUpdating(true);
+    setEditError(null);
+    try {
+      await api.patch(`/api/credentials/${id}`, { secret: editSecret });
+      setEditingId(null);
+      setEditSecret('');
+    } catch (err) {
+      setEditError(err.response?.data?.message || 'Failed to update credential.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
       await api.delete(`/api/credentials/${id}`);
@@ -74,10 +95,6 @@ export default function VaultManager() {
     } catch {
       // Silently fail
     }
-  };
-
-  const maskSecret = (id) => {
-    return revealedId === id ? '(encrypted on server)' : '••••••••••••••••';
   };
 
   return (
@@ -173,56 +190,80 @@ export default function VaultManager() {
       ) : (
         <div className="flex flex-col gap-2">
           {credentials.map((cred) => (
-            <div
-              key={cred._id}
-              className="flex items-center justify-between p-4 bg-neutral-950 border border-neutral-800 rounded-xl group hover:border-neutral-700 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500">
-                  <Key className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-neutral-200">{cred.name}</span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
-                      {TYPE_LABELS[cred.type] || cred.type}
-                    </span>
-                    <span className="text-[10px] text-neutral-600 font-mono select-all">
-                      {cred._id}
-                    </span>
-                    <button
-                      onClick={() => handleCopyId(cred._id)}
-                      className="p-0.5 text-neutral-600 hover:text-neutral-300 transition-colors"
-                      title="Copy credential ID"
-                    >
-                      {copiedId === cred._id
-                        ? <CheckCheck className="w-3 h-3 text-emerald-400" />
-                        : <Copy className="w-3 h-3" />}
-                    </button>
+            <div key={cred._id} className="flex flex-col bg-neutral-950 border border-neutral-800 rounded-xl group hover:border-neutral-700 transition-colors">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500">
+                    <Key className="w-4 h-4" />
                   </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-neutral-200">{cred.name}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+                        {TYPE_LABELS[cred.type] || cred.type}
+                      </span>
+                      <span className="text-[10px] text-neutral-600 font-mono select-all">
+                        {cred._id}
+                      </span>
+                      <button
+                        onClick={() => handleCopyId(cred._id)}
+                        className="p-0.5 text-neutral-600 hover:text-neutral-300 transition-colors"
+                        title="Copy credential ID"
+                      >
+                        {copiedId === cred._id
+                          ? <CheckCheck className="w-3 h-3 text-emerald-400" />
+                          : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setEditingId(editingId === cred._id ? null : cred._id); setEditSecret(''); setEditError(null); }}
+                    className="p-2 text-neutral-600 hover:text-neutral-300 transition-colors"
+                    title="Update secret"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cred._id)}
+                    className="p-2 text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setRevealedId(revealedId === cred._id ? null : cred._id)}
-                  className="p-2 text-neutral-600 hover:text-neutral-300 transition-colors"
-                >
-                  {revealedId === cred._id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={() => handleDelete(cred._id)}
-                  className="p-2 text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Inline update form */}
+              {editingId === cred._id && (
+                <div className="px-4 pb-4 flex flex-col gap-2 border-t border-neutral-800 pt-3">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">New Secret</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={editSecret}
+                      onChange={(e) => setEditSecret(e.target.value)}
+                      placeholder="Paste new token / API key"
+                      className="flex-1 bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-neutral-600 transition-colors placeholder-neutral-700"
+                    />
+                    <button
+                      onClick={() => handleUpdate(cred._id)}
+                      disabled={isUpdating}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition-all disabled:opacity-50"
+                    >
+                      {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
+                      Save
+                    </button>
+                  </div>
+                  {editError && <p className="text-xs text-red-400 font-medium">{editError}</p>}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* ID copy hint */}
       {credentials.length > 0 && (
         <p className="text-[10px] text-neutral-600 mt-4 text-center">
           Click the copy icon next to a credential ID to use it in your workflow nodes.

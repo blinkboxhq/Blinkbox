@@ -31,7 +31,7 @@ export async function createCredential(req, res) {
       return res.status(400).json({ message: "Name must be under 100 characters." });
     }
 
-    const { encryptedData, iv, authTag } = encrypt(secret);
+    const { encryptedData, iv, authTag } = encrypt(secret.trim());
 
     const credential = await Credential.create({
       workspaceId: req.user.id,
@@ -53,6 +53,32 @@ export async function createCredential(req, res) {
   } catch (err) {
     console.error("[Credentials] Create error:", err.message);
     res.status(500).json({ message: "Failed to create credential." });
+  }
+}
+
+export async function updateCredential(req, res) {
+  try {
+    const { secret } = req.body;
+
+    if (!secret || !secret.trim()) {
+      return res.status(400).json({ message: "Secret is required." });
+    }
+
+    const { encryptedData, iv, authTag } = encrypt(secret.trim());
+
+    const result = await Credential.updateOne(
+      { _id: req.params.id, workspaceId: req.user.id },
+      { $set: { encryptedData, iv, authTag } },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Credential not found." });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[Credentials] Update error:", err.message);
+    res.status(500).json({ message: "Failed to update credential." });
   }
 }
 
