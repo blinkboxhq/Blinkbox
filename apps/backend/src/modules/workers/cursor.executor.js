@@ -14,6 +14,7 @@ import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
+import { dispatchErrorTriggers } from "../../infra/error.trigger.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
 const MAX_RETRIES = 3;
@@ -470,6 +471,21 @@ export async function processCursor({ executionId, cursorId }) {
           totalDuration: (performance.now() - startTime).toFixed(2),
         },
       });
+
+      // Fire error_trigger automations if this execution failed
+      if (hasFailed) {
+        const failedCursor = latestExecution.cursors.find((c) => c.status === "failed");
+        dispatchErrorTriggers({
+          workspaceId: latestExecution.workspaceId,
+          automationId: latestExecution.automationId,
+          automationName: latestExecution.name || "Unknown",
+          executionId: latestExecution._id,
+          nodeId: failedCursor?.nodeId || node.id,
+          nodeType: node.type,
+          errorMessage: failedCursor?.errorMessage || executionError || "Unknown error",
+          failedAt: latestExecution.completedAt.toISOString(),
+        }).catch((e) => console.error("[ErrorTrigger] Dispatch error:", e.message));
+      }
     }
 
     await latestExecution.save();

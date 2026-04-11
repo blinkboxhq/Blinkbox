@@ -62,6 +62,7 @@ import WhatsAppNode from "./components/nodes/WhatsAppNode";
 import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
+import OllamaNode from "./components/nodes/OllamaNode";
 
 // ── Memory Nodes ─────────────────────────────────────────────────────────
 import WindowBufferMemoryNode from "./components/nodes/WindowBufferMemoryNode";
@@ -119,15 +120,6 @@ const CerebrasNode = makeOpenAICompatNode({
     { value: "llama3.1-8b", label: "Llama 3.1 8B" },
   ],
   defaultModel: "llama3.1-70b",
-});
-const OllamaNode = makeOpenAICompatNode({
-  label: "Ollama (Local)", accent: "slate", subtitle: "Local models — no API key",
-  models: [
-    { value: "llama3", label: "Llama 3" },
-    { value: "mistral", label: "Mistral" },
-    { value: "gemma", label: "Gemma" },
-  ],
-  defaultModel: "llama3",
 });
 const NovitaNode = makeOpenAICompatNode({
   label: "Novita AI", accent: "violet", subtitle: "Affordable GPU inference",

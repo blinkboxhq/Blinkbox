@@ -5,6 +5,9 @@ import { startCursorWorker } from "../modules/workers/cursor.worker.js";
 import { startWebhookWorker } from "../modules/workers/webhook.worker.js";
 import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
+import { startRssPoller } from "../infra/rss.poller.js";
+import { startImapPoller } from "../infra/imap.poller.js";
+import { startDbPoller } from "../infra/db.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -28,6 +31,15 @@ export async function startServer() {
 
   // 4. Start cron scheduler (BullMQ repeatable jobs)
   await startCronScheduler();
+
+  // 4a. Start RSS feed poller
+  await startRssPoller();
+
+  // 4b. Start IMAP email poller
+  await startImapPoller();
+
+  // 4c. Start database row poller
+  await startDbPoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

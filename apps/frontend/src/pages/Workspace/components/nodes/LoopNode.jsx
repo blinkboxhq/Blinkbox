@@ -1,7 +1,7 @@
 import { Repeat } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function LoopNode({ config, updateConfig }) {
+export default function LoopNode({ config = {}, updateConfig }) {
   const arrayPath = config.arrayPath || "";
 
   return (

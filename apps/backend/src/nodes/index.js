@@ -80,6 +80,36 @@ export const nodeRegistry = {
       return input;
     },
   },
+  error_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
+  rss_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
+  imap_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
+  db_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
+  github_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
+  stripe_trigger: {
+    async run(config, input) {
+      return input;
+    },
+  },
   cron_trigger: cronTrigger,
 
   // ── Core Nodes ─────────────────────────────────────────────────────────

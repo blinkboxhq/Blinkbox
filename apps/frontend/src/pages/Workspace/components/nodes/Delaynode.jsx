@@ -1,6 +1,6 @@
 import { Clock, Hourglass } from 'lucide-react';
 
-export default function DelayNode({ config, updateConfig }) {
+export default function DelayNode({ config = {}, updateConfig }) {
   // Read from config, default to 10 seconds
   const amount = config.amount ?? 10;
   const unit = config.unit || 'seconds';

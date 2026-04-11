@@ -1,6 +1,6 @@
 import { Code2, AlertTriangle } from "lucide-react";
 
-export default function CodeNode({ config, updateConfig }) {
+export default function CodeNode({ config = {}, updateConfig }) {
   const code = config.code || "";
 
   return (
