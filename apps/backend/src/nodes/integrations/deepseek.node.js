@@ -1,21 +1,21 @@
 /**
- * NOVITA AI NODE
+ * DEEPSEEK NODE
  *
- * OpenAI-compatible. Affordable GPU inference.
+ * OpenAI-compatible API. DeepSeek models (deepseek-chat, deepseek-reasoner).
  *
- * Output: { result, model, tokensUsed, provider: "novita" }
+ * Output: { result, model, tokensUsed, provider: "deepseek" }
  */
 
 import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
-const API_URL = "https://api.novita.ai/v3/openai/chat/completions";
+const API_URL = "https://api.deepseek.com/chat/completions";
 
 export default {
   async run(config, input, context = {}) {
     const {
-      model = "meta-llama/llama-3-70b-instruct",
+      model = "deepseek-chat",
       prompt,
       credentialId,
       outputFormat = "text",
@@ -23,8 +23,8 @@ export default {
       maxTokens = 2000,
     } = config;
 
-    if (!prompt) throw new Error("Novita AI: 'prompt' is required.");
-    const cred = await resolveCredential(credentialId, context.workspaceId, "Novita AI");
+    if (!prompt) throw new Error("DeepSeek: 'prompt' is required.");
+    const cred = await resolveCredential(credentialId, context.workspaceId, "DeepSeek");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     const inputSummary =
@@ -50,7 +50,6 @@ export default {
           ],
           temperature,
           max_tokens: maxTokens,
-          ...(outputFormat === "json" && { response_format: { type: "json_object" } }),
         },
         {
           headers: {
@@ -78,12 +77,12 @@ export default {
         result,
         model: response.data.model || model,
         tokensUsed: response.data.usage?.total_tokens || 0,
-        provider: "novita",
+        provider: "deepseek",
       };
     } catch (err) {
-      if (err.response?.status === 401) throw new Error("Novita AI: Invalid API key.");
-      if (err.response?.status === 429) throw new Error("Novita AI: Rate limit exceeded. Retry later.");
-      throw new Error(`Novita AI failed: ${err.response?.status || err.code} — ${err.message}`);
+      if (err.response?.status === 401) throw new Error("DeepSeek: Invalid API key.");
+      if (err.response?.status === 429) throw new Error("DeepSeek: Rate limit exceeded. Retry later.");
+      throw new Error(`DeepSeek failed: ${err.response?.status || err.code} — ${err.message}`);
     }
   },
 };

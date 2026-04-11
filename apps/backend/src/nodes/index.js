@@ -34,16 +34,9 @@ import respondWebhook from "./respond_webhook.node.js";
 import openai from "./integrations/openai.node.js";
 import anthropic from "./integrations/anthropic.node.js";
 import gemini from "./integrations/gemini.node.js";
-import openrouter from "./integrations/openrouter.node.js";
-import together from "./integrations/together.node.js";
 import perplexity from "./integrations/perplexity.node.js";
 import xai from "./integrations/xai.node.js";
-import fireworks from "./integrations/fireworks.node.js";
-import cerebras from "./integrations/cerebras.node.js";
-import ollama from "./integrations/ollama.node.js";
-import novita from "./integrations/novita.node.js";
-import deepinfra from "./integrations/deepinfra.node.js";
-import hyperbolic from "./integrations/hyperbolic.node.js";
+import deepseek from "./integrations/deepseek.node.js";
 
 // ── Integrations: Comms Hub ──────────────────────────────────────────────────
 import telegram from "./integrations/telegram.node.js";
@@ -123,16 +116,9 @@ export const nodeRegistry = {
   openai: openai,
   anthropic: anthropic,
   gemini: gemini,
-  openrouter: openrouter,
-  together: together,
   perplexity: perplexity,
   xai: xai,
-  fireworks: fireworks,
-  cerebras: cerebras,
-  ollama: ollama,
-  novita: novita,
-  deepinfra: deepinfra,
-  hyperbolic: hyperbolic,
+  deepseek: deepseek,
 
   // ── Comms Hub ──────────────────────────────────────────────────────────
   telegram: telegram,

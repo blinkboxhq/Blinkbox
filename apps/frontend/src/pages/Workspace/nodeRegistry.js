@@ -8,13 +8,6 @@ import {
   GitBranch,
   Code2,
   Repeat,
-  Router,
-  Cpu,
-  Flame,
-  Bolt,
-  Server,
-  Cloud,
-  CircuitBoard,
   Sparkles,
   MousePointerClick,
   Webhook,
@@ -32,7 +25,7 @@ import {
   SiGooglegemini,
   SiAnthropic,
   SiPerplexity,
-  SiOllama,
+  SiDeepseek,
 } from "react-icons/si";
 
 // ── UI Components ─────────────────────────────────────────────────────────
@@ -57,26 +50,9 @@ import WhatsAppNode from "./components/nodes/WhatsAppNode";
 import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
-import OllamaNode from "./components/nodes/OllamaNode";
+import DeepSeekNode from "./components/nodes/DeepSeekNode";
 
 // ── Generated Config Panels for OpenAI-Compatible Providers ─────────────
-const OpenRouterNode = makeOpenAICompatNode({
-  label: "OpenRouter", accent: "blue", subtitle: "100+ models via unified API",
-  models: [
-    { value: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet" },
-    { value: "google/gemini-pro-1.5", label: "Gemini Pro 1.5" },
-    { value: "liquid/lfm-40b", label: "LFM 40B" },
-  ],
-  defaultModel: "anthropic/claude-3.5-sonnet",
-});
-const TogetherNode = makeOpenAICompatNode({
-  label: "Together AI", accent: "sky", subtitle: "Fast open-source inference",
-  models: [
-    { value: "meta-llama/Llama-3-70b-chat-hf", label: "Llama 3 70B" },
-    { value: "mistralai/Mixtral-8x7B-Instruct-v0.1", label: "Mixtral 8x7B" },
-  ],
-  defaultModel: "meta-llama/Llama-3-70b-chat-hf",
-});
 const PerplexityNode = makeOpenAICompatNode({
   label: "Perplexity", accent: "cyan", subtitle: "Search-augmented AI",
   models: [
@@ -92,43 +68,6 @@ const XAINode = makeOpenAICompatNode({
     { value: "grok-2", label: "Grok 2" },
   ],
   defaultModel: "grok-beta",
-});
-const FireworksNode = makeOpenAICompatNode({
-  label: "Fireworks AI", accent: "rose", subtitle: "Blazing-fast inference",
-  models: [
-    { value: "accounts/fireworks/models/firefunction-v2", label: "FireFunction v2" },
-    { value: "accounts/fireworks/models/llama-v3-70b-instruct", label: "Llama 3 70B" },
-  ],
-  defaultModel: "accounts/fireworks/models/firefunction-v2",
-});
-const CerebrasNode = makeOpenAICompatNode({
-  label: "Cerebras", accent: "orange", subtitle: "Ultra-fast wafer-scale inference",
-  models: [
-    { value: "llama3.1-70b", label: "Llama 3.1 70B" },
-    { value: "llama3.1-8b", label: "Llama 3.1 8B" },
-  ],
-  defaultModel: "llama3.1-70b",
-});
-const NovitaNode = makeOpenAICompatNode({
-  label: "Novita AI", accent: "violet", subtitle: "Affordable GPU inference",
-  models: [
-    { value: "meta-llama/llama-3-70b-instruct", label: "Llama 3 70B" },
-  ],
-  defaultModel: "meta-llama/llama-3-70b-instruct",
-});
-const DeepInfraNode = makeOpenAICompatNode({
-  label: "DeepInfra", accent: "emerald", subtitle: "Serverless open models",
-  models: [
-    { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
-  ],
-  defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
-});
-const HyperbolicNode = makeOpenAICompatNode({
-  label: "Hyperbolic", accent: "amber", subtitle: "Decentralized GPU inference",
-  models: [
-    { value: "meta-llama/Meta-Llama-3-70B-Instruct", label: "Llama 3 70B" },
-  ],
-  defaultModel: "meta-llama/Meta-Llama-3-70B-Instruct",
 });
 
 // ── Category Definitions (ordered for sidebar) ───────────────────────────
@@ -207,24 +146,6 @@ export const NodeRegistry = {
     ConfigPanel: GeminiNode,
     category: "ai",
   },
-  openrouter: {
-    label: "OpenRouter",
-    icon: Router,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#3b82f6]",
-    accentColor: "59,130,246",
-    ConfigPanel: OpenRouterNode,
-    category: "ai",
-  },
-  together: {
-    label: "Together AI",
-    icon: Cpu,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#0ea5e9]",
-    accentColor: "14,165,233",
-    ConfigPanel: TogetherNode,
-    category: "ai",
-  },
   perplexity: {
     label: "Perplexity",
     icon: SiPerplexity,
@@ -244,59 +165,14 @@ export const NodeRegistry = {
     ConfigPanel: XAINode,
     category: "ai",
   },
-  fireworks: {
-    label: "Fireworks AI",
-    icon: Flame,
+  deepseek: {
+    label: "DeepSeek",
+    icon: SiDeepseek,
     bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#f43f5e]",
-    accentColor: "244,63,94",
-    ConfigPanel: FireworksNode,
-    category: "ai",
-  },
-  cerebras: {
-    label: "Cerebras",
-    icon: CircuitBoard,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#f97316]",
-    accentColor: "249,115,22",
-    ConfigPanel: CerebrasNode,
-    category: "ai",
-  },
-  ollama: {
-    label: "Ollama (Local)",
-    icon: SiOllama,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#94a3b8]",
-    accentColor: "148,163,184",
-    logoUrl: siLogo("ollama", "94A3B8"),
-    ConfigPanel: OllamaNode,
-    category: "ai",
-  },
-  novita: {
-    label: "Novita AI",
-    icon: Cloud,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#8b5cf6]",
-    accentColor: "139,92,246",
-    ConfigPanel: NovitaNode,
-    category: "ai",
-  },
-  deepinfra: {
-    label: "DeepInfra",
-    icon: Server,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#10b981]",
-    accentColor: "16,185,129",
-    ConfigPanel: DeepInfraNode,
-    category: "ai",
-  },
-  hyperbolic: {
-    label: "Hyperbolic",
-    icon: Bolt,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#fbbf24]",
-    accentColor: "251,191,36",
-    ConfigPanel: HyperbolicNode,
+    colorClass: "text-[#4D9BF8]",
+    accentColor: "77,155,248",
+    logoUrl: siLogo("deepseek", "4D9BF8"),
+    ConfigPanel: DeepSeekNode,
     category: "ai",
   },
   ai_agent: {

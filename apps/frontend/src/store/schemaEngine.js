@@ -57,16 +57,9 @@ export const DEFAULT_SCHEMAS = {
   openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   anthropic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   gemini: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  openrouter: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  together: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   perplexity: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   xai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  fireworks: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  cerebras: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  ollama: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  novita: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  deepinfra: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  hyperbolic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
+  deepseek: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
 
   // Comms Hub
   telegram: { ok: "boolean", messageId: "number", chat: "object", pollId: "string", deleted: "boolean", pinned: "boolean" },
