@@ -34,7 +34,6 @@ import respondWebhook from "./respond_webhook.node.js";
 import openai from "./integrations/openai.node.js";
 import anthropic from "./integrations/anthropic.node.js";
 import gemini from "./integrations/gemini.node.js";
-import deepseek from "./integrations/deepseek.node.js";
 import openrouter from "./integrations/openrouter.node.js";
 import together from "./integrations/together.node.js";
 import perplexity from "./integrations/perplexity.node.js";
@@ -46,21 +45,11 @@ import novita from "./integrations/novita.node.js";
 import deepinfra from "./integrations/deepinfra.node.js";
 import hyperbolic from "./integrations/hyperbolic.node.js";
 
-// ── Memory Nodes ────────────────────────────────────────────────────────────
-import windowBufferMemory from "./memory/windowBufferMemory.node.js";
-import redisMemory from "./memory/redisMemory.node.js";
-import postgresMemory from "./memory/postgresMemory.node.js";
-import vectorMemory from "./memory/vectorMemory.node.js";
-import mem0 from "./memory/mem0.node.js";
-
 // ── Integrations: Comms Hub ──────────────────────────────────────────────────
 import telegram from "./integrations/telegram.node.js";
 import whatsapp from "./integrations/whatsapp.node.js";
 import slackReal from "./integrations/slack.node.js";
 import discord from "./integrations/discord.node.js";
-
-// ── Integrations: Payments Hub ───────────────────────────────────────────────
-import stripe from "./integrations/stripe.node.js";
 
 // ── Integrations: Data Hub ───────────────────────────────────────────────────
 import airtable from "./integrations/airtable.node.js";
@@ -134,7 +123,6 @@ export const nodeRegistry = {
   openai: openai,
   anthropic: anthropic,
   gemini: gemini,
-  deepseek: deepseek,
   openrouter: openrouter,
   together: together,
   perplexity: perplexity,
@@ -146,21 +134,11 @@ export const nodeRegistry = {
   deepinfra: deepinfra,
   hyperbolic: hyperbolic,
 
-  // ── Memory ────────────────────────────────────────────────────────────
-  window_buffer_memory: windowBufferMemory,
-  redis_memory: redisMemory,
-  postgres_memory: postgresMemory,
-  vector_memory: vectorMemory,
-  mem0: mem0,
-
   // ── Comms Hub ──────────────────────────────────────────────────────────
   telegram: telegram,
   whatsapp: whatsapp,
   slack: slackReal,
   discord: discord,
-
-  // ── Payments Hub ───────────────────────────────────────────────────────
-  stripe: stripe,
 
   // ── Data Hub ───────────────────────────────────────────────────────────
   airtable: airtable,
@@ -169,7 +147,6 @@ export const nodeRegistry = {
   web_search: webSearch,
 
   // ── Backward Compatibility Aliases ─────────────────────────────────────
-  // Old node types map to new implementations so existing automations work.
   advanced_scraper: webScraper,
   informer: webScraper,
   set_fields: dataMapper,

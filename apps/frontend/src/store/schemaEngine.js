@@ -53,13 +53,10 @@ export const DEFAULT_SCHEMAS = {
   merge: { _passthrough: true },
   slack: { ok: "boolean", ts: "string", channel: "string", message: "object" },
   discord: { ok: "boolean", webhookId: "string" },
-  stripe: { id: "string", object: "string" },
-
   // AI Hub
   openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   anthropic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   gemini: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
-  deepseek: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   openrouter: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   together: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   perplexity: { result: "string", model: "string", tokensUsed: "number", provider: "string" },

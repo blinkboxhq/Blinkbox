@@ -8,7 +8,6 @@ import {
   GitBranch,
   Code2,
   Repeat,
-  Compass,
   Router,
   Cpu,
   Flame,
@@ -17,7 +16,6 @@ import {
   Cloud,
   CircuitBoard,
   Sparkles,
-  Brain,
   MousePointerClick,
   Webhook,
   Clock,
@@ -27,7 +25,6 @@ import {
 import {
   SiSlack,
   SiDiscord,
-  SiStripe,
   SiOpenai,
   SiTelegram,
   SiWhatsapp,
@@ -52,24 +49,15 @@ import CodeNode from "./components/nodes/CodeNode";
 import LoopNode from "./components/nodes/LoopNode";
 import SlackNode from "./components/nodes/SlackNode";
 import DiscordNode from "./components/nodes/DiscordNode";
-import StripeNode from "./components/nodes/StripeNode";
 import OpenAINode from "./components/nodes/OpenAINode";
 import AnthropicNode from "./components/nodes/AnthropicNode";
 import GeminiNode from "./components/nodes/GeminiNode";
-import DeepSeekNode from "./components/nodes/DeepSeekNode";
 import TelegramNode from "./components/nodes/TelegramNode";
 import WhatsAppNode from "./components/nodes/WhatsAppNode";
 import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
 import OllamaNode from "./components/nodes/OllamaNode";
-
-// ── Memory Nodes ─────────────────────────────────────────────────────────
-import WindowBufferMemoryNode from "./components/nodes/WindowBufferMemoryNode";
-import RedisMemoryNode from "./components/nodes/RedisMemoryNode";
-import PostgresMemoryNode from "./components/nodes/PostgresMemoryNode";
-import VectorMemoryNode from "./components/nodes/VectorMemoryNode";
-import Mem0Node from "./components/nodes/Mem0Node";
 
 // ── Generated Config Panels for OpenAI-Compatible Providers ─────────────
 const OpenRouterNode = makeOpenAICompatNode({
@@ -151,7 +139,6 @@ export const CATEGORIES = [
   { id: "research", label: "Research", icon: Search },
   { id: "flow", label: "Logic & Flow", icon: GitBranch },
   { id: "code", label: "Code", icon: Code2 },
-  { id: "memory", label: "Memory", icon: Brain },
   { id: "integration", label: "Integrations", icon: Database },
 ];
 
@@ -218,16 +205,6 @@ export const NodeRegistry = {
     accentColor: "66,133,244",
     logoUrl: siLogo("googlegemini", "4285F4"),
     ConfigPanel: GeminiNode,
-    category: "ai",
-  },
-  deepseek: {
-    label: "DeepSeek",
-    icon: Compass,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-cyan-400",
-    accentColor: "34,211,238",
-    logoUrl: siLogo("deepseek", "22D3EE"),
-    ConfigPanel: DeepSeekNode,
     category: "ai",
   },
   openrouter: {
@@ -412,53 +389,6 @@ export const NodeRegistry = {
     category: "code",
   },
 
-  // ── Memory ───────────────────────────────────────────────────────────────
-  window_buffer_memory: {
-    label: "Window Buffer",
-    icon: Brain,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: WindowBufferMemoryNode,
-    category: "memory",
-  },
-  redis_memory: {
-    label: "Redis Memory",
-    icon: Brain,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: RedisMemoryNode,
-    category: "memory",
-  },
-  postgres_memory: {
-    label: "Postgres Memory",
-    icon: Brain,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: PostgresMemoryNode,
-    category: "memory",
-  },
-  vector_memory: {
-    label: "Vector Memory",
-    icon: Brain,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: VectorMemoryNode,
-    category: "memory",
-  },
-  mem0: {
-    label: "Mem0",
-    icon: Brain,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-purple-400",
-    accentColor: "168,85,247",
-    ConfigPanel: Mem0Node,
-    category: "memory",
-  },
-
   // ── Integrations ──────────────────────────────────────────────────────────
   telegram: {
     label: "Telegram",
@@ -498,16 +428,6 @@ export const NodeRegistry = {
     accentColor: "88,101,242",
     logoUrl: siLogo("discord", "5865F2"),
     ConfigPanel: DiscordNode,
-    category: "integration",
-  },
-  stripe: {
-    label: "Stripe",
-    icon: SiStripe,
-    bgClass: "bg-zinc-800/60",
-    colorClass: "text-[#635BFF]",
-    accentColor: "99,91,255",
-    logoUrl: siLogo("stripe", "635BFF"),
-    ConfigPanel: StripeNode,
     category: "integration",
   },
   airtable: {

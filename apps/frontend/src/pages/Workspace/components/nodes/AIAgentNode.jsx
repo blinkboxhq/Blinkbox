@@ -84,7 +84,6 @@ const BRAND_ICONS = {
   openai: SiOpenai,
   anthropic: SiAnthropic,
   gemini: SiGooglegemini,
-  deepseek: Cpu,
   openrouter: Cpu,
   together: Cpu,
   perplexity: SiPerplexity,
