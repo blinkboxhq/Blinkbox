@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
+import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 
 // ── Per-trigger output variable schemas ──────────────────────────────────────
 const TRIGGER_OUTPUT_SCHEMA = {
@@ -79,11 +80,26 @@ const TRIGGER_OUTPUT_SCHEMA = {
   ],
 };
 
-// Generic action node output
-const ACTION_OUTPUT_SCHEMA = [
-  { path: "$node.<nodeId>.output",  type: "any",    note: "Full output of this node" },
-  { path: "$node.<nodeId>.success", type: "boolean",note: "Whether this node succeeded" },
+// Fallback for nodes with no known schema
+const GENERIC_ACTION_SCHEMA = [
+  { path: "output",  type: "any",    note: "Full output of this node" },
+  { path: "success", type: "boolean",note: "Whether this node succeeded" },
 ];
+
+/** Convert a DEFAULT_SCHEMAS entry into VarRow props */
+function schemaToRows(schema, nodeId) {
+  if (!schema || typeof schema !== "object") return GENERIC_ACTION_SCHEMA;
+  // Special markers — passthrough/dynamic have no fixed shape
+  if (schema._passthrough || schema._dynamic) return GENERIC_ACTION_SCHEMA;
+
+  return Object.entries(schema)
+    .filter(([k]) => !k.startsWith("_"))
+    .map(([key, type]) => ({
+      path: `{{${nodeId}.${key}}}`,
+      type: typeof type === "string" ? type : "object",
+      note: "",
+    }));
+}
 
 // ── Type badge colors ────────────────────────────────────────────────────────
 const TYPE_COLORS = {
@@ -163,9 +179,11 @@ export default function NodeConfigModal() {
   const triggerVariantKey = node?.data.config?.triggerVariant;
   let outputSchema;
   if (isTrigger) {
-    outputSchema = TRIGGER_OUTPUT_SCHEMA[triggerVariantKey] || TRIGGER_OUTPUT_SCHEMA[node?.data.backendType] || ACTION_OUTPUT_SCHEMA;
+    outputSchema = TRIGGER_OUTPUT_SCHEMA[triggerVariantKey] || TRIGGER_OUTPUT_SCHEMA[node?.data.backendType] || GENERIC_ACTION_SCHEMA;
   } else {
-    outputSchema = ACTION_OUTPUT_SCHEMA;
+    const backendType = node?.data.backendType;
+    const defaultSchema = backendType ? DEFAULT_SCHEMAS[backendType] : null;
+    outputSchema = schemaToRows(defaultSchema, selectedNodeId);
   }
 
   const updateConfig = (key, value) => updateNodeConfig(selectedNodeId, key, value);
@@ -278,11 +296,11 @@ export default function NodeConfigModal() {
                 <div className="w-[320px] shrink-0 overflow-y-auto flex flex-col">
                   <div className="px-5 pt-5 pb-3 shrink-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Output variables</span>
+                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Output fields</span>
                       <div className="flex-1 h-px bg-white/[0.04]" />
                     </div>
                     <p className="text-[10px] text-zinc-700 mt-2 leading-relaxed">
-                      Use these in downstream nodes with <code className="text-zinc-500 font-mono">{`{{ $var }}`}</code> syntax.
+                      Copy these into downstream nodes to reference this node's output.
                     </p>
                   </div>
 
