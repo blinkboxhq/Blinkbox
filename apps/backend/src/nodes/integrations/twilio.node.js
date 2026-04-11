@@ -1,0 +1,131 @@
+/**
+ * TWILIO NODE
+ *
+ * Operations:
+ *   sendSms      — Send an SMS message (default)
+ *   makeCall     — Initiate a voice call with TwiML URL
+ *   lookupNumber — Look up carrier/line-type info for a phone number
+ *
+ * Auth: Twilio Account SID + Auth Token stored as "user:pass" in vault
+ * Credential format: "ACXXXXXXXX:authtoken"
+ */
+
+import axios from "axios";
+import { resolveCredential } from "../../utils/resolveCredential.js";
+import { decrypt } from "../../utils/crypto.js";
+
+const BASE = "https://api.twilio.com/2010-04-01";
+
+async function getCreds(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "Twilio");
+  const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const [accountSid, authToken] = raw.split(":");
+  if (!accountSid || !authToken) throw new Error("Twilio: Credential must be formatted as 'AccountSID:AuthToken'.");
+  return { accountSid, authToken };
+}
+
+function handleError(err) {
+  if (err.message.startsWith("Twilio")) throw err;
+  const status = err.response?.status;
+  const code = err.response?.data?.code;
+  const msg = err.response?.data?.message;
+  if (status === 401) throw new Error("Twilio: Invalid Account SID or Auth Token.");
+  if (status === 400) throw new Error(`Twilio: ${msg || "Bad request"} (code ${code})`);
+  if (status === 429) throw new Error("Twilio: Rate limit exceeded. Retry later.");
+  throw new Error(`Twilio failed: ${status || err.code} — ${err.message}`);
+}
+
+function encodeForm(obj) {
+  return Object.entries(obj)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+}
+
+async function opSendSms(config, { accountSid, authToken }) {
+  if (!config.to) throw new Error("Twilio sendSms: 'to' (recipient phone number) is required.");
+  if (!config.from) throw new Error("Twilio sendSms: 'from' (Twilio phone number) is required.");
+  if (!config.body) throw new Error("Twilio sendSms: 'body' (message text) is required.");
+
+  const url = `${BASE}/Accounts/${accountSid}/Messages.json`;
+  const response = await axios.post(url, encodeForm({
+    To: config.to,
+    From: config.from,
+    Body: config.body,
+  }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return {
+    messageSid: response.data.sid,
+    status: response.data.status,
+    to: response.data.to,
+    from: response.data.from,
+    body: response.data.body,
+    price: response.data.price,
+  };
+}
+
+async function opMakeCall(config, { accountSid, authToken }) {
+  if (!config.to) throw new Error("Twilio makeCall: 'to' is required.");
+  if (!config.from) throw new Error("Twilio makeCall: 'from' is required.");
+  if (!config.url) throw new Error("Twilio makeCall: 'url' (TwiML URL) is required.");
+  if (!/^https?:\/\//i.test(config.url)) throw new Error("Twilio makeCall: 'url' must be a valid https:// URL.");
+
+  const callUrl = `${BASE}/Accounts/${accountSid}/Calls.json`;
+  const response = await axios.post(callUrl, encodeForm({
+    To: config.to,
+    From: config.from,
+    Url: config.url,
+  }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return {
+    callSid: response.data.sid,
+    status: response.data.status,
+    to: response.data.to,
+    from: response.data.from,
+    direction: response.data.direction,
+  };
+}
+
+async function opLookupNumber(config, { accountSid, authToken }) {
+  if (!config.phoneNumber) throw new Error("Twilio lookupNumber: 'phoneNumber' is required (E.164 format, e.g. +14155551234).");
+  const encoded = encodeURIComponent(config.phoneNumber);
+  const url = `https://lookups.twilio.com/v1/PhoneNumbers/${encoded}`;
+  const response = await axios.get(url, {
+    auth: { username: accountSid, password: authToken },
+    params: { Type: "carrier" },
+    timeout: 10000,
+  });
+  return {
+    phoneNumber: response.data.phone_number,
+    nationalFormat: response.data.national_format,
+    countryCode: response.data.country_code,
+    carrier: response.data.carrier,
+  };
+}
+
+const OPERATIONS = {
+  sendSms: opSendSms,
+  makeCall: opMakeCall,
+  lookupNumber: opLookupNumber,
+};
+
+export default {
+  async run(config, input, context = {}) {
+    const operation = config.operation || "sendSms";
+    const handler = OPERATIONS[operation];
+    if (!handler)
+      throw new Error(`Twilio: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
+
+    const creds = await getCreds(config.credentialId, context.workspaceId);
+    try {
+      return await handler(config, creds);
+    } catch (err) {
+      handleError(err);
+    }
+  },
+};

@@ -26,6 +26,11 @@ import {
   SiAnthropic,
   SiPerplexity,
   SiDeepseek,
+  SiGooglesheets,
+  SiGmail,
+  SiNotion,
+  SiTwilio,
+  SiSendgrid,
 } from "react-icons/si";
 
 // ── UI Components ─────────────────────────────────────────────────────────
@@ -51,6 +56,11 @@ import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
 import DeepSeekNode from "./components/nodes/DeepSeekNode";
+import GoogleSheetsNode from "./components/nodes/GoogleSheetsNode";
+import GmailNode from "./components/nodes/GmailNode";
+import NotionNode from "./components/nodes/NotionNode";
+import TwilioNode from "./components/nodes/TwilioNode";
+import SendGridNode from "./components/nodes/SendGridNode";
 
 // ── Generated Config Panels for OpenAI-Compatible Providers ─────────────
 const PerplexityNode = makeOpenAICompatNode({
@@ -314,6 +324,56 @@ export const NodeRegistry = {
     accentColor: "246,88,88",
     logoUrl: siLogo("airtable", "F65858"),
     ConfigPanel: AirtableNode,
+    category: "integration",
+  },
+  google_sheets: {
+    label: "Google Sheets",
+    icon: SiGooglesheets,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#0F9D58]",
+    accentColor: "15,157,88",
+    logoUrl: siLogo("googlesheets", "0F9D58"),
+    ConfigPanel: GoogleSheetsNode,
+    category: "integration",
+  },
+  notion: {
+    label: "Notion",
+    icon: SiNotion,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-white",
+    accentColor: "255,255,255",
+    logoUrl: siLogo("notion", "ffffff"),
+    ConfigPanel: NotionNode,
+    category: "integration",
+  },
+  gmail: {
+    label: "Gmail",
+    icon: SiGmail,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#EA4335]",
+    accentColor: "234,67,53",
+    logoUrl: siLogo("gmail", "EA4335"),
+    ConfigPanel: GmailNode,
+    category: "integration",
+  },
+  twilio: {
+    label: "Twilio",
+    icon: SiTwilio,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#F22F46]",
+    accentColor: "242,47,70",
+    logoUrl: siLogo("twilio", "F22F46"),
+    ConfigPanel: TwilioNode,
+    category: "integration",
+  },
+  sendgrid: {
+    label: "SendGrid",
+    icon: SiSendgrid,
+    bgClass: "bg-zinc-800/60",
+    colorClass: "text-[#1A82E2]",
+    accentColor: "26,130,226",
+    logoUrl: siLogo("sendgrid", "1A82E2"),
+    ConfigPanel: SendGridNode,
     category: "integration",
   },
 };

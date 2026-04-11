@@ -46,6 +46,13 @@ import discord from "./integrations/discord.node.js";
 
 // ── Integrations: Data Hub ───────────────────────────────────────────────────
 import airtable from "./integrations/airtable.node.js";
+import googleSheets from "./integrations/googleSheets.node.js";
+import notion from "./integrations/notion.node.js";
+
+// ── Integrations: Email & Messaging ─────────────────────────────────────────
+import gmail from "./integrations/gmail.node.js";
+import twilio from "./integrations/twilio.node.js";
+import sendgrid from "./integrations/sendgrid.node.js";
 
 // ── Integrations: Web Browser ────────────────────────────────────────────────
 import webSearch from "./integrations/webSearch.node.js";
@@ -128,6 +135,13 @@ export const nodeRegistry = {
 
   // ── Data Hub ───────────────────────────────────────────────────────────
   airtable: airtable,
+  google_sheets: googleSheets,
+  notion: notion,
+
+  // ── Email & Messaging ──────────────────────────────────────────────────
+  gmail: gmail,
+  twilio: twilio,
+  sendgrid: sendgrid,
 
   // ── Web Browser ────────────────────────────────────────────────────────
   web_search: webSearch,

@@ -69,6 +69,13 @@ export const DEFAULT_SCHEMAS = {
 
   // Data Hub
   airtable: { id: "string", fields: "object", createdTime: "string", records: "array", totalRecords: "number", deleted: "boolean", created: "number", updated: "number" },
+  google_sheets: { values: "array", rowCount: "number", range: "string", updatedRange: "string", updatedRows: "number", updatedCells: "number", clearedRange: "string", title: "string", sheets: "array" },
+  notion: { pageId: "string", url: "string", title: "string", properties: "object", results: "array", hasMore: "boolean", nextCursor: "string", appended: "number", blockIds: "array", created: "boolean", updated: "boolean" },
+
+  // Email & Messaging
+  gmail: { messageId: "string", threadId: "string", from: "string", to: "string", subject: "string", body: "string", snippet: "string", messages: "array", draftId: "string", marked: "string", trashed: "boolean" },
+  twilio: { messageSid: "string", status: "string", to: "string", from: "string", body: "string", price: "string", callSid: "string", direction: "string", phoneNumber: "string", carrier: "object" },
+  sendgrid: { sent: "boolean", messageId: "string", statusCode: "number", recipientCount: "number", jobId: "string", added: "boolean" },
 
   // Web Browser
   web_search: { answer: "string", results: "array", query: "string", responseTime: "number" },
