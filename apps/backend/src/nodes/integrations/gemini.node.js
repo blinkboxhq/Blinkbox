@@ -1,101 +1,233 @@
 /**
  * GEMINI NODE
  *
- * Dedicated Google Gemini node via the Generative Language API.
+ * Multi-operation Google Gemini node via the Generative Language API.
  *
  * Config:
- *   model        — "gemini-2.0-flash" (default) | "gemini-1.5-pro" | any valid model
- *   prompt       — Instruction prompt (already expression-resolved)
- *   credentialId — Vault reference to Google AI API key (type: "api_key")
+ *   operation    — see OPERATIONS below (default: "message")
+ *   model        — model id (default per operation)
+ *   prompt       — instruction / user message
+ *   credentialId — Vault reference to Google AI API key
  *   outputFormat — "json" | "text" (default: "text")
  *   temperature  — 0-2 (default: 0.7)
- *   maxTokens    — Max response tokens (default: 2000)
+ *   maxTokens    — max output tokens (default: 2000)
  *
- * Output:
- *   { result, model, tokensUsed, provider: "gemini" }
+ *   ── analyzeImage ──
+ *   imageUrl     — public URL to an image (JPEG/PNG/GIF/WEBP)
+ *
+ *   ── analyzeDocument ──
+ *   documentText — raw text (falls back to input.text / input.content)
+ *
+ * OPERATIONS:
+ *   message          — Chat with Gemini (default)
+ *   analyzeImage     — Vision: describe or answer questions about an image
+ *   analyzeDocument  — Analyze a document / long text
+ *   generatePrompt   — Write a prompt for a described task
+ *
+ * Output varies by operation.
  */
 
 import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+
+async function getApiKey(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "Gemini");
+  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+}
+
+function handleError(err) {
+  if (err.message.startsWith("Gemini")) throw err;
+  if (err.response?.status === 400) throw new Error(`Gemini: Bad request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 403) throw new Error("Gemini: Invalid API key or access denied.");
+  if (err.response?.status === 429) throw new Error("Gemini: Rate limit exceeded. Retry later.");
+  throw new Error(`Gemini failed: ${err.response?.status || err.code} — ${err.message}`);
+}
+
+function inputSummary(input) {
+  return typeof input === "string" ? input : JSON.stringify(input, null, 2).substring(0, 15000);
+}
+
+async function callGemini(apiKey, model, systemInstruction, parts, generationConfig) {
+  const url = `${GEMINI_BASE}/${model}:generateContent`;
+  const response = await axios.post(
+    url,
+    {
+      system_instruction: { parts: [{ text: systemInstruction }] },
+      contents: [{ parts }],
+      generationConfig,
+    },
+    {
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      timeout: 120000,
+      maxContentLength: 10 * 1024 * 1024,
+      maxBodyLength: 10 * 1024 * 1024,
+    },
+  );
+
+  const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const tokensUsed =
+    (response.data.usageMetadata?.promptTokenCount || 0) +
+    (response.data.usageMetadata?.candidatesTokenCount || 0);
+  return { text, tokensUsed };
+}
+
+// ── Operation handlers ──────────────────────────────────────────────────────
+
+async function opMessage(config, input, apiKey) {
+  const {
+    model = "gemini-2.0-flash",
+    prompt,
+    outputFormat = "text",
+    temperature = 0.7,
+    maxTokens = 2000,
+  } = config;
+
+  if (!prompt) throw new Error("Gemini message: 'prompt' is required.");
+
+  const system =
+    outputFormat === "json"
+      ? "You are a data processing assistant. Always respond with valid JSON. No markdown fences, no explanations — just the JSON object."
+      : "You are a helpful assistant. Respond clearly and concisely.";
+
+  const userMessage = `${prompt}\n\n---\nInput Data:\n${inputSummary(input)}`;
+
+  const genConfig = {
+    temperature,
+    maxOutputTokens: maxTokens,
+    ...(outputFormat === "json" && { responseMimeType: "application/json" }),
+  };
+
+  const { text, tokensUsed } = await callGemini(apiKey, model, system, [{ text: userMessage }], genConfig);
+
+  let result = text;
+  if (outputFormat === "json") {
+    try { result = JSON.parse(result); } catch {
+      const stripped = result.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
+      try { result = JSON.parse(stripped); } catch { /* return raw text */ }
+    }
+  }
+
+  return { result, model, tokensUsed, provider: "gemini", operation: "message" };
+}
+
+async function opAnalyzeImage(config, input, apiKey) {
+  const {
+    model = "gemini-2.0-flash",
+    prompt = "Describe this image in detail.",
+    maxTokens = 1000,
+    temperature = 0.5,
+  } = config;
+
+  const imageUrl = config.imageUrl || input?.imageUrl || input?.url;
+  if (!imageUrl) throw new Error("Gemini analyzeImage: 'imageUrl' is required.");
+
+  // Gemini supports inline base64 or URL fetch — fetch and inline
+  let inlinePart;
+  if (imageUrl.startsWith("data:")) {
+    const [meta, data] = imageUrl.split(",");
+    const mimeType = meta.replace("data:", "").replace(";base64", "");
+    inlinePart = { inlineData: { mimeType, data } };
+  } else {
+    if (!/^https?:\/\//i.test(imageUrl)) {
+      throw new Error("Gemini analyzeImage: imageUrl must be an http/https URL.");
+    }
+    const imgResponse = await axios.get(imageUrl, { responseType: "arraybuffer", timeout: 30000, maxContentLength: 10 * 1024 * 1024 });
+    const mimeType = (imgResponse.headers["content-type"] || "image/jpeg").split(";")[0];
+    const data = Buffer.from(imgResponse.data).toString("base64");
+    inlinePart = { inlineData: { mimeType, data } };
+  }
+
+  const parts = [inlinePart, { text: prompt }];
+  const { text, tokensUsed } = await callGemini(
+    apiKey, model,
+    "You are a helpful vision assistant. Analyze images thoroughly and answer questions accurately.",
+    parts, { temperature, maxOutputTokens: maxTokens },
+  );
+
+  return { result: text, model, tokensUsed, provider: "gemini", operation: "analyzeImage" };
+}
+
+async function opAnalyzeDocument(config, input, apiKey) {
+  const {
+    model = "gemini-2.0-flash",
+    prompt = "Summarize this document.",
+    outputFormat = "text",
+    temperature = 0.3,
+    maxTokens = 4000,
+  } = config;
+
+  const documentText =
+    config.documentText ||
+    input?.text ||
+    input?.content ||
+    input?.body ||
+    inputSummary(input);
+
+  if (!documentText) throw new Error("Gemini analyzeDocument: provide 'documentText' or pass document text as input.");
+
+  const system = outputFormat === "json"
+    ? "You are a document analysis assistant. Respond with valid JSON only."
+    : "You are a document analysis assistant. Analyze the provided document thoroughly.";
+
+  const userMessage = `${prompt}\n\n---\nDocument:\n${documentText.substring(0, 30000)}`;
+  const genConfig = {
+    temperature,
+    maxOutputTokens: maxTokens,
+    ...(outputFormat === "json" && { responseMimeType: "application/json" }),
+  };
+
+  const { text, tokensUsed } = await callGemini(apiKey, model, system, [{ text: userMessage }], genConfig);
+
+  let result = text;
+  if (outputFormat === "json") {
+    try { result = JSON.parse(result); } catch {
+      const stripped = result.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
+      try { result = JSON.parse(stripped); } catch { /* return raw text */ }
+    }
+  }
+
+  return { result, model, tokensUsed, provider: "gemini", operation: "analyzeDocument" };
+}
+
+async function opGeneratePrompt(config, input, apiKey) {
+  const { model = "gemini-2.0-flash", maxTokens = 1000, temperature = 0.8 } = config;
+  const taskDescription = config.task || config.prompt || input?.task || inputSummary(input);
+  if (!taskDescription) throw new Error("Gemini generatePrompt: 'task' description is required.");
+
+  const { text, tokensUsed } = await callGemini(
+    apiKey, model,
+    "You are an expert prompt engineer. Write clear, effective prompts for AI models. Return only the prompt text, no explanations.",
+    [{ text: `Write an effective AI prompt for this task: ${taskDescription}` }],
+    { temperature, maxOutputTokens: maxTokens },
+  );
+
+  return { prompt: text, tokensUsed, provider: "gemini", operation: "generatePrompt" };
+}
+
+// ── Main export ─────────────────────────────────────────────────────────────
+
+const OPERATIONS = {
+  message: opMessage,
+  analyzeImage: opAnalyzeImage,
+  analyzeDocument: opAnalyzeDocument,
+  generatePrompt: opGeneratePrompt,
+};
+
 export default {
   async run(config, input, context = {}) {
-    const {
-      model = "gemini-2.0-flash",
-      prompt,
-      credentialId,
-      outputFormat = "text",
-      temperature = 0.7,
-      maxTokens = 2000,
-    } = config;
+    const operation = config.operation || "message";
+    const handler = OPERATIONS[operation];
+    if (!handler) throw new Error(`Gemini: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    if (!prompt) throw new Error("Gemini: 'prompt' is required.");
-    // Vault: resolve + decrypt API key
-    const cred = await resolveCredential(credentialId, context.workspaceId, "Gemini");
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-
-    // Build content
-    const inputSummary =
-      typeof input === "string"
-        ? input
-        : JSON.stringify(input, null, 2).substring(0, 15000);
-
-    const systemInstruction =
-      outputFormat === "json"
-        ? "You are a data processing assistant. Always respond with valid JSON. No markdown fences, no explanations — just the JSON object."
-        : "You are a helpful assistant. Respond clearly and concisely.";
-
-    const userMessage = `${prompt}\n\n---\nInput Data:\n${inputSummary}`;
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const apiKey = await getApiKey(config.credentialId, context.workspaceId);
 
     try {
-      const response = await axios.post(
-        apiUrl,
-        {
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: [{ parts: [{ text: userMessage }] }],
-          generationConfig: {
-            temperature,
-            maxOutputTokens: maxTokens,
-            ...(outputFormat === "json" && { responseMimeType: "application/json" }),
-          },
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          timeout: 120000,
-          maxContentLength: 10 * 1024 * 1024,
-        },
-      );
-
-      const candidate = response.data.candidates?.[0];
-      let result = candidate?.content?.parts?.[0]?.text || "";
-
-      const tokensUsed =
-        (response.data.usageMetadata?.promptTokenCount || 0) +
-        (response.data.usageMetadata?.candidatesTokenCount || 0);
-
-      if (outputFormat === "json") {
-        try {
-          result = JSON.parse(result);
-        } catch {
-          const stripped = result.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
-          try { result = JSON.parse(stripped); } catch { /* return raw text */ }
-        }
-      }
-
-      return {
-        result,
-        model,
-        tokensUsed,
-        provider: "gemini",
-      };
+      return await handler(config, input, apiKey);
     } catch (err) {
-      if (err.response?.status === 400) throw new Error(`Gemini: Bad request — ${err.response?.data?.error?.message || err.message}`);
-      if (err.response?.status === 403) throw new Error("Gemini: Invalid API key or access denied.");
-      if (err.response?.status === 429) throw new Error("Gemini: Rate limit exceeded. Retry later.");
-      throw new Error(`Gemini failed: ${err.response?.status || err.code} — ${err.message}`);
+      handleError(err);
     }
   },
 };

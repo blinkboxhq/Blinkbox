@@ -3,6 +3,12 @@ import Automation from "../../../models/automation.model.js";
 import Execution from "../../../models/execution.model.js";
 import { validateAutomation } from "./automation.validator.js";
 import { executeAutomation } from "../automation.executor.js";
+import { syncCronJobs } from "../../../infra/cron.scheduler.js";
+import { syncRssJobs } from "../../../infra/rss.poller.js";
+import { syncImapJobs } from "../../../infra/imap.poller.js";
+import { syncDbJobs } from "../../../infra/db.poller.js";
+import { registerGitHubWebhook, unregisterGitHubWebhook } from "../../../infra/github.webhook.js";
+import { registerStripeWebhook, unregisterStripeWebhook } from "../../../infra/stripe.webhook.js";
 
 /**
  * ===============================
@@ -55,8 +61,47 @@ export async function activateAutomation(req, res) {
 
     validateAutomation(automation); // 🔒 Structural + logic validation
 
+    const trigger = automation.trigger;
+    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const cfg = entryNode?.data?.config || {};
+
+    // ── Auto-register external webhooks ──────────────────────────────────────
+    // Re-read entry node config after potential webhook registration
+    // (registerGitHubWebhook / registerStripeWebhook save the secret back into the doc)
+    if (trigger === "github_trigger") {
+      const token = cfg.tokenCredentialKey || cfg.githubToken;
+      const repo = cfg.repo;
+      const events = cfg.events || ["push"];
+      if (!repo) throw new Error("GitHub trigger requires a repository (owner/repo).");
+      if (!token) throw new Error("GitHub trigger requires a GitHub token.");
+      if (!cfg.webhookRegistered) {
+        await registerGitHubWebhook(automation._id.toString(), repo, events, token);
+        // Re-fetch automation after registerGitHubWebhook saved the secret into it
+        const refreshed = await Automation.findById(automation._id);
+        if (refreshed) Object.assign(automation, refreshed.toObject());
+      }
+    }
+
+    if (trigger === "stripe_trigger") {
+      const apiKey = cfg.stripeKeyCredential;
+      const events = cfg.events || ["payment_intent.succeeded"];
+      if (!apiKey) throw new Error("Stripe trigger requires a Stripe secret key.");
+      if (!cfg.webhookRegistered) {
+        await registerStripeWebhook(automation._id.toString(), events, apiKey);
+        const refreshed = await Automation.findById(automation._id);
+        if (refreshed) Object.assign(automation, refreshed.toObject());
+      }
+    }
+
+    automation.active = true;
     automation.status = "active";
     await automation.save();
+
+    // Re-sync pollers so the new automation is picked up immediately
+    if (trigger === "cron_trigger") syncCronJobs().catch(console.error);
+    if (trigger === "rss_trigger")  syncRssJobs().catch(console.error);
+    if (trigger === "imap_trigger") syncImapJobs().catch(console.error);
+    if (trigger === "db_trigger")   syncDbJobs().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {
@@ -173,6 +218,19 @@ export async function deleteAutomation(req, res) {
     if (!automation) {
       return res.status(404).json({ success: false, message: "Not found or access denied" });
     }
+
+    // Clean up external webhook registrations on delete
+    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const cfg = entryNode?.data?.config || {};
+    if (automation.trigger === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
+      unregisterGitHubWebhook(automation._id.toString(), cfg.repo, cfg.githubWebhookId, cfg.tokenCredentialKey || cfg.githubToken)
+        .catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
+    }
+    if (automation.trigger === "stripe_trigger" && cfg.stripeWebhookId) {
+      unregisterStripeWebhook(automation._id.toString(), cfg.stripeWebhookId, cfg.stripeKeyCredential)
+        .catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
+    }
+
     await Execution.deleteMany({ automationId: req.params.id, workspaceId: req.user.id });
     res.json({ success: true });
   } catch (err) {
