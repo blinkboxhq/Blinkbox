@@ -1,3 +1,4 @@
+import { MessageSquare, Layout, FileText, PlusCircle, Trash2 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 function DiscordIcon({ className }) {
@@ -8,66 +9,217 @@ function DiscordIcon({ className }) {
   );
 }
 
+const OPERATIONS = [
+  { value: 'sendMessage', label: 'Send Message', icon: MessageSquare },
+  { value: 'sendEmbed',   label: 'Send Embed',   icon: Layout },
+  { value: 'sendFile',    label: 'Send File',     icon: FileText },
+];
+
 export default function DiscordNode({ config = {}, updateConfig }) {
-  const webhookUrl = config.webhookUrl || "";
-  const message = config.message || "";
-  const username = config.username || "";
+  const operation = config.operation || "sendMessage";
+  const fields = Array.isArray(config.fields) ? config.fields : [];
+
+  const addField = () => updateConfig('fields', [...fields, { name: '', value: '', inline: true }]);
+  const removeField = (i) => updateConfig('fields', fields.filter((_, idx) => idx !== i));
+  const updateField = (i, key, val) => {
+    const next = fields.map((f, idx) => idx === i ? { ...f, [key]: val } : f);
+    updateConfig('fields', next);
+  };
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-5 w-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 bg-[#5865F2]/10 border border-[#5865F2]/30 rounded-xl">
         <div className="p-2 bg-[#5865F2]/20 rounded-lg text-[#5865F2] shrink-0">
           <DiscordIcon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#5865F2]">Send Discord Message</span>
-          <span className="text-[10px] text-zinc-400 leading-relaxed">
-            Post a message to any Discord channel via webhook.
-          </span>
+          <span className="text-sm font-bold text-[#5865F2]">Discord</span>
+          <span className="text-[10px] text-zinc-400">Discord Webhook</span>
         </div>
       </div>
 
-      {/* Webhook URL */}
+      {/* Operation */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Webhook URL
-        </label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
+        <div className="grid grid-cols-3 gap-2">
+          {OPERATIONS.map((op) => {
+            const Icon = op.icon;
+            return (
+              <button
+                key={op.value}
+                onClick={() => updateConfig('operation', op.value)}
+                className={`flex flex-col items-center gap-1.5 p-2.5 rounded-lg border text-xs font-bold transition-all ${
+                  operation === op.value
+                    ? 'bg-[#5865F2]/10 border-[#5865F2]/40 text-[#5865F2]'
+                    : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
+                }`}
+              >
+                <Icon className="w-4 h-4" /> {op.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Webhook URL — all ops */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Webhook URL</label>
         <SmartVariableInput
-          value={webhookUrl}
+          value={config.webhookUrl || ""}
           onChange={(val) => updateConfig("webhookUrl", val)}
           placeholder="https://discord.com/api/webhooks/..."
         />
-        <p className="text-[10px] text-zinc-600">
-          Server Settings → Integrations → Webhooks → New Webhook
-        </p>
+        <p className="text-[10px] text-zinc-600">Server Settings → Integrations → Webhooks → New Webhook</p>
       </div>
 
-      {/* Bot Username Override */}
+      {/* Bot name (all ops) */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Bot Name <span className="text-zinc-700">(optional)</span>
-        </label>
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Bot Name <span className="text-zinc-700">(optional)</span></label>
         <input
-          value={username}
+          value={config.username || ""}
           onChange={(e) => updateConfig("username", e.target.value)}
           placeholder="BlinkBox Bot"
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-xl px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-[#5865F2]/50 transition-colors"
         />
       </div>
 
-      {/* Message */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Message
-        </label>
-        <SmartVariableInput
-          value={message}
-          onChange={(val) => updateConfig("message", val)}
-          placeholder="Alert: {{trigger.data.event}} just happened!"
-          multiline
-        />
-      </div>
+      {/* sendMessage */}
+      {operation === "sendMessage" && (
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Message</label>
+          <SmartVariableInput
+            value={config.message || ""}
+            onChange={(val) => updateConfig("message", val)}
+            placeholder="Alert: {{trigger.data.event}} just happened!"
+            multiline
+          />
+          <p className="text-[10px] text-zinc-600">Max 2000 characters. Supports Discord markdown.</p>
+        </div>
+      )}
+
+      {/* sendEmbed */}
+      {operation === "sendEmbed" && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Title <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput
+              value={config.title || ""}
+              onChange={(val) => updateConfig("title", val)}
+              placeholder="New Event"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Description</label>
+            <SmartVariableInput
+              value={config.description || ""}
+              onChange={(val) => updateConfig("description", val)}
+              placeholder="Something happened that you should know about..."
+              multiline
+            />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col gap-2 flex-1">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Color</label>
+              <input
+                type="color"
+                value={config.color || "#5865F2"}
+                onChange={(e) => updateConfig("color", e.target.value)}
+                className="w-full h-9 rounded-lg border border-[#222] bg-[#0a0a0a] cursor-pointer"
+              />
+            </div>
+            <div className="flex flex-col gap-2 flex-1">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Thumbnail URL <span className="text-zinc-700">(opt)</span></label>
+              <SmartVariableInput
+                value={config.thumbnailUrl || ""}
+                onChange={(val) => updateConfig("thumbnailUrl", val)}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          {/* Fields */}
+          <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Fields</span>
+              <button onClick={addField} className="flex items-center gap-1 text-[10px] font-bold text-[#5865F2] hover:text-blue-400 uppercase">
+                <PlusCircle className="w-3 h-3" /> Add
+              </button>
+            </div>
+            {fields.length === 0 ? (
+              <p className="text-xs text-zinc-600 text-center py-2">No fields. Click Add to create key-value pairs.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {fields.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      value={f.name}
+                      onChange={(e) => updateField(i, 'name', e.target.value)}
+                      placeholder="Field name"
+                      className="w-1/3 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-[#5865F2]/50"
+                    />
+                    <SmartVariableInput
+                      value={f.value}
+                      onChange={(val) => updateField(i, 'value', val)}
+                      placeholder="Value"
+                    />
+                    <button
+                      onClick={() => updateField(i, 'inline', !f.inline)}
+                      className={`px-2 py-1.5 rounded text-[10px] font-bold border shrink-0 ${f.inline ? 'bg-[#5865F2]/10 border-[#5865F2]/40 text-[#5865F2]' : 'border-[#222] text-zinc-600'}`}
+                    >
+                      Inline
+                    </button>
+                    <button onClick={() => removeField(i)} className="p-1 text-zinc-600 hover:text-red-400">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Footer Text <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput
+              value={config.footerText || ""}
+              onChange={(val) => updateConfig("footerText", val)}
+              placeholder="Sent by BlinkBox"
+            />
+          </div>
+        </>
+      )}
+
+      {/* sendFile */}
+      {operation === "sendFile" && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">File Name</label>
+            <input
+              value={config.filename || ""}
+              onChange={(e) => updateConfig("filename", e.target.value)}
+              placeholder="output.txt"
+              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#5865F2]/50 transition-colors"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">File Content</label>
+            <SmartVariableInput
+              value={config.content || ""}
+              onChange={(val) => updateConfig("content", val)}
+              placeholder="{{previousNode.result}}"
+              multiline
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Message <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput
+              value={config.message || ""}
+              onChange={(val) => updateConfig("message", val)}
+              placeholder="Here's the file you requested"
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

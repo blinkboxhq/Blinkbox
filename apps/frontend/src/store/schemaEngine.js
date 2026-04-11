@@ -69,11 +69,13 @@ export const DEFAULT_SCHEMAS = {
   hyperbolic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
 
   // Comms Hub
-  telegram: { ok: "boolean", messageId: "number", chat: "object" },
-  whatsapp: { messageId: "string", contacts: "array", messages: "array" },
+  telegram: { ok: "boolean", messageId: "number", chat: "object", pollId: "string", deleted: "boolean", pinned: "boolean" },
+  whatsapp: { messageId: "string", contacts: "array", messages: "array", ok: "boolean", status: "string" },
+  slack: { ok: "boolean", ts: "string", channel: "string", messageId: "string", fileId: "string", userId: "string", channelId: "string" },
+  discord: { ok: "boolean", webhookId: "string", filename: "string" },
 
   // Data Hub
-  airtable: { id: "string", fields: "object", createdTime: "string" },
+  airtable: { id: "string", fields: "object", createdTime: "string", records: "array", totalRecords: "number", deleted: "boolean", created: "number", updated: "number" },
 
   // Web Browser
   web_search: { answer: "string", results: "array", query: "string", responseTime: "number" },

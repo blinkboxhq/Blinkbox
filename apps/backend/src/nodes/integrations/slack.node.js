@@ -1,76 +1,245 @@
 /**
- * SLACK NODE (Real)
+ * SLACK NODE
  *
- * Posts messages to Slack via the Web API (chat.postMessage).
- * Replaces the old http_request wrapper with a proper integration.
+ * Operations:
+ *   postMessage    — Send a plain text message (default)
+ *   postRichMessage — Send a Block Kit message (sections, buttons, fields)
+ *   uploadFile     — Upload a text/code snippet as a file
+ *   getUser        — Look up a Slack user by email
+ *   createChannel  — Create a public or private channel
+ *   inviteToChannel — Invite a user to a channel
+ *   setTopic       — Set a channel topic
+ *   addReaction    — Add an emoji reaction to a message
  *
- * Config:
- *   credentialId — Vault reference to Slack Bot OAuth token (type: "bearer")
- *   channel      — Channel ID or name (e.g., "#general" or "C01ABCDEF")
- *   text         — Message text (already expression-resolved)
- *   username     — Optional bot username override
- *   iconEmoji    — Optional emoji for bot avatar (e.g., ":rocket:")
- *   unfurlLinks  — Unfurl URLs in the message (default: false)
+ * Config (all ops):
+ *   credentialId — Vault reference to Slack Bot Token (xoxb-...)
+ *   operation    — one of the above (default: "postMessage")
  *
- * Output:
- *   { ok, ts, channel, message }
+ * Note: webhookUrl mode (legacy) still works for postMessage only.
  */
 
 import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
-const API_URL = "https://slack.com/api/chat.postMessage";
+const API = "https://slack.com/api";
+
+async function getToken(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "Slack");
+  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+}
+
+async function slackCall(token, method, payload) {
+  const response = await axios.post(`${API}/${method}`, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    timeout: 15000,
+  });
+  if (!response.data.ok) {
+    const err = response.data.error || "unknown_error";
+    if (err === "invalid_auth" || err === "not_authed") throw new Error("Slack: Invalid Bot Token.");
+    if (err === "channel_not_found") throw new Error("Slack: Channel not found. Use a channel ID (C...) or ensure the bot is invited.");
+    if (err === "not_in_channel") throw new Error("Slack: Bot is not in this channel. Invite it with /invite @yourbot.");
+    if (err === "ratelimited") throw new Error("Slack: Rate limit exceeded. Retry later.");
+    throw new Error(`Slack API error: ${err}`);
+  }
+  return response.data;
+}
+
+// ── Handlers ────────────────────────────────────────────────────────────────
+
+async function opPostMessage(config, token) {
+  // Legacy webhook mode
+  if (config.webhookUrl && !config.credentialId) {
+    if (!/^https:\/\/hooks\.slack\.com\//.test(config.webhookUrl))
+      throw new Error("Slack: Invalid webhook URL.");
+    const text = config.message || config.text;
+    if (!text) throw new Error("Slack postMessage: 'text' is required.");
+    await axios.post(config.webhookUrl, { text }, { timeout: 10000 });
+    return { ok: true, ts: null, channel: null };
+  }
+
+  const channel = config.channel;
+  const text = config.message || config.text;
+  if (!channel) throw new Error("Slack postMessage: 'channel' is required.");
+  if (!text) throw new Error("Slack postMessage: 'text' is required.");
+
+  const payload = { channel, text, unfurl_links: config.unfurlLinks || false };
+  if (config.username) payload.username = config.username;
+  if (config.iconEmoji) payload.icon_emoji = config.iconEmoji;
+
+  const data = await slackCall(token, "chat.postMessage", payload);
+  return { ok: true, ts: data.ts, channel: data.channel, messageId: data.ts };
+}
+
+async function opPostRichMessage(config, token) {
+  const channel = config.channel;
+  if (!channel) throw new Error("Slack postRichMessage: 'channel' is required.");
+
+  // blocks can be passed directly or assembled from simple fields
+  let blocks = config.blocks;
+  if (!blocks) {
+    // Build a simple header + section from config.title and config.text
+    blocks = [];
+    if (config.title) {
+      blocks.push({ type: "header", text: { type: "plain_text", text: config.title } });
+    }
+    if (config.text) {
+      blocks.push({ type: "section", text: { type: "mrkdwn", text: config.text } });
+    }
+    if (config.fields && Array.isArray(config.fields)) {
+      blocks.push({
+        type: "section",
+        fields: config.fields.map((f) => ({ type: "mrkdwn", text: typeof f === "string" ? f : `*${f.label}*\n${f.value}` })),
+      });
+    }
+    if (config.buttonLabel && config.buttonUrl) {
+      blocks.push({
+        type: "actions",
+        elements: [{
+          type: "button",
+          text: { type: "plain_text", text: config.buttonLabel },
+          url: config.buttonUrl,
+          style: config.buttonStyle || "primary",
+        }],
+      });
+    }
+  }
+
+  if (!blocks || blocks.length === 0)
+    throw new Error("Slack postRichMessage: 'blocks' or at least 'text'/'title' is required.");
+
+  const payload = { channel, blocks, text: config.fallbackText || config.text || "New message" };
+  const data = await slackCall(token, "chat.postMessage", payload);
+  return { ok: true, ts: data.ts, channel: data.channel, messageId: data.ts };
+}
+
+async function opUploadFile(config, token) {
+  const channel = config.channel;
+  const content = config.content || config.text;
+  if (!channel) throw new Error("Slack uploadFile: 'channel' is required.");
+  if (!content) throw new Error("Slack uploadFile: 'content' is required.");
+
+  const payload = {
+    channels: channel,
+    content,
+    filename: config.filename || "output.txt",
+    filetype: config.filetype || "text",
+    title: config.title || config.filename || "File",
+  };
+  const data = await slackCall(token, "files.upload", payload);
+  return { ok: true, fileId: data.file?.id, fileName: data.file?.name, url: data.file?.permalink };
+}
+
+async function opGetUser(config, token) {
+  const email = config.email;
+  if (!email) throw new Error("Slack getUser: 'email' is required.");
+
+  const response = await axios.get(`${API}/users.lookupByEmail`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { email },
+    timeout: 10000,
+  });
+  if (!response.data.ok) {
+    if (response.data.error === "users_not_found") throw new Error(`Slack getUser: No user found with email "${email}".`);
+    throw new Error(`Slack API error: ${response.data.error}`);
+  }
+  const u = response.data.user;
+  return {
+    ok: true,
+    userId: u.id,
+    name: u.real_name || u.name,
+    email: u.profile?.email,
+    displayName: u.profile?.display_name,
+    isAdmin: u.is_admin,
+    isBot: u.is_bot,
+  };
+}
+
+async function opCreateChannel(config, token) {
+  const name = config.channelName || config.name;
+  if (!name) throw new Error("Slack createChannel: 'channelName' is required.");
+
+  const payload = {
+    name: name.replace(/[^a-z0-9-_]/gi, "-").toLowerCase(),
+    is_private: config.isPrivate || false,
+  };
+  const data = await slackCall(token, "conversations.create", payload);
+  return {
+    ok: true,
+    channelId: data.channel?.id,
+    channelName: data.channel?.name,
+    isPrivate: data.channel?.is_private,
+  };
+}
+
+async function opInviteToChannel(config, token) {
+  const channel = config.channel;
+  const users = config.userId || config.users;
+  if (!channel) throw new Error("Slack inviteToChannel: 'channel' is required.");
+  if (!users) throw new Error("Slack inviteToChannel: 'userId' is required.");
+
+  const data = await slackCall(token, "conversations.invite", {
+    channel,
+    users: Array.isArray(users) ? users.join(",") : users,
+  });
+  return { ok: true, channelId: data.channel?.id, channelName: data.channel?.name };
+}
+
+async function opSetTopic(config, token) {
+  const channel = config.channel;
+  if (!channel) throw new Error("Slack setTopic: 'channel' is required.");
+  if (!config.topic) throw new Error("Slack setTopic: 'topic' is required.");
+
+  const data = await slackCall(token, "conversations.setTopic", { channel, topic: config.topic });
+  return { ok: true, topic: data.topic };
+}
+
+async function opAddReaction(config, token) {
+  const channel = config.channel;
+  const timestamp = config.timestamp || config.ts;
+  const emoji = (config.emoji || "").replace(/:/g, "");
+  if (!channel) throw new Error("Slack addReaction: 'channel' is required.");
+  if (!timestamp) throw new Error("Slack addReaction: 'timestamp' (message ts) is required.");
+  if (!emoji) throw new Error("Slack addReaction: 'emoji' is required (e.g. 'thumbsup').");
+
+  await slackCall(token, "reactions.add", { channel, timestamp, name: emoji });
+  return { ok: true, emoji, channel, timestamp };
+}
+
+// ── Operations map ───────────────────────────────────────────────────────────
+
+const OPERATIONS = {
+  postMessage: opPostMessage,
+  postRichMessage: opPostRichMessage,
+  uploadFile: opUploadFile,
+  getUser: opGetUser,
+  createChannel: opCreateChannel,
+  inviteToChannel: opInviteToChannel,
+  setTopic: opSetTopic,
+  addReaction: opAddReaction,
+};
 
 export default {
   async run(config, input, context = {}) {
-    const {
-      credentialId,
-      channel,
-      text,
-      username,
-      iconEmoji,
-      unfurlLinks = false,
-    } = config;
+    const operation = config.operation || "postMessage";
+    const handler = OPERATIONS[operation];
+    if (!handler)
+      throw new Error(`Slack: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    if (!text) throw new Error("Slack: 'text' is required.");
-    if (!channel) throw new Error("Slack: 'channel' is required.");
-    // Vault: resolve + decrypt Bot OAuth token
-    const cred = await resolveCredential(credentialId, context.workspaceId, "Slack");
-    const botToken = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    // Legacy webhook mode bypasses token resolution
+    if (operation === "postMessage" && config.webhookUrl && !config.credentialId) {
+      return opPostMessage(config, null);
+    }
 
-    const payload = {
-      channel,
-      text,
-      unfurl_links: unfurlLinks,
-    };
-
-    if (username) payload.username = username;
-    if (iconEmoji) payload.icon_emoji = iconEmoji;
+    const token = await getToken(config.credentialId, context.workspaceId);
 
     try {
-      const response = await axios.post(API_URL, payload, {
-        headers: {
-          Authorization: `Bearer ${botToken}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 15000,
-      });
-
-      // Slack returns 200 even on errors — check the `ok` field
-      if (!response.data.ok) {
-        throw new Error(`Slack API error: ${response.data.error}`);
-      }
-
-      return {
-        ok: true,
-        ts: response.data.ts,
-        channel: response.data.channel,
-        message: response.data.message,
-      };
+      return await handler(config, token);
     } catch (err) {
-      if (err.message.startsWith("Slack API error:")) throw err;
-      if (err.response?.status === 401) throw new Error("Slack: Invalid Bot Token.");
+      if (err.message.startsWith("Slack")) throw err;
       if (err.response?.status === 429) throw new Error("Slack: Rate limit exceeded. Retry later.");
       throw new Error(`Slack failed: ${err.response?.status || err.code} — ${err.message}`);
     }
