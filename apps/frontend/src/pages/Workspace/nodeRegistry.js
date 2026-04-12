@@ -21,10 +21,8 @@ import imgAnthropic   from "../../assets/anthropic.svg";
 import imgGemini      from "../../assets/gemini-color.svg";
 import imgPerplexity  from "../../assets/perplexity-color.svg";
 import imgDeepSeek    from "../../assets/deepseek-color.svg";
-import imgAIAgent     from "../../assets/Ai-Chip-Robot--Streamline-Ultimate.png";
 import imgHTTP        from "../../assets/Globe--Streamline-Unicons.svg";
 import imgCode        from "../../assets/Brackets-Curly--Streamline-Unicons.svg";
-import imgWebScraper  from "../../assets/computer.png";
 import imgAirtable    from "../../assets/Airtable--Streamline-Svg-Logos.svg";
 import imgNotion      from "../../assets/Notion-Logo--Streamline-Radix.svg";
 import imgSendGrid    from "../../assets/Sendgrid-Icon--Streamline-Svg-Logos.svg";
@@ -179,7 +177,6 @@ export const NodeRegistry = {
     icon: Bot,
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
-    logoUrl: imgAIAgent,
     ConfigPanel: AIAgentNode,
     category: "ai",
   },
@@ -201,7 +198,6 @@ export const NodeRegistry = {
     icon: Search,
     colorClass: "text-purple-400",
     accentColor: "168,85,247",
-    logoUrl: imgWebScraper,
     ConfigPanel: InformerNode,
     category: "research",
   },
