@@ -311,9 +311,13 @@ function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
         ...(glow ? { boxShadow: `0 0 16px rgba(${accent},0.15), 0 0 4px rgba(${accent},0.1)` } : {}),
       }}
     >
-      <div className={`flex items-center justify-center ${nodeDef.colorClass}`}>
-        <Icon className={s.icon} strokeWidth={1.75} />
-      </div>
+      {nodeDef.logoUrl ? (
+        <img src={nodeDef.logoUrl} alt={nodeDef.label} className={`${s.icon} object-contain`} />
+      ) : (
+        <div className={`flex items-center justify-center ${nodeDef.colorClass}`}>
+          <Icon className={s.icon} strokeWidth={1.75} />
+        </div>
+      )}
     </div>
   );
 }
