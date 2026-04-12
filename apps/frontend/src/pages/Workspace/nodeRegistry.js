@@ -16,12 +16,11 @@ import {
 } from "lucide-react";
 
 // ── Local asset icons ─────────────────────────────────────────────────────
-import imgOpenAI      from "../../assets/chatgpt.png";
+import imgOpenAI      from "../../assets/openai.svg";
 import imgAnthropic   from "../../assets/anthropic.svg";
 import imgGemini      from "../../assets/gemini-color.svg";
 import imgPerplexity  from "../../assets/perplexity-color.svg";
 import imgDeepSeek    from "../../assets/deepseek-color.svg";
-import imgGrok        from "../../assets/grok-color.svg";
 import imgAIAgent     from "../../assets/Ai-Chip-Robot--Streamline-Ultimate.png";
 import imgHTTP        from "../../assets/Globe--Streamline-Unicons.svg";
 import imgCode        from "../../assets/Brackets-Curly--Streamline-Unicons.svg";
@@ -163,7 +162,6 @@ export const NodeRegistry = {
     icon: Sparkles,
     colorClass: "text-zinc-100",
     accentColor: "244,244,245",
-    logoUrl: imgGrok,
     ConfigPanel: XAINode,
     category: "ai",
   },
