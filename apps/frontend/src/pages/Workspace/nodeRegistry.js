@@ -12,6 +12,7 @@ import {
   MousePointerClick,
   Webhook,
   Clock,
+  Brain,
 } from "lucide-react";
 
 // ── Brand Logos (react-icons/si = Simple Icons) ──────────────────────────
@@ -25,7 +26,6 @@ import {
   SiGooglegemini,
   SiAnthropic,
   SiPerplexity,
-  SiDeepseek,
   SiGooglesheets,
   SiGmail,
   SiNotion,
@@ -177,7 +177,7 @@ export const NodeRegistry = {
   },
   deepseek: {
     label: "DeepSeek",
-    icon: SiDeepseek,
+    icon: Brain,
     bgClass: "bg-zinc-800/60",
     colorClass: "text-[#4D9BF8]",
     accentColor: "77,155,248",
