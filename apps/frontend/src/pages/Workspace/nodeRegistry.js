@@ -21,6 +21,8 @@ import imgAnthropic   from "../../assets/anthropic.svg";
 import imgGemini      from "../../assets/gemini-color.svg";
 import imgPerplexity  from "../../assets/perplexity-color.svg";
 import imgDeepSeek    from "../../assets/deepseek-color.svg";
+import imgGrok        from "../../assets/grok-color.svg";
+import imgComputer    from "../../assets/computer.png";
 import imgHTTP        from "../../assets/Globe--Streamline-Unicons.svg";
 import imgCode        from "../../assets/Brackets-Curly--Streamline-Unicons.svg";
 import imgAirtable    from "../../assets/Airtable--Streamline-Svg-Logos.svg";
@@ -160,6 +162,7 @@ export const NodeRegistry = {
     icon: Sparkles,
     colorClass: "text-zinc-100",
     accentColor: "244,244,245",
+    logoUrl: imgGrok,
     ConfigPanel: XAINode,
     category: "ai",
   },
@@ -198,6 +201,8 @@ export const NodeRegistry = {
     icon: Search,
     colorClass: "text-purple-400",
     accentColor: "168,85,247",
+    logoUrl: imgComputer,
+    imgFilter: "brightness(0) invert(1)",
     ConfigPanel: InformerNode,
     category: "research",
   },

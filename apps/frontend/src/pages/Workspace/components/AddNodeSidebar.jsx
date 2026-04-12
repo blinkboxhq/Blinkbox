@@ -60,7 +60,12 @@ export default function AddNodeSidebar() {
       >
         <div className="w-6 h-6 shrink-0 flex items-center justify-center">
           {nodeDef.logoUrl ? (
-            <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-5 h-5 object-contain" />
+            <img
+              src={nodeDef.logoUrl}
+              alt={nodeDef.label}
+              className="w-5 h-5 object-contain"
+              style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
+            />
           ) : (
             <Icon className={`w-5 h-5 ${nodeDef.colorClass}`} />
           )}

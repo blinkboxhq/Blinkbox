@@ -312,7 +312,12 @@ function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
       }}
     >
       {nodeDef.logoUrl ? (
-        <img src={nodeDef.logoUrl} alt={nodeDef.label} className={`${s.icon} object-contain`} />
+        <img
+          src={nodeDef.logoUrl}
+          alt={nodeDef.label}
+          className={`${s.icon} object-contain`}
+          style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
+        />
       ) : (
         <div className={`flex items-center justify-center ${nodeDef.colorClass}`}>
           <Icon className={s.icon} strokeWidth={1.75} />
