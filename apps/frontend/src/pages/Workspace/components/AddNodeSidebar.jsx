@@ -58,25 +58,12 @@ export default function AddNodeSidebar() {
         onClick={() => handleAdd(nodeDef)}
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800/60 transition-all duration-150 text-left group border border-transparent hover:border-zinc-700/40 w-full"
       >
-        {nodeDef.logoUrl ? (
-          <img
-            src={nodeDef.logoUrl}
-            alt={nodeDef.label}
-            className="w-7 h-7 rounded-lg object-contain shrink-0"
-          />
-        ) : (
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-            style={{
-              backgroundColor: `rgba(${nodeDef.accentColor},0.12)`,
-            }}
-          >
-            <Icon
-              className={`w-3.5 h-3.5 ${nodeDef.colorClass}`}
-              strokeWidth={1.75}
-            />
-          </div>
-        )}
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ backgroundColor: `rgba(${nodeDef.accentColor},0.12)` }}
+        >
+          <Icon className={`w-3.5 h-3.5 ${nodeDef.colorClass}`} />
+        </div>
         <span className="text-sm text-zinc-300 group-hover:text-white transition-colors truncate">
           {nodeDef.label}
         </span>

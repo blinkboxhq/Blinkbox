@@ -311,19 +311,7 @@ function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
         ...(glow ? { boxShadow: `0 0 16px rgba(${accent},0.15), 0 0 4px rgba(${accent},0.1)` } : {}),
       }}
     >
-      {nodeDef.logoUrl ? (
-        <img
-          src={nodeDef.logoUrl}
-          alt={nodeDef.label}
-          className={`${s.img} object-contain`}
-          loading="lazy"
-          onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
-        />
-      ) : null}
-      {/* Fallback icon — always rendered, hidden if logo loads */}
-      <div
-        className={`${nodeDef.logoUrl ? "hidden" : "flex"} items-center justify-center ${nodeDef.colorClass}`}
-      >
+      <div className={`flex items-center justify-center ${nodeDef.colorClass}`}>
         <Icon className={s.icon} strokeWidth={1.75} />
       </div>
     </div>
