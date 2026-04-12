@@ -140,7 +140,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full w-full relative bg-[#0d0d0f]"
+      className="flex-1 h-full min-w-0 relative bg-[#0d0d0f]"
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
