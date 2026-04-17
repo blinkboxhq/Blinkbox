@@ -7,6 +7,7 @@ import {
   resumeExecution,
   cancelExecution,
   retryExecution,
+  getExecutionLogs,
 } from "./execution.controller.js";
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get("/automation/:automationId", verifyToken, listExecutions);
 router.post("/resume/:executionId", verifyToken, resumeExecution);
 router.post("/cancel/:executionId", verifyToken, cancelExecution);
 router.post("/retry/:executionId", verifyToken, retryExecution);
+router.get("/:executionId/logs", verifyToken, getExecutionLogs);
 
 export default router;

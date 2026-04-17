@@ -1,14 +1,28 @@
 import { useState } from "react";
-import { Check, X, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Check, X, Loader2, ChevronDown, ChevronRight, RefreshCw, Clock } from "lucide-react";
 import TraceDiffBlock from "./TraceDiffBlock";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 
-/**
- * TraceTimelineStep — a single node in the execution trace timeline.
- *
- * @param {{ node: object, cursor: object|null, isLast: boolean, isLive: boolean }} props
- */
-export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
+function formatDuration(ms) {
+  if (!ms || ms < 0) return null;
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function JsonBlock({ label, data, labelColor = "text-zinc-500" }) {
+  return (
+    <div className="rounded-lg bg-zinc-900/80 border border-zinc-800 overflow-hidden">
+      <div className={`px-3 py-1.5 border-b border-zinc-800 text-[9px] font-bold uppercase tracking-widest ${labelColor}`}>
+        {label}
+      </div>
+      <pre className="text-[10px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap break-all px-3 py-2.5 max-h-48 overflow-auto">
+        {data === undefined || data === null ? "—" : JSON.stringify(data, null, 2)}
+      </pre>
+    </div>
+  );
+}
+
+export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLogs = [] }) {
   const [expanded, setExpanded] = useState(false);
 
   const status = cursor ? cursor.status : (isLive ? "pending" : "idle");
@@ -17,14 +31,21 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
   const isWaiting = status === "waiting";
   const isRunning = status === "running" || isWaiting;
 
-  // Build diff data for failed steps
+  // Pull the most recent node_step log entry for this node
+  const stepLog = nodeLogs.filter((l) => l.type === "node_step").slice(-1)[0] ?? null;
+  const durationMs = stepLog?.durationMs ?? cursor?.durationMs ?? null;
+  const retries = stepLog?.retries ?? cursor?.retries ?? 0;
+  const logInput = stepLog?.input;
+  const logOutput = stepLog?.output;
+  const hasLogData = logInput !== undefined || logOutput !== undefined;
+
+  // Build diff data for failed steps (schema mismatch detection)
   const failedDiff = hasFailed ? buildFailedDiff(node, cursor) : null;
 
   return (
     <div className="flex gap-4 min-h-[56px]">
       {/* Timeline rail */}
       <div className="flex flex-col items-center">
-        {/* Status icon */}
         {isCompleted && (
           <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center shrink-0 z-10 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
             <Check className="w-3 h-3 text-white" strokeWidth={3} />
@@ -44,7 +65,6 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
           <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 z-10" />
         )}
 
-        {/* Connecting line */}
         {!isLast && (
           <div
             className={`w-[1.5px] flex-1 my-1 rounded-full transition-colors ${
@@ -66,7 +86,7 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
             <ChevronRight className="w-3 h-3 text-zinc-500 shrink-0" />
           )}
           <span
-            className={`text-sm font-semibold truncate ${
+            className={`text-sm font-semibold truncate flex-1 ${
               isCompleted ? "text-zinc-100" :
               hasFailed ? "text-red-400" :
               isRunning ? "text-blue-400" :
@@ -75,29 +95,50 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
           >
             {node.data.label}
           </span>
+
+          {/* Duration badge */}
+          {durationMs != null && (
+            <span className="flex items-center gap-0.5 shrink-0 text-[9px] font-mono text-zinc-600 ml-1">
+              <Clock className="w-2.5 h-2.5" />
+              {formatDuration(durationMs)}
+            </span>
+          )}
+
+          {/* Retry badge */}
+          {retries > 0 && (
+            <span className="flex items-center gap-0.5 shrink-0 text-[9px] font-mono text-amber-500/80 ml-1">
+              <RefreshCw className="w-2.5 h-2.5" />
+              {retries}×
+            </span>
+          )}
         </button>
 
         {/* Status subtitle */}
         <p className="text-[10px] font-mono uppercase tracking-widest mt-0.5 ml-[18px]">
           {isRunning && !isWaiting && <span className="text-blue-400 animate-pulse">Processing...</span>}
           {isWaiting && <span className="text-amber-400 animate-pulse">Retrying...</span>}
-          {isCompleted && <span className="text-emerald-500/70">Payload received</span>}
+          {isCompleted && <span className="text-emerald-500/70">Completed</span>}
           {hasFailed && <span className="text-red-400">FAILED</span>}
           {(status === "pending" || status === "idle") && (
             <span className="text-zinc-600">Waiting</span>
           )}
         </p>
 
-        {/* Expanded JSON payload */}
-        {expanded && cursor?.output && (
-          <div className="mt-2 ml-[18px] bg-zinc-900/80 border border-zinc-800 rounded-lg p-3 max-h-48 overflow-auto">
-            <pre className="text-[10px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap break-all">
-              {JSON.stringify(cursor.output, null, 2)}
-            </pre>
+        {/* Expanded: Input → Output from logs (preferred) or cursor.output fallback */}
+        {expanded && (
+          <div className="mt-2 ml-[18px] space-y-2">
+            {hasLogData ? (
+              <>
+                <JsonBlock label="Input" data={logInput} labelColor="text-zinc-500" />
+                <JsonBlock label="Output" data={logOutput} labelColor="text-emerald-600" />
+              </>
+            ) : cursor?.output ? (
+              <JsonBlock label="Output" data={cursor.output} labelColor="text-emerald-600" />
+            ) : null}
           </div>
         )}
 
-        {/* Failed diff block */}
+        {/* Failed: schema diff */}
         {hasFailed && failedDiff && (
           <div className="ml-[18px]">
             <TraceDiffBlock
@@ -108,7 +149,7 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
           </div>
         )}
 
-        {/* Error message for failed steps — split error and hint */}
+        {/* Failed: plain error message */}
         {hasFailed && cursor?.errorMessage && !failedDiff && (
           <div className="mt-2 ml-[18px] bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2.5 space-y-1.5">
             <p className="text-[10px] text-red-300 font-mono leading-relaxed">
@@ -132,9 +173,6 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive }) {
   );
 }
 
-/**
- * Build expected vs received diff data from a failed cursor.
- */
 function buildFailedDiff(node, cursor) {
   if (!cursor) return null;
 
@@ -144,9 +182,8 @@ function buildFailedDiff(node, cursor) {
 
   if (!expectedSchema || !input) return null;
 
-  // Find first field with null/missing value that the schema expects
   const mismatches = [];
-  for (const [key, expectedType] of Object.entries(expectedSchema)) {
+  for (const [key] of Object.entries(expectedSchema)) {
     if (key.startsWith("_")) continue;
     const actualValue = input[key];
     if (actualValue === null || actualValue === undefined) {

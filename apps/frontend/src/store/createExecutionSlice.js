@@ -35,6 +35,14 @@ export const createExecutionSlice = (set, get) => ({
   // Shape: { [nodeId]: "running" | "completed" | "failed" }
   nodeStatuses: {},
 
+  // Last completed run's per-node output data — used by variable hover preview
+  // Shape: { [nodeId]: unknown }
+  lastRunOutputs: {},
+
+  // Execution logs fetched after terminal state — used by debugger UI
+  // Shape: ExecutionLog[] (node_step + execution_start + execution_end entries)
+  executionLogs: [],
+
   // ── Derived helper: per-node status for O(1) lookups ───────────────────
   // Prefers the granular live map (instant), falls back to cursor array.
   getNodeStatus: (nodeId) => {
@@ -63,6 +71,7 @@ export const createExecutionSlice = (set, get) => ({
       liveExecutionState: null,
       executionError: null,
       nodeStatuses: {},
+      executionLogs: [],
       _subscribedAutomationId: null,
     });
   },
@@ -233,6 +242,23 @@ function _subscribeToExecution(set, get, executionId, automationId) {
         if (nodeHandler) socket.off("node:status", nodeHandler);
         if (automationId) socket.emit("unsubscribe:automation", automationId);
       }, 2000);
+
+      // Fetch execution logs for the debugger UI
+      api.get(`/api/execution/${executionId}/logs`).then((res) => {
+        if (res.data?.logs) {
+          const logs = res.data.logs;
+          set({ executionLogs: logs });
+
+          // Build lastRunOutputs: { [nodeId]: outputData } from node_step entries
+          const outputs = {};
+          for (const log of logs) {
+            if (log.type === "node_step" && log.nodeId && log.output !== undefined) {
+              outputs[log.nodeId] = log.output;
+            }
+          }
+          set({ lastRunOutputs: outputs });
+        }
+      }).catch(() => {});
 
       if (data.status === "executed") {
         toast.success("Execution completed successfully.");

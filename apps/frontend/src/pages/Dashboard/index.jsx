@@ -9,11 +9,14 @@ import {
 import api from '../../lib/api';
 
 import GlobalHeader from '../../components/GlobalHeader';
+import { NodeCardSkeleton } from '../../components/ui/Skeleton';
+import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardHeader from './components/DashboardHeader';
 import EmptyState from './components/EmptyState';
 import CreateModal from './components/CreateModal';
 import VaultManager from './components/VaultManager';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
@@ -204,6 +207,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'workflows');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [workflows, setWorkflows] = useState([]);
+  const [workflowsLoading, setWorkflowsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -244,10 +248,12 @@ export default function Dashboard() {
     (async () => {
       try {
         setSystemError(null);
+        setWorkflowsLoading(true);
         const r = await api.get('/api/automation', { params: { page: currentPage, limit: 20 } });
         setWorkflows(r.data?.automations || []);
         setPagination(r.data?.pagination || null);
       } catch { setSystemError('Failed to load workflows.'); }
+      finally { setWorkflowsLoading(false); }
     })();
   }, [user, currentPage]);
 
@@ -352,6 +358,8 @@ export default function Dashboard() {
         @keyframes dbSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
+      <OnboardingModal />
+
       <CreateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -386,7 +394,11 @@ export default function Dashboard() {
                 total={workflows.length}
               />
 
-              {filtered.length === 0 ? (
+              {workflowsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                  {Array.from({ length: 6 }).map((_, i) => <NodeCardSkeleton key={i} />)}
+                </div>
+              ) : filtered.length === 0 ? (
                 <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
               ) : viewMode === 'list' ? (
                 /* ── LIST VIEW ── */
@@ -569,6 +581,9 @@ export default function Dashboard() {
               )}
             </div>
           )}
+
+          {/* ═══ ANALYTICS ═══ */}
+          {activeTab === 'analytics' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><AnalyticsDashboard /></div>}
 
           {/* ═══ VAULT ═══ */}
           {activeTab === 'vault' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><VaultManager /></div>}

@@ -1,20 +1,25 @@
+import { evaluateCondition } from "../modules/automation/engine/condition/condition.evaluator.v2.js";
+
 /**
- * 🔁 LOOP NODE
- * Iterates over every item in an array and emits each one as a separate
- * downstream item — effectively a forEach / map in the flow graph.
+ * LOOP NODE — iterates over an array, emitting each item as a downstream cursor.
  *
  * Config:
- *   arrayPath  — dot-path into $json to grab the array  (e.g. "users" or "data.items")
- *                If blank, the whole $json is treated as the array.
- *   indexKey   — name to inject the current index into each item (default: "__loopIndex")
- *
- * Output: array of { json: item, __loopIndex: N } objects, one per element.
+ *   arrayPath      — dot-path into input to grab the array (blank = use input itself)
+ *   indexKey       — key injected as current index (default: "__loopIndex")
+ *   maxIterations  — safety cap; throws if exceeded (default: 1000)
+ *   breakCondition — optional v2 condition object evaluated against each item;
+ *                    when true, iteration stops at that item (exclusive)
  */
 export default {
   async run(config, input) {
-    const { arrayPath = "", indexKey = "__loopIndex" } = config;
+    const {
+      arrayPath = "",
+      indexKey = "__loopIndex",
+      maxIterations = 1000,
+      breakCondition,
+    } = config;
 
-    // Resolve the array from the input
+    // Resolve the array
     let sourceArray;
     if (arrayPath) {
       sourceArray = arrayPath.split(".").reduce((obj, key) => obj?.[key], input);
@@ -30,16 +35,38 @@ export default {
     }
 
     if (sourceArray.length === 0) {
-      return []; // Empty loop — emit nothing so downstream nodes are simply not triggered
+      return [];
     }
 
-    // Emit one item per element so the cursor engine fans them out
-    return sourceArray.map((item, index) => ({
-      json: {
+    if (sourceArray.length > maxIterations) {
+      throw new Error(
+        `Loop Node: Array length (${sourceArray.length}) exceeds maxIterations limit (${maxIterations}). ` +
+        `Increase the limit in Advanced Settings or add a break condition.`,
+      );
+    }
+
+    const items = [];
+    for (let index = 0; index < sourceArray.length; index++) {
+      const item = sourceArray[index];
+      const itemContext = {
         ...(typeof item === "object" && item !== null ? item : { value: item }),
         [indexKey]: index,
         __loopTotal: sourceArray.length,
-      },
-    }));
+      };
+
+      // Evaluate break condition before emitting the item
+      if (breakCondition) {
+        try {
+          const shouldBreak = evaluateCondition(breakCondition, itemContext);
+          if (shouldBreak) break;
+        } catch {
+          // Invalid break condition — skip and continue
+        }
+      }
+
+      items.push({ json: itemContext });
+    }
+
+    return items;
   },
 };

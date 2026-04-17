@@ -691,6 +691,7 @@ interface AiAgentThinkOutput {
 interface LoadSubWorkflowInput {
   targetAutomationId: string;
   workspaceId: string;
+  parentChain?: string[];
 }
 
 interface SubWorkflowDefinition {
@@ -731,7 +732,16 @@ interface SubWorkflowDefinition {
 export async function loadSubWorkflowDefinitionActivity(
   input: LoadSubWorkflowInput,
 ): Promise<SubWorkflowDefinition> {
-  const { targetAutomationId, workspaceId } = input;
+  const { targetAutomationId, workspaceId, parentChain = [] } = input;
+
+  // Cycle detection: prevent A → B → A infinite recursion
+  if (parentChain.includes(targetAutomationId)) {
+    throw new Error(
+      `Sub-Workflow cycle detected: "${targetAutomationId}" is already in the call chain ` +
+      `[${parentChain.join(" → ")} → ${targetAutomationId}]. ` +
+      `Sub-workflows cannot call themselves or their ancestors.`,
+    );
+  }
 
   const automation = await (Automation as any).findById(targetAutomationId).lean();
 

@@ -1,6 +1,6 @@
-import { Plus } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useCallback, useRef, useMemo } from "react";
+import React, { useCallback, useRef, useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Controls,
@@ -14,7 +14,6 @@ import useWorkspaceStore from "../../../store/workspaceStore";
 import CustomNode from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
 
-// ── Placeholder node rendered when canvas is empty ─────────────────────────
 function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
 
@@ -34,7 +33,6 @@ function PlaceholderNode() {
 const nodeTypes = { custom: CustomNode, placeholder: PlaceholderNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
-// ── Default edge options (solid, arrow, smoothstep) ─────────────────────────
 const EDGE_COLOR = "#3f3f46";
 const defaultEdgeOptions = {
   type: "configurable",
@@ -47,7 +45,6 @@ const defaultEdgeOptions = {
   },
 };
 
-// ── Placeholder node injected into ReactFlow when canvas is empty ────────
 const PLACEHOLDER_NODE = {
   id: "__placeholder__",
   type: "placeholder",
@@ -56,8 +53,6 @@ const PLACEHOLDER_NODE = {
   selectable: false,
   draggable: false,
 };
-
-// ── Canvas Component ────────────────────────────────────────────────────────
 
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
@@ -78,18 +73,39 @@ export default function Canvas() {
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
 
-  // Show placeholder node on canvas when empty (stitched to canvas, not floating)
+  // Undo/redo
+  const undo = useWorkspaceStore((s) => s.undo);
+  const redo = useWorkspaceStore((s) => s.redo);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      if ((e.key === "z" && e.shiftKey) || e.key === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
+
+  // Multi-select
+  const selectedNodeIds = useWorkspaceStore((s) => s.selectedNodeIds);
+  const onSelectionChange = useWorkspaceStore((s) => s.onSelectionChange);
+  const deleteSelectedNodes = useWorkspaceStore((s) => s.deleteSelectedNodes);
+  const duplicateSelectedNodes = useWorkspaceStore((s) => s.duplicateSelectedNodes);
+  const alignSelectedNodes = useWorkspaceStore((s) => s.alignSelectedNodes);
+  const autoLayout = useWorkspaceStore((s) => s.autoLayout);
+
+  const isMultiSelected = selectedNodeIds.length > 1;
+
   const nodes = useMemo(() => {
     if (!isLoading && storeNodes.length === 0) return [PLACEHOLDER_NODE];
     return storeNodes;
   }, [storeNodes, isLoading]);
 
-  // Derive edge statuses + arrow markers from their source node's live status.
   const liveEdges = useMemo(() => {
     return edges.map((edge) => {
       const sourceStatus = isExecutionLive ? nodeStatuses[edge.source] : null;
 
-      // Arrow color matches edge status
       const arrowColor = sourceStatus === "running"
         ? "#3b82f6"
         : sourceStatus === "completed"
@@ -157,6 +173,7 @@ export default function Canvas() {
         isValidConnection={isValidConnection}
         onNodeClick={(e, node) => { if (node.id !== "__placeholder__") setSelectedNodeId(node.id); }}
         onPaneClick={() => setSelectedNodeId(null)}
+        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
@@ -177,7 +194,66 @@ export default function Canvas() {
         />
       </ReactFlow>
 
-      {/* ── Add node button — only shown when canvas has at least one node ── */}
+      {/* ── Multi-select floating toolbar ── */}
+      <AnimatePresence>
+        {isMultiSelected && (
+          <motion.div
+            key="multiselect-toolbar"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/60 shadow-xl shadow-black/40"
+          >
+            <span className="text-[10px] font-semibold text-zinc-500 px-1.5">
+              {selectedNodeIds.length} selected
+            </span>
+            <div className="w-px h-4 bg-zinc-700/60 mx-0.5" />
+            <ToolbarBtn
+              icon={AlignHorizontalJustifyStart}
+              label="Align top"
+              onClick={() => alignSelectedNodes("horizontal")}
+            />
+            <ToolbarBtn
+              icon={AlignVerticalJustifyStart}
+              label="Align left"
+              onClick={() => alignSelectedNodes("vertical")}
+            />
+            <div className="w-px h-4 bg-zinc-700/60 mx-0.5" />
+            <ToolbarBtn
+              icon={Copy}
+              label="Duplicate"
+              onClick={duplicateSelectedNodes}
+            />
+            <ToolbarBtn
+              icon={Trash2}
+              label="Delete"
+              onClick={deleteSelectedNodes}
+              danger
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Auto-layout button ── */}
+      <AnimatePresence>
+        {storeNodesLen > 1 && !isMultiSelected && (
+          <motion.button
+            key="auto-layout-btn"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.15 }}
+            onClick={autoLayout}
+            title="Auto-layout (L)"
+            className="absolute bottom-6 right-20 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 bg-zinc-800 border border-zinc-700/60 text-zinc-400 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add node button ── */}
       <AnimatePresence>
         {storeNodesLen > 0 && (
           <motion.button
@@ -203,5 +279,21 @@ export default function Canvas() {
       </AnimatePresence>
 
     </div>
+  );
+}
+
+function ToolbarBtn({ icon: Icon, label, onClick, danger = false }) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      className={`p-1.5 rounded-lg transition-colors ${
+        danger
+          ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+          : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50"
+      }`}
+    >
+      <Icon className="w-3.5 h-3.5" />
+    </button>
   );
 }

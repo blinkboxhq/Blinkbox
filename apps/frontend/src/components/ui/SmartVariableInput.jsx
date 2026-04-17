@@ -220,6 +220,62 @@ function NodeGroup({ nodeId, nodeSchema, onSelect, schemaGeneration }) {
   );
 }
 
+// ── Token Hover Preview ───────────────────────────────────────────────────────
+
+function resolveTokenPath(lastRunOutputs, tokenPath) {
+  // tokenPath format: "nodeId.field.subfield"
+  const parts = tokenPath.split(".");
+  const nodeId = parts[0];
+  const fieldPath = parts.slice(1);
+  let value = lastRunOutputs?.[nodeId];
+  for (const key of fieldPath) {
+    if (value == null || typeof value !== "object") return undefined;
+    value = value[key];
+  }
+  return value;
+}
+
+function formatPreviewValue(val) {
+  if (val === undefined) return null;
+  if (val === null) return "null";
+  if (typeof val === "string") return val.length > 120 ? val.slice(0, 120) + "…" : val;
+  if (typeof val === "object") {
+    try {
+      const s = JSON.stringify(val, null, 2);
+      return s.length > 300 ? s.slice(0, 300) + "\n…" : s;
+    } catch { return String(val); }
+  }
+  return String(val);
+}
+
+function TokenPreviewPopover({ token, anchorRect, lastRunOutputs, onClose }) {
+  const resolved = resolveTokenPath(lastRunOutputs, token);
+  const preview = formatPreviewValue(resolved);
+  const parts = token.split(".");
+  const label = parts.slice(1).join(".");
+
+  return (
+    <div
+      className="fixed z-[9999] pointer-events-none"
+      style={{
+        top: (anchorRect?.bottom ?? 0) + 6,
+        left: anchorRect?.left ?? 0,
+      }}
+    >
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl p-3 min-w-[160px] max-w-[280px]">
+        <div className="text-[9px] font-bold uppercase tracking-widest text-blue-400 mb-1.5">{label}</div>
+        {preview !== null ? (
+          <pre className="text-[10px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap break-all max-h-32 overflow-auto">
+            {preview}
+          </pre>
+        ) : (
+          <p className="text-[10px] text-zinc-600 italic">No data from last run</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function SmartVariableInput({
@@ -232,6 +288,8 @@ export default function SmartVariableInput({
   nodeId: propNodeId,
 }) {
   const [open, setOpen] = useState(false);
+  const [hoveredToken, setHoveredToken] = useState(null);
+  const [tokenAnchorRect, setTokenAnchorRect] = useState(null);
   const editableRef = useRef(null);
   const isComposing = useRef(false);
 
@@ -240,6 +298,7 @@ export default function SmartVariableInput({
     (s) => s.getAvailableVariables
   );
   const schemaGeneration = useWorkspaceStore((s) => s._schemaGeneration);
+  const lastRunOutputs = useWorkspaceStore((s) => s.lastRunOutputs ?? {});
 
   const targetNodeId = propNodeId || selectedNodeId;
   const availableVars = getAvailableVariables(targetNodeId);
@@ -288,12 +347,37 @@ export default function SmartVariableInput({
     [onChange]
   );
 
+  // Token hover preview — delegate to pill spans inside contenteditable
+  const handleMouseOver = useCallback((e) => {
+    const pill = e.target.closest("[data-token]");
+    if (pill) {
+      setHoveredToken(pill.dataset.token);
+      setTokenAnchorRect(pill.getBoundingClientRect());
+    }
+  }, []);
+
+  const handleMouseOut = useCallback((e) => {
+    const pill = e.target.closest("[data-token]");
+    if (pill) {
+      setHoveredToken(null);
+      setTokenAnchorRect(null);
+    }
+  }, []);
+
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
         <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
           {label}
         </label>
+      )}
+
+      {hoveredToken && tokenAnchorRect && (
+        <TokenPreviewPopover
+          token={hoveredToken}
+          anchorRect={tokenAnchorRect}
+          lastRunOutputs={lastRunOutputs}
+        />
       )}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
@@ -310,6 +394,8 @@ export default function SmartVariableInput({
               isComposing.current = false;
               handleInput();
             }}
+            onMouseOver={handleMouseOver}
+            onMouseOut={handleMouseOut}
             data-placeholder={placeholder}
             className={[
               "w-full bg-surface-1 border border-neutral-800 rounded-lg px-3 py-2.5 pr-9",

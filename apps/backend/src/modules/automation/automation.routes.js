@@ -10,6 +10,7 @@ import {
 } from "./engine/automation.controller.js";
 import { parseWorkflowBody } from "./engine/automation.validator.js";
 import { verifyToken } from "../auth/auth.middleware.js";
+import versionRouter from "./version.routes.js";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.post("/:id/duplicate", verifyToken, duplicateAutomation);
 router.patch("/:id/rename", verifyToken, renameAutomation);
 router.post("/:id/activate", verifyToken, activateAutomation);
 router.post("/:id/execute", verifyToken, triggerAutomation);
+router.use("/:id/versions", versionRouter);
 
 export default router;

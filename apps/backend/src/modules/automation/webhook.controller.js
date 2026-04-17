@@ -4,6 +4,7 @@ import { startAndAwaitWorkflowExecution } from "../execution/execution.service.j
 import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
 import { webhookQueue } from "../../infra/webhook.queue.js";
+import { sanitizeAndLog } from "../../utils/errors.js";
 
 const RATE_LIMIT = 60;
 const RATE_WINDOW_SECONDS = 60;
@@ -45,6 +46,23 @@ export async function handlePublicWebhook(req, res) {
       const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
       if (token !== triggerConfig.secret) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
+    }
+
+    // HMAC signature verification (GitHub/Stripe-style)
+    if (triggerConfig.hmacEnabled && triggerConfig.hmacSecret) {
+      const headerName = (triggerConfig.hmacHeader || "x-hub-signature-256").toLowerCase();
+      const algorithm = triggerConfig.hmacAlgorithm || "sha256";
+      const receivedSig = req.headers[headerName] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expectedSig = `${algorithm}=` + crypto.createHmac(algorithm, triggerConfig.hmacSecret)
+        .update(rawBody).digest("hex");
+
+      if (
+        receivedSig.length !== expectedSig.length ||
+        !crypto.timingSafeEqual(Buffer.from(receivedSig), Buffer.from(expectedSig))
+      ) {
+        return res.status(401).json({ error: "Webhook signature verification failed" });
       }
     }
 
@@ -99,11 +117,8 @@ export async function handlePublicWebhook(req, res) {
           output: result,
         });
       } catch (err) {
-        console.error(`[Webhook Sync] Workflow error for ${automationId}:`, err.message);
-        return res.status(500).json({
-          error: "Workflow execution failed",
-          detail: err.message,
-        });
+        const safeMsg = sanitizeAndLog(err, `Webhook Sync ${automationId}`);
+        return res.status(500).json({ error: safeMsg });
       }
     }
 
@@ -127,7 +142,7 @@ export async function handlePublicWebhook(req, res) {
       workflowKey: idempotencyKey,
     });
   } catch (err) {
-    console.error("[Webhook] Controller error:", err.message);
+    sanitizeAndLog(err, "Webhook Controller");
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }

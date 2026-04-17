@@ -4,6 +4,7 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
 import automationRoutes from "../modules/automation/automation.routes.js";
 import executionRoutes from "../modules/execution/execution.routes.js";
+import analyticsRoutes from "../modules/execution/analytics.routes.js";
 import credentialRoutes from "../modules/credentials/credential.routes.js";
 import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
@@ -47,7 +48,11 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "2mb" }));
+// Preserve raw body buffer for HMAC signature verification on webhook endpoints
+app.use(express.json({
+  limit: "2mb",
+  verify: (req, _res, buf) => { req.rawBody = buf; },
+}));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 // ── Public webhook endpoint (no auth required) ────────────────────────────────
@@ -65,6 +70,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/execution", executionRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use("/api/credentials", credentialRoutes);
 app.use("/api/oauth", oauthRoutes);
 app.use("/api/billing", billingRoutes);

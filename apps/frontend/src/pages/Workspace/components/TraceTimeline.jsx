@@ -1,17 +1,20 @@
 import TraceTimelineStep from "./TraceTimelineStep";
 
-/**
- * TraceTimeline — vertical chronological list of execution trace steps.
- *
- * @param {{ nodes: Array, liveExecutionState: object|null, isLive: boolean }} props
- */
-export default function TraceTimeline({ nodes, liveExecutionState, isLive }) {
+export default function TraceTimeline({ nodes, liveExecutionState, isLive, executionLogs = [] }) {
   if (!nodes || nodes.length === 0) {
     return (
       <div className="flex items-center justify-center h-32">
         <p className="text-xs text-zinc-600">No nodes in workflow</p>
       </div>
     );
+  }
+
+  // Build a map of nodeId → log entries for O(1) lookup
+  const logsByNode = {};
+  for (const log of executionLogs) {
+    if (!log.nodeId) continue;
+    if (!logsByNode[log.nodeId]) logsByNode[log.nodeId] = [];
+    logsByNode[log.nodeId].push(log);
   }
 
   return (
@@ -27,6 +30,7 @@ export default function TraceTimeline({ nodes, liveExecutionState, isLive }) {
             cursor={cursor}
             isLast={index === nodes.length - 1}
             isLive={isLive}
+            nodeLogs={logsByNode[node.id] || []}
           />
         );
       })}

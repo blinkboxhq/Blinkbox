@@ -1,10 +1,11 @@
-import { useEffect, useCallback, useRef } from "react";
-import { X, Zap, ChevronRight } from "lucide-react";
+import { useEffect, useCallback, useRef, useState } from "react";
+import { X, Zap, ChevronRight, ChevronDown, Settings2, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
+import { NODE_DOCS } from "../../../lib/nodeDocumentation";
 
 // ── Per-trigger output variable schemas ──────────────────────────────────────
 const TRIGGER_OUTPUT_SCHEMA = {
@@ -145,6 +146,7 @@ export default function NodeConfigModal() {
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const nodes = useWorkspaceStore((s) => s.nodes);
   const updateNodeConfig = useWorkspaceStore((s) => s.updateNodeConfig);
+  const [showDocs, setShowDocs] = useState(false);
 
   const node = nodes.find((n) => n.id === selectedNodeId) ?? null;
   const isOpen = !!selectedNodeId && !!node;
@@ -188,6 +190,8 @@ export default function NodeConfigModal() {
 
   const updateConfig = (key, value) => updateNodeConfig(selectedNodeId, key, value);
   const config = node?.data.config || {};
+  const retryPolicy = config.retryPolicy || {};
+  const updateRetryPolicy = (field, value) => updateConfig('retryPolicy', { ...retryPolicy, [field]: value });
 
   return (
     <AnimatePresence>
@@ -252,6 +256,17 @@ export default function NodeConfigModal() {
                   </div>
                 </div>
 
+                {/* Docs toggle */}
+                {NODE_DOCS[node.data.backendType] && (
+                  <button
+                    onClick={() => setShowDocs((v) => !v)}
+                    title="Node documentation"
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${showDocs ? "text-blue-400 bg-blue-500/10" : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.07]"}`}
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                )}
+
                 {/* Close */}
                 <button
                   onClick={() => setSelectedNodeId(null)}
@@ -262,6 +277,56 @@ export default function NodeConfigModal() {
               </div>
 
               {/* ── Two-column body ── */}
+              {/* ── Docs panel ── */}
+              <AnimatePresence>
+                {showDocs && NODE_DOCS[node.data.backendType] && (() => {
+                  const doc = NODE_DOCS[node.data.backendType];
+                  return (
+                    <motion.div
+                      key="docs-panel"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden border-b border-white/[0.05]"
+                    >
+                      <div className="p-5 space-y-3 bg-zinc-900/50">
+                        <p className="text-xs text-zinc-400 leading-relaxed">{doc.description}</p>
+                        {doc.inputs?.length > 0 && (
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">Inputs</p>
+                            <div className="space-y-1">
+                              {doc.inputs.map((inp) => (
+                                <div key={inp.name} className="flex items-start gap-2 text-[10px]">
+                                  <code className="text-zinc-300 font-mono shrink-0">{inp.name}</code>
+                                  <span className="text-zinc-700">·</span>
+                                  <span className="text-blue-400 shrink-0">{inp.type}</span>
+                                  <span className="text-zinc-600">{inp.desc}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {doc.outputs?.length > 0 && (
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">Outputs</p>
+                            <div className="space-y-1">
+                              {doc.outputs.map((out) => (
+                                <div key={out.name} className="flex items-start gap-2 text-[10px]">
+                                  <code className="text-emerald-400 font-mono shrink-0">{out.name}</code>
+                                  <span className="text-zinc-700">·</span>
+                                  <span className="text-blue-400 shrink-0">{out.type}</span>
+                                  <span className="text-zinc-600">{out.desc}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+
               <div className="flex flex-1 min-h-0">
 
                 {/* LEFT — config inputs */}
@@ -290,6 +355,9 @@ export default function NodeConfigModal() {
                       <p className="text-xs text-zinc-700 mt-1">This node works automatically</p>
                     </div>
                   )}
+
+                  {/* ── Advanced Settings ── */}
+                  {!isTrigger && <AdvancedSettings retryPolicy={retryPolicy} updateRetryPolicy={updateRetryPolicy} timeoutMs={config.timeoutMs} onTimeoutChange={(v) => updateConfig('timeoutMs', v)} />}
                 </div>
 
                 {/* RIGHT — output variables */}
@@ -327,19 +395,101 @@ export default function NodeConfigModal() {
 }
 
 // ── Wrapper strips Handle/Position props that only work inside ReactFlow ─────
-// The existing config panels import Handle from @xyflow/react but when rendered
-// outside the flow canvas they fail. We catch that by wrapping in a plain div
-// with pointer-events reset and suppressing the XYFlow context warning.
 function ConfigPanelWrapper({ Panel, config, updateConfig, selected, nodeId }) {
   const ref = useRef(null);
   return (
     <div ref={ref} className="config-panel-wrapper [&_.react-flow\_\_handle]:hidden">
-      <Panel
-        config={config}
-        updateConfig={updateConfig}
-        selected={selected}
-        nodeId={nodeId}
-      />
+      <Panel config={config} updateConfig={updateConfig} selected={selected} nodeId={nodeId} />
+    </div>
+  );
+}
+
+// ── Advanced Settings Panel ───────────────────────────────────────────────────
+function AdvancedSettings({ retryPolicy, updateRetryPolicy, timeoutMs, onTimeoutChange }) {
+  const [open, setOpen] = useState(false);
+
+  const onFailureBehavior = retryPolicy.retryOnFailure === false ? 'error_path' : (retryPolicy.maxAttempts === 1 ? 'no_retry' : 'retry');
+  const setOnFailureBehavior = (val) => {
+    if (val === 'error_path') updateRetryPolicy('retryOnFailure', false);
+    else if (val === 'no_retry') { updateRetryPolicy('retryOnFailure', true); updateRetryPolicy('maxAttempts', 1); }
+    else { updateRetryPolicy('retryOnFailure', true); updateRetryPolicy('maxAttempts', retryPolicy.maxAttempts || 3); }
+  };
+
+  return (
+    <div className="w-full max-w-[320px] mx-auto mt-2">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 w-full text-left py-2 px-3 rounded-lg hover:bg-white/[0.03] transition-colors group"
+      >
+        <Settings2 className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest group-hover:text-zinc-400 transition-colors flex-1">Advanced Settings</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-zinc-600 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="mt-2 p-4 bg-[#0d0d0f] border border-white/[0.06] rounded-xl flex flex-col gap-4">
+          {/* Timeout */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Timeout (ms)</label>
+            <input
+              type="number"
+              min={1000}
+              max={3600000}
+              step={1000}
+              value={timeoutMs || 60000}
+              onChange={(e) => onTimeoutChange(Number(e.target.value))}
+              className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors"
+            />
+            <p className="text-[9px] text-zinc-600">How long before this node times out. Default: 60000ms (60s).</p>
+          </div>
+
+          {/* On-failure behavior */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">On Failure</label>
+            <select
+              value={onFailureBehavior}
+              onChange={(e) => setOnFailureBehavior(e.target.value)}
+              className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-1.5 text-xs text-white focus:outline-none cursor-pointer"
+            >
+              <option value="retry">Retry then stop workflow</option>
+              <option value="no_retry">Stop immediately (no retry)</option>
+              <option value="error_path">Continue to error path</option>
+            </select>
+          </div>
+
+          {/* Max retries (only if not error_path or no_retry) */}
+          {onFailureBehavior === 'retry' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Max Retries</label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={retryPolicy.maxAttempts || 3}
+                onChange={(e) => updateRetryPolicy('maxAttempts', Number(e.target.value))}
+                className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors"
+              />
+            </div>
+          )}
+
+          {/* Backoff coefficient */}
+          {onFailureBehavior === 'retry' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Backoff Multiplier</label>
+              <input
+                type="number"
+                min={1}
+                max={5}
+                step={0.5}
+                value={retryPolicy.backoffCoefficient || 2}
+                onChange={(e) => updateRetryPolicy('backoffCoefficient', Number(e.target.value))}
+                className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors"
+              />
+              <p className="text-[9px] text-zinc-600">Each retry waits longer by this factor (e.g. 2 = 1s, 2s, 4s…).</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { syncImapJobs } from "../../../infra/imap.poller.js";
 import { syncDbJobs } from "../../../infra/db.poller.js";
 import { registerGitHubWebhook, unregisterGitHubWebhook } from "../../../infra/github.webhook.js";
 import { registerStripeWebhook, unregisterStripeWebhook } from "../../../infra/stripe.webhook.js";
+import { snapshotBeforeSave } from "../version.routes.js";
 
 /**
  * ===============================
@@ -27,6 +28,10 @@ export async function saveAutomation(req, res) {
 
     // If an ID is passed in the params, update the existing one
     if (req.params.id) {
+      // Snapshot current state before overwriting (for version history)
+      const existing = await Automation.findOne({ _id: req.params.id, workspaceId: req.user.id });
+      if (existing) await snapshotBeforeSave(existing, req.user.id);
+
       automation = await Automation.findOneAndUpdate(
         { _id: req.params.id, workspaceId: req.user.id },
         req.body,

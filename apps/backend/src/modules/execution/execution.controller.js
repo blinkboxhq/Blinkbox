@@ -1,7 +1,8 @@
 import Execution from "../../models/execution.model.js";
 import Automation from "../../models/automation.model.js";
+import ExecutionLog from "../../models/executionLog.model.js";
 import { executeAutomation } from "../automation/automation.executor.js";
-import { enqueueCursor } from "../workers/cursor.queue.js"; // Needed for Retries!
+import { enqueueCursor } from "../workers/cursor.queue.js";
 
 /**
  * START EXECUTION
@@ -160,6 +161,35 @@ export async function retryExecution(req, res) {
 /**
  * ⏯️ RESUME WAITING EXECUTION (Manual Wakeup)
  */
+/**
+ * GET EXECUTION LOGS — returns node_step entries for the execution debugger UI
+ */
+export async function getExecutionLogs(req, res) {
+  try {
+    const { executionId } = req.params;
+
+    // Resolve the workflowId from the execution (workspace-scoped)
+    const execution = await Execution.findOne({
+      _id: executionId,
+      workspaceId: req.user.id,
+    }).lean();
+
+    if (!execution) return res.status(404).json({ success: false, error: "Not found" });
+
+    const logs = await ExecutionLog.find({
+      workflowId: execution.workflowId || executionId,
+      type: { $in: ["node_step", "execution_start", "execution_end"] },
+    })
+      .sort({ timestamp: 1 })
+      .lean();
+
+    res.json({ success: true, logs });
+  } catch (err) {
+    console.error("[ExecutionLogs]", err.message);
+    res.status(500).json({ success: false, error: "Failed to load logs" });
+  }
+}
+
 export async function resumeExecution(req, res) {
   const execution = await Execution.findOne({
     _id: req.params.executionId,

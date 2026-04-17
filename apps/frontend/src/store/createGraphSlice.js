@@ -1,10 +1,14 @@
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
+import dagre from "dagre";
 import {
   calculateAllAvailableVariables,
   calculateAvailableVariables,
   inferSchemaFromValue,
   validateAllNodeMappings,
 } from "./schemaEngine";
+
+const NODE_WIDTH = 260;
+const NODE_HEIGHT = 80;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Graph Slice — owns nodes, edges, and all XYFlow mutation logic.
@@ -36,6 +40,15 @@ function wouldCreateCycle(edges, source, target) {
   return false;
 }
 
+const MAX_HISTORY = 20;
+
+function pushHistory(get) {
+  const { nodes, edges, _past } = get();
+  const snapshot = { nodes: [...nodes], edges: [...edges] };
+  const past = [...(_past ?? []), snapshot].slice(-MAX_HISTORY);
+  return { _past: past, _future: [] };
+}
+
 export const createGraphSlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   nodes: [],
@@ -44,6 +57,9 @@ export const createGraphSlice = (set, get) => ({
   availableVariables: {},
   mappingWarnings: {},
   _schemaGeneration: 0,
+  selectedNodeIds: [],
+  _past: [],
+  _future: [],
 
   // ── XYFlow callbacks ─────────────────────────────────────────────────────
   onNodesChange: (changes) =>
@@ -98,6 +114,7 @@ export const createGraphSlice = (set, get) => ({
     );
 
     set({
+      ...pushHistory(get),
       edges: newEdges,
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(nodes, newVars),
@@ -118,8 +135,140 @@ export const createGraphSlice = (set, get) => ({
     return !wouldCreateCycle(edges, connection.source, connection.target);
   },
 
+  // ── Selection ─────────────────────────────────────────────────────────────
+  onSelectionChange: ({ nodes: selectedNodes }) => {
+    set({ selectedNodeIds: selectedNodes.map((n) => n.id) });
+  },
+
+  deleteSelectedNodes: () => {
+    const { nodes, edges, selectedNodeIds } = get();
+    if (selectedNodeIds.length === 0) return;
+    const idSet = new Set(selectedNodeIds);
+    const newNodes = nodes.filter((n) => !idSet.has(n.id));
+    const newEdges = edges.filter((e) => !idSet.has(e.source) && !idSet.has(e.target));
+    const newVars = calculateAllAvailableVariables(newNodes, newEdges, get().nodeOutputSchemas);
+    set({
+      ...pushHistory(get),
+      nodes: newNodes,
+      edges: newEdges,
+      selectedNodeIds: [],
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(newNodes, newVars),
+      _schemaGeneration: get()._schemaGeneration + 1,
+    });
+  },
+
+  duplicateSelectedNodes: () => {
+    const { nodes, edges, selectedNodeIds, nodeOutputSchemas } = get();
+    if (selectedNodeIds.length === 0) return;
+    const idSet = new Set(selectedNodeIds);
+    const clones = nodes
+      .filter((n) => idSet.has(n.id))
+      .map((n) => ({
+        ...n,
+        id: `${n.data.backendType}-${crypto.randomUUID()}`,
+        position: { x: n.position.x + 60, y: n.position.y + 70 },
+        data: { ...n.data, config: { ...n.data.config } },
+        selected: false,
+      }));
+    const newNodes = [...nodes, ...clones];
+    const newVars = calculateAllAvailableVariables(newNodes, edges, nodeOutputSchemas);
+    set({
+      ...pushHistory(get),
+      nodes: newNodes,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(newNodes, newVars),
+      selectedNodeIds: clones.map((c) => c.id),
+    });
+  },
+
+  alignSelectedNodes: (axis) => {
+    const { nodes, selectedNodeIds } = get();
+    if (selectedNodeIds.length < 2) return;
+    const idSet = new Set(selectedNodeIds);
+    const selected = nodes.filter((n) => idSet.has(n.id));
+    const anchorPos = axis === "horizontal"
+      ? Math.min(...selected.map((n) => n.position.y))
+      : Math.min(...selected.map((n) => n.position.x));
+    const newNodes = nodes.map((n) => {
+      if (!idSet.has(n.id)) return n;
+      return {
+        ...n,
+        position: {
+          x: axis === "vertical" ? anchorPos : n.position.x,
+          y: axis === "horizontal" ? anchorPos : n.position.y,
+        },
+      };
+    });
+    set({ nodes: newNodes });
+  },
+
+  undo: () => {
+    const { _past, nodes, edges } = get();
+    if (!_past || _past.length === 0) return;
+    const prev = _past[_past.length - 1];
+    const future = [{ nodes: [...nodes], edges: [...edges] }, ...(get()._future ?? [])].slice(0, MAX_HISTORY);
+    const newVars = calculateAllAvailableVariables(prev.nodes, prev.edges, get().nodeOutputSchemas);
+    set({
+      nodes: prev.nodes,
+      edges: prev.edges,
+      _past: _past.slice(0, -1),
+      _future: future,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(prev.nodes, newVars),
+      _schemaGeneration: get()._schemaGeneration + 1,
+    });
+  },
+
+  redo: () => {
+    const { _future, nodes, edges } = get();
+    if (!_future || _future.length === 0) return;
+    const next = _future[0];
+    const past = [...(get()._past ?? []), { nodes: [...nodes], edges: [...edges] }].slice(-MAX_HISTORY);
+    const newVars = calculateAllAvailableVariables(next.nodes, next.edges, get().nodeOutputSchemas);
+    set({
+      nodes: next.nodes,
+      edges: next.edges,
+      _past: past,
+      _future: _future.slice(1),
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(next.nodes, newVars),
+      _schemaGeneration: get()._schemaGeneration + 1,
+    });
+  },
+
+  autoLayout: () => {
+    const { nodes, edges } = get();
+    if (nodes.length === 0) return;
+
+    const g = new dagre.graphlib.Graph();
+    g.setDefaultEdgeLabel(() => ({}));
+    g.setGraph({ rankdir: "LR", nodesep: 60, ranksep: 120 });
+
+    for (const node of nodes) {
+      g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    }
+    for (const edge of edges) {
+      g.setEdge(edge.source, edge.target);
+    }
+
+    dagre.layout(g);
+
+    const newNodes = nodes.map((node) => {
+      const pos = g.node(node.id);
+      return {
+        ...node,
+        position: {
+          x: pos.x - NODE_WIDTH / 2,
+          y: pos.y - NODE_HEIGHT / 2,
+        },
+      };
+    });
+    set({ nodes: newNodes });
+  },
+
   // ── Mutations ────────────────────────────────────────────────────────────
-  addNode: (node) => set({ nodes: [...get().nodes, node] }),
+  addNode: (node) => set({ ...pushHistory(get), nodes: [...get().nodes, node] }),
 
   duplicateNode: (nodeId) => {
     const { nodes, edges, nodeOutputSchemas } = get();

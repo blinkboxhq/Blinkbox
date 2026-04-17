@@ -142,6 +142,7 @@ export default function WebhookTriggerNode({ config = {}, updateConfig, selected
 
         {activeTab === 'security' && (
           <div className="flex flex-col gap-3">
+            {/* Bearer Token Auth */}
             <div className="flex items-start gap-3 p-2.5 bg-[#111] border border-[#1e1e1e] rounded-lg">
               <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -171,6 +172,65 @@ export default function WebhookTriggerNode({ config = {}, updateConfig, selected
                 <p className="text-[9px] text-zinc-600">Keep this secret. Requests without it will be rejected with 401.</p>
               </div>
             )}
+
+            {/* HMAC Signature Verification */}
+            <div className="flex flex-col gap-2 border-t border-[#1a1a1a] pt-3">
+              <div className="flex items-start gap-3 p-2.5 bg-[#111] border border-[#1e1e1e] rounded-lg">
+                <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="text-[10px] font-bold text-zinc-300 block">HMAC Signature Verification</span>
+                  <span className="text-[9px] text-zinc-600 mt-0.5 block leading-relaxed">
+                    Verify webhook came from a trusted source (GitHub/Stripe-style)
+                  </span>
+                </div>
+                <div
+                  className={`w-8 h-4 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 mt-0.5 ${config.hmacEnabled ? 'bg-blue-500' : 'bg-zinc-700'}`}
+                  onClick={() => updateConfig?.('hmacEnabled', !config.hmacEnabled)}
+                >
+                  <div className={`w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${config.hmacEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+              </div>
+
+              {config.hmacEnabled && (
+                <div className="flex flex-col gap-2 px-1">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">HMAC Secret</label>
+                    <input
+                      type="password"
+                      value={config.hmacSecret || ''}
+                      onChange={(e) => updateConfig?.('hmacSecret', e.target.value)}
+                      placeholder="Shared secret from provider…"
+                      className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Algorithm</label>
+                      <select
+                        value={config.hmacAlgorithm || 'sha256'}
+                        onChange={(e) => updateConfig?.('hmacAlgorithm', e.target.value)}
+                        className="w-full bg-[#111] border border-[#222] rounded-md px-2 py-1.5 text-xs text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="sha256">SHA-256</option>
+                        <option value="sha1">SHA-1 (legacy)</option>
+                        <option value="sha512">SHA-512</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Signature Header</label>
+                      <input
+                        value={config.hmacHeader || 'x-hub-signature-256'}
+                        onChange={(e) => updateConfig?.('hmacHeader', e.target.value)}
+                        className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-zinc-600 leading-relaxed">
+                    Requests with invalid or missing signatures will be rejected with 401.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

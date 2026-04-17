@@ -1,11 +1,15 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect } from 'react';
-import { ArrowLeft, Play, Save, Loader2, Check, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
+import VersionHistoryPanel from './VersionHistoryPanel';
+import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
 
 export default function WorkspaceHeader() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [versionPanelOpen, setVersionPanelOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const workflowName = useWorkspaceStore(state => state.workflowName);
   const isSaving = useWorkspaceStore(state => state.isSaving);
@@ -28,6 +32,12 @@ export default function WorkspaceHeader() {
         e.preventDefault();
         runEngine(id);
       }
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (tag !== 'input' && tag !== 'textarea' && !document.activeElement?.isContentEditable) {
+          setShortcutsOpen((v) => !v);
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -40,6 +50,7 @@ export default function WorkspaceHeader() {
     'bg-zinc-900/50 border-zinc-800 text-zinc-500';
 
   return (
+    <>
     <div className="relative w-full h-14 bg-zinc-950 border-b border-zinc-800/60 z-50 flex items-center justify-between px-6 shrink-0">
 
       {/* Left: Breadcrumb */}
@@ -101,6 +112,25 @@ export default function WorkspaceHeader() {
           )}
         </div>
 
+        {/* Shortcuts button */}
+        <button
+          onClick={() => setShortcutsOpen(true)}
+          title="Keyboard shortcuts (?)"
+          className="p-1.5 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+        >
+          <Keyboard className="w-3.5 h-3.5" />
+        </button>
+
+        {/* History button */}
+        <button
+          onClick={() => setVersionPanelOpen(true)}
+          title="Version history"
+          className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-100 transition-colors"
+        >
+          <Clock className="w-3.5 h-3.5" />
+          History
+        </button>
+
         {/* Save button */}
         <button
           onClick={() => saveEngine(id)}
@@ -124,5 +154,16 @@ export default function WorkspaceHeader() {
         </button>
       </div>
     </div>
+
+    <VersionHistoryPanel
+      automationId={id}
+      isOpen={versionPanelOpen}
+      onClose={() => setVersionPanelOpen(false)}
+    />
+    <KeyboardShortcutsPanel
+      isOpen={shortcutsOpen}
+      onClose={() => setShortcutsOpen(false)}
+    />
+    </>
   );
 }

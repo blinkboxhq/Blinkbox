@@ -25,6 +25,7 @@ import {
 } from "@temporalio/workflow";
 import type { WorkflowDefinition } from "../schemas.js";
 import type * as activities from "./activities.js";
+import { evaluateConditionV2 } from "./condition.inline.js";
 
 // Re-export the AI Agent Child Workflow so Temporal's bundler registers it.
 // The parent workflow dispatches it via executeChild("executeAiAgentWorkflow", ...).
@@ -107,10 +108,39 @@ const subWf = proxyActivities<
 
 const TRIGGER_TYPES = new Set(["manual", "webhook", "cron_trigger"]);
 const MAX_ITERATIONS = 500;
-
-// Approval nodes can sleep for up to 30 days waiting for human input.
-// After that, the workflow times out — configurable per-node via data.timeoutMs.
 const DEFAULT_APPROVAL_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+// ── Per-Node Activity Proxy ─────────────────────────────────────────────────────
+
+interface NodeRetryPolicy {
+  maxAttempts?: number;
+  initialIntervalMs?: number;
+  backoffCoefficient?: number;
+  maxIntervalMs?: number;
+  retryOnFailure?: boolean;
+}
+
+/**
+ * Build a fresh proxyActivities using the node's retryPolicy + timeoutMs.
+ * proxyActivities() is synchronous (returns a JS Proxy, no network call),
+ * so creating one per node execution adds negligible overhead.
+ */
+function getActivitiesForNode(node: { data: Record<string, unknown> }) {
+  const policy = (node.data["retryPolicy"] as NodeRetryPolicy | undefined) ?? {};
+  const timeoutMs = Math.min(
+    Math.max((node.data["timeoutMs"] as number | undefined) ?? 60_000, 1_000),
+    3_600_000,
+  );
+  return proxyActivities<typeof activities>({
+    startToCloseTimeout: `${timeoutMs}ms`,
+    retry: {
+      maximumAttempts: policy.maxAttempts ?? 3,
+      initialInterval: `${policy.initialIntervalMs ?? 1_000}ms`,
+      backoffCoefficient: policy.backoffCoefficient ?? 2,
+      maximumInterval: `${policy.maxIntervalMs ?? 30_000}ms`,
+    },
+  });
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
@@ -142,6 +172,7 @@ export async function executeAutomationWorkflow(
   automationId: string,
   definition: WorkflowDefinition,
   triggerData: Record<string, unknown>,
+  parentChain: string[] = [],
 ): Promise<Record<string, unknown>> {
   // Build lookup structures from the definition (deterministic, no I/O)
   const nodeMap = new Map(definition.nodes.map((n) => [n.id, n]));
@@ -238,7 +269,8 @@ export async function executeAutomationWorkflow(
         await sleep(delayMs);
         output = input;
       } else if (node.type === "http_request") {
-        output = await acts.executeHttpRequestActivity({
+        const nodeActs = getActivitiesForNode(node);
+        output = await nodeActs.executeHttpRequestActivity({
           url: (node.data["url"] as string) ?? "",
           method: node.data["method"] as string | undefined,
           headers: node.data["headers"] as Record<string, string> | undefined,
@@ -255,7 +287,8 @@ export async function executeAutomationWorkflow(
           nodeId,
         });
       } else if (node.type === "code") {
-        const codeResult = await acts.executeSecureCodeActivity({
+        const nodeActs = getActivitiesForNode(node);
+        const codeResult = await nodeActs.executeSecureCodeActivity({
           code: (node.data["code"] as string) ?? "",
           variables: input,
         });
@@ -328,9 +361,11 @@ export async function executeAutomationWorkflow(
           );
         }
 
+        const childChain = [...parentChain, automationId];
         const childDef = await subWf.loadSubWorkflowDefinitionActivity({
           targetAutomationId,
           workspaceId: definition.workspaceId ?? "",
+          parentChain: childChain,
         });
 
         const explicitPayload = (node.data["payload"] as Record<string, unknown>) ?? {};
@@ -359,6 +394,7 @@ export async function executeAutomationWorkflow(
               description: childDef.description,
             },
             childTriggerData,
+            childChain,
           ],
           workflowId: `sub-${automationId}-${nodeId}-${Date.now()}`,
           taskQueue: undefined,
@@ -382,12 +418,31 @@ export async function executeAutomationWorkflow(
           workflowExecutionTimeout: "35m",
         });
       } else {
-        output = await acts.executeNodeActivity({
-          nodeType: node.type,
-          config: node.data as Record<string, unknown>,
-          inputData: input,
-          workspaceId: definition.workspaceId,
-        });
+        const retryOnFailure = (node.data["retryPolicy"] as NodeRetryPolicy | undefined)?.retryOnFailure ?? true;
+        if (!retryOnFailure) {
+          // Error boundary: catch immediately, route to onFailure edges — no Temporal-level retries
+          try {
+            const nodeActs = getActivitiesForNode({ data: { ...node.data, retryPolicy: { ...(node.data["retryPolicy"] as object ?? {}), maxAttempts: 1 } } });
+            output = await nodeActs.executeNodeActivity({
+              nodeType: node.type,
+              config: node.data as Record<string, unknown>,
+              inputData: input,
+              workspaceId: definition.workspaceId,
+            });
+          } catch (err) {
+            failed = true;
+            errorMsg = (err as Error).message;
+            output = { error: errorMsg };
+          }
+        } else {
+          const nodeActs = getActivitiesForNode(node);
+          output = await nodeActs.executeNodeActivity({
+            nodeType: node.type,
+            config: node.data as Record<string, unknown>,
+            inputData: input,
+            workspaceId: definition.workspaceId,
+          });
+        }
       }
     } catch (err) {
       failed = true;
@@ -486,7 +541,7 @@ export async function executeAutomationWorkflow(
           ? (output as Record<string, unknown>)
           : {};
 
-      if (!evaluateCondition(edge.condition, evalContext)) continue;
+      if (!evaluateConditionV2(edge.condition as Parameters<typeof evaluateConditionV2>[0], evalContext)) continue;
 
       const target = edge.target;
       if (processed.has(target) || inflight.has(target)) continue;
@@ -578,85 +633,4 @@ function isPayloadRef(value: unknown): boolean {
   );
 }
 
-// ── Condition Evaluator (pure logic — safe for deterministic workflows) ────────
-
-function evaluateCondition(
-  condition: string | Record<string, unknown> | undefined,
-  context: Record<string, unknown>,
-): boolean {
-  if (!condition || condition === "always" || condition === "true") return true;
-  if (condition === "false") return false;
-  // Empty objects from the DB (no operator/left/right) should pass through
-  if (typeof condition === "object" && Object.keys(condition).length === 0)
-    return true;
-  if (condition["type"] === "always") return true;
-
-  const { operator, left, right } = condition as {
-    operator?: string;
-    left?: unknown;
-    right?: unknown;
-  };
-
-  const resolve = (value: unknown): unknown => {
-    if (typeof value === "string" && value.startsWith("{{")) {
-      const path = value.replace(/[{}\s]/g, "").split(".");
-      return path.reduce<unknown>(
-        (obj, key) =>
-          obj && typeof obj === "object"
-            ? (obj as Record<string, unknown>)[key]
-            : undefined,
-        context,
-      );
-    }
-    return value;
-  };
-
-  const l = resolve(left);
-  const r = resolve(right);
-
-  switch (operator) {
-    case "equals":
-      return l == r;
-    case "strictEquals":
-      return l === r;
-    case "not_equals":
-    case "notEquals":
-      return l != r;
-    case "greater_than":
-    case "gt":
-      return Number(l) > Number(r);
-    case "less_than":
-    case "lt":
-      return Number(l) < Number(r);
-    case "gte":
-      return Number(l) >= Number(r);
-    case "lte":
-      return Number(l) <= Number(r);
-    case "contains":
-      return String(l).includes(String(r));
-    case "notContains":
-      return !String(l).includes(String(r));
-    case "startsWith":
-      return String(l).startsWith(String(r));
-    case "endsWith":
-      return String(l).endsWith(String(r));
-    case "exists":
-      return l !== undefined && l !== null;
-    case "isEmpty":
-      return (
-        l === undefined ||
-        l === null ||
-        l === "" ||
-        (Array.isArray(l) && l.length === 0)
-      );
-    case "isNotEmpty":
-      return (
-        l !== undefined &&
-        l !== null &&
-        l !== "" &&
-        !(Array.isArray(l) && l.length === 0)
-      );
-    default:
-      return false;
-  }
-}
+// evaluateCondition replaced by evaluateConditionV2 from condition.inline.ts
