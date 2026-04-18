@@ -12,9 +12,21 @@ import {
   Database,
   Github,
   CreditCard,
+  ShoppingBag,
+  Circle,
+  FileText,
+  Users,
   X,
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
+
+import imgTelegram  from "../../../assets/telegram.png";
+import imgSlack     from "../../../assets/slack.png";
+import imgDiscord   from "../../../assets/discord.png";
+import imgGmail     from "../../../assets/gmail.png";
+import imgWhatsApp  from "../../../assets/whatsapp.png";
+import imgAirtable  from "../../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion    from "../../../assets/Notion-Logo--Streamline-Radix.svg";
 
 const TRIGGER_OPTIONS = [
   // ── Core ────────────────────────────────────────────────────────────────────
@@ -100,7 +112,112 @@ const TRIGGER_OPTIONS = [
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
   },
-  // ── Integrations ────────────────────────────────────────────────────────────
+  // ── Messaging ───────────────────────────────────────────────────────────────
+  {
+    id: "telegram",
+    backendType: "telegram_trigger",
+    logoUrl: imgTelegram,
+    label: "On Telegram message",
+    description: "Fires when your bot receives a message, button press, or other update.",
+    color: "text-[#26A5E4]",
+    bg: "bg-[#26A5E4]/10",
+    border: "border-[#26A5E4]/20",
+  },
+  {
+    id: "slack",
+    backendType: "slack_trigger",
+    logoUrl: imgSlack,
+    label: "On Slack event",
+    description: "Message posted, reaction added, user joined channel — any Slack Event API event.",
+    color: "text-[#E01E5A]",
+    bg: "bg-[#E01E5A]/10",
+    border: "border-[#E01E5A]/20",
+  },
+  {
+    id: "discord",
+    backendType: "discord_trigger",
+    logoUrl: imgDiscord,
+    label: "On Discord event",
+    description: "Message sent, member joined, reaction added — via Discord webhook or bot gateway.",
+    color: "text-[#5865F2]",
+    bg: "bg-[#5865F2]/10",
+    border: "border-[#5865F2]/20",
+  },
+  {
+    id: "whatsapp",
+    backendType: "whatsapp_trigger",
+    logoUrl: imgWhatsApp,
+    label: "On WhatsApp message",
+    description: "Fires when a message arrives on your WhatsApp Business number (Twilio or Meta).",
+    color: "text-[#25D366]",
+    bg: "bg-[#25D366]/10",
+    border: "border-[#25D366]/20",
+  },
+  // ── Productivity ─────────────────────────────────────────────────────────────
+  {
+    id: "gmail",
+    backendType: "gmail_trigger",
+    logoUrl: imgGmail,
+    label: "On Gmail email",
+    description: "Polls your Gmail inbox for new emails matching an optional query filter.",
+    color: "text-[#EA4335]",
+    bg: "bg-[#EA4335]/10",
+    border: "border-[#EA4335]/20",
+  },
+  {
+    id: "airtable",
+    backendType: "airtable_trigger",
+    logoUrl: imgAirtable,
+    label: "On Airtable record",
+    description: "Fires when a new record is created or updated in an Airtable base.",
+    color: "text-[#F65858]",
+    bg: "bg-[#F65858]/10",
+    border: "border-[#F65858]/20",
+    imgFilter: "brightness(0) invert(1)",
+  },
+  {
+    id: "notion",
+    backendType: "notion_trigger",
+    logoUrl: imgNotion,
+    label: "On Notion page",
+    description: "Polls a Notion database for new or edited pages.",
+    color: "text-zinc-200",
+    bg: "bg-zinc-500/10",
+    border: "border-zinc-500/20",
+    imgFilter: "brightness(0) invert(1)",
+  },
+  {
+    id: "hubspot",
+    backendType: "hubspot_trigger",
+    icon: Users,
+    label: "On HubSpot CRM event",
+    description: "New or updated contacts, deals, companies, or tickets in HubSpot CRM.",
+    color: "text-[#FF7A59]",
+    bg: "bg-[#FF7A59]/10",
+    border: "border-[#FF7A59]/20",
+  },
+  // ── Commerce ─────────────────────────────────────────────────────────────────
+  {
+    id: "shopify",
+    backendType: "shopify_trigger",
+    icon: ShoppingBag,
+    label: "On Shopify event",
+    description: "Order placed, fulfillment shipped, product updated — any Shopify webhook topic.",
+    color: "text-[#95BF47]",
+    bg: "bg-[#95BF47]/10",
+    border: "border-[#95BF47]/20",
+  },
+  {
+    id: "stripe",
+    backendType: "stripe_trigger",
+    icon: CreditCard,
+    label: "On Stripe event",
+    description: "Payment succeeded, subscription cancelled — auto-registered on your Stripe account.",
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/20",
+  },
+  // ── Dev Tools ────────────────────────────────────────────────────────────────
   {
     id: "github",
     backendType: "github_trigger",
@@ -112,14 +229,24 @@ const TRIGGER_OPTIONS = [
     border: "border-zinc-500/20",
   },
   {
-    id: "stripe",
-    backendType: "stripe_trigger",
-    icon: CreditCard,
-    label: "On Stripe event",
-    description: "Payment succeeded, subscription cancelled — auto-registered on your Stripe account.",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
-    border: "border-indigo-500/20",
+    id: "linear",
+    backendType: "linear_trigger",
+    icon: Circle,
+    label: "On Linear event",
+    description: "Issue created, status changed, cycle updated — any Linear webhook event.",
+    color: "text-[#5E6AD2]",
+    bg: "bg-[#5E6AD2]/10",
+    border: "border-[#5E6AD2]/20",
+  },
+  {
+    id: "typeform",
+    backendType: "typeform_trigger",
+    icon: FileText,
+    label: "On Typeform submission",
+    description: "Fires every time a respondent submits your Typeform.",
+    color: "text-zinc-300",
+    bg: "bg-zinc-500/10",
+    border: "border-zinc-500/20",
   },
   // ── System ──────────────────────────────────────────────────────────────────
   {
@@ -134,12 +261,14 @@ const TRIGGER_OPTIONS = [
   },
 ];
 
-// Group labels for the picker
 const GROUPS = [
   { label: "Core",         ids: ["manual", "cron", "webhook", "chat"] },
   { label: "Email",        ids: ["email", "imap"] },
   { label: "Data",         ids: ["rss", "database"] },
-  { label: "Integrations", ids: ["github", "stripe"] },
+  { label: "Messaging",    ids: ["telegram", "slack", "discord", "whatsapp"] },
+  { label: "Productivity", ids: ["gmail", "airtable", "notion", "hubspot"] },
+  { label: "Commerce",     ids: ["shopify", "stripe"] },
+  { label: "Dev Tools",    ids: ["github", "linear", "typeform"] },
   { label: "System",       ids: ["error"] },
 ];
 
@@ -155,7 +284,7 @@ export default function TriggerPicker() {
           t.label.toLowerCase().includes(search.toLowerCase()) ||
           t.description.toLowerCase().includes(search.toLowerCase()),
       )
-    : null; // null = show grouped view
+    : null;
 
   const handleSelect = (trigger) => {
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
@@ -183,7 +312,16 @@ export default function TriggerPicker() {
         className="flex items-start gap-4 px-4 py-3.5 rounded-xl hover:bg-zinc-800/60 transition-all duration-150 text-left group border border-transparent hover:border-zinc-700/40"
       >
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${trigger.bg} ${trigger.border}`}>
-          <Icon className={`w-4 h-4 ${trigger.color}`} strokeWidth={1.75} />
+          {trigger.logoUrl ? (
+            <img
+              src={trigger.logoUrl}
+              alt={trigger.label}
+              className="w-5 h-5 object-contain"
+              style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
+            />
+          ) : (
+            <Icon className={`w-4 h-4 ${trigger.color}`} strokeWidth={1.75} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
@@ -235,7 +373,6 @@ export default function TriggerPicker() {
       {/* Trigger list */}
       <div className="flex-1 overflow-y-auto px-3 pb-6">
         {filtered !== null ? (
-          // Search results — flat list
           filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Search className="w-8 h-8 text-zinc-700 mb-2" />
@@ -247,7 +384,6 @@ export default function TriggerPicker() {
             </div>
           )
         ) : (
-          // Grouped view
           <div className="flex flex-col gap-4">
             {GROUPS.map(({ label, ids }) => {
               const triggers = ids.map((id) => TRIGGER_OPTIONS.find((t) => t.id === id)).filter(Boolean);

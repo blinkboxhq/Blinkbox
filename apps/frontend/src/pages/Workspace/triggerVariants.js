@@ -10,19 +10,44 @@ import {
   Database,
   Github,
   CreditCard,
+  ShoppingBag,
+  Circle,
+  FileText,
+  Users,
 } from "lucide-react";
 
-import TriggerNode from "./components/nodes/TriggerNode";
-import WebhookTriggerNode from "./components/nodes/WebhookTriggerNode";
+import TriggerNode         from "./components/nodes/TriggerNode";
+import WebhookTriggerNode  from "./components/nodes/WebhookTriggerNode";
 import ScheduleTriggerNode from "./components/nodes/ScheduleTriggerNode";
-import ChatTriggerNode from "./components/nodes/ChatTriggerNode";
-import EmailTriggerNode from "./components/nodes/EmailTriggerNode";
-import ErrorTriggerNode from "./components/nodes/ErrorTriggerNode";
-import RssTriggerNode from "./components/nodes/RssTriggerNode";
-import ImapTriggerNode from "./components/nodes/ImapTriggerNode";
+import ChatTriggerNode     from "./components/nodes/ChatTriggerNode";
+import EmailTriggerNode    from "./components/nodes/EmailTriggerNode";
+import ErrorTriggerNode    from "./components/nodes/ErrorTriggerNode";
+import RssTriggerNode      from "./components/nodes/RssTriggerNode";
+import ImapTriggerNode     from "./components/nodes/ImapTriggerNode";
 import DatabaseTriggerNode from "./components/nodes/DatabaseTriggerNode";
-import GitHubTriggerNode from "./components/nodes/GitHubTriggerNode";
-import StripeTriggerNode from "./components/nodes/StripeTriggerNode";
+import GitHubTriggerNode   from "./components/nodes/GitHubTriggerNode";
+import StripeTriggerNode   from "./components/nodes/StripeTriggerNode";
+
+// Integration triggers
+import TelegramTriggerNode from "./components/nodes/TelegramTriggerNode";
+import SlackTriggerNode    from "./components/nodes/SlackTriggerNode";
+import DiscordTriggerNode  from "./components/nodes/DiscordTriggerNode";
+import GmailTriggerNode    from "./components/nodes/GmailTriggerNode";
+import AirtableTriggerNode from "./components/nodes/AirtableTriggerNode";
+import NotionTriggerNode   from "./components/nodes/NotionTriggerNode";
+import HubSpotTriggerNode  from "./components/nodes/HubSpotTriggerNode";
+import ShopifyTriggerNode  from "./components/nodes/ShopifyTriggerNode";
+import LinearTriggerNode   from "./components/nodes/LinearTriggerNode";
+import TypeformTriggerNode from "./components/nodes/TypeformTriggerNode";
+import WhatsAppTriggerNode from "./components/nodes/WhatsAppTriggerNode";
+
+import imgTelegram from "../../assets/telegram.png";
+import imgSlack    from "../../assets/slack.png";
+import imgDiscord  from "../../assets/discord.png";
+import imgGmail    from "../../assets/gmail.png";
+import imgWhatsApp from "../../assets/whatsapp.png";
+import imgAirtable from "../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion   from "../../assets/Notion-Logo--Streamline-Radix.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -112,5 +137,102 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-indigo-400",
     accentColor: "99,102,241",
     ConfigPanel: StripeTriggerNode,
+  },
+
+  // ── Integration triggers ────────────────────────────────────────────────────
+  telegram: {
+    backendType: "telegram_trigger",
+    icon: MessageSquare,
+    logoUrl: imgTelegram,
+    label: "On Telegram Message",
+    colorClass: "text-[#26A5E4]",
+    accentColor: "38,165,228",
+    ConfigPanel: TelegramTriggerNode,
+  },
+  slack: {
+    backendType: "slack_trigger",
+    icon: MessageSquare,
+    logoUrl: imgSlack,
+    label: "On Slack Event",
+    colorClass: "text-[#E01E5A]",
+    accentColor: "224,30,90",
+    ConfigPanel: SlackTriggerNode,
+  },
+  discord: {
+    backendType: "discord_trigger",
+    icon: MessageSquare,
+    logoUrl: imgDiscord,
+    label: "On Discord Event",
+    colorClass: "text-[#5865F2]",
+    accentColor: "88,101,242",
+    ConfigPanel: DiscordTriggerNode,
+  },
+  whatsapp: {
+    backendType: "whatsapp_trigger",
+    icon: MessageSquare,
+    logoUrl: imgWhatsApp,
+    label: "On WhatsApp Message",
+    colorClass: "text-[#25D366]",
+    accentColor: "37,211,102",
+    ConfigPanel: WhatsAppTriggerNode,
+  },
+  gmail: {
+    backendType: "gmail_trigger",
+    icon: Mail,
+    logoUrl: imgGmail,
+    label: "On Gmail Email",
+    colorClass: "text-[#EA4335]",
+    accentColor: "234,67,53",
+    ConfigPanel: GmailTriggerNode,
+  },
+  airtable: {
+    backendType: "airtable_trigger",
+    icon: Database,
+    logoUrl: imgAirtable,
+    label: "On Airtable Record",
+    colorClass: "text-[#F65858]",
+    accentColor: "246,88,88",
+    ConfigPanel: AirtableTriggerNode,
+  },
+  notion: {
+    backendType: "notion_trigger",
+    icon: Database,
+    logoUrl: imgNotion,
+    label: "On Notion Page",
+    colorClass: "text-zinc-200",
+    accentColor: "228,228,231",
+    ConfigPanel: NotionTriggerNode,
+  },
+  hubspot: {
+    backendType: "hubspot_trigger",
+    icon: Users,
+    label: "On HubSpot CRM Event",
+    colorClass: "text-[#FF7A59]",
+    accentColor: "255,122,89",
+    ConfigPanel: HubSpotTriggerNode,
+  },
+  shopify: {
+    backendType: "shopify_trigger",
+    icon: ShoppingBag,
+    label: "On Shopify Event",
+    colorClass: "text-[#95BF47]",
+    accentColor: "149,191,71",
+    ConfigPanel: ShopifyTriggerNode,
+  },
+  linear: {
+    backendType: "linear_trigger",
+    icon: Circle,
+    label: "On Linear Event",
+    colorClass: "text-[#5E6AD2]",
+    accentColor: "94,106,210",
+    ConfigPanel: LinearTriggerNode,
+  },
+  typeform: {
+    backendType: "typeform_trigger",
+    icon: FileText,
+    label: "On Typeform Submission",
+    colorClass: "text-zinc-300",
+    accentColor: "212,212,216",
+    ConfigPanel: TypeformTriggerNode,
   },
 };
