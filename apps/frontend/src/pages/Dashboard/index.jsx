@@ -334,7 +334,7 @@ export default function Dashboard() {
     const isActive = wf.status === 'active';
     try {
       if (isActive) {
-        await api.put(`/api/automation/${id}`, { status: 'draft', active: false });
+        await api.post(`/api/automation/${id}/deactivate`);
         setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, status: 'draft', active: false } : w));
       } else {
         await api.post(`/api/automation/${id}/activate`);

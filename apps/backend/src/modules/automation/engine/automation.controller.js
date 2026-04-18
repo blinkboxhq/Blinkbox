@@ -124,6 +124,25 @@ export async function activateAutomation(req, res) {
 
 /**
  * ===============================
+ * DEACTIVATE AUTOMATION
+ * ===============================
+ */
+export async function deactivateAutomation(req, res) {
+  try {
+    const automation = await Automation.findOneAndUpdate(
+      { _id: req.params.id, workspaceId: req.user.id },
+      { active: false, status: "draft" },
+      { new: true },
+    );
+    if (!automation) return res.status(404).json({ success: false, message: "Automation not found" });
+    res.json({ success: true, automation });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+}
+
+/**
+ * ===============================
  * TRIGGER AUTOMATION (STEP 5)
  * ===============================
  * Idempotent. Safe. Crash-proof.

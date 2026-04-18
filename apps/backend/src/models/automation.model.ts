@@ -58,7 +58,8 @@ const AutomationSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     trigger: { type: String, required: true },
-    active: { type: Boolean, default: true },
+    active: { type: Boolean, default: false },
+    status: { type: String, enum: ["draft", "active"], default: "draft" },
     workspaceId: { type: String, required: true, index: true },
     nodes: { type: [NodeSchema], default: [] },
     edges: { type: [EdgeSchema], default: [] },
@@ -72,6 +73,7 @@ const AutomationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-AutomationSchema.index({ trigger: 1, name: 1 }, { unique: true });
+AutomationSchema.index({ workspaceId: 1, name: 1 });
+AutomationSchema.index({ trigger: 1, active: 1 });
 
 export default mongoose.model("Automation", AutomationSchema);

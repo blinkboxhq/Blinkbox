@@ -2,6 +2,7 @@ import express from "express";
 import {
   saveAutomation,
   activateAutomation,
+  deactivateAutomation,
   triggerAutomation,
   getAutomations,
   deleteAutomation,
@@ -21,6 +22,7 @@ router.delete("/:id", verifyToken, deleteAutomation);
 router.post("/:id/duplicate", verifyToken, duplicateAutomation);
 router.patch("/:id/rename", verifyToken, renameAutomation);
 router.post("/:id/activate", verifyToken, activateAutomation);
+router.post("/:id/deactivate", verifyToken, deactivateAutomation);
 router.post("/:id/execute", verifyToken, triggerAutomation);
 router.use("/:id/versions", versionRouter);
 

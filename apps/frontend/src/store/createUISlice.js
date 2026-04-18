@@ -103,7 +103,7 @@ export const createUISlice = (set, get) => ({
     set({ isActivating: true });
     try {
       if (isActive) {
-        await api.put(`/api/automation/${automationId}`, { active: false, status: "draft" });
+        await api.post(`/api/automation/${automationId}/deactivate`);
         set({ isActive: false });
         toast.success("Workflow deactivated");
       } else {
