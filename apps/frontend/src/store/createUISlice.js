@@ -14,7 +14,9 @@ export const createUISlice = (set, get) => ({
   isTriggerPickerOpen: false,
   isAddNodeOpen: false,
   workflowName: "Loading...",
+  isActive: false,
   isSaving: false,
+  isActivating: false,
   isLoading: true,
   addNodeSource: null, // nodeId that triggered "Add Next Step" modal
   insertEdgeId: null, // edgeId when inserting node between two nodes
@@ -60,10 +62,9 @@ export const createUISlice = (set, get) => ({
           data: {
             label: n.description || resolvedType,
             backendType: resolvedType,
-            type:
+            type: resolvedType.endsWith("_trigger") ||
               resolvedType === "manual" ||
-              resolvedType === "webhook" ||
-              resolvedType === "cron_trigger"
+              resolvedType === "webhook"
                 ? "trigger"
                 : "action",
             config: n.data || {},
@@ -87,11 +88,33 @@ export const createUISlice = (set, get) => ({
         nodes: loadedNodes,
         edges: loadedEdges,
         workflowName: workflow.name,
+        isActive: workflow.active === true || workflow.status === "active",
         isLoading: false,
       });
     } catch (error) {
       console.error("Load error:", error);
       set({ isLoading: false });
+    }
+  },
+
+  // ── API: Activate / Deactivate Workflow ─────────────────────────────────
+  activateEngine: async (automationId) => {
+    const { isActive } = get();
+    set({ isActivating: true });
+    try {
+      if (isActive) {
+        await api.put(`/api/automation/${automationId}`, { active: false, status: "draft" });
+        set({ isActive: false });
+        toast.success("Workflow deactivated");
+      } else {
+        await api.post(`/api/automation/${automationId}/activate`);
+        set({ isActive: true });
+        toast.success("Workflow activated — trigger is now live");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update workflow status");
+    } finally {
+      set({ isActivating: false });
     }
   },
 

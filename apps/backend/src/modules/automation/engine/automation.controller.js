@@ -7,6 +7,10 @@ import { syncCronJobs } from "../../../infra/cron.scheduler.js";
 import { syncRssJobs } from "../../../infra/rss.poller.js";
 import { syncImapJobs } from "../../../infra/imap.poller.js";
 import { syncDbJobs } from "../../../infra/db.poller.js";
+import { syncGmailJobs } from "../../../infra/gmail.poller.js";
+import { syncAirtableJobs } from "../../../infra/airtable.poller.js";
+import { syncNotionJobs } from "../../../infra/notion.poller.js";
+import { syncHubSpotJobs } from "../../../infra/hubspot.poller.js";
 import { registerGitHubWebhook, unregisterGitHubWebhook } from "../../../infra/github.webhook.js";
 import { registerStripeWebhook, unregisterStripeWebhook } from "../../../infra/stripe.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
@@ -103,10 +107,14 @@ export async function activateAutomation(req, res) {
     await automation.save();
 
     // Re-sync pollers so the new automation is picked up immediately
-    if (trigger === "cron_trigger") syncCronJobs().catch(console.error);
-    if (trigger === "rss_trigger")  syncRssJobs().catch(console.error);
-    if (trigger === "imap_trigger") syncImapJobs().catch(console.error);
-    if (trigger === "db_trigger")   syncDbJobs().catch(console.error);
+    if (trigger === "cron_trigger")    syncCronJobs().catch(console.error);
+    if (trigger === "rss_trigger")     syncRssJobs().catch(console.error);
+    if (trigger === "imap_trigger")    syncImapJobs().catch(console.error);
+    if (trigger === "db_trigger")      syncDbJobs().catch(console.error);
+    if (trigger === "gmail_trigger")   syncGmailJobs().catch(console.error);
+    if (trigger === "airtable_trigger") syncAirtableJobs().catch(console.error);
+    if (trigger === "notion_trigger")  syncNotionJobs().catch(console.error);
+    if (trigger === "hubspot_trigger") syncHubSpotJobs().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard } from 'lucide-react';
+import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard, Power } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
@@ -14,8 +14,11 @@ export default function WorkspaceHeader() {
   const workflowName = useWorkspaceStore(state => state.workflowName);
   const isSaving = useWorkspaceStore(state => state.isSaving);
   const isRunning = useWorkspaceStore(state => state.isRunning);
+  const isActive = useWorkspaceStore(state => state.isActive);
+  const isActivating = useWorkspaceStore(state => state.isActivating);
   const saveEngine = useWorkspaceStore(state => state.saveEngine);
   const runEngine = useWorkspaceStore(state => state.runEngine);
+  const activateEngine = useWorkspaceStore(state => state.activateEngine);
   const nodes = useWorkspaceStore(state => state.nodes);
   const liveExecutionState = useWorkspaceStore(state => state.liveExecutionState);
 
@@ -140,6 +143,23 @@ export default function WorkspaceHeader() {
         >
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Save
+        </button>
+
+        {/* Activate toggle */}
+        <button
+          onClick={() => activateEngine(id)}
+          disabled={isActivating || nodeCount === 0}
+          title={isActive ? "Deactivate trigger" : "Activate trigger — go live"}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isActive
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+          }`}
+        >
+          {isActivating
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <Power className="w-3.5 h-3.5" />}
+          {isActive ? 'Active' : 'Activate'}
         </button>
 
         {/* Run button */}
