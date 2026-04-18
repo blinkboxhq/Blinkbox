@@ -8,6 +8,10 @@ import { startCronScheduler } from "../infra/cron.scheduler.js";
 import { startRssPoller } from "../infra/rss.poller.js";
 import { startImapPoller } from "../infra/imap.poller.js";
 import { startDbPoller } from "../infra/db.poller.js";
+import { startGmailPoller } from "../infra/gmail.poller.js";
+import { startAirtablePoller } from "../infra/airtable.poller.js";
+import { startNotionPoller } from "../infra/notion.poller.js";
+import { startHubSpotPoller } from "../infra/hubspot.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -40,6 +44,12 @@ export async function startServer() {
 
   // 4c. Start database row poller
   await startDbPoller();
+
+  // 4d. Start integration pollers (Gmail, Airtable, Notion, HubSpot)
+  await startGmailPoller();
+  await startAirtablePoller();
+  await startNotionPoller();
+  await startHubSpotPoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

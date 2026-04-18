@@ -27,9 +27,24 @@ import imgWhatsApp   from "../../assets/whatsapp.png";
 import imgGmail      from "../../assets/gmail.png";
 
 // Config Panels — existing
-import TriggerNode         from "./components/nodes/TriggerNode";
-import WebhookTriggerNode  from "./components/nodes/WebhookTriggerNode";
-import ScheduleTriggerNode from "./components/nodes/ScheduleTriggerNode";
+import TriggerNode          from "./components/nodes/TriggerNode";
+import WebhookTriggerNode   from "./components/nodes/WebhookTriggerNode";
+import ScheduleTriggerNode  from "./components/nodes/ScheduleTriggerNode";
+import GitHubTriggerNode    from "./components/nodes/GitHubTriggerNode";
+import StripeTriggerNode    from "./components/nodes/StripeTriggerNode";
+
+// Config Panels — integration triggers (new)
+import TelegramTriggerNode  from "./components/nodes/TelegramTriggerNode";
+import SlackTriggerNode     from "./components/nodes/SlackTriggerNode";
+import DiscordTriggerNode   from "./components/nodes/DiscordTriggerNode";
+import GmailTriggerNode     from "./components/nodes/GmailTriggerNode";
+import AirtableTriggerNode  from "./components/nodes/AirtableTriggerNode";
+import NotionTriggerNode    from "./components/nodes/NotionTriggerNode";
+import HubSpotTriggerNode   from "./components/nodes/HubSpotTriggerNode";
+import ShopifyTriggerNode   from "./components/nodes/ShopifyTriggerNode";
+import LinearTriggerNode    from "./components/nodes/LinearTriggerNode";
+import TypeformTriggerNode  from "./components/nodes/TypeformTriggerNode";
+import WhatsAppTriggerNode  from "./components/nodes/WhatsAppTriggerNode";
 import HttpRequestNode     from "./components/nodes/HttpRequestNode";
 import DelayNode           from "./components/nodes/Delaynode";
 import InformerNode        from "./components/nodes/InformerNode";
@@ -131,6 +146,58 @@ export const NodeRegistry = {
   cron_trigger: {
     label: "Schedule Trigger", icon: Clock, colorClass: "text-amber-400",
     accentColor: "251,191,36", ConfigPanel: ScheduleTriggerNode, category: "trigger",
+  },
+  github_trigger: {
+    label: "GitHub Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
+    ConfigPanel: GitHubTriggerNode, category: "trigger",
+  },
+  stripe_trigger: {
+    label: "Stripe Trigger", icon: CreditCard, colorClass: "text-[#635BFF]", accentColor: "99,91,255",
+    ConfigPanel: StripeTriggerNode, category: "trigger",
+  },
+  telegram_trigger: {
+    label: "Telegram Trigger", icon: Brain, colorClass: "text-[#26A5E4]", accentColor: "38,165,228",
+    logoUrl: imgTelegram, ConfigPanel: TelegramTriggerNode, category: "trigger",
+  },
+  slack_trigger: {
+    label: "Slack Trigger", icon: Brain, colorClass: "text-[#E01E5A]", accentColor: "224,30,90",
+    logoUrl: imgSlack, ConfigPanel: SlackTriggerNode, category: "trigger",
+  },
+  discord_trigger: {
+    label: "Discord Trigger", icon: Brain, colorClass: "text-[#5865F2]", accentColor: "88,101,242",
+    logoUrl: imgDiscord, ConfigPanel: DiscordTriggerNode, category: "trigger",
+  },
+  gmail_trigger: {
+    label: "Gmail Trigger", icon: Brain, colorClass: "text-[#EA4335]", accentColor: "234,67,53",
+    logoUrl: imgGmail, ConfigPanel: GmailTriggerNode, category: "trigger",
+  },
+  airtable_trigger: {
+    label: "Airtable Trigger", icon: Brain, colorClass: "text-[#F65858]", accentColor: "246,88,88",
+    logoUrl: imgAirtable, ConfigPanel: AirtableTriggerNode, category: "trigger",
+  },
+  notion_trigger: {
+    label: "Notion Trigger", icon: Brain, colorClass: "text-white", accentColor: "255,255,255",
+    logoUrl: imgNotion, ConfigPanel: NotionTriggerNode, category: "trigger",
+  },
+  hubspot_trigger: {
+    label: "HubSpot Trigger", icon: Users, colorClass: "text-[#FF7A59]", accentColor: "255,122,89",
+    ConfigPanel: HubSpotTriggerNode, category: "trigger",
+  },
+  shopify_trigger: {
+    label: "Shopify Trigger", icon: ShoppingBag, colorClass: "text-[#95BF47]", accentColor: "149,191,71",
+    ConfigPanel: ShopifyTriggerNode, category: "trigger",
+  },
+  linear_trigger: {
+    label: "Linear Trigger", icon: Circle, colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",
+    ConfigPanel: LinearTriggerNode, category: "trigger",
+  },
+  typeform_trigger: {
+    label: "Typeform Trigger", icon: FileText, colorClass: "text-zinc-300", accentColor: "212,212,216",
+    ConfigPanel: TypeformTriggerNode, category: "trigger",
+  },
+  whatsapp_trigger: {
+    label: "WhatsApp Trigger", icon: Brain, colorClass: "text-[#25D366]", accentColor: "37,211,102",
+    logoUrl: imgWhatsApp, ConfigPanel: WhatsAppTriggerNode, category: "trigger",
   },
 
   // AI Models

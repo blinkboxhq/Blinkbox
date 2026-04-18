@@ -106,6 +106,21 @@ export const nodeRegistry = {
   stripe_trigger: { async run(config, input) { return input; } },
   cron_trigger: cronTrigger,
 
+  // Integration Triggers (webhook-push)
+  telegram_trigger: { async run(config, input) { return input; } },
+  slack_trigger:    { async run(config, input) { return input; } },
+  discord_trigger:  { async run(config, input) { return input; } },
+  shopify_trigger:  { async run(config, input) { return input; } },
+  linear_trigger:   { async run(config, input) { return input; } },
+  typeform_trigger: { async run(config, input) { return input; } },
+  whatsapp_trigger: { async run(config, input) { return input; } },
+
+  // Integration Triggers (polling)
+  gmail_trigger:    { async run(config, input) { return input; } },
+  airtable_trigger: { async run(config, input) { return input; } },
+  notion_trigger:   { async run(config, input) { return input; } },
+  hubspot_trigger:  { async run(config, input) { return input; } },
+
   // Core Nodes
   http_request: httpRequest,
   web_scraper: webScraper,

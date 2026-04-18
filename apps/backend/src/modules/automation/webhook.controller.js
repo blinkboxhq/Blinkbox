@@ -66,6 +66,80 @@ export async function handlePublicWebhook(req, res) {
       }
     }
 
+    // ── Telegram: X-Telegram-Bot-Api-Secret-Token header ─────────────────────
+    if (triggerConfig.telegramSecretToken) {
+      const provided = req.headers["x-telegram-bot-api-secret-token"] || "";
+      if (provided !== triggerConfig.telegramSecretToken) {
+        return res.status(401).json({ error: "Invalid Telegram secret token" });
+      }
+    }
+
+    // ── Slack: HMAC v0=sha256(signingSecret, "v0:timestamp:rawBody") ─────────
+    if (triggerConfig.slackSigningSecret) {
+      // Auto-respond to Slack URL verification challenge
+      if (req.body?.type === "url_verification") {
+        return res.status(200).json({ challenge: req.body.challenge });
+      }
+      const ts = req.headers["x-slack-request-timestamp"] || "";
+      const slackSig = req.headers["x-slack-signature"] || "";
+      if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) {
+        return res.status(401).json({ error: "Slack request timestamp too old" });
+      }
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const sigBase = `v0:${ts}:${rawBody.toString()}`;
+      const computed = "v0=" + crypto.createHmac("sha256", triggerConfig.slackSigningSecret)
+        .update(sigBase).digest("hex");
+      const sigBuf = Buffer.from(slackSig.padEnd(computed.length));
+      const expBuf = Buffer.from(computed);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        return res.status(401).json({ error: "Invalid Slack signature" });
+      }
+    }
+
+    // ── Shopify: X-Shopify-Hmac-Sha256 (base64-encoded HMAC) ─────────────────
+    if (triggerConfig.shopifyWebhookSecret) {
+      const provided = req.headers["x-shopify-hmac-sha256"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = crypto.createHmac("sha256", triggerConfig.shopifyWebhookSecret)
+        .update(rawBody).digest("base64");
+      if (provided !== expected) {
+        return res.status(401).json({ error: "Invalid Shopify webhook signature" });
+      }
+    }
+
+    // ── Linear: linear-signature header ──────────────────────────────────────
+    if (triggerConfig.linearWebhookSecret) {
+      const provided = req.headers["linear-signature"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = crypto.createHmac("sha256", triggerConfig.linearWebhookSecret)
+        .update(rawBody).digest("hex");
+      if (provided !== expected) {
+        return res.status(401).json({ error: "Invalid Linear webhook signature" });
+      }
+    }
+
+    // ── Typeform: Typeform-Signature header (sha256=base64 HMAC) ─────────────
+    if (triggerConfig.typeformWebhookSecret) {
+      const provided = req.headers["typeform-signature"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.typeformWebhookSecret)
+        .update(rawBody).digest("base64");
+      if (provided !== expected) {
+        return res.status(401).json({ error: "Invalid Typeform webhook signature" });
+      }
+    }
+
+    // ── Meta WhatsApp: hub.verify_token challenge (GET requests) ─────────────
+    if (triggerConfig.metaVerifyToken && req.method === "GET") {
+      const mode  = req.query["hub.mode"];
+      const token = req.query["hub.verify_token"];
+      const challenge = req.query["hub.challenge"];
+      if (mode === "subscribe" && token === triggerConfig.metaVerifyToken) {
+        return res.status(200).send(challenge);
+      }
+      return res.status(403).json({ error: "Meta webhook verification failed" });
+    }
+
     const webhookData = {
       body:    req.body    || {},
       query:   req.query   || {},
