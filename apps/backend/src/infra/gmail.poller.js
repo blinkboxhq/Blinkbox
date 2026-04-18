@@ -15,7 +15,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
-import { decrypt } from "../utils/encryption.js";
+import { decrypt } from "../utils/crypto.js";
 import Credential from "../models/credential.model.js";
 
 const GMAIL_QUEUE = "bb-gmail-poller";
