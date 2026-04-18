@@ -7,6 +7,23 @@ export const NODE_TYPES = [
   "manual",
   "webhook",
   "cron_trigger",
+  "imap_trigger",
+  "rss_trigger",
+  "db_trigger",
+  "telegram_trigger",
+  "slack_trigger",
+  "discord_trigger",
+  "whatsapp_trigger",
+  "gmail_trigger",
+  "airtable_trigger",
+  "notion_trigger",
+  "hubspot_trigger",
+  "shopify_trigger",
+  "stripe_trigger",
+  "github_trigger",
+  "linear_trigger",
+  "typeform_trigger",
+  "error_trigger",
   // Core
   "http_request",
   "web_scraper",
@@ -56,7 +73,28 @@ export const EdgeTypeSchema = z.enum(EDGE_TYPES);
 
 // ── Trigger Types ───────────────────────────────────────────────────────────────
 
-export const TRIGGER_TYPES = ["manual", "webhook", "cron_trigger"] as const;
+export const TRIGGER_TYPES = [
+  "manual",
+  "webhook",
+  "cron_trigger",
+  "imap_trigger",
+  "rss_trigger",
+  "db_trigger",
+  "telegram_trigger",
+  "slack_trigger",
+  "discord_trigger",
+  "whatsapp_trigger",
+  "gmail_trigger",
+  "airtable_trigger",
+  "notion_trigger",
+  "hubspot_trigger",
+  "shopify_trigger",
+  "stripe_trigger",
+  "github_trigger",
+  "linear_trigger",
+  "typeform_trigger",
+  "error_trigger",
+] as const;
 export const TriggerTypeSchema = z.enum(TRIGGER_TYPES);
 
 // ── Shared Primitives ───────────────────────────────────────────────────────────
@@ -121,7 +159,7 @@ export const AutomationSettingsSchema = z.object({
 export const WorkflowDefinitionSchema = z.object({
   name: z.string().min(1, "Automation name is required").max(200),
   trigger: TriggerTypeSchema,
-  active: z.boolean().default(true),
+  active: z.boolean().optional(),
   // Injected server-side from JWT after validation — never sent by the client
   workspaceId: z.string().optional(),
   nodes: z.array(NodeConfigSchema).default([]),

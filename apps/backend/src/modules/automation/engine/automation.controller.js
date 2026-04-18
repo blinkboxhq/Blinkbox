@@ -30,6 +30,10 @@ export async function saveAutomation(req, res) {
       req.body.workspaceId = req.user.id;
     }
 
+    // Never let a save overwrite activation state — use /activate and /deactivate for that
+    delete req.body.active;
+    delete req.body.status;
+
     // If an ID is passed in the params, update the existing one
     if (req.params.id) {
       // Snapshot current state before overwriting (for version history)
