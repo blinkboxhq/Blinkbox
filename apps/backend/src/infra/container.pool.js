@@ -171,6 +171,12 @@ export async function execute(config, workspaceId = "default") {
   let timedOut = false;
 
   try {
+    // Verify Docker daemon is reachable before acquiring semaphore resources
+    try { await docker.ping(); } catch {
+      await releaseSemaphore(workspaceId);
+      throw new Error("Virtual Computer: Docker daemon is not available on this server. This feature requires a self-hosted deployment with Docker installed.");
+    }
+
     const envVars = Array.isArray(config.envVars)
       ? config.envVars.filter(e => e?.key).map(e => `${e.key}=${e.value ?? ""}`)
       : [];
