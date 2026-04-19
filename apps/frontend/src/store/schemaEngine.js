@@ -198,6 +198,12 @@ export const DEFAULT_SCHEMAS = {
   groq:           { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
   ollama:         { result: "string", code: "string", model: "string", operation: "string", provider: "string" },
   github_copilot: { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
+
+  // Databases (Part C)
+  supabase:   { rows: "array", count: "number", table: "string", inserted: "array", updated: "array", deleted: "array", result: "object" },
+  mongodb:    { documents: "array", count: "number", document: "object", found: "boolean", insertedId: "string", insertedCount: "number", modifiedCount: "number", deletedCount: "number", collection: "string" },
+  redis_node: { value: "any", raw: "string", items: "array", members: "array", hash: "object", keys: "array", found: "boolean", set: "boolean", key: "string", length: "number" },
+  firebase:   { document: "object", documents: "array", count: "number", docId: "string", found: "boolean", user: "object", uid: "string", messageId: "string", collection: "string" },
 };
 
 /**

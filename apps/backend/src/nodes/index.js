@@ -81,7 +81,11 @@ import linear from "./integrations/linear.node.js";
 import stripe from "./integrations/stripe.node.js";
 
 // Integrations: Databases
-import postgres from "./integrations/postgres.node.js";
+import postgres   from "./integrations/postgres.node.js";
+import supabase   from "./integrations/supabase.node.js";
+import mongodb    from "./integrations/mongodb.node.js";
+import redisNode  from "./integrations/redis.node.js";
+import firebase   from "./integrations/firebase.node.js";
 
 // Integrations: Google Workspace
 import googleCalendar from "./integrations/googleCalendar.node.js";
@@ -252,6 +256,12 @@ export const nodeRegistry = {
   airtable: airtable,
   google_sheets: googleSheets,
   notion: notion,
+
+  // Databases
+  supabase: supabase,
+  mongodb: mongodb,
+  redis_node: redisNode,
+  firebase: firebase,
 
   // Email & Messaging
   gmail: gmail,

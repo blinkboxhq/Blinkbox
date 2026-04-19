@@ -110,6 +110,12 @@ import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 
+// Config Panels — Database nodes
+import SupabaseNode        from "./components/nodes/SupabaseNode";
+import MongoDBNode         from "./components/nodes/MongoDBNode";
+import RedisNode           from "./components/nodes/RedisNode";
+import FirebaseNode        from "./components/nodes/FirebaseNode";
+
 // Config Panels — new integrations
 import GithubNode          from "./components/nodes/GithubNode";
 import StripeNode          from "./components/nodes/StripeNode";
@@ -276,6 +282,22 @@ export const NodeRegistry = {
   postgres: {
     label: "PostgreSQL", icon: Server, colorClass: "text-[#5B9BD5]", accentColor: "91,155,213",
     ConfigPanel: PostgresNode, category: "data",
+  },
+  supabase: {
+    label: "Supabase", icon: Database, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: SupabaseNode, category: "data",
+  },
+  mongodb: {
+    label: "MongoDB", icon: Database, colorClass: "text-[#47A248]", accentColor: "71,162,72",
+    ConfigPanel: MongoDBNode, category: "data",
+  },
+  redis_node: {
+    label: "Redis", icon: Server, colorClass: "text-[#FF4438]", accentColor: "255,68,56",
+    ConfigPanel: RedisNode, category: "data",
+  },
+  firebase: {
+    label: "Firebase", icon: Database, colorClass: "text-[#FFCA28]", accentColor: "255,202,40",
+    ConfigPanel: FirebaseNode, category: "data",
   },
 
   // Transform (array/data manipulation)
