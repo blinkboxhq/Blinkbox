@@ -17,6 +17,10 @@ import {
   FileText,
   Users,
   X,
+  Youtube,
+  TrendingUp,
+  MessageSquarePlus,
+  Calendar,
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -248,6 +252,57 @@ const TRIGGER_OPTIONS = [
     bg: "bg-zinc-500/10",
     border: "border-zinc-500/20",
   },
+  // ── Polling ──────────────────────────────────────────────────────────────────
+  {
+    id: "youtube",
+    backendType: "youtube_trigger",
+    icon: Youtube,
+    label: "On YouTube video",
+    description: "Fires when a channel publishes a new video. Uses YouTube Data API v3.",
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+    border: "border-red-500/20",
+  },
+  {
+    id: "price_alert",
+    backendType: "price_alert_trigger",
+    icon: TrendingUp,
+    label: "On crypto price alert",
+    description: "Fires when a coin price crosses your threshold (above or below). Powered by CoinGecko.",
+    color: "text-yellow-400",
+    bg: "bg-yellow-500/10",
+    border: "border-yellow-500/20",
+  },
+  {
+    id: "reddit",
+    backendType: "reddit_trigger",
+    icon: MessageSquarePlus,
+    label: "On Reddit post",
+    description: "Polls a subreddit for new posts. Optional keyword filter. No API key needed.",
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+  },
+  {
+    id: "google_calendar",
+    backendType: "google_calendar_trigger",
+    icon: Calendar,
+    label: "On Google Calendar event",
+    description: "Fires when a calendar event is about to start. Configure minutes-before to get an advance warning.",
+    color: "text-[#4285F4]",
+    bg: "bg-[#4285F4]/10",
+    border: "border-[#4285F4]/20",
+  },
+  {
+    id: "github_issue",
+    backendType: "github_issue_trigger",
+    icon: Github,
+    label: "On GitHub issue / PR",
+    description: "Polls a repo for new issues or pull requests. Filter by label or type.",
+    color: "text-zinc-300",
+    bg: "bg-zinc-500/10",
+    border: "border-zinc-500/20",
+  },
   // ── System ──────────────────────────────────────────────────────────────────
   {
     id: "error",
@@ -264,11 +319,11 @@ const TRIGGER_OPTIONS = [
 const GROUPS = [
   { label: "Core",         ids: ["manual", "cron", "webhook", "chat"] },
   { label: "Email",        ids: ["email", "imap"] },
-  { label: "Data",         ids: ["rss", "database"] },
+  { label: "Data",         ids: ["rss", "database", "youtube", "price_alert", "reddit"] },
   { label: "Messaging",    ids: ["telegram", "slack", "discord", "whatsapp"] },
-  { label: "Productivity", ids: ["gmail", "airtable", "notion", "hubspot"] },
+  { label: "Productivity", ids: ["gmail", "airtable", "notion", "hubspot", "google_calendar"] },
   { label: "Commerce",     ids: ["shopify", "stripe"] },
-  { label: "Dev Tools",    ids: ["github", "linear", "typeform"] },
+  { label: "Dev Tools",    ids: ["github", "linear", "typeform", "github_issue"] },
   { label: "System",       ids: ["error"] },
 ];
 
