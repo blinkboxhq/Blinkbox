@@ -72,11 +72,18 @@ export async function activateAutomation(req, res) {
     });
     if (!automation) throw new Error("Automation not found or access denied");
 
+    if (!automation.entryNodeId) {
+      throw new Error("No trigger node found. Please save your workflow before activating.");
+    }
+    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    if (!entryNode) {
+      throw new Error("Trigger node not found. Please save your workflow and try again.");
+    }
+
     validateAutomation(automation); // 🔒 Structural + logic validation
 
     const trigger = automation.trigger;
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
-    const cfg = entryNode?.data?.config || {};
+    const cfg = entryNode.data?.config || {};
 
     // ── Auto-register external webhooks ──────────────────────────────────────
     // Re-read entry node config after potential webhook registration

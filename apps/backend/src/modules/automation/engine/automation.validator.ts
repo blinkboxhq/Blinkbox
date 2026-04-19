@@ -37,6 +37,10 @@ export function validateAutomation(automation: {
 }): true {
   const { nodes, edges, entryNodeId } = automation;
 
+  if (!entryNodeId) {
+    throw new Error("No entry point configured. Add a trigger node and save first.");
+  }
+
   // ── Build Node Map ────────────────────────────────────────────────────────
   const nodeMap = new Set<string>();
   for (const node of nodes) {

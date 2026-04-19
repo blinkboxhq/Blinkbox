@@ -25,6 +25,20 @@ export const DEFAULT_SCHEMAS = {
     method: "string",
   },
   cron_trigger: { scheduledAt: "string", cronExpression: "string" },
+  imap_trigger: { subject: "string", from: "string", to: "string", body: "string", date: "string", messageId: "string", attachments: "array" },
+  rss_trigger: { title: "string", link: "string", pubDate: "string", content: "string", guid: "string", author: "string", feedUrl: "string" },
+  db_trigger: { row: "object", table: "string", operation: "string", timestamp: "string" },
+  telegram_trigger: { text: "string", from: "object", chat: "object", date: "number", messageId: "number", updateId: "number" },
+  slack_trigger: { text: "string", user: "string", channel: "string", ts: "string", event: "object", teamId: "string" },
+  discord_trigger: { content: "string", author: "object", channel_id: "string", guild_id: "string", message: "object" },
+  whatsapp_trigger: { text: "string", from: "string", phoneNumberId: "string", message: "object", contacts: "array" },
+  gmail_trigger: { subject: "string", from: "string", to: "string", body: "string", threadId: "string", messageId: "string", attachments: "array", snippet: "string" },
+  airtable_trigger: { id: "string", fields: "object", createdTime: "string", tableId: "string", record: "object" },
+  notion_trigger: { id: "string", properties: "object", url: "string", lastEditedTime: "string", page: "object" },
+  hubspot_trigger: { objectId: "string", objectType: "string", changeSource: "string", portalId: "string", event: "object" },
+  shopify_trigger: { id: "string", email: "string", total_price: "string", line_items: "array", order: "object", customer: "object" },
+  linear_trigger: { id: "string", title: "string", state: "object", assignee: "object", team: "object", issue: "object", priority: "number" },
+  typeform_trigger: { form_id: "string", token: "string", answers: "array", submitted_at: "string", form_response: "object" },
 
   // Core nodes
   http_request: {
