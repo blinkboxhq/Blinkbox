@@ -107,6 +107,14 @@ import pdfGenerator from "./pdfGenerator.node.js";
 // Virtual Computer
 import virtualComputer from "./virtualComputer.node.js";
 
+// Coding Agents
+import claudeCode    from "./integrations/claudeCode.node.js";
+import codex         from "./integrations/codex.node.js";
+import geminiCli     from "./integrations/geminiCli.node.js";
+import groq          from "./integrations/groq.node.js";
+import ollama        from "./integrations/ollama.node.js";
+import githubCopilot from "./integrations/githubCopilot.node.js";
+
 // New Integrations
 import elevenlabs from "./integrations/elevenlabs.node.js";
 import pinecone from "./integrations/pinecone.node.js";
@@ -294,6 +302,14 @@ export const nodeRegistry = {
 
   // Virtual Computer
   virtual_computer: virtualComputer,
+
+  // Coding Agents
+  claude_code:    claudeCode,
+  codex:          codex,
+  gemini_cli:     geminiCli,
+  groq:           groq,
+  ollama:         ollama,
+  github_copilot: githubCopilot,
 
   // New Integrations
   elevenlabs: elevenlabs,

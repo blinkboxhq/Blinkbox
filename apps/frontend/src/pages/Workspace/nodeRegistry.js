@@ -108,6 +108,7 @@ import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
+import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 
 // Config Panels — new integrations
 import GithubNode          from "./components/nodes/GithubNode";
@@ -491,6 +492,44 @@ export const NodeRegistry = {
   pdf_generator: {
     label: "PDF Generator", icon: FileOutput, colorClass: "text-rose-400", accentColor: "251,113,133",
     ConfigPanel: PDFGeneratorNode, category: "transform",
+  },
+
+  // ── Coding Agents ─────────────────────────────────────────────────────────
+  claude_code: {
+    label: "Claude Code", icon: Brain, logoUrl: imgAnthropic,
+    colorClass: "text-[#D4C1B3]", accentColor: "212,193,179",
+    ConfigPanel: makeCodingAgentNode({ label: "Claude Code", accent: "orange", credentialType: "Anthropic", defaultModel: "claude-sonnet-4-20250514", models: [{ value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4.6" }, { value: "claude-opus-4-20250514", label: "Claude Opus 4" }, { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" }] }),
+    category: "code",
+  },
+  codex: {
+    label: "Codex", icon: Brain, logoUrl: imgOpenAI,
+    colorClass: "text-[#10A37F]", accentColor: "16,163,127",
+    ConfigPanel: makeCodingAgentNode({ label: "Codex (GPT-4o)", accent: "emerald", credentialType: "OpenAI", defaultModel: "gpt-4o", models: [{ value: "gpt-4o", label: "GPT-4o" }, { value: "gpt-4o-mini", label: "GPT-4o Mini" }, { value: "o4-mini", label: "o4-mini" }] }),
+    category: "code",
+  },
+  gemini_cli: {
+    label: "Gemini CLI", icon: Brain, logoUrl: imgGemini,
+    colorClass: "text-[#4285F4]", accentColor: "66,133,244",
+    ConfigPanel: makeCodingAgentNode({ label: "Gemini CLI", accent: "blue", credentialType: "Gemini", defaultModel: "gemini-2.0-flash", models: [{ value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" }, { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }, { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" }] }),
+    category: "code",
+  },
+  groq: {
+    label: "Groq", icon: Zap, logoUrl: imgGrok,
+    colorClass: "text-[#F55036]", accentColor: "245,80,54",
+    ConfigPanel: makeCodingAgentNode({ label: "Groq", accent: "red", credentialType: "Groq", defaultModel: "llama-3.3-70b-versatile", models: [{ value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" }, { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" }, { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" }] }),
+    category: "code",
+  },
+  ollama: {
+    label: "Ollama", icon: Server,
+    colorClass: "text-zinc-300", accentColor: "212,212,216",
+    ConfigPanel: makeCodingAgentNode({ label: "Ollama (Local)", accent: "zinc", defaultModel: "llama3.2", hasBaseUrl: true }),
+    category: "code",
+  },
+  github_copilot: {
+    label: "GitHub Copilot", icon: Github,
+    colorClass: "text-zinc-200", accentColor: "244,244,245",
+    ConfigPanel: makeCodingAgentNode({ label: "GitHub Copilot", accent: "zinc", credentialType: "GitHub", defaultModel: "gpt-4o", models: [{ value: "gpt-4o", label: "GPT-4o (Copilot)" }] }),
+    category: "code",
   },
 
   virtual_computer: {

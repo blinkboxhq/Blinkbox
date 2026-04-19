@@ -192,6 +192,12 @@ export const DEFAULT_SCHEMAS = {
   resend: { id: "string", from: "string", to: "array", subject: "string", createdAt: "string", status: "string" },
   openai_assistant: { threadId: "string", runId: "string", lastMessage: "string", messages: "array", status: "string", usage: "object" },
   virtual_computer: { stdout: "string", stderr: "string", exitCode: "number", language: "string", executionTimeMs: "number", timedOut: "boolean" },
+  claude_code:    { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
+  codex:          { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
+  gemini_cli:     { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
+  groq:           { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
+  ollama:         { result: "string", code: "string", model: "string", operation: "string", provider: "string" },
+  github_copilot: { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
 };
 
 /**
