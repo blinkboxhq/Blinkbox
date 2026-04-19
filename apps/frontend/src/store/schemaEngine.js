@@ -167,6 +167,30 @@ export const DEFAULT_SCHEMAS = {
 
   // Web Browser
   web_search: { answer: "string", results: "array", query: "string", responseTime: "number" },
+
+  // New Triggers
+  youtube_trigger: { videoId: "string", title: "string", description: "string", publishedAt: "string", channelId: "string", channelTitle: "string", thumbnailUrl: "string", url: "string" },
+  price_alert_trigger: { coinId: "string", currentPrice: "number", priceChange24h: "number", priceChangePercent24h: "number", marketCap: "number", currency: "string", condition: "string", threshold: "number", triggeredAt: "string" },
+  reddit_trigger: { id: "string", title: "string", selftext: "string", url: "string", score: "number", numComments: "number", author: "string", subreddit: "string", created: "string", permalink: "string", isNSFW: "boolean", flair: "string" },
+  google_calendar_trigger: { eventId: "string", title: "string", description: "string", startTime: "string", endTime: "string", location: "string", attendees: "array", organizer: "string", meetLink: "string", status: "string", htmlLink: "string" },
+  github_issue_trigger: { id: "number", number: "number", title: "string", body: "string", state: "string", url: "string", author: "string", labels: "array", createdAt: "string", type: "string" },
+
+  // New Utility Nodes
+  qr_code: { dataUrl: "string", content: "string", size: "number", format: "string" },
+  text_splitter: { chunks: "array", chunkCount: "number", totalLength: "number" },
+  template_renderer: { rendered: "string", templateLength: "number", outputLength: "number" },
+  json_validator: { valid: "boolean", data: "object", errors: "array", errorCount: "number" },
+  switch: { value: "string", matchedCase: "string", isDefault: "boolean" },
+  image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },
+  aggregate: { items: "array", count: "number", sessionId: "string", completedAt: "string" },
+  pdf_generator: { pdf: "string", filename: "string", sizeBytes: "number", mimeType: "string" },
+
+  // New Integrations
+  elevenlabs: { audioBase64: "string", mimeType: "string", voiceId: "string", model: "string", characterCount: "number" },
+  pinecone: { matches: "array", upsertedCount: "number", namespace: "string" },
+  zoom: { meetingId: "string", topic: "string", joinUrl: "string", startUrl: "string", password: "string", startTime: "string", duration: "number" },
+  resend: { id: "string", from: "string", to: "array", subject: "string", createdAt: "string", status: "string" },
+  openai_assistant: { threadId: "string", runId: "string", lastMessage: "string", messages: "array", status: "string", usage: "object" },
 };
 
 /**

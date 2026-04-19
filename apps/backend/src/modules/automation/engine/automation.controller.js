@@ -11,6 +11,11 @@ import { syncGmailJobs } from "../../../infra/gmail.poller.js";
 import { syncAirtableJobs } from "../../../infra/airtable.poller.js";
 import { syncNotionJobs } from "../../../infra/notion.poller.js";
 import { syncHubSpotJobs } from "../../../infra/hubspot.poller.js";
+import { syncYouTubeJobs } from "../../../infra/youtube.poller.js";
+import { syncPriceAlertJobs } from "../../../infra/priceAlert.poller.js";
+import { syncRedditJobs } from "../../../infra/reddit.poller.js";
+import { syncGoogleCalendarJobs } from "../../../infra/googleCalendar.poller.js";
+import { syncGitHubIssueJobs } from "../../../infra/githubIssue.poller.js";
 import { registerGitHubWebhook, unregisterGitHubWebhook } from "../../../infra/github.webhook.js";
 import { registerStripeWebhook, unregisterStripeWebhook } from "../../../infra/stripe.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
@@ -126,6 +131,11 @@ export async function activateAutomation(req, res) {
     if (trigger === "airtable_trigger") syncAirtableJobs().catch(console.error);
     if (trigger === "notion_trigger")  syncNotionJobs().catch(console.error);
     if (trigger === "hubspot_trigger") syncHubSpotJobs().catch(console.error);
+    if (trigger === "youtube_trigger") syncYouTubeJobs().catch(console.error);
+    if (trigger === "price_alert_trigger") syncPriceAlertJobs().catch(console.error);
+    if (trigger === "reddit_trigger") syncRedditJobs().catch(console.error);
+    if (trigger === "google_calendar_trigger") syncGoogleCalendarJobs().catch(console.error);
+    if (trigger === "github_issue_trigger") syncGitHubIssueJobs().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {

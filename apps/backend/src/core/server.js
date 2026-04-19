@@ -12,6 +12,11 @@ import { startGmailPoller } from "../infra/gmail.poller.js";
 import { startAirtablePoller } from "../infra/airtable.poller.js";
 import { startNotionPoller } from "../infra/notion.poller.js";
 import { startHubSpotPoller } from "../infra/hubspot.poller.js";
+import { startYouTubePoller } from "../infra/youtube.poller.js";
+import { startPriceAlertPoller } from "../infra/priceAlert.poller.js";
+import { startRedditPoller } from "../infra/reddit.poller.js";
+import { startGoogleCalendarPoller } from "../infra/googleCalendar.poller.js";
+import { startGitHubIssuePoller } from "../infra/githubIssue.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -50,6 +55,13 @@ export async function startServer() {
   await startAirtablePoller();
   await startNotionPoller();
   await startHubSpotPoller();
+
+  // 4e. Start new pollers
+  await startYouTubePoller();
+  await startPriceAlertPoller();
+  await startRedditPoller();
+  await startGoogleCalendarPoller();
+  await startGitHubIssuePoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

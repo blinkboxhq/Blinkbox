@@ -94,6 +94,23 @@ import shopify from "./integrations/shopify.node.js";
 // Integrations: Social Media
 import twitter from "./integrations/twitter.node.js";
 
+// New Utility Nodes
+import qrCode from "./qrCode.node.js";
+import textSplitter from "./textSplitter.node.js";
+import templateRenderer from "./templateRenderer.node.js";
+import jsonValidator from "./jsonValidator.node.js";
+import switchNode from "./switch.node.js";
+import imageResize from "./imageResize.node.js";
+import aggregate from "./aggregate.node.js";
+import pdfGenerator from "./pdfGenerator.node.js";
+
+// New Integrations
+import elevenlabs from "./integrations/elevenlabs.node.js";
+import pinecone from "./integrations/pinecone.node.js";
+import zoom from "./integrations/zoom.node.js";
+import resend from "./integrations/resend.node.js";
+import openaiAssistant from "./integrations/openaiAssistant.node.js";
+
 export const nodeRegistry = {
   // Triggers (genesis nodes)
   manual: { async run(config, input) { return input; } },
@@ -254,6 +271,30 @@ export const nodeRegistry = {
 
   // Social Media
   twitter: twitter,
+
+  // New Utility Nodes
+  qr_code: qrCode,
+  text_splitter: textSplitter,
+  template_renderer: templateRenderer,
+  json_validator: jsonValidator,
+  switch: switchNode,
+  image_resize: imageResize,
+  aggregate: aggregate,
+  pdf_generator: pdfGenerator,
+
+  // New Trigger pass-throughs (pollers fire; node just returns input)
+  youtube_trigger: { async run(config, input) { return input?.body ?? input; } },
+  price_alert_trigger: { async run(config, input) { return input?.body ?? input; } },
+  reddit_trigger: { async run(config, input) { return input?.body ?? input; } },
+  google_calendar_trigger: { async run(config, input) { return input?.body ?? input; } },
+  github_issue_trigger: { async run(config, input) { return input?.body ?? input; } },
+
+  // New Integrations
+  elevenlabs: elevenlabs,
+  pinecone: pinecone,
+  zoom: zoom,
+  resend: resend,
+  openai_assistant: openaiAssistant,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,

@@ -14,6 +14,10 @@ import {
   Circle,
   FileText,
   Users,
+  Youtube,
+  TrendingUp,
+  MessageSquarePlus,
+  Calendar,
 } from "lucide-react";
 
 import TriggerNode         from "./components/nodes/TriggerNode";
@@ -40,6 +44,11 @@ import ShopifyTriggerNode  from "./components/nodes/ShopifyTriggerNode";
 import LinearTriggerNode   from "./components/nodes/LinearTriggerNode";
 import TypeformTriggerNode from "./components/nodes/TypeformTriggerNode";
 import WhatsAppTriggerNode from "./components/nodes/WhatsAppTriggerNode";
+import YouTubeTriggerNode        from "./components/nodes/YouTubeTriggerNode";
+import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode";
+import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
+import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
+import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
 
 import imgTelegram from "../../assets/telegram.png";
 import imgSlack    from "../../assets/slack.png";
@@ -234,5 +243,47 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
     ConfigPanel: TypeformTriggerNode,
+  },
+
+  // ── New triggers ────────────────────────────────────────────────────────────
+  youtube: {
+    backendType: "youtube_trigger",
+    icon: Youtube,
+    label: "On YouTube Video",
+    colorClass: "text-red-400",
+    accentColor: "248,113,113",
+    ConfigPanel: YouTubeTriggerNode,
+  },
+  price_alert: {
+    backendType: "price_alert_trigger",
+    icon: TrendingUp,
+    label: "On Crypto Price Alert",
+    colorClass: "text-yellow-400",
+    accentColor: "250,204,21",
+    ConfigPanel: PriceAlertTriggerNode,
+  },
+  reddit: {
+    backendType: "reddit_trigger",
+    icon: MessageSquarePlus,
+    label: "On Reddit Post",
+    colorClass: "text-orange-400",
+    accentColor: "251,146,60",
+    ConfigPanel: RedditTriggerNode,
+  },
+  google_calendar: {
+    backendType: "google_calendar_trigger",
+    icon: Calendar,
+    label: "On Calendar Event",
+    colorClass: "text-[#4285F4]",
+    accentColor: "66,133,244",
+    ConfigPanel: GoogleCalendarTriggerNode,
+  },
+  github_issue: {
+    backendType: "github_issue_trigger",
+    icon: Github,
+    label: "On GitHub Issue / PR",
+    colorClass: "text-zinc-200",
+    accentColor: "244,244,245",
+    ConfigPanel: GitHubIssueTriggerNode,
   },
 };

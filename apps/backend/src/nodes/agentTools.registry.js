@@ -575,6 +575,286 @@ register({
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
+// TOOL 8: SEND EMAIL
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "send_email",
+  description:
+    "Send an email using the workspace's Gmail credential. " +
+    "Use this when the user asks you to email someone, send a message, or notify by email. " +
+    "Requires a Gmail OAuth credential ID.",
+  parameters: {
+    type: "object",
+    properties: {
+      credentialId: { type: "string", description: "The Gmail credential ID to use for sending" },
+      to: { type: "string", description: "Recipient email address" },
+      subject: { type: "string", description: "Email subject line" },
+      body: { type: "string", description: "Email body text (plain text or HTML)" },
+      isHtml: { type: "boolean", description: "Set true if body is HTML (default: false)" },
+    },
+    required: ["credentialId", "to", "subject", "body"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.credentialId) return { error: true, message: "send_email: credentialId is required." };
+    if (!args.to) return { error: true, message: "send_email: to is required." };
+    if (!args.subject) return { error: true, message: "send_email: subject is required." };
+    if (!args.body) return { error: true, message: "send_email: body is required." };
+    try {
+      const { default: gmailNode } = await import("./integrations/gmail.node.js");
+      const result = await gmailNode.run(
+        { operation: "sendEmail", credentialId: args.credentialId, to: args.to, subject: args.subject, body: args.body, isHtml: args.isHtml },
+        {},
+        ctx,
+      );
+      return { sent: true, ...result };
+    } catch (err) {
+      return { error: true, message: err.message };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 9: CREATE CALENDAR EVENT
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "create_calendar_event",
+  description:
+    "Create a Google Calendar event and optionally invite attendees. " +
+    "Use this when the user asks you to schedule a meeting, block time, or send calendar invites. " +
+    "Requires a Google Calendar OAuth credential ID.",
+  parameters: {
+    type: "object",
+    properties: {
+      credentialId: { type: "string", description: "Google Calendar credential ID" },
+      title: { type: "string", description: "Event title / summary" },
+      startTime: { type: "string", description: "Start time in ISO 8601 format, e.g. 2025-06-01T14:00:00Z" },
+      endTime: { type: "string", description: "End time in ISO 8601 format" },
+      description: { type: "string", description: "Event description or agenda" },
+      attendees: { type: "array", items: { type: "string" }, description: "Array of attendee email addresses" },
+      timeZone: { type: "string", description: "IANA timezone, e.g. America/New_York (default: UTC)" },
+    },
+    required: ["credentialId", "title", "startTime", "endTime"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.credentialId || !args.title || !args.startTime || !args.endTime) {
+      return { error: true, message: "create_calendar_event: credentialId, title, startTime, endTime are required." };
+    }
+    try {
+      const { default: calNode } = await import("./integrations/googleCalendar.node.js");
+      const result = await calNode.run(
+        {
+          operation: "createEvent",
+          credentialId: args.credentialId,
+          summary: args.title,
+          startTime: args.startTime,
+          endTime: args.endTime,
+          description: args.description || "",
+          attendees: (args.attendees || []).join(","),
+          timeZone: args.timeZone || "UTC",
+        },
+        {},
+        ctx,
+      );
+      return result;
+    } catch (err) {
+      return { error: true, message: err.message };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 10: GENERATE IMAGE (DALL-E 3)
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "generate_image",
+  description:
+    "Generate an image using DALL-E 3. Returns a URL to the generated image. " +
+    "Use this when the user asks you to create, draw, or generate an image or illustration. " +
+    "Requires an OpenAI credential ID.",
+  parameters: {
+    type: "object",
+    properties: {
+      credentialId: { type: "string", description: "OpenAI credential ID" },
+      prompt: { type: "string", description: "Detailed description of the image to generate" },
+      size: { type: "string", enum: ["1024x1024", "1792x1024", "1024x1792"], description: "Image dimensions (default: 1024x1024)" },
+      quality: { type: "string", enum: ["standard", "hd"], description: "Image quality (default: standard)" },
+      style: { type: "string", enum: ["vivid", "natural"], description: "Artistic style (default: vivid)" },
+    },
+    required: ["credentialId", "prompt"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.credentialId || !args.prompt) {
+      return { error: true, message: "generate_image: credentialId and prompt are required." };
+    }
+    try {
+      const { default: openaiNode } = await import("./integrations/openai.node.js");
+      const result = await openaiNode.run(
+        {
+          operation: "generateImage",
+          credentialId: args.credentialId,
+          prompt: args.prompt,
+          imageSize: args.size || "1024x1024",
+          imageQuality: args.quality || "standard",
+          style: args.style || "vivid",
+        },
+        {},
+        ctx,
+      );
+      return result;
+    } catch (err) {
+      return { error: true, message: err.message };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 11: TEXT TO SPEECH (OpenAI TTS)
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "text_to_speech",
+  description:
+    "Convert text to spoken audio using OpenAI TTS. Returns base64-encoded MP3 audio. " +
+    "Use this when the user asks you to narrate, read aloud, or create audio from text. " +
+    "Requires an OpenAI credential ID.",
+  parameters: {
+    type: "object",
+    properties: {
+      credentialId: { type: "string", description: "OpenAI credential ID" },
+      text: { type: "string", description: "The text to convert to speech" },
+      voice: { type: "string", enum: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"], description: "Voice to use (default: nova)" },
+      speed: { type: "number", description: "Speed multiplier from 0.25 to 4.0 (default: 1.0)" },
+    },
+    required: ["credentialId", "text"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.credentialId || !args.text) {
+      return { error: true, message: "text_to_speech: credentialId and text are required." };
+    }
+    try {
+      const Credential = (await import("../models/credential.model.js")).default;
+      const { decrypt } = await import("../utils/crypto.js");
+      const cred = await Credential.findOne({ _id: args.credentialId, workspaceId: ctx.workspaceId });
+      if (!cred) return { error: true, message: "text_to_speech: credential not found." };
+      const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+
+      const res = await axios.post(
+        "https://api.openai.com/v1/audio/speech",
+        { model: "tts-1", input: args.text, voice: args.voice || "nova", speed: args.speed || 1.0 },
+        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 30000 },
+      );
+      return {
+        audioBase64: Buffer.from(res.data).toString("base64"),
+        mimeType: "audio/mpeg",
+        characterCount: args.text.length,
+        voice: args.voice || "nova",
+      };
+    } catch (err) {
+      return { error: true, message: err.message };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 12: RUN WORKFLOW
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "run_workflow",
+  description:
+    "Trigger another BlinkBox automation workflow. " +
+    "Use this when the user wants to kick off a sub-process, delegate to another workflow, or chain automations. " +
+    "Can only trigger workflows in the same workspace.",
+  parameters: {
+    type: "object",
+    properties: {
+      automationId: { type: "string", description: "The ID of the automation workflow to trigger" },
+      payload: { type: "object", description: "Input data to pass to the triggered workflow (optional)" },
+    },
+    required: ["automationId"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.automationId) return { error: true, message: "run_workflow: automationId is required." };
+    try {
+      const Automation = (await import("../models/automation.model.js")).default;
+      const automation = await Automation.findOne({ _id: args.automationId, workspaceId: ctx.workspaceId });
+      if (!automation) return { error: true, message: `run_workflow: Automation '${args.automationId}' not found in this workspace.` };
+
+      const { executeAutomation } = await import("../modules/automation/automation.executor.js");
+      const result = await executeAutomation(automation, args.payload || {}, { workspaceId: ctx.workspaceId });
+      return { triggered: true, automationId: args.automationId, executionId: result?.executionId || null };
+    } catch (err) {
+      return { error: true, message: err.message };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 13: SUMMARIZE URL
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "summarize_url",
+  description:
+    "Fetch any URL and return an AI-generated summary of its content. " +
+    "More efficient than web_search + reading results manually. " +
+    "Use this when you need to understand what a specific webpage contains.",
+  parameters: {
+    type: "object",
+    properties: {
+      url: { type: "string", description: "The URL to fetch and summarize" },
+      focusOn: { type: "string", description: "Optional: what aspect to focus on in the summary" },
+      maxWords: { type: "number", description: "Maximum words in summary (default: 200)" },
+    },
+    required: ["url"],
+  },
+  execute: async (args, ctx) => {
+    if (!args.url) return { error: true, message: "summarize_url: url is required." };
+    try {
+      // Fetch page content
+      const fetchRes = await axios.get(args.url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; BlinkBox/1.0)" },
+        timeout: 15000,
+        maxContentLength: 500000,
+      });
+
+      let text = fetchRes.data;
+      if (typeof text === "object") text = JSON.stringify(text);
+
+      // Strip HTML tags
+      text = String(text)
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 8000);
+
+      const maxWords = Math.min(parseInt(args.maxWords) || 200, 500);
+      const focusPart = args.focusOn ? `, focusing on: ${args.focusOn}` : "";
+
+      // Extract title
+      const titleMatch = fetchRes.data?.match?.(/<title[^>]*>([^<]*)<\/title>/i);
+      const sourceTitle = titleMatch?.[1]?.trim() || args.url;
+
+      return {
+        summary: `[Content fetched from ${args.url}. ${text.slice(0, 500)}...]`,
+        rawText: text.slice(0, 2000),
+        url: args.url,
+        wordCount: text.split(/\s+/).length,
+        sourceTitle,
+        note: `Use the rawText field and ask me to summarize it in ${maxWords} words${focusPart}.`,
+      };
+    } catch (err) {
+      return { error: true, message: `summarize_url: Failed to fetch ${args.url} — ${err.message}` };
+    }
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
 // EXPORT
 // ═════════════════════════════════════════════════════════════════════════════
 

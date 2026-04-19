@@ -3,7 +3,9 @@ import {
   Sparkles, MousePointerClick, Webhook, Clock, Brain, Filter, ArrowUpDown,
   Layers, LayoutGrid, FileText, Calendar, Shield, Tags, Scissors, Wand2,
   Github, CreditCard, Ticket, Circle, ShoppingBag, Twitter, Users, Merge,
-  CheckSquare, Server,
+  CheckSquare, Server, QrCode, SplitSquareHorizontal, AlignLeft, CheckCircle2,
+  GitFork, Image, Package, FileOutput, Mic2, Box, Video, MessageSquarePlus,
+  TrendingUp, Youtube,
 } from "lucide-react";
 
 // Local asset icons
@@ -85,6 +87,26 @@ import CryptoUtilsNode  from "./components/nodes/CryptoUtilsNode";
 import AIClassifyNode   from "./components/nodes/AIClassifyNode";
 import AIExtractNode    from "./components/nodes/AIExtractNode";
 import AITransformNode  from "./components/nodes/AITransformNode";
+
+// Config Panels — Innovation Sprint nodes
+import QRCodeNode           from "./components/nodes/QRCodeNode";
+import TextSplitterNode     from "./components/nodes/TextSplitterNode";
+import TemplateRendererNode from "./components/nodes/TemplateRendererNode";
+import JSONValidatorNode    from "./components/nodes/JSONValidatorNode";
+import SwitchNode           from "./components/nodes/SwitchNode";
+import ImageResizeNode      from "./components/nodes/ImageResizeNode";
+import AggregateNode        from "./components/nodes/AggregateNode";
+import PDFGeneratorNode     from "./components/nodes/PDFGeneratorNode";
+import ElevenLabsNode       from "./components/nodes/ElevenLabsNode";
+import PineconeNode         from "./components/nodes/PineconeNode";
+import ZoomNode             from "./components/nodes/ZoomNode";
+import ResendNode           from "./components/nodes/ResendNode";
+import OpenAIAssistantNode  from "./components/nodes/OpenAIAssistantNode";
+import YouTubeTriggerNode        from "./components/nodes/YouTubeTriggerNode";
+import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode";
+import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
+import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
+import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
 
 // Config Panels — new integrations
 import GithubNode          from "./components/nodes/GithubNode";
@@ -412,5 +434,83 @@ export const NodeRegistry = {
   twitter: {
     label: "Twitter / X", icon: Twitter, colorClass: "text-[#1DA1F2]", accentColor: "29,161,242",
     ConfigPanel: TwitterNode, category: "social",
+  },
+
+  // ── New Triggers ───────────────────────────────────────────────────────────
+  youtube_trigger: {
+    label: "YouTube Trigger", icon: Youtube, colorClass: "text-red-400", accentColor: "248,113,113",
+    ConfigPanel: YouTubeTriggerNode, category: "trigger",
+  },
+  price_alert_trigger: {
+    label: "Price Alert Trigger", icon: TrendingUp, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    ConfigPanel: PriceAlertTriggerNode, category: "trigger",
+  },
+  reddit_trigger: {
+    label: "Reddit Trigger", icon: MessageSquarePlus, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: RedditTriggerNode, category: "trigger",
+  },
+  google_calendar_trigger: {
+    label: "Google Calendar Trigger", icon: Calendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
+    ConfigPanel: GoogleCalendarTriggerNode, category: "trigger",
+  },
+  github_issue_trigger: {
+    label: "GitHub Issue / PR Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
+    ConfigPanel: GitHubIssueTriggerNode, category: "trigger",
+  },
+
+  // ── New Utility Nodes ──────────────────────────────────────────────────────
+  qr_code: {
+    label: "QR Code", icon: QrCode, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: QRCodeNode, category: "transform",
+  },
+  text_splitter: {
+    label: "Text Splitter", icon: SplitSquareHorizontal, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: TextSplitterNode, category: "transform",
+  },
+  template_renderer: {
+    label: "Template Renderer", icon: AlignLeft, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: TemplateRendererNode, category: "transform",
+  },
+  json_validator: {
+    label: "JSON Validator", icon: CheckCircle2, colorClass: "text-red-400", accentColor: "248,113,113",
+    ConfigPanel: JSONValidatorNode, category: "transform",
+  },
+  switch: {
+    label: "Switch", icon: GitFork, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: SwitchNode, category: "flow",
+  },
+  image_resize: {
+    label: "Image Resize", icon: Image, colorClass: "text-fuchsia-400", accentColor: "232,121,249",
+    ConfigPanel: ImageResizeNode, category: "transform",
+  },
+  aggregate: {
+    label: "Aggregate", icon: Package, colorClass: "text-teal-400", accentColor: "45,212,191",
+    ConfigPanel: AggregateNode, category: "flow",
+  },
+  pdf_generator: {
+    label: "PDF Generator", icon: FileOutput, colorClass: "text-rose-400", accentColor: "251,113,133",
+    ConfigPanel: PDFGeneratorNode, category: "transform",
+  },
+
+  // ── New Integration Nodes ──────────────────────────────────────────────────
+  elevenlabs: {
+    label: "ElevenLabs", icon: Mic2, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: ElevenLabsNode, category: "integration",
+  },
+  pinecone: {
+    label: "Pinecone", icon: Box, colorClass: "text-green-400", accentColor: "74,222,128",
+    ConfigPanel: PineconeNode, category: "data",
+  },
+  zoom: {
+    label: "Zoom", icon: Video, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: ZoomNode, category: "integration",
+  },
+  resend: {
+    label: "Resend", icon: Mail, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: ResendNode, category: "integration",
+  },
+  openai_assistant: {
+    label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
+    ConfigPanel: OpenAIAssistantNode, category: "ai",
   },
 };

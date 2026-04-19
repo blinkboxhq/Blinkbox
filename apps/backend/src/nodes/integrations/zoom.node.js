@@ -1,0 +1,113 @@
+/**
+ * ZOOM NODE
+ * Operations: createMeeting, getMeeting, listMeetings, deleteMeeting, updateMeeting
+ */
+import axios from "axios";
+import { resolveCredential } from "../../utils/resolveCredential.js";
+import { decrypt } from "../../utils/crypto.js";
+
+const BASE = "https://api.zoom.us/v2";
+
+async function getToken(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "Zoom");
+  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+}
+
+function handleError(err) {
+  if (err.response?.status === 401) throw new Error("Zoom: Invalid or expired token.");
+  if (err.response?.status === 404) throw new Error("Zoom: Meeting not found.");
+  if (err.response?.status === 400) throw new Error(`Zoom: Bad request — ${err.response?.data?.message || err.message}`);
+  throw new Error(`Zoom failed: ${err.response?.status || err.code} — ${err.message}`);
+}
+
+function headers(token) {
+  return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+}
+
+async function opCreateMeeting(config, token) {
+  const body = {
+    topic: config.topic || "Meeting",
+    type: parseInt(config.type) || 2,
+    duration: parseInt(config.duration) || 60,
+    timezone: config.timezone || "UTC",
+    agenda: config.agenda || "",
+    settings: { host_video: true, participant_video: true },
+  };
+  if (config.startTime) body.start_time = config.startTime;
+  if (config.password) body.password = config.password;
+
+  const userId = config.userId || "me";
+  const res = await axios.post(`${BASE}/users/${userId}/meetings`, body, { headers: headers(token), timeout: 15000 });
+  const m = res.data;
+  return {
+    meetingId: String(m.id),
+    topic: m.topic,
+    joinUrl: m.join_url,
+    startUrl: m.start_url,
+    password: m.password,
+    startTime: m.start_time,
+    duration: m.duration,
+    timezone: m.timezone,
+  };
+}
+
+async function opGetMeeting(config, token) {
+  if (!config.meetingId) throw new Error("Zoom getMeeting: 'meetingId' is required.");
+  const res = await axios.get(`${BASE}/meetings/${config.meetingId}`, { headers: headers(token), timeout: 10000 });
+  const m = res.data;
+  return { meetingId: String(m.id), topic: m.topic, joinUrl: m.join_url, startTime: m.start_time, duration: m.duration, status: m.status };
+}
+
+async function opListMeetings(config, token) {
+  const userId = config.userId || "me";
+  const type = config.listType || "scheduled";
+  const res = await axios.get(`${BASE}/users/${userId}/meetings?type=${type}&page_size=30`, { headers: headers(token), timeout: 10000 });
+  return { meetings: res.data.meetings || [], total: res.data.total_records };
+}
+
+async function opDeleteMeeting(config, token) {
+  if (!config.meetingId) throw new Error("Zoom deleteMeeting: 'meetingId' is required.");
+  await axios.delete(`${BASE}/meetings/${config.meetingId}`, { headers: headers(token), timeout: 10000 });
+  return { deleted: true, meetingId: config.meetingId };
+}
+
+async function opUpdateMeeting(config, token) {
+  if (!config.meetingId) throw new Error("Zoom updateMeeting: 'meetingId' is required.");
+  const body = {};
+  if (config.topic) body.topic = config.topic;
+  if (config.startTime) body.start_time = config.startTime;
+  if (config.duration) body.duration = parseInt(config.duration);
+  if (config.agenda) body.agenda = config.agenda;
+  if (config.password) body.password = config.password;
+  await axios.patch(`${BASE}/meetings/${config.meetingId}`, body, { headers: headers(token), timeout: 10000 });
+  return { updated: true, meetingId: config.meetingId };
+}
+
+const OPERATIONS = {
+  createMeeting: opCreateMeeting,
+  getMeeting: opGetMeeting,
+  listMeetings: opListMeetings,
+  deleteMeeting: opDeleteMeeting,
+  updateMeeting: opUpdateMeeting,
+};
+
+export default {
+  async run(config, input, context = {}) {
+    const operation = config.operation || "createMeeting";
+    const handler = OPERATIONS[operation];
+    if (!handler) throw new Error(`Zoom: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
+
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (err) {
+      handleError(err);
+    }
+
+    try {
+      return await handler(config, token);
+    } catch (err) {
+      handleError(err);
+    }
+  },
+};
