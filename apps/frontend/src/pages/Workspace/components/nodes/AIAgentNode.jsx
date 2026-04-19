@@ -10,6 +10,7 @@ import {
   Cpu,
   AlertTriangle,
   Sparkles,
+  Clock,
 } from "lucide-react";
 import { LuBrainCircuit, LuWrench } from "react-icons/lu";
 import {
@@ -75,6 +76,26 @@ const AGENT_TOOLS = [
     bg: "bg-cyan-500/10",
     border: "border-cyan-500/20",
     activeRing: "ring-cyan-500/30",
+  },
+  {
+    id: "datetime",
+    label: "Date & Time",
+    desc: "Know current date/time/day",
+    icon: Clock,
+    color: "#f59e0b",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    activeRing: "ring-amber-500/30",
+  },
+  {
+    id: "think",
+    label: "Think (Scratchpad)",
+    desc: "Step-by-step reasoning",
+    icon: LuBrainCircuit,
+    color: "#8b5cf6",
+    bg: "bg-violet-500/10",
+    border: "border-violet-500/20",
+    activeRing: "ring-violet-500/30",
   },
 ];
 
@@ -310,7 +331,53 @@ export default function AIAgentNode({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          ELEMENT 2: Give Agent Access To (visual tool toggles)
+          ELEMENT 2: Conversation Memory
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              Conversation Memory
+            </label>
+            <span className="text-[9px] text-zinc-600">Remember chat history between runs</span>
+          </div>
+          <button
+            onClick={() => updateConfig("conversationMemoryEnabled", !config.conversationMemoryEnabled)}
+            className={`relative w-8 h-[18px] rounded-full transition-colors duration-200 ${config.conversationMemoryEnabled ? "bg-violet-500" : "bg-zinc-700"}`}
+          >
+            <span className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] rounded-full bg-white transition-transform duration-200 ${config.conversationMemoryEnabled ? "translate-x-[14px]" : "translate-x-0"}`} />
+          </button>
+        </div>
+        {config.conversationMemoryEnabled && (
+          <div className="flex flex-col gap-2 pl-1 border-l-2 border-violet-500/20">
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] text-zinc-600 uppercase tracking-wider">Session ID</label>
+              <SmartVariableInput
+                value={config.memorySessionId || ""}
+                onChange={(val) => updateConfig("memorySessionId", val)}
+                placeholder="{{telegram_trigger.chat.id}}"
+                nodeId={nodeId}
+              />
+              <p className="text-[9px] text-zinc-700">Unique ID per conversation (e.g. chat ID)</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] text-zinc-600 uppercase tracking-wider">Remember last N messages</label>
+              <input
+                type="number"
+                min="4"
+                max="100"
+                step="2"
+                value={config.memoryMaxMessages ?? 20}
+                onChange={(e) => updateConfig("memoryMaxMessages", parseInt(e.target.value))}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 font-mono outline-none focus:border-violet-500/40 transition-colors"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          ELEMENT 3: Give Agent Access To (visual tool toggles)
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="flex flex-col gap-2.5">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
@@ -341,7 +408,7 @@ export default function AIAgentNode({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          ELEMENT 3: Advanced Accordion (hidden by default)
+          ELEMENT 4: Advanced Accordion (hidden by default)
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="flex flex-col border-t border-zinc-800/40 pt-3">
         <button

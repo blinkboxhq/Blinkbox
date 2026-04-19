@@ -49,6 +49,7 @@
 import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
+import { redis } from "../infra/redis.client.js";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -178,6 +179,11 @@ const agentNode = {
       builtinWebSearch = false,
       webSearchCredentialId,
 
+      // Conversation memory
+      conversationMemoryEnabled = false,
+      memorySessionId,
+      memoryMaxMessages = 20,
+
       // Legacy compat — old configs may still send agentType
       agentType: _legacyAgentType,
     } = config;
@@ -203,6 +209,27 @@ const agentNode = {
       "AI Agent"
     );
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+
+    // ── Conversation Memory — load from Redis ─────────────────────
+    const memKey = conversationMemoryEnabled && memorySessionId
+      ? `bb:conv:${context.workspaceId}:${String(memorySessionId).slice(0, 200)}`
+      : null;
+
+    let conversationHistory = [];
+    if (memKey) {
+      try {
+        const stored = await redis.get(memKey);
+        if (stored) {
+          conversationHistory = JSON.parse(stored);
+          const cap = memoryMaxMessages * 2;
+          if (conversationHistory.length > cap) {
+            conversationHistory = conversationHistory.slice(-cap);
+          }
+        }
+      } catch {
+        conversationHistory = [];
+      }
+    }
 
     // ── Assemble Tool Surface ──────────────────────────────────────────
     // Three sources merged into one flat array:
@@ -259,6 +286,10 @@ const agentNode = {
     const messages = [];
 
     for (const msg of memoryMessages) {
+      messages.push(msg);
+    }
+
+    for (const msg of conversationHistory) {
       messages.push(msg);
     }
 
@@ -343,6 +374,22 @@ const agentNode = {
 
       if (outputFormat === "json") {
         result = parseJsonResponse(result);
+      }
+
+      // ── Save conversation turn to Redis ───────────────────────────
+      if (memKey) {
+        try {
+          const assistantText = typeof result === "string" ? result : JSON.stringify(result);
+          const updated = [
+            ...conversationHistory,
+            { role: "user", content: userContent },
+            { role: "assistant", content: assistantText },
+          ];
+          const cap = memoryMaxMessages * 2;
+          await redis.set(memKey, JSON.stringify(updated.slice(-cap)), "EX", 60 * 60 * 24 * 7);
+        } catch {
+          // Non-fatal: continue without saving
+        }
       }
 
       return buildOutput({

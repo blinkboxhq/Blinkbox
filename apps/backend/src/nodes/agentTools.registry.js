@@ -525,6 +525,56 @@ register({
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
+// TOOL 6: DATETIME
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "datetime",
+  description:
+    "Get the current date, time, day of week, and Unix timestamp. " +
+    "Use this whenever you need to know what time or date it is right now.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+  },
+  execute: async () => {
+    const now = new Date();
+    return {
+      iso: now.toISOString(),
+      date: now.toISOString().split("T")[0],
+      time: now.toTimeString().split(" ")[0],
+      dayOfWeek: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][now.getDay()],
+      unixTimestamp: Math.floor(now.getTime() / 1000),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+  },
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TOOL 7: THINK (Scratchpad)
+// ═════════════════════════════════════════════════════════════════════════════
+
+register({
+  name: "think",
+  description:
+    "Use this to reason through a problem step by step before acting. " +
+    "Write your thoughts as the input — no external action is taken. " +
+    "The output is your own thought returned back. Use this to plan, reflect, or work through complex logic.",
+  parameters: {
+    type: "object",
+    properties: {
+      thought: {
+        type: "string",
+        description: "Your reasoning, plan, or reflection",
+      },
+    },
+    required: ["thought"],
+  },
+  execute: async ({ thought }) => ({ thought, acknowledged: true }),
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
 // EXPORT
 // ═════════════════════════════════════════════════════════════════════════════
 

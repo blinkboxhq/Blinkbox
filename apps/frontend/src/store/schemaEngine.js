@@ -123,7 +123,7 @@ export const DEFAULT_SCHEMAS = {
   },
   web_scraper: { content: "string", metadata: "object" },
   ai_agent: {
-    result: "object",
+    result: "string",
     model: "string",
     tokensUsed: "number",
     provider: "string",
