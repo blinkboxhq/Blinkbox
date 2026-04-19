@@ -294,7 +294,7 @@ export async function processCursor({ executionId, cursorId }) {
       }
 
       let rawOutput = await withTimeout(
-        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry }),
+        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
         NODE_TIMEOUT_MS,
       );
 

@@ -66,9 +66,9 @@ async function call(token, method, payload) {
 // ── Handlers ────────────────────────────────────────────────────────────────
 
 async function opSendMessage(config, token) {
-  const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
+  const chatId = typeof config.chatId === "string" ? config.chatId.trim() : String(config.chatId ?? "");
   const text = typeof config.text === "string" ? config.text.trim() : config.text;
-  if (!chatId) throw new Error("Telegram sendMessage: 'chatId' is required.");
+  if (!chatId) throw new Error("Telegram sendMessage: 'chatId' is required. Leave it blank to auto-reply to the trigger sender.");
   if (!text) throw new Error("Telegram sendMessage: 'text' is required.");
 
   const payload = {
@@ -215,8 +215,15 @@ export default {
 
     const token = await getToken(config.credentialId, context.workspaceId);
 
+    // If chatId is blank, reply to whoever triggered the workflow
+    const resolvedConfig = { ...config };
+    if (!resolvedConfig.chatId) {
+      const triggerChat = context.triggerOutput?.chat?.id;
+      if (triggerChat) resolvedConfig.chatId = String(triggerChat);
+    }
+
     try {
-      return await handler(config, token);
+      return await handler(resolvedConfig, token);
     } catch (err) {
       handleError(err);
     }
