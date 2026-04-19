@@ -106,7 +106,14 @@ const subWf = proxyActivities<
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 
-const TRIGGER_TYPES = new Set(["manual", "webhook", "cron_trigger"]);
+const TRIGGER_TYPES = new Set([
+  "manual", "webhook", "cron_trigger",
+  "imap_trigger", "rss_trigger", "db_trigger", "error_trigger",
+  "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
+  "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
+  "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
+  "typeform_trigger",
+]);
 const MAX_ITERATIONS = 500;
 const DEFAULT_APPROVAL_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 

@@ -16,7 +16,7 @@
 import { Worker } from "bullmq";
 import { createBullMQConnection } from "../../infra/bullmq.js";
 import { webhookDeadLetterQueue } from "../../infra/webhook.queue.js";
-import { startWorkflowExecution } from "../execution/execution.service.js";
+import { executeAutomation } from "../automation/automation.executor.js";
 import Automation from "../../models/automation.model.js";
 
 const CONCURRENCY = 10;
@@ -44,7 +44,7 @@ export async function startWebhookWorker() {
         return; // Complete the job without error (no point retrying)
       }
 
-      await startWorkflowExecution(automation, webhookData, {
+      await executeAutomation(automation, webhookData, {
         idempotencyKey,
         workspaceId,
       });

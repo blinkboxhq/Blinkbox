@@ -106,20 +106,73 @@ export const nodeRegistry = {
   stripe_trigger: { async run(config, input) { return input; } },
   cron_trigger: cronTrigger,
 
-  // Integration Triggers (webhook-push)
-  telegram_trigger: { async run(config, input) { return input; } },
-  slack_trigger:    { async run(config, input) { return input; } },
-  discord_trigger:  { async run(config, input) { return input; } },
-  shopify_trigger:  { async run(config, input) { return input; } },
-  linear_trigger:   { async run(config, input) { return input; } },
-  typeform_trigger: { async run(config, input) { return input; } },
-  whatsapp_trigger: { async run(config, input) { return input; } },
+  // Integration Triggers (webhook-push) — extract service-specific fields so
+  // downstream nodes can use {{ nodeId.text }} instead of {{ nodeId.body.message.text }}
+  telegram_trigger: {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      const msg  = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
+      return {
+        text:      msg.text      ?? "",
+        from:      msg.from      ?? {},
+        chat:      msg.chat      ?? {},
+        date:      msg.date      ?? null,
+        messageId: msg.message_id ?? null,
+        updateId:  body?.update_id ?? null,
+      };
+    },
+  },
+  slack_trigger: {
+    async run(config, input) {
+      const body  = input?.body ?? input;
+      const event = body?.event ?? body;
+      return {
+        text:    event.text    ?? "",
+        user:    event.user    ?? "",
+        channel: event.channel ?? "",
+        ts:      event.ts      ?? "",
+        event,
+        teamId:  body?.team_id ?? "",
+      };
+    },
+  },
+  discord_trigger:  { async run(config, input) { return input?.body ?? input; } },
+  shopify_trigger:  {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      return {
+        id:         body.id         ?? null,
+        email:      body.email      ?? "",
+        total_price: body.total_price ?? "",
+        line_items: body.line_items  ?? [],
+        order:      body,
+        customer:   body.customer    ?? {},
+      };
+    },
+  },
+  linear_trigger:   { async run(config, input) { const b = input?.body ?? input; return { id: b?.data?.id, title: b?.data?.title, state: b?.data?.state, assignee: b?.data?.assignee, team: b?.data?.team, issue: b?.data, type: b?.type }; } },
+  typeform_trigger: { async run(config, input) { const b = input?.body ?? input; const r = b?.form_response ?? b; return { form_id: b?.form_id, token: r.token, answers: r.answers ?? [], submitted_at: r.submitted_at, form_response: r }; } },
+  whatsapp_trigger: {
+    async run(config, input) {
+      const body    = input?.body ?? input;
+      const entry   = body?.entry?.[0] ?? {};
+      const change  = entry?.changes?.[0]?.value ?? {};
+      const msg     = change?.messages?.[0]  ?? {};
+      return {
+        text:          msg.text?.body ?? "",
+        from:          msg.from       ?? "",
+        phoneNumberId: change.metadata?.phone_number_id ?? "",
+        message:       msg,
+        contacts:      change.contacts ?? [],
+      };
+    },
+  },
 
-  // Integration Triggers (polling)
-  gmail_trigger:    { async run(config, input) { return input; } },
-  airtable_trigger: { async run(config, input) { return input; } },
-  notion_trigger:   { async run(config, input) { return input; } },
-  hubspot_trigger:  { async run(config, input) { return input; } },
+  // Integration Triggers (polling) — data already extracted by pollers, pass through
+  gmail_trigger:    { async run(config, input) { return input?.body ?? input; } },
+  airtable_trigger: { async run(config, input) { return input?.body ?? input; } },
+  notion_trigger:   { async run(config, input) { return input?.body ?? input; } },
+  hubspot_trigger:  { async run(config, input) { return input?.body ?? input; } },
 
   // Core Nodes
   http_request: httpRequest,
