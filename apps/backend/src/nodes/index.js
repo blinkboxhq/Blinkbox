@@ -104,6 +104,9 @@ import imageResize from "./imageResize.node.js";
 import aggregate from "./aggregate.node.js";
 import pdfGenerator from "./pdfGenerator.node.js";
 
+// Virtual Computer
+import virtualComputer from "./virtualComputer.node.js";
+
 // New Integrations
 import elevenlabs from "./integrations/elevenlabs.node.js";
 import pinecone from "./integrations/pinecone.node.js";
@@ -288,6 +291,9 @@ export const nodeRegistry = {
   reddit_trigger: { async run(config, input) { return input?.body ?? input; } },
   google_calendar_trigger: { async run(config, input) { return input?.body ?? input; } },
   github_issue_trigger: { async run(config, input) { return input?.body ?? input; } },
+
+  // Virtual Computer
+  virtual_computer: virtualComputer,
 
   // New Integrations
   elevenlabs: elevenlabs,

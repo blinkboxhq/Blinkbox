@@ -191,6 +191,7 @@ export const DEFAULT_SCHEMAS = {
   zoom: { meetingId: "string", topic: "string", joinUrl: "string", startUrl: "string", password: "string", startTime: "string", duration: "number" },
   resend: { id: "string", from: "string", to: "array", subject: "string", createdAt: "string", status: "string" },
   openai_assistant: { threadId: "string", runId: "string", lastMessage: "string", messages: "array", status: "string", usage: "object" },
+  virtual_computer: { stdout: "string", stderr: "string", exitCode: "number", language: "string", executionTimeMs: "number", timedOut: "boolean" },
 };
 
 /**

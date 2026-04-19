@@ -107,6 +107,7 @@ import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode"
 import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
+import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 
 // Config Panels — new integrations
 import GithubNode          from "./components/nodes/GithubNode";
@@ -490,6 +491,12 @@ export const NodeRegistry = {
   pdf_generator: {
     label: "PDF Generator", icon: FileOutput, colorClass: "text-rose-400", accentColor: "251,113,133",
     ConfigPanel: PDFGeneratorNode, category: "transform",
+  },
+
+  virtual_computer: {
+    label: "Virtual Computer", icon: Server, logoUrl: imgComputer,
+    colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: VirtualComputerNode, category: "code",
   },
 
   // ── New Integration Nodes ──────────────────────────────────────────────────
