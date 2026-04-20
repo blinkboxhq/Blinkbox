@@ -26,6 +26,10 @@ import {
   registerStripeWebhook,
   unregisterStripeWebhook,
 } from "../../../infra/stripe.webhook.js";
+import {
+  registerTelegramWebhook,
+  unregisterTelegramWebhook,
+} from "../../../infra/telegram.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
 
 /**
@@ -156,6 +160,13 @@ export async function activateAutomation(req, res) {
         const refreshed = await Automation.findById(automation._id);
         if (refreshed) Object.assign(automation, refreshed.toObject());
       }
+    }
+
+    if (trigger === "telegram_trigger") {
+      const botToken = cfg.botToken;
+      if (!botToken)
+        throw new Error("Telegram trigger requires a Bot Token. Open the trigger node and paste your bot token.");
+      await registerTelegramWebhook(automation._id.toString(), botToken);
     }
 
     automation.active = true;
