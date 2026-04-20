@@ -5,7 +5,7 @@ import {
   Github, CreditCard, Ticket, Circle, ShoppingBag, Twitter, Users, Merge,
   CheckSquare, Server, QrCode, SplitSquareHorizontal, AlignLeft, CheckCircle2,
   GitFork, Image, Package, FileOutput, Mic2, Box, Video, MessageSquarePlus,
-  TrendingUp, Youtube, Mail,
+  TrendingUp, Youtube, Mail, Edit2,
 } from "lucide-react";
 
 // Local asset icons
