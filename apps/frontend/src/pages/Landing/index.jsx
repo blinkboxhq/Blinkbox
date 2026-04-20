@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Component, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, Bot, Search, GitBranch, Globe, Shield, Cpu,
@@ -14,6 +14,13 @@ import { BGPattern } from '@/components/ui/bg-pattern';
 import { DottedSurface } from '@/components/ui/dotted-surface';
 import { ParticleTextEffect } from '@/components/ui/particle-text-effect';
 import logo from '../../assets/logo.svg';
+
+// Silently swallows crashes in visual-only decorative components
+class SilentBoundary extends Component {
+  constructor(props) { super(props); this.state = { failed: false }; }
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? (this.props.fallback ?? null) : this.props.children; }
+}
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -275,7 +282,7 @@ export default function Landing() {
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
         {/* Animated paths bg */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <BackgroundPaths />
+          <SilentBoundary><BackgroundPaths /></SilentBoundary>
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
         </div>
 
@@ -346,18 +353,20 @@ export default function Landing() {
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="relative overflow-hidden">
         <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-0 text-center reveal-on-scroll pt-10">What will you automate?</p>
-        <ParticleTextEffect
-          words={[
-            'SCRAPE COMPETITORS',
-            'DEPLOY AI AGENTS',
-            'MONITOR PRICES',
-            'PARSE INVOICES',
-            'SYNC DATABASES',
-            'SEND ALERTS',
-            'GENERATE REPORTS',
-            'ENRICH LEADS',
-          ]}
-        />
+        <SilentBoundary>
+          <ParticleTextEffect
+            words={[
+              'SCRAPE COMPETITORS',
+              'DEPLOY AI AGENTS',
+              'MONITOR PRICES',
+              'PARSE INVOICES',
+              'SYNC DATABASES',
+              'SEND ALERTS',
+              'GENERATE REPORTS',
+              'ENRICH LEADS',
+            ]}
+          />
+        </SilentBoundary>
       </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -563,7 +572,7 @@ export default function Landing() {
           FINAL CTA — cinematic, minimal
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-28 md:py-40 relative overflow-hidden">
-        <DottedSurface />
+        <SilentBoundary><DottedSurface /></SilentBoundary>
         {/* Fade overlay so dots blend into black edges */}
         <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black via-transparent to-black" />
 
