@@ -97,6 +97,12 @@ import SwitchNode           from "./components/nodes/SwitchNode";
 import ImageResizeNode      from "./components/nodes/ImageResizeNode";
 import AggregateNode        from "./components/nodes/AggregateNode";
 import PDFGeneratorNode     from "./components/nodes/PDFGeneratorNode";
+import DataDiffNode         from "./components/nodes/DataDiffNode";
+import EmailParserNode      from "./components/nodes/EmailParserNode";
+import VectorMemoryNode     from "./components/nodes/VectorMemoryNode";
+import AIDecisionNode       from "./components/nodes/AIDecisionNode";
+import NotificationHubNode  from "./components/nodes/NotificationHubNode";
+import BrowserAgentNode     from "./components/nodes/BrowserAgentNode";
 import ElevenLabsNode       from "./components/nodes/ElevenLabsNode";
 import PineconeNode         from "./components/nodes/PineconeNode";
 import ZoomNode             from "./components/nodes/ZoomNode";
@@ -514,6 +520,32 @@ export const NodeRegistry = {
   pdf_generator: {
     label: "PDF Generator", icon: FileOutput, colorClass: "text-rose-400", accentColor: "251,113,133",
     ConfigPanel: PDFGeneratorNode, category: "transform",
+  },
+  data_diff: {
+    label: "Data Diff", icon: Layers, colorClass: "text-indigo-400", accentColor: "129,140,248",
+    ConfigPanel: DataDiffNode, category: "transform",
+  },
+
+  // ── AI Innovated Nodes ───────────────────────────────────────────────────
+  email_parser: {
+    label: "Email Parser", icon: Mail, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: EmailParserNode, category: "ai_tools",
+  },
+  vector_memory: {
+    label: "Vector Memory", icon: Database, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: VectorMemoryNode, category: "ai_tools",
+  },
+  ai_decision: {
+    label: "AI Decision", icon: CheckCircle2, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: AIDecisionNode, category: "ai_tools",
+  },
+  notification_hub: {
+    label: "Notification Hub", icon: Zap, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: NotificationHubNode, category: "integration",
+  },
+  browser_agent: {
+    label: "Browser Agent", icon: Globe, colorClass: "text-violet-400", accentColor: "139,92,246",
+    ConfigPanel: BrowserAgentNode, category: "ai",
   },
 
   // ── Coding Agents ─────────────────────────────────────────────────────────

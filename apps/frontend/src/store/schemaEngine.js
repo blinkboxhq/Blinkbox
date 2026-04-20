@@ -184,6 +184,14 @@ export const DEFAULT_SCHEMAS = {
   image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },
   aggregate: { items: "array", count: "number", sessionId: "string", completedAt: "string" },
   pdf_generator: { pdf: "string", filename: "string", sizeBytes: "number", mimeType: "string" },
+  data_diff: { hasChanges: "boolean", changeCount: "number", summary: "object", operation: "string", changes: "array", newItems: "array", removedItems: "array", changedItems: "array" },
+
+  // AI Innovated Nodes
+  email_parser: { _meta: "object", _dynamic: true },
+  vector_memory: { memories: "array", count: "number", namespace: "string", query: "string", memoryId: "string", memoryKey: "string", text: "string" },
+  ai_decision: { decision: "string", confidence: "number", reasoning: "string", scores: "object", factors: "array", recommended_action: "string", risks: "array", alternatives: "array" },
+  notification_hub: { sent: "number", failed: "number", total: "number", results: "array", fallbackUsed: "boolean", deduped: "boolean", message: "string" },
+  browser_agent: { success: "boolean", result: "string", finalUrl: "string", title: "string", screenshot: "string", steps: "array", stepCount: "number" },
 
   // New Integrations
   elevenlabs: { audioBase64: "string", mimeType: "string", voiceId: "string", model: "string", characterCount: "number" },
@@ -330,6 +338,12 @@ const EXPECTED_INPUT_TYPES = {
   code: { input: "object" },
   ai_agent: { prompt: "string", systemPrompt: "string" },
   logic_router: { conditions: "array" },
+  email_parser: { emailText: "string" },
+  vector_memory: { text: "string" },
+  ai_decision: { scenario: "string" },
+  notification_hub: { message: "string" },
+  browser_agent: { url: "string", goal: "string" },
+  data_diff: { before: "object", after: "object" },
 };
 
 /**

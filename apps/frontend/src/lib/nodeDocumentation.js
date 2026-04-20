@@ -116,4 +116,69 @@ export const NODE_DOCS = {
     ],
     example: {},
   },
+  email_parser: {
+    description: "Extract structured data from emails (Invoices, Orders, etc.) using AI.",
+    inputs: [
+      { name: "emailText", type: "string", desc: "The raw email body" },
+      { name: "operation", type: "string", desc: "Type of document to extract" },
+    ],
+    outputs: [
+      { name: "_meta", type: "object", desc: "Extraction metadata" },
+      { name: "...", type: "any", desc: "Dynamic fields from the extracted document" },
+    ],
+  },
+  vector_memory: {
+    description: "Store and recall text by semantic meaning using AI embeddings.",
+    inputs: [
+      { name: "operation", type: "string", desc: "remember | recall | forget" },
+      { name: "text", type: "string", desc: "Text to store or search for" },
+    ],
+    outputs: [
+      { name: "memories", type: "array", desc: "List of similar memories found (recall)" },
+      { name: "memoryId", type: "string", desc: "ID of the stored memory (remember)" },
+    ],
+  },
+  ai_decision: {
+    description: "Make a structured decision between multiple options using AI reasoning.",
+    inputs: [
+      { name: "scenario", type: "string", desc: "The situation to evaluate" },
+      { name: "options", type: "array", desc: "List of choices to decide between" },
+    ],
+    outputs: [
+      { name: "decision", type: "string", desc: "The chosen option" },
+      { name: "reasoning", type: "string", desc: "Why this decision was made" },
+    ],
+  },
+  notification_hub: {
+    description: "Fan-out messages to multiple channels (Slack, Email, SMS, etc.) simultaneously.",
+    inputs: [
+      { name: "message", type: "string", desc: "Notification text" },
+      { name: "channels", type: "array", desc: "List of channels to notify" },
+    ],
+    outputs: [
+      { name: "sent", type: "number", desc: "Number of successful deliveries" },
+    ],
+  },
+  browser_agent: {
+    description: "Autonomous browser automation for navigating, clicking, and extracting data from websites.",
+    inputs: [
+      { name: "url", type: "string", desc: "Starting URL" },
+      { name: "goal", type: "string", desc: "What the agent should achieve" },
+    ],
+    outputs: [
+      { name: "result", type: "string", desc: "Final answer or status" },
+      { name: "screenshot", type: "string", desc: "Base64 page screenshot" },
+    ],
+  },
+  data_diff: {
+    description: "Deep structural comparison of two objects or arrays to find what changed.",
+    inputs: [
+      { name: "before", type: "object", desc: "Original state" },
+      { name: "after", type: "object", desc: "New state" },
+    ],
+    outputs: [
+      { name: "hasChanges", type: "boolean", desc: "Whether any difference was found" },
+      { name: "changes", type: "array", desc: "List of specific path changes" },
+    ],
+  },
 };

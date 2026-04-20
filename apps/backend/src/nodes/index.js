@@ -107,6 +107,14 @@ import switchNode from "./switch.node.js";
 import imageResize from "./imageResize.node.js";
 import aggregate from "./aggregate.node.js";
 import pdfGenerator from "./pdfGenerator.node.js";
+import dataDiff from "./dataDiff.node.js";
+
+// AI Innovated Nodes
+import emailParser from "./emailParser.node.js";
+import vectorMemory from "./vectorMemory.node.js";
+import aiDecision from "./aiDecision.node.js";
+import notificationHub from "./notificationHub.node.js";
+import browserAgent from "./browserAgent.node.js";
 
 // Virtual Computer
 import virtualComputer from "./virtualComputer.node.js";
@@ -302,6 +310,14 @@ export const nodeRegistry = {
   image_resize: imageResize,
   aggregate: aggregate,
   pdf_generator: pdfGenerator,
+  data_diff: dataDiff,
+
+  // AI Innovated Nodes
+  email_parser: emailParser,
+  vector_memory: vectorMemory,
+  ai_decision: aiDecision,
+  notification_hub: notificationHub,
+  browser_agent: browserAgent,
 
   // New Trigger pass-throughs (pollers fire; node just returns input)
   youtube_trigger: { async run(config, input) { return input?.body ?? input; } },
