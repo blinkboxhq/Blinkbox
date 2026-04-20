@@ -52,6 +52,7 @@ import DelayNode           from "./components/nodes/Delaynode";
 import InformerNode        from "./components/nodes/InformerNode";
 import AIAgentNode         from "./components/nodes/AIAgentNode";
 import DataMapperNode      from "./components/nodes/DataMapperNode";
+import SetFieldsNode      from "./components/nodes/SetFieldsNode";
 import LogicRouterNode     from "./components/nodes/LogicRouterNode";
 import CodeNode            from "./components/nodes/CodeNode";
 import LoopNode            from "./components/nodes/LoopNode";
@@ -338,6 +339,10 @@ export const NodeRegistry = {
   data_mapper: {
     label: "Data Mapper", icon: Database, colorClass: "text-emerald-400", accentColor: "52,211,153",
     ConfigPanel: DataMapperNode, category: "transform",
+  },
+  set_fields: {
+    label: "Set Fields", icon: Edit2, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: SetFieldsNode, category: "transform",
   },
 
   // Research

@@ -96,6 +96,16 @@ export const NODE_DOCS = {
     ],
     example: { mode: "set", items: [{ key1: "fullName", key2: "{{n1.firstName}} {{n1.lastName}}" }] },
   },
+  set_fields: {
+    description: "Quickly add or update multiple fields in your data payload.",
+    inputs: [
+      { name: "fields", type: "array", desc: "List of key-value pairs to set" },
+    ],
+    outputs: [
+      { name: "...", type: "any", desc: "The original data plus your new fields" },
+    ],
+    example: { fields: [{ key: "status", value: "processed" }, { key: "timestamp", value: "{{n1.time}}" }] },
+  },
   code: {
     description: "Run custom JavaScript code with access to all upstream node outputs.",
     inputs: [

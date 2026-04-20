@@ -132,6 +132,7 @@ export const DEFAULT_SCHEMAS = {
     intermediateSteps: "array",
   },
   data_mapper: { _dynamic: true },
+  set_fields: { _dynamic: true },
   logic_router: { _passthrough: true },
 
   // Supporting nodes
@@ -335,6 +336,7 @@ export function calculateAvailableVariables(
 const EXPECTED_INPUT_TYPES = {
   http_request: { body: "object", headers: "object", url: "string" },
   data_mapper: { mappings: "object" },
+  set_fields: { fields: "array" },
   code: { input: "object" },
   ai_agent: { prompt: "string", systemPrompt: "string" },
   logic_router: { conditions: "array" },
