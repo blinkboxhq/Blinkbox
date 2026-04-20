@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import { parseExpression as parseCron } from "cron-parser";
+import cronParser from "cron-parser";
+const { parseExpression: parseCron } = cronParser;
 import Automation from "../../../models/automation.model.js";
 import Execution from "../../../models/execution.model.js";
 import { validateAutomation } from "./automation.validator.js";
