@@ -166,7 +166,10 @@ export async function activateAutomation(req, res) {
       const botToken = cfg.botToken;
       if (!botToken)
         throw new Error("Telegram trigger requires a Bot Token. Open the trigger node and paste your bot token.");
-      await registerTelegramWebhook(automation._id.toString(), botToken);
+      // Non-blocking — activation succeeds even if Telegram's API is temporarily unreachable
+      registerTelegramWebhook(automation._id.toString(), botToken).catch((err) =>
+        console.error(`[Telegram] Webhook registration failed for ${automation._id}:`, err.message)
+      );
     }
 
     automation.active = true;
