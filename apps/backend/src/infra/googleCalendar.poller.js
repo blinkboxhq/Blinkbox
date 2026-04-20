@@ -82,7 +82,7 @@ async function pollCalendar(automationId, credentialId, workspaceId, calendarId,
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, event, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, event, { workspaceId: automation.workspaceId, idempotencyKey: `gcal:${automation._id}:${event.eventId}` });
       } catch (err) {
         console.error(`[GCalPoller] Failed for "${automation.name}":`, err.message);
       }

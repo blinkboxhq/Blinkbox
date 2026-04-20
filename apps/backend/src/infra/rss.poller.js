@@ -141,7 +141,7 @@ async function pollFeed(automationId, feedUrl, onlyNew) {
       }
 
       try {
-        await executeAutomation(automation, { item, feedUrl }, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, { item, feedUrl }, { workspaceId: automation.workspaceId, idempotencyKey: `rss:${automation._id}:${guid}` });
         console.log(`[RSS] Fired automation "${automation.name}" for item: "${item.title}"`);
       } catch (err) {
         console.error(`[RSS] Failed to fire automation "${automation.name}":`, err.message);

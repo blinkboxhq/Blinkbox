@@ -125,7 +125,7 @@ async function pollGmail(automationId, credentialId, query, maxResults, onlyNew,
       try {
         const full = await gmailGet(token, `users/me/messages/${id}`, { format: "full" });
         const parsed = parseMessage(full);
-        await executeAutomation(automation, parsed, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, parsed, { workspaceId: automation.workspaceId, idempotencyKey: `gmail:${automation._id}:${id}` });
         console.log(`[GmailPoller] Fired for automation "${automation.name}" message: ${id}`);
       } catch (err) {
         console.error(`[GmailPoller] Failed to process message ${id}:`, err.message);

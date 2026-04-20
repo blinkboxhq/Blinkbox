@@ -64,7 +64,7 @@ async function pollChannel(automationId, credentialId, workspaceId, channelId, m
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, video, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, video, { workspaceId: automation.workspaceId, idempotencyKey: `yt:${automation._id}:${video.videoId}` });
       } catch (err) {
         console.error(`[YouTubePoller] Failed for automation "${automation.name}":`, err.message);
       }

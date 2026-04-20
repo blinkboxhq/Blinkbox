@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { parseExpression as parseCron } from "cron-parser";
 import Automation from "../../../models/automation.model.js";
 import Execution from "../../../models/execution.model.js";
 import { validateAutomation } from "./automation.validator.js";
@@ -88,7 +89,15 @@ export async function activateAutomation(req, res) {
     validateAutomation(automation); // 🔒 Structural + logic validation
 
     const trigger = automation.trigger;
-    const cfg = entryNode.data?.config || {};
+    const cfg = entryNode.data || {};
+
+    // Validate cron expression before going live — bad expressions silently never fire
+    if (trigger === "cron_trigger") {
+      const expr = cfg.schedule || cfg.customCron;
+      if (!expr) throw new Error("Cron trigger requires a schedule. Open the trigger node and set a cron expression.");
+      try { parseCron(expr); }
+      catch { throw new Error(`Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`); }
+    }
 
     // ── Auto-register external webhooks ──────────────────────────────────────
     // Re-read entry node config after potential webhook registration

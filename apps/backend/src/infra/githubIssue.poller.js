@@ -85,7 +85,7 @@ async function pollRepo(automationId, credentialId, workspaceId, owner, repo, ty
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, item, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, idempotencyKey: `ghissue:${automation._id}:${item.type}-${item.number}` });
       } catch (err) {
         console.error(`[GHIssuePoller] Failed for "${automation.name}":`, err.message);
       }

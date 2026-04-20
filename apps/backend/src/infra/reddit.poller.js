@@ -71,7 +71,7 @@ async function pollSubreddit(automationId, cfg) {
       await redis.expire(seenKey, SEEN_TTL);
 
       try {
-        await executeAutomation(automation, post, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, post, { workspaceId: automation.workspaceId, idempotencyKey: `reddit:${automation._id}:${post.id}` });
       } catch (err) {
         console.error(`[RedditPoller] Failed for "${automation.name}":`, err.message);
       }

@@ -78,7 +78,8 @@ async function pollPrice(automationId, cfg) {
     };
 
     try {
-      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId });
+      const crossKey = `price:${automation._id}:${coinId}:${condition}:${Math.floor(Date.now() / 60000)}`;
+      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, idempotencyKey: crossKey });
       console.log(`[PriceAlert] Fired for "${automation.name}": ${coinId} ${condition} ${threshold}`);
     } catch (err) {
       console.error(`[PriceAlert] Failed for "${automation.name}":`, err.message);

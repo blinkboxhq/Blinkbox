@@ -1,5 +1,15 @@
 import api from "../lib/api";
 import { toast } from "sonner";
+import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
+
+// Build a reverse map: backendType → first matching variantId
+// (used to restore triggerVariant on load when it wasn't saved to backend)
+const BACKEND_TYPE_TO_VARIANT = {};
+for (const [id, v] of Object.entries(TRIGGER_VARIANTS)) {
+  if (!BACKEND_TYPE_TO_VARIANT[v.backendType]) {
+    BACKEND_TYPE_TO_VARIANT[v.backendType] = id;
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI Slice — owns sidebar selection, workflow metadata, and API persistence.
@@ -55,6 +65,22 @@ export const createUISlice = (set, get) => ({
 
       const loadedNodes = workflow.nodes.map((n, index) => {
         const resolvedType = LEGACY_TYPE_MAP[n.type] || n.type;
+        const isTriggerNode = resolvedType.endsWith("_trigger") ||
+          resolvedType === "manual" ||
+          resolvedType === "webhook";
+
+        // Restore triggerVariant if the backend didn't store it.
+        // The variant is in config when saving (TriggerPicker sets it) but for
+        // automations created before this fix, or on first load, we derive it
+        // from backendType. The !config.triggerVariant guard preserves
+        // ambiguous variants like "chat" / "email" (both backendType "webhook")
+        // which do have triggerVariant saved in their config.
+        const config = { ...(n.data || {}) };
+        if (isTriggerNode && !config.triggerVariant) {
+          const variantId = BACKEND_TYPE_TO_VARIANT[resolvedType];
+          if (variantId) config.triggerVariant = variantId;
+        }
+
         return {
           id: n.id,
           type: "custom",
@@ -62,12 +88,8 @@ export const createUISlice = (set, get) => ({
           data: {
             label: n.description || resolvedType,
             backendType: resolvedType,
-            type: resolvedType.endsWith("_trigger") ||
-              resolvedType === "manual" ||
-              resolvedType === "webhook"
-                ? "trigger"
-                : "action",
-            config: n.data || {},
+            type: isTriggerNode ? "trigger" : "action",
+            config,
           },
         };
       });
@@ -127,9 +149,23 @@ export const createUISlice = (set, get) => ({
       if (!entryNode)
         throw new Error("A Trigger node is required to save the workflow.");
 
-      const isCron = entryNode.data.backendType === 'cron_trigger';
+      const trigConf = entryNode.data.config || {};
+      const bt = entryNode.data.backendType;
+
+      // Soft warnings for obviously incomplete trigger configs
+      if (bt === "cron_trigger" && !trigConf.schedule && !trigConf.customCron) {
+        toast.warning("Cron trigger has no schedule — defaulting to 9am daily. Open the trigger node to configure.");
+      }
+      if (bt === "rss_trigger" && !trigConf.feedUrl) {
+        toast.warning("RSS trigger has no feed URL. Open the trigger node to add one.");
+      }
+      if (bt === "imap_trigger" && !trigConf.credentialId) {
+        toast.warning("IMAP trigger has no email credential. Open the trigger node to configure.");
+      }
+
+      const isCron = bt === 'cron_trigger';
       const cronExpression = isCron
-        ? (entryNode.data.config?.schedule || entryNode.data.config?.customCron || '0 9 * * *')
+        ? (trigConf.schedule || trigConf.customCron || '0 9 * * *')
         : undefined;
 
       const payload = {
