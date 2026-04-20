@@ -18,8 +18,14 @@ import { syncPriceAlertJobs } from "../../../infra/priceAlert.poller.js";
 import { syncRedditJobs } from "../../../infra/reddit.poller.js";
 import { syncGoogleCalendarJobs } from "../../../infra/googleCalendar.poller.js";
 import { syncGitHubIssueJobs } from "../../../infra/githubIssue.poller.js";
-import { registerGitHubWebhook, unregisterGitHubWebhook } from "../../../infra/github.webhook.js";
-import { registerStripeWebhook, unregisterStripeWebhook } from "../../../infra/stripe.webhook.js";
+import {
+  registerGitHubWebhook,
+  unregisterGitHubWebhook,
+} from "../../../infra/github.webhook.js";
+import {
+  registerStripeWebhook,
+  unregisterStripeWebhook,
+} from "../../../infra/stripe.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
 
 /**
@@ -44,13 +50,16 @@ export async function saveAutomation(req, res) {
     // If an ID is passed in the params, update the existing one
     if (req.params.id) {
       // Snapshot current state before overwriting (for version history)
-      const existing = await Automation.findOne({ _id: req.params.id, workspaceId: req.user.id });
+      const existing = await Automation.findOne({
+        _id: req.params.id,
+        workspaceId: req.user.id,
+      });
       if (existing) await snapshotBeforeSave(existing, req.user.id);
 
       automation = await Automation.findOneAndUpdate(
         { _id: req.params.id, workspaceId: req.user.id },
         req.body,
-        { returnDocument: 'after' },
+        { returnDocument: "after" },
       );
       if (!automation) throw new Error("Automation not found or access denied");
     }
@@ -80,11 +89,17 @@ export async function activateAutomation(req, res) {
     if (!automation) throw new Error("Automation not found or access denied");
 
     if (!automation.entryNodeId) {
-      throw new Error("No trigger node found. Please save your workflow before activating.");
+      throw new Error(
+        "No trigger node found. Please save your workflow before activating.",
+      );
     }
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const entryNode = automation.nodes.find(
+      (n) => n.id === automation.entryNodeId,
+    );
     if (!entryNode) {
-      throw new Error("Trigger node not found. Please save your workflow and try again.");
+      throw new Error(
+        "Trigger node not found. Please save your workflow and try again.",
+      );
     }
 
     validateAutomation(automation); // 🔒 Structural + logic validation
@@ -95,9 +110,17 @@ export async function activateAutomation(req, res) {
     // Validate cron expression before going live — bad expressions silently never fire
     if (trigger === "cron_trigger") {
       const expr = cfg.schedule || cfg.customCron;
-      if (!expr) throw new Error("Cron trigger requires a schedule. Open the trigger node and set a cron expression.");
-      try { parseCron(expr); }
-      catch { throw new Error(`Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`); }
+      if (!expr)
+        throw new Error(
+          "Cron trigger requires a schedule. Open the trigger node and set a cron expression.",
+        );
+      try {
+        parseCron(expr);
+      } catch {
+        throw new Error(
+          `Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`,
+        );
+      }
     }
 
     // ── Auto-register external webhooks ──────────────────────────────────────
@@ -107,10 +130,16 @@ export async function activateAutomation(req, res) {
       const token = cfg.tokenCredentialKey || cfg.githubToken;
       const repo = cfg.repo;
       const events = cfg.events || ["push"];
-      if (!repo) throw new Error("GitHub trigger requires a repository (owner/repo).");
+      if (!repo)
+        throw new Error("GitHub trigger requires a repository (owner/repo).");
       if (!token) throw new Error("GitHub trigger requires a GitHub token.");
       if (!cfg.webhookRegistered) {
-        await registerGitHubWebhook(automation._id.toString(), repo, events, token);
+        await registerGitHubWebhook(
+          automation._id.toString(),
+          repo,
+          events,
+          token,
+        );
         // Re-fetch automation after registerGitHubWebhook saved the secret into it
         const refreshed = await Automation.findById(automation._id);
         if (refreshed) Object.assign(automation, refreshed.toObject());
@@ -120,7 +149,8 @@ export async function activateAutomation(req, res) {
     if (trigger === "stripe_trigger") {
       const apiKey = cfg.stripeKeyCredential;
       const events = cfg.events || ["payment_intent.succeeded"];
-      if (!apiKey) throw new Error("Stripe trigger requires a Stripe secret key.");
+      if (!apiKey)
+        throw new Error("Stripe trigger requires a Stripe secret key.");
       if (!cfg.webhookRegistered) {
         await registerStripeWebhook(automation._id.toString(), events, apiKey);
         const refreshed = await Automation.findById(automation._id);
@@ -133,19 +163,22 @@ export async function activateAutomation(req, res) {
     await automation.save();
 
     // Re-sync pollers so the new automation is picked up immediately
-    if (trigger === "cron_trigger")    syncCronJobs().catch(console.error);
-    if (trigger === "rss_trigger")     syncRssJobs().catch(console.error);
-    if (trigger === "imap_trigger")    syncImapJobs().catch(console.error);
-    if (trigger === "db_trigger")      syncDbJobs().catch(console.error);
-    if (trigger === "gmail_trigger")   syncGmailJobs().catch(console.error);
+    if (trigger === "cron_trigger") syncCronJobs().catch(console.error);
+    if (trigger === "rss_trigger") syncRssJobs().catch(console.error);
+    if (trigger === "imap_trigger") syncImapJobs().catch(console.error);
+    if (trigger === "db_trigger") syncDbJobs().catch(console.error);
+    if (trigger === "gmail_trigger") syncGmailJobs().catch(console.error);
     if (trigger === "airtable_trigger") syncAirtableJobs().catch(console.error);
-    if (trigger === "notion_trigger")  syncNotionJobs().catch(console.error);
+    if (trigger === "notion_trigger") syncNotionJobs().catch(console.error);
     if (trigger === "hubspot_trigger") syncHubSpotJobs().catch(console.error);
     if (trigger === "youtube_trigger") syncYouTubeJobs().catch(console.error);
-    if (trigger === "price_alert_trigger") syncPriceAlertJobs().catch(console.error);
+    if (trigger === "price_alert_trigger")
+      syncPriceAlertJobs().catch(console.error);
     if (trigger === "reddit_trigger") syncRedditJobs().catch(console.error);
-    if (trigger === "google_calendar_trigger") syncGoogleCalendarJobs().catch(console.error);
-    if (trigger === "github_issue_trigger") syncGitHubIssueJobs().catch(console.error);
+    if (trigger === "google_calendar_trigger")
+      syncGoogleCalendarJobs().catch(console.error);
+    if (trigger === "github_issue_trigger")
+      syncGitHubIssueJobs().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {
@@ -165,7 +198,10 @@ export async function deactivateAutomation(req, res) {
       { active: false, status: "draft" },
       { new: true },
     );
-    if (!automation) return res.status(404).json({ success: false, message: "Automation not found" });
+    if (!automation)
+      return res
+        .status(404)
+        .json({ success: false, message: "Automation not found" });
     res.json({ success: true, automation });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -279,22 +315,40 @@ export async function deleteAutomation(req, res) {
       workspaceId: req.user.id,
     });
     if (!automation) {
-      return res.status(404).json({ success: false, message: "Not found or access denied" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Not found or access denied" });
     }
 
     // Clean up external webhook registrations on delete
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const entryNode = automation.nodes.find(
+      (n) => n.id === automation.entryNodeId,
+    );
     const cfg = entryNode?.data?.config || {};
-    if (automation.trigger === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
-      unregisterGitHubWebhook(automation._id.toString(), cfg.repo, cfg.githubWebhookId, cfg.tokenCredentialKey || cfg.githubToken)
-        .catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
+    if (
+      automation.trigger === "github_trigger" &&
+      cfg.githubWebhookId &&
+      cfg.repo
+    ) {
+      unregisterGitHubWebhook(
+        automation._id.toString(),
+        cfg.repo,
+        cfg.githubWebhookId,
+        cfg.tokenCredentialKey || cfg.githubToken,
+      ).catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
     }
     if (automation.trigger === "stripe_trigger" && cfg.stripeWebhookId) {
-      unregisterStripeWebhook(automation._id.toString(), cfg.stripeWebhookId, cfg.stripeKeyCredential)
-        .catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
+      unregisterStripeWebhook(
+        automation._id.toString(),
+        cfg.stripeWebhookId,
+        cfg.stripeKeyCredential,
+      ).catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
     }
 
-    await Execution.deleteMany({ automationId: req.params.id, workspaceId: req.user.id });
+    await Execution.deleteMany({
+      automationId: req.params.id,
+      workspaceId: req.user.id,
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to delete." });
@@ -313,7 +367,9 @@ export async function duplicateAutomation(req, res) {
       workspaceId: req.user.id,
     });
     if (!source) {
-      return res.status(404).json({ success: false, message: "Not found or access denied" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Not found or access denied" });
     }
     const copy = source.toObject();
     delete copy._id;
@@ -339,15 +395,19 @@ export async function renameAutomation(req, res) {
   try {
     const { name } = req.body;
     if (!name || typeof name !== "string" || name.trim().length < 1) {
-      return res.status(400).json({ success: false, message: "Name is required." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Name is required." });
     }
     const automation = await Automation.findOneAndUpdate(
       { _id: req.params.id, workspaceId: req.user.id },
       { name: name.trim() },
-      { returnDocument: 'after' },
+      { returnDocument: "after" },
     );
     if (!automation) {
-      return res.status(404).json({ success: false, message: "Not found or access denied" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Not found or access denied" });
     }
     res.json({ success: true, automation });
   } catch (err) {
@@ -363,9 +423,7 @@ export async function renameAutomation(req, res) {
 export async function getAutomations(req, res) {
   try {
     if (!req.user || !req.user.id) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized." });
+      return res.status(401).json({ success: false, message: "Unauthorized." });
     }
 
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -390,6 +448,8 @@ export async function getAutomations(req, res) {
       },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to load workflows." });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load workflows." });
   }
 }
