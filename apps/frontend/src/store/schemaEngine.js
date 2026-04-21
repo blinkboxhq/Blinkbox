@@ -46,10 +46,15 @@ export const DEFAULT_SCHEMAS = {
   },
   discord_trigger: {
     content: "string",
-    channel_id: "string",
-    guild_id: "string",
+    username: "string",
+    userId: "string",
+    channelId: "string",
+    guildId: "string",
+    messageId: "string",
+    attachments: "array",
+    embeds: "array",
     author: { id: "string", username: "string", discriminator: "string" },
-    message: { id: "string", content: "string", timestamp: "string" },
+    message: "object",
   },
   whatsapp_trigger: {
     text: "string",
@@ -59,13 +64,16 @@ export const DEFAULT_SCHEMAS = {
     contacts: "array",
   },
   gmail_trigger: {
+    id: "string",
+    threadId: "string",
     subject: "string",
     from: "string",
     to: "string",
-    body: "string",
+    date: "string",
     snippet: "string",
-    threadId: "string",
-    messageId: "string",
+    bodyText: "string",
+    bodyHtml: "string",
+    labels: "array",
     attachments: "array",
   },
   airtable_trigger: {
@@ -78,9 +86,11 @@ export const DEFAULT_SCHEMAS = {
   notion_trigger: {
     id: "string",
     url: "string",
-    lastEditedTime: "string",
+    created_time: "string",
+    last_edited_time: "string",
     properties: "object",
-    page: { id: "string", url: "string", created_time: "string", last_edited_time: "string" },
+    archived: "boolean",
+    parent: "object",
   },
   hubspot_trigger: {
     objectId: "string",
@@ -140,8 +150,6 @@ export const DEFAULT_SCHEMAS = {
   delay: { delayed: "boolean" },
   loop: { items: "array", index: "number", item: "object" },
   merge: { _passthrough: true },
-  slack: { ok: "boolean", ts: "string", channel: "string", message: "object" },
-  discord: { ok: "boolean", webhookId: "string" },
   // AI Hub
   openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   anthropic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
@@ -162,10 +170,26 @@ export const DEFAULT_SCHEMAS = {
   notion: { pageId: "string", url: "string", title: "string", properties: "object", results: "array", hasMore: "boolean", nextCursor: "string", appended: "number", blockIds: "array", created: "boolean", updated: "boolean" },
 
   // Email & Messaging
-  gmail: { messageId: "string", threadId: "string", from: "string", to: "string", subject: "string", body: "string", snippet: "string", messages: "array", draftId: "string", marked: "string", trashed: "boolean" },
+  gmail: { messageId: "string", threadId: "string", from: "string", to: "string", subject: "string", bodyText: "string", bodyHtml: "string", snippet: "string", date: "string", labels: "array", attachments: "array", messages: "array", draftId: "string", marked: "string", trashed: "boolean" },
   twilio: { messageSid: "string", status: "string", to: "string", from: "string", body: "string", price: "string", callSid: "string", direction: "string", phoneNumber: "string", carrier: "object" },
   sendgrid: { sent: "boolean", messageId: "string", statusCode: "number", recipientCount: "number", jobId: "string", added: "boolean" },
 
+  // Dev Tools
+  github: { number: "number", url: "string", title: "string", state: "string", id: "string", body: "string", issues: "array", count: "number", author: "string", labels: "array", merged: "boolean", sha: "string" },
+  jira: { id: "string", key: "string", url: "string", summary: "string", status: "string", assignee: "string", issues: "array", total: "number", updated: "boolean", created: "boolean" },
+  linear: { id: "string", title: "string", url: "string", state: "string", priority: "number", assignee: "string", issues: "array", count: "number", updated: "boolean" },
+  // Payments
+  stripe: { id: "string", object: "string", status: "string", amount: "number", currency: "string", customer: "object", email: "string", created: "number", charges: "array", invoices: "array", refunded: "boolean" },
+  // Social
+  twitter: { id: "string", text: "string", url: "string", deleted: "boolean", liked: "boolean", tweets: "array", count: "number", username: "string", name: "string", followers: "number", following: "number" },
+  // CRM & E-Commerce
+  hubspot: { id: "string", email: "string", found: "boolean", contacts: "array", total: "number", dealName: "string", stage: "string", updated: "boolean", created: "boolean" },
+  shopify: { id: "string", title: "string", status: "string", orders: "array", products: "array", count: "number", total_price: "string", financial_status: "string", email: "string", updated: "boolean" },
+  // Google Workspace
+  google_calendar: { id: "string", summary: "string", url: "string", start: "string", end: "string", location: "string", attendees: "array", calendars: "array", deleted: "boolean", updated: "boolean" },
+  google_drive: { id: "string", name: "string", mimeType: "string", files: "array", count: "number", content: "string", deleted: "boolean", moved: "boolean", permissionId: "string", shared: "boolean" },
+  // Databases
+  postgres: { rows: "array", count: "number", total: "number", fields: "array", rowCount: "number", command: "string" },
   // Web Browser
   web_search: { answer: "string", results: "array", query: "string", responseTime: "number" },
 
