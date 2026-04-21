@@ -176,7 +176,23 @@ export const nodeRegistry = {
       };
     },
   },
-  discord_trigger:  { async run(config, input) { return input?.body ?? input; } },
+  discord_trigger: {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      return {
+        content:   body.content   ?? "",
+        author:    body.author    ?? {},
+        username:  body.author?.username ?? "",
+        userId:    body.author?.id ?? "",
+        channelId: body.channel_id ?? "",
+        guildId:   body.guild_id   ?? "",
+        messageId: body.id         ?? "",
+        attachments: body.attachments ?? [],
+        embeds:    body.embeds     ?? [],
+        message:   body,
+      };
+    },
+  },
   shopify_trigger:  {
     async run(config, input) {
       const body = input?.body ?? input;

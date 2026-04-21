@@ -3,7 +3,7 @@ import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
-const MODELS = ["gpt-4o", "gpt-4o-mini", "o4-mini"];
+const MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"];
 
 export default {
   async run(config, _input, context = {}) {
