@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import authRoutes from "../modules/auth/auth.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
 import automationRoutes from "../modules/automation/automation.routes.js";
@@ -10,6 +11,7 @@ import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
+import { redis } from "../infra/redis.client.js";
 
 const app = express();
 
@@ -54,6 +56,30 @@ app.use(express.json({
   verify: (req, _res, buf) => { req.rawBody = buf; },
 }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+// ── Health / readiness probe ──────────────────────────────────────────────────
+app.get("/health", async (_req, res) => {
+  const checks = { mongo: "ok", redis: "ok" };
+  let healthy = true;
+
+  if (mongoose.connection.readyState !== 1) {
+    checks.mongo = "down";
+    healthy = false;
+  }
+
+  try {
+    await redis.ping();
+  } catch {
+    checks.redis = "down";
+    healthy = false;
+  }
+
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? "ok" : "degraded",
+    uptime: Math.floor(process.uptime()),
+    ...checks,
+  });
+});
 
 // ── Public webhook endpoint (no auth required) ────────────────────────────────
 // Supports both POST (form/JSON payloads) and GET (query-param triggers)
