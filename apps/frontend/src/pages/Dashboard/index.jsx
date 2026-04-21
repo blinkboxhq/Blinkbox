@@ -14,10 +14,8 @@ import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import DashboardHeader from './components/DashboardHeader';
 import EmptyState from './components/EmptyState';
-import CreateModal from './components/CreateModal';
+import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
 // Node format matches backend: { id, type, description, data, position }
@@ -303,23 +301,25 @@ export default function Dashboard() {
     setIsCreating(false);
   };
 
-  const handleCreateTemplate = async (t) => {
+  const handleCreateTemplate = async (templateIdOrObj, nameOverride, descOverride) => {
     setIsCreating(true);
     try {
-      // 1. Create the automation record
-      const triggerType = t.scaffold.nodes[0]?.type || 'manual';
-      const r = await api.post('/api/automation', { name: t.name, description: t.desc, trigger: triggerType });
+      const t = typeof templateIdOrObj === 'string'
+        ? TEMPLATES.find((tpl) => tpl.id === templateIdOrObj)
+        : templateIdOrObj;
+      if (!t) { setIsCreating(false); return; }
+      const automationName = nameOverride || t.name;
+      const automationDesc = descOverride || t.desc;
+      const triggerType = t.scaffold.trigger || t.scaffold.nodes[0]?.type || 'manual';
+      const r = await api.post('/api/automation', { name: automationName, description: automationDesc, trigger: triggerType });
       if (!r.data?.success) { setIsCreating(false); return; }
       const id = r.data.automation._id;
-
-      // 2. Immediately save the pre-built scaffold nodes + edges
       await api.put(`/api/automation/${id}`, {
         entryNodeId: t.scaffold.entryNodeId,
         nodes: t.scaffold.nodes,
         edges: t.scaffold.edges,
       });
-
-      setWorkflows([{ ...r.data.automation, name: t.name }, ...workflows]);
+      setWorkflows([{ ...r.data.automation, name: automationName }, ...workflows]);
       navigate(`/workspace/${id}`);
     } catch {}
     setIsCreating(false);
@@ -360,14 +360,11 @@ export default function Dashboard() {
 
       <OnboardingModal />
 
-      <CreateModal
+      <CreateAutomationBox
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreate}
-        onCreateTemplate={(templateId) => {
-          const t = TEMPLATES.find((t) => t.id === templateId);
-          if (t) handleCreateTemplate(t);
-        }}
+        onCreateTemplate={handleCreateTemplate}
         isLoading={isCreating}
       />
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
@@ -581,9 +578,6 @@ export default function Dashboard() {
               )}
             </div>
           )}
-
-          {/* ═══ ANALYTICS ═══ */}
-          {activeTab === 'analytics' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><AnalyticsDashboard /></div>}
 
           {/* ═══ VAULT ═══ */}
           {activeTab === 'vault' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><VaultManager /></div>}
