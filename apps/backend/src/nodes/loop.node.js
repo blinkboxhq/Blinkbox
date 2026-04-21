@@ -1,25 +1,29 @@
 import { evaluateCondition } from "../modules/automation/engine/condition/condition.evaluator.v2.js";
 
 /**
- * LOOP NODE — iterates over an array, emitting each item as a downstream cursor.
+ * LOOP NODE — iterates over an array, spawning one independent cursor per item.
  *
  * Config:
  *   arrayPath      — dot-path into input to grab the array (blank = use input itself)
  *   indexKey       — key injected as current index (default: "__loopIndex")
- *   maxIterations  — safety cap; throws if exceeded (default: 1000)
- *   breakCondition — optional v2 condition object evaluated against each item;
- *                    when true, iteration stops at that item (exclusive)
+ *   maxIterations  — safety cap; throws if exceeded (default: 200)
+ *   breakCondition — optional v2 condition object; when true, stops at that item
+ *   fanOut         — when true (default), each item becomes its own parallel cursor branch.
+ *                    Set false to get the old batch-all behaviour (rarely useful).
+ *
+ * Fan-out signal: returns { __loopFanOut: true, items: [...] } so cursor.executor
+ * can spawn one downstream cursor per item instead of passing the whole array.
  */
 export default {
   async run(config, input) {
     const {
       arrayPath = "",
       indexKey = "__loopIndex",
-      maxIterations = 1000,
+      maxIterations = 200,
       breakCondition,
+      fanOut = true,
     } = config;
 
-    // Resolve the array
     let sourceArray;
     if (arrayPath) {
       sourceArray = arrayPath.split(".").reduce((obj, key) => obj?.[key], input);
@@ -35,7 +39,7 @@ export default {
     }
 
     if (sourceArray.length === 0) {
-      return [];
+      return fanOut ? { __loopFanOut: true, items: [] } : [];
     }
 
     if (sourceArray.length > maxIterations) {
@@ -54,7 +58,6 @@ export default {
         __loopTotal: sourceArray.length,
       };
 
-      // Evaluate break condition before emitting the item
       if (breakCondition) {
         try {
           const shouldBreak = evaluateCondition(breakCondition, itemContext);
@@ -65,6 +68,11 @@ export default {
       }
 
       items.push({ json: itemContext });
+    }
+
+    // Fan-out: signal the executor to spawn one cursor per item
+    if (fanOut) {
+      return { __loopFanOut: true, items };
     }
 
     return items;

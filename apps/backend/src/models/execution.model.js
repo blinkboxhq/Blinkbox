@@ -25,6 +25,8 @@ const CursorSchema = new mongoose.Schema(
     lockedAt: { type: Date, default: null },
     lockedBy: { type: String, default: null },
     parentCursorId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    // Set by loop fan-out: the specific item this cursor should process
+    _loopItemOverride: { type: mongoose.Schema.Types.Mixed, default: null },
   },
   { _id: false },
 );

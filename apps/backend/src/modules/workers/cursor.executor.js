@@ -219,7 +219,10 @@ export async function processCursor({ executionId, cursorId }) {
     const incomingEdges = automation.edges.filter((e) => e.target === node.id);
     let inputItems = [];
 
-    if (incomingEdges.length === 0) {
+    // LOOP FAN-OUT: cursor carries a specific item snapshot — use it exclusively
+    if (cursor._loopItemOverride != null) {
+      inputItems = [{ json: cursor._loopItemOverride }];
+    } else if (incomingEdges.length === 0) {
       inputItems = dynamicContext[node.id] || [{ json: {} }];
     } else {
       for (const edge of incomingEdges) {
@@ -304,6 +307,15 @@ export async function processCursor({ executionId, cursorId }) {
         rawOutput = { delayed: true, requestedSleep: true };
       }
 
+      // Loop fan-out: store items array so routeEdges can spawn one cursor per item
+      if (rawOutput && rawOutput.__loopFanOut === true) {
+        finalOutputs.__loopFanOut = true;
+        finalOutputs.__loopItems = rawOutput.items || [];
+        // Still store the full array as the saved output for {{ loop.* }} references
+        finalOutputs.push(...(rawOutput.items.length ? rawOutput.items : [{ json: {} }]));
+        break; // loop node only runs once per trigger item
+      }
+
       const formatted = Array.isArray(rawOutput)
         ? rawOutput.map((r) => (r.json ? r : { json: r }))
         : [{ json: rawOutput }];
@@ -375,6 +387,7 @@ export async function processCursor({ executionId, cursorId }) {
 
       await routeEdges(
         automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
+        finalOutputs.__loopFanOut ? finalOutputs.__loopItems : null,
       );
     } else {
       // FAILURE PATH — check retry budget
@@ -525,6 +538,7 @@ async function _markCursorFailed(execution, cursor, reason, category = "unknown"
 }
 
 // ── Edge router with fresh merge check ───────────────────────────────────────
+// fanOutItems: when set (loop node), spawn one cursor per item in this array
 async function routeEdges(
   automation,
   execution,
@@ -532,6 +546,7 @@ async function routeEdges(
   outputData,
   edgeType,
   delayUntil,
+  fanOutItems = null,
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
@@ -566,6 +581,40 @@ async function routeEdges(
           (e) => e.source === sourceNode.id || freshContext[e.source] !== undefined,
         );
         if (!ready) continue;
+      }
+
+      // LOOP FAN-OUT: spawn one cursor per item, each carrying its own input snapshot
+      if (fanOutItems && fanOutItems.length > 0) {
+        // Guard: don't exceed cursor cap with fan-out
+        const slotsLeft = MAX_CURSORS_PER_EXECUTION - execution.cursors.length;
+        const itemsToSpawn = fanOutItems.slice(0, slotsLeft);
+
+        if (itemsToSpawn.length < fanOutItems.length) {
+          console.warn(`[LoopFanOut] Execution ${execution._id} cursor cap reached — spawned ${itemsToSpawn.length}/${fanOutItems.length} items`);
+        }
+
+        for (const loopItem of itemsToSpawn) {
+          const newCursor = {
+            nodeId: targetNodeId,
+            status: delayUntil ? "waiting" : "pending",
+            retries: 0,
+            lockedAt: null,
+            lockedBy: null,
+            parentCursorId: null,
+            // Store per-item input so the target node uses this item's data, not the whole array
+            _loopItemOverride: loopItem.json,
+          };
+          execution.cursors.push(newCursor);
+          toEnqueue.push({
+            payload: {
+              executionId: execution._id.toString(),
+              cursorId: execution.cursors.at(-1)._id.toString(),
+            },
+            delayed: !!delayUntil,
+          });
+        }
+        // Only create fan-out cursors for this edge; skip normal single-cursor creation
+        continue;
       }
 
       const newCursor = {
