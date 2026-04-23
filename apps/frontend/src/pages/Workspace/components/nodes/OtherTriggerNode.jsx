@@ -88,6 +88,23 @@ export default function OtherTriggerNode({ config = {}, updateConfig, selected }
           />
         </div>
 
+        {/* Variables */}
+        <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+          {[
+            ['$trigger.body', 'Full JSON body from the request'],
+            ['$trigger.body.*', 'Any field from the posted payload'],
+            ['$trigger.headers', 'Request headers'],
+            ['$trigger.query', 'URL query parameters'],
+            ['$trigger.method', 'HTTP method used'],
+          ].map(([key, desc]) => (
+            <div key={key} className="flex items-baseline gap-2">
+              <span className="text-[10px] font-mono text-zinc-400 shrink-0">{key}</span>
+              <span className="text-[9px] text-zinc-600">{desc}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );

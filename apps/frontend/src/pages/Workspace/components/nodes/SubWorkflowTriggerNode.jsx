@@ -57,7 +57,7 @@ export default function SubWorkflowTriggerNode({ config = {}, updateConfig, sele
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all capitalize ${activeTab === tab ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+            className={`pb-2 text-[9px] font-bold capitalize tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
           >
             {tab}
           </button>
@@ -145,6 +145,21 @@ export default function SubWorkflowTriggerNode({ config = {}, updateConfig, sele
               rows={6}
             />
             <p className="text-[9px] text-zinc-600 leading-relaxed">Document the JSON shape this workflow expects. Helps callers know what to send.</p>
+
+            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg mt-1">
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+              {[
+                ['$trigger.body', 'Full JSON body sent by the calling workflow'],
+                ['$trigger.body.*', 'Any field from the posted payload'],
+                ['$trigger.headers', 'Request headers (incl. Authorization)'],
+                ['$trigger.query', 'URL query parameters'],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex items-baseline gap-2">
+                  <span className="text-[10px] font-mono text-cyan-400 shrink-0">{key}</span>
+                  <span className="text-[9px] text-zinc-600">{desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

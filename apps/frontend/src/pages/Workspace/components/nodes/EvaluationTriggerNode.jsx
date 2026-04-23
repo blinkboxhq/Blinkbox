@@ -85,6 +85,20 @@ export default function EvaluationTriggerNode({ config = {}, updateConfig, selec
           </div>
         </div>
 
+        {/* Variables */}
+        <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+          {[
+            ['$trigger.*', 'Every field from the current dataset item'],
+            ['$trigger.message', 'Example field (from default dataset)'],
+          ].map(([key, desc]) => (
+            <div key={key} className="flex items-baseline gap-2">
+              <span className="text-[10px] font-mono text-orange-400 shrink-0">{key}</span>
+              <span className="text-[9px] text-zinc-600">{desc}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );

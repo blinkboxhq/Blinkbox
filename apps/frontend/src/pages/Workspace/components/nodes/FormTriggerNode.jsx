@@ -69,7 +69,7 @@ ${expectedFields.map((f) => `  <input name="${f}" />`).join('\n') || '  <input n
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all capitalize ${activeTab === tab ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+            className={`pb-2 text-[9px] font-bold capitalize tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
           >
             {tab === 'snippet' ? 'HTML Snippet' : tab}
           </button>
@@ -148,6 +148,21 @@ ${expectedFields.map((f) => `  <input name="${f}" />`).join('\n') || '  <input n
             <pre className="bg-[#0d0d0d] border border-[#1e1e1e] rounded-lg p-2.5 text-[9px] text-zinc-400 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">
               {htmlSnippet}
             </pre>
+
+            {/* Variables */}
+            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg mt-1">
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+              {(expectedFields.length > 0 ? expectedFields : ['field_name']).map((field) => (
+                <div key={field} className="flex items-baseline gap-2">
+                  <span className="text-[10px] font-mono text-emerald-400 shrink-0">{`$trigger.body.${field}`}</span>
+                  <span className="text-[9px] text-zinc-600">Form field "{field}"</span>
+                </div>
+              ))}
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span className="text-[10px] font-mono text-emerald-400 shrink-0">$trigger.headers</span>
+                <span className="text-[9px] text-zinc-600">Request headers</span>
+              </div>
+            </div>
           </div>
         )}
       </div>
