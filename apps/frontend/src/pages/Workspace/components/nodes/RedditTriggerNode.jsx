@@ -68,6 +68,28 @@ export default function RedditTriggerNode({ config = {}, updateConfig }) {
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-orange-500/40"
         />
       </div>
+
+      <div className="flex flex-col gap-1 p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+        {[
+          ['$trigger.id', 'Reddit post ID'],
+          ['$trigger.title', 'Post title'],
+          ['$trigger.selftext', 'Post body text'],
+          ['$trigger.url', 'Post URL'],
+          ['$trigger.author', 'Reddit username'],
+          ['$trigger.subreddit', 'Subreddit name'],
+          ['$trigger.score', 'Upvote score'],
+          ['$trigger.numComments', 'Number of comments'],
+          ['$trigger.created', 'Post date (ISO)'],
+          ['$trigger.permalink', 'Full reddit.com link'],
+          ['$trigger.flair', 'Post flair text'],
+        ].map(([key, desc]) => (
+          <div key={key} className="flex items-baseline gap-2">
+            <span className="text-[10px] font-mono text-orange-400 shrink-0">{key}</span>
+            <span className="text-[9px] text-zinc-600">{desc}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -50,8 +50,22 @@ export default function YouTubeTriggerNode({ config = {}, updateConfig }) {
         </div>
       </div>
 
-      <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800 text-[10px] text-zinc-500">
-        Output: <code className="text-red-400">videoId, title, description, publishedAt, channelTitle, thumbnailUrl, url</code>
+      <div className="flex flex-col gap-1 p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
+        {[
+          ['$trigger.videoId', 'YouTube video ID'],
+          ['$trigger.title', 'Video title'],
+          ['$trigger.description', 'Video description'],
+          ['$trigger.publishedAt', 'Publish date (ISO)'],
+          ['$trigger.channelTitle', 'Channel name'],
+          ['$trigger.thumbnailUrl', 'Thumbnail image URL'],
+          ['$trigger.url', 'Full YouTube watch URL'],
+        ].map(([key, desc]) => (
+          <div key={key} className="flex items-baseline gap-2">
+            <span className="text-[10px] font-mono text-red-400 shrink-0">{key}</span>
+            <span className="text-[9px] text-zinc-600">{desc}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
