@@ -46,6 +46,15 @@ export default function WorkspaceHeader() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [id, saveEngine, runEngine]);
 
+  // Auto-save every 5 seconds
+  useEffect(() => {
+    if (!id) return;
+    const interval = setInterval(() => {
+      if (!isSaving) saveEngine(id);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [id, isSaving, saveEngine]);
+
   const statusBadgeColor =
     executionStatus === 'failed' ? 'bg-red-500/5 border-red-500/20 text-red-400' :
     executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
