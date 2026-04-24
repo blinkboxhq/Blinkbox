@@ -469,7 +469,7 @@ export default function Dashboard() {
                     <div
                       key={wf._id || wf.id}
                       onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-[#0a0a0a] hover:bg-[#0f0f0f] hover:border-zinc-700/80 cursor-pointer transition-all duration-150"
+                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-[#0a0a0a] hover:bg-[#0f0f0f] hover:border-zinc-700/80 cursor-pointer transition-all duration-150 overflow-visible"
                       style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
                     >
                       <div className="flex items-start justify-between mb-2.5">
@@ -477,7 +477,7 @@ export default function Dashboard() {
                         <div className="relative shrink-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
-                            className="p-1 text-neutral-700 hover:text-neutral-400 rounded opacity-0 group-hover:opacity-100 transition-all"
+                            className={`p-1 text-neutral-700 hover:text-neutral-400 rounded transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
