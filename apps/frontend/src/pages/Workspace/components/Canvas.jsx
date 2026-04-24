@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect } from "react";
 import {
@@ -67,6 +67,8 @@ export default function Canvas() {
   const isValidConnection = useWorkspaceStore((s) => s.isValidConnection);
   const addNode = useWorkspaceStore((s) => s.addNode);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
+  const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
   const storeNodesLen = useWorkspaceStore((s) => s.nodes.length);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
@@ -91,6 +93,7 @@ export default function Canvas() {
   const deleteSelectedNodes = useWorkspaceStore((s) => s.deleteSelectedNodes);
   const duplicateSelectedNodes = useWorkspaceStore((s) => s.duplicateSelectedNodes);
   const alignSelectedNodes = useWorkspaceStore((s) => s.alignSelectedNodes);
+  const autoLayout = useWorkspaceStore((s) => s.autoLayout);
 
   const isMultiSelected = selectedNodeIds.length > 1;
 
@@ -232,6 +235,48 @@ export default function Canvas() {
         )}
       </AnimatePresence>
 
+      {/* ── Auto-layout button ── */}
+      <AnimatePresence>
+        {storeNodesLen > 1 && !isMultiSelected && (
+          <motion.button
+            key="auto-layout-btn"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.15 }}
+            onClick={autoLayout}
+            title="Auto-layout (L)"
+            className="absolute bottom-6 right-20 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 bg-zinc-800 border border-zinc-700/60 text-zinc-400 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add node button ── */}
+      <AnimatePresence>
+        {storeNodesLen > 0 && (
+          <motion.button
+            key="add-node-btn"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setAddNodeOpen(!isAddNodeOpen)}
+            title="Add a node"
+            className={`absolute bottom-6 right-6 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200
+              ${isAddNodeOpen
+                ? "bg-zinc-100 text-zinc-900 shadow-zinc-900/50"
+                : "bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
+              }`}
+          >
+            <Plus
+              className={`w-5 h-5 transition-transform duration-200 ${isAddNodeOpen ? "rotate-45" : ""}`}
+              strokeWidth={2}
+            />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
     </div>
   );
