@@ -473,7 +473,15 @@ export default function Dashboard() {
                       style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
                     >
                       <div className="flex items-start justify-between mb-2.5">
-                        <h3 className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate flex-1 min-w-0 mr-2">{wf.name}</h3>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleActive(wf); }}
+                            className={`w-7 h-4 rounded-full relative transition-colors duration-200 shrink-0 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
+                          >
+                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
+                          </button>
+                          <h3 className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate">{wf.name}</h3>
+                        </div>
                         <div className="relative shrink-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
