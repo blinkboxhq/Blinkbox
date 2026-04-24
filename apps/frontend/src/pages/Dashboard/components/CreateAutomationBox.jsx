@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  X, ArrowRight, Zap, Globe, Bot, Webhook, GitBranch,
+  X, ArrowRight, Box, Globe, Bot, Webhook, GitBranch,
   Timer, Database, Search, Mail, MessageSquare, Loader2,
   ChevronRight, Sparkles, Code2, Bell, Play,
 } from 'lucide-react';
@@ -291,9 +291,9 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreat
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800/60 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white" />
+              <Box className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-[14px] font-semibold text-white tracking-tight">New Automation</span>
+            <span className="text-[14px] font-semibold text-white tracking-tight">New Box</span>
           </div>
 
           {/* Step indicators */}
@@ -334,7 +334,7 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreat
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What does this automation do?"
+                    placeholder="What does this box do?"
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-[13px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-600 transition-colors"
                   />
                 </div>
@@ -350,7 +350,7 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreat
                       : 'border-neutral-800 text-neutral-600 hover:text-neutral-300 hover:border-neutral-700'
                   }`}
                 >
-                  <Zap className="w-3.5 h-3.5" /> Start from scratch
+                  <Box className="w-3.5 h-3.5" /> Start from scratch
                 </button>
                 <button
                   onClick={() => setMode('template')}
@@ -486,7 +486,7 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreat
                     ) : selectedTrigger ? (
                       <selectedTrigger.icon className="w-6 h-6" style={{ color: selectedTrigger?.color || '#fff' }} />
                     ) : (
-                      <Zap className="w-6 h-6 text-white" />
+                      <Box className="w-6 h-6 text-white" />
                     )}
                   </div>
                   <h3 className="text-[18px] font-bold text-white mb-1.5">{name}</h3>
@@ -507,8 +507,8 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreat
                   className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl bg-white text-black text-[14px] font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-60"
                 >
                   {isLoading
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Building automation...</>
-                    : <><Zap className="w-4 h-4" /> Launch Automation</>
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Building box...</>
+                    : <><Box className="w-4 h-4" /> Launch Box</>
                   }
                 </button>
 

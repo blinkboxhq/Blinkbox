@@ -7,12 +7,12 @@ export default function EmptyState({ onDeploy, isSearch }) {
         <Plus className="w-5 h-5 text-neutral-600" />
       </div>
       <h3 className="text-sm font-semibold text-neutral-300 mb-1">
-        {isSearch ? 'No matching workflows' : 'No workflows yet'}
+        {isSearch ? 'No matching boxes' : 'No boxes yet'}
       </h3>
       <p className="text-xs text-neutral-600 max-w-xs mb-6">
         {isSearch
           ? 'Try a different search term.'
-          : 'Create your first workflow to start automating.'}
+          : 'Create your first box to start automating.'}
       </p>
       {!isSearch && (
         <button
