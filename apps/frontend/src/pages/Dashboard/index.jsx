@@ -143,7 +143,7 @@ function timeAgo(d) {
 }
 
 // ─── Dropdown menu ─────────────────────────────────────────────────────────
-function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
+function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClose }) {
   const [mode, setMode] = useState('menu');
   const [val, setVal] = useState(wf.name);
   const [busy, setBusy] = useState(false);
@@ -184,8 +184,14 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onClose }) {
     );
   }
 
+  const isActive = wf.status === 'active';
+
   return (
     <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-44 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
+      <button onClick={() => exec(onToggleActive, wf)} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">
+        <Power className="w-3.5 h-3.5" /> {isActive ? 'Deactivate' : 'Set Active'}
+      </button>
+      <div className="border-t border-zinc-700/60 my-1" />
       <button onClick={() => setMode('rename')} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"><Pencil className="w-3.5 h-3.5" /> Rename</button>
       <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors disabled:opacity-50">
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />} Duplicate
@@ -448,7 +454,7 @@ export default function Dashboard() {
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
                             {openMenuId === (wf._id || wf.id) && (
-                              <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onClose={() => setOpenMenuId(null)} />
+                              <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
                             )}
                           </td>
                         </tr>
@@ -463,21 +469,12 @@ export default function Dashboard() {
                     <div
                       key={wf._id || wf.id}
                       onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 cursor-pointer transition-all duration-150"
+                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-[#0a0a0a] hover:bg-[#0f0f0f] hover:border-zinc-700/80 cursor-pointer transition-all duration-150"
                       style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          {/* Toggle */}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleToggleActive(wf); }}
-                            className={`w-7 h-4 rounded-full relative transition-colors duration-200 shrink-0 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
-                          >
-                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
-                          </button>
-                          <h3 className="text-[13px] font-medium text-neutral-200 group-hover:text-white truncate">{wf.name}</h3>
-                        </div>
-                        <div className="relative shrink-0 ml-2">
+                      <div className="flex items-start justify-between mb-2.5">
+                        <h3 className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate flex-1 min-w-0 mr-2">{wf.name}</h3>
+                        <div className="relative shrink-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
                             className="p-1 text-neutral-700 hover:text-neutral-400 rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -485,14 +482,14 @@ export default function Dashboard() {
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
                           {openMenuId === (wf._id || wf.id) && (
-                            <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onClose={() => setOpenMenuId(null)} />
+                            <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
                           )}
                         </div>
                       </div>
-                      <p className="text-[11px] text-neutral-600 mb-auto line-clamp-2 min-h-[2rem]">{wf.description || 'No description'}</p>
-                      <div className="flex items-center justify-between text-[10px] text-neutral-700 pt-3 mt-3 border-t border-zinc-800/60">
-                        <span className="capitalize">{wf.trigger || 'manual'}</span>
-                        <span>{timeAgo(wf.updatedAt)}</span>
+                      <p className="text-[11px] text-neutral-600 mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/50">
+                        <span className="text-[10px] text-neutral-700 capitalize">{wf.trigger || 'manual'}</span>
+                        <span className="text-[10px] text-neutral-700">{timeAgo(wf.updatedAt)}</span>
                       </div>
                     </div>
                   ))}
