@@ -341,12 +341,16 @@ export default function Dashboard() {
     try {
       if (isActive) {
         await api.post(`/api/automation/${id}/deactivate`);
-        setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, status: 'draft', active: false } : w));
+        setWorkflows((prev) => prev.map((w) => (w._id || w.id) === id ? { ...w, status: 'draft', active: false } : w));
       } else {
         await api.post(`/api/automation/${id}/activate`);
-        setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, status: 'active', active: true } : w));
+        setWorkflows((prev) => prev.map((w) => (w._id || w.id) === id ? { ...w, status: 'active', active: true } : w));
       }
-    } catch {}
+    } catch (e) {
+      const msg = e.response?.data?.message || e.message || 'Failed to update status.';
+      setSystemError(msg);
+      setTimeout(() => setSystemError(null), 4000);
+    }
   };
 
   // Filter
