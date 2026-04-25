@@ -317,20 +317,25 @@ export default function Analytics() {
           {loading ? SPINNER : (
             <div className="space-y-2">
               {daily.slice(-7).reverse().map((d) => {
-                const pct = Math.round((d.count / dayMax7) * 100);
+                const pct = d.count === 0 ? 0 : Math.round((d.count / dayMax7) * 100);
                 const label = new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', {
                   weekday: 'short', month: 'short', day: 'numeric',
                 });
                 return (
                   <div key={d.date} className="flex items-center gap-3">
-                    <span className="text-[11px] text-neutral-600 w-[108px] shrink-0">{label}</span>
-                    <div className="flex-1 h-1.5 bg-neutral-900 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-neutral-600 transition-all duration-500" style={{ width: `${pct}%` }} />
+                    <span className={`text-[11px] w-[108px] shrink-0 ${d.count === 0 ? 'text-neutral-700' : 'text-neutral-500'}`}>{label}</span>
+                    <div className="flex-1 h-1 bg-neutral-900 rounded-full overflow-hidden">
+                      {pct > 0 && (
+                        <div
+                          className="h-full rounded-full bg-neutral-500 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      )}
                     </div>
-                    <span className="text-[11px] text-neutral-400 tabular-nums w-5 text-right shrink-0">{d.count}</span>
-                    {d.failed > 0 && (
-                      <span className="text-[10px] text-red-400/60 shrink-0 w-[52px]">{d.failed} fail</span>
-                    )}
+                    <span className={`text-[11px] tabular-nums w-5 text-right shrink-0 ${d.count === 0 ? 'text-neutral-700' : 'text-neutral-300'}`}>{d.count}</span>
+                    <span className="text-[10px] text-red-400/70 shrink-0 w-[48px] text-left">
+                      {d.failed > 0 ? `${d.failed} fail` : ''}
+                    </span>
                   </div>
                 );
               })}
