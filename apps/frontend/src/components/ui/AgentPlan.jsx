@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  CheckCircle2, Circle, CircleAlert,
-  CircleDotDashed, CircleX,
+  CheckCircle2, Circle, AlertCircle,
+  CircleDotDashed, XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
@@ -11,8 +11,8 @@ function StatusIcon({ status, size = "sm" }) {
   const map = {
     completed:   <CheckCircle2   className={`${sz} text-emerald-400`} />,
     "in-progress":<CircleDotDashed className={`${sz} text-blue-400`} />,
-    "need-help": <CircleAlert    className={`${sz} text-amber-400`} />,
-    failed:      <CircleX        className={`${sz} text-red-400`} />,
+    "need-help": <AlertCircle    className={`${sz} text-amber-400`} />,
+    failed:      <XCircle        className={`${sz} text-red-400`} />,
     pending:     <Circle         className={`${sz} text-neutral-600`} />,
   };
   return map[status] ?? map.pending;
