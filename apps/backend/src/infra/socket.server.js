@@ -115,6 +115,31 @@ export function initSocketServer(httpServer) {
       });
     });
 
+    // ── Collaboration DM chat ────────────────────────────────────────────────
+    socket.on("collab:dm_send", ({ toUserId, text, automationId }) => {
+      if (!text?.trim() || !toUserId) return;
+
+      const room = roomPresence.get(automationId);
+      const sender = room?.get(socket.userId);
+
+      const msg = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        fromUserId: socket.userId,
+        fromName:   sender?.name   || "Unknown",
+        fromAvatar: sender?.avatar || "",
+        fromColor:  sender?.color  || "#7c3aed",
+        toUserId,
+        automationId,
+        text: text.trim(),
+        timestamp: new Date().toISOString(),
+      };
+
+      // Deliver to recipient
+      io.to(`user:${toUserId}`).emit("collab:dm", msg);
+      // Echo back to sender so they see their own message
+      socket.emit("collab:dm", { ...msg, isSelf: true });
+    });
+
     // ── Cleanup on disconnect ─────────────────────────────────────────────────
     socket.on("disconnect", () => {
       if (socket._collabRoomId) {

@@ -6,6 +6,7 @@ import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
 import ProfileModal from '../../../components/ProfileModal';
 import CollaboratorsModal from './CollaboratorsModal';
+import CollabDMChat from './CollabDMChat';
 import NotificationBell from '../../../components/NotificationBell';
 import { getSocket } from '../../../lib/socket';
 import brianLogo from '../../../assets/brian.webp';
@@ -45,6 +46,8 @@ export default function WorkspaceHeader() {
   const [profileOpen,      setProfileOpen]      = useState(false);
   const [collabOpen,       setCollabOpen]       = useState(false);
   const [presence,         setPresence]         = useState([]);
+  const [activeDM,         setActiveDM]         = useState(null);   // { peer }
+  const [dmMessages,       setDmMessages]       = useState({});     // { [userId]: msg[] }
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('blinkbox_user') || '{}'); } catch { return {}; }
   });
@@ -88,16 +91,29 @@ export default function WorkspaceHeader() {
     const myAvatar = user?.avatar || user?.picture || '';
 
     const join = () => socket.emit('collab:join', { automationId: id, name: myName, avatar: myAvatar });
+
     const onPresence = (members) => setPresence(members.filter(m => String(m.userId) !== String(myId)));
+
+    const onDM = (msg) => {
+      const peerId = msg.isSelf ? msg.toUserId : msg.fromUserId;
+      setDmMessages(prev => ({ ...prev, [peerId]: [...(prev[peerId] || []), msg] }));
+      if (!msg.isSelf) {
+        setActiveDM(prev => prev ?? {
+          peer: { userId: msg.fromUserId, name: msg.fromName, avatar: msg.fromAvatar, color: msg.fromColor },
+        });
+      }
+    };
 
     socket.on('connect', join);
     socket.on('collab:presence', onPresence);
+    socket.on('collab:dm', onDM);
     if (socket.connected) join();
 
     return () => {
       socket.emit('collab:leave', { automationId: id });
       socket.off('connect', join);
       socket.off('collab:presence', onPresence);
+      socket.off('collab:dm', onDM);
     };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -160,12 +176,13 @@ export default function WorkspaceHeader() {
       {/* ── RIGHT ────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2">
 
-        {/* Presence avatars (other users editing) */}
+        {/* Presence avatars — click to open DM */}
         {presence.length > 0 && (
           <div className="flex items-center -space-x-1.5">
             {presence.slice(0, 4).map(p => (
               <UserAvatarBubble key={p.userId} user={{ name: p.name, avatar: p.avatar }}
-                title={`${p.name} is editing`} color={p.color} />
+                title={`${p.name} is editing — click to chat`} color={p.color}
+                onClick={() => setActiveDM(prev => prev?.peer.userId === p.userId ? null : { peer: p })} />
             ))}
             {presence.length > 4 && (
               <div className={`${BTN_H} w-7 rounded-full bg-neutral-800 border-2 border-neutral-950 flex items-center justify-center text-[9px] font-semibold text-neutral-500`}>
@@ -221,6 +238,20 @@ export default function WorkspaceHeader() {
     <KeyboardShortcutsPanel isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     <ProfileModal user={user} isOpen={profileOpen} onClose={() => setProfileOpen(false)} onUpdated={handleProfileUpdated} />
     <CollaboratorsModal automationId={id} isOpen={collabOpen} onClose={() => setCollabOpen(false)} />
+
+    {/* DM chat — floats bottom-right, opens when a presence avatar is clicked */}
+    {activeDM && (
+      <CollabDMChat
+        peer={activeDM.peer}
+        myUserId={user?.id || user?._id || ''}
+        automationId={id}
+        messages={dmMessages[activeDM.peer.userId] || []}
+        onSend={(text) => {
+          getSocket().emit('collab:dm_send', { toUserId: activeDM.peer.userId, text, automationId: id });
+        }}
+        onClose={() => setActiveDM(null)}
+      />
+    )}
     </>
   );
 }

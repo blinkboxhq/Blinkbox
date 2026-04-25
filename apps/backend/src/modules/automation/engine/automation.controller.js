@@ -41,40 +41,42 @@ export async function saveAutomation(req, res) {
   try {
     let automation;
 
-    // 🛡️ THE FIX: Inject the secure user ID into the data payload before saving
-    // (Assuming your auth middleware attaches the user to req.user)
-    if (req.user && req.user.id) {
-      req.body.workspaceId = req.user.id;
-    }
-
-    // Never let a save overwrite activation state — use /activate and /deactivate for that
+    // Never let a save overwrite activation state
     delete req.body.active;
     delete req.body.status;
 
-    // If an ID is passed in the params, update the existing one
     if (req.params.id) {
-      // Snapshot current state before overwriting (for version history)
-      const existing = await Automation.findOne({
+      // Updating an existing automation —
+      // allow owner OR an editor-role collaborator to save.
+      // Do NOT overwrite workspaceId (ownership stays with original creator).
+      delete req.body.workspaceId;
+
+      const accessFilter = {
         _id: req.params.id,
-        workspaceId: req.user.id,
-      });
-      if (existing) await snapshotBeforeSave(existing, req.user.id);
+        $or: [
+          { workspaceId: req.user.id },
+          { collaborators: { $elemMatch: { userId: String(req.user.id), role: "editor" } } },
+        ],
+      };
+
+      const existing = await Automation.findOne(accessFilter);
+      if (!existing) throw new Error("Automation not found or access denied");
+
+      await snapshotBeforeSave(existing, existing.workspaceId);
 
       automation = await Automation.findOneAndUpdate(
-        { _id: req.params.id, workspaceId: req.user.id },
+        { _id: req.params.id },
         req.body,
         { returnDocument: "after" },
       );
-      if (!automation) throw new Error("Automation not found or access denied");
-    }
-    // Otherwise, create a brand new one!
-    else {
+    } else {
+      // Creating a brand new automation — inject current user as owner
+      req.body.workspaceId = req.user.id;
       automation = await Automation.create(req.body);
     }
 
     res.json({ success: true, automation });
   } catch (err) {
-    // 🚨 This will print the EXACT reason it failed in your backend terminal!
     console.error("SAVE ERROR:", err.message);
     res.status(400).json({ success: false, message: err.message });
   }

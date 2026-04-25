@@ -201,7 +201,8 @@ export const createUISlice = (set, get) => ({
       await api.put(`/api/automation/${automationId}`, payload);
       if (!silent) toast.success("Workflow saved");
     } catch (error) {
-      // Always surface errors, even on silent auto-saves
+      // Suppress access-denied errors on silent auto-saves (viewer collaborators, etc.)
+      if (silent && (error.response?.status === 403 || error.response?.status === 401)) return;
       toast.error(
         "Save failed: " + (error.response?.data?.message || error.message),
       );
