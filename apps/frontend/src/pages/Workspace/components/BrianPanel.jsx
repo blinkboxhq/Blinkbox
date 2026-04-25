@@ -73,7 +73,7 @@ function Bubble({ msg, onApply }) {
           className={`px-3.5 py-2.5 rounded-2xl text-[12.5px] leading-relaxed ${
             isUser
               ? 'bg-white/[0.08] text-neutral-200 rounded-tr-sm'
-              : 'bg-[#111] border border-zinc-800 text-neutral-300 rounded-tl-sm'
+              : 'bg-neutral-900 border border-[#333] text-neutral-300 rounded-tl-sm'
           }`}
         >
           {renderText(msg.text)}
@@ -108,7 +108,7 @@ function Thinking() {
       <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
         <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
       </div>
-      <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-[#111] border border-zinc-800 flex items-center gap-1">
+      <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-neutral-900 border border-[#333] flex items-center gap-1">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
@@ -200,20 +200,13 @@ export default function BrianPanel() {
 
   return (
     <>
-      {/* Backdrop — click to close */}
+      {/* Panel — docked sidebar, not an overlay */}
       <div
-        className="absolute inset-0 z-30"
-        onClick={() => setBrianOpen(false)}
-      />
-
-      {/* Panel */}
-      <div
-        className="absolute top-0 right-0 h-full w-[360px] z-40 flex flex-col bg-[#0a0a0a] border-l border-zinc-800/80"
-        style={{ animation: 'brianSlide 0.2s cubic-bezier(0.16,1,0.3,1)' }}
-        onClick={(e) => e.stopPropagation()}
+        className="w-[340px] shrink-0 h-full flex flex-col bg-neutral-950 border-l border-[#333]"
+        style={{ animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-800/80 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#333] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
               <img src={brianLogo} alt="Brian" className="w-5 h-5 object-contain" />
@@ -257,7 +250,7 @@ export default function BrianPanel() {
               <button
                 key={s}
                 onClick={() => send(s)}
-                className="w-full text-left px-3 py-2 rounded-lg border border-zinc-800/80 bg-[#0f0f0f] text-[11.5px] text-neutral-500 hover:text-neutral-300 hover:border-zinc-700 hover:bg-white/[0.03] transition-all"
+                className="w-full text-left px-3 py-2 rounded-lg border border-[#333] bg-neutral-900 text-[11.5px] text-neutral-500 hover:text-neutral-300 hover:border-neutral-700 hover:bg-white/[0.03] transition-all"
               >
                 {s}
               </button>
@@ -266,8 +259,8 @@ export default function BrianPanel() {
         )}
 
         {/* Input */}
-        <div className="px-3 pb-4 pt-2 border-t border-zinc-800/80 shrink-0">
-          <div className="flex items-end gap-2 bg-[#0f0f0f] border border-zinc-800 rounded-xl px-3 py-2.5 focus-within:border-zinc-600 transition-colors">
+        <div className="px-3 pb-4 pt-2 border-t border-[#333] shrink-0">
+          <div className="flex items-end gap-2 bg-neutral-900 border border-[#333] rounded-xl px-3 py-2.5 focus-within:border-neutral-600 transition-colors">
             <textarea
               ref={inputRef}
               value={input}

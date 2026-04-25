@@ -101,13 +101,13 @@ export default function Workspace() {
         <WorkspaceHeader />
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* Main canvas row */}
-          <div className="flex-1 flex overflow-hidden min-h-0 relative">
+          <div className="flex-1 flex overflow-hidden min-h-0">
             <ReactFlowProvider>
               <Canvas />
               <WorkspaceRightSidebar />
-              <BrianPanel />
               <NodeConfigModal />
             </ReactFlowProvider>
+            <BrianPanel />
           </div>
 
           {/* Bottom chat panel */}
