@@ -374,7 +374,6 @@ export default function Dashboard() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreate}
-        onCreateTemplate={handleCreateTemplate}
         isLoading={isCreating}
       />
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
