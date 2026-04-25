@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, ChevronRight, RotateCcw, Check } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import api from '../../../lib/api';
+import BrianThinking from './BrianThinking';
 
 async function callBrian(messages) {
   const { data } = await api.post('/api/brian/chat', {
@@ -67,26 +69,6 @@ function Bubble({ msg, onApply }) {
             }
           </button>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ── Thinking indicator ───────────────────────────────────────────────────────
-function Thinking() {
-  return (
-    <div className="flex gap-2.5">
-      <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
-        <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
-      </div>
-      <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-neutral-900 border border-[#333] flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-violet-400/60"
-            style={{ animation: `brianDot 1.2s ease-in-out ${i * 0.2}s infinite` }}
-          />
-        ))}
       </div>
     </div>
   );
@@ -217,7 +199,9 @@ export default function BrianPanel({ width, onResizeStart }) {
           {messages.map((msg) => (
             <Bubble key={msg.id} msg={msg} onApply={applyFlow} />
           ))}
-          {thinking && <Thinking />}
+          <AnimatePresence>
+            {thinking && <BrianThinking key="brian-thinking" />}
+          </AnimatePresence>
           <div ref={bottomRef} />
         </div>
 
