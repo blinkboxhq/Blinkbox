@@ -1,9 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard, Power, PanelLeft, PanelBottom, PanelRight, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Play, Save, Loader2, Check, Clock, Keyboard, Power, PanelLeft, PanelBottom } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
+import brianLogo from '../../../assets/brian.webp';
 
 export default function WorkspaceHeader() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function WorkspaceHeader() {
   const liveExecutionState = useWorkspaceStore(state => state.liveExecutionState);
   const panels = useWorkspaceStore(state => state.panels);
   const togglePanel = useWorkspaceStore(state => state.togglePanel);
+  const isBrianOpen = useWorkspaceStore(state => state.isBrianOpen);
+  const setBrianOpen = useWorkspaceStore(state => state.setBrianOpen);
 
   const nodeCount = nodes.length;
   const executionStatus = liveExecutionState?.status || (isRunning ? 'running' : 'idle');
@@ -49,75 +52,94 @@ export default function WorkspaceHeader() {
   }, [id, saveEngine, runEngine]);
 
   const statusBadgeColor =
-    executionStatus === 'failed' ? 'bg-red-500/5 border-red-500/20 text-red-400' :
+    executionStatus === 'failed'   ? 'bg-red-500/5 border-red-500/20 text-red-400' :
     executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
-    executionStatus === 'running' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
-    'bg-zinc-900/50 border-zinc-800 text-zinc-500';
+    executionStatus === 'running'  ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
+    'bg-neutral-900/50 border-[#333] text-neutral-500';
+
+  const panelToggles = [
+    {
+      key: 'leftSidebar',
+      title: 'Left sidebar',
+      active: panels.leftSidebar,
+      onClick: () => togglePanel('leftSidebar'),
+      icon: <PanelLeft className="w-3.5 h-3.5" />,
+    },
+    {
+      key: 'bottomChat',
+      title: 'Chat + Tree',
+      active: panels.bottomChat,
+      onClick: () => togglePanel('bottomChat'),
+      icon: <PanelBottom className="w-3.5 h-3.5" />,
+    },
+    {
+      key: 'brian',
+      title: 'Brian AI',
+      active: isBrianOpen,
+      onClick: () => setBrianOpen(!isBrianOpen),
+      icon: <img src={brianLogo} alt="Brian" className="w-3.5 h-3.5 object-contain" />,
+    },
+  ];
 
   return (
     <>
-    <div className="relative w-full h-14 bg-zinc-950 border-b border-zinc-800/60 z-50 flex items-center justify-between px-6 shrink-0">
+    <div className="relative w-full h-14 bg-neutral-950 border-b border-[#333] z-50 flex items-center justify-between px-5 shrink-0">
 
       {/* Left: Breadcrumb */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={() => navigate('/dashboard')}
-          className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.05] rounded-lg transition-colors shrink-0"
           title="Back to Dashboard"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
-        <div className="w-px h-4 bg-zinc-800" />
+        <div className="w-px h-4 bg-[#333]" />
 
-        <nav className="flex items-center gap-2 text-xs">
+        <nav className="flex items-center gap-2 text-xs min-w-0">
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="text-neutral-500 hover:text-neutral-300 transition-colors shrink-0"
           >
             Workflows
           </button>
-          <span className="text-zinc-700">/</span>
-          <span className="text-zinc-200 font-medium tracking-tight truncate max-w-xs" title={workflowName}>
+          <span className="text-neutral-700">/</span>
+          <span className="text-neutral-200 font-medium tracking-tight truncate max-w-[180px]" title={workflowName}>
             {workflowName}
           </span>
         </nav>
       </div>
 
       {/* Centre: Panel toggles */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-zinc-900/80 border border-zinc-800 rounded-lg p-1">
-        {[
-          { key: 'leftSidebar', icon: PanelLeft,   title: 'Left sidebar' },
-          { key: 'canvas',      icon: LayoutTemplate, title: 'Canvas (always on)' },
-          { key: 'bottomChat',  icon: PanelBottom, title: 'Chat panel' },
-          { key: 'nodeTree',    icon: PanelRight,  title: 'Node tree' },
-        ].map(({ key, icon: Icon, title }) => {
-          const on = key === 'canvas' ? true : panels[key];
-          return (
-            <button
-              key={key}
-              onClick={() => key !== 'canvas' && togglePanel(key)}
-              title={title}
-              className={`p-1.5 rounded-md transition-all ${on ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'} ${key === 'canvas' ? 'cursor-default' : ''}`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-            </button>
-          );
-        })}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-neutral-900 border border-[#333] rounded-lg p-1">
+        {panelToggles.map(({ key, title, active, onClick, icon }) => (
+          <button
+            key={key}
+            onClick={onClick}
+            title={title}
+            className={`p-1.5 rounded-md transition-all ${
+              active
+                ? 'bg-white/10 text-white'
+                : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.05]'
+            }`}
+          >
+            {icon}
+          </button>
+        ))}
       </div>
 
       {/* Right: Status + Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
 
         {/* Node count */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border border-zinc-800 rounded-lg">
-          <Zap className="w-3 h-3 text-zinc-500" />
-          <span className="text-[11px] font-mono text-zinc-400">{nodeCount} nodes</span>
+        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 border border-[#333] rounded-lg">
+          <span className="text-[11px] font-mono text-neutral-500">{nodeCount} nodes</span>
         </div>
 
         {/* Execution status */}
-        <div className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg transition-colors ${statusBadgeColor}`}>
-          {executionStatus === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+        <div className={`flex items-center gap-2 px-2.5 py-1.5 border rounded-lg transition-colors ${statusBadgeColor}`}>
+          {executionStatus === 'running'  && <Loader2 className="w-3 h-3 animate-spin" />}
           {executionStatus === 'executed' && <Check className="w-3 h-3" />}
           <span className="text-[11px] font-semibold uppercase tracking-widest">
             {executionStatus === 'executed' ? 'Success' : executionStatus === 'running' ? 'Running' : executionStatus === 'failed' ? 'Failed' : 'Idle'}
@@ -125,73 +147,67 @@ export default function WorkspaceHeader() {
         </div>
 
         {/* Save indicator */}
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500">
+        <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
           {isSaving ? (
-            <>
-              <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Saving</span>
-            </>
+            <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving</span></>
           ) : (
-            <>
-              <Check className="w-3 h-3 text-emerald-500/70" />
-              <span>Saved</span>
-            </>
+            <><Check className="w-3 h-3 text-emerald-500/60" /><span>Saved</span></>
           )}
         </div>
 
-        {/* Shortcuts button */}
+        {/* Shortcuts */}
         <button
           onClick={() => setShortcutsOpen(true)}
           title="Keyboard shortcuts (?)"
-          className="p-1.5 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+          className="p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.05] rounded-lg transition-colors"
         >
           <Keyboard className="w-3.5 h-3.5" />
         </button>
 
-        {/* History button */}
+        <div className="w-px h-4 bg-[#333]" />
+
+        {/* History */}
         <button
           onClick={() => setVersionPanelOpen(true)}
           title="Version history"
-          className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-100 transition-colors"
+          className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 hover:bg-white/[0.05] border border-[#333] rounded-lg text-[11px] font-semibold text-neutral-500 hover:text-neutral-200 transition-colors"
         >
           <Clock className="w-3.5 h-3.5" />
           History
         </button>
 
-        {/* Save button */}
+        {/* Save */}
         <button
           onClick={() => saveEngine(id)}
           disabled={isSaving}
           title="Save (Cmd+S)"
-          className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-[11px] font-semibold text-zinc-300 hover:text-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 hover:bg-white/[0.05] border border-[#333] rounded-lg text-[11px] font-semibold text-neutral-400 hover:text-neutral-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Save
         </button>
 
-        {/* Activate toggle */}
+        {/* Activate */}
         <button
           onClick={() => activateEngine(id)}
           disabled={isActivating || nodeCount === 0}
-          title={isActive ? "Deactivate trigger" : "Activate trigger — go live"}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          title={isActive ? 'Deactivate trigger' : 'Activate trigger — go live'}
+          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
             isActive
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+              : 'bg-neutral-900 border-[#333] text-neutral-400 hover:bg-white/[0.05] hover:text-neutral-100'
           }`}
         >
-          {isActivating
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Power className="w-3.5 h-3.5" />}
+          {isActivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
           {isActive ? 'Active' : 'Activate'}
         </button>
 
-        {/* Run button */}
+        {/* Run */}
         <button
           onClick={() => runEngine(id)}
           disabled={isRunning || nodeCount === 0}
           title="Run (Cmd+Enter)"
-          className="flex items-center gap-2 px-4 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
           Run Test

@@ -7,14 +7,11 @@ import WorkspaceRightSidebar from './components/WorkspaceRightSidebar';
 import logo from '../../assets/logo.svg';
 
 // 1. Layout Components
-import GlobalHeader from '../../components/GlobalHeader';
 import DashboardSidebar from '../Dashboard/components/DashboardSidebar';
 import Canvas from './components/Canvas';
-import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 import NodeConfigModal from './components/NodeConfigModal';
 import BrianPanel from './components/BrianPanel';
 import BottomChatPanel from './components/BottomChatPanel';
-import NodeTreePanel from './components/NodeTreePanel';
 import WorkspaceHeader from './components/WorkspaceHeader';
 
 // Re-export from the centralized registry
@@ -111,7 +108,6 @@ export default function Workspace() {
               <BrianPanel />
               <NodeConfigModal />
             </ReactFlowProvider>
-            {panels.nodeTree && <NodeTreePanel />}
           </div>
 
           {/* Bottom chat panel */}

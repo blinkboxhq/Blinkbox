@@ -24,7 +24,7 @@ export const createUISlice = (set, get) => ({
   isTriggerPickerOpen: false,
   isAddNodeOpen: false,
   isBrianOpen: false,
-  panels: { leftSidebar: true, bottomChat: false, nodeTree: false },
+  panels: { leftSidebar: true, bottomChat: false },
   workflowName: "Loading...",
   isActive: false,
   isSaving: false,

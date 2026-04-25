@@ -97,7 +97,7 @@ function NodeRow({ node, edges, allNodes, depth = 0, visited = new Set() }) {
   );
 }
 
-export default function NodeTreePanel() {
+export default function NodeTreePanel({ embedded = false }) {
   const nodes = useWorkspaceStore(s => s.nodes);
   const edges = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
@@ -109,9 +109,9 @@ export default function NodeTreePanel() {
   const displayRoots = roots.length > 0 ? roots : nodes.slice(0, 1);
 
   return (
-    <div className="w-[220px] shrink-0 bg-[#0a0a0a] border-l border-zinc-800/80 flex flex-col overflow-hidden">
+    <div className={`${embedded ? 'flex-1 min-w-0' : 'w-[220px] shrink-0'} bg-neutral-950 ${embedded ? 'border-l border-[#333]' : 'border-l border-[#333]'} flex flex-col overflow-hidden`}>
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-zinc-800/60 shrink-0">
+      <div className="px-3 py-2.5 border-b border-[#333] shrink-0">
         <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-widest">Node Tree</p>
       </div>
 
@@ -152,7 +152,7 @@ export default function NodeTreePanel() {
       </div>
 
       {/* Footer stats */}
-      <div className="px-3 py-2 border-t border-zinc-800/60 shrink-0">
+      <div className="px-3 py-2 border-t border-[#333] shrink-0">
         <div className="flex items-center justify-between text-[10px] text-zinc-700">
           <span>{nodes.length} nodes</span>
           <span>{edges.length} edges</span>
