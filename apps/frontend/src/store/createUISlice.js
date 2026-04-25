@@ -145,7 +145,7 @@ export const createUISlice = (set, get) => ({
   },
 
   // ── API: Save Workflow ───────────────────────────────────────────────────
-  saveEngine: async (automationId) => {
+  saveEngine: async (automationId, silent = false) => {
     const state = get();
     set({ isSaving: true });
     try {
@@ -199,8 +199,9 @@ export const createUISlice = (set, get) => ({
       };
 
       await api.put(`/api/automation/${automationId}`, payload);
-      toast.success("Workflow saved");
+      if (!silent) toast.success("Workflow saved");
     } catch (error) {
+      // Always surface errors, even on silent auto-saves
       toast.error(
         "Save failed: " + (error.response?.data?.message || error.message),
       );

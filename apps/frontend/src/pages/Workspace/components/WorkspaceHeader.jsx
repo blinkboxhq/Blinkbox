@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Loader2, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users } from 'lucide-react';
+import { ArrowLeft, Loader2, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users, CloudOff } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
@@ -49,7 +49,8 @@ export default function WorkspaceHeader() {
     try { return JSON.parse(localStorage.getItem('blinkbox_user') || '{}'); } catch { return {}; }
   });
 
-  const workflowName   = useWorkspaceStore(s => s.workflowName);
+  const workflowName = useWorkspaceStore(s => s.workflowName);
+  const isSaving     = useWorkspaceStore(s => s.isSaving);
   const isActive       = useWorkspaceStore(s => s.isActive);
   const isActivating   = useWorkspaceStore(s => s.isActivating);
   const saveEngine     = useWorkspaceStore(s => s.saveEngine);
@@ -135,6 +136,13 @@ export default function WorkspaceHeader() {
             {workflowName}
           </span>
         </nav>
+        {/* Auto-save pulse — only visible while saving */}
+        {isSaving && (
+          <div className="flex items-center gap-1 text-[10px] text-neutral-600 shrink-0">
+            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+            <span>Saving…</span>
+          </div>
+        )}
       </div>
 
       {/* ── CENTER — absolutely locked to true midpoint ───────────────────── */}
