@@ -49,7 +49,7 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
 
   if (mode === 'rename') {
     return (
-      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="absolute right-0 bottom-full mb-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
         <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider px-1 mb-1.5">Rename</p>
         <div className="flex items-center gap-1.5">
           <input autoFocus value={val} onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())} className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[12px] text-white focus:outline-none focus:border-neutral-600" />
@@ -62,7 +62,7 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
 
   if (mode === 'confirmDelete') {
     return (
-      <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="absolute right-0 bottom-full mb-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
         <p className="text-[12px] text-neutral-300 mb-3">Delete <strong>{wf.name}</strong>? This cannot be undone.</p>
         <div className="flex items-center gap-2 justify-end">
           <button onClick={() => setMode('menu')} className="text-[12px] text-neutral-500 hover:text-white px-2 py-1">Cancel</button>
@@ -79,7 +79,7 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
   const iconSz = { width: 13, height: 13, flexShrink: 0 };
 
   return (
-    <div ref={ref} style={{ fontSize: 12 }} className="absolute right-0 top-full mt-1 z-40 w-40 bg-[#111] border border-zinc-800 rounded-lg shadow-2xl py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div ref={ref} style={{ fontSize: 12 }} className="absolute right-0 bottom-full mb-1 z-40 w-40 bg-[#111] border border-zinc-800 rounded-lg shadow-2xl py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <button onClick={() => exec(onToggleActive, wf)} className={btnCls}>
         <Power style={iconSz} /> {isActive ? 'Deactivate' : 'Set Active'}
       </button>
