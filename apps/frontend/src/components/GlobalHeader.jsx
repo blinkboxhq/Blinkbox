@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Loader2, Save, Play } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
 import ProfileModal from './ProfileModal';
+import NotificationBell from './NotificationBell';
 
 function UserAvatar({ user, onClick }) {
   const src = user?.avatar || user?.picture;
@@ -133,6 +134,7 @@ export default function GlobalHeader({ user: userProp }) {
           </>
         )}
 
+        <NotificationBell />
         <UserAvatar user={user} onClick={() => setProfileOpen(true)} />
       </div>
     </header>

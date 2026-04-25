@@ -444,7 +444,13 @@ export async function getAutomations(req, res) {
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const filter = { workspaceId: req.user.id };
+    // Return automations the user owns OR has accepted collaboration on
+    const filter = {
+      $or: [
+        { workspaceId: req.user.id },
+        { "collaborators.userId": String(req.user.id) },
+      ],
+    };
 
     const [automations, total] = await Promise.all([
       Automation.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),

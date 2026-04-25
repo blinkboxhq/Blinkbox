@@ -6,6 +6,7 @@ import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
 import ProfileModal from '../../../components/ProfileModal';
 import CollaboratorsModal from './CollaboratorsModal';
+import NotificationBell from '../../../components/NotificationBell';
 import { getSocket } from '../../../lib/socket';
 import brianLogo from '../../../assets/brian.webp';
 
@@ -165,6 +166,9 @@ export default function WorkspaceHeader() {
             )}
           </div>
         )}
+
+        {/* Notification bell */}
+        <NotificationBell />
 
         {/* Share */}
         <button onClick={() => setCollabOpen(true)} title="Manage collaborators"

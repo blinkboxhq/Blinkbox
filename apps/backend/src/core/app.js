@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import authRoutes from "../modules/auth/auth.routes.js";
 import profileRoutes from "../modules/profile/profile.routes.js";
+import inviteRoutes from "../modules/collab/invite.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
 import automationRoutes from "../modules/automation/automation.routes.js";
 import executionRoutes from "../modules/execution/execution.routes.js";
@@ -95,6 +96,7 @@ app.post("/api/automations/signal/:workflowId", handleApprovalSignal);
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/invites", inviteRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/execution", executionRoutes);
