@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard, Power } from 'lucide-react';
+import { ArrowLeft, Play, Save, Loader2, Check, Zap, Clock, Keyboard, Power, PanelLeft, PanelBottom, PanelRight, LayoutTemplate } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
@@ -21,6 +21,8 @@ export default function WorkspaceHeader() {
   const activateEngine = useWorkspaceStore(state => state.activateEngine);
   const nodes = useWorkspaceStore(state => state.nodes);
   const liveExecutionState = useWorkspaceStore(state => state.liveExecutionState);
+  const panels = useWorkspaceStore(state => state.panels);
+  const togglePanel = useWorkspaceStore(state => state.togglePanel);
 
   const nodeCount = nodes.length;
   const executionStatus = liveExecutionState?.status || (isRunning ? 'running' : 'idle');
@@ -80,6 +82,28 @@ export default function WorkspaceHeader() {
             {workflowName}
           </span>
         </nav>
+      </div>
+
+      {/* Centre: Panel toggles */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-zinc-900/80 border border-zinc-800 rounded-lg p-1">
+        {[
+          { key: 'leftSidebar', icon: PanelLeft,   title: 'Left sidebar' },
+          { key: 'canvas',      icon: LayoutTemplate, title: 'Canvas (always on)' },
+          { key: 'bottomChat',  icon: PanelBottom, title: 'Chat panel' },
+          { key: 'nodeTree',    icon: PanelRight,  title: 'Node tree' },
+        ].map(({ key, icon: Icon, title }) => {
+          const on = key === 'canvas' ? true : panels[key];
+          return (
+            <button
+              key={key}
+              onClick={() => key !== 'canvas' && togglePanel(key)}
+              title={title}
+              className={`p-1.5 rounded-md transition-all ${on ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'} ${key === 'canvas' ? 'cursor-default' : ''}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+            </button>
+          );
+        })}
       </div>
 
       {/* Right: Status + Actions */}

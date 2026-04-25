@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Monitor, ArrowLeft } from 'lucide-react';
@@ -13,6 +13,9 @@ import Canvas from './components/Canvas';
 import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 import NodeConfigModal from './components/NodeConfigModal';
 import BrianPanel from './components/BrianPanel';
+import BottomChatPanel from './components/BottomChatPanel';
+import NodeTreePanel from './components/NodeTreePanel';
+import WorkspaceHeader from './components/WorkspaceHeader';
 
 // Re-export from the centralized registry
 export { NodeRegistry } from './nodeRegistry';
@@ -45,11 +48,20 @@ function MobileGate() {
   );
 }
 
+const CHAT_MIN = 140;
+const CHAT_MAX = 480;
+const CHAT_DEFAULT = 220;
+
 export default function Workspace() {
   const { id } = useParams();
   const navigate = useNavigate();
   const loadEngine = useWorkspaceStore((state) => state.loadEngine);
+  const panels = useWorkspaceStore((state) => state.panels);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  const [chatHeight, setChatHeight] = useState(CHAT_DEFAULT);
+  const resizing = useRef(false);
+  const startY = useRef(0);
+  const startH = useRef(CHAT_DEFAULT);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 640);
@@ -61,26 +73,51 @@ export default function Workspace() {
     if (id && !isMobile) loadEngine(id);
   }, [id, loadEngine, isMobile]);
 
+  const onResizeStart = useCallback((e) => {
+    resizing.current = true;
+    startY.current = e.clientY;
+    startH.current = chatHeight;
+    const onMove = (ev) => {
+      if (!resizing.current) return;
+      const delta = startY.current - ev.clientY;
+      setChatHeight(Math.min(CHAT_MAX, Math.max(CHAT_MIN, startH.current + delta)));
+    };
+    const onUp = () => { resizing.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [chatHeight]);
+
   if (isMobile) return <MobileGate />;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#1E1E20]">
-      <DashboardSidebar
-        user={{ name: 'User', email: '' }}
-        onLogout={() => navigate('/login')}
-        activeTab="workflows"
-        setActiveTab={(tab) => navigate(`/dashboard?tab=${tab}`)}
-        usage={null}
-      />
-      <div className="flex-1 flex flex-col relative overflow-hidden">
-        <GlobalHeader user={{ name: 'User' }} />
-        <div className="flex-1 w-full flex overflow-hidden relative">
-          <ReactFlowProvider>
-            <Canvas />
-            <WorkspaceRightSidebar />
-            <BrianPanel />
-            <NodeConfigModal />
-          </ReactFlowProvider>
+      {panels.leftSidebar && (
+        <DashboardSidebar
+          user={{ name: 'User', email: '' }}
+          onLogout={() => navigate('/login')}
+          activeTab="workflows"
+          setActiveTab={(tab) => navigate(`/dashboard?tab=${tab}`)}
+          usage={null}
+        />
+      )}
+      <div className="flex-1 flex flex-col relative overflow-hidden min-w-0">
+        <WorkspaceHeader />
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {/* Main canvas row */}
+          <div className="flex-1 flex overflow-hidden min-h-0 relative">
+            <ReactFlowProvider>
+              <Canvas />
+              <WorkspaceRightSidebar />
+              <BrianPanel />
+              <NodeConfigModal />
+            </ReactFlowProvider>
+            {panels.nodeTree && <NodeTreePanel />}
+          </div>
+
+          {/* Bottom chat panel */}
+          {panels.bottomChat && (
+            <BottomChatPanel height={chatHeight} onResizeStart={onResizeStart} />
+          )}
         </div>
       </div>
     </div>
