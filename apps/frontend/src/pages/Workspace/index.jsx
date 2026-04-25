@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Monitor, ArrowLeft } from 'lucide-react';
@@ -79,22 +79,13 @@ function MobileGate() {
   );
 }
 
-const AUTO_SAVE_DELAY = 5000; // 5 seconds
-
 export default function Workspace() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const loadEngine    = useWorkspaceStore(s => s.loadEngine);
-  const saveEngine    = useWorkspaceStore(s => s.saveEngine);
-  const panels        = useWorkspaceStore(s => s.panels);
-  const isLoading     = useWorkspaceStore(s => s.isLoading);
-  const schemaGen     = useWorkspaceStore(s => s._schemaGeneration);
+  const loadEngine = useWorkspaceStore(s => s.loadEngine);
+  const panels     = useWorkspaceStore(s => s.panels);
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
-
-  // Track the generation at load-complete so we don't auto-save the initial state
-  const loadedGenRef   = useRef(null);
-  const autoSaveTimer  = useRef(null);
 
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 640);
@@ -106,26 +97,19 @@ export default function Workspace() {
     if (id && !isMobile) loadEngine(id);
   }, [id, loadEngine, isMobile]);
 
-  // Capture the schema generation once the canvas finishes loading
+  // Auto-save every 5 s. Reads live store state so it catches every kind of
+  // change (node moves, config edits, edge changes, etc.) without needing
+  // to track a generation counter.
   useEffect(() => {
-    if (!isLoading && loadedGenRef.current === null) {
-      loadedGenRef.current = schemaGen;
-    }
-  }, [isLoading, schemaGen]);
-
-  // Auto-save 5 s after any user-driven graph change
-  useEffect(() => {
-    if (!id || isLoading) return;
-    if (loadedGenRef.current === null) return;          // not loaded yet
-    if (schemaGen <= loadedGenRef.current) return;      // no user changes yet
-
-    clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      saveEngine(id, true); // silent — no success toast
-    }, AUTO_SAVE_DELAY);
-
-    return () => clearTimeout(autoSaveTimer.current);
-  }, [schemaGen, id, isLoading, saveEngine]);
+    if (!id || isMobile) return;
+    const interval = setInterval(() => {
+      const { isLoading, isSaving, nodes, saveEngine } = useWorkspaceStore.getState();
+      if (isLoading || isSaving) return;           // still loading or mid-save
+      if (!nodes.find(n => n.data?.type === 'trigger')) return; // no trigger = nothing to save
+      saveEngine(id, true);                        // silent — no success toast
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [id, isMobile]);
 
   // ── Per-panel resize state ───────────────────────────────────────────────
   const [chatH,     onChatResizeStart] = useResize({ initial: 220, min: 140, max: 480, direction: 'vertical' });
