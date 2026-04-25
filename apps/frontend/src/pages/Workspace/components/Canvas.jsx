@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect } from "react";
 import {
@@ -18,14 +18,34 @@ function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
 
   return (
-    <div className="flex flex-col items-center gap-3 select-none">
-      <button
-        onClick={() => setTriggerPickerOpen(true)}
-        className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 transition-all duration-200 hover:bg-zinc-800/40 cursor-pointer"
-      >
-        <Plus className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
-      </button>
-      <span className="text-sm text-zinc-500 font-medium">Add first step...</span>
+    <div className="flex items-start gap-4 select-none">
+      {/* Manual build */}
+      <div className="flex flex-col items-center gap-3">
+        <button
+          onClick={() => setTriggerPickerOpen(true)}
+          className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 hover:bg-zinc-800/40 transition-all duration-200 cursor-pointer"
+        >
+          <Plus className="w-7 h-7 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
+        </button>
+        <span className="text-[12px] text-zinc-500 font-medium whitespace-nowrap">Add first step</span>
+      </div>
+
+      {/* Divider */}
+      <div className="flex flex-col items-center gap-1 pt-8">
+        <div className="w-px h-6 bg-zinc-800" />
+        <span className="text-[10px] text-zinc-700 font-medium uppercase tracking-widest">or</span>
+        <div className="w-px h-6 bg-zinc-800" />
+      </div>
+
+      {/* Build with AI */}
+      <div className="flex flex-col items-center gap-3">
+        <button
+          className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-violet-500/60 hover:bg-violet-500/5 transition-all duration-200 cursor-pointer"
+        >
+          <Sparkles className="w-7 h-7 text-zinc-600 group-hover:text-violet-400 transition-colors" strokeWidth={1.5} />
+        </button>
+        <span className="text-[12px] text-zinc-500 font-medium whitespace-nowrap">Build with AI</span>
+      </div>
     </div>
   );
 }
@@ -48,7 +68,7 @@ const defaultEdgeOptions = {
 const PLACEHOLDER_NODE = {
   id: "__placeholder__",
   type: "placeholder",
-  position: { x: 400, y: 300 },
+  position: { x: 0, y: 0 },
   data: {},
   selectable: false,
   draggable: false,
@@ -178,6 +198,8 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={{ hideAttribution: true }}
+        fitView
+        fitViewOptions={{ padding: 0.5 }}
         snapToGrid
         snapGrid={[20, 20]}
         panOnDrag
