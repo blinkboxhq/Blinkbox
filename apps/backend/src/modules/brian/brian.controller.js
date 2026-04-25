@@ -1,8 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// gemini-2.0-flash: free on AI Studio, excellent structured JSON output.
-// Override with BRIAN_MODEL env var once Gemma 4 appears in AI Studio's model list.
-const MODEL = process.env.BRIAN_MODEL || "gemini-2.0-flash";
+// Real model names always contain a hyphen (gemini-2.0-flash, gemma-4-27b-it).
+// If BRIAN_MODEL is unset, empty, or looks like a variable name (no hyphen),
+// fall back to gemini-2.0-flash so a misconfigured env var never crashes Brian.
+const _rawModel = process.env.BRIAN_MODEL || "";
+const MODEL = _rawModel.includes("-") ? _rawModel : "gemini-2.0-flash";
+if (_rawModel && !_rawModel.includes("-")) {
+  console.warn(`[Brian] BRIAN_MODEL="${_rawModel}" is not a valid model name — using gemini-2.0-flash. Set it to e.g. gemini-2.0-flash in Railway.`);
+}
 
 const SYSTEM_PROMPT = `You are Brian, an AI workflow builder inside BlinkBox — an automation platform like Zapier and Make.
 
