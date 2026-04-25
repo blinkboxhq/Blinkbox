@@ -123,8 +123,10 @@ export default function BrianPanel({ width, onResizeStart }) {
       const history = [...messages, userMsg].map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
       const result = await callBrian(history);
       setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'brian', text: result.text, flow: result.flow }]);
-    } catch {
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'brian', text: "Sorry, I hit an error. Try again.", flow: null }]);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Unknown error";
+      console.error("[Brian] frontend error:", msg);
+      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'brian', text: `⚠️ ${msg}`, flow: null }]);
     } finally {
       setThinking(false);
     }

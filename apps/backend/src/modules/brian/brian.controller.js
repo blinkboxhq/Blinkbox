@@ -95,19 +95,20 @@ export async function brianChat(req, res) {
   if (!messages.length) return res.status(400).json({ message: "messages array is required" });
 
   try {
-    const genAI  = new GoogleGenerativeAI(apiKey);
-    const model  = genAI.getGenerativeModel({
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // responseMimeType: "application/json" is Gemini-only — Gemma models don't support it.
+    // We parse JSON manually from the text response instead.
+    const model = genAI.getGenerativeModel({
       model: MODEL,
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
-        temperature:     0.4,   // low = more deterministic JSON
+        temperature:     0.4,
         maxOutputTokens: 4096,
-        responseMimeType: "application/json", // force JSON mode where supported
       },
     });
 
-    // Convert our message history to Gemini's format
-    // Gemini uses role: "user" | "model"
+    // Gemini API uses role "user" | "model" (not "assistant")
     const history = messages.slice(0, -1).map((m) => ({
       role: m.role === "user" ? "user" : "model",
       parts: [{ text: m.content }],
@@ -117,6 +118,7 @@ export async function brianChat(req, res) {
     const chat    = model.startChat({ history });
     const result  = await chat.sendMessage(lastMsg.content);
     const raw     = result.response.text();
+    console.log("[Brian] raw model output:", raw.slice(0, 300));
 
     let parsed;
     try {
@@ -131,16 +133,19 @@ export async function brianChat(req, res) {
       flow: parsed.flow || null,
     });
   } catch (err) {
-    console.error("[Brian] Gemma error:", err.message);
+    // Log full error so Railway shows the real cause
+    console.error("[Brian] error:", err.message, err.status, JSON.stringify(err.errorDetails ?? ""));
 
-    // Surface quota/auth errors clearly
-    if (err.message?.includes("API_KEY") || err.status === 403) {
-      return res.status(403).json({ message: "Invalid GOOGLE_AI_KEY — check your environment." });
+    if (!apiKey || err.message?.includes("API_KEY") || err.status === 403) {
+      return res.status(503).json({ message: "GOOGLE_AI_KEY missing or invalid. Add it in Railway variables." });
+    }
+    if (err.status === 404 || err.message?.includes("not found")) {
+      return res.status(503).json({ message: `Model "${MODEL}" not found in AI Studio. Try setting BRIAN_MODEL=gemini-2.0-flash in Railway.` });
     }
     if (err.status === 429) {
       return res.status(429).json({ message: "Brian is rate-limited. Try again in a moment." });
     }
 
-    res.status(500).json({ message: "Brian encountered an error. Try again." });
+    res.status(500).json({ message: `Brian error: ${err.message}` });
   }
 }
