@@ -4,174 +4,225 @@ import api from '../../../lib/api';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// ── SVG Line / Area plot ────────────────────────────────────────────────────
-function LinePlot({ data }) {
-  const W = 800;
-  const H = 180;
-  const PAD = { top: 20, right: 16, bottom: 32, left: 36 };
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
+// ── Cartesian plane plot ────────────────────────────────────────────────────
+function CartesianPlot({ data }) {
+  // Canvas dimensions
+  const W = 860;
+  const H = 260;
+  // Origin sits at bottom-left; leave room for axis labels + arrowheads
+  const O = { x: 54, y: H - 40 }; // origin pixel position
+  const ARROW = 14;                 // extra space past last tick for arrowhead
+  const plotW = W - O.x - 30;      // usable width from origin → right arrow tip
+  const plotH = O.y - 20;          // usable height from origin → top arrow tip
 
   const [hover, setHover] = useState(null);
   const svgRef = useRef(null);
 
-  const max = Math.max(...data.map((d) => d.count), 1);
   const n = data.length;
+  const maxVal = Math.max(...data.map((d) => d.count), 1);
 
-  // Map data point to SVG coordinates
-  const px = (i) => PAD.left + (i / (n - 1)) * innerW;
-  const py = (v) => PAD.top + innerH - (v / max) * innerH;
+  // Round max up to a nice number for Y axis
+  const yMax = Math.ceil(maxVal / 5) * 5 || 5;
 
-  // Build smooth polyline points (cardinal spline via simple bezier)
-  const pts = data.map((d, i) => ({ x: px(i), y: py(d.count) }));
+  // Y ticks: 5 evenly spaced from 0 → yMax
+  const Y_TICKS = 5;
+  const yTicks = Array.from({ length: Y_TICKS + 1 }, (_, i) => ({
+    val: Math.round((i / Y_TICKS) * yMax),
+    py: O.y - (i / Y_TICKS) * plotH,
+  }));
 
-  // Catmull-Rom → cubic bezier conversion for smooth curve
-  function catmullRomPath(points) {
+  // X ticks: one per day, but label every ~5th to avoid crowding
+  const xLabelEvery = Math.max(1, Math.ceil(n / 7));
+
+  // Map day index → pixel X (days start at index 0 = day 1)
+  const toX = (i) => O.x + ((i + 1) / (n + 1)) * (plotW - ARROW);
+  // Map value → pixel Y
+  const toY = (v) => O.y - (v / yMax) * plotH;
+
+  const pts = data.map((d, i) => ({ x: toX(i), y: toY(d.count), d, i }));
+
+  // Smooth Catmull-Rom path through points
+  function curvePath(points) {
     if (points.length < 2) return '';
-    let d = `M ${points[0].x},${points[0].y}`;
+    let path = `M ${points[0].x},${points[0].y}`;
     for (let i = 0; i < points.length - 1; i++) {
       const p0 = points[Math.max(0, i - 1)];
       const p1 = points[i];
       const p2 = points[i + 1];
       const p3 = points[Math.min(points.length - 1, i + 2)];
-      const t = 0.4;
+      const t = 0.35;
       const cp1x = p1.x + (p2.x - p0.x) * t;
       const cp1y = p1.y + (p2.y - p0.y) * t;
       const cp2x = p2.x - (p3.x - p1.x) * t;
       const cp2y = p2.y - (p3.y - p1.y) * t;
-      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
     }
-    return d;
+    return path;
   }
 
-  const linePath = catmullRomPath(pts);
-  // Area fill: close path at bottom
+  const linePath = curvePath(pts);
   const areaPath = pts.length > 1
-    ? `${linePath} L ${pts[pts.length - 1].x},${PAD.top + innerH} L ${pts[0].x},${PAD.top + innerH} Z`
+    ? `${linePath} L ${pts[pts.length - 1].x},${O.y} L ${pts[0].x},${O.y} Z`
     : '';
-
-  // Y-axis grid lines
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-    y: PAD.top + innerH - t * innerH,
-    label: Math.round(t * max),
-  }));
-
-  // X-axis labels — show ~7 evenly spaced
-  const xInterval = Math.max(1, Math.floor(n / 6));
-  const xLabels = data
-    .map((d, i) => ({ i, label: String(d.day), show: i % xInterval === 0 || i === n - 1 }))
-    .filter((x) => x.show);
 
   const handleMouseMove = useCallback((e) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const relX = (e.clientX - rect.left) * (W / rect.width) - PAD.left;
-    const idx = Math.round((relX / innerW) * (n - 1));
-    if (idx >= 0 && idx < n) setHover(idx);
-  }, [n, innerW]);
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    // Find nearest point
+    let closest = null, minDist = Infinity;
+    pts.forEach((p) => {
+      const dist = Math.abs(p.x - mx);
+      if (dist < minDist) { minDist = dist; closest = p.i; }
+    });
+    if (minDist < 30) setHover(closest);
+    else setHover(null);
+  }, [pts]);
+
+  const hPt = hover !== null ? pts[hover] : null;
 
   return (
-    <div className="relative select-none">
+    <div className="relative select-none w-full overflow-x-auto">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
-        style={{ height: '180px' }}
+        style={{ minHeight: '240px' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHover(null)}
       >
         <defs>
-          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fff" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+          <linearGradient id="cpAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.01" />
           </linearGradient>
-          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#525252" />
-            <stop offset="100%" stopColor="#e5e5e5" />
-          </linearGradient>
+          <marker id="arrowX" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#3f3f3f" />
+          </marker>
+          <marker id="arrowY" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,6 L3,0 L6,6 Z" fill="#3f3f3f" />
+          </marker>
         </defs>
 
-        {/* Grid lines */}
-        {yTicks.map((t) => (
-          <g key={t.label}>
-            <line
-              x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
-              stroke="#1f1f1f" strokeWidth="1"
-            />
-            <text x={PAD.left - 6} y={t.y + 3.5} textAnchor="end" fontSize="9" fill="#404040">
-              {t.label}
+        {/* ── Quadrant grid (light) ── */}
+        {yTicks.slice(1).map((t) => (
+          <line key={t.val}
+            x1={O.x} y1={t.py} x2={W - 24} y2={t.py}
+            stroke="#1a1a1a" strokeWidth="1" strokeDasharray="4 4"
+          />
+        ))}
+        {data.map((_, i) => (
+          <line key={i}
+            x1={toX(i)} y1={O.y} x2={toX(i)} y2={20}
+            stroke="#1a1a1a" strokeWidth="1" strokeDasharray="4 4"
+          />
+        ))}
+
+        {/* ── Y-axis ── */}
+        <line
+          x1={O.x} y1={O.y + 6} x2={O.x} y2={20 - ARROW}
+          stroke="#3f3f3f" strokeWidth="1.5"
+          markerEnd="url(#arrowY)"
+        />
+        {/* Y-axis label */}
+        <text x={O.x - 2} y={14} textAnchor="middle" fontSize="9" fill="#555" fontStyle="italic">runs</text>
+
+        {/* Y ticks + labels */}
+        {yTicks.filter((t) => t.val > 0).map((t) => (
+          <g key={t.val}>
+            <line x1={O.x - 4} y1={t.py} x2={O.x + 4} y2={t.py} stroke="#3f3f3f" strokeWidth="1" />
+            <text x={O.x - 8} y={t.py + 3.5} textAnchor="end" fontSize="9" fill="#4a4a4a" fontFamily="monospace">
+              {t.val}
             </text>
           </g>
         ))}
 
-        {/* X-axis labels */}
-        {xLabels.map(({ i, label }) => (
-          <text key={i} x={px(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#404040">
-            {label}
-          </text>
-        ))}
+        {/* ── X-axis ── */}
+        <line
+          x1={O.x - 6} y1={O.y} x2={W - 24 + ARROW} y2={O.y}
+          stroke="#3f3f3f" strokeWidth="1.5"
+          markerEnd="url(#arrowX)"
+        />
+        {/* X-axis label */}
+        <text x={W - 18} y={O.y + 12} textAnchor="middle" fontSize="9" fill="#555" fontStyle="italic">day</text>
 
-        {/* Area fill */}
-        {areaPath && (
-          <path d={areaPath} fill="url(#areaGrad)" />
-        )}
-
-        {/* Line */}
-        {linePath && (
-          <path
-            d={linePath}
-            fill="none"
-            stroke="url(#lineGrad)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* Hover vertical line */}
-        {hover !== null && (
-          <line
-            x1={px(hover)} y1={PAD.top} x2={px(hover)} y2={PAD.top + innerH}
-            stroke="#333" strokeWidth="1" strokeDasharray="3 3"
-          />
-        )}
-
-        {/* Data dots */}
-        {pts.map((p, i) => {
-          const isHover = hover === i;
-          const d = data[i];
-          if (d.count === 0 && !isHover) return null;
+        {/* X ticks + day labels */}
+        {data.map((d, i) => {
+          const showLabel = i % xLabelEvery === 0 || i === n - 1;
           return (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={isHover ? 5 : 3}
-              fill={isHover ? '#fff' : '#666'}
-              stroke={isHover ? '#111' : 'none'}
-              strokeWidth="2"
-              className="transition-all duration-75"
-            />
+            <g key={i}>
+              <line x1={toX(i)} y1={O.y - 4} x2={toX(i)} y2={O.y + 4} stroke="#3f3f3f" strokeWidth="1" />
+              {showLabel && (
+                <text x={toX(i)} y={O.y + 16} textAnchor="middle" fontSize="9" fill="#4a4a4a" fontFamily="monospace">
+                  {d.day}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Origin label */}
+        <text x={O.x - 8} y={O.y + 14} textAnchor="middle" fontSize="9" fill="#333" fontFamily="monospace">0</text>
+
+        {/* ── Area fill ── */}
+        {areaPath && <path d={areaPath} fill="url(#cpAreaGrad)" />}
+
+        {/* ── Curve line ── */}
+        {linePath && (
+          <path d={linePath} fill="none" stroke="#525252" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+
+        {/* ── Plotted points ── */}
+        {pts.map((p) => {
+          const isHov = hover === p.i;
+          return (
+            <g key={p.i}>
+              {/* Crosshair lines through the point when hovered */}
+              {isHov && (
+                <>
+                  <line x1={O.x} y1={p.y} x2={p.x} y2={p.y} stroke="#2a2a2a" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1={p.x} y1={O.y} x2={p.x} y2={p.y} stroke="#2a2a2a" strokeWidth="1" strokeDasharray="3 3" />
+                </>
+              )}
+              {/* Outer glow ring on hover */}
+              {isHov && <circle cx={p.x} cy={p.y} r={9} fill="#ffffff" fillOpacity="0.06" />}
+              {/* Point */}
+              <circle
+                cx={p.x} cy={p.y}
+                r={isHov ? 5 : p.d.count === 0 ? 2.5 : 3.5}
+                fill={isHov ? '#fff' : p.d.count === 0 ? '#1f1f1f' : '#737373'}
+                stroke={isHov ? '#111' : p.d.count === 0 ? '#2a2a2a' : '#111'}
+                strokeWidth={isHov ? 2 : 1}
+              />
+              {/* Coordinate label on hover */}
+              {isHov && (
+                <text
+                  x={p.x + 9} y={p.y - 7}
+                  fontSize="9" fill="#888" fontFamily="monospace"
+                >
+                  ({p.d.day}, {p.d.count})
+                </text>
+              )}
+            </g>
           );
         })}
       </svg>
 
-      {/* Floating tooltip */}
-      {hover !== null && (
+      {/* Tooltip card */}
+      {hPt && (
         <div
-          className="absolute pointer-events-none z-30"
+          className="absolute pointer-events-none z-30 bottom-12"
           style={{
-            bottom: `${H * 0.15}px`,
-            left: `${(px(hover) / W) * 100}%`,
-            transform: 'translateX(-50%)',
+            left: `${(hPt.x / W) * 100}%`,
+            transform: hPt.x / W > 0.7 ? 'translateX(-110%)' : 'translateX(12px)',
           }}
         >
-          <div className="bg-[#111] border border-zinc-700/80 rounded-xl px-3.5 py-2.5 shadow-2xl whitespace-nowrap">
-            <p className="text-[10px] text-neutral-500 mb-1.5">{data[hover]?.date}</p>
-            <p className="text-[15px] font-bold text-white leading-none mb-1">{data[hover]?.count} runs</p>
-            <div className="flex gap-3">
-              <span className="text-[10px] text-emerald-400">{data[hover]?.success} success</span>
-              <span className="text-[10px] text-red-400">{data[hover]?.failed} failed</span>
+          <div className="bg-[#0f0f0f] border border-zinc-700/70 rounded-xl px-4 py-3 shadow-2xl whitespace-nowrap">
+            <p className="text-[10px] text-neutral-600 mb-1 font-mono">Day {hPt.d.day} · {hPt.d.date}</p>
+            <p className="text-[16px] font-bold text-white leading-none mb-1.5">{hPt.d.count} <span className="text-[11px] font-normal text-neutral-500">runs</span></p>
+            <div className="flex gap-3 border-t border-zinc-800 pt-1.5">
+              <span className="text-[10px] text-emerald-400">{hPt.d.success} success</span>
+              <span className="text-[10px] text-red-400">{hPt.d.failed} failed</span>
             </div>
           </div>
         </div>
