@@ -8,10 +8,12 @@ import {
   cancelExecution,
   retryExecution,
   getExecutionLogs,
+  getAnalytics,
 } from "./execution.controller.js";
 
 const router = Router();
 
+router.get("/analytics", verifyToken, getAnalytics);
 router.post("/start/:automationId", verifyToken, startExecution);
 router.get("/:executionId", verifyToken, getExecutionById);
 router.get("/automation/:automationId", verifyToken, listExecutions);

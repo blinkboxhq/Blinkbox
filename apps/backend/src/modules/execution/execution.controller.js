@@ -5,6 +5,75 @@ import { executeAutomation } from "../automation/automation.executor.js";
 import { enqueueCursor } from "../workers/cursor.queue.js";
 
 /**
+ * GET ANALYTICS — 30-day daily execution counts + status breakdown
+ */
+export async function getAnalytics(req, res) {
+  try {
+    const workspaceId = req.user.id;
+    const since = new Date();
+    since.setDate(since.getDate() - 29);
+    since.setHours(0, 0, 0, 0);
+
+    const [daily, statusBreakdown, totalCount, activeBoxes] = await Promise.all([
+      // Daily execution counts for past 30 days
+      Execution.aggregate([
+        { $match: { workspaceId, createdAt: { $gte: since } } },
+        {
+          $group: {
+            _id: {
+              y: { $year: "$createdAt" },
+              m: { $month: "$createdAt" },
+              d: { $dayOfMonth: "$createdAt" },
+            },
+            count: { $sum: 1 },
+            success: { $sum: { $cond: [{ $in: ["$status", ["executed", "completed"]] }, 1, 0] } },
+            failed: { $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] } },
+          },
+        },
+        { $sort: { "_id.y": 1, "_id.m": 1, "_id.d": 1 } },
+      ]),
+      // Status breakdown (all time or 30d)
+      Execution.aggregate([
+        { $match: { workspaceId, createdAt: { $gte: since } } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Execution.countDocuments({ workspaceId, createdAt: { $gte: since } }),
+      Automation.countDocuments({ workspaceId, status: "active" }),
+    ]);
+
+    // Fill in missing days with 0
+    const days = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(since);
+      d.setDate(d.getDate() + i);
+      const found = daily.find(
+        (r) => r._id.y === d.getFullYear() && r._id.m === d.getMonth() + 1 && r._id.d === d.getDate()
+      );
+      days.push({
+        date: d.toISOString().slice(0, 10),
+        count: found?.count || 0,
+        success: found?.success || 0,
+        failed: found?.failed || 0,
+      });
+    }
+
+    const breakdown = {};
+    for (const s of statusBreakdown) breakdown[s._id] = s.count;
+
+    res.json({
+      success: true,
+      daily: days,
+      breakdown,
+      total: totalCount,
+      activeBoxes,
+    });
+  } catch (err) {
+    console.error("[Analytics]", err.message);
+    res.status(500).json({ success: false, error: "Failed to load analytics" });
+  }
+}
+
+/**
  * START EXECUTION
  */
 export async function startExecution(req, res) {

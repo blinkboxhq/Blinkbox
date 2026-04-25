@@ -15,6 +15,7 @@ import DashboardHeader from './components/DashboardHeader';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
+import Analytics from './components/Analytics';
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
 // Node format matches backend: { id, type, description, data, position }
@@ -428,6 +429,9 @@ export default function Dashboard() {
               )}
             </div>
           )}
+
+          {/* ═══ ANALYTICS ═══ */}
+          {activeTab === 'analytics' && <Analytics />}
 
           {/* ═══ VAULT ═══ */}
           {activeTab === 'vault' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><VaultManager /></div>}
