@@ -61,6 +61,68 @@ ACTION (type:"action"):
 - Question (not a workflow)? Set flow to null, answer in text
 - Return ONLY the JSON object, nothing else`;
 
+// Normalise whatever JSON shape the model returns into the exact canvas format.
+// Models frequently put nodes/edges at the root level, skip "type":"custom",
+// or forget the "data" wrapper — this fixes all of it.
+function normalizeFlow(parsed) {
+  // Find nodes + edges wherever the model put them
+  const raw = parsed.flow || parsed.workflow || parsed;
+  const nodes = raw.nodes || parsed.nodes || [];
+  const edges = raw.edges || parsed.edges || [];
+
+  if (!nodes.length) return null;
+
+  const TRIGGER_TYPES = new Set([
+    "manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger",
+    "slack_trigger","discord_trigger","telegram_trigger","github_trigger",
+    "shopify_trigger","linear_trigger","notion_trigger","airtable_trigger",
+    "stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger",
+    "google_calendar_trigger","price_alert_trigger","chat_trigger","form_trigger",
+    "db_trigger","error_trigger",
+  ]);
+
+  const normNodes = nodes.map((n, i) => {
+    // backendType might be at root or inside data
+    const bt = n.backendType || n.data?.backendType || n.type || "manual";
+    const isTrigger = TRIGGER_TYPES.has(bt) || n.data?.type === "trigger";
+    const label = n.label || n.data?.label || n.name || bt;
+    const pos   = n.position || { x: 300, y: 200 + i * 200 };
+
+    return {
+      id:       n.id || `n${i + 1}`,
+      type:     "custom",            // ReactFlow always needs type:"custom"
+      position: { x: pos.x ?? 300, y: pos.y ?? 200 + i * 200 },
+      data: {
+        label:       label,
+        backendType: bt,
+        type:        isTrigger ? "trigger" : "action",
+        config:      n.config || n.data?.config || {},
+      },
+    };
+  });
+
+  const normEdges = edges.map((e, i) => ({
+    id:     e.id || `e${i + 1}`,
+    source: e.source || e.from || "",
+    target: e.target || e.to   || "",
+    type:   "configurable",
+    data:   { conditionPath: e.conditionPath || e.data?.conditionPath || "" },
+    style:  {},
+  })).filter(e => e.source && e.target);
+
+  // If model forgot edges, auto-wire nodes in sequence
+  if (!normEdges.length && normNodes.length > 1) {
+    for (let i = 0; i < normNodes.length - 1; i++) {
+      normEdges.push({
+        id: `e${i + 1}`, source: normNodes[i].id, target: normNodes[i + 1].id,
+        type: "configurable", data: { conditionPath: "" }, style: {},
+      });
+    }
+  }
+
+  return { nodes: normNodes, edges: normEdges };
+}
+
 export async function brianChat(req, res) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
@@ -115,13 +177,13 @@ export async function brianChat(req, res) {
       );
 
       const raw = response.data.choices[0].message.content;
-      console.log("[Brian] raw output:", raw.slice(0, 300));
+      console.log("[Brian] raw output:", raw.slice(0, 400));
 
       let parsed;
       try { parsed = JSON.parse(raw); }
-      catch { parsed = { text: raw, flow: null }; }
+      catch { return res.json({ text: raw, flow: null }); }
 
-      return res.json({ text: parsed.text || "", flow: parsed.flow || null });
+      return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
     } catch (err) {
       lastErr = err;
       const status = err.response?.status;
