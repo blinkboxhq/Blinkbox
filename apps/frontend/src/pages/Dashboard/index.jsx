@@ -75,19 +75,25 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
   }
 
   const isActive = wf.status === 'active';
+  const btnCls = 'w-full flex items-center gap-2 px-3 py-[5px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors';
+  const iconSz = { width: 13, height: 13, flexShrink: 0 };
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-1 z-40 w-44 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
-      <button onClick={() => exec(onToggleActive, wf)} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">
-        <Power className="w-3.5 h-3.5" /> {isActive ? 'Deactivate' : 'Set Active'}
+    <div ref={ref} style={{ fontSize: 12 }} className="absolute right-0 top-full mt-1 z-40 w-40 bg-[#111] border border-zinc-800 rounded-lg shadow-2xl py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <button onClick={() => exec(onToggleActive, wf)} className={btnCls}>
+        <Power style={iconSz} /> {isActive ? 'Deactivate' : 'Set Active'}
       </button>
-      <div className="border-t border-zinc-700/60 my-1" />
-      <button onClick={() => setMode('rename')} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"><Pencil className="w-3.5 h-3.5" /> Rename</button>
-      <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors disabled:opacity-50">
-        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />} Duplicate
+      <div className="border-t border-zinc-800 my-1" />
+      <button onClick={() => setMode('rename')} className={btnCls}>
+        <Pencil style={iconSz} /> Rename
       </button>
-      <div className="border-t border-zinc-700/60 my-1" />
-      <button onClick={() => setMode('confirmDelete')} className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors"><Trash2 className="w-3.5 h-3.5" /> Delete</button>
+      <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className={`${btnCls} disabled:opacity-40`}>
+        {busy ? <Loader2 style={iconSz} className="animate-spin" /> : <Copy style={iconSz} />} Duplicate
+      </button>
+      <div className="border-t border-zinc-800 my-1" />
+      <button onClick={() => setMode('confirmDelete')} style={{ fontSize: 12 }} className="w-full flex items-center gap-2 px-3 py-[5px] text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors">
+        <Trash2 style={iconSz} /> Delete
+      </button>
     </div>
   );
 }
