@@ -115,6 +115,19 @@ export function initSocketServer(httpServer) {
       });
     });
 
+    // ── Instant graph broadcast (add/delete node, edge change) ───────────────
+    // Client pushes its current nodes+edges; server relays to everyone else.
+    // This is NOT a save — just live canvas sync between collaborators.
+    socket.on("collab:graph_push", ({ automationId, nodes, edges }) => {
+      if (!automationId) return;
+      socket.to(`collab:${automationId}`).emit("collab:graph_sync", {
+        automationId,
+        nodes,
+        edges,
+        savedBy: socket.userId, // used by receiver to skip self-echo
+      });
+    });
+
     // ── Collaboration DM chat ────────────────────────────────────────────────
     socket.on("collab:dm_send", ({ toUserId, text, automationId }) => {
       if (!text?.trim() || !toUserId) return;
@@ -181,4 +194,10 @@ export function emitNodeStatus(automationId, data) {
 export function emitToUser(userId, event, data) {
   if (!io) return;
   io.to(`user:${userId}`).emit(event, data);
+}
+
+// Broadcast to everyone in a collab room (used after saves to sync the graph)
+export function emitToCollabRoom(automationId, event, data) {
+  if (!io) return;
+  io.to(`collab:${automationId}`).emit(event, data);
 }

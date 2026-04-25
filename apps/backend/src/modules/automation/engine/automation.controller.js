@@ -10,6 +10,7 @@ import { syncRssJobs } from "../../../infra/rss.poller.js";
 import { syncImapJobs } from "../../../infra/imap.poller.js";
 import { syncDbJobs } from "../../../infra/db.poller.js";
 import { syncGmailJobs } from "../../../infra/gmail.poller.js";
+import { emitToCollabRoom } from "../../../infra/socket.server.js";
 import { syncAirtableJobs } from "../../../infra/airtable.poller.js";
 import { syncNotionJobs } from "../../../infra/notion.poller.js";
 import { syncHubSpotJobs } from "../../../infra/hubspot.poller.js";
@@ -73,6 +74,16 @@ export async function saveAutomation(req, res) {
       // Creating a brand new automation — inject current user as owner
       req.body.workspaceId = req.user.id;
       automation = await Automation.create(req.body);
+    }
+
+    // Broadcast updated graph to everyone else editing this automation
+    if (req.params.id && automation) {
+      emitToCollabRoom(String(automation._id), "collab:graph_sync", {
+        automationId: String(automation._id),
+        nodes: automation.nodes,
+        edges: automation.edges,
+        savedBy: String(req.user.id),
+      });
     }
 
     res.json({ success: true, automation });

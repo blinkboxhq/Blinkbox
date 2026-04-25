@@ -330,13 +330,26 @@ export const createGraphSlice = (set, get) => ({
   },
 
   // Apply a remote collaborator's node move without triggering local re-emit.
-  // Called directly from the socket listener in Canvas — bypasses onNodesChange.
   applyRemoteNodeMove: (nodeId, position) => {
     set((state) => ({
       nodes: state.nodes.map((n) =>
         n.id === nodeId ? { ...n, position } : n,
       ),
     }));
+  },
+
+  // Replace the full graph from a collab:graph_sync event (after a remote save).
+  // Skips nodes/edges that are already identical to avoid unnecessary re-renders.
+  applyGraphSync: (incomingNodes, incomingEdges) => {
+    const state = get();
+    const newVars = calculateAllAvailableVariables(incomingNodes, incomingEdges, state.nodeOutputSchemas);
+    set({
+      nodes: incomingNodes,
+      edges: incomingEdges,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(incomingNodes, newVars),
+      _schemaGeneration: state._schemaGeneration + 1,
+    });
   },
 
   // Bulk-set nodes + edges (used by loadEngine)

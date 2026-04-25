@@ -99,7 +99,6 @@ export default function Canvas() {
   const onEdgesChange = useWorkspaceStore((s) => s.onEdgesChange);
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const isValidConnection = useWorkspaceStore((s) => s.isValidConnection);
-  const addNode = useWorkspaceStore((s) => s.addNode);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
@@ -107,6 +106,7 @@ export default function Canvas() {
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const applyRemoteNodeMove = useWorkspaceStore((s) => s.applyRemoteNodeMove);
+  const applyGraphSync      = useWorkspaceStore((s) => s.applyGraphSync);
 
   // Undo/redo
   const undo = useWorkspaceStore((s) => s.undo);
@@ -130,16 +130,64 @@ export default function Canvas() {
     }, 40),
   );
 
-  // Listen for peer node moves and apply them without re-emitting
+  // Listen for peer node moves
   useEffect(() => {
     if (!automationId) return;
     const socket = getSocket();
-    const handler = ({ nodeId, position }) => {
-      applyRemoteNodeMove(nodeId, position);
-    };
-    socket.on("collab:node_move", handler);
-    return () => socket.off("collab:node_move", handler);
+    const onMove = ({ nodeId, position }) => applyRemoteNodeMove(nodeId, position);
+    socket.on("collab:node_move", onMove);
+    return () => socket.off("collab:node_move", onMove);
   }, [automationId, applyRemoteNodeMove]);
+
+  // Listen for full graph sync (after any collaborator saves — adds/deletes/edges)
+  useEffect(() => {
+    if (!automationId) return;
+    const socket = getSocket();
+    const myId = (() => { try { return JSON.parse(localStorage.getItem("blinkbox_user") || "{}").id || ""; } catch { return ""; } })();
+
+    const onSync = ({ nodes: inNodes, edges: inEdges, savedBy }) => {
+      // Don't apply our own save broadcast back to ourselves
+      if (String(savedBy) === String(myId)) return;
+      // Convert backend node format → ReactFlow format (same mapping as loadEngine)
+      const rfNodes = inNodes.map((n) => {
+        const isTrigger = n.type?.endsWith("_trigger") || n.type === "manual" || n.type === "webhook";
+        return {
+          id: n.id,
+          type: "custom",
+          position: n.position || { x: 0, y: 0 },
+          data: {
+            label: n.description || n.type,
+            backendType: n.type,
+            type: isTrigger ? "trigger" : "action",
+            config: n.data || {},
+          },
+        };
+      });
+      const rfEdges = inEdges.map((e) => ({
+        id: e.id || `edge-${e.source}-${e.target}`,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle || null,
+        targetHandle: e.targetHandle || null,
+        type: "configurable",
+        data: { conditionPath: e.conditionPath || "" },
+        style: {},
+      }));
+      applyGraphSync(rfNodes, rfEdges);
+    };
+
+    socket.on("collab:graph_sync", onSync);
+    return () => socket.off("collab:graph_sync", onSync);
+  }, [automationId, applyGraphSync]);
+
+  // Emit the current graph to collab room (debounced to avoid flooding)
+  const emitGraphRef = useRef(
+    debounce((aId) => {
+      if (!aId) return;
+      const { nodes: n, edges: e } = useWorkspaceStore.getState();
+      getSocket().emit("collab:graph_push", { automationId: aId, nodes: n, edges: e });
+    }, 80),
+  );
 
   // Wrap onNodesChange to emit position deltas to collaborators
   const handleNodesChange = useCallback((changes) => {
@@ -150,8 +198,18 @@ export default function Canvas() {
       if (c.type === "position" && c.position) {
         emitNodeMoveRef.current(c.id, c.position, automationId);
       }
+      // Immediately broadcast structure changes (removes = delete)
+      if (c.type === "remove") emitGraphRef.current(automationId);
     }
   }, [onNodesChange, automationId]);
+
+  // Intercept addNode to broadcast immediately
+  const addNode = useWorkspaceStore((s) => s.addNode);
+  const addNodeAndBroadcast = useCallback((node) => {
+    addNode(node);
+    // Small delay so the store update lands first
+    setTimeout(() => emitGraphRef.current(automationId), 20);
+  }, [addNode, automationId]);
 
   // Multi-select
   const selectedNodeIds = useWorkspaceStore((s) => s.selectedNodeIds);
@@ -210,7 +268,7 @@ export default function Canvas() {
         y: event.clientY,
       });
 
-      addNode({
+      addNodeAndBroadcast({
         id: `${nodeData.backendType}-${crypto.randomUUID()}`,
         type: "custom",
         position,
