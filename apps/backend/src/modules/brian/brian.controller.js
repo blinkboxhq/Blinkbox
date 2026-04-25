@@ -138,18 +138,33 @@ export async function brianChat(req, res) {
     const userText = (lastMsg?.content || lastMsg?.text || "").trim();
     if (!userText) return res.status(400).json({ message: "Empty message." });
 
-    // 25-second timeout — Gemini is fast but we don't want Railway to sit forever
-    const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 25_000);
-
-    let raw;
-    try {
-      const chat   = model.startChat({ history });
-      const result = await chat.sendMessage(userText);
-      raw = result.response.text();
-    } finally {
-      clearTimeout(timer);
+    // Retry up to 2 times on rate-limit (429) with exponential backoff.
+    // Free AI Studio tier caps at 15 RPM — a brief wait is enough to clear it.
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let raw, lastErr;
+    for (let attempt = 0; attempt <= 2; attempt++) {
+      if (attempt > 0) {
+        console.log(`[Brian] rate-limited — waiting ${attempt * 2}s before retry ${attempt}/2`);
+        await sleep(attempt * 2000);
+      }
+      try {
+        const abort = new AbortController();
+        const timer = setTimeout(() => abort.abort(), 25_000);
+        try {
+          const chat   = model.startChat({ history });
+          const result = await chat.sendMessage(userText);
+          raw = result.response.text();
+        } finally {
+          clearTimeout(timer);
+        }
+        lastErr = null;
+        break; // success — exit retry loop
+      } catch (e) {
+        lastErr = e;
+        if (e.status !== 429) throw e; // only retry on rate-limit
+      }
     }
+    if (lastErr) throw lastErr; // all retries exhausted
 
     console.log("[Brian] model output (first 400 chars):", raw?.slice(0, 400));
 
