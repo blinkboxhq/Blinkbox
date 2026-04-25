@@ -127,7 +127,13 @@ export default function BrianPanel({ width, onResizeStart }) {
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Unknown error";
       console.error("[Brian] frontend error:", msg);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'brian', text: `⚠️ ${msg}`, flow: null }]);
+      const isConfig = msg.includes("GOOGLE_AI_KEY") || msg.includes("not configured");
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1, role: 'brian', flow: null,
+        text: isConfig
+          ? "⚠️ Brian needs a Google AI key. Add GOOGLE_AI_KEY in Railway → Variables (free at aistudio.google.com)."
+          : `⚠️ ${msg}`,
+      }]);
     } finally {
       setThinking(false);
     }
