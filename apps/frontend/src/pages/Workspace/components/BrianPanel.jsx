@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, ChevronRight, RotateCcw, Check } from 'lucide-react';
+import { X, Send, ChevronRight, RotateCcw, Check } from 'lucide-react';
+import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
 
 // ── Stub: replace with real Gemma call later ─────────────────────────────────
@@ -62,8 +63,8 @@ function Bubble({ msg, onApply }) {
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
       {!isUser && (
-        <div className="w-6 h-6 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0 mt-0.5">
-          <Sparkles className="w-3 h-3 text-violet-400" />
+        <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+          <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
         </div>
       )}
 
@@ -104,8 +105,8 @@ function Bubble({ msg, onApply }) {
 function Thinking() {
   return (
     <div className="flex gap-2.5">
-      <div className="w-6 h-6 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0 mt-0.5">
-        <Sparkles className="w-3 h-3 text-violet-400" />
+      <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+        <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
       </div>
       <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-[#111] border border-zinc-800 flex items-center gap-1">
         {[0, 1, 2].map((i) => (
@@ -214,8 +215,8 @@ export default function BrianPanel() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-800/80 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
+              <img src={brianLogo} alt="Brian" className="w-5 h-5 object-contain" />
             </div>
             <div>
               <p className="text-[13px] font-semibold text-white leading-none">Brian</p>

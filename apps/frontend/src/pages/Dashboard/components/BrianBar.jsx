@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Sparkles, ArrowUp, Zap, Globe, Mail, Code2, GitBranch } from 'lucide-react';
+import { ArrowUp, Zap, Globe, Mail, Code2, GitBranch } from 'lucide-react';
+import brianLogo from '../../../assets/brian.webp';
 
 const SUGGESTIONS = [
   { icon: Zap,       label: 'Webhook to email' },
@@ -40,7 +41,7 @@ export default function BrianBar({ onSubmit }) {
     <div className="w-full mb-7" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
       {/* Heading */}
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 text-violet-400" />
+        <img src={brianLogo} alt="Brian" className="w-5 h-5 object-contain" />
         <span className="text-[13px] font-semibold text-white">Brian</span>
         <span className="text-[11px] text-neutral-600">· AI workflow assistant</span>
       </div>
