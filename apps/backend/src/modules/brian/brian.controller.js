@@ -1,21 +1,17 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from "axios";
 
-// Real model names always contain a hyphen (gemini-2.0-flash, gemma-4-27b-it).
-// If BRIAN_MODEL is unset, empty, or looks like a variable name (no hyphen),
-// fall back to gemini-2.0-flash so a misconfigured env var never crashes Brian.
-const _rawModel = process.env.BRIAN_MODEL || "";
-const MODEL = _rawModel.includes("-") ? _rawModel : "gemini-2.0-flash";
-if (_rawModel && !_rawModel.includes("-")) {
-  console.warn(`[Brian] BRIAN_MODEL="${_rawModel}" is not a valid model name — using gemini-2.0-flash. Set it to e.g. gemini-2.0-flash in Railway.`);
-}
+// Groq: free forever, open-source models, 30 req/min, no credit card needed.
+// Get key in 60 seconds: console.groq.com → API Keys → Create
+const GROQ_URL  = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL     = process.env.BRIAN_MODEL || "llama-3.3-70b-versatile";
 
-const SYSTEM_PROMPT = `You are Brian, an AI workflow builder inside BlinkBox — an automation platform like Zapier and Make.
+const SYSTEM_PROMPT = `You are Brian, an AI workflow builder inside BlinkBox — an automation platform like Zapier.
 
-Your ONLY job: read the user's request and return a single JSON object describing a workflow.
+Return ONLY a JSON object — no markdown, no explanation, nothing else.
 
-## Available node backendType values
+## Node types
 
-TRIGGER nodes (type: "trigger") — always exactly one, always first:
+TRIGGER (type:"trigger", always first, exactly one):
   manual, webhook, cron_trigger, rss_trigger, imap_trigger, gmail_trigger,
   slack_trigger, discord_trigger, telegram_trigger, github_trigger,
   shopify_trigger, linear_trigger, notion_trigger, airtable_trigger,
@@ -23,7 +19,7 @@ TRIGGER nodes (type: "trigger") — always exactly one, always first:
   google_calendar_trigger, price_alert_trigger, chat_trigger, form_trigger,
   db_trigger, error_trigger
 
-ACTION nodes (type: "action"):
+ACTION (type:"action"):
   http_request, code, data_mapper, logic_router, web_scraper,
   ai_agent, ai_classify, ai_extract, ai_transform, ai_decision,
   email_parser, vector_memory,
@@ -38,164 +34,109 @@ ACTION nodes (type: "action"):
   qr_code, image_resize, pdf_generator,
   twitter, web_search, elevenlabs, pinecone, notify_hub
 
-## Required output schema — return ONLY this JSON, no markdown fences, no extra text
+## Output schema
 
 {
-  "text": "1-3 sentence explanation of what this workflow does",
+  "text": "1-3 sentence explanation",
   "flow": {
     "nodes": [
       {
         "id": "n1",
         "type": "custom",
         "position": { "x": 300, "y": 200 },
-        "data": {
-          "label": "Human readable name",
-          "backendType": "webhook",
-          "type": "trigger",
-          "config": {}
-        }
+        "data": { "label": "Name", "backendType": "webhook", "type": "trigger", "config": {} }
       }
     ],
     "edges": [
-      {
-        "id": "e1",
-        "source": "n1",
-        "target": "n2",
-        "type": "configurable",
-        "data": { "conditionPath": "" }
-      }
+      { "id": "e1", "source": "n1", "target": "n2", "type": "configurable", "data": { "conditionPath": "" } }
     ]
   }
 }
 
-## Layout rules
-- Trigger node: x=300 y=200
-- Each subsequent node: same x=300, y increases by 200
-- Parallel branches: offset x by ±300 from main path
-
-## Hard rules
-- Exactly ONE trigger node, always the first node
-- Every node must be reachable from the trigger via edges
-- Use ONLY backendType values from the list above
-- If the user asks a question (not a workflow request), set flow to null and answer in text
-- Aim for 3-7 nodes unless complexity is explicitly requested
-- NEVER output markdown. NEVER output anything except the JSON object.
-
-## Fallback for vague prompts
-If the request is too vague to map to specific services (e.g. "do something cool",
-"automate stuff"), build a sensible default: webhook → code → slack, and explain in text.
-
-## Concrete example
-User: "notify Slack when a form is submitted"
-Output:
-{"text":"When a form is submitted, the payload is processed by a Code node then posted to Slack.","flow":{"nodes":[{"id":"n1","type":"custom","position":{"x":300,"y":200},"data":{"label":"Form Trigger","backendType":"form_trigger","type":"trigger","config":{}}},{"id":"n2","type":"custom","position":{"x":300,"y":400},"data":{"label":"Process Data","backendType":"code","type":"action","config":{}}},{"id":"n3","type":"custom","position":{"x":300,"y":600},"data":{"label":"Notify Slack","backendType":"slack","type":"action","config":{}}}],"edges":[{"id":"e1","source":"n1","target":"n2","type":"configurable","data":{"conditionPath":""}},{"id":"e2","source":"n2","target":"n3","type":"configurable","data":{"conditionPath":""}}]}}`;
-
-// Brace-counting JSON extractor — handles nested objects correctly
-function extractJSON(raw) {
-  const s = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-  let depth = 0, start = -1;
-  for (let i = 0; i < s.length; i++) {
-    if (s[i] === "{") {
-      if (depth === 0) start = i;
-      depth++;
-    } else if (s[i] === "}") {
-      depth--;
-      if (depth === 0 && start !== -1) {
-        return JSON.parse(s.slice(start, i + 1));
-      }
-    }
-  }
-  throw new Error("No valid JSON object in model response");
-}
+## Rules
+- Layout: trigger at x:300 y:200, each next node y+200, branches x±300
+- Every node reachable from trigger via edges
+- 3-7 nodes unless more is asked
+- Vague prompt? Default to webhook → code → slack and explain it
+- Question (not a workflow)? Set flow to null, answer in text
+- Return ONLY the JSON object, nothing else`;
 
 export async function brianChat(req, res) {
-  const apiKey = process.env.GOOGLE_AI_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ message: "Brian is not configured. Add GOOGLE_AI_KEY in Railway → Variables (free at aistudio.google.com)." });
+    return res.status(503).json({
+      message: "Brian needs a free Groq API key. Go to console.groq.com → API Keys → Create Key → add GROQ_API_KEY to Railway Variables. Takes 60 seconds.",
+    });
   }
 
   const { messages = [] } = req.body;
   if (!messages.length) return res.status(400).json({ message: "messages array is required." });
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
-    });
+  const lastMsg  = messages[messages.length - 1];
+  const userText = (lastMsg?.content || lastMsg?.text || "").trim();
+  if (!userText) return res.status(400).json({ message: "Empty message." });
 
-    // Gemini requires history to alternate user/model and start with user.
-    // Strip any leading model turns (e.g. welcome message echoed in history).
-    let history = messages.slice(0, -1).map((m) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content || " " }],
-    }));
-    const firstUserIdx = history.findIndex((m) => m.role === "user");
-    history = firstUserIdx > 0 ? history.slice(firstUserIdx) : firstUserIdx === -1 ? [] : history;
+  // Build OpenAI-style history (strip leading model turns — Groq requires user first)
+  let history = messages.slice(0, -1).map(m => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: m.content || m.text || " ",
+  }));
+  const firstUser = history.findIndex(m => m.role === "user");
+  history = firstUser > 0 ? history.slice(firstUser) : firstUser === -1 ? [] : history;
 
-    const lastMsg = messages[messages.length - 1];
-    const userText = (lastMsg?.content || lastMsg?.text || "").trim();
-    if (!userText) return res.status(400).json({ message: "Empty message." });
+  // Retry up to 2× on 429 with backoff
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  let lastErr;
 
-    // Retry up to 2 times on rate-limit (429) with exponential backoff.
-    // Free AI Studio tier caps at 15 RPM — a brief wait is enough to clear it.
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-    let raw, lastErr;
-    for (let attempt = 0; attempt <= 2; attempt++) {
-      if (attempt > 0) {
-        console.log(`[Brian] rate-limited — waiting ${attempt * 2}s before retry ${attempt}/2`);
-        await sleep(attempt * 2000);
-      }
-      try {
-        const abort = new AbortController();
-        const timer = setTimeout(() => abort.abort(), 25_000);
-        try {
-          const chat   = model.startChat({ history });
-          const result = await chat.sendMessage(userText);
-          raw = result.response.text();
-        } finally {
-          clearTimeout(timer);
-        }
-        lastErr = null;
-        break; // success — exit retry loop
-      } catch (e) {
-        lastErr = e;
-        if (e.status !== 429) throw e; // only retry on rate-limit
-      }
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    if (attempt > 0) {
+      console.log(`[Brian] rate-limited — retry ${attempt}/2 in ${attempt * 2}s`);
+      await sleep(attempt * 2000);
     }
-    if (lastErr) throw lastErr; // all retries exhausted
 
-    console.log("[Brian] model output (first 400 chars):", raw?.slice(0, 400));
-
-    let parsed;
     try {
-      parsed = extractJSON(raw);
-    } catch {
-      // Model returned plain prose — treat as a text-only reply
-      parsed = { text: raw, flow: null };
-    }
+      const response = await axios.post(
+        GROQ_URL,
+        {
+          model: MODEL,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...history,
+            { role: "user", content: userText },
+          ],
+          temperature:     0.3,
+          max_tokens:      4096,
+          response_format: { type: "json_object" }, // Groq JSON mode — always valid JSON
+        },
+        {
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          timeout: 25000,
+        },
+      );
 
-    return res.json({
-      text: parsed.text || "",
-      flow: parsed.flow || null,
-    });
-  } catch (err) {
-    console.error("[Brian] error:", err.message, "status:", err.status);
+      const raw = response.data.choices[0].message.content;
+      console.log("[Brian] raw output:", raw.slice(0, 300));
 
-    if (err.name === "AbortError") {
-      return res.status(504).json({ message: "Brian timed out. Try a simpler prompt." });
-    }
-    if (err.message?.includes("API_KEY") || err.status === 403) {
-      return res.status(503).json({ message: "GOOGLE_AI_KEY is invalid. Check Railway variables." });
-    }
-    if (err.status === 404 || err.message?.includes("not found")) {
-      return res.status(503).json({ message: `Model "${MODEL}" not found. Set BRIAN_MODEL=gemini-2.0-flash in Railway.` });
-    }
-    if (err.status === 429) {
-      return res.status(429).json({ message: "Brian is rate-limited. Try again in a moment." });
-    }
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch { parsed = { text: raw, flow: null }; }
 
-    res.status(500).json({ message: `Brian error: ${err.message}` });
+      return res.json({ text: parsed.text || "", flow: parsed.flow || null });
+    } catch (err) {
+      lastErr = err;
+      const status = err.response?.status;
+      if (status !== 429) break; // only retry on rate-limit
+    }
   }
+
+  // Handle errors
+  const status  = lastErr?.response?.status;
+  const errBody = lastErr?.response?.data?.error?.message || lastErr?.message || "Unknown error";
+  console.error("[Brian] error:", status, errBody);
+
+  if (status === 401) return res.status(503).json({ message: "GROQ_API_KEY is invalid. Check Railway → Variables." });
+  if (status === 429) return res.status(429).json({ message: "Groq rate limit hit. Try again in a moment." });
+  if (lastErr?.code === "ECONNABORTED") return res.status(504).json({ message: "Brian timed out. Try a simpler prompt." });
+
+  res.status(500).json({ message: `Brian error: ${errBody}` });
 }
