@@ -12,6 +12,7 @@ import DashboardSidebar from '../Dashboard/components/DashboardSidebar';
 import Canvas from './components/Canvas';
 import ExecutionTraceSidebar from './components/ExecutionTraceSidebar';
 import NodeConfigModal from './components/NodeConfigModal';
+import BrianPanel from './components/BrianPanel';
 
 // Re-export from the centralized registry
 export { NodeRegistry } from './nodeRegistry';
@@ -77,6 +78,7 @@ export default function Workspace() {
           <ReactFlowProvider>
             <Canvas />
             <WorkspaceRightSidebar />
+            <BrianPanel />
             <NodeConfigModal />
           </ReactFlowProvider>
         </div>

@@ -23,6 +23,7 @@ export const createUISlice = (set, get) => ({
   isRightSidebarOpen: false,
   isTriggerPickerOpen: false,
   isAddNodeOpen: false,
+  isBrianOpen: false,
   workflowName: "Loading...",
   isActive: false,
   isSaving: false,
@@ -36,6 +37,7 @@ export const createUISlice = (set, get) => ({
   setRightSidebarOpen: (isOpen) => set({ isRightSidebarOpen: isOpen }),
   setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen, ...(isOpen ? { isAddNodeOpen: false } : {}) }),
   setAddNodeOpen: (isOpen) => set({ isAddNodeOpen: isOpen, ...(isOpen ? { isTriggerPickerOpen: false } : {}) }),
+  setBrianOpen: (isOpen) => set({ isBrianOpen: isOpen }),
   setWorkflowName: (name) => set({ workflowName: name }),
   setAddNodeSource: (nodeId) =>
     set({ addNodeSource: nodeId, insertEdgeId: null }),

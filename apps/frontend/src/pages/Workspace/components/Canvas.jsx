@@ -16,6 +16,7 @@ import ConfigurableEdge from "./ConfigurableEdge";
 
 function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
+  const setBrianOpen = useWorkspaceStore((s) => s.setBrianOpen);
 
   return (
     <div className="flex items-start gap-4 select-none">
@@ -40,6 +41,7 @@ function PlaceholderNode() {
       {/* Build with AI */}
       <div className="flex flex-col items-center gap-3">
         <button
+          onClick={() => setBrianOpen(true)}
           className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-violet-500/60 hover:bg-violet-500/5 transition-all duration-200 cursor-pointer"
         >
           <Sparkles className="w-7 h-7 text-zinc-600 group-hover:text-violet-400 transition-colors" strokeWidth={1.5} />
