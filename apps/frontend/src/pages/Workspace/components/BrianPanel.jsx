@@ -2,42 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Send, ChevronRight, RotateCcw, Check } from 'lucide-react';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
+import api from '../../../lib/api';
 
-// ── Stub: replace with real Gemma call later ─────────────────────────────────
 async function callBrian(messages) {
-  // TODO: POST /api/ai/chat with messages array, stream back response
-  // For now returns a mock after a fake delay
-  await new Promise((r) => setTimeout(r, 1400));
-
-  return {
-    text: "I've designed a flow for you. It starts with a Webhook trigger, passes data through a Code node to transform it, then sends an email notification. Click **Apply to canvas** to drop it in.",
-    flow: {
-      nodes: [
-        {
-          id: 'brian-1',
-          type: 'custom',
-          position: { x: 200, y: 200 },
-          data: { label: 'Webhook Trigger', backendType: 'webhook', type: 'trigger', config: {} },
-        },
-        {
-          id: 'brian-2',
-          type: 'custom',
-          position: { x: 200, y: 380 },
-          data: { label: 'Transform Data', backendType: 'code', type: 'action', config: {} },
-        },
-        {
-          id: 'brian-3',
-          type: 'custom',
-          position: { x: 200, y: 560 },
-          data: { label: 'Send Email', backendType: 'email', type: 'action', config: {} },
-        },
-      ],
-      edges: [
-        { id: 'be-1-2', source: 'brian-1', target: 'brian-2', type: 'configurable', data: { conditionPath: '' } },
-        { id: 'be-2-3', source: 'brian-2', target: 'brian-3', type: 'configurable', data: { conditionPath: '' } },
-      ],
-    },
-  };
+  const { data } = await api.post('/api/brian/chat', {
+    messages: messages.map(m => ({ role: m.role, content: m.text })),
+  });
+  return data; // { text, flow }
 }
 
 // ── Message bubble ───────────────────────────────────────────────────────────

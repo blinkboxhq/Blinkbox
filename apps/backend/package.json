@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@react-oauth/google": "^0.13.4",
     "@supabase/supabase-js": "^2.103.3",
     "@temporalio/activity": "^1.15.0",
