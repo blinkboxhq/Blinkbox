@@ -5,52 +5,63 @@ import { executeAutomation } from "../automation/automation.executor.js";
 import { enqueueCursor } from "../workers/cursor.queue.js";
 
 /**
- * GET ANALYTICS — 30-day daily execution counts + status breakdown
+ * GET ANALYTICS — platform-wide daily execution counts + status breakdown.
+ * Query params: year (default current), month (1-12, default current).
+ * No workspace filter — shows aggregate data for all users.
  */
 export async function getAnalytics(req, res) {
   try {
-    const workspaceId = req.user.id;
-    const since = new Date();
-    since.setDate(since.getDate() - 29);
-    since.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const year = parseInt(req.query.year) || now.getFullYear();
+    const month = parseInt(req.query.month) || now.getMonth() + 1;
 
-    const [daily, statusBreakdown, totalCount, activeBoxes] = await Promise.all([
-      // Daily execution counts for past 30 days
+    const since = new Date(year, month - 1, 1, 0, 0, 0, 0);
+    const until = new Date(year, month, 1, 0, 0, 0, 0); // first of next month
+
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const [daily, statusBreakdown, totalCount, activeBoxes, monthly] = await Promise.all([
+      // Daily counts for the selected month — no workspaceId filter
       Execution.aggregate([
-        { $match: { workspaceId, createdAt: { $gte: since } } },
+        { $match: { createdAt: { $gte: since, $lt: until } } },
         {
           $group: {
-            _id: {
-              y: { $year: "$createdAt" },
-              m: { $month: "$createdAt" },
-              d: { $dayOfMonth: "$createdAt" },
-            },
+            _id: { d: { $dayOfMonth: "$createdAt" } },
             count: { $sum: 1 },
             success: { $sum: { $cond: [{ $in: ["$status", ["executed", "completed"]] }, 1, 0] } },
             failed: { $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] } },
           },
         },
-        { $sort: { "_id.y": 1, "_id.m": 1, "_id.d": 1 } },
+        { $sort: { "_id.d": 1 } },
       ]),
-      // Status breakdown (all time or 30d)
+      // Status breakdown for selected month
       Execution.aggregate([
-        { $match: { workspaceId, createdAt: { $gte: since } } },
+        { $match: { createdAt: { $gte: since, $lt: until } } },
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
-      Execution.countDocuments({ workspaceId, createdAt: { $gte: since } }),
-      Automation.countDocuments({ workspaceId, status: "active" }),
+      Execution.countDocuments({ createdAt: { $gte: since, $lt: until } }),
+      Automation.countDocuments({ status: "active" }),
+      // Monthly totals for last 12 months (for the month picker summary)
+      Execution.aggregate([
+        { $match: { createdAt: { $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1) } } },
+        {
+          $group: {
+            _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.y": 1, "_id.m": 1 } },
+      ]),
     ]);
 
-    // Fill in missing days with 0
+    // Fill all days of the month with 0 where no data
     const days = [];
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(since);
-      d.setDate(d.getDate() + i);
-      const found = daily.find(
-        (r) => r._id.y === d.getFullYear() && r._id.m === d.getMonth() + 1 && r._id.d === d.getDate()
-      );
+    for (let d = 1; d <= daysInMonth; d++) {
+      const found = daily.find((r) => r._id.d === d);
+      const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       days.push({
-        date: d.toISOString().slice(0, 10),
+        date: dateStr,
+        day: d,
         count: found?.count || 0,
         success: found?.success || 0,
         failed: found?.failed || 0,
@@ -66,6 +77,8 @@ export async function getAnalytics(req, res) {
       breakdown,
       total: totalCount,
       activeBoxes,
+      monthly,
+      meta: { year, month, daysInMonth },
     });
   } catch (err) {
     console.error("[Analytics]", err.message);
