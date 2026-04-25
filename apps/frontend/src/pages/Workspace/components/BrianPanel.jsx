@@ -7,9 +7,8 @@ import api from '../../../lib/api';
 import BrianThinking from './BrianThinking';
 
 async function callBrian(messages) {
-  const { data } = await api.post('/api/brian/chat', {
-    messages: messages.map(m => ({ role: m.role, content: m.text })),
-  });
+  // messages already have { role, content } — pass them through directly
+  const { data } = await api.post('/api/brian/chat', { messages });
   return data; // { text, flow }
 }
 
