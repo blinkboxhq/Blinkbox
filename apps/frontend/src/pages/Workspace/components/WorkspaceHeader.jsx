@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ArrowLeft, Play, Save, Loader2, Check, Clock, Keyboard,
   Power, PanelLeft, PanelBottom, Users,
@@ -48,7 +48,6 @@ export default function WorkspaceHeader() {
     try { return JSON.parse(localStorage.getItem('blinkbox_user') || '{}'); } catch { return {}; }
   });
   const [presence, setPresence] = useState([]);
-  const joinedRef = useRef(false);
 
   const workflowName = useWorkspaceStore(s => s.workflowName);
   const isSaving    = useWorkspaceStore(s => s.isSaving);
@@ -83,40 +82,37 @@ export default function WorkspaceHeader() {
     return () => window.removeEventListener('keydown', h);
   }, [id, saveEngine, runEngine]);
 
-  // ── Collab presence — wait for socket to connect before joining ──────────
+  // ── Collab presence ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
-    joinedRef.current = false;
-    const socket = getSocket();
-    const me = user;
 
-    const doJoin = () => {
-      if (joinedRef.current) return;
-      joinedRef.current = true;
-      socket.emit('collab:join', {
-        automationId: id,
-        name: me?.name || 'Anonymous',
-        avatar: me?.avatar || me?.picture || '',
-      });
+    const socket = getSocket();
+
+    // Snapshot user at effect-run time (stable for the lifetime of this room)
+    const myId   = user?.id   || user?._id || '';
+    const myName = user?.name || 'Anonymous';
+    const myAvatar = user?.avatar || user?.picture || '';
+
+    const join = () => {
+      socket.emit('collab:join', { automationId: id, name: myName, avatar: myAvatar });
     };
 
     const onPresence = (members) => {
-      setPresence(members.filter(m => m.userId !== me?.id));
+      // Filter self out (compare as strings to handle ObjectId vs string mismatches)
+      setPresence(members.filter(m => String(m.userId) !== String(myId)));
     };
 
+    // Re-join after server restarts / reconnects
+    socket.on('connect', join);
     socket.on('collab:presence', onPresence);
 
-    if (socket.connected) {
-      doJoin();
-    } else {
-      socket.once('connect', doJoin);
-    }
+    // Join immediately if already connected
+    if (socket.connected) join();
 
     return () => {
       socket.emit('collab:leave', { automationId: id });
+      socket.off('connect', join);
       socket.off('collab:presence', onPresence);
-      socket.off('connect', doJoin);
-      joinedRef.current = false;
     };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -138,12 +134,11 @@ export default function WorkspaceHeader() {
 
   return (
     <>
-    {/*
-      True 3-column grid: left and right are fixed by content, center is
-      an actual centered column — avoids the absolute/justify-between trick
-      that breaks when the right side grows.
-    */}
-    <div className="w-full h-14 bg-neutral-950 border-b border-[#333] z-50 grid grid-cols-[1fr_auto_1fr] items-center px-4 shrink-0">
+    {/* 3-column grid via inline style — guaranteed regardless of Tailwind JIT scan */}
+    <div
+      style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}
+      className="w-full h-14 bg-neutral-950 border-b border-[#333] z-50 px-4 shrink-0"
+    >
 
       {/* ── LEFT: breadcrumb ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 min-w-0">
