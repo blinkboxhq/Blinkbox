@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL = process.env.BRIAN_MODEL || "gemma-4-27b-it";
+const MODEL = process.env.BRIAN_MODEL || "gemma-4-31b-it";
 
 // ── System prompt — tells the model what nodes exist and what to output ────────
 const SYSTEM_PROMPT = `You are Brian, an AI workflow builder inside BlinkBox — an automation platform similar to Zapier and Make.
