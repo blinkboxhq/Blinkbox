@@ -16,6 +16,7 @@ import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
+import BrianBar from './components/BrianBar';
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
 // Node format matches backend: { id, type, description, data, position }
@@ -191,6 +192,12 @@ export default function Dashboard() {
     })();
   }, [activeTab, workflows]);
 
+  const handleBrianSubmit = async (prompt) => {
+    // TODO: POST /api/ai/chat with prompt, get back a box name/config, navigate to it
+    await new Promise((r) => setTimeout(r, 1200));
+    setActiveTab('workflows');
+  };
+
   const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch {} setIsTogglingPause(false); };
 
   const handleCreate = async (data) => {
@@ -255,6 +262,8 @@ export default function Dashboard() {
         <GlobalHeader user={user} />
         <main className="flex-1 overflow-y-auto bg-[#060606]">
         <div className="p-8 max-w-[1100px] mx-auto">
+
+          <BrianBar onSubmit={handleBrianSubmit} />
 
           {systemError && (
             <div className="mb-5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
