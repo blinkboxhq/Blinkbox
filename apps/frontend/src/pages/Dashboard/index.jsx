@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  MoreHorizontal, Clock, AlertTriangle, ChevronLeft, ChevronRight,
-  Copy, Trash2, Pencil, Check, X, Loader2, Globe, Bot, Webhook,
-  GitBranch, Search as SearchIcon, Timer, Database,
-  Zap, Activity, Power, ExternalLink, Play,
+  MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
+  Copy, Trash2, Pencil, Check, X, Loader2,
+  Activity, Power,
 } from 'lucide-react';
 import api from '../../lib/api';
 
@@ -21,116 +20,6 @@ import VaultManager from './components/VaultManager';
 // Node format matches backend: { id, type, description, data, position }
 // Edge format: { id, source, target, type: 'onSuccess', conditionPath: '' }
 
-const TEMPLATES = [
-  {
-    id: 'lead-enrichment',
-    name: 'Lead Enrichment Pipeline',
-    desc: 'Webhook receives lead data, AI agent enriches it, pushes to Slack.',
-    nodes: ['webhook', 'ai_agent', 'slack'],
-    category: 'Sales',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'webhook', description: 'Webhook Trigger', data: { isActive: true }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'ai_agent', description: 'Enrich Lead', data: { prompt: 'Enrich this lead data and return a JSON summary: {{n1.body}}' }, position: { x: 400, y: 300 } },
-        { id: 'n3', type: 'slack', description: 'Notify Sales', data: { message: 'New lead enriched: {{n2.response}}' }, position: { x: 700, y: 300 } },
-      ],
-      edges: [
-        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
-        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-  {
-    id: 'price-monitor',
-    name: 'Competitor Price Monitor',
-    desc: 'Scrape competitor pricing page, AI detects changes, alert via Slack.',
-    nodes: ['manual', 'web_scraper', 'ai_agent', 'slack'],
-    category: 'Research',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'manual', description: 'Manual Trigger', data: {}, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'web_scraper', description: 'Scrape Prices', data: { source: 'https://competitor.com/pricing', particularThing: 'Find all pricing tiers and features' }, position: { x: 400, y: 300 } },
-        { id: 'n3', type: 'ai_agent', description: 'Analyze Changes', data: { prompt: 'Compare these pricing details to standard market rates and highlight anomalies:\n{{n2.content}}' }, position: { x: 700, y: 300 } },
-        { id: 'n4', type: 'slack', description: 'Alert Team', data: { message: 'Price update: {{n3.response}}' }, position: { x: 1000, y: 300 } },
-      ],
-      edges: [
-        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
-        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
-        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-  {
-    id: 'form-to-api',
-    name: 'Form Submission Handler',
-    desc: 'Webhook captures form data, data mapper transforms fields, HTTP posts to your API.',
-    nodes: ['webhook', 'data_mapper', 'http_request'],
-    category: 'Data',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'webhook', description: 'Form Webhook', data: { isActive: true }, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'data_mapper', description: 'Map Fields', data: { mode: 'set', items: [{ key1: 'name', key2: '{{n1.body.name}}' }, { key1: 'email', key2: '{{n1.body.email}}' }] }, position: { x: 400, y: 300 } },
-        { id: 'n3', type: 'http_request', description: 'Submit to API', data: { method: 'POST', url: 'https://api.example.com/submissions' }, position: { x: 700, y: 300 } },
-      ],
-      edges: [
-        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
-        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-  {
-    id: 'daily-digest',
-    name: 'Daily AI Summary',
-    desc: 'Fetch metrics from an API, AI summarizes them, posts digest to Discord.',
-    nodes: ['manual', 'http_request', 'ai_agent', 'discord'],
-    category: 'Reporting',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'manual', description: 'Run Report', data: {}, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'http_request', description: 'Fetch Metrics', data: { method: 'GET', url: 'https://api.example.com/metrics' }, position: { x: 400, y: 300 } },
-        { id: 'n3', type: 'ai_agent', description: 'Summarize', data: { prompt: 'Write a concise daily digest from these metrics:\n{{n2.data}}' }, position: { x: 700, y: 300 } },
-        { id: 'n4', type: 'discord', description: 'Post Digest', data: { message: '{{n3.response}}' }, position: { x: 1000, y: 300 } },
-      ],
-      edges: [
-        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
-        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
-        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-  {
-    id: 'content-pipeline',
-    name: 'Content Research Pipeline',
-    desc: 'Scrape topics, AI generates content briefs, data mapper structures the output.',
-    nodes: ['manual', 'web_scraper', 'ai_agent', 'data_mapper'],
-    category: 'Content',
-    scaffold: {
-      nodes: [
-        { id: 'n1', type: 'manual', description: 'Manual Trigger', data: {}, position: { x: 100, y: 300 } },
-        { id: 'n2', type: 'web_scraper', description: 'Scrape Topics', data: { source: 'https://trends.example.com', particularThing: 'trending topics and summaries' }, position: { x: 400, y: 300 } },
-        { id: 'n3', type: 'ai_agent', description: 'Generate Brief', data: { prompt: 'Write a content brief for this topic:\n{{n2.content}}' }, position: { x: 700, y: 300 } },
-        { id: 'n4', type: 'data_mapper', description: 'Structure Output', data: { mode: 'set', items: [{ key1: 'title', key2: '{{n2.title}}' }, { key1: 'brief', key2: '{{n3.response}}' }] }, position: { x: 1000, y: 300 } },
-      ],
-      edges: [
-        { id: 'e1-2', source: 'n1', target: 'n2', type: 'onSuccess', conditionPath: '' },
-        { id: 'e2-3', source: 'n2', target: 'n3', type: 'onSuccess', conditionPath: '' },
-        { id: 'e3-4', source: 'n3', target: 'n4', type: 'onSuccess', conditionPath: '' },
-      ],
-      entryNodeId: 'n1',
-    },
-  },
-];
-
-const NODE_ICONS = {
-  webhook: Webhook, cron_trigger: Timer, manual: Zap, http_request: Globe,
-  ai_agent: Bot, web_scraper: SearchIcon, logic_router: GitBranch,
-  data_mapper: Database, delay: Timer, loop: Zap, code: Zap,
-  slack: Webhook, discord: Webhook, stripe: Globe,
-};
 
 function timeAgo(d) {
   if (!d) return '—';
@@ -307,29 +196,6 @@ export default function Dashboard() {
     setIsCreating(false);
   };
 
-  const handleCreateTemplate = async (templateIdOrObj, nameOverride, descOverride) => {
-    setIsCreating(true);
-    try {
-      const t = typeof templateIdOrObj === 'string'
-        ? TEMPLATES.find((tpl) => tpl.id === templateIdOrObj)
-        : templateIdOrObj;
-      if (!t) { setIsCreating(false); return; }
-      const automationName = nameOverride || t.name;
-      const automationDesc = descOverride || t.desc;
-      const triggerType = t.scaffold.trigger || t.scaffold.nodes[0]?.type || 'manual';
-      const r = await api.post('/api/automation', { name: automationName, description: automationDesc, trigger: triggerType });
-      if (!r.data?.success) { setIsCreating(false); return; }
-      const id = r.data.automation._id;
-      await api.put(`/api/automation/${id}`, {
-        entryNodeId: t.scaffold.entryNodeId,
-        nodes: t.scaffold.nodes,
-        edges: t.scaffold.edges,
-      });
-      setWorkflows([{ ...r.data.automation, name: automationName }, ...workflows]);
-      navigate(`/workspace/${id}`);
-    } catch {}
-    setIsCreating(false);
-  };
 
   const handleDelete = async (id) => { try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); } catch {} };
   const handleDuplicate = async (id) => { try { const r = await api.post(`/api/automation/${id}/duplicate`); if (r.data?.success) setWorkflows([r.data.automation, ...workflows]); } catch {} };
@@ -515,30 +381,6 @@ export default function Dashboard() {
                   <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-zinc-800 rounded hover:bg-zinc-900 transition-all disabled:opacity-30">Next <ChevronRight className="w-3 h-3" /></button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ═══ TEMPLATES ═══ */}
-          {activeTab === 'templates' && (
-            <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Templates</h2>
-                <p className="text-xs text-neutral-600 mt-0.5">Start from a pre-built workflow pattern.</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {TEMPLATES.map((t, i) => (
-                  <div key={t.id} className="group flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 transition-all duration-150" style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
-                    <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider mb-2">{t.category}</span>
-                    <h3 className="text-[13px] font-medium text-neutral-200 mb-1">{t.name}</h3>
-                    <p className="text-[11px] text-neutral-600 mb-4 flex-1">{t.desc}</p>
-                    <div className="flex items-center gap-1 mb-3">
-                      {t.nodes.map((n, j) => { const I = NODE_ICONS[n] || Zap; return <div key={`${n}-${j}`} className="w-5 h-5 rounded bg-neutral-900 border border-zinc-700/60 flex items-center justify-center" title={n}><I className="w-2.5 h-2.5 text-neutral-500" /></div>; })}
-                      {t.nodes.length > 1 && <span className="text-[9px] text-neutral-700 ml-1">{t.nodes.length} nodes</span>}
-                    </div>
-                    <button onClick={() => handleCreateTemplate(t)} disabled={isCreating} className="w-full py-1.5 text-[12px] font-medium text-neutral-500 border border-zinc-800 rounded hover:text-white hover:border-neutral-700 hover:bg-neutral-900/50 transition-all disabled:opacity-50">Use Template</button>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 

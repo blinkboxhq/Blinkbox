@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, LayoutTemplate, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
   { key: 'workflows', icon: Network, label: 'Workflows' },
-  { key: 'templates', icon: LayoutTemplate, label: 'Templates' },
   { key: 'logs', icon: Activity, label: 'History' },
   { key: 'vault', icon: Key, label: 'Credentials' },
 ];
