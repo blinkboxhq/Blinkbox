@@ -3,7 +3,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const GROQ_URL    = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL  = process.env.BRIAN_MODEL || "llama-3.3-70b-versatile";
+// Only use BRIAN_MODEL for Groq if it looks like a Groq model (not a Google/Gemini model)
+const _bm = process.env.BRIAN_MODEL || "";
+const GROQ_MODEL = (_bm && !_bm.startsWith("gemini") && !_bm.startsWith("gemma-4")) ? _bm : "llama-3.3-70b-versatile";
 const GROQ_FAST   = "llama-3.1-8b-instant";
 const GEMINI_MODEL = "gemini-2.0-flash";
 const sleep        = ms => new Promise(r => setTimeout(r, ms));
