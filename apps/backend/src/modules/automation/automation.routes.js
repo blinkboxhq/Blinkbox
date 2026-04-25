@@ -12,6 +12,7 @@ import {
 import { parseWorkflowBody } from "./engine/automation.validator.js";
 import { verifyToken } from "../auth/auth.middleware.js";
 import versionRouter from "./version.routes.js";
+import { listCollaborators, addCollaborator, removeCollaborator } from "./collaborator.controller.js";
 
 const router = express.Router();
 
@@ -25,5 +26,10 @@ router.post("/:id/activate", verifyToken, activateAutomation);
 router.post("/:id/deactivate", verifyToken, deactivateAutomation);
 router.post("/:id/execute", verifyToken, triggerAutomation);
 router.use("/:id/versions", versionRouter);
+
+// Collaborator management (owner only)
+router.get("/:id/collaborators", verifyToken, listCollaborators);
+router.post("/:id/collaborators", verifyToken, addCollaborator);
+router.delete("/:id/collaborators/:userId", verifyToken, removeCollaborator);
 
 export default router;

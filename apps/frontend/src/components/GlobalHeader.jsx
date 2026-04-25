@@ -1,16 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Loader2, Save, Play } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
+import ProfileModal from './ProfileModal';
 
-export default function GlobalHeader({ user }) {
+function UserAvatar({ user, onClick }) {
+  const src = user?.avatar || user?.picture;
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        className="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all"
+        referrerPolicy="no-referrer"
+        title={`${user?.name || 'Profile'} — click to edit`}
+        onClick={onClick}
+      />
+    );
+  }
+  const initial = user?.name?.charAt(0) || '?';
+  return (
+    <div
+      className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-[10px] font-semibold text-neutral-200 uppercase shrink-0 cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all"
+      title={`${user?.name || 'Profile'} — click to edit`}
+      onClick={onClick}
+    >
+      {initial}
+    </div>
+  );
+}
+
+export default function GlobalHeader({ user: userProp }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
 
   const isWorkspace = location.pathname.startsWith('/workspace');
 
-  // Workspace-specific store selectors (safe to call unconditionally)
   const workflowName = useWorkspaceStore((s) => s.workflowName);
   const isSaving = useWorkspaceStore((s) => s.isSaving);
   const isRunning = useWorkspaceStore((s) => s.isRunning);
@@ -19,6 +45,24 @@ export default function GlobalHeader({ user }) {
   const nodes = useWorkspaceStore((s) => s.nodes);
 
   const nodeCount = nodes.length;
+
+  // Merge prop user with localStorage (avatar may have been updated mid-session)
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('blinkbox_user') || '{}');
+      return { ...userProp, ...stored };
+    } catch { return userProp || {}; }
+  });
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  // Keep in sync when parent passes new user prop (after login)
+  useEffect(() => {
+    setUser((prev) => ({ ...prev, ...userProp }));
+  }, [userProp]);
+
+  const handleProfileUpdated = useCallback((updated) => {
+    setUser((prev) => ({ ...prev, ...updated }));
+  }, []);
 
   // Keyboard shortcuts (workspace only)
   useEffect(() => {
@@ -37,20 +81,8 @@ export default function GlobalHeader({ user }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWorkspace, id, saveEngine, runEngine]);
 
-  const displayName = user?.name || 'User';
-
-  const UserAvatar = () => {
-    if (user?.picture) {
-      return <img src={user.picture} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />;
-    }
-    return (
-      <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-[9px] font-semibold text-neutral-300 uppercase shrink-0">
-        {displayName.charAt(0)}
-      </div>
-    );
-  };
-
   return (
+    <>
     <header className="w-full h-12 bg-neutral-950 border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Breadcrumbs */}
@@ -79,7 +111,6 @@ export default function GlobalHeader({ user }) {
       <div className="flex items-center gap-3">
         {isWorkspace && (
           <>
-            {/* Save button */}
             <button
               onClick={() => saveEngine(id)}
               disabled={isSaving}
@@ -90,7 +121,6 @@ export default function GlobalHeader({ user }) {
               Save
             </button>
 
-            {/* Run button */}
             <button
               onClick={() => runEngine(id)}
               disabled={isRunning || nodeCount === 0}
@@ -103,9 +133,16 @@ export default function GlobalHeader({ user }) {
           </>
         )}
 
-        {/* User avatar */}
-        <UserAvatar />
+        <UserAvatar user={user} onClick={() => setProfileOpen(true)} />
       </div>
     </header>
+
+    <ProfileModal
+      user={user}
+      isOpen={profileOpen}
+      onClose={() => setProfileOpen(false)}
+      onUpdated={handleProfileUpdated}
+    />
+    </>
   );
 }

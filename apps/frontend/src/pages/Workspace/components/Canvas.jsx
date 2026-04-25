@@ -1,6 +1,7 @@
 import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   ReactFlow,
   Controls,
@@ -13,6 +14,7 @@ import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import CustomNode from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
+import { getSocket } from "../../../lib/socket";
 
 function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
@@ -76,9 +78,19 @@ const PLACEHOLDER_NODE = {
   draggable: false,
 };
 
+// Debounce helper — fires fn at most once every `wait` ms
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
+  const { id: automationId } = useParams();
 
   const storeNodes = useWorkspaceStore((s) => s.nodes);
   const edges = useWorkspaceStore((s) => s.edges);
@@ -94,6 +106,7 @@ export default function Canvas() {
   const storeNodesLen = useWorkspaceStore((s) => s.nodes.length);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
+  const applyRemoteNodeMove = useWorkspaceStore((s) => s.applyRemoteNodeMove);
 
   // Undo/redo
   const undo = useWorkspaceStore((s) => s.undo);
@@ -108,6 +121,37 @@ export default function Canvas() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [undo, redo]);
+
+  // Debounced socket emitter for collaborative node moves
+  const emitNodeMoveRef = useRef(
+    debounce((nodeId, position, aId) => {
+      if (!aId) return;
+      getSocket().emit("collab:node_move", { automationId: aId, nodeId, position });
+    }, 40),
+  );
+
+  // Listen for peer node moves and apply them without re-emitting
+  useEffect(() => {
+    if (!automationId) return;
+    const socket = getSocket();
+    const handler = ({ nodeId, position }) => {
+      applyRemoteNodeMove(nodeId, position);
+    };
+    socket.on("collab:node_move", handler);
+    return () => socket.off("collab:node_move", handler);
+  }, [automationId, applyRemoteNodeMove]);
+
+  // Wrap onNodesChange to emit position deltas to collaborators
+  const handleNodesChange = useCallback((changes) => {
+    const real = changes.filter((c) => c.id !== "__placeholder__");
+    if (!real.length) return;
+    onNodesChange(real);
+    for (const c of real) {
+      if (c.type === "position" && c.position) {
+        emitNodeMoveRef.current(c.id, c.position, automationId);
+      }
+    }
+  }, [onNodesChange, automationId]);
 
   // Multi-select
   const selectedNodeIds = useWorkspaceStore((s) => s.selectedNodeIds);
@@ -186,10 +230,7 @@ export default function Canvas() {
       <ReactFlow
         nodes={nodes}
         edges={liveEdges}
-        onNodesChange={(changes) => {
-          const real = changes.filter((c) => c.id !== "__placeholder__");
-          if (real.length) onNodesChange(real);
-        }}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}

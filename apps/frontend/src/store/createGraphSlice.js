@@ -329,6 +329,16 @@ export const createGraphSlice = (set, get) => ({
     });
   },
 
+  // Apply a remote collaborator's node move without triggering local re-emit.
+  // Called directly from the socket listener in Canvas — bypasses onNodesChange.
+  applyRemoteNodeMove: (nodeId, position) => {
+    set((state) => ({
+      nodes: state.nodes.map((n) =>
+        n.id === nodeId ? { ...n, position } : n,
+      ),
+    }));
+  },
+
   // Bulk-set nodes + edges (used by loadEngine)
   setGraph: (nodes, edges) => {
     const state = get();

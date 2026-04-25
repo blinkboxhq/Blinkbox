@@ -1,16 +1,46 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Play, Save, Loader2, Check, Clock, Keyboard, Power, PanelLeft, PanelBottom } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { ArrowLeft, Play, Save, Loader2, Check, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
+import ProfileModal from '../../../components/ProfileModal';
+import CollaboratorsModal from './CollaboratorsModal';
+import { getSocket } from '../../../lib/socket';
 import brianLogo from '../../../assets/brian.webp';
+
+function UserAvatarBubble({ user, size = 'sm', title, onClick, ring }) {
+  const sz = size === 'sm' ? 'w-7 h-7 text-[10px]' : 'w-8 h-8 text-[11px]';
+  const ringStyle = ring ? `ring-2 ring-[${ring}]` : '';
+  const src = user?.avatar || user?.picture;
+  const cls = `${sz} rounded-full object-cover shrink-0 border-2 border-neutral-950 ${onClick ? 'cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all' : ''}`;
+  if (src) {
+    return <img src={src} alt="" className={`${cls} ${ringStyle}`} referrerPolicy="no-referrer" title={title} onClick={onClick} />;
+  }
+  const initials = user?.name?.charAt(0) || '?';
+  return (
+    <div
+      className={`${sz} rounded-full bg-neutral-700 flex items-center justify-center font-semibold text-neutral-200 uppercase border-2 border-neutral-950 ${onClick ? 'cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all' : ''}`}
+      title={title}
+      onClick={onClick}
+      style={ring ? { outline: `2px solid ${ring}`, outlineOffset: '1px' } : {}}
+    >
+      {initials}
+    </div>
+  );
+}
 
 export default function WorkspaceHeader() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [versionPanelOpen, setVersionPanelOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [collabOpen, setCollabOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('blinkbox_user') || '{}'); } catch { return {}; }
+  });
+  const [presence, setPresence] = useState([]); // other users currently editing
 
   const workflowName = useWorkspaceStore(state => state.workflowName);
   const isSaving = useWorkspaceStore(state => state.isSaving);
@@ -30,6 +60,7 @@ export default function WorkspaceHeader() {
   const nodeCount = nodes.length;
   const executionStatus = liveExecutionState?.status || (isRunning ? 'running' : 'idle');
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -50,6 +81,34 @@ export default function WorkspaceHeader() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [id, saveEngine, runEngine]);
+
+  // Collaborative presence — join room when workspace opens, leave on unmount
+  useEffect(() => {
+    if (!id) return;
+    const socket = getSocket();
+    const currentUser = user;
+
+    socket.emit('collab:join', {
+      automationId: id,
+      name: currentUser?.name || 'Anonymous',
+      avatar: currentUser?.avatar || currentUser?.picture || '',
+    });
+
+    socket.on('collab:presence', (members) => {
+      // Filter out self
+      setPresence(members.filter((m) => m.userId !== currentUser?.id));
+    });
+
+    return () => {
+      socket.emit('collab:leave', { automationId: id });
+      socket.off('collab:presence');
+    };
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-read user from localStorage whenever profile modal closes (to show updated avatar)
+  const handleProfileUpdated = useCallback((updated) => {
+    setUser((prev) => ({ ...prev, ...updated }));
+  }, []);
 
   const statusBadgeColor =
     executionStatus === 'failed'   ? 'bg-red-500/5 border-red-500/20 text-red-400' :
@@ -129,8 +188,39 @@ export default function WorkspaceHeader() {
         ))}
       </div>
 
-      {/* Right: Status + Actions */}
+      {/* Right: Presence + Status + Actions + Profile */}
       <div className="flex items-center gap-3">
+
+        {/* Live presence avatars — other editors in the room */}
+        {presence.length > 0 && (
+          <div className="flex items-center -space-x-2">
+            {presence.slice(0, 4).map((p) => (
+              <UserAvatarBubble
+                key={p.userId}
+                user={{ name: p.name, avatar: p.avatar }}
+                title={`${p.name} is editing`}
+                ring={p.color}
+              />
+            ))}
+            {presence.length > 4 && (
+              <div className="w-7 h-7 rounded-full bg-neutral-800 border-2 border-neutral-950 flex items-center justify-center text-[9px] font-semibold text-neutral-400">
+                +{presence.length - 4}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Share / collaborators button */}
+        <button
+          onClick={() => setCollabOpen(true)}
+          title="Manage collaborators"
+          className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 hover:bg-white/[0.05] border border-[#333] rounded-lg text-[11px] font-semibold text-neutral-500 hover:text-neutral-200 transition-colors"
+        >
+          <Users className="w-3.5 h-3.5" />
+          Share
+        </button>
+
+        <div className="w-px h-4 bg-[#333]" />
 
         {/* Node count */}
         <div className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 border border-[#333] rounded-lg">
@@ -212,6 +302,15 @@ export default function WorkspaceHeader() {
           {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
           Run Test
         </button>
+
+        <div className="w-px h-4 bg-[#333]" />
+
+        {/* Profile avatar — clickable */}
+        <UserAvatarBubble
+          user={user}
+          title={`${user?.name || 'Profile'} — click to edit`}
+          onClick={() => setProfileOpen(true)}
+        />
       </div>
     </div>
 
@@ -223,6 +322,17 @@ export default function WorkspaceHeader() {
     <KeyboardShortcutsPanel
       isOpen={shortcutsOpen}
       onClose={() => setShortcutsOpen(false)}
+    />
+    <ProfileModal
+      user={user}
+      isOpen={profileOpen}
+      onClose={() => setProfileOpen(false)}
+      onUpdated={handleProfileUpdated}
+    />
+    <CollaboratorsModal
+      automationId={id}
+      isOpen={collabOpen}
+      onClose={() => setCollabOpen(false)}
     />
     </>
   );

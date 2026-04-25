@@ -69,6 +69,21 @@ const AutomationSchema = new mongoose.Schema(
       default: { maxParallel: 10 },
     },
     description: { type: String, default: "" },
+    collaborators: {
+      type: [
+        {
+          userId: { type: String, required: true },
+          email: { type: String, required: true },
+          name: { type: String, default: "" },
+          avatar: { type: String, default: "" },
+          picture: { type: String, default: "" },
+          role: { type: String, enum: ["editor", "viewer"], default: "editor" },
+          addedAt: { type: Date, default: Date.now },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true },
 );

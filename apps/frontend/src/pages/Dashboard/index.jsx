@@ -23,6 +23,42 @@ import BrianBar from './components/BrianBar';
 // Edge format: { id, source, target, type: 'onSuccess', conditionPath: '' }
 
 
+// Stacked avatars for collaborators on a card
+function CollabAvatarStack({ collaborators = [] }) {
+  if (!collaborators.length) return null;
+  const shown = collaborators.slice(0, 3);
+  return (
+    <div className="flex items-center -space-x-1.5">
+      {shown.map((c, i) => {
+        const src = c.avatar || c.picture;
+        return src ? (
+          <img
+            key={c.userId || i}
+            src={src}
+            alt={c.name}
+            title={c.name}
+            referrerPolicy="no-referrer"
+            className="w-5 h-5 rounded-full border border-neutral-900 object-cover"
+          />
+        ) : (
+          <div
+            key={c.userId || i}
+            title={c.name}
+            className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-700 flex items-center justify-center text-[8px] font-semibold text-neutral-300 uppercase"
+          >
+            {c.name?.charAt(0) || '?'}
+          </div>
+        );
+      })}
+      {collaborators.length > 3 && (
+        <div className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-800 flex items-center justify-center text-[8px] font-semibold text-neutral-500">
+          +{collaborators.length - 3}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function timeAgo(d) {
   if (!d) return '—';
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -299,6 +335,7 @@ export default function Dashboard() {
                         <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
                         <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
                         <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Updated</th>
+                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Team</th>
                         <th className="w-10" />
                       </tr>
                     </thead>
@@ -331,6 +368,7 @@ export default function Dashboard() {
                           </td>
                           <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{wf.trigger || 'manual'}</td>
                           <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(wf.updatedAt)}</td>
+                          <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
                           <td className="px-3 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
@@ -382,7 +420,10 @@ export default function Dashboard() {
                       <p className="text-[11px] text-neutral-600 mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
                       <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/50">
                         <span className="text-[10px] text-neutral-700 capitalize">{wf.trigger || 'manual'}</span>
-                        <span className="text-[10px] text-neutral-700">{timeAgo(wf.updatedAt)}</span>
+                        <div className="flex items-center gap-2">
+                          <CollabAvatarStack collaborators={wf.collaborators || []} />
+                          <span className="text-[10px] text-neutral-700">{timeAgo(wf.updatedAt)}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

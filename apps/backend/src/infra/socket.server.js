@@ -4,6 +4,26 @@ import { JWT_SECRET } from "../config/env.js";
 
 let io = null;
 
+// In-memory presence map: automationId → Map(userId → { userId, name, avatar, color, socketId })
+const roomPresence = new Map();
+
+const USER_COLORS = [
+  "#7c3aed", "#2563eb", "#059669", "#d97706", "#dc2626",
+  "#7c3aed", "#db2777", "#0891b2", "#65a30d", "#ea580c",
+];
+
+function getColor(userId) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+}
+
+function getPresenceList(automationId) {
+  const room = roomPresence.get(automationId);
+  if (!room) return [];
+  return Array.from(room.values());
+}
+
 export function initSocketServer(httpServer) {
   const ALLOWED_ORIGINS = (
     process.env.CORS_ORIGINS ||
@@ -35,9 +55,9 @@ export function initSocketServer(httpServer) {
   });
 
   io.on("connection", (socket) => {
-    // Join user-specific room for targeted events
     socket.join(`user:${socket.userId}`);
 
+    // ── Execution subscriptions ───────────────────────────────────────────────
     socket.on("subscribe:execution", (executionId) => {
       socket.join(`execution:${executionId}`);
     });
@@ -46,7 +66,6 @@ export function initSocketServer(httpServer) {
       socket.leave(`execution:${executionId}`);
     });
 
-    // Granular node-level telemetry (canvas animation)
     socket.on("subscribe:automation", (automationId) => {
       socket.join(`automation:${automationId}`);
     });
@@ -55,8 +74,52 @@ export function initSocketServer(httpServer) {
       socket.leave(`automation:${automationId}`);
     });
 
+    // ── Collaboration: join canvas room ───────────────────────────────────────
+    socket.on("collab:join", ({ automationId, name, avatar }) => {
+      if (!automationId) return;
+      socket.join(`collab:${automationId}`);
+      socket._collabRoomId = automationId;
+
+      if (!roomPresence.has(automationId)) roomPresence.set(automationId, new Map());
+      const room = roomPresence.get(automationId);
+
+      room.set(socket.userId, {
+        userId: socket.userId,
+        name: name || "Anonymous",
+        avatar: avatar || "",
+        color: getColor(socket.userId),
+        socketId: socket.id,
+      });
+
+      // Send current presence snapshot to the newcomer
+      socket.emit("collab:presence", getPresenceList(automationId));
+
+      // Broadcast updated presence to everyone else in the room
+      socket.to(`collab:${automationId}`).emit("collab:presence", getPresenceList(automationId));
+    });
+
+    // ── Collaboration: leave canvas room ─────────────────────────────────────
+    socket.on("collab:leave", ({ automationId }) => {
+      _removeFromPresence(socket, automationId);
+    });
+
+    // ── Collaboration: broadcast node move to peers ───────────────────────────
+    // The emitting client should NOT re-apply its own move, so we broadcast
+    // to everyone in the room EXCEPT the sender (socket.to(...)).
+    socket.on("collab:node_move", ({ automationId, nodeId, position }) => {
+      if (!automationId || !nodeId || !position) return;
+      socket.to(`collab:${automationId}`).emit("collab:node_move", {
+        nodeId,
+        position,
+        userId: socket.userId,
+      });
+    });
+
+    // ── Cleanup on disconnect ─────────────────────────────────────────────────
     socket.on("disconnect", () => {
-      // Cleanup handled by socket.io automatically
+      if (socket._collabRoomId) {
+        _removeFromPresence(socket, socket._collabRoomId);
+      }
     });
   });
 
@@ -64,24 +127,32 @@ export function initSocketServer(httpServer) {
   return io;
 }
 
+function _removeFromPresence(socket, automationId) {
+  const room = roomPresence.get(automationId);
+  if (!room) return;
+  room.delete(socket.userId);
+  if (room.size === 0) roomPresence.delete(automationId);
+  // Broadcast updated presence list
+  if (io) {
+    io.to(`collab:${automationId}`).emit("collab:presence", getPresenceList(automationId));
+  }
+  socket.leave(`collab:${automationId}`);
+}
+
 export function getIO() {
   return io;
 }
 
-// Emit execution state updates to subscribers
 export function emitExecutionUpdate(executionId, data) {
   if (!io) return;
   io.to(`execution:${executionId}`).emit("execution:update", data);
 }
 
-// Emit granular per-node lifecycle events for canvas animation.
-// Payload: { automationId, nodeId, nodeType, status, durationMs?, error? }
 export function emitNodeStatus(automationId, data) {
   if (!io) return;
   io.to(`automation:${automationId}`).emit("node:status", data);
 }
 
-// Emit workspace-level events (e.g. admin stats push)
 export function emitToUser(userId, event, data) {
   if (!io) return;
   io.to(`user:${userId}`).emit(event, data);

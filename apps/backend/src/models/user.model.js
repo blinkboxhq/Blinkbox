@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema(
     picture: { type: String, default: "" },
 
     role: { type: String, enum: ["admin", "user"], default: "user" },
+    // Custom uploaded avatar (base64 data URL). Google users also get picture from OAuth.
+    avatar: { type: String, default: "" },
   },
   { timestamps: true },
 );
