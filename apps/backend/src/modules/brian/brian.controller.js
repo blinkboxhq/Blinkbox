@@ -109,14 +109,22 @@ export async function brianChat(req, res) {
     });
 
     // Gemini API uses role "user" | "model" (not "assistant")
-    const history = messages.slice(0, -1).map((m) => ({
+    // Strip any leading model/brian turns (e.g. the welcome message) —
+    // Gemini requires history to start with a user turn.
+    let history = messages.slice(0, -1).map((m) => ({
       role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content }],
+      parts: [{ text: m.content || " " }],
     }));
+    const firstUser = history.findIndex((m) => m.role === "user");
+    if (firstUser > 0) history = history.slice(firstUser);
+    if (firstUser === -1) history = [];
 
     const lastMsg = messages[messages.length - 1];
-    const chat    = model.startChat({ history });
-    const result  = await chat.sendMessage(lastMsg.content);
+    const userText = lastMsg?.content?.trim() || lastMsg?.text?.trim() || "";
+    if (!userText) return res.status(400).json({ message: "Empty message." });
+
+    const chat   = model.startChat({ history });
+    const result = await chat.sendMessage(userText);
     const raw     = result.response.text();
     console.log("[Brian] raw model output:", raw.slice(0, 300));
 

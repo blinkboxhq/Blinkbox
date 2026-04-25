@@ -120,7 +120,9 @@ export default function BrianPanel({ width, onResizeStart }) {
     setThinking(true);
 
     try {
-      const history = [...messages, userMsg].map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+      // Exclude the welcome message — backend strips leading model turns but let's be clean
+      const allMsgs = [...messages, userMsg].filter(m => m.id !== 'welcome');
+      const history = allMsgs.map((m) => ({ role: m.role === 'user' ? 'user' : 'model', content: m.text }));
       const result = await callBrian(history);
       setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'brian', text: result.text, flow: result.flow }]);
     } catch (err) {
