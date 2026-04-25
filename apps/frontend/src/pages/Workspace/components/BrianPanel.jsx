@@ -130,7 +130,7 @@ const SUGGESTIONS = [
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
-export default function BrianPanel() {
+export default function BrianPanel({ width, onResizeStart }) {
   const isBrianOpen = useWorkspaceStore((s) => s.isBrianOpen);
   const setBrianOpen = useWorkspaceStore((s) => s.setBrianOpen);
   const addNode = useWorkspaceStore((s) => s.addNode);
@@ -202,9 +202,17 @@ export default function BrianPanel() {
     <>
       {/* Panel — docked sidebar, not an overlay */}
       <div
-        className="w-[340px] shrink-0 h-full flex flex-col bg-neutral-950 border-l border-[#333]"
-        style={{ animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
+        className="shrink-0 h-full flex flex-row bg-neutral-950 border-l border-[#333]"
+        style={{ width: width ?? 340, animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
       >
+        {/* Drag handle on left edge */}
+        <div
+          onMouseDown={onResizeStart}
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors group border-r border-[#2a2a2a]"
+        >
+          <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+        </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#333] shrink-0">
           <div className="flex items-center gap-2.5">
@@ -283,6 +291,7 @@ export default function BrianPanel() {
           </div>
           <p className="text-[10px] text-neutral-800 mt-1.5 text-center">Brian · powered by Gemma</p>
         </div>
+        </div>{/* end flex-1 inner wrapper */}
       </div>
 
       <style>{`

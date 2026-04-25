@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 import {
-  ArrowLeft, Play, Save, Loader2, Check, Clock, Keyboard,
+  ArrowLeft, Loader2, Clock, Keyboard,
   Power, PanelLeft, PanelBottom, Users,
 } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
@@ -49,23 +49,19 @@ export default function WorkspaceHeader() {
   });
   const [presence, setPresence] = useState([]);
 
-  const workflowName = useWorkspaceStore(s => s.workflowName);
-  const isSaving    = useWorkspaceStore(s => s.isSaving);
-  const isRunning   = useWorkspaceStore(s => s.isRunning);
-  const isActive    = useWorkspaceStore(s => s.isActive);
-  const isActivating= useWorkspaceStore(s => s.isActivating);
-  const saveEngine  = useWorkspaceStore(s => s.saveEngine);
-  const runEngine   = useWorkspaceStore(s => s.runEngine);
+  const workflowName   = useWorkspaceStore(s => s.workflowName);
+  const isActive       = useWorkspaceStore(s => s.isActive);
+  const isActivating   = useWorkspaceStore(s => s.isActivating);
+  const saveEngine     = useWorkspaceStore(s => s.saveEngine);
+  const runEngine      = useWorkspaceStore(s => s.runEngine);
   const activateEngine = useWorkspaceStore(s => s.activateEngine);
-  const nodes       = useWorkspaceStore(s => s.nodes);
-  const liveExec    = useWorkspaceStore(s => s.liveExecutionState);
-  const panels      = useWorkspaceStore(s => s.panels);
-  const togglePanel = useWorkspaceStore(s => s.togglePanel);
-  const isBrianOpen = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen= useWorkspaceStore(s => s.setBrianOpen);
+  const nodes          = useWorkspaceStore(s => s.nodes);
+  const panels         = useWorkspaceStore(s => s.panels);
+  const togglePanel    = useWorkspaceStore(s => s.togglePanel);
+  const isBrianOpen    = useWorkspaceStore(s => s.isBrianOpen);
+  const setBrianOpen   = useWorkspaceStore(s => s.setBrianOpen);
 
   const nodeCount = nodes.length;
-  const executionStatus = liveExec?.status || (isRunning ? 'running' : 'idle');
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useEffect(() => {
@@ -120,12 +116,6 @@ export default function WorkspaceHeader() {
     setUser(prev => ({ ...prev, ...updated }));
   }, []);
 
-  const statusColor =
-    executionStatus === 'failed'   ? 'bg-red-500/5 border-red-500/20 text-red-400' :
-    executionStatus === 'executed' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
-    executionStatus === 'running'  ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' :
-    'bg-neutral-900/50 border-[#333] text-neutral-500';
-
   const panelToggles = [
     { key: 'leftSidebar', title: 'Left sidebar', active: panels.leftSidebar, onClick: () => togglePanel('leftSidebar'), icon: <PanelLeft className="w-3.5 h-3.5" /> },
     { key: 'bottomChat',  title: 'Chat + Tree',  active: panels.bottomChat,  onClick: () => togglePanel('bottomChat'),  icon: <PanelBottom className="w-3.5 h-3.5" /> },
@@ -179,6 +169,20 @@ export default function WorkspaceHeader() {
           </div>
         )}
 
+        {/* Live presence (other editors) */}
+        {presence.length > 0 && (
+          <div className="flex items-center -space-x-1.5">
+            {presence.slice(0, 4).map(p => (
+              <UserAvatarBubble key={p.userId} user={{ name: p.name, avatar: p.avatar }} title={`${p.name} is editing`} color={p.color} />
+            ))}
+            {presence.length > 4 && (
+              <div className="w-7 h-7 rounded-full bg-neutral-800 border-2 border-neutral-950 flex items-center justify-center text-[9px] font-semibold text-neutral-500">
+                +{presence.length - 4}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Share */}
         <button onClick={() => setCollabOpen(true)} title="Manage collaborators"
           className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-900 hover:bg-white/[0.05] border border-[#333] rounded-lg text-[11px] font-semibold text-neutral-500 hover:text-neutral-200 transition-colors">
@@ -187,15 +191,6 @@ export default function WorkspaceHeader() {
         </button>
 
         <div className="w-px h-4 bg-[#333]" />
-
-        {/* Execution status badge */}
-        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg transition-colors ${statusColor}`}>
-          {executionStatus === 'running'  && <Loader2 className="w-3 h-3 animate-spin" />}
-          {executionStatus === 'executed' && <Check className="w-3 h-3" />}
-          <span className="text-[11px] font-semibold uppercase tracking-widest">
-            {executionStatus === 'executed' ? 'Success' : executionStatus === 'running' ? 'Running' : executionStatus === 'failed' ? 'Failed' : 'Idle'}
-          </span>
-        </div>
 
         {/* History */}
         <button onClick={() => setVersionPanelOpen(true)} title="Version history"
@@ -211,13 +206,6 @@ export default function WorkspaceHeader() {
 
         <div className="w-px h-4 bg-[#333]" />
 
-        {/* Save */}
-        <button onClick={() => saveEngine(id)} disabled={isSaving} title="Save (Cmd+S)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-900 hover:bg-white/[0.05] border border-[#333] rounded-lg text-[11px] font-semibold text-neutral-400 hover:text-neutral-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-          {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          Save
-        </button>
-
         {/* Activate */}
         <button onClick={() => activateEngine(id)} disabled={isActivating || nodeCount === 0}
           title={isActive ? 'Deactivate trigger' : 'Activate — go live'}
@@ -226,13 +214,6 @@ export default function WorkspaceHeader() {
           }`}>
           {isActivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
           {isActive ? 'Active' : 'Activate'}
-        </button>
-
-        {/* Run */}
-        <button onClick={() => runEngine(id)} disabled={isRunning || nodeCount === 0} title="Run (Cmd+Enter)"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-          {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-          Run
         </button>
 
         <div className="w-px h-4 bg-[#333]" />
