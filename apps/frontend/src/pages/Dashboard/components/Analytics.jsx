@@ -237,7 +237,7 @@ export default function Analytics() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-[15px] font-semibold text-white">Analytics</h2>
-          <p className="text-[11px] text-neutral-600 mt-0.5">Platform-wide · visible to all users</p>
+          <p className="text-[11px] text-neutral-600 mt-0.5">Your workflows only</p>
         </div>
         {/* Month picker */}
         <div className="flex items-center gap-1 bg-[#0d0d0d] border border-zinc-800 rounded-lg p-1">

@@ -15,15 +15,15 @@ export async function getAnalytics(req, res) {
     const year = parseInt(req.query.year) || now.getFullYear();
     const month = parseInt(req.query.month) || now.getMonth() + 1;
 
+    const workspaceId = req.user.id;
     const since = new Date(year, month - 1, 1, 0, 0, 0, 0);
     const until = new Date(year, month, 1, 0, 0, 0, 0); // first of next month
 
     const daysInMonth = new Date(year, month, 0).getDate();
 
     const [daily, statusBreakdown, totalCount, activeBoxes, monthly] = await Promise.all([
-      // Daily counts for the selected month — no workspaceId filter
       Execution.aggregate([
-        { $match: { createdAt: { $gte: since, $lt: until } } },
+        { $match: { workspaceId, createdAt: { $gte: since, $lt: until } } },
         {
           $group: {
             _id: { d: { $dayOfMonth: "$createdAt" } },
@@ -34,16 +34,14 @@ export async function getAnalytics(req, res) {
         },
         { $sort: { "_id.d": 1 } },
       ]),
-      // Status breakdown for selected month
       Execution.aggregate([
-        { $match: { createdAt: { $gte: since, $lt: until } } },
+        { $match: { workspaceId, createdAt: { $gte: since, $lt: until } } },
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
-      Execution.countDocuments({ createdAt: { $gte: since, $lt: until } }),
-      Automation.countDocuments({ status: "active" }),
-      // Monthly totals for last 12 months (for the month picker summary)
+      Execution.countDocuments({ workspaceId, createdAt: { $gte: since, $lt: until } }),
+      Automation.countDocuments({ workspaceId, status: "active" }),
       Execution.aggregate([
-        { $match: { createdAt: { $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1) } } },
+        { $match: { workspaceId, createdAt: { $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1) } } },
         {
           $group: {
             _id: { y: { $year: "$createdAt" }, m: { $month: "$createdAt" } },
