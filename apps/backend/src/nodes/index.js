@@ -136,8 +136,49 @@ import openaiAssistant from "./integrations/openaiAssistant.node.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
-  manual: { async run(config, input) { return input; } },
-  webhook: { async run(config, input) { return input; } },
+  manual: {
+    async run(config, input) {
+      return { ...input, triggeredAt: new Date().toISOString(), triggerType: "manual" };
+    },
+  },
+  webhook: {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      return {
+        body,
+        headers: input?.headers ?? {},
+        method:  input?.method  ?? "POST",
+        query:   input?.query   ?? {},
+        triggeredAt: new Date().toISOString(),
+        triggerType: "webhook",
+      };
+    },
+  },
+  chat_trigger: {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      const sidField = config.sessionIdField || "sessionId";
+      return {
+        message:      body.message    ?? body.text ?? "",
+        sessionId:    body[sidField]  ?? body.sessionId ?? "",
+        systemPrompt: config.systemPrompt ?? "",
+        body,
+        triggeredAt:  new Date().toISOString(),
+        triggerType:  "chat",
+      };
+    },
+  },
+  form_trigger: {
+    async run(config, input) {
+      const body = input?.body ?? input;
+      return {
+        fields:      body.fields ?? body,
+        submittedAt: body.submittedAt ?? new Date().toISOString(),
+        body,
+        triggerType: "form",
+      };
+    },
+  },
   error_trigger: { async run(config, input) { return input; } },
   rss_trigger: { async run(config, input) { return input; } },
   imap_trigger: { async run(config, input) { return input; } },

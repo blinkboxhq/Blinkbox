@@ -61,8 +61,11 @@ function useSplitResize({ containerRef }) {
 export default function BottomChatPanel({ height, onResizeStart }) {
   const { id: automationId } = useParams();
   const nodeCount = useWorkspaceStore(s => s.nodes.length);
+  const hasChatTrigger = useWorkspaceStore(s =>
+    s.nodes.some(n => n.data?.backendType === 'chat_trigger')
+  );
   const [messages, setMessages] = useState([
-    { id: 'sys', role: 'system', text: "Chat trigger is ready. Messages you send here will fire your workflow's chat trigger node and show the output." }
+    { id: 'sys', role: 'system', text: "Messages you send here fire your workflow's Chat Trigger node. Add a Chat Trigger node to the canvas to enable testing." }
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -119,7 +122,10 @@ export default function BottomChatPanel({ height, onResizeStart }) {
           <div className="flex items-center gap-2">
             <Bot className="w-3.5 h-3.5 text-violet-400" />
             <span className="text-[11px] font-semibold text-neutral-300">Chat Trigger</span>
-            <span className="text-[10px] text-neutral-600">· test your workflow</span>
+            {hasChatTrigger
+              ? <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">connected</span>
+              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400">no trigger</span>
+            }
           </div>
           <button
             onClick={() => setMessages([{ id: 'sys', role: 'system', text: 'Chat cleared.' }])}
@@ -165,24 +171,30 @@ export default function BottomChatPanel({ height, onResizeStart }) {
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1.5 border-t border-[#222] shrink-0">
-            <div className="flex items-center gap-2 bg-neutral-900 border border-[#2a2a2a] rounded-xl px-3 py-2 focus-within:border-neutral-700 transition-colors">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Send a message to trigger your workflow…"
-                className="flex-1 bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 focus:outline-none"
-                disabled={sending}
-              />
-              <button
-                onClick={send}
-                disabled={!input.trim() || sending}
-                className="w-6 h-6 rounded-lg bg-violet-600 flex items-center justify-center hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Send className="w-3 h-3 text-white" />
-              </button>
-            </div>
+            {!hasChatTrigger ? (
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/5 border border-amber-500/15 rounded-xl">
+                <span className="text-[11px] text-amber-400/70">Add a Chat Trigger node to the canvas to test chat here</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-neutral-900 border border-[#2a2a2a] rounded-xl px-3 py-2 focus-within:border-neutral-700 transition-colors">
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder="Send a message to trigger your workflow…"
+                  className="flex-1 bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 focus:outline-none"
+                  disabled={sending}
+                />
+                <button
+                  onClick={send}
+                  disabled={!input.trim() || sending}
+                  className="w-6 h-6 rounded-lg bg-violet-600 flex items-center justify-center hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

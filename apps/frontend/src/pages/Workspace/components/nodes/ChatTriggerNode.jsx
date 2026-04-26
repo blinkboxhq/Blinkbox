@@ -39,11 +39,14 @@ export default function ChatTriggerNode({ config = {}, updateConfig, selected })
       </Handle>
 
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
-        <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <MessageSquare className="w-3 h-3 text-pink-400" />
+      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
+        <div className="flex items-center gap-2">
+          <div className="p-1 bg-[#222] rounded-md border border-[#333]">
+            <MessageSquare className="w-3 h-3 text-pink-400" />
+          </div>
+          <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Chat Trigger</span>
         </div>
-        <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Chat Message</span>
+        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono">↔ bottom panel</span>
       </div>
 
       {/* Tabs */}

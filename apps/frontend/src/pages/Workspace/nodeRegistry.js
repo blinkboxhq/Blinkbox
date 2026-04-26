@@ -32,6 +32,8 @@ import imgGmail      from "../../assets/gmail.png";
 import TriggerNode          from "./components/nodes/TriggerNode";
 import WebhookTriggerNode   from "./components/nodes/WebhookTriggerNode";
 import ScheduleTriggerNode  from "./components/nodes/ScheduleTriggerNode";
+import ChatTriggerNode      from "./components/nodes/ChatTriggerNode";
+import FormTriggerNode      from "./components/nodes/FormTriggerNode";
 import GitHubTriggerNode    from "./components/nodes/GitHubTriggerNode";
 import StripeTriggerNode    from "./components/nodes/StripeTriggerNode";
 
@@ -183,6 +185,14 @@ export const NodeRegistry = {
   cron_trigger: {
     label: "Schedule Trigger", icon: Clock, colorClass: "text-amber-400",
     accentColor: "251,191,36", ConfigPanel: ScheduleTriggerNode, category: "trigger",
+  },
+  chat_trigger: {
+    label: "Chat Trigger", icon: MessageSquarePlus, colorClass: "text-pink-400",
+    accentColor: "236,72,153", ConfigPanel: ChatTriggerNode, category: "trigger",
+  },
+  form_trigger: {
+    label: "Form Trigger", icon: FileText, colorClass: "text-violet-400",
+    accentColor: "167,139,250", ConfigPanel: FormTriggerNode, category: "trigger",
   },
   github_trigger: {
     label: "GitHub Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
