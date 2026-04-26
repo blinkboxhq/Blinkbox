@@ -156,7 +156,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
   );
 }
 
-export default function NodeTreePanel({ embedded = false }) {
+export default function NodeTreePanel({ embedded = false, hideHeader = false, className = '' }) {
   const nodes = useWorkspaceStore(s => s.nodes);
   const edges = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
@@ -166,12 +166,14 @@ export default function NodeTreePanel({ embedded = false }) {
   const displayRoots = roots.length > 0 ? roots : nodes.slice(0, 1);
 
   return (
-    <div className={`${embedded ? 'w-[200px]' : 'w-[220px]'} shrink-0 bg-neutral-950 border-l border-[#333] flex flex-col overflow-hidden`}>
+    <div className={`${embedded ? 'flex-1 min-w-0' : 'w-[220px] shrink-0 border-l border-[#222]'} bg-neutral-950 flex flex-col overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="px-3 py-2 border-b border-[#333] shrink-0 flex items-center justify-between">
-        <p className="text-[10px] font-medium text-neutral-600 uppercase tracking-widest">Flow</p>
-        <span className="text-[10px] text-neutral-700 font-mono">{nodes.length}</span>
-      </div>
+      {!hideHeader && (
+        <div className="px-3 py-2 border-b border-[#222] shrink-0 flex items-center justify-between">
+          <p className="text-[10px] font-medium text-neutral-600 uppercase tracking-widest">Flow</p>
+          <span className="text-[10px] text-neutral-700 font-mono">{nodes.length}</span>
+        </div>
+      )}
 
       {/* Tree */}
       <div className="flex-1 overflow-y-auto py-1.5 min-h-0">
