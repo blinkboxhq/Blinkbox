@@ -151,7 +151,7 @@ async function pollTableInner(automationId, cfg, resolvedConnectionString, dbTyp
       await executeAutomation(
         automation,
         { row, tableName, event: eventType, detectedAt },
-        { workspaceId: automation.workspaceId },
+        { workspaceId: automation.workspaceId, idempotencyKey: `db:${automationId}:${tableName}:${row[cfg.primaryKeyColumn || "id"] ?? new Date(rowTs).getTime()}` },
       );
       console.log(`[DBPoller] Fired "${automation.name}" for row in ${tableName}`);
     } catch (err) {
