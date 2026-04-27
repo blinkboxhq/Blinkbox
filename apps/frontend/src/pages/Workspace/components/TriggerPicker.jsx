@@ -21,339 +21,281 @@ import {
   TrendingUp,
   MessageSquarePlus,
   Calendar,
+  ChevronRight,
+  Zap,
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
-import imgTelegram  from "../../../assets/telegram.png";
-import imgSlack     from "../../../assets/slack.png";
-import imgDiscord   from "../../../assets/discord.png";
-import imgGmail     from "../../../assets/gmail.png";
-import imgWhatsApp  from "../../../assets/whatsapp.png";
-import imgAirtable  from "../../../assets/Airtable--Streamline-Svg-Logos.svg";
-import imgNotion    from "../../../assets/Notion-Logo--Streamline-Radix.svg";
+import imgTelegram from "../../../assets/telegram.png";
+import imgSlack    from "../../../assets/slack.png";
+import imgDiscord  from "../../../assets/discord.png";
+import imgGmail    from "../../../assets/gmail.png";
+import imgWhatsApp from "../../../assets/whatsapp.png";
+import imgAirtable from "../../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion   from "../../../assets/Notion-Logo--Streamline-Radix.svg";
 
-const TRIGGER_OPTIONS = [
-  // ── Core ────────────────────────────────────────────────────────────────────
+// ── Core triggers (always greyscale) ────────────────────────────────────────
+const CORE_TRIGGERS = [
   {
     id: "manual",
     backendType: "manual",
     icon: MousePointerClick,
     label: "Trigger manually",
-    description: "Run on demand by clicking a button. Great for testing and one-off tasks.",
-    color: "text-green-400",
-    bg: "bg-green-500/10",
-    border: "border-green-500/20",
+    description: "Run on demand by clicking a button.",
   },
   {
     id: "cron",
     backendType: "cron_trigger",
     icon: Clock,
     label: "On a schedule",
-    description: "Run every minute, hour, day, or on a custom cron expression.",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    description: "Run every minute, hour, day, or on a custom cron.",
   },
   {
     id: "webhook",
     backendType: "webhook",
     icon: Webhook,
     label: "On webhook call",
-    description: "Run when your URL receives an HTTP request. Works with any app that can POST.",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
+    description: "Run when your URL receives an HTTP request.",
   },
   {
     id: "chat",
     backendType: "webhook",
     icon: MessageSquare,
     label: "On chat message",
-    description: "Run when a user sends a message. Wire into AI nodes to build chatbots.",
-    color: "text-pink-400",
-    bg: "bg-pink-500/10",
-    border: "border-pink-500/20",
+    description: "Run when a user sends a message to your chat endpoint.",
   },
-  // ── Email ───────────────────────────────────────────────────────────────────
   {
     id: "email",
     backendType: "webhook",
     icon: Mail,
-    label: "On email received (webhook)",
-    description: "Run when an email arrives via Mailgun, SendGrid, Postmark, or Forward Email.",
-    color: "text-violet-400",
-    bg: "bg-violet-500/10",
-    border: "border-violet-500/20",
+    label: "On email received",
+    description: "Via Mailgun, SendGrid, Postmark, or Forward Email.",
   },
   {
     id: "imap",
     backendType: "imap_trigger",
     icon: Inbox,
     label: "On email in inbox (IMAP)",
-    description: "Poll Gmail, Outlook, or any IMAP inbox directly. No external webhook setup.",
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-    border: "border-cyan-500/20",
+    description: "Poll Gmail, Outlook, or any IMAP inbox directly.",
   },
-  // ── Data ────────────────────────────────────────────────────────────────────
-  {
-    id: "rss",
-    backendType: "rss_trigger",
-    icon: Rss,
-    label: "On RSS / Atom update",
-    description: "Poll any RSS or Atom feed. Triggers once per new article or item.",
-    color: "text-orange-400",
-    bg: "bg-orange-500/10",
-    border: "border-orange-500/20",
-  },
-  {
-    id: "database",
-    backendType: "db_trigger",
-    icon: Database,
-    label: "On database row",
-    description: "Watch a PostgreSQL or MySQL table for new or updated rows.",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-  },
-  // ── Messaging ───────────────────────────────────────────────────────────────
-  {
-    id: "telegram",
-    backendType: "telegram_trigger",
-    logoUrl: imgTelegram,
-    label: "On Telegram message",
-    description: "Fires when your bot receives a message, button press, or other update.",
-    color: "text-[#26A5E4]",
-    bg: "bg-[#26A5E4]/10",
-    border: "border-[#26A5E4]/20",
-  },
-  {
-    id: "slack",
-    backendType: "slack_trigger",
-    logoUrl: imgSlack,
-    label: "On Slack event",
-    description: "Message posted, reaction added, user joined channel — any Slack Event API event.",
-    color: "text-[#E01E5A]",
-    bg: "bg-[#E01E5A]/10",
-    border: "border-[#E01E5A]/20",
-  },
-  {
-    id: "discord",
-    backendType: "discord_trigger",
-    logoUrl: imgDiscord,
-    label: "On Discord event",
-    description: "Message sent, member joined, reaction added — via Discord webhook or bot gateway.",
-    color: "text-[#5865F2]",
-    bg: "bg-[#5865F2]/10",
-    border: "border-[#5865F2]/20",
-  },
-  {
-    id: "whatsapp",
-    backendType: "whatsapp_trigger",
-    logoUrl: imgWhatsApp,
-    label: "On WhatsApp message",
-    description: "Fires when a message arrives on your WhatsApp Business number (Twilio or Meta).",
-    color: "text-[#25D366]",
-    bg: "bg-[#25D366]/10",
-    border: "border-[#25D366]/20",
-  },
-  // ── Productivity ─────────────────────────────────────────────────────────────
-  {
-    id: "gmail",
-    backendType: "gmail_trigger",
-    logoUrl: imgGmail,
-    label: "On Gmail email",
-    description: "Polls your Gmail inbox for new emails matching an optional query filter.",
-    color: "text-[#EA4335]",
-    bg: "bg-[#EA4335]/10",
-    border: "border-[#EA4335]/20",
-  },
-  {
-    id: "airtable",
-    backendType: "airtable_trigger",
-    logoUrl: imgAirtable,
-    label: "On Airtable record",
-    description: "Fires when a new record is created or updated in an Airtable base.",
-    color: "text-[#F65858]",
-    bg: "bg-[#F65858]/10",
-    border: "border-[#F65858]/20",
-    imgFilter: "brightness(0) invert(1)",
-  },
-  {
-    id: "notion",
-    backendType: "notion_trigger",
-    logoUrl: imgNotion,
-    label: "On Notion page",
-    description: "Polls a Notion database for new or edited pages.",
-    color: "text-zinc-200",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/20",
-    imgFilter: "brightness(0) invert(1)",
-  },
-  {
-    id: "hubspot",
-    backendType: "hubspot_trigger",
-    icon: Users,
-    label: "On HubSpot CRM event",
-    description: "New or updated contacts, deals, companies, or tickets in HubSpot CRM.",
-    color: "text-[#FF7A59]",
-    bg: "bg-[#FF7A59]/10",
-    border: "border-[#FF7A59]/20",
-  },
-  // ── Commerce ─────────────────────────────────────────────────────────────────
-  {
-    id: "shopify",
-    backendType: "shopify_trigger",
-    icon: ShoppingBag,
-    label: "On Shopify event",
-    description: "Order placed, fulfillment shipped, product updated — any Shopify webhook topic.",
-    color: "text-[#95BF47]",
-    bg: "bg-[#95BF47]/10",
-    border: "border-[#95BF47]/20",
-  },
-  {
-    id: "stripe",
-    backendType: "stripe_trigger",
-    icon: CreditCard,
-    label: "On Stripe event",
-    description: "Payment succeeded, subscription cancelled — auto-registered on your Stripe account.",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
-    border: "border-indigo-500/20",
-  },
-  // ── Dev Tools ────────────────────────────────────────────────────────────────
-  {
-    id: "github",
-    backendType: "github_trigger",
-    icon: Github,
-    label: "On GitHub event",
-    description: "Push, PR, issue, release — BlinkBox registers the webhook for you.",
-    color: "text-zinc-300",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/20",
-  },
-  {
-    id: "linear",
-    backendType: "linear_trigger",
-    icon: Circle,
-    label: "On Linear event",
-    description: "Issue created, status changed, cycle updated — any Linear webhook event.",
-    color: "text-[#5E6AD2]",
-    bg: "bg-[#5E6AD2]/10",
-    border: "border-[#5E6AD2]/20",
-  },
-  {
-    id: "typeform",
-    backendType: "typeform_trigger",
-    icon: FileText,
-    label: "On Typeform submission",
-    description: "Fires every time a respondent submits your Typeform.",
-    color: "text-zinc-300",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/20",
-  },
-  // ── Polling ──────────────────────────────────────────────────────────────────
-  {
-    id: "youtube",
-    backendType: "youtube_trigger",
-    icon: Youtube,
-    label: "On YouTube video",
-    description: "Fires when a channel publishes a new video. Uses YouTube Data API v3.",
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/20",
-  },
-  {
-    id: "price_alert",
-    backendType: "price_alert_trigger",
-    icon: TrendingUp,
-    label: "On crypto price alert",
-    description: "Fires when a coin price crosses your threshold (above or below). Powered by CoinGecko.",
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/10",
-    border: "border-yellow-500/20",
-  },
-  {
-    id: "reddit",
-    backendType: "reddit_trigger",
-    icon: MessageSquarePlus,
-    label: "On Reddit post",
-    description: "Polls a subreddit for new posts. Optional keyword filter. No API key needed.",
-    color: "text-orange-400",
-    bg: "bg-orange-500/10",
-    border: "border-orange-500/20",
-  },
-  {
-    id: "google_calendar",
-    backendType: "google_calendar_trigger",
-    icon: Calendar,
-    label: "On Google Calendar event",
-    description: "Fires when a calendar event is about to start. Configure minutes-before to get an advance warning.",
-    color: "text-[#4285F4]",
-    bg: "bg-[#4285F4]/10",
-    border: "border-[#4285F4]/20",
-  },
-  {
-    id: "github_issue",
-    backendType: "github_issue_trigger",
-    icon: Github,
-    label: "On GitHub issue / PR",
-    description: "Polls a repo for new issues or pull requests. Filter by label or type.",
-    color: "text-zinc-300",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/20",
-  },
-  // ── System ──────────────────────────────────────────────────────────────────
   {
     id: "error",
     backendType: "error_trigger",
     icon: AlertTriangle,
     label: "On workflow error",
-    description: "Fires when any workflow in your workspace fails. Build alert & recovery automations.",
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/20",
+    description: "Fires when any workflow in your workspace fails.",
   },
 ];
 
-const GROUPS = [
+// ── App triggers (colored logos) ─────────────────────────────────────────────
+const APP_TRIGGERS = [
   {
-    label: "Manual",
-    description: "Start a workflow yourself",
-    ids: ["manual"],
+    id: "telegram",
+    backendType: "telegram_trigger",
+    logoUrl: imgTelegram,
+    label: "Telegram",
+    description: "Message, button press, or any bot update.",
+    color: "#26A5E4",
   },
   {
-    label: "Time & HTTP",
-    description: "Schedule or webhook-based triggers",
-    ids: ["cron", "webhook"],
+    id: "slack",
+    backendType: "slack_trigger",
+    logoUrl: imgSlack,
+    label: "Slack",
+    description: "Message posted, reaction added, member joined.",
+    color: "#E01E5A",
   },
   {
-    label: "User Input",
-    description: "Chat messages and form submissions",
-    ids: ["chat", "email", "imap"],
+    id: "discord",
+    backendType: "discord_trigger",
+    logoUrl: imgDiscord,
+    label: "Discord",
+    description: "Message sent, member joined, reaction added.",
+    color: "#5865F2",
   },
   {
+    id: "whatsapp",
+    backendType: "whatsapp_trigger",
+    logoUrl: imgWhatsApp,
+    label: "WhatsApp",
+    description: "Message arrives on your WhatsApp Business number.",
+    color: "#25D366",
+  },
+  {
+    id: "gmail",
+    backendType: "gmail_trigger",
+    logoUrl: imgGmail,
+    label: "Gmail",
+    description: "New email matching an optional query filter.",
+    color: "#EA4335",
+  },
+  {
+    id: "airtable",
+    backendType: "airtable_trigger",
+    logoUrl: imgAirtable,
+    imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)",
+    label: "Airtable",
+    description: "New or updated record in an Airtable base.",
+    color: "#F65858",
+  },
+  {
+    id: "notion",
+    backendType: "notion_trigger",
+    logoUrl: imgNotion,
+    imgFilter: "brightness(0) invert(1)",
+    label: "Notion",
+    description: "New or edited page in a Notion database.",
+    color: "#ffffff",
+  },
+  {
+    id: "hubspot",
+    backendType: "hubspot_trigger",
+    icon: Users,
+    label: "HubSpot",
+    description: "New or updated contacts, deals, companies.",
+    color: "#FF7A59",
+  },
+  {
+    id: "google_calendar",
+    backendType: "google_calendar_trigger",
+    icon: Calendar,
+    label: "Google Calendar",
+    description: "Calendar event about to start.",
+    color: "#4285F4",
+  },
+  {
+    id: "shopify",
+    backendType: "shopify_trigger",
+    icon: ShoppingBag,
+    label: "Shopify",
+    description: "Order placed, fulfillment shipped, product updated.",
+    color: "#95BF47",
+  },
+  {
+    id: "stripe",
+    backendType: "stripe_trigger",
+    icon: CreditCard,
+    label: "Stripe",
+    description: "Payment succeeded, subscription cancelled.",
+    color: "#635BFF",
+  },
+  {
+    id: "github",
+    backendType: "github_trigger",
+    icon: Github,
+    label: "GitHub",
+    description: "Push, PR, issue, release — webhook auto-registered.",
+    color: "#e4e4e7",
+  },
+  {
+    id: "linear",
+    backendType: "linear_trigger",
+    icon: Circle,
+    label: "Linear",
+    description: "Issue created, status changed, cycle updated.",
+    color: "#5E6AD2",
+  },
+  {
+    id: "typeform",
+    backendType: "typeform_trigger",
+    icon: FileText,
+    label: "Typeform",
+    description: "Respondent submits your Typeform.",
+    color: "#e4e4e7",
+  },
+  {
+    id: "github_issue",
+    backendType: "github_issue_trigger",
+    icon: Github,
+    label: "GitHub Issues / PRs",
+    description: "New issues or pull requests. Filter by label or type.",
+    color: "#e4e4e7",
+  },
+  {
+    id: "rss",
+    backendType: "rss_trigger",
+    icon: Rss,
+    label: "RSS / Atom",
+    description: "New article or item in any RSS or Atom feed.",
+    color: "#F97316",
+  },
+  {
+    id: "database",
+    backendType: "db_trigger",
+    icon: Database,
+    label: "Database",
+    description: "New or updated row in PostgreSQL or MySQL.",
+    color: "#10B981",
+  },
+  {
+    id: "youtube",
+    backendType: "youtube_trigger",
+    icon: Youtube,
+    label: "YouTube",
+    description: "Channel publishes a new video.",
+    color: "#FF0000",
+  },
+  {
+    id: "price_alert",
+    backendType: "price_alert_trigger",
+    icon: TrendingUp,
+    label: "Crypto Price Alert",
+    description: "Coin price crosses your threshold. Powered by CoinGecko.",
+    color: "#EAB308",
+  },
+  {
+    id: "reddit",
+    backendType: "reddit_trigger",
+    icon: MessageSquarePlus,
+    label: "Reddit",
+    description: "New post in a subreddit. Optional keyword filter.",
+    color: "#FF4500",
+  },
+];
+
+// ── Top-level category rows ───────────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id: "manual",
+    icon: MousePointerClick,
+    label: "Run manually",
+    description: "Start yourself, no automation needed",
+    triggers: CORE_TRIGGERS.filter((t) => t.id === "manual"),
+  },
+  {
+    id: "schedule",
+    icon: Clock,
+    label: "On a schedule",
+    description: "Time-based or recurring",
+    triggers: CORE_TRIGGERS.filter((t) => t.id === "cron"),
+  },
+  {
+    id: "incoming",
+    icon: Webhook,
+    label: "On incoming event",
+    description: "Webhook, chat, email, IMAP, errors",
+    triggers: CORE_TRIGGERS.filter((t) => ["webhook", "chat", "email", "imap", "error"].includes(t.id)),
+  },
+  {
+    id: "app_events",
+    icon: Zap,
     label: "App Events",
-    description: "Fire when something happens in a connected app",
-    ids: [
-      "telegram", "slack", "discord", "whatsapp",
-      "gmail", "airtable", "notion", "hubspot", "google_calendar",
-      "shopify", "stripe",
-      "github", "linear", "typeform", "github_issue",
-      "rss", "database", "youtube", "price_alert", "reddit",
-      "error",
-    ],
+    description: "Connected integrations",
+    triggers: APP_TRIGGERS,
+    isApps: true,
   },
 ];
 
 export default function TriggerPicker() {
   const [search, setSearch] = useState("");
+  const [openCategory, setOpenCategory] = useState(null);
   const addNode = useWorkspaceStore((s) => s.addNode);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
 
+  const allTriggers = [...CORE_TRIGGERS, ...APP_TRIGGERS];
   const filtered = search
-    ? TRIGGER_OPTIONS.filter(
+    ? allTriggers.filter(
         (t) =>
           t.label.toLowerCase().includes(search.toLowerCase()) ||
           t.description.toLowerCase().includes(search.toLowerCase()),
@@ -377,15 +319,42 @@ export default function TriggerPicker() {
     setSelectedNodeId(newId);
   };
 
-  const renderTrigger = (trigger) => {
+  const toggleCategory = (id) => {
+    setOpenCategory((prev) => (prev === id ? null : id));
+  };
+
+  // ── Greyscale trigger row (core triggers) ────────────────────────────────
+  const renderCoreTrigger = (trigger) => {
     const Icon = trigger.icon;
     return (
       <button
         key={trigger.id}
         onClick={() => handleSelect(trigger)}
-        className="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-zinc-800/60 transition-all duration-150 text-left group border border-transparent hover:border-zinc-700/40"
+        className="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-zinc-800/50 transition-all duration-150 text-left group w-full border border-transparent hover:border-zinc-700/30"
       >
-        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-zinc-400 shrink-0" strokeWidth={1.75} />
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-medium text-zinc-200 group-hover:text-white transition-colors leading-tight">
+            {trigger.label}
+          </div>
+          <div className="text-[11px] text-zinc-600 mt-0.5 group-hover:text-zinc-500 transition-colors truncate">
+            {trigger.description}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  // ── Colored app trigger row ───────────────────────────────────────────────
+  const renderAppTrigger = (trigger) => {
+    const Icon = trigger.icon;
+    return (
+      <button
+        key={trigger.id}
+        onClick={() => handleSelect(trigger)}
+        className="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-zinc-800/50 transition-all duration-150 text-left group w-full border border-transparent hover:border-zinc-700/30"
+      >
+        <div className="w-5 h-5 flex items-center justify-center shrink-0">
           {trigger.logoUrl ? (
             <img
               src={trigger.logoUrl}
@@ -394,19 +363,25 @@ export default function TriggerPicker() {
               style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
             />
           ) : (
-            <Icon className={`w-5 h-5 ${trigger.color}`} strokeWidth={1.75} />
+            <Icon className="w-5 h-5 shrink-0" style={{ color: trigger.color }} strokeWidth={1.75} />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors leading-tight">
+          <div className="text-[13px] font-medium text-zinc-200 group-hover:text-white transition-colors leading-tight">
             {trigger.label}
           </div>
-          <div className="text-xs text-zinc-500 mt-0.5 leading-relaxed group-hover:text-zinc-400 transition-colors truncate">
+          <div className="text-[11px] text-zinc-600 mt-0.5 group-hover:text-zinc-500 transition-colors truncate">
             {trigger.description}
           </div>
         </div>
       </button>
     );
+  };
+
+  // ── Search result row (greyscale icon, colored for apps) ─────────────────
+  const renderSearchResult = (trigger) => {
+    const isApp = APP_TRIGGERS.some((a) => a.id === trigger.id);
+    return isApp ? renderAppTrigger(trigger) : renderCoreTrigger(trigger);
   };
 
   return (
@@ -417,9 +392,7 @@ export default function TriggerPicker() {
           <h2 className="text-base font-semibold text-zinc-100 tracking-tight">
             What triggers this workflow?
           </h2>
-          <p className="text-sm text-zinc-500 mt-1">
-            Choose how this workflow starts
-          </p>
+          <p className="text-sm text-zinc-500 mt-1">Choose how this workflow starts</p>
         </div>
         <button
           onClick={() => setTriggerPickerOpen(false)}
@@ -430,7 +403,7 @@ export default function TriggerPicker() {
       </div>
 
       {/* Search */}
-      <div className="px-6 pb-3">
+      <div className="px-6 pb-4">
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-zinc-900 border border-zinc-700/60 rounded-xl focus-within:border-zinc-500 transition-colors">
           <Search className="w-4 h-4 text-zinc-500 shrink-0" />
           <input
@@ -444,8 +417,10 @@ export default function TriggerPicker() {
         </div>
       </div>
 
-      {/* Trigger list */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto px-3 pb-6">
+
+        {/* ── Search results ── */}
         {filtered !== null ? (
           filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -453,25 +428,49 @@ export default function TriggerPicker() {
               <p className="text-sm text-zinc-600">No triggers found</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
-              {filtered.map(renderTrigger)}
+            <div className="flex flex-col gap-0.5">
+              {filtered.map(renderSearchResult)}
             </div>
           )
+
         ) : (
-          <div className="flex flex-col gap-5">
-            {GROUPS.map(({ label, description, ids }) => {
-              const triggers = ids.map((id) => TRIGGER_OPTIONS.find((t) => t.id === id)).filter(Boolean);
+          /* ── Category accordion ── */
+          <div className="flex flex-col gap-1">
+            {CATEGORIES.map((cat) => {
+              const CatIcon = cat.icon;
+              const isOpen = openCategory === cat.id;
               return (
-                <div key={label}>
-                  <div className="px-4 pb-2">
-                    <span className="text-[11px] font-bold text-zinc-400 tracking-wide">{label}</span>
-                    {description && (
-                      <span className="text-[10px] text-zinc-600 ml-2">{description}</span>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    {triggers.map(renderTrigger)}
-                  </div>
+                <div key={cat.id} className="rounded-xl overflow-hidden">
+
+                  {/* Category row */}
+                  <button
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-left transition-all duration-150 rounded-xl
+                      ${isOpen
+                        ? "bg-zinc-800/70 border border-zinc-700/40"
+                        : "hover:bg-zinc-800/40 border border-transparent hover:border-zinc-700/20"
+                      }`}
+                  >
+                    <CatIcon className="w-4 h-4 text-zinc-400 shrink-0" strokeWidth={1.75} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-zinc-200 leading-tight">
+                        {cat.label}
+                      </div>
+                      <div className="text-[11px] text-zinc-600 mt-0.5">{cat.description}</div>
+                    </div>
+                    <ChevronRight
+                      className={`w-3.5 h-3.5 text-zinc-600 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
+                    />
+                  </button>
+
+                  {/* Expanded triggers */}
+                  {isOpen && (
+                    <div className="mt-0.5 ml-3 border-l border-zinc-800/60 pl-2 flex flex-col gap-0.5 pb-1">
+                      {cat.triggers.map((t) =>
+                        cat.isApps ? renderAppTrigger(t) : renderCoreTrigger(t)
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
