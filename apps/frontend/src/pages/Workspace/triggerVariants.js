@@ -50,13 +50,25 @@ import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
 
-import imgTelegram from "../../assets/telegram.png";
-import imgSlack    from "../../assets/slack.png";
-import imgDiscord  from "../../assets/discord.png";
-import imgGmail    from "../../assets/gmail.png";
-import imgWhatsApp from "../../assets/whatsapp.png";
-import imgAirtable from "../../assets/Airtable--Streamline-Svg-Logos.svg";
-import imgNotion   from "../../assets/Notion-Logo--Streamline-Radix.svg";
+import imgTelegram       from "../../assets/telegram.png";
+import imgSlack          from "../../assets/slack.png";
+import imgDiscord        from "../../assets/discord.png";
+import imgGmail          from "../../assets/gmail.png";
+import imgWhatsApp       from "../../assets/whatsapp.png";
+import imgAirtable       from "../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion         from "../../assets/notion.svg";
+import imgGitHub         from "../../assets/github.svg";
+import imgStripe         from "../../assets/stripe.svg";
+import imgHubSpot        from "../../assets/hubspot.svg";
+import imgShopify        from "../../assets/shopify.svg";
+import imgLinear         from "../../assets/linear.svg";
+import imgTypeform       from "../../assets/typeform.svg";
+import imgYouTube        from "../../assets/youtube.svg";
+import imgReddit         from "../../assets/reddit.svg";
+import imgGoogleCalendar from "../../assets/google-calendar.svg";
+import imgRss            from "../../assets/rss.svg";
+import imgPostgres       from "../../assets/postgresql.svg";
+import imgBitcoin        from "../../assets/bitcoin.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -110,6 +122,7 @@ export const TRIGGER_VARIANTS = {
   rss: {
     backendType: "rss_trigger",
     icon: Rss,
+    logoUrl: imgRss,
     label: "On RSS / Atom Update",
     colorClass: "text-orange-400",
     accentColor: "249,115,22",
@@ -126,6 +139,7 @@ export const TRIGGER_VARIANTS = {
   database: {
     backendType: "db_trigger",
     icon: Database,
+    logoUrl: imgPostgres,
     label: "On Database Row",
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
@@ -134,6 +148,7 @@ export const TRIGGER_VARIANTS = {
   github: {
     backendType: "github_trigger",
     icon: Github,
+    logoUrl: imgGitHub,
     label: "On GitHub Event",
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
@@ -142,6 +157,7 @@ export const TRIGGER_VARIANTS = {
   stripe: {
     backendType: "stripe_trigger",
     icon: CreditCard,
+    logoUrl: imgStripe,
     label: "On Stripe Event",
     colorClass: "text-indigo-400",
     accentColor: "99,102,241",
@@ -215,6 +231,7 @@ export const TRIGGER_VARIANTS = {
   hubspot: {
     backendType: "hubspot_trigger",
     icon: Users,
+    logoUrl: imgHubSpot,
     label: "On HubSpot CRM Event",
     colorClass: "text-[#FF7A59]",
     accentColor: "255,122,89",
@@ -223,6 +240,7 @@ export const TRIGGER_VARIANTS = {
   shopify: {
     backendType: "shopify_trigger",
     icon: ShoppingBag,
+    logoUrl: imgShopify,
     label: "On Shopify Event",
     colorClass: "text-[#95BF47]",
     accentColor: "149,191,71",
@@ -231,6 +249,7 @@ export const TRIGGER_VARIANTS = {
   linear: {
     backendType: "linear_trigger",
     icon: Circle,
+    logoUrl: imgLinear,
     label: "On Linear Event",
     colorClass: "text-[#5E6AD2]",
     accentColor: "94,106,210",
@@ -239,6 +258,7 @@ export const TRIGGER_VARIANTS = {
   typeform: {
     backendType: "typeform_trigger",
     icon: FileText,
+    logoUrl: imgTypeform,
     label: "On Typeform Submission",
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
@@ -249,6 +269,7 @@ export const TRIGGER_VARIANTS = {
   youtube: {
     backendType: "youtube_trigger",
     icon: Youtube,
+    logoUrl: imgYouTube,
     label: "On YouTube Video",
     colorClass: "text-red-400",
     accentColor: "248,113,113",
@@ -257,6 +278,7 @@ export const TRIGGER_VARIANTS = {
   price_alert: {
     backendType: "price_alert_trigger",
     icon: TrendingUp,
+    logoUrl: imgBitcoin,
     label: "On Crypto Price Alert",
     colorClass: "text-yellow-400",
     accentColor: "250,204,21",
@@ -265,6 +287,7 @@ export const TRIGGER_VARIANTS = {
   reddit: {
     backendType: "reddit_trigger",
     icon: MessageSquarePlus,
+    logoUrl: imgReddit,
     label: "On Reddit Post",
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
@@ -273,6 +296,7 @@ export const TRIGGER_VARIANTS = {
   google_calendar: {
     backendType: "google_calendar_trigger",
     icon: Calendar,
+    logoUrl: imgGoogleCalendar,
     label: "On Calendar Event",
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
@@ -281,6 +305,7 @@ export const TRIGGER_VARIANTS = {
   github_issue: {
     backendType: "github_issue_trigger",
     icon: Github,
+    logoUrl: imgGitHub,
     label: "On GitHub Issue / PR",
     colorClass: "text-zinc-200",
     accentColor: "244,244,245",

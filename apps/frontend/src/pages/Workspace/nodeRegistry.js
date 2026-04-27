@@ -18,15 +18,27 @@ import imgGrok       from "../../assets/grok-color.svg";
 import imgComputer   from "../../assets/computer.png";
 import imgHTTP       from "../../assets/Globe--Streamline-Unicons.svg";
 import imgCode       from "../../assets/Brackets-Curly--Streamline-Unicons.svg";
-import imgAirtable   from "../../assets/Airtable--Streamline-Svg-Logos.svg";
-import imgNotion     from "../../assets/Notion-Logo--Streamline-Radix.svg";
-import imgSendGrid   from "../../assets/Sendgrid-Icon--Streamline-Svg-Logos.svg";
-import imgTwilio     from "../../assets/Twilio-Icon--Streamline-Svg-Logos.svg";
-import imgSlack      from "../../assets/slack.png";
-import imgDiscord    from "../../assets/discord.png";
-import imgTelegram   from "../../assets/telegram.png";
-import imgWhatsApp   from "../../assets/whatsapp.png";
-import imgGmail      from "../../assets/gmail.png";
+import imgAirtable       from "../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion         from "../../assets/notion.svg";
+import imgSendGrid       from "../../assets/Sendgrid-Icon--Streamline-Svg-Logos.svg";
+import imgTwilio         from "../../assets/Twilio-Icon--Streamline-Svg-Logos.svg";
+import imgSlack          from "../../assets/slack.png";
+import imgDiscord        from "../../assets/discord.png";
+import imgTelegram       from "../../assets/telegram.png";
+import imgWhatsApp       from "../../assets/whatsapp.png";
+import imgGmail          from "../../assets/gmail.png";
+import imgGitHub         from "../../assets/github.svg";
+import imgStripe         from "../../assets/stripe.svg";
+import imgHubSpot        from "../../assets/hubspot.svg";
+import imgShopify        from "../../assets/shopify.svg";
+import imgLinear         from "../../assets/linear.svg";
+import imgTypeform       from "../../assets/typeform.svg";
+import imgYouTube        from "../../assets/youtube.svg";
+import imgReddit         from "../../assets/reddit.svg";
+import imgGoogleCalendar from "../../assets/google-calendar.svg";
+import imgRss            from "../../assets/rss.svg";
+import imgPostgres       from "../../assets/postgresql.svg";
+import imgBitcoin        from "../../assets/bitcoin.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -196,11 +208,11 @@ export const NodeRegistry = {
   },
   github_trigger: {
     label: "GitHub Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
-    ConfigPanel: GitHubTriggerNode, category: "trigger",
+    logoUrl: imgGitHub, ConfigPanel: GitHubTriggerNode, category: "trigger",
   },
   stripe_trigger: {
     label: "Stripe Trigger", icon: CreditCard, colorClass: "text-[#635BFF]", accentColor: "99,91,255",
-    ConfigPanel: StripeTriggerNode, category: "trigger",
+    logoUrl: imgStripe, ConfigPanel: StripeTriggerNode, category: "trigger",
   },
   telegram_trigger: {
     label: "Telegram Trigger", icon: Brain, colorClass: "text-[#26A5E4]", accentColor: "38,165,228",
@@ -228,19 +240,19 @@ export const NodeRegistry = {
   },
   hubspot_trigger: {
     label: "HubSpot Trigger", icon: Users, colorClass: "text-[#FF7A59]", accentColor: "255,122,89",
-    ConfigPanel: HubSpotTriggerNode, category: "trigger",
+    logoUrl: imgHubSpot, ConfigPanel: HubSpotTriggerNode, category: "trigger",
   },
   shopify_trigger: {
     label: "Shopify Trigger", icon: ShoppingBag, colorClass: "text-[#95BF47]", accentColor: "149,191,71",
-    ConfigPanel: ShopifyTriggerNode, category: "trigger",
+    logoUrl: imgShopify, ConfigPanel: ShopifyTriggerNode, category: "trigger",
   },
   linear_trigger: {
     label: "Linear Trigger", icon: Circle, colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",
-    ConfigPanel: LinearTriggerNode, category: "trigger",
+    logoUrl: imgLinear, ConfigPanel: LinearTriggerNode, category: "trigger",
   },
   typeform_trigger: {
     label: "Typeform Trigger", icon: FileText, colorClass: "text-zinc-300", accentColor: "212,212,216",
-    ConfigPanel: TypeformTriggerNode, category: "trigger",
+    logoUrl: imgTypeform, ConfigPanel: TypeformTriggerNode, category: "trigger",
   },
   whatsapp_trigger: {
     label: "WhatsApp Trigger", icon: Brain, colorClass: "text-[#25D366]", accentColor: "37,211,102",
@@ -484,23 +496,23 @@ export const NodeRegistry = {
   // ── New Triggers ───────────────────────────────────────────────────────────
   youtube_trigger: {
     label: "YouTube Trigger", icon: Youtube, colorClass: "text-red-400", accentColor: "248,113,113",
-    ConfigPanel: YouTubeTriggerNode, category: "trigger",
+    logoUrl: imgYouTube, ConfigPanel: YouTubeTriggerNode, category: "trigger",
   },
   price_alert_trigger: {
     label: "Price Alert Trigger", icon: TrendingUp, colorClass: "text-yellow-400", accentColor: "250,204,21",
-    ConfigPanel: PriceAlertTriggerNode, category: "trigger",
+    logoUrl: imgBitcoin, ConfigPanel: PriceAlertTriggerNode, category: "trigger",
   },
   reddit_trigger: {
     label: "Reddit Trigger", icon: MessageSquarePlus, colorClass: "text-orange-400", accentColor: "251,146,60",
-    ConfigPanel: RedditTriggerNode, category: "trigger",
+    logoUrl: imgReddit, ConfigPanel: RedditTriggerNode, category: "trigger",
   },
   google_calendar_trigger: {
     label: "Google Calendar Trigger", icon: Calendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
-    ConfigPanel: GoogleCalendarTriggerNode, category: "trigger",
+    logoUrl: imgGoogleCalendar, ConfigPanel: GoogleCalendarTriggerNode, category: "trigger",
   },
   github_issue_trigger: {
     label: "GitHub Issue / PR Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
-    ConfigPanel: GitHubIssueTriggerNode, category: "trigger",
+    logoUrl: imgGitHub, ConfigPanel: GitHubIssueTriggerNode, category: "trigger",
   },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────
