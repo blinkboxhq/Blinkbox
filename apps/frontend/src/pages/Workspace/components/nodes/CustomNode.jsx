@@ -294,36 +294,31 @@ function isAINode(backendType) {
 }
 
 // ── Node Icon with optional Logo URL ────────────────────────────────────────
-function NodeIcon({ nodeDef, accent, size = "md", glow = false }) {
+function NodeIcon({ nodeDef, size = "md" }) {
   const Icon = nodeDef.icon;
   const sizeMap = {
-    sm: { box: "w-7 h-7", icon: "w-3.5 h-3.5", img: "w-3.5 h-3.5" },
-    md: { box: "w-9 h-9", icon: "w-4 h-4", img: "w-4 h-4" },
-    lg: { box: "w-10 h-10", icon: "w-5 h-5", img: "w-5 h-5" },
+    sm: { icon: "w-4 h-4", img: "w-4 h-4" },
+    md: { icon: "w-5 h-5", img: "w-5 h-5" },
+    lg: { icon: "w-6 h-6", img: "w-6 h-6" },
   };
   const s = sizeMap[size];
 
+  if (nodeDef.logoUrl) {
+    return (
+      <img
+        src={nodeDef.logoUrl}
+        alt={nodeDef.label}
+        className={`${s.img} object-contain shrink-0`}
+        style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
+      />
+    );
+  }
+
   return (
-    <div
-      className={`${s.box} rounded-xl flex items-center justify-center shrink-0 relative`}
-      style={{
-        backgroundColor: `rgba(${accent},0.12)`,
-        ...(glow ? { boxShadow: `0 0 16px rgba(${accent},0.15), 0 0 4px rgba(${accent},0.1)` } : {}),
-      }}
-    >
-      {nodeDef.logoUrl ? (
-        <img
-          src={nodeDef.logoUrl}
-          alt={nodeDef.label}
-          className={`${s.icon} object-contain`}
-          style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
-        />
-      ) : (
-        <div className={`flex items-center justify-center ${nodeDef.colorClass}`}>
-          <Icon className={s.icon} strokeWidth={1.75} />
-        </div>
-      )}
-    </div>
+    <Icon
+      className={`${s.icon} shrink-0 ${nodeDef.colorClass}`}
+      strokeWidth={1.75}
+    />
   );
 }
 
@@ -599,15 +594,19 @@ export default function CustomNode({ id, data, selected }) {
           )}
 
           {/* Trigger icon — uses variant def icon if available, falls back to registry */}
-          <div
-            className="flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300"
-            style={{ backgroundColor: `rgba(${accent},0.08)` }}
-          >
-            <Icon
-              className={`w-8 h-8 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
-              strokeWidth={1.25}
+          {(variantDef || nodeDef).logoUrl ? (
+            <img
+              src={(variantDef || nodeDef).logoUrl}
+              alt={data.label}
+              className="w-14 h-14 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+              style={(variantDef || nodeDef).imgFilter ? { filter: (variantDef || nodeDef).imgFilter } : undefined}
             />
-          </div>
+          ) : (
+            <Icon
+              className={`w-14 h-14 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
+              strokeWidth={1}
+            />
+          )}
 
           {/* ── Output handle — standard React Flow handle on right edge ── */}
           <Handle
@@ -731,7 +730,7 @@ export default function CustomNode({ id, data, selected }) {
         {/* Header */}
         <div className="relative flex items-center gap-3 px-4 py-3.5">
           {/* Icon */}
-          <NodeIcon nodeDef={nodeDef} accent={accent} size="md" glow={isGlassmorphic} />
+          <NodeIcon nodeDef={nodeDef} size="md" />
 
           <div className="flex flex-col overflow-hidden flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
