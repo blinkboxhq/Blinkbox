@@ -37,6 +37,28 @@ import imgSsh            from "../../../assets/ssh.svg";
 import imgDocker         from "../../../assets/docker.svg";
 import imgJira           from "../../../assets/jira.svg";
 import imgTrello         from "../../../assets/trello.svg";
+import imgGoogleSheets   from "../../../assets/google-sheets.svg";
+import imgGoogleDrive    from "../../../assets/google-drive.svg";
+import imgGoogleDocs     from "../../../assets/google-docs.svg";
+import imgGoogleForms    from "../../../assets/google-forms.svg";
+import imgOutlook        from "../../../assets/outlook.svg";
+import imgTeams          from "../../../assets/microsoft-teams.svg";
+import imgOneDrive       from "../../../assets/onedrive.svg";
+import imgSharePoint     from "../../../assets/sharepoint.svg";
+import imgAzureDevOps    from "../../../assets/azure-devops.svg";
+import imgGitLab         from "../../../assets/gitlab.svg";
+import imgSentry         from "../../../assets/sentry.svg";
+import imgVercel         from "../../../assets/vercel.svg";
+import imgNetlify        from "../../../assets/netlify.svg";
+import imgCalendly       from "../../../assets/calendly.svg";
+import imgZendesk        from "../../../assets/zendesk.svg";
+import imgMailchimp      from "../../../assets/mailchimp.svg";
+import imgAsana          from "../../../assets/asana.svg";
+import imgClickUp        from "../../../assets/clickup.svg";
+import imgMonday         from "../../../assets/monday.svg";
+import imgFigma          from "../../../assets/figma.svg";
+import imgPagerDuty      from "../../../assets/pagerduty.svg";
+import imgDatadog        from "../../../assets/datadog.svg";
 
 const APP_TRIGGERS = [
   { id: "telegram",        backendType: "telegram_trigger",        logoUrl: imgTelegram,       label: "Telegram",            description: "Message, button press, or any bot update." },
@@ -63,6 +85,39 @@ const APP_TRIGGERS = [
   { id: "docker",          backendType: "docker_trigger",          logoUrl: imgDocker,         label: "Docker Event",        description: "Container started, stopped, image pulled — any Docker event." },
   { id: "jira",            backendType: "jira_trigger",            logoUrl: imgJira,           label: "Jira",                description: "New issue matching a JQL filter in your Jira project." },
   { id: "trello",          backendType: "trello_trigger",          logoUrl: imgTrello,         label: "Trello",              description: "Card created or moved to a list on your board." },
+
+  // Google
+  { id: "google_sheets",  backendType: "google_sheets_trigger",   logoUrl: imgGoogleSheets,   label: "Google Sheets",       description: "New row added to a spreadsheet." },
+  { id: "google_drive",   backendType: "webhook",                  logoUrl: imgGoogleDrive,    label: "Google Drive",        description: "File uploaded, shared, or modified." },
+  { id: "google_docs",    backendType: "webhook",                  logoUrl: imgGoogleDocs,     label: "Google Docs",         description: "Document edited or commented on." },
+  { id: "google_forms",   backendType: "webhook",                  logoUrl: imgGoogleForms,    label: "Google Forms",        description: "Form response submitted." },
+
+  // Microsoft
+  { id: "outlook",        backendType: "outlook_trigger",          logoUrl: imgOutlook,        label: "Outlook",             description: "New email in your Microsoft 365 inbox.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
+  { id: "teams",          backendType: "teams_trigger",            logoUrl: imgTeams,          label: "Microsoft Teams",     description: "Message posted in a channel.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(210deg)" },
+  { id: "onedrive",       backendType: "webhook",                  logoUrl: imgOneDrive,       label: "OneDrive",            description: "File created or modified in OneDrive.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
+  { id: "sharepoint",     backendType: "webhook",                  logoUrl: imgSharePoint,     label: "SharePoint",          description: "List item created or updated.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
+  { id: "azure_devops",   backendType: "webhook",                  logoUrl: imgAzureDevOps,    label: "Azure DevOps",        description: "Work item created, PR opened, pipeline triggered.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
+
+  // DevOps / Security
+  { id: "gitlab",         backendType: "gitlab_trigger",           logoUrl: imgGitLab,         label: "GitLab",              description: "Merge request, issue, or pipeline event." },
+  { id: "sentry",         backendType: "webhook",                  logoUrl: imgSentry,         label: "Sentry",              description: "New error or issue created in your project.", imgFilter: "brightness(0) invert(1)" },
+  { id: "vercel",         backendType: "webhook",                  logoUrl: imgVercel,         label: "Vercel",              description: "Deployment succeeded, failed, or cancelled.", imgFilter: "brightness(0) invert(1)" },
+  { id: "netlify",        backendType: "webhook",                  logoUrl: imgNetlify,        label: "Netlify",             description: "Build or deploy event on your site." },
+  { id: "pagerduty",      backendType: "webhook",                  logoUrl: imgPagerDuty,      label: "PagerDuty",           description: "Alert triggered or resolved.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(100deg)" },
+  { id: "datadog",        backendType: "webhook",                  logoUrl: imgDatadog,        label: "Datadog",             description: "Monitor alert fired.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(240deg)" },
+  { id: "http_monitor",   backendType: "http_monitor_trigger",     logoUrl: imgVercel,         label: "HTTP Monitor",        description: "URL goes down, comes back up, or responds slowly.", imgFilter: "brightness(0) invert(1)" },
+
+  // Business / PM
+  { id: "zendesk",        backendType: "webhook",                  logoUrl: imgZendesk,        label: "Zendesk",             description: "New ticket or ticket status changed.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(140deg)" },
+  { id: "calendly",       backendType: "webhook",                  logoUrl: imgCalendly,       label: "Calendly",            description: "Meeting booked or cancelled." },
+  { id: "mailchimp",      backendType: "webhook",                  logoUrl: imgMailchimp,      label: "Mailchimp",           description: "Subscriber added, unsubscribed, or campaign sent." },
+  { id: "asana",          backendType: "webhook",                  logoUrl: imgAsana,          label: "Asana",               description: "Task created or completed in a project.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)" },
+  { id: "clickup",        backendType: "webhook",                  logoUrl: imgClickUp,        label: "ClickUp",             description: "Task event in a space or list.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(240deg)" },
+  { id: "monday",         backendType: "webhook",                  logoUrl: imgMonday,         label: "Monday.com",          description: "Item status changed on a board." },
+
+  // Design
+  { id: "figma",          backendType: "webhook",                  logoUrl: imgFigma,          label: "Figma",               description: "Comment added or file version published." },
 ];
 
 // Category rows on the home screen

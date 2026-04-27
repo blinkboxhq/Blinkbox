@@ -44,6 +44,25 @@ import imgDocker         from "../../assets/docker.svg";
 import imgJira           from "../../assets/jira.svg";
 import imgTrello         from "../../assets/trello.svg";
 import imgFigma          from "../../assets/figma.svg";
+import imgGoogleSheets   from "../../assets/google-sheets.svg";
+import imgGoogleDrive    from "../../assets/google-drive.svg";
+import imgGoogleDocs     from "../../assets/google-docs.svg";
+import imgGoogleForms    from "../../assets/google-forms.svg";
+import imgOutlook        from "../../assets/outlook.svg";
+import imgTeams          from "../../assets/microsoft-teams.svg";
+import imgOneDrive       from "../../assets/onedrive.svg";
+import imgSharePoint     from "../../assets/sharepoint.svg";
+import imgAzureDevOps    from "../../assets/azure-devops.svg";
+import imgGitLab         from "../../assets/gitlab.svg";
+import imgSentry         from "../../assets/sentry.svg";
+import imgVercel         from "../../assets/vercel.svg";
+import imgNetlify        from "../../assets/netlify.svg";
+import imgCalendly       from "../../assets/calendly.svg";
+import imgZendesk        from "../../assets/zendesk.svg";
+import imgMailchimp      from "../../assets/mailchimp.svg";
+import imgAsana          from "../../assets/asana.svg";
+import imgClickUp        from "../../assets/clickup.svg";
+import imgMonday         from "../../assets/monday.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -133,10 +152,15 @@ import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode"
 import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
-import SshTriggerNode           from "./components/nodes/SshTriggerNode";
-import DockerTriggerNode        from "./components/nodes/DockerTriggerNode";
-import JiraTriggerNode          from "./components/nodes/JiraTriggerNode";
-import TrelloTriggerNode        from "./components/nodes/TrelloTriggerNode";
+import SshTriggerNode              from "./components/nodes/SshTriggerNode";
+import DockerTriggerNode           from "./components/nodes/DockerTriggerNode";
+import JiraTriggerNode             from "./components/nodes/JiraTriggerNode";
+import TrelloTriggerNode           from "./components/nodes/TrelloTriggerNode";
+import GoogleSheetsTriggerNode     from "./components/nodes/GoogleSheetsTriggerNode";
+import OutlookTriggerNode          from "./components/nodes/OutlookTriggerNode";
+import TeamsTriggerNode            from "./components/nodes/TeamsTriggerNode";
+import HttpMonitorTriggerNode      from "./components/nodes/HttpMonitorTriggerNode";
+import GitLabTriggerNode           from "./components/nodes/GitLabTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 
@@ -538,6 +562,26 @@ export const NodeRegistry = {
   trello_trigger: {
     label: "Trello Card", icon: Github, colorClass: "text-[#0052CC]", accentColor: "0,82,204",
     logoUrl: imgTrello, ConfigPanel: TrelloTriggerNode, category: "trigger",
+  },
+  google_sheets_trigger: {
+    label: "Google Sheets", icon: Github, colorClass: "text-[#34A853]", accentColor: "52,168,83",
+    logoUrl: imgGoogleSheets, ConfigPanel: GoogleSheetsTriggerNode, category: "trigger",
+  },
+  outlook_trigger: {
+    label: "Outlook Email", icon: Github, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
+    logoUrl: imgOutlook, imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)", ConfigPanel: OutlookTriggerNode, category: "trigger",
+  },
+  teams_trigger: {
+    label: "Microsoft Teams", icon: Github, colorClass: "text-[#6264A7]", accentColor: "98,100,167",
+    logoUrl: imgTeams, imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(210deg)", ConfigPanel: TeamsTriggerNode, category: "trigger",
+  },
+  http_monitor_trigger: {
+    label: "HTTP Monitor", icon: Github, colorClass: "text-red-400", accentColor: "248,113,113",
+    logoUrl: imgVercel, ConfigPanel: HttpMonitorTriggerNode, category: "trigger",
+  },
+  gitlab_trigger: {
+    label: "GitLab", icon: Github, colorClass: "text-[#FC6D26]", accentColor: "252,109,38",
+    logoUrl: imgGitLab, ConfigPanel: GitLabTriggerNode, category: "trigger",
   },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────

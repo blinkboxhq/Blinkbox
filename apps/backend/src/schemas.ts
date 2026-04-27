@@ -15,6 +15,8 @@ export const NODE_TYPES = [
   "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
   "app_event_trigger", "evaluation_trigger", "database_trigger",
   "ssh_trigger", "docker_trigger", "jira_trigger", "trello_trigger",
+  "google_sheets_trigger", "outlook_trigger", "teams_trigger",
+  "http_monitor_trigger", "gitlab_trigger",
   // Core
   "http_request", "web_scraper", "ai_agent", "data_mapper", "logic_router",
   // Supporting

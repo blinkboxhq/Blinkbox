@@ -49,10 +49,15 @@ import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode"
 import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
-import SshTriggerNode           from "./components/nodes/SshTriggerNode";
-import DockerTriggerNode        from "./components/nodes/DockerTriggerNode";
-import JiraTriggerNode          from "./components/nodes/JiraTriggerNode";
-import TrelloTriggerNode        from "./components/nodes/TrelloTriggerNode";
+import SshTriggerNode              from "./components/nodes/SshTriggerNode";
+import DockerTriggerNode           from "./components/nodes/DockerTriggerNode";
+import JiraTriggerNode             from "./components/nodes/JiraTriggerNode";
+import TrelloTriggerNode           from "./components/nodes/TrelloTriggerNode";
+import GoogleSheetsTriggerNode     from "./components/nodes/GoogleSheetsTriggerNode";
+import OutlookTriggerNode          from "./components/nodes/OutlookTriggerNode";
+import TeamsTriggerNode            from "./components/nodes/TeamsTriggerNode";
+import HttpMonitorTriggerNode      from "./components/nodes/HttpMonitorTriggerNode";
+import GitLabTriggerNode           from "./components/nodes/GitLabTriggerNode";
 
 import imgTelegram       from "../../assets/telegram.png";
 import imgSlack          from "../../assets/slack.png";
@@ -77,6 +82,11 @@ import imgSsh            from "../../assets/ssh.svg";
 import imgDocker         from "../../assets/docker.svg";
 import imgJira           from "../../assets/jira.svg";
 import imgTrello         from "../../assets/trello.svg";
+import imgGoogleSheets   from "../../assets/google-sheets.svg";
+import imgOutlook        from "../../assets/outlook.svg";
+import imgTeams          from "../../assets/microsoft-teams.svg";
+import imgVercel         from "../../assets/vercel.svg";
+import imgGitLab         from "../../assets/gitlab.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -354,5 +364,50 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-[#0052CC]",
     accentColor: "0,82,204",
     ConfigPanel: TrelloTriggerNode,
+  },
+  google_sheets: {
+    backendType: "google_sheets_trigger",
+    icon: Github,
+    logoUrl: imgGoogleSheets,
+    label: "On Google Sheets Row",
+    colorClass: "text-[#34A853]",
+    accentColor: "52,168,83",
+    ConfigPanel: GoogleSheetsTriggerNode,
+  },
+  outlook: {
+    backendType: "outlook_trigger",
+    icon: Github,
+    logoUrl: imgOutlook,
+    label: "On Outlook Email",
+    colorClass: "text-[#0078D4]",
+    accentColor: "0,120,212",
+    ConfigPanel: OutlookTriggerNode,
+  },
+  teams: {
+    backendType: "teams_trigger",
+    icon: Github,
+    logoUrl: imgTeams,
+    label: "On Teams Message",
+    colorClass: "text-[#6264A7]",
+    accentColor: "98,100,167",
+    ConfigPanel: TeamsTriggerNode,
+  },
+  http_monitor: {
+    backendType: "http_monitor_trigger",
+    icon: Github,
+    logoUrl: imgVercel,
+    label: "HTTP Monitor",
+    colorClass: "text-red-400",
+    accentColor: "248,113,113",
+    ConfigPanel: HttpMonitorTriggerNode,
+  },
+  gitlab: {
+    backendType: "gitlab_trigger",
+    icon: Github,
+    logoUrl: imgGitLab,
+    label: "On GitLab Event",
+    colorClass: "text-[#FC6D26]",
+    accentColor: "252,109,38",
+    ConfigPanel: GitLabTriggerNode,
   },
 };

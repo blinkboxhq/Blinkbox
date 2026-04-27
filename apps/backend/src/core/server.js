@@ -21,6 +21,11 @@ import { startSshPoller } from "../infra/ssh.poller.js";
 import { startDockerPoller } from "../infra/docker.poller.js";
 import { startJiraPoller } from "../infra/jira.poller.js";
 import { startTrelloPoller } from "../infra/trello.poller.js";
+import { startGoogleSheetsPoller } from "../infra/googleSheets.poller.js";
+import { startOutlookPoller } from "../infra/outlookEmail.poller.js";
+import { startTeamsPoller } from "../infra/teamsMessage.poller.js";
+import { startHttpMonitor } from "../infra/httpMonitor.poller.js";
+import { startGitLabPoller } from "../infra/gitlab.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -70,6 +75,11 @@ export async function startServer() {
   await startDockerPoller();
   await startJiraPoller();
   await startTrelloPoller();
+  await startGoogleSheetsPoller();
+  await startOutlookPoller();
+  await startTeamsPoller();
+  await startHttpMonitor();
+  await startGitLabPoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();
