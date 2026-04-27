@@ -60,6 +60,7 @@ export async function dispatchErrorTriggers({
     try {
       await executeAutomation(errAuto, triggerPayload, {
         workspaceId,
+        idempotencyKey: `error:${errAuto._id}:${executionId}:${failedAt}`,
       });
       console.log(
         `[ErrorTrigger] Fired error handler "${errAuto.name}" for failed automation "${automationName}"`,

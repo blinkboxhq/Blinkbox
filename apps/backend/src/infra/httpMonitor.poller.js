@@ -62,7 +62,7 @@ async function pollHttpMonitor(automationId, cfg) {
       checkedAt: new Date().toISOString(),
     }, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `httpmon:${automationId}:${currentState}:${Date.now()}`,
+      idempotencyKey: `httpmon:${automationId}:${currentState}:${new Date().toISOString().slice(0, 13)}`,
     });
   } catch (err) {
     console.warn(`[HttpMonitor] Error for ${automationId}:`, err.message);

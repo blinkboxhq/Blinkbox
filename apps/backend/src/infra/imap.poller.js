@@ -109,7 +109,7 @@ async function pollMailbox(automationId, cfg, password) {
         await executeAutomation(
           automation,
           { email: emailPayload },
-          { workspaceId: automation.workspaceId },
+          { workspaceId: automation.workspaceId, idempotencyKey: `imap:${automationId}:${msg.uid}` },
         );
         console.log(`[IMAP] Fired "${automation.name}" for email: "${emailPayload.subject}"`);
 

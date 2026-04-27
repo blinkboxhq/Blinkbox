@@ -99,7 +99,7 @@ async function pollNotion(
       if (claimed === 0 && !triggerOnUpdate) continue;
 
       try {
-        await executeAutomation(automation, page, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, page, { workspaceId: automation.workspaceId, idempotencyKey: `notion:${automationId}:${dedupeKey}` });
         console.log(`[NotionPoller] Fired for "${automation.name}" page: ${page.id}`);
       } catch (err) {
         console.error(`[NotionPoller] Failed to process page ${page.id}:`, err.message);

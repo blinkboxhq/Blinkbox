@@ -84,7 +84,7 @@ async function pollAirtable(
 
       try {
         const payload = { id: record.id, createdTime: record.createdTime, fields: record.fields, _meta: { baseId, tableId } };
-        await executeAutomation(automation, payload, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, idempotencyKey: `airtable:${automationId}:${record.id}:${record.fields["Modified"] || record.createdTime}` });
         console.log(`[AirtablePoller] Fired for "${automation.name}" record: ${record.id}`);
       } catch (err) {
         console.error(`[AirtablePoller] Failed to process ${record.id}:`, err.message);
