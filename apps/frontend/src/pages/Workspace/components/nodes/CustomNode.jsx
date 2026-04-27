@@ -523,12 +523,12 @@ export default function CustomNode({ id, data, selected }) {
             </div>
           )}
 
-          {(variantDef || nodeDef).logoUrl ? (
+          {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img
-              src={(variantDef || nodeDef).logoUrl}
+              src={variantDef?.logoUrl || nodeDef.logoUrl}
               alt={data.label}
               className="w-14 h-14 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-              style={(variantDef || nodeDef).imgFilter ? { filter: (variantDef || nodeDef).imgFilter } : undefined}
+              style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined}
             />
           ) : (
             <Icon
