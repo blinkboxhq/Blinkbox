@@ -72,10 +72,11 @@ const defaultEdgeOptions = {
 const PLACEHOLDER_NODE = {
   id: "__placeholder__",
   type: "placeholder",
-  position: { x: 0, y: 0 },
+  position: { x: -160, y: -80 },
   data: {},
   selectable: false,
   draggable: false,
+  style: { width: 320, height: 160 },
 };
 
 // Debounce helper — fires fn at most once every `wait` ms
@@ -89,7 +90,7 @@ function debounce(fn, wait) {
 
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   const { id: automationId } = useParams();
 
   const storeNodes = useWorkspaceStore((s) => s.nodes);
@@ -299,6 +300,10 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         proOptions={{ hideAttribution: true }}
+        onInit={() => {
+          const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
+          fitView({ padding: 0.5, minZoom: isEmpty ? 1 : 0.5, maxZoom: isEmpty ? 1 : 2, duration: 0 });
+        }}
         fitView
         fitViewOptions={{ padding: 0.5 }}
         snapToGrid
