@@ -133,24 +133,26 @@ export default function ConfigurableEdge({
           }}
           className="nodrag nopan"
         >
-          <div className="opacity-0 edge-action-buttons transition-all duration-150 flex items-center gap-1.5">
+          <div className="opacity-0 edge-action-buttons transition-all duration-150 flex items-center gap-2">
             <button
               onClick={handleInsert}
-              className="w-7 h-7 rounded-lg bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
-                hover:bg-zinc-700 hover:border-zinc-500 active:scale-95 transition-all duration-150
-                shadow-lg shadow-black/50"
-              title="Add step"
+              className="w-8 h-8 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600
+                flex items-center justify-center
+                hover:bg-zinc-700 hover:border-zinc-400 active:scale-95
+                transition-all duration-150 shadow-lg shadow-black/50 group/btn"
+              title="Add step between"
             >
-              <Plus className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-200" strokeWidth={2.5} />
+              <Plus className="w-4 h-4 text-zinc-300 group-hover/btn:text-white" strokeWidth={3} />
             </button>
             <button
               onClick={handleDelete}
-              className="w-7 h-7 rounded-lg bg-[#1a1a1e] border border-zinc-700/50 flex items-center justify-center
-                hover:bg-red-500/20 hover:border-red-500/40 active:scale-95 transition-all duration-150
-                shadow-lg shadow-black/50"
+              className="w-8 h-8 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600
+                flex items-center justify-center
+                hover:bg-red-500/20 hover:border-red-500/50 active:scale-95
+                transition-all duration-150 shadow-lg shadow-black/50 group/btn"
               title="Delete connection"
             >
-              <Trash2 className="w-3.5 h-3.5 text-zinc-400 hover:text-red-400" strokeWidth={2.5} />
+              <Trash2 className="w-3.5 h-3.5 text-zinc-400 group-hover/btn:text-red-400" strokeWidth={2.5} />
             </button>
           </div>
         </div>
