@@ -33,7 +33,8 @@ async function pollDns(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;
   try {
-    const { domain, recordType = "A" } = cfg;
+    const domain = cfg.domain || cfg.hostname;
+    const { recordType = "A" } = cfg;
     if (!domain) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
@@ -71,9 +72,13 @@ export async function syncDnsJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.domain) continue;
-    const intervalMin = parseInt(cfg.pollIntervalMinutes) || 15;
-    await dnsQueue.add("dns-poll", { automationId: automation._id.toString(), cfg: { domain: cfg.domain, recordType: cfg.recordType } }, { repeat: { pattern: `*/${intervalMin} * * * *` }, jobId: `dns-${automation._id}` });
+    const domain = cfg.domain || cfg.hostname;
+    if (!domain) continue;
+    const intervalMin = Math.max(1, Math.round(
+      cfg.pollIntervalMinutes ? parseInt(cfg.pollIntervalMinutes) :
+      cfg.pollIntervalSeconds ? parseInt(cfg.pollIntervalSeconds) / 60 : 15
+    ));
+    await dnsQueue.add("dns-poll", { automationId: automation._id.toString(), cfg: { domain, recordType: cfg.recordType } }, { repeat: { pattern: `*/${intervalMin} * * * *` }, jobId: `dns-${automation._id}` });
   }
   console.log(`[DnsMonitor] Synced ${automations.length} automations`);
 }

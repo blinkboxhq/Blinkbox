@@ -28,7 +28,8 @@ async function pollPipedrive(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { apiToken, watchType = "deal", stageFilter } = cfg;
+    const { apiToken, stageFilter } = cfg;
+    const watchType = cfg.watchType || cfg.entityType || "deal";
     if (!apiToken) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
@@ -72,7 +73,7 @@ export async function syncPipedriveJobs() {
     const cfg = entryNode?.data?.config || {};
     if (!cfg.apiToken) continue;
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
-    await pipedriveQueue.add("pipedrive-poll", { automationId: automation._id.toString(), cfg: { apiToken: cfg.apiToken, watchType: cfg.watchType, stageFilter: cfg.stageFilter } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pipedrive-${automation._id}` });
+    await pipedriveQueue.add("pipedrive-poll", { automationId: automation._id.toString(), cfg: { apiToken: cfg.apiToken, watchType: cfg.watchType || cfg.entityType, stageFilter: cfg.stageFilter } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pipedrive-${automation._id}` });
   }
   console.log(`[PipedrivePoller] Synced ${automations.length} automations`);
 }

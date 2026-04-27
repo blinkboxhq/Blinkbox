@@ -19,6 +19,21 @@ import { syncPriceAlertJobs } from "../../../infra/priceAlert.poller.js";
 import { syncRedditJobs } from "../../../infra/reddit.poller.js";
 import { syncGoogleCalendarJobs } from "../../../infra/googleCalendar.poller.js";
 import { syncGitHubIssueJobs } from "../../../infra/githubIssue.poller.js";
+import { syncSshJobs } from "../../../infra/ssh.poller.js";
+import { syncDockerJobs } from "../../../infra/docker.poller.js";
+import { syncJiraJobs } from "../../../infra/jira.poller.js";
+import { syncTrelloJobs } from "../../../infra/trello.poller.js";
+import { syncGoogleSheetsJobs } from "../../../infra/googleSheets.poller.js";
+import { syncOutlookJobs } from "../../../infra/outlookEmail.poller.js";
+import { syncTeamsJobs } from "../../../infra/teamsMessage.poller.js";
+import { syncHttpMonitorJobs } from "../../../infra/httpMonitor.poller.js";
+import { syncGitLabJobs } from "../../../infra/gitlab.poller.js";
+import { syncSslJobs } from "../../../infra/sslCert.poller.js";
+import { syncDnsJobs } from "../../../infra/dnsMonitor.poller.js";
+import { syncPortJobs } from "../../../infra/portMonitor.poller.js";
+import { syncHNJobs } from "../../../infra/hackerNews.poller.js";
+import { syncPipedriveJobs } from "../../../infra/pipedrive.poller.js";
+import { syncAsanaJobs } from "../../../infra/asana.poller.js";
 import {
   registerGitHubWebhook,
   unregisterGitHubWebhook,
@@ -206,6 +221,21 @@ export async function activateAutomation(req, res) {
       syncGoogleCalendarJobs().catch(console.error);
     if (trigger === "github_issue_trigger")
       syncGitHubIssueJobs().catch(console.error);
+    if (trigger === "ssh_trigger") syncSshJobs().catch(console.error);
+    if (trigger === "docker_trigger") syncDockerJobs().catch(console.error);
+    if (trigger === "jira_trigger") syncJiraJobs().catch(console.error);
+    if (trigger === "trello_trigger") syncTrelloJobs().catch(console.error);
+    if (trigger === "google_sheets_trigger") syncGoogleSheetsJobs().catch(console.error);
+    if (trigger === "outlook_trigger") syncOutlookJobs().catch(console.error);
+    if (trigger === "teams_trigger") syncTeamsJobs().catch(console.error);
+    if (trigger === "http_monitor_trigger") syncHttpMonitorJobs().catch(console.error);
+    if (trigger === "gitlab_trigger") syncGitLabJobs().catch(console.error);
+    if (trigger === "ssl_trigger") syncSslJobs().catch(console.error);
+    if (trigger === "dns_trigger") syncDnsJobs().catch(console.error);
+    if (trigger === "port_monitor_trigger") syncPortJobs().catch(console.error);
+    if (trigger === "hackernews_trigger") syncHNJobs().catch(console.error);
+    if (trigger === "pipedrive_trigger") syncPipedriveJobs().catch(console.error);
+    if (trigger === "asana_trigger") syncAsanaJobs().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {

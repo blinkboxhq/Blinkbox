@@ -70,7 +70,7 @@ export async function syncPortJobs() {
   if (!portQueue) return;
   const existing = await portQueue.getRepeatableJobs();
   for (const job of existing) await portQueue.removeRepeatableByKey(job.key);
-  const automations = await Automation.find({ trigger: "port_trigger", active: true });
+  const automations = await Automation.find({ trigger: "port_monitor_trigger", active: true });
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};

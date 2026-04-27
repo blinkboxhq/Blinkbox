@@ -27,7 +27,9 @@ async function pollAsana(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { token, projectId, watchType = "new_task" } = cfg;
+    const token = cfg.token || cfg.accessToken;
+    const projectId = cfg.projectId || cfg.projectGid;
+    const watchType = cfg.watchType || cfg.eventType || "new_task";
     if (!token || !projectId) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
@@ -66,9 +68,14 @@ export async function syncAsanaJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.token || !cfg.projectId) continue;
-    const interval = parseInt(cfg.pollIntervalMinutes) || 5;
-    await asanaQueue.add("asana-poll", { automationId: automation._id.toString(), cfg: { token: cfg.token, projectId: cfg.projectId, watchType: cfg.watchType } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `asana-${automation._id}` });
+    const token = cfg.token || cfg.accessToken;
+    const projectId = cfg.projectId || cfg.projectGid;
+    if (!token || !projectId) continue;
+    const interval = Math.max(1, Math.round(
+      cfg.pollIntervalMinutes ? parseInt(cfg.pollIntervalMinutes) :
+      cfg.pollIntervalSeconds ? parseInt(cfg.pollIntervalSeconds) / 60 : 5
+    ));
+    await asanaQueue.add("asana-poll", { automationId: automation._id.toString(), cfg: { token, projectId, watchType: cfg.watchType || cfg.eventType } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `asana-${automation._id}` });
   }
   console.log(`[AsanaPoller] Synced ${automations.length} automations`);
 }

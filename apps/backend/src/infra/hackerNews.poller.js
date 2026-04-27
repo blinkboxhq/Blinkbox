@@ -32,7 +32,9 @@ async function pollHackerNews(automationId, cfg) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const { query, storyType = "story", minPoints = 0 } = cfg;
+    const query = cfg.query || cfg.keyword;
+    const storyType = cfg.storyType || cfg.feedType || "story";
+    const minPoints = cfg.minPoints || 0;
     const stories = await fetchStories(query, storyType, parseInt(minPoints));
     const seenKey = `bb:hn:seen:${automationId}`;
     for (const story of stories) {
@@ -71,7 +73,7 @@ export async function syncHNJobs() {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
     const interval = parseInt(cfg.pollIntervalMinutes) || 15;
-    await hnQueue.add("hn-poll", { automationId: automation._id.toString(), cfg: { query: cfg.query, storyType: cfg.storyType, minPoints: cfg.minPoints } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `hn-${automation._id}` });
+    await hnQueue.add("hn-poll", { automationId: automation._id.toString(), cfg: { query: cfg.query || cfg.keyword, storyType: cfg.storyType || cfg.feedType, minPoints: cfg.minPoints } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `hn-${automation._id}` });
   }
   console.log(`[HNPoller] Synced ${automations.length} automations`);
 }

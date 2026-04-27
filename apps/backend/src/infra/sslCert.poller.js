@@ -35,7 +35,8 @@ async function pollSslCert(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { host, port = 443, warnDays = 14 } = cfg;
+    const host = cfg.host || cfg.hostname;
+    const { port = 443, warnDays = cfg.warningDays ?? 14 } = cfg;
     if (!host) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
@@ -77,8 +78,9 @@ export async function syncSslJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.host) continue;
-    await sslQueue.add("ssl-poll", { automationId: automation._id.toString(), cfg: { host: cfg.host, port: cfg.port, warnDays: cfg.warnDays } }, { repeat: { every: 12 * 60 * 60 * 1000 }, jobId: `ssl-${automation._id}` });
+    const host = cfg.host || cfg.hostname;
+    if (!host) continue;
+    await sslQueue.add("ssl-poll", { automationId: automation._id.toString(), cfg: { host, port: cfg.port, warnDays: cfg.warnDays || cfg.warningDays } }, { repeat: { every: 12 * 60 * 60 * 1000 }, jobId: `ssl-${automation._id}` });
   }
   console.log(`[SslPoller] Synced ${automations.length} automations`);
 }
