@@ -97,7 +97,7 @@ async function pollHubSpot(
       if (claimed === 0 && !triggerOnUpdate) continue;
 
       try {
-        await executeAutomation(automation, obj, { workspaceId: automation.workspaceId });
+        await executeAutomation(automation, obj, { workspaceId: automation.workspaceId, idempotencyKey: `hubspot:${automationId}:${obj.id}:${ts}` });
         console.log(`[HubSpotPoller] Fired for "${automation.name}" ${objectType} ID: ${obj.id}`);
       } catch (err) {
         console.error(`[HubSpotPoller] Failed to process ${obj.id}:`, err.message);

@@ -59,11 +59,18 @@ export async function startCronScheduler() {
 
       console.log(`[CronScheduler] Firing cron for: ${automation.name}`);
 
-      await executeAutomation(automation, {
-        triggeredAt: new Date().toISOString(),
-        schedule: job.opts?.repeat?.pattern || "unknown",
-        triggerType: "cron",
-      });
+      await executeAutomation(
+        automation,
+        {
+          triggeredAt: new Date().toISOString(),
+          schedule: job.opts?.repeat?.pattern || "unknown",
+          triggerType: "cron",
+        },
+        {
+          workspaceId: automation.workspaceId,
+          idempotencyKey: `cron-${automationId}-${Date.now()}`,
+        },
+      );
     },
     {
       connection: createBullMQConnection(),
