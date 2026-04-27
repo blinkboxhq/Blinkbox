@@ -317,14 +317,33 @@ const TRIGGER_OPTIONS = [
 ];
 
 const GROUPS = [
-  { label: "Core",         ids: ["manual", "cron", "webhook", "chat"] },
-  { label: "Email",        ids: ["email", "imap"] },
-  { label: "Data",         ids: ["rss", "database", "youtube", "price_alert", "reddit"] },
-  { label: "Messaging",    ids: ["telegram", "slack", "discord", "whatsapp"] },
-  { label: "Productivity", ids: ["gmail", "airtable", "notion", "hubspot", "google_calendar"] },
-  { label: "Commerce",     ids: ["shopify", "stripe"] },
-  { label: "Dev Tools",    ids: ["github", "linear", "typeform", "github_issue"] },
-  { label: "System",       ids: ["error"] },
+  {
+    label: "Manual",
+    description: "Start a workflow yourself",
+    ids: ["manual"],
+  },
+  {
+    label: "Time & HTTP",
+    description: "Schedule or webhook-based triggers",
+    ids: ["cron", "webhook"],
+  },
+  {
+    label: "User Input",
+    description: "Chat messages and form submissions",
+    ids: ["chat", "email", "imap"],
+  },
+  {
+    label: "App Events",
+    description: "Fire when something happens in a connected app",
+    ids: [
+      "telegram", "slack", "discord", "whatsapp",
+      "gmail", "airtable", "notion", "hubspot", "google_calendar",
+      "shopify", "stripe",
+      "github", "linear", "typeform", "github_issue",
+      "rss", "database", "youtube", "price_alert", "reddit",
+      "error",
+    ],
+  },
 ];
 
 export default function TriggerPicker() {
@@ -364,9 +383,9 @@ export default function TriggerPicker() {
       <button
         key={trigger.id}
         onClick={() => handleSelect(trigger)}
-        className="flex items-start gap-4 px-4 py-3.5 rounded-xl hover:bg-zinc-800/60 transition-all duration-150 text-left group border border-transparent hover:border-zinc-700/40"
+        className="flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-zinc-800/60 transition-all duration-150 text-left group border border-transparent hover:border-zinc-700/40"
       >
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${trigger.bg} ${trigger.border}`}>
+        <div className="w-6 h-6 flex items-center justify-center shrink-0">
           {trigger.logoUrl ? (
             <img
               src={trigger.logoUrl}
@@ -375,14 +394,14 @@ export default function TriggerPicker() {
               style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
             />
           ) : (
-            <Icon className={`w-4 h-4 ${trigger.color}`} strokeWidth={1.75} />
+            <Icon className={`w-5 h-5 ${trigger.color}`} strokeWidth={1.75} />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
+          <div className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors leading-tight">
             {trigger.label}
           </div>
-          <div className="text-xs text-zinc-500 mt-0.5 leading-relaxed group-hover:text-zinc-400 transition-colors">
+          <div className="text-xs text-zinc-500 mt-0.5 leading-relaxed group-hover:text-zinc-400 transition-colors truncate">
             {trigger.description}
           </div>
         </div>
@@ -439,13 +458,16 @@ export default function TriggerPicker() {
             </div>
           )
         ) : (
-          <div className="flex flex-col gap-4">
-            {GROUPS.map(({ label, ids }) => {
+          <div className="flex flex-col gap-5">
+            {GROUPS.map(({ label, description, ids }) => {
               const triggers = ids.map((id) => TRIGGER_OPTIONS.find((t) => t.id === id)).filter(Boolean);
               return (
                 <div key={label}>
-                  <div className="px-4 pb-1">
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{label}</span>
+                  <div className="px-4 pb-2">
+                    <span className="text-[11px] font-bold text-zinc-400 tracking-wide">{label}</span>
+                    {description && (
+                      <span className="text-[10px] text-zinc-600 ml-2">{description}</span>
+                    )}
                   </div>
                   <div className="flex flex-col gap-0.5">
                     {triggers.map(renderTrigger)}
