@@ -17,6 +17,10 @@ import { startPriceAlertPoller } from "../infra/priceAlert.poller.js";
 import { startRedditPoller } from "../infra/reddit.poller.js";
 import { startGoogleCalendarPoller } from "../infra/googleCalendar.poller.js";
 import { startGitHubIssuePoller } from "../infra/githubIssue.poller.js";
+import { startSshPoller } from "../infra/ssh.poller.js";
+import { startDockerPoller } from "../infra/docker.poller.js";
+import { startJiraPoller } from "../infra/jira.poller.js";
+import { startTrelloPoller } from "../infra/trello.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -62,6 +66,10 @@ export async function startServer() {
   await startRedditPoller();
   await startGoogleCalendarPoller();
   await startGitHubIssuePoller();
+  await startSshPoller();
+  await startDockerPoller();
+  await startJiraPoller();
+  await startTrelloPoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

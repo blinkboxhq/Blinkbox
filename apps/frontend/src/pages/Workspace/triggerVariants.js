@@ -49,6 +49,10 @@ import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode"
 import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
+import SshTriggerNode           from "./components/nodes/SshTriggerNode";
+import DockerTriggerNode        from "./components/nodes/DockerTriggerNode";
+import JiraTriggerNode          from "./components/nodes/JiraTriggerNode";
+import TrelloTriggerNode        from "./components/nodes/TrelloTriggerNode";
 
 import imgTelegram       from "../../assets/telegram.png";
 import imgSlack          from "../../assets/slack.png";
@@ -69,6 +73,10 @@ import imgGoogleCalendar from "../../assets/google-calendar.svg";
 import imgRss            from "../../assets/rss.svg";
 import imgPostgres       from "../../assets/postgresql.svg";
 import imgBitcoin        from "../../assets/bitcoin.svg";
+import imgSsh            from "../../assets/ssh.svg";
+import imgDocker         from "../../assets/docker.svg";
+import imgJira           from "../../assets/jira.svg";
+import imgTrello         from "../../assets/trello.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -310,5 +318,41 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-zinc-200",
     accentColor: "244,244,245",
     ConfigPanel: GitHubIssueTriggerNode,
+  },
+  ssh: {
+    backendType: "ssh_trigger",
+    icon: Github,
+    logoUrl: imgSsh,
+    label: "On SSH Command Output",
+    colorClass: "text-zinc-300",
+    accentColor: "212,212,216",
+    ConfigPanel: SshTriggerNode,
+  },
+  docker: {
+    backendType: "docker_trigger",
+    icon: Github,
+    logoUrl: imgDocker,
+    label: "On Docker Event",
+    colorClass: "text-[#2496ED]",
+    accentColor: "36,150,237",
+    ConfigPanel: DockerTriggerNode,
+  },
+  jira: {
+    backendType: "jira_trigger",
+    icon: Github,
+    logoUrl: imgJira,
+    label: "On Jira Issue",
+    colorClass: "text-[#0052CC]",
+    accentColor: "0,82,204",
+    ConfigPanel: JiraTriggerNode,
+  },
+  trello: {
+    backendType: "trello_trigger",
+    icon: Github,
+    logoUrl: imgTrello,
+    label: "On Trello Card",
+    colorClass: "text-[#0052CC]",
+    accentColor: "0,82,204",
+    ConfigPanel: TrelloTriggerNode,
   },
 };

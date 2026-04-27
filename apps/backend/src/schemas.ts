@@ -1,70 +1,60 @@
 import { z } from "zod";
 
 // ── Node Types ──────────────────────────────────────────────────────────────────
+// Accept any string — the node registry is the source of truth.
+// Using z.string() prevents Zod from rejecting new node types added to the registry.
 
 export const NODE_TYPES = [
   // Triggers
-  "manual",
-  "webhook",
-  "cron_trigger",
-  "imap_trigger",
-  "rss_trigger",
-  "db_trigger",
-  "telegram_trigger",
-  "slack_trigger",
-  "discord_trigger",
-  "whatsapp_trigger",
-  "gmail_trigger",
-  "airtable_trigger",
-  "notion_trigger",
-  "hubspot_trigger",
-  "shopify_trigger",
-  "stripe_trigger",
-  "github_trigger",
-  "linear_trigger",
-  "typeform_trigger",
-  "error_trigger",
+  "manual", "webhook", "cron_trigger", "chat_trigger", "form_trigger",
+  "imap_trigger", "rss_trigger", "db_trigger",
+  "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
+  "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
+  "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
+  "typeform_trigger", "error_trigger", "youtube_trigger", "price_alert_trigger",
+  "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
+  "app_event_trigger", "evaluation_trigger", "database_trigger",
+  "ssh_trigger", "docker_trigger", "jira_trigger", "trello_trigger",
   // Core
-  "http_request",
-  "web_scraper",
-  "ai_agent",
-  "data_mapper",
-  "logic_router",
+  "http_request", "web_scraper", "ai_agent", "data_mapper", "logic_router",
   // Supporting
-  "code",
-  "delay",
-  "loop",
-  "merge",
-  "respond_webhook",
-  // Integration wrappers
-  "slack",
-  "discord",
-  "stripe",
+  "code", "delay", "loop", "merge", "respond_webhook",
+  // Utility
+  "filter_array", "sort_array", "deduplicate", "batch_split", "csv_parser",
+  "date_time", "crypto_utils", "data_diff", "aggregate", "set_fields",
+  "qr_code", "image_resize", "pdf_generator", "text_splitter",
+  "template_renderer", "json_validator", "switch",
   // AI Hub
-  "openai",
-  "anthropic",
-  "gemini",
-  "deepseek",
-  // Comms Hub
-  "telegram",
-  "whatsapp",
-  // Data Hub
-  "airtable",
-  // Web Browser
+  "openai", "anthropic", "gemini", "deepseek", "groq", "perplexity", "xai",
+  "openai_assistant", "ai_classify", "ai_extract", "ai_transform", "ai_decision",
+  // Comms
+  "telegram", "whatsapp", "discord", "slack", "twilio", "sendgrid", "gmail",
+  "resend", "notify_hub", "email_parser",
+  // Data
+  "airtable", "google_sheets", "notion", "mongodb", "postgres", "redis_node",
+  "firebase", "supabase", "pinecone", "vector_memory",
+  // Web
   "web_search",
+  // Dev tools
+  "github", "jira", "linear",
+  // Payments
+  "stripe", "shopify", "hubspot",
+  // Google Workspace
+  "google_calendar", "google_drive",
+  // Social
+  "twitter", "elevenlabs", "zoom",
+  // Agent / Computer
+  "browser_agent", "virtual_computer", "coding_agent",
+  "claude_code", "codex", "gemini_cli", "ollama", "github_copilot",
   // Flow Control
-  "approval",
-  "sub_workflow",
-  // Backward-compat aliases (map to new implementations at runtime)
-  "advanced_scraper",
-  "informer",
-  "set_fields",
-  "transform",
-  "filter",
-  "if_condition",
+  "approval", "sub_workflow",
+  // Backward-compat aliases
+  "advanced_scraper", "informer", "transform", "filter", "if_condition",
 ] as const;
 
-export const NodeTypeSchema = z.enum(NODE_TYPES);
+// For runtime validation in save routes we accept any non-empty string
+// so new node types never break saves. Strict enum validation only at activation.
+export const NodeTypeSchema = z.string().min(1);
 
 // ── Edge Types ──────────────────────────────────────────────────────────────────
 
@@ -74,28 +64,18 @@ export const EdgeTypeSchema = z.enum(EDGE_TYPES);
 // ── Trigger Types ───────────────────────────────────────────────────────────────
 
 export const TRIGGER_TYPES = [
-  "manual",
-  "webhook",
-  "cron_trigger",
-  "imap_trigger",
-  "rss_trigger",
-  "db_trigger",
-  "telegram_trigger",
-  "slack_trigger",
-  "discord_trigger",
-  "whatsapp_trigger",
-  "gmail_trigger",
-  "airtable_trigger",
-  "notion_trigger",
-  "hubspot_trigger",
-  "shopify_trigger",
-  "stripe_trigger",
-  "github_trigger",
-  "linear_trigger",
-  "typeform_trigger",
-  "error_trigger",
+  "manual", "webhook", "cron_trigger", "chat_trigger", "form_trigger",
+  "imap_trigger", "rss_trigger", "db_trigger",
+  "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
+  "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
+  "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
+  "typeform_trigger", "error_trigger", "youtube_trigger", "price_alert_trigger",
+  "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
+  "app_event_trigger", "evaluation_trigger", "database_trigger",
 ] as const;
-export const TriggerTypeSchema = z.enum(TRIGGER_TYPES);
+
+// Accept any non-empty string for trigger type on save — new triggers shouldn't break saves
+export const TriggerTypeSchema = z.string().min(1);
 
 // ── Shared Primitives ───────────────────────────────────────────────────────────
 
@@ -133,8 +113,6 @@ export const EdgeConfigSchema = z.object({
 });
 
 // ── Binary Metadata ────────────────────────────────────────────────────────────
-// Pointer for file outputs (images, PDFs, etc.) stored in S3 or local disk.
-// Flows through Temporal state without the actual file bytes.
 
 export const BinaryMetadataSchema = z.object({
   type: z.literal("binary"),
@@ -149,10 +127,11 @@ export const BinaryMetadataSchema = z.object({
 export type BinaryMetadata = z.infer<typeof BinaryMetadataSchema>;
 
 // ── Automation Settings ─────────────────────────────────────────────────────────
+// passthrough() so extra fields (cronExpression, etc.) are preserved, not stripped
 
 export const AutomationSettingsSchema = z.object({
   maxParallel: z.number().int().min(1).max(100).default(10),
-});
+}).passthrough();
 
 // ── WorkflowDefinition ──────────────────────────────────────────────────────────
 
@@ -160,20 +139,19 @@ export const WorkflowDefinitionSchema = z.object({
   name: z.string().min(1, "Automation name is required").max(200),
   trigger: TriggerTypeSchema,
   active: z.boolean().optional(),
-  // Injected server-side from JWT after validation — never sent by the client
   workspaceId: z.string().optional(),
   nodes: z.array(NodeConfigSchema).default([]),
   edges: z.array(EdgeConfigSchema).default([]),
   entryNodeId: z.string().optional().default(""),
   settings: AutomationSettingsSchema.default({ maxParallel: 10 }),
   description: z.string().default(""),
-});
+}).passthrough();
 
 // ── Inferred TypeScript Types ───────────────────────────────────────────────────
 
-export type NodeType = z.infer<typeof NodeTypeSchema>;
-export type EdgeType = z.infer<typeof EdgeTypeSchema>;
-export type TriggerType = z.infer<typeof TriggerTypeSchema>;
+export type NodeType = (typeof NODE_TYPES)[number];
+export type EdgeType = (typeof EDGE_TYPES)[number];
+export type TriggerType = (typeof TRIGGER_TYPES)[number];
 export type Position = z.infer<typeof PositionSchema>;
 export type EdgeCondition = z.infer<typeof EdgeConditionSchema>;
 export type NodeConfig = z.infer<typeof NodeConfigSchema>;

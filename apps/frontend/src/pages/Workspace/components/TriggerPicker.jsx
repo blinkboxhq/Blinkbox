@@ -33,6 +33,10 @@ import imgReddit         from "../../../assets/reddit.svg";
 import imgRss            from "../../../assets/rss.svg";
 import imgPostgres       from "../../../assets/postgresql.svg";
 import imgBitcoin        from "../../../assets/bitcoin.svg";
+import imgSsh            from "../../../assets/ssh.svg";
+import imgDocker         from "../../../assets/docker.svg";
+import imgJira           from "../../../assets/jira.svg";
+import imgTrello         from "../../../assets/trello.svg";
 
 const APP_TRIGGERS = [
   { id: "telegram",        backendType: "telegram_trigger",        logoUrl: imgTelegram,       label: "Telegram",            description: "Message, button press, or any bot update." },
@@ -55,6 +59,10 @@ const APP_TRIGGERS = [
   { id: "rss",             backendType: "rss_trigger",             logoUrl: imgRss,            label: "RSS / Atom",          description: "New article or item in any feed." },
   { id: "database",        backendType: "db_trigger",              logoUrl: imgPostgres,       label: "Database",            description: "New or updated row in PostgreSQL or MySQL." },
   { id: "price_alert",     backendType: "price_alert_trigger",     logoUrl: imgBitcoin,        label: "Crypto Price Alert",  description: "Coin price crosses your threshold. Powered by CoinGecko." },
+  { id: "ssh",             backendType: "ssh_trigger",             logoUrl: imgSsh,            label: "SSH Command",         description: "Run a command on a remote server and trigger on output." },
+  { id: "docker",          backendType: "docker_trigger",          logoUrl: imgDocker,         label: "Docker Event",        description: "Container started, stopped, image pulled — any Docker event." },
+  { id: "jira",            backendType: "jira_trigger",            logoUrl: imgJira,           label: "Jira",                description: "New issue matching a JQL filter in your Jira project." },
+  { id: "trello",          backendType: "trello_trigger",          logoUrl: imgTrello,         label: "Trello",              description: "Card created or moved to a list on your board." },
 ];
 
 // Category rows on the home screen

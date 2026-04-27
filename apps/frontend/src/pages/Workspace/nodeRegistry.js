@@ -39,6 +39,11 @@ import imgGoogleCalendar from "../../assets/google-calendar.svg";
 import imgRss            from "../../assets/rss.svg";
 import imgPostgres       from "../../assets/postgresql.svg";
 import imgBitcoin        from "../../assets/bitcoin.svg";
+import imgSsh            from "../../assets/ssh.svg";
+import imgDocker         from "../../assets/docker.svg";
+import imgJira           from "../../assets/jira.svg";
+import imgTrello         from "../../assets/trello.svg";
+import imgFigma          from "../../assets/figma.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -128,6 +133,10 @@ import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode"
 import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
 import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
 import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
+import SshTriggerNode           from "./components/nodes/SshTriggerNode";
+import DockerTriggerNode        from "./components/nodes/DockerTriggerNode";
+import JiraTriggerNode          from "./components/nodes/JiraTriggerNode";
+import TrelloTriggerNode        from "./components/nodes/TrelloTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 
@@ -513,6 +522,22 @@ export const NodeRegistry = {
   github_issue_trigger: {
     label: "GitHub Issue / PR Trigger", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
     logoUrl: imgGitHub, ConfigPanel: GitHubIssueTriggerNode, category: "trigger",
+  },
+  ssh_trigger: {
+    label: "SSH Command", icon: Github, colorClass: "text-zinc-300", accentColor: "212,212,216",
+    logoUrl: imgSsh, ConfigPanel: SshTriggerNode, category: "trigger",
+  },
+  docker_trigger: {
+    label: "Docker Event", icon: Github, colorClass: "text-[#2496ED]", accentColor: "36,150,237",
+    logoUrl: imgDocker, ConfigPanel: DockerTriggerNode, category: "trigger",
+  },
+  jira_trigger: {
+    label: "Jira Issue", icon: Github, colorClass: "text-[#0052CC]", accentColor: "0,82,204",
+    logoUrl: imgJira, ConfigPanel: JiraTriggerNode, category: "trigger",
+  },
+  trello_trigger: {
+    label: "Trello Card", icon: Github, colorClass: "text-[#0052CC]", accentColor: "0,82,204",
+    logoUrl: imgTrello, ConfigPanel: TrelloTriggerNode, category: "trigger",
   },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────
