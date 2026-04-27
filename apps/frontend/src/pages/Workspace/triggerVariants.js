@@ -97,6 +97,8 @@ import imgLetsEncrypt    from "../../assets/letsencrypt.svg";
 import imgHackerNews     from "../../assets/hackernews.svg";
 import imgPipedrive      from "../../assets/pipedrive.svg";
 import imgAsana          from "../../assets/asana.svg";
+import imgDns            from "../../assets/dns.svg";
+import imgPortMonitor    from "../../assets/port-monitor.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -432,6 +434,7 @@ export const TRIGGER_VARIANTS = {
   dns: {
     backendType: "dns_trigger",
     icon: Database,
+    logoUrl: imgDns,
     label: "On DNS Record Change",
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
@@ -440,6 +443,7 @@ export const TRIGGER_VARIANTS = {
   port_monitor: {
     backendType: "port_monitor_trigger",
     icon: Webhook,
+    logoUrl: imgPortMonitor,
     label: "On Port State Change",
     colorClass: "text-violet-400",
     accentColor: "167,139,250",

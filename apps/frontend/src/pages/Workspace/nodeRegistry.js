@@ -66,6 +66,8 @@ import imgMonday         from "../../assets/monday.svg";
 import imgLetsEncrypt    from "../../assets/letsencrypt.svg";
 import imgHackerNews     from "../../assets/hackernews.svg";
 import imgPipedrive      from "../../assets/pipedrive.svg";
+import imgDns            from "../../assets/dns.svg";
+import imgPortMonitor    from "../../assets/port-monitor.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -598,11 +600,11 @@ export const NodeRegistry = {
   },
   dns_trigger: {
     label: "DNS Record Change", icon: Globe, colorClass: "text-sky-400", accentColor: "56,189,248",
-    ConfigPanel: DnsTriggerNode, category: "trigger",
+    logoUrl: imgDns, ConfigPanel: DnsTriggerNode, category: "trigger",
   },
   port_monitor_trigger: {
     label: "Port Monitor", icon: Webhook, colorClass: "text-violet-400", accentColor: "167,139,250",
-    ConfigPanel: PortMonitorTriggerNode, category: "trigger",
+    logoUrl: imgPortMonitor, ConfigPanel: PortMonitorTriggerNode, category: "trigger",
   },
   hackernews_trigger: {
     label: "Hacker News", icon: MessageSquarePlus, colorClass: "text-orange-400", accentColor: "251,146,60",

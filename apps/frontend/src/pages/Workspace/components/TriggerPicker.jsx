@@ -62,6 +62,8 @@ import imgDatadog        from "../../../assets/datadog.svg";
 import imgLetsEncrypt    from "../../../assets/letsencrypt.svg";
 import imgHackerNews     from "../../../assets/hackernews.svg";
 import imgPipedrive      from "../../../assets/pipedrive.svg";
+import imgDns            from "../../../assets/dns.svg";
+import imgPortMonitor    from "../../../assets/port-monitor.svg";
 import imgInstagram      from "../../../assets/instagram.svg";
 import imgTikTok         from "../../../assets/tiktok.svg";
 import imgMastodon       from "../../../assets/mastodon.svg";
@@ -143,8 +145,8 @@ const APP_TRIGGERS = [
 
   // Infra / Security
   { id: "ssl",            backendType: "ssl_trigger",              logoUrl: imgLetsEncrypt,    label: "SSL Cert Expiry",     description: "Certificate expiring within your chosen window." },
-  { id: "dns",            backendType: "dns_trigger",                                          label: "DNS Record Change",   description: "DNS A, MX, TXT or other record changes." },
-  { id: "port_monitor",   backendType: "port_monitor_trigger",                                 label: "Port Monitor",        description: "TCP port opens or closes on your server." },
+  { id: "dns",            backendType: "dns_trigger",              logoUrl: imgDns,            label: "DNS Record Change",   description: "DNS A, MX, TXT or other record changes." },
+  { id: "port_monitor",   backendType: "port_monitor_trigger",     logoUrl: imgPortMonitor,    label: "Port Monitor",        description: "TCP port opens or closes on your server." },
   { id: "virustotal",     backendType: "webhook",                  logoUrl: imgVirusTotal,     label: "VirusTotal",          description: "Scan result returned for a file or URL." },
 ];
 
