@@ -217,6 +217,13 @@ export default function AnthropicNode({ config = {}, updateConfig }) {
         label="Anthropic API Key"
         placeholder="Select Anthropic credential..."
       />
+      <div className="p-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest block mb-0.5">Available as</span>
+        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.result }}"} — response text</span>
+        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.text }}"} — alias for result</span>
+        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.model }}"} — model used</span>
+        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.tokensUsed }}"}</span>
+      </div>
     </div>
   );
 }

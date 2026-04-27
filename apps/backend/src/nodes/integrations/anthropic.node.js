@@ -96,7 +96,7 @@ async function opMessage(config, input, apiKey) {
     }
   }
 
-  return { result, model: usedModel, tokensUsed, provider: "anthropic", operation: "message" };
+  return { result, text: typeof result === "string" ? result : JSON.stringify(result), model: usedModel, tokensUsed, provider: "anthropic", operation: "message" };
 }
 
 async function opAnalyzeImage(config, input, apiKey) {
@@ -130,7 +130,7 @@ async function opAnalyzeImage(config, input, apiKey) {
     userContent, maxTokens, temperature,
   );
 
-  return { result: text, model: usedModel, tokensUsed, provider: "anthropic", operation: "analyzeImage" };
+  return { result: text, text, model: usedModel, tokensUsed, provider: "anthropic", operation: "analyzeImage" };
 }
 
 async function opAnalyzeDocument(config, input, apiKey) {
@@ -160,7 +160,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
     }
   }
 
-  return { result, model: usedModel, tokensUsed, provider: "anthropic", operation: "analyzeDocument" };
+  return { result, text: typeof result === "string" ? result : JSON.stringify(result), model: usedModel, tokensUsed, provider: "anthropic", operation: "analyzeDocument" };
 }
 
 async function opImprovePrompt(config, input, apiKey) {
@@ -175,7 +175,7 @@ async function opImprovePrompt(config, input, apiKey) {
     maxTokens, temperature,
   );
 
-  return { improvedPrompt: text, originalPrompt, tokensUsed, provider: "anthropic", operation: "improvePrompt" };
+  return { result: text, text, improvedPrompt: text, originalPrompt, tokensUsed, provider: "anthropic", operation: "improvePrompt" };
 }
 
 async function opGeneratePrompt(config, input, apiKey) {
@@ -190,7 +190,7 @@ async function opGeneratePrompt(config, input, apiKey) {
     maxTokens, temperature,
   );
 
-  return { prompt: text, tokensUsed, provider: "anthropic", operation: "generatePrompt" };
+  return { result: text, text, prompt: text, tokensUsed, provider: "anthropic", operation: "generatePrompt" };
 }
 
 // ── Main export ─────────────────────────────────────────────────────────────

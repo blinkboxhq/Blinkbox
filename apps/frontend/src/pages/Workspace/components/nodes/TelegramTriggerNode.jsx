@@ -130,19 +130,18 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, selecte
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5 mb-0.5">
               <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available as (replace nodeId)</span>
             </div>
             <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               {[
-                ['$trigger.body.message.text', 'Message text content'],
-                ['$trigger.body.message.from.id', 'Sender user ID'],
-                ['$trigger.body.message.from.username', 'Sender username'],
-                ['$trigger.body.message.from.first_name', 'Sender first name'],
-                ['$trigger.body.message.chat.id', 'Chat ID (use for replies)'],
-                ['$trigger.body.message.chat.type', '"private", "group", "supergroup", "channel"'],
-                ['$trigger.body.message.photo', 'Photo array (if photo sent)'],
-                ['$trigger.body.message.document', 'Document object (if file sent)'],
-                ['$trigger.body.callback_query.data', 'Button payload (inline keyboards)'],
+                ['{{ nodeId.text }}', 'Message text'],
+                ['{{ nodeId.chat.id }}', 'Chat ID — use for replies'],
+                ['{{ nodeId.chat.type }}', '"private", "group", "channel"'],
+                ['{{ nodeId.from.id }}', 'Sender user ID'],
+                ['{{ nodeId.from.username }}', 'Sender @username'],
+                ['{{ nodeId.from.first_name }}', 'Sender first name'],
+                ['{{ nodeId.messageId }}', 'Message ID'],
+                ['{{ nodeId.updateId }}', 'Update ID'],
               ].map(([key, desc]) => (
                 <div key={key} className="flex items-baseline gap-2">
                   <span className="text-[10px] font-mono text-[#26A5E4] shrink-0">{key}</span>
@@ -150,6 +149,9 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, selecte
                 </div>
               ))}
             </div>
+            <p className="text-[9px] text-zinc-600 leading-relaxed">
+              The Telegram send node&apos;s <span className="font-mono text-zinc-500">chatId</span> can be left blank to auto-reply to the sender.
+            </p>
           </div>
         )}
       </div>
