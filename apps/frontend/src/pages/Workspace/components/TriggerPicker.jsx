@@ -8,53 +8,53 @@ import {
   Mail,
   AlertTriangle,
   Inbox,
-  Database,
-  Github,
-  CreditCard,
-  ShoppingBag,
-  Circle,
-  FileText,
-  Users,
   X,
-  Youtube,
-  TrendingUp,
-  MessageSquarePlus,
-  Calendar,
   Zap,
   ArrowLeft,
-  Rss,
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
-import imgTelegram from "../../../assets/telegram.png";
-import imgSlack    from "../../../assets/slack.png";
-import imgDiscord  from "../../../assets/discord.png";
-import imgGmail    from "../../../assets/gmail.png";
-import imgWhatsApp from "../../../assets/whatsapp.png";
-import imgAirtable from "../../../assets/Airtable--Streamline-Svg-Logos.svg";
-import imgNotion   from "../../../assets/Notion-Logo--Streamline-Radix.svg";
+import imgTelegram       from "../../../assets/telegram.png";
+import imgSlack          from "../../../assets/slack.png";
+import imgDiscord        from "../../../assets/discord.png";
+import imgGmail          from "../../../assets/gmail.png";
+import imgWhatsApp       from "../../../assets/whatsapp.png";
+import imgAirtable       from "../../../assets/Airtable--Streamline-Svg-Logos.svg";
+import imgNotion         from "../../../assets/notion.svg";
+import imgHubSpot        from "../../../assets/hubspot.svg";
+import imgGoogleCalendar from "../../../assets/google-calendar.svg";
+import imgShopify        from "../../../assets/shopify.svg";
+import imgStripe         from "../../../assets/stripe.svg";
+import imgGitHub         from "../../../assets/github.svg";
+import imgLinear         from "../../../assets/linear.svg";
+import imgTypeform       from "../../../assets/typeform.svg";
+import imgYouTube        from "../../../assets/youtube.svg";
+import imgReddit         from "../../../assets/reddit.svg";
+import imgRss            from "../../../assets/rss.svg";
+import imgPostgres       from "../../../assets/postgresql.svg";
+import imgBitcoin        from "../../../assets/bitcoin.svg";
 
 const APP_TRIGGERS = [
-  { id: "telegram",       backendType: "telegram_trigger",        logoUrl: imgTelegram, label: "Telegram",            description: "Message, button press, or any bot update.", color: "#26A5E4" },
-  { id: "slack",          backendType: "slack_trigger",           logoUrl: imgSlack,    label: "Slack",               description: "Message posted, reaction added, member joined.", color: "#E01E5A" },
-  { id: "discord",        backendType: "discord_trigger",         logoUrl: imgDiscord,  label: "Discord",             description: "Message sent, member joined, reaction added.", color: "#5865F2" },
-  { id: "whatsapp",       backendType: "whatsapp_trigger",        logoUrl: imgWhatsApp, label: "WhatsApp",            description: "Message on your WhatsApp Business number.", color: "#25D366" },
-  { id: "gmail",          backendType: "gmail_trigger",           logoUrl: imgGmail,    label: "Gmail",               description: "New email matching an optional query filter.", color: "#EA4335" },
-  { id: "airtable",       backendType: "airtable_trigger",        logoUrl: imgAirtable, label: "Airtable",            description: "New or updated record in an Airtable base.", color: "#F65858", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)" },
-  { id: "notion",         backendType: "notion_trigger",          logoUrl: imgNotion,   label: "Notion",              description: "New or edited page in a Notion database.", color: "#ffffff", imgFilter: "brightness(0) invert(1)" },
-  { id: "hubspot",        backendType: "hubspot_trigger",         icon: Users,          label: "HubSpot",             description: "New or updated contacts, deals, companies.", color: "#FF7A59" },
-  { id: "google_calendar",backendType: "google_calendar_trigger", icon: Calendar,       label: "Google Calendar",     description: "Calendar event about to start.", color: "#4285F4" },
-  { id: "shopify",        backendType: "shopify_trigger",         icon: ShoppingBag,    label: "Shopify",             description: "Order placed, fulfillment shipped, product updated.", color: "#95BF47" },
-  { id: "stripe",         backendType: "stripe_trigger",          icon: CreditCard,     label: "Stripe",              description: "Payment succeeded, subscription cancelled.", color: "#635BFF" },
-  { id: "github",         backendType: "github_trigger",          icon: Github,         label: "GitHub",              description: "Push, PR, issue, release — webhook auto-registered.", color: "#e4e4e7" },
-  { id: "linear",         backendType: "linear_trigger",          icon: Circle,         label: "Linear",              description: "Issue created, status changed, cycle updated.", color: "#5E6AD2" },
-  { id: "typeform",       backendType: "typeform_trigger",        icon: FileText,       label: "Typeform",            description: "Respondent submits your Typeform.", color: "#e4e4e7" },
-  { id: "github_issue",   backendType: "github_issue_trigger",    icon: Github,         label: "GitHub Issues / PRs", description: "New issues or pull requests. Filter by label.", color: "#e4e4e7" },
-  { id: "rss",            backendType: "rss_trigger",             icon: Rss,            label: "RSS / Atom",          description: "New article or item in any feed.", color: "#F97316" },
-  { id: "database",       backendType: "db_trigger",              icon: Database,       label: "Database",            description: "New or updated row in PostgreSQL or MySQL.", color: "#10B981" },
-  { id: "youtube",        backendType: "youtube_trigger",         icon: Youtube,        label: "YouTube",             description: "Channel publishes a new video.", color: "#FF0000" },
-  { id: "price_alert",    backendType: "price_alert_trigger",     icon: TrendingUp,     label: "Crypto Price Alert",  description: "Coin price crosses your threshold.", color: "#EAB308" },
-  { id: "reddit",         backendType: "reddit_trigger",          icon: MessageSquarePlus, label: "Reddit",           description: "New post in a subreddit. Optional keyword filter.", color: "#FF4500" },
+  { id: "telegram",        backendType: "telegram_trigger",        logoUrl: imgTelegram,       label: "Telegram",            description: "Message, button press, or any bot update." },
+  { id: "slack",           backendType: "slack_trigger",           logoUrl: imgSlack,          label: "Slack",               description: "Message posted, reaction added, member joined." },
+  { id: "discord",         backendType: "discord_trigger",         logoUrl: imgDiscord,        label: "Discord",             description: "Message sent, member joined, reaction added." },
+  { id: "whatsapp",        backendType: "whatsapp_trigger",        logoUrl: imgWhatsApp,       label: "WhatsApp",            description: "Message on your WhatsApp Business number." },
+  { id: "gmail",           backendType: "gmail_trigger",           logoUrl: imgGmail,          label: "Gmail",               description: "New email matching an optional query filter." },
+  { id: "airtable",        backendType: "airtable_trigger",        logoUrl: imgAirtable,       label: "Airtable",            description: "New or updated record in an Airtable base.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)" },
+  { id: "notion",          backendType: "notion_trigger",          logoUrl: imgNotion,         label: "Notion",              description: "New or edited page in a Notion database." },
+  { id: "hubspot",         backendType: "hubspot_trigger",         logoUrl: imgHubSpot,        label: "HubSpot",             description: "New or updated contacts, deals, companies." },
+  { id: "google_calendar", backendType: "google_calendar_trigger", logoUrl: imgGoogleCalendar, label: "Google Calendar",     description: "Calendar event about to start." },
+  { id: "shopify",         backendType: "shopify_trigger",         logoUrl: imgShopify,        label: "Shopify",             description: "Order placed, fulfillment shipped, product updated." },
+  { id: "stripe",          backendType: "stripe_trigger",          logoUrl: imgStripe,         label: "Stripe",              description: "Payment succeeded, subscription cancelled." },
+  { id: "github",          backendType: "github_trigger",          logoUrl: imgGitHub,         label: "GitHub",              description: "Push, PR, issue, release — webhook auto-registered." },
+  { id: "github_issue",    backendType: "github_issue_trigger",    logoUrl: imgGitHub,         label: "GitHub Issues / PRs", description: "New issues or pull requests. Filter by label." },
+  { id: "linear",          backendType: "linear_trigger",          logoUrl: imgLinear,         label: "Linear",              description: "Issue created, status changed, cycle updated." },
+  { id: "typeform",        backendType: "typeform_trigger",        logoUrl: imgTypeform,       label: "Typeform",            description: "Respondent submits your Typeform." },
+  { id: "youtube",         backendType: "youtube_trigger",         logoUrl: imgYouTube,        label: "YouTube",             description: "Channel publishes a new video." },
+  { id: "reddit",          backendType: "reddit_trigger",          logoUrl: imgReddit,         label: "Reddit",              description: "New post in a subreddit. Optional keyword filter." },
+  { id: "rss",             backendType: "rss_trigger",             logoUrl: imgRss,            label: "RSS / Atom",          description: "New article or item in any feed." },
+  { id: "database",        backendType: "db_trigger",              logoUrl: imgPostgres,       label: "Database",            description: "New or updated row in PostgreSQL or MySQL." },
+  { id: "price_alert",     backendType: "price_alert_trigger",     logoUrl: imgBitcoin,        label: "Crypto Price Alert",  description: "Coin price crosses your threshold. Powered by CoinGecko." },
 ];
 
 // Category rows on the home screen
@@ -179,27 +179,23 @@ export default function TriggerPicker() {
     </button>
   );
 
-  const AppRow = ({ trigger }) => {
-    const Icon = trigger.icon;
-    return (
-      <button
-        onClick={() => handleSelect(trigger)}
-        className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
-      >
-        <div className="w-5 h-5 flex items-center justify-center shrink-0">
-          {trigger.logoUrl ? (
-            <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain" style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
-          ) : (
-            <Icon className="w-5 h-5 shrink-0" style={{ color: trigger.color }} strokeWidth={1.6} />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{trigger.label}</div>
-          <div className="text-[12px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 truncate">{trigger.description}</div>
-        </div>
-      </button>
-    );
-  };
+  const AppRow = ({ trigger }) => (
+    <button
+      onClick={() => handleSelect(trigger)}
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
+    >
+      <img
+        src={trigger.logoUrl}
+        alt={trigger.label}
+        className="w-5 h-5 object-contain shrink-0"
+        style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{trigger.label}</div>
+        <div className="text-[12px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 truncate">{trigger.description}</div>
+      </div>
+    </button>
+  );
 
   // ── Sub-page content ─────────────────────────────────────────────────────────
   const currentCat = CATEGORIES.find((c) => c.id === page);
@@ -293,9 +289,13 @@ export default function TriggerPicker() {
           ) : (
             filtered.map((t) => {
               const isApp = APP_TRIGGERS.some((a) => a.id === t.id);
+              const coreDef = [...CATEGORIES.filter(c => c.direct).map(c => ({ ...c.trigger, icon: c.icon, description: c.description })),
+                { id: "email", icon: Mail, backendType: "webhook", label: "Email via webhook", description: "Mailgun, SendGrid, Postmark." },
+                { id: "imap",  icon: Inbox, backendType: "imap_trigger", label: "Email via IMAP", description: "Poll any IMAP inbox." },
+              ].find(c => c.id === t.id);
               return isApp
                 ? <AppRow key={t.id} trigger={t} />
-                : <CoreRow key={t.id} trigger={t} icon={t.icon || MousePointerClick} />;
+                : <CoreRow key={t.id} trigger={t} icon={coreDef?.icon || MousePointerClick} />;
             })
           )
         ) : (
