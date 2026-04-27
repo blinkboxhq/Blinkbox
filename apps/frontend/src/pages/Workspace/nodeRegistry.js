@@ -63,6 +63,9 @@ import imgMailchimp      from "../../assets/mailchimp.svg";
 import imgAsana          from "../../assets/asana.svg";
 import imgClickUp        from "../../assets/clickup.svg";
 import imgMonday         from "../../assets/monday.svg";
+import imgLetsEncrypt    from "../../assets/letsencrypt.svg";
+import imgHackerNews     from "../../assets/hackernews.svg";
+import imgPipedrive      from "../../assets/pipedrive.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -161,6 +164,12 @@ import OutlookTriggerNode          from "./components/nodes/OutlookTriggerNode";
 import TeamsTriggerNode            from "./components/nodes/TeamsTriggerNode";
 import HttpMonitorTriggerNode      from "./components/nodes/HttpMonitorTriggerNode";
 import GitLabTriggerNode           from "./components/nodes/GitLabTriggerNode";
+import SslTriggerNode              from "./components/nodes/SslTriggerNode";
+import DnsTriggerNode              from "./components/nodes/DnsTriggerNode";
+import PortMonitorTriggerNode      from "./components/nodes/PortMonitorTriggerNode";
+import HackerNewsTriggerNode       from "./components/nodes/HackerNewsTriggerNode";
+import PipedriveTriggerNode        from "./components/nodes/PipedriveTriggerNode";
+import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 
@@ -569,11 +578,11 @@ export const NodeRegistry = {
   },
   outlook_trigger: {
     label: "Outlook Email", icon: Github, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
-    logoUrl: imgOutlook, imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)", ConfigPanel: OutlookTriggerNode, category: "trigger",
+    logoUrl: imgOutlook, ConfigPanel: OutlookTriggerNode, category: "trigger",
   },
   teams_trigger: {
     label: "Microsoft Teams", icon: Github, colorClass: "text-[#6264A7]", accentColor: "98,100,167",
-    logoUrl: imgTeams, imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(210deg)", ConfigPanel: TeamsTriggerNode, category: "trigger",
+    logoUrl: imgTeams, ConfigPanel: TeamsTriggerNode, category: "trigger",
   },
   http_monitor_trigger: {
     label: "HTTP Monitor", icon: Github, colorClass: "text-red-400", accentColor: "248,113,113",
@@ -582,6 +591,30 @@ export const NodeRegistry = {
   gitlab_trigger: {
     label: "GitLab", icon: Github, colorClass: "text-[#FC6D26]", accentColor: "252,109,38",
     logoUrl: imgGitLab, ConfigPanel: GitLabTriggerNode, category: "trigger",
+  },
+  ssl_trigger: {
+    label: "SSL Cert Expiry", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128",
+    logoUrl: imgLetsEncrypt, ConfigPanel: SslTriggerNode, category: "trigger",
+  },
+  dns_trigger: {
+    label: "DNS Record Change", icon: Globe, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: DnsTriggerNode, category: "trigger",
+  },
+  port_monitor_trigger: {
+    label: "Port Monitor", icon: Webhook, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: PortMonitorTriggerNode, category: "trigger",
+  },
+  hackernews_trigger: {
+    label: "Hacker News", icon: MessageSquarePlus, colorClass: "text-orange-400", accentColor: "251,146,60",
+    logoUrl: imgHackerNews, ConfigPanel: HackerNewsTriggerNode, category: "trigger",
+  },
+  pipedrive_trigger: {
+    label: "Pipedrive", icon: Users, colorClass: "text-[#F55137]", accentColor: "245,81,55",
+    logoUrl: imgPipedrive, ConfigPanel: PipedriveTriggerNode, category: "trigger",
+  },
+  asana_trigger: {
+    label: "Asana", icon: Circle, colorClass: "text-[#F06A6A]", accentColor: "240,106,106",
+    logoUrl: imgAsana, ConfigPanel: AsanaTriggerNode, category: "trigger",
   },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────

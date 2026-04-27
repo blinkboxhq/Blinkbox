@@ -26,6 +26,12 @@ import { startOutlookPoller } from "../infra/outlookEmail.poller.js";
 import { startTeamsPoller } from "../infra/teamsMessage.poller.js";
 import { startHttpMonitor } from "../infra/httpMonitor.poller.js";
 import { startGitLabPoller } from "../infra/gitlab.poller.js";
+import { startSslPoller } from "../infra/sslCert.poller.js";
+import { startDnsMonitor } from "../infra/dnsMonitor.poller.js";
+import { startPortMonitor } from "../infra/portMonitor.poller.js";
+import { startHackerNewsPoller } from "../infra/hackerNews.poller.js";
+import { startPipedrivePoller } from "../infra/pipedrive.poller.js";
+import { startAsanaPoller } from "../infra/asana.poller.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -80,6 +86,12 @@ export async function startServer() {
   await startTeamsPoller();
   await startHttpMonitor();
   await startGitLabPoller();
+  await startSslPoller();
+  await startDnsMonitor();
+  await startPortMonitor();
+  await startHackerNewsPoller();
+  await startPipedrivePoller();
+  await startAsanaPoller();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

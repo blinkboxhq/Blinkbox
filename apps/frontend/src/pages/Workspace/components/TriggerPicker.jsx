@@ -59,6 +59,16 @@ import imgMonday         from "../../../assets/monday.svg";
 import imgFigma          from "../../../assets/figma.svg";
 import imgPagerDuty      from "../../../assets/pagerduty.svg";
 import imgDatadog        from "../../../assets/datadog.svg";
+import imgLetsEncrypt    from "../../../assets/letsencrypt.svg";
+import imgHackerNews     from "../../../assets/hackernews.svg";
+import imgPipedrive      from "../../../assets/pipedrive.svg";
+import imgInstagram      from "../../../assets/instagram.svg";
+import imgTikTok         from "../../../assets/tiktok.svg";
+import imgMastodon       from "../../../assets/mastodon.svg";
+import imgProductHunt    from "../../../assets/producthunt.svg";
+import imgIntercom       from "../../../assets/intercom.svg";
+import imgWooCommerce    from "../../../assets/woocommerce.svg";
+import imgVirusTotal     from "../../../assets/virustotal.svg";
 
 const APP_TRIGGERS = [
   { id: "telegram",        backendType: "telegram_trigger",        logoUrl: imgTelegram,       label: "Telegram",            description: "Message, button press, or any bot update." },
@@ -66,7 +76,7 @@ const APP_TRIGGERS = [
   { id: "discord",         backendType: "discord_trigger",         logoUrl: imgDiscord,        label: "Discord",             description: "Message sent, member joined, reaction added." },
   { id: "whatsapp",        backendType: "whatsapp_trigger",        logoUrl: imgWhatsApp,       label: "WhatsApp",            description: "Message on your WhatsApp Business number." },
   { id: "gmail",           backendType: "gmail_trigger",           logoUrl: imgGmail,          label: "Gmail",               description: "New email matching an optional query filter." },
-  { id: "airtable",        backendType: "airtable_trigger",        logoUrl: imgAirtable,       label: "Airtable",            description: "New or updated record in an Airtable base.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)" },
+  { id: "airtable",        backendType: "airtable_trigger",        logoUrl: imgAirtable,       label: "Airtable",            description: "New or updated record in an Airtable base." },
   { id: "notion",          backendType: "notion_trigger",          logoUrl: imgNotion,         label: "Notion",              description: "New or edited page in a Notion database." },
   { id: "hubspot",         backendType: "hubspot_trigger",         logoUrl: imgHubSpot,        label: "HubSpot",             description: "New or updated contacts, deals, companies." },
   { id: "google_calendar", backendType: "google_calendar_trigger", logoUrl: imgGoogleCalendar, label: "Google Calendar",     description: "Calendar event about to start." },
@@ -93,31 +103,49 @@ const APP_TRIGGERS = [
   { id: "google_forms",   backendType: "webhook",                  logoUrl: imgGoogleForms,    label: "Google Forms",        description: "Form response submitted." },
 
   // Microsoft
-  { id: "outlook",        backendType: "outlook_trigger",          logoUrl: imgOutlook,        label: "Outlook",             description: "New email in your Microsoft 365 inbox.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
-  { id: "teams",          backendType: "teams_trigger",            logoUrl: imgTeams,          label: "Microsoft Teams",     description: "Message posted in a channel.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(210deg)" },
-  { id: "onedrive",       backendType: "webhook",                  logoUrl: imgOneDrive,       label: "OneDrive",            description: "File created or modified in OneDrive.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
-  { id: "sharepoint",     backendType: "webhook",                  logoUrl: imgSharePoint,     label: "SharePoint",          description: "List item created or updated.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
-  { id: "azure_devops",   backendType: "webhook",                  logoUrl: imgAzureDevOps,    label: "Azure DevOps",        description: "Work item created, PR opened, pipeline triggered.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(190deg)" },
+  { id: "outlook",        backendType: "outlook_trigger",          logoUrl: imgOutlook,        label: "Outlook",             description: "New email in your Microsoft 365 inbox." },
+  { id: "teams",          backendType: "teams_trigger",            logoUrl: imgTeams,          label: "Microsoft Teams",     description: "Message posted in a channel." },
+  { id: "onedrive",       backendType: "webhook",                  logoUrl: imgOneDrive,       label: "OneDrive",            description: "File created or modified in OneDrive." },
+  { id: "sharepoint",     backendType: "webhook",                  logoUrl: imgSharePoint,     label: "SharePoint",          description: "List item created or updated." },
+  { id: "azure_devops",   backendType: "webhook",                  logoUrl: imgAzureDevOps,    label: "Azure DevOps",        description: "Work item created, PR opened, pipeline triggered." },
 
   // DevOps / Security
   { id: "gitlab",         backendType: "gitlab_trigger",           logoUrl: imgGitLab,         label: "GitLab",              description: "Merge request, issue, or pipeline event." },
-  { id: "sentry",         backendType: "webhook",                  logoUrl: imgSentry,         label: "Sentry",              description: "New error or issue created in your project.", imgFilter: "brightness(0) invert(1)" },
-  { id: "vercel",         backendType: "webhook",                  logoUrl: imgVercel,         label: "Vercel",              description: "Deployment succeeded, failed, or cancelled.", imgFilter: "brightness(0) invert(1)" },
+  { id: "sentry",         backendType: "webhook",                  logoUrl: imgSentry,         label: "Sentry",              description: "New error or issue created in your project." },
+  { id: "vercel",         backendType: "webhook",                  logoUrl: imgVercel,         label: "Vercel",              description: "Deployment succeeded, failed, or cancelled." },
   { id: "netlify",        backendType: "webhook",                  logoUrl: imgNetlify,        label: "Netlify",             description: "Build or deploy event on your site." },
-  { id: "pagerduty",      backendType: "webhook",                  logoUrl: imgPagerDuty,      label: "PagerDuty",           description: "Alert triggered or resolved.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(100deg)" },
-  { id: "datadog",        backendType: "webhook",                  logoUrl: imgDatadog,        label: "Datadog",             description: "Monitor alert fired.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(240deg)" },
-  { id: "http_monitor",   backendType: "http_monitor_trigger",     logoUrl: imgVercel,         label: "HTTP Monitor",        description: "URL goes down, comes back up, or responds slowly.", imgFilter: "brightness(0) invert(1)" },
+  { id: "pagerduty",      backendType: "webhook",                  logoUrl: imgPagerDuty,      label: "PagerDuty",           description: "Alert triggered or resolved." },
+  { id: "datadog",        backendType: "webhook",                  logoUrl: imgDatadog,        label: "Datadog",             description: "Monitor alert fired." },
+  { id: "http_monitor",   backendType: "http_monitor_trigger",     logoUrl: imgVercel,         label: "HTTP Monitor",        description: "URL goes down, comes back up, or responds slowly." },
 
   // Business / PM
-  { id: "zendesk",        backendType: "webhook",                  logoUrl: imgZendesk,        label: "Zendesk",             description: "New ticket or ticket status changed.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(50%) saturate(500%) hue-rotate(140deg)" },
+  { id: "zendesk",        backendType: "webhook",                  logoUrl: imgZendesk,        label: "Zendesk",             description: "New ticket or ticket status changed." },
   { id: "calendly",       backendType: "webhook",                  logoUrl: imgCalendly,       label: "Calendly",            description: "Meeting booked or cancelled." },
   { id: "mailchimp",      backendType: "webhook",                  logoUrl: imgMailchimp,      label: "Mailchimp",           description: "Subscriber added, unsubscribed, or campaign sent." },
-  { id: "asana",          backendType: "webhook",                  logoUrl: imgAsana,          label: "Asana",               description: "Task created or completed in a project.", imgFilter: "brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(330deg)" },
-  { id: "clickup",        backendType: "webhook",                  logoUrl: imgClickUp,        label: "ClickUp",             description: "Task event in a space or list.", imgFilter: "brightness(0) saturate(100%) invert(30%) sepia(90%) saturate(1000%) hue-rotate(240deg)" },
+  { id: "asana",          backendType: "asana_trigger",            logoUrl: imgAsana,          label: "Asana",               description: "Task created or completed in a project." },
+  { id: "clickup",        backendType: "webhook",                  logoUrl: imgClickUp,        label: "ClickUp",             description: "Task event in a space or list." },
   { id: "monday",         backendType: "webhook",                  logoUrl: imgMonday,         label: "Monday.com",          description: "Item status changed on a board." },
 
   // Design
   { id: "figma",          backendType: "webhook",                  logoUrl: imgFigma,          label: "Figma",               description: "Comment added or file version published." },
+
+  // Social
+  { id: "instagram",      backendType: "webhook",                  logoUrl: imgInstagram,      label: "Instagram",           description: "New post, story, or mention via webhook." },
+  { id: "tiktok",         backendType: "webhook",                  logoUrl: imgTikTok,         label: "TikTok",              description: "New video published on your account." },
+  { id: "mastodon",       backendType: "webhook",                  logoUrl: imgMastodon,       label: "Mastodon",            description: "New toot or mention on your Mastodon account." },
+  { id: "producthunt",    backendType: "hackernews_trigger",       logoUrl: imgProductHunt,    label: "Product Hunt",        description: "New product launch or comment." },
+  { id: "hackernews",     backendType: "hackernews_trigger",       logoUrl: imgHackerNews,     label: "Hacker News",         description: "New post matching a keyword or reaching min score." },
+
+  // CRM / Sales
+  { id: "pipedrive",      backendType: "pipedrive_trigger",        logoUrl: imgPipedrive,      label: "Pipedrive",           description: "New or updated deal, person, or organization." },
+  { id: "intercom",       backendType: "webhook",                  logoUrl: imgIntercom,       label: "Intercom",            description: "New conversation or user event." },
+  { id: "woocommerce",    backendType: "webhook",                  logoUrl: imgWooCommerce,    label: "WooCommerce",         description: "Order placed, status changed, or product updated." },
+
+  // Infra / Security
+  { id: "ssl",            backendType: "ssl_trigger",              logoUrl: imgLetsEncrypt,    label: "SSL Cert Expiry",     description: "Certificate expiring within your chosen window." },
+  { id: "dns",            backendType: "dns_trigger",                                          label: "DNS Record Change",   description: "DNS A, MX, TXT or other record changes." },
+  { id: "port_monitor",   backendType: "port_monitor_trigger",                                 label: "Port Monitor",        description: "TCP port opens or closes on your server." },
+  { id: "virustotal",     backendType: "webhook",                  logoUrl: imgVirusTotal,     label: "VirusTotal",          description: "Scan result returned for a file or URL." },
 ];
 
 // Category rows on the home screen

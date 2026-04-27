@@ -58,6 +58,12 @@ import OutlookTriggerNode          from "./components/nodes/OutlookTriggerNode";
 import TeamsTriggerNode            from "./components/nodes/TeamsTriggerNode";
 import HttpMonitorTriggerNode      from "./components/nodes/HttpMonitorTriggerNode";
 import GitLabTriggerNode           from "./components/nodes/GitLabTriggerNode";
+import SslTriggerNode              from "./components/nodes/SslTriggerNode";
+import DnsTriggerNode              from "./components/nodes/DnsTriggerNode";
+import PortMonitorTriggerNode      from "./components/nodes/PortMonitorTriggerNode";
+import HackerNewsTriggerNode       from "./components/nodes/HackerNewsTriggerNode";
+import PipedriveTriggerNode        from "./components/nodes/PipedriveTriggerNode";
+import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 
 import imgTelegram       from "../../assets/telegram.png";
 import imgSlack          from "../../assets/slack.png";
@@ -87,6 +93,10 @@ import imgOutlook        from "../../assets/outlook.svg";
 import imgTeams          from "../../assets/microsoft-teams.svg";
 import imgVercel         from "../../assets/vercel.svg";
 import imgGitLab         from "../../assets/gitlab.svg";
+import imgLetsEncrypt    from "../../assets/letsencrypt.svg";
+import imgHackerNews     from "../../assets/hackernews.svg";
+import imgPipedrive      from "../../assets/pipedrive.svg";
+import imgAsana          from "../../assets/asana.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -409,5 +419,57 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-[#FC6D26]",
     accentColor: "252,109,38",
     ConfigPanel: GitLabTriggerNode,
+  },
+  ssl: {
+    backendType: "ssl_trigger",
+    icon: AlertTriangle,
+    logoUrl: imgLetsEncrypt,
+    label: "On SSL Cert Expiry",
+    colorClass: "text-green-400",
+    accentColor: "74,222,128",
+    ConfigPanel: SslTriggerNode,
+  },
+  dns: {
+    backendType: "dns_trigger",
+    icon: Database,
+    label: "On DNS Record Change",
+    colorClass: "text-sky-400",
+    accentColor: "56,189,248",
+    ConfigPanel: DnsTriggerNode,
+  },
+  port_monitor: {
+    backendType: "port_monitor_trigger",
+    icon: Webhook,
+    label: "On Port State Change",
+    colorClass: "text-violet-400",
+    accentColor: "167,139,250",
+    ConfigPanel: PortMonitorTriggerNode,
+  },
+  hackernews: {
+    backendType: "hackernews_trigger",
+    icon: Rss,
+    logoUrl: imgHackerNews,
+    label: "On Hacker News Post",
+    colorClass: "text-orange-400",
+    accentColor: "251,146,60",
+    ConfigPanel: HackerNewsTriggerNode,
+  },
+  pipedrive: {
+    backendType: "pipedrive_trigger",
+    icon: Users,
+    logoUrl: imgPipedrive,
+    label: "On Pipedrive Event",
+    colorClass: "text-[#F55137]",
+    accentColor: "245,81,55",
+    ConfigPanel: PipedriveTriggerNode,
+  },
+  asana: {
+    backendType: "asana_trigger",
+    icon: Circle,
+    logoUrl: imgAsana,
+    label: "On Asana Task",
+    colorClass: "text-[#F06A6A]",
+    accentColor: "240,106,106",
+    ConfigPanel: AsanaTriggerNode,
   },
 };
