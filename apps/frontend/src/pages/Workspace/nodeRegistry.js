@@ -190,6 +190,17 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Research nodes
+import PubMedSearchNode     from "./components/nodes/PubMedSearchNode";
+import ArxivSearchNode      from "./components/nodes/ArxivSearchNode";
+import WikipediaLookupNode  from "./components/nodes/WikipediaLookupNode";
+import DrugLookupNode       from "./components/nodes/DrugLookupNode";
+import ClinicalTrialsNode   from "./components/nodes/ClinicalTrialsNode";
+import WeatherNode          from "./components/nodes/WeatherNode";
+import NewsSearchNode       from "./components/nodes/NewsSearchNode";
+import StockPriceNode       from "./components/nodes/StockPriceNode";
+import CurrencyExchangeNode from "./components/nodes/CurrencyExchangeNode";
+import IpLookupNode         from "./components/nodes/IpLookupNode";
 // Data Processing nodes
 import NumberFormatNode     from "./components/nodes/NumberFormatNode";
 import TextFormatNode       from "./components/nodes/TextFormatNode";
@@ -454,6 +465,56 @@ export const NodeRegistry = {
   web_search: {
     label: "Web Search", icon: Globe, colorClass: "text-white", accentColor: "129,140,248",
     ConfigPanel: WebSearchNode, category: "research",
+  },
+  pubmed_search: {
+    label: "PubMed Search", icon: Microscope, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: PubMedSearchNode, category: "research",
+    description: "Search biomedical literature via NCBI PubMed",
+  },
+  arxiv_search: {
+    label: "ArXiv Search", icon: Atom, colorClass: "text-rose-400", accentColor: "251,113,133",
+    ConfigPanel: ArxivSearchNode, category: "research",
+    description: "Search scientific preprints on arXiv.org",
+  },
+  wikipedia_lookup: {
+    label: "Wikipedia Lookup", icon: BookOpen, colorClass: "text-white", accentColor: "161,161,170",
+    ConfigPanel: WikipediaLookupNode, category: "research",
+    description: "Fetch article summaries from Wikipedia",
+  },
+  drug_lookup: {
+    label: "Drug Lookup", icon: Pill, colorClass: "text-green-400", accentColor: "74,222,128",
+    ConfigPanel: DrugLookupNode, category: "research",
+    description: "Query FDA drug database via openFDA",
+  },
+  clinical_trials: {
+    label: "Clinical Trials", icon: HeartPulse, colorClass: "text-red-400", accentColor: "248,113,113",
+    ConfigPanel: ClinicalTrialsNode, category: "research",
+    description: "Search ClinicalTrials.gov database",
+  },
+  weather: {
+    label: "Weather", icon: Thermometer, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: WeatherNode, category: "research",
+    description: "Current weather or forecast for any location",
+  },
+  news_search: {
+    label: "News Search", icon: Newspaper, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: NewsSearchNode, category: "research",
+    description: "Fetch latest news articles by keyword",
+  },
+  stock_price: {
+    label: "Stock Price", icon: TrendingUp, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: StockPriceNode, category: "research",
+    description: "Live and historical stock data via Alpha Vantage",
+  },
+  currency_exchange: {
+    label: "Currency Exchange", icon: DollarSign, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    ConfigPanel: CurrencyExchangeNode, category: "research",
+    description: "Live FX rates and currency conversion",
+  },
+  ip_lookup: {
+    label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: IpLookupNode, category: "research",
+    description: "Geolocation and ISP info from an IP address",
   },
 
   // Logic & Flow
