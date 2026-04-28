@@ -190,6 +190,19 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Data Processing nodes
+import NumberFormatNode     from "./components/nodes/NumberFormatNode";
+import TextFormatNode       from "./components/nodes/TextFormatNode";
+import RegexMatchNode       from "./components/nodes/RegexMatchNode";
+import FindReplaceNode      from "./components/nodes/FindReplaceNode";
+import HtmlToTextNode       from "./components/nodes/HtmlToTextNode";
+import JsonToCsvNode        from "./components/nodes/JsonToCsvNode";
+import XmlParserNode        from "./components/nodes/XmlParserNode";
+import MarkdownRendererNode from "./components/nodes/MarkdownRendererNode";
+import UrlParserNode        from "./components/nodes/UrlParserNode";
+import ColorConverterNode   from "./components/nodes/ColorConverterNode";
+import UnitConverterNode    from "./components/nodes/UnitConverterNode";
+import MathExpressionNode   from "./components/nodes/MathExpressionNode";
 import ConditionNode            from "./components/nodes/ConditionNode";
 import RetryNode                from "./components/nodes/RetryNode";
 import StopErrorNode            from "./components/nodes/StopErrorNode";
@@ -765,6 +778,68 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Data Processing Nodes ────────────────────────────────────────────────
+  number_format: {
+    label: "Number Format", icon: Hash, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: NumberFormatNode, category: "transform",
+    description: "Round, format currency, fixed decimals, percentage",
+  },
+  text_format: {
+    label: "Text Format", icon: CaseSensitive, colorClass: "text-white", accentColor: "167,139,250",
+    ConfigPanel: TextFormatNode, category: "transform",
+    description: "Uppercase, lowercase, trim, slug, truncate text",
+  },
+  regex_match: {
+    label: "Regex Match", icon: Regex, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: RegexMatchNode, category: "transform",
+    description: "Test or extract patterns with regular expressions",
+  },
+  find_replace: {
+    label: "Find & Replace", icon: Replace, colorClass: "text-white", accentColor: "251,146,60",
+    ConfigPanel: FindReplaceNode, category: "transform",
+    description: "Search and substitute text, supports regex",
+  },
+  html_to_text: {
+    label: "HTML to Text", icon: FileText, colorClass: "text-white", accentColor: "34,211,238",
+    ConfigPanel: HtmlToTextNode, category: "transform",
+    description: "Strip HTML tags and extract clean plain text",
+  },
+  json_to_csv: {
+    label: "JSON ↔ CSV", icon: Table2, colorClass: "text-white", accentColor: "52,211,153",
+    ConfigPanel: JsonToCsvNode, category: "transform",
+    description: "Convert between JSON arrays and CSV format",
+  },
+  xml_parser: {
+    label: "XML Parser", icon: Code2, colorClass: "text-white", accentColor: "251,191,36",
+    ConfigPanel: XmlParserNode, category: "transform",
+    description: "Parse XML to JSON or build XML from JSON",
+  },
+  markdown_renderer: {
+    label: "Markdown Renderer", icon: BookOpen, colorClass: "text-white", accentColor: "129,140,248",
+    ConfigPanel: MarkdownRendererNode, category: "transform",
+    description: "Convert markdown to HTML",
+  },
+  url_parser: {
+    label: "URL Parser", icon: Link2, colorClass: "text-white", accentColor: "56,189,248",
+    ConfigPanel: UrlParserNode, category: "transform",
+    description: "Extract domain, path, params from a URL",
+  },
+  color_converter: {
+    label: "Color Converter", icon: Palette, colorClass: "text-white", accentColor: "232,121,249",
+    ConfigPanel: ColorConverterNode, category: "transform",
+    description: "Convert between HEX, RGB, HSL, HSV color formats",
+  },
+  unit_converter: {
+    label: "Unit Converter", icon: ArrowRightLeft, colorClass: "text-white", accentColor: "45,212,191",
+    ConfigPanel: UnitConverterNode, category: "transform",
+    description: "Convert weight, length, temperature, volume and more",
+  },
+  math_expression: {
+    label: "Math Expression", icon: Sigma, colorClass: "text-white", accentColor: "250,204,21",
+    ConfigPanel: MathExpressionNode, category: "transform",
+    description: "Evaluate a safe mathematical formula",
   },
 
   // ── Flow Control Nodes ────────────────────────────────────────────────────
