@@ -25,7 +25,7 @@ export default function AddNodeSidebar() {
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const clearAddNodeModal = useWorkspaceStore((s) => s.clearAddNodeModal);
-  const addEdge        = useWorkspaceStore((s) => s.onConnect);
+  const onConnect      = useWorkspaceStore((s) => s.onConnect);
 
   const handleClose = () => {
     setAddNodeOpen(false);
@@ -54,7 +54,7 @@ export default function AddNodeSidebar() {
     if (addNodeSource && addNodeSource !== "__edge__") {
       const alreadyConnected = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
       if (!alreadyConnected) {
-        addEdge({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
+        onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
       }
     }
 
