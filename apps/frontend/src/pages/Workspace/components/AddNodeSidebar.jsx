@@ -76,7 +76,7 @@ export default function AddNodeSidebar() {
         onClick={() => handleAdd(nodeDef)}
         className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
       >
-        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+        <div className="w-8 h-8 shrink-0 flex items-center justify-center" style={{ minWidth: 32 }}>
           {nodeDef.logoUrl ? (
             <img
               src={nodeDef.logoUrl}
@@ -107,7 +107,7 @@ export default function AddNodeSidebar() {
         onClick={() => setPage(cat.id)}
         className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
       >
-        <div className="w-9 h-9 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ minWidth: 32 }}>
           <CatIcon className="w-7 h-7 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.6} />
         </div>
         <div className="flex-1 min-w-0">

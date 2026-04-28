@@ -335,156 +335,156 @@ export const NodeRegistry = {
 
   // AI Tools (specialty)
   ai_classify: {
-    label: "AI Classify", icon: Tags, colorClass: "text-violet-400", accentColor: "139,92,246",
+    label: "AI Classify", icon: Tags, colorClass: "text-white", accentColor: "139,92,246",
     ConfigPanel: AIClassifyNode, category: "ai_tools",
   },
   ai_extract: {
-    label: "AI Extract", icon: Scissors, colorClass: "text-sky-400", accentColor: "56,189,248",
+    label: "AI Extract", icon: Scissors, colorClass: "text-white", accentColor: "56,189,248",
     ConfigPanel: AIExtractNode, category: "ai_tools",
   },
   ai_transform: {
-    label: "AI Transform", icon: Wand2, colorClass: "text-fuchsia-400", accentColor: "232,121,249",
+    label: "AI Transform", icon: Wand2, colorClass: "text-white", accentColor: "232,121,249",
     ConfigPanel: AITransformNode, category: "ai_tools",
   },
 
   // Data & APIs
   http_request: {
-    label: "HTTP Request", icon: Globe, colorClass: "text-blue-400", accentColor: "59,130,246",
+    label: "HTTP Request", icon: Globe, colorClass: "text-white", accentColor: "59,130,246",
     logoUrl: imgHTTP, ConfigPanel: HttpRequestNode, category: "data",
   },
   postgres: {
-    label: "PostgreSQL", icon: Server, colorClass: "text-[#5B9BD5]", accentColor: "91,155,213",
-    ConfigPanel: PostgresNode, category: "data",
+    label: "PostgreSQL", icon: Server, colorClass: "text-white", accentColor: "91,155,213",
+    logoUrl: imgPostgres, ConfigPanel: PostgresNode, category: "data",
   },
   supabase: {
-    label: "Supabase", icon: Database, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    label: "Supabase", icon: Database, colorClass: "text-white", accentColor: "52,211,153",
     ConfigPanel: SupabaseNode, category: "data",
   },
   mongodb: {
-    label: "MongoDB", icon: Database, colorClass: "text-[#47A248]", accentColor: "71,162,72",
+    label: "MongoDB", icon: Database, colorClass: "text-white", accentColor: "71,162,72",
     ConfigPanel: MongoDBNode, category: "data",
   },
   redis_node: {
-    label: "Redis", icon: Server, colorClass: "text-[#FF4438]", accentColor: "255,68,56",
+    label: "Redis", icon: Server, colorClass: "text-white", accentColor: "255,68,56",
     ConfigPanel: RedisNode, category: "data",
   },
   firebase: {
-    label: "Firebase", icon: Database, colorClass: "text-[#FFCA28]", accentColor: "255,202,40",
+    label: "Firebase", icon: Database, colorClass: "text-white", accentColor: "255,202,40",
     ConfigPanel: FirebaseNode, category: "data",
   },
 
   // Transform (array/data manipulation)
   filter_array: {
-    label: "Filter Array", icon: Filter, colorClass: "text-pink-400", accentColor: "244,114,182",
+    label: "Filter Array", icon: Filter, colorClass: "text-white", accentColor: "244,114,182",
     ConfigPanel: FilterArrayNode, category: "transform",
   },
   sort_array: {
-    label: "Sort Array", icon: ArrowUpDown, colorClass: "text-cyan-400", accentColor: "34,211,238",
+    label: "Sort Array", icon: ArrowUpDown, colorClass: "text-white", accentColor: "34,211,238",
     ConfigPanel: SortArrayNode, category: "transform",
   },
   deduplicate: {
-    label: "Deduplicate", icon: Layers, colorClass: "text-violet-400", accentColor: "139,92,246",
+    label: "Deduplicate", icon: Layers, colorClass: "text-white", accentColor: "139,92,246",
     ConfigPanel: DeduplicateNode, category: "transform",
   },
   batch_split: {
-    label: "Batch Split", icon: LayoutGrid, colorClass: "text-orange-400", accentColor: "251,146,60",
+    label: "Batch Split", icon: LayoutGrid, colorClass: "text-white", accentColor: "251,146,60",
     ConfigPanel: BatchSplitNode, category: "transform",
   },
   csv_parser: {
-    label: "CSV Parser", icon: FileText, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    label: "CSV Parser", icon: FileText, colorClass: "text-white", accentColor: "52,211,153",
     ConfigPanel: CSVParserNode, category: "transform",
   },
   date_time: {
-    label: "Date / Time", icon: Calendar, colorClass: "text-amber-400", accentColor: "251,191,36",
+    label: "Date / Time", icon: Calendar, colorClass: "text-white", accentColor: "251,191,36",
     ConfigPanel: DateTimeNode, category: "transform",
   },
   crypto_utils: {
-    label: "Crypto Utils", icon: Shield, colorClass: "text-red-400", accentColor: "248,113,113",
+    label: "Crypto Utils", icon: Shield, colorClass: "text-white", accentColor: "248,113,113",
     ConfigPanel: CryptoUtilsNode, category: "transform",
   },
   data_mapper: {
-    label: "Data Mapper", icon: Database, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    label: "Data Mapper", icon: Database, colorClass: "text-white", accentColor: "52,211,153",
     ConfigPanel: DataMapperNode, category: "transform",
   },
   set_fields: {
-    label: "Set Fields", icon: Edit2, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    label: "Set Fields", icon: Edit2, colorClass: "text-white", accentColor: "52,211,153",
     ConfigPanel: SetFieldsNode, category: "transform",
   },
 
   // Research
   web_scraper: {
-    label: "Web Scraper", icon: Search, colorClass: "text-purple-400", accentColor: "168,85,247",
+    label: "Web Scraper", icon: Search, colorClass: "text-white", accentColor: "168,85,247",
     logoUrl: imgComputer, imgFilter: "brightness(0) invert(1)", ConfigPanel: InformerNode, category: "research",
   },
   web_search: {
-    label: "Web Search", icon: Globe, colorClass: "text-indigo-400", accentColor: "129,140,248",
+    label: "Web Search", icon: Globe, colorClass: "text-white", accentColor: "129,140,248",
     ConfigPanel: WebSearchNode, category: "research",
   },
 
   // Logic & Flow
   logic_router: {
-    label: "Logic Router", icon: GitBranch, colorClass: "text-pink-400", accentColor: "236,72,153",
+    label: "Logic Router", icon: GitBranch, colorClass: "text-white", accentColor: "236,72,153",
     ConfigPanel: LogicRouterNode, category: "flow",
   },
   delay: {
-    label: "Delay", icon: Hourglass, colorClass: "text-orange-400", accentColor: "251,146,60",
+    label: "Delay", icon: Hourglass, colorClass: "text-white", accentColor: "251,146,60",
     ConfigPanel: DelayNode, category: "flow",
   },
   loop: {
-    label: "Loop", icon: Repeat, colorClass: "text-amber-400", accentColor: "251,191,36",
+    label: "Loop", icon: Repeat, colorClass: "text-white", accentColor: "251,191,36",
     ConfigPanel: LoopNode, category: "flow",
   },
   merge: {
-    label: "Merge", icon: Merge, colorClass: "text-teal-400", accentColor: "45,212,191",
+    label: "Merge", icon: Merge, colorClass: "text-white", accentColor: "45,212,191",
     ConfigPanel: MergeNode, category: "flow",
   },
   approval: {
-    label: "Approval Gate", icon: CheckSquare, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    label: "Approval Gate", icon: CheckSquare, colorClass: "text-white", accentColor: "250,204,21",
     ConfigPanel: ApprovalNode, category: "flow",
   },
 
   // Code
   code: {
-    label: "Run Code", icon: Code2, colorClass: "text-lime-400", accentColor: "163,230,53",
+    label: "Run Code", icon: Code2, colorClass: "text-white", accentColor: "163,230,53",
     logoUrl: imgCode, ConfigPanel: CodeNode, category: "code",
   },
 
   // Integrations (comms)
   telegram: {
-    label: "Telegram", icon: Brain, colorClass: "text-[#26A5E4]", accentColor: "38,165,228",
+    label: "Telegram", icon: Brain, colorClass: "text-white", accentColor: "38,165,228",
     logoUrl: imgTelegram, ConfigPanel: TelegramNode, category: "integration",
   },
   whatsapp: {
-    label: "WhatsApp", icon: Brain, colorClass: "text-[#25D366]", accentColor: "37,211,102",
+    label: "WhatsApp", icon: Brain, colorClass: "text-white", accentColor: "37,211,102",
     logoUrl: imgWhatsApp, ConfigPanel: WhatsAppNode, category: "integration",
   },
   slack: {
-    label: "Slack", icon: Brain, colorClass: "text-[#E01E5A]", accentColor: "224,30,90",
+    label: "Slack", icon: Brain, colorClass: "text-white", accentColor: "224,30,90",
     logoUrl: imgSlack, ConfigPanel: SlackNode, category: "integration",
   },
   discord: {
-    label: "Discord", icon: Brain, colorClass: "text-[#5865F2]", accentColor: "88,101,242",
+    label: "Discord", icon: Brain, colorClass: "text-white", accentColor: "88,101,242",
     logoUrl: imgDiscord, ConfigPanel: DiscordNode, category: "integration",
   },
   gmail: {
-    label: "Gmail", icon: Brain, colorClass: "text-[#EA4335]", accentColor: "234,67,53",
+    label: "Gmail", icon: Brain, colorClass: "text-white", accentColor: "234,67,53",
     logoUrl: imgGmail, ConfigPanel: GmailNode, category: "integration",
   },
   twilio: {
-    label: "Twilio", icon: Brain, colorClass: "text-[#F22F46]", accentColor: "242,47,70",
+    label: "Twilio", icon: Brain, colorClass: "text-white", accentColor: "242,47,70",
     logoUrl: imgTwilio, ConfigPanel: TwilioNode, category: "integration",
   },
   sendgrid: {
-    label: "SendGrid", icon: Brain, colorClass: "text-[#1A82E2]", accentColor: "26,130,226",
+    label: "SendGrid", icon: Brain, colorClass: "text-white", accentColor: "26,130,226",
     logoUrl: imgSendGrid, ConfigPanel: SendGridNode, category: "integration",
   },
   airtable: {
-    label: "Airtable", icon: Brain, colorClass: "text-[#F65858]", accentColor: "246,88,88",
+    label: "Airtable", icon: Brain, colorClass: "text-white", accentColor: "246,88,88",
     logoUrl: imgAirtable, ConfigPanel: AirtableNode, category: "integration",
   },
   google_sheets: {
-    label: "Google Sheets", icon: Brain, colorClass: "text-[#0F9D58]", accentColor: "15,157,88",
-    ConfigPanel: GoogleSheetsNode, category: "integration",
+    label: "Google Sheets", icon: Brain, colorClass: "text-white", accentColor: "15,157,88",
+    logoUrl: imgGoogleSheets, ConfigPanel: GoogleSheetsNode, category: "integration",
   },
   notion: {
     label: "Notion", icon: Brain, colorClass: "text-white", accentColor: "255,255,255",
@@ -493,47 +493,47 @@ export const NodeRegistry = {
 
   // Google Workspace
   google_calendar: {
-    label: "Google Calendar", icon: Calendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
-    ConfigPanel: GoogleCalendarNode, category: "integration",
+    label: "Google Calendar", icon: Calendar, colorClass: "text-white", accentColor: "66,133,244",
+    logoUrl: imgGoogleCalendar, ConfigPanel: GoogleCalendarNode, category: "integration",
   },
   google_drive: {
-    label: "Google Drive", icon: Database, colorClass: "text-[#FBBC04]", accentColor: "251,188,4",
-    ConfigPanel: GoogleDriveNode, category: "integration",
+    label: "Google Drive", icon: Database, colorClass: "text-white", accentColor: "251,188,4",
+    logoUrl: imgGoogleDrive, ConfigPanel: GoogleDriveNode, category: "integration",
   },
 
   // Developer Tools
   github: {
-    label: "GitHub", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
-    ConfigPanel: GithubNode, category: "devtools",
+    label: "GitHub", icon: Github, colorClass: "text-white", accentColor: "244,244,245",
+    logoUrl: imgGitHub, ConfigPanel: GithubNode, category: "devtools",
   },
   jira: {
-    label: "Jira", icon: Ticket, colorClass: "text-[#2684FF]", accentColor: "38,132,255",
-    ConfigPanel: JiraNode, category: "devtools",
+    label: "Jira", icon: Ticket, colorClass: "text-white", accentColor: "38,132,255",
+    logoUrl: imgJira, ConfigPanel: JiraNode, category: "devtools",
   },
   linear: {
-    label: "Linear", icon: Circle, colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",
-    ConfigPanel: LinearNode, category: "devtools",
+    label: "Linear", icon: Circle, colorClass: "text-white", accentColor: "94,106,210",
+    logoUrl: imgLinear, ConfigPanel: LinearNode, category: "devtools",
   },
 
   // Payments
   stripe: {
-    label: "Stripe", icon: CreditCard, colorClass: "text-[#635BFF]", accentColor: "99,91,255",
-    ConfigPanel: StripeNode, category: "payments",
+    label: "Stripe", icon: CreditCard, colorClass: "text-white", accentColor: "99,91,255",
+    logoUrl: imgStripe, ConfigPanel: StripeNode, category: "payments",
   },
 
   // CRM & E-commerce
   hubspot: {
-    label: "HubSpot", icon: Users, colorClass: "text-[#FF7A59]", accentColor: "255,122,89",
-    ConfigPanel: HubSpotNode, category: "crm",
+    label: "HubSpot", icon: Users, colorClass: "text-white", accentColor: "255,122,89",
+    logoUrl: imgHubSpot, ConfigPanel: HubSpotNode, category: "crm",
   },
   shopify: {
-    label: "Shopify", icon: ShoppingBag, colorClass: "text-[#95BF47]", accentColor: "149,191,71",
-    ConfigPanel: ShopifyNode, category: "crm",
+    label: "Shopify", icon: ShoppingBag, colorClass: "text-white", accentColor: "149,191,71",
+    logoUrl: imgShopify, ConfigPanel: ShopifyNode, category: "crm",
   },
 
   // Social Media
   twitter: {
-    label: "Twitter / X", icon: Twitter, colorClass: "text-[#1DA1F2]", accentColor: "29,161,242",
+    label: "Twitter / X", icon: Twitter, colorClass: "text-white", accentColor: "29,161,242",
     ConfigPanel: TwitterNode, category: "social",
   },
 
