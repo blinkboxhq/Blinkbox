@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
@@ -103,6 +103,8 @@ export default function Canvas() {
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
+  const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
+  const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const storeNodesLen = useWorkspaceStore((s) => s.nodes.length);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
@@ -377,6 +379,28 @@ export default function Canvas() {
             className="absolute bottom-6 right-20 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 bg-zinc-800 border border-zinc-700/60 text-zinc-400 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
           >
             <LayoutDashboard className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add trigger button ── */}
+      <AnimatePresence>
+        {storeNodesLen > 0 && (
+          <motion.button
+            key="add-trigger-btn"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setTriggerPickerOpen(!isTriggerPickerOpen)}
+            title="Add a trigger"
+            className={`absolute bottom-6 right-[104px] z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200
+              ${isTriggerPickerOpen
+                ? "bg-zinc-100 text-zinc-900 shadow-zinc-900/50"
+                : "bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
+              }`}
+          >
+            <Zap className="w-4 h-4" strokeWidth={2} />
           </motion.button>
         )}
       </AnimatePresence>

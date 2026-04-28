@@ -215,6 +215,7 @@ export default function TriggerPicker() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState("home"); // "home" | category.id
   const addNode = useWorkspaceStore((s) => s.addNode);
+  const nodes = useWorkspaceStore((s) => s.nodes);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
 
@@ -235,10 +236,14 @@ export default function TriggerPicker() {
 
   const handleSelect = (trigger) => {
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
+    const existingTriggers = nodes.filter((n) => n.data?.type === "trigger");
+    const position = existingTriggers.length > 0
+      ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
+      : { x: 400, y: 300 };
     addNode({
       id: newId,
       type: "custom",
-      position: { x: 400, y: 300 },
+      position,
       data: {
         backendType: trigger.backendType,
         label: trigger.label,
