@@ -1,1 +1,4 @@
-<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#E2E8F0"><title>Vercel</title><path d="m12 1.608 12 20.784H0Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <rect width="24" height="24" rx="4" fill="#000000"/>
+  <path d="M12 5L22 19H2z" fill="white"/>
+</svg>

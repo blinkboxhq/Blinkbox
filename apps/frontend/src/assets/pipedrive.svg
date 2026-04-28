@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F55137"><title>Pipedrive</title><path d="M11.5 2C7.358 2 4 5.358 4 9.5c0 3.686 2.624 6.76 6.12 7.395V22h2.76v-5.105C16.376 16.26 19 13.186 19 9.5 19 5.358 15.642 2 11.5 2zm0 12.5c-2.761 0-5-2.239-5-5s2.239-5 5-5 5 2.239 5 5-2.239 5-5 5z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <rect width="24" height="24" rx="5" fill="#F55137"/>
+  <circle cx="12" cy="10" r="4.5" fill="none" stroke="white" stroke-width="2"/>
+  <line x1="12" y1="14.5" x2="12" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
