@@ -107,8 +107,8 @@ export default function AddNodeSidebar() {
         onClick={() => setPage(cat.id)}
         className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
       >
-        <div className="w-9 h-9 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center shrink-0 group-hover:bg-zinc-700/80 transition-colors">
-          <CatIcon className="w-4.5 h-4.5 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.6} />
+        <div className="w-9 h-9 flex items-center justify-center shrink-0">
+          <CatIcon className="w-5 h-5 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.6} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{cat.label}</div>
