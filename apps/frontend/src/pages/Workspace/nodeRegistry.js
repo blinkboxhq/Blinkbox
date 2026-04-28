@@ -213,19 +213,19 @@ const XAINode = makeOpenAICompatNode({
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [
-  { id: "trigger",     label: "Triggers",      icon: Zap },
-  { id: "ai",          label: "AI Models",     icon: Bot },
-  { id: "ai_tools",    label: "AI Tools",      icon: Wand2 },
-  { id: "data",        label: "Data & APIs",   icon: Globe },
-  { id: "transform",   label: "Transform",     icon: Filter },
-  { id: "research",    label: "Research",      icon: Search },
-  { id: "flow",        label: "Logic & Flow",  icon: GitBranch },
-  { id: "code",        label: "Code",          icon: Code2 },
-  { id: "integration", label: "Integrations",  icon: Database },
-  { id: "devtools",    label: "Dev Tools",     icon: Github },
-  { id: "payments",    label: "Payments",      icon: CreditCard },
-  { id: "crm",         label: "CRM & Commerce",icon: Users },
-  { id: "social",      label: "Social Media",  icon: Twitter },
+  { id: "trigger",     label: "Triggers",        icon: Zap },
+  { id: "ai",          label: "AI",              icon: Sparkles },
+  { id: "ai_tools",    label: "AI Utilities",    icon: Brain },
+  { id: "data",        label: "Data & APIs",     icon: Database },
+  { id: "transform",   label: "Data Processing", icon: Layers },
+  { id: "research",    label: "Research",        icon: Search },
+  { id: "flow",        label: "Flow Control",    icon: GitFork },
+  { id: "code",        label: "Code",            icon: Code2 },
+  { id: "integration", label: "Integrations",    icon: Package },
+  { id: "devtools",    label: "Developer Tools", icon: Server },
+  { id: "payments",    label: "Payments",        icon: CreditCard },
+  { id: "crm",         label: "CRM & Commerce",  icon: Users },
+  { id: "social",      label: "Social Media",    icon: TrendingUp },
 ];
 
 export const NodeRegistry = {
