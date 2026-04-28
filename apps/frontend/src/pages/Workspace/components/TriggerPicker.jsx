@@ -28,7 +28,7 @@ import imgStripe         from "../../../assets/stripe.svg";
 import imgGitHub         from "../../../assets/github.svg";
 import imgLinear         from "../../../assets/linear.svg";
 import imgTypeform       from "../../../assets/typeform.svg";
-import imgYouTube        from "../../../assets/youtube.svg";
+import imgYouTube        from "../../../assets/youtube.png";
 import imgReddit         from "../../../assets/reddit.svg";
 import imgRss            from "../../../assets/rss.svg";
 import imgPostgres       from "../../../assets/postgresql.svg";

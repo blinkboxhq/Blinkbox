@@ -33,7 +33,7 @@ import imgHubSpot        from "../../assets/hubspot.svg";
 import imgShopify        from "../../assets/shopify.svg";
 import imgLinear         from "../../assets/linear.svg";
 import imgTypeform       from "../../assets/typeform.svg";
-import imgYouTube        from "../../assets/youtube.svg";
+import imgYouTube        from "../../assets/youtube.png";
 import imgReddit         from "../../assets/reddit.svg";
 import imgGoogleCalendar from "../../assets/google-calendar.svg";
 import imgRss            from "../../assets/rss.svg";
