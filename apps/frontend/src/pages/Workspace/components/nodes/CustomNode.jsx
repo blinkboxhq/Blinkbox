@@ -572,153 +572,113 @@ export default function CustomNode({ id, data, selected }) {
     );
   }
 
-  // ── ACTION NODE ───────────────────────────────────────────────────────────
-  const isGlassmorphic = isAI || isMemory;
+  // ── ACTION NODE ── same square card as trigger ────────────────────────────
+  const cardW = 120;
+  const cardH = 120;
+
+  const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
+    : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
+    : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
+    : selected ? `1.5px solid rgba(${accent},0.5)`
+    : `1px solid rgba(${accent},0.2)`;
+
+  const cardShadow = status === "running" ? "0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)"
+    : status === "completed" ? "0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)"
+    : status === "failed" ? "0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)"
+    : selected ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
+    : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   return (
     <div
       className="relative group"
+      style={{ width: cardW, height: cardH + 48 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {toolbar}
 
+      {/* Input handle */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="input"
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none"
+        style={{ top: cardH / 2 }}
+      />
+
+      {isAgent && AI_AGENT_LEFT_HANDLES.map((h) => (
+        <AgentLeftHandle key={h.id} handle={h} parentNodeId={id} hasConnection={getHandleConnected(h.id)} />
+      ))}
+
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
+        initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className={`relative border min-w-[240px] max-w-[280px] transition-all duration-300 overflow-visible
-          ${isGlassmorphic
-            ? `${shapeClass} bg-zinc-900/70 backdrop-blur-xl border-zinc-700/20`
-            : `${shapeClass} bg-zinc-900/95 border-zinc-800/40`
-          }
-          ${glowClass}
-        `}
+        onClick={handleOpenConfig}
+        className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
         style={{
-          ...borderStyle,
-          ...(isGlassmorphic ? {
-            boxShadow: `${glowClass ? "" : `0 0 24px rgba(${accent},0.08), 0 0 8px rgba(${accent},0.04), `}inset 0 1px 0 rgba(255,255,255,0.04)`,
-          } : {
-            boxShadow: glowClass ? undefined : "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
-          }),
+          width: cardW,
+          height: cardH,
+          borderRadius: shapeClass === "rounded-sm" ? 4 : shapeClass === "rounded-3xl" ? 32 : shapeClass === "rounded-xl" ? 12 : 20,
+          background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
+          border: cardBorder,
+          boxShadow: cardShadow,
         }}
       >
+        <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: "inherit", background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: "inherit", background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
+
         {badge}
 
-        {isGlassmorphic && (
-          <div className={`absolute inset-0 pointer-events-none ${shapeClass}`} style={{ background: `radial-gradient(ellipse at 30% -20%, rgba(${accent},0.08) 0%, transparent 60%)` }} />
+        {status === "running" && (
+          <div className="absolute top-2 right-2">
+            <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+          </div>
         )}
 
-        {isGlassmorphic && (
-          <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full" style={{ backgroundColor: `rgba(${accent},0.4)`, boxShadow: `0 0 8px rgba(${accent},0.3)` }} />
+        {hasMappingWarning && (
+          <div className="absolute top-2 left-2 group/warn">
+            <AlertTriangle className="w-3 h-3 text-amber-500/70 cursor-help" />
+            <div className="absolute bottom-full left-0 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover/warn:opacity-100 transition-opacity pointer-events-none z-50 w-52">
+              {warnings.map((w, i) => (
+                <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
+              ))}
+            </div>
+          </div>
         )}
 
-        {!isGlassmorphic && (
-          <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full" style={{ backgroundColor: `rgba(${accent},0.35)` }} />
-        )}
-
-        {/* Input handle — large dot, bold */}
-        {!isTrigger && (
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input"
-            className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none"
-            style={isAgent ? { top: "12%" } : {}}
+        {nodeDef.logoUrl ? (
+          <img
+            src={nodeDef.logoUrl}
+            alt={data.label}
+            className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+            style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
+          />
+        ) : (
+          <Icon
+            className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
+            strokeWidth={1}
           />
         )}
-
-        {isAgent && AI_AGENT_LEFT_HANDLES.map((h) => (
-          <AgentLeftHandle key={h.id} handle={h} parentNodeId={id} hasConnection={getHandleConnected(h.id)} />
-        ))}
-
-        {/* Header */}
-        <div className="relative flex items-center gap-3 px-4 py-3.5">
-          <NodeIcon nodeDef={nodeDef} size="md" />
-
-          <div className="flex flex-col overflow-hidden flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[12px] font-bold text-zinc-100 tracking-tight truncate">
-                {data.label}
-              </span>
-              {isMemory && (
-                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">
-                  <Database className="w-2.5 h-2.5 text-purple-400" />
-                  <span className="text-[7px] font-bold text-purple-400 uppercase tracking-wider">Mem</span>
-                </div>
-              )}
-              {hasMappingWarning && (
-                <div className="relative group/warn">
-                  <AlertTriangle className="w-3 h-3 text-amber-500/70 shrink-0 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover/warn:opacity-100 transition-opacity pointer-events-none z-50 w-52">
-                    {warnings.map((w, i) => (
-                      <p key={i} className="text-[10px] text-amber-400/80 leading-relaxed">{w}</p>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            {configHint && (
-              <span className="text-[10px] font-medium text-zinc-500 truncate font-mono mt-0.5">{configHint}</span>
-            )}
-          </div>
-
-          <div className="shrink-0">
-            {status === "running" && (
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
-              </span>
-            )}
-            {status === "completed" && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />}
-            {status === "failed" && <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]" />}
-          </div>
-        </div>
-
-        {/* Agent footer */}
-        {isAgent && (
-          <div className="flex items-center gap-3 px-4 py-2 border-t border-zinc-800/30 bg-zinc-950/30">
-            {agentHandleStatus.map((h) => (
-              <div key={h.id} className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full transition-colors" style={{ backgroundColor: h.connected ? "#10b981" : "#3f3f46" }} />
-                <span className={`text-[8px] font-bold uppercase tracking-wider ${h.connected ? "text-zinc-500" : "text-zinc-700"}`}>{h.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Standard footer */}
-        {!isAgent && (
-          <div className={`flex items-center justify-between px-4 py-2 border-t bg-zinc-950/30 ${isGlassmorphic ? "border-zinc-700/15" : "border-zinc-800/30"}`}>
-            <span className="text-[9px] font-bold text-zinc-600 font-mono truncate max-w-[120px]">
-              {data.backendType}
-            </span>
-            <div className="flex items-center gap-1.5">
-              {isConfigured ? (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[8px] font-bold text-emerald-400/80 uppercase tracking-wider">Ready</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-800/50">
-                  <Settings2 className="w-2.5 h-2.5 text-zinc-600" />
-                  <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-wider">Setup</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
       </motion.div>
 
-      {/* Output handle + plus button — outside the card */}
       <OutputHandle
         nodeId={id}
         hasConnection={hasOutputConnection}
         onAdd={handleAddNext}
         dotColor={dotColor}
         statusGlow={statusGlow}
+        cardHeight={cardH}
       />
+
+      <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
+        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
+          {data.label}
+        </span>
+        {configHint && (
+          <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>
+        )}
+      </div>
     </div>
   );
 }
