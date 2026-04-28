@@ -213,19 +213,19 @@ const XAINode = makeOpenAICompatNode({
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [
-  { id: "trigger",     label: "Triggers",        icon: Zap },
-  { id: "ai",          label: "AI",              icon: Sparkles },
-  { id: "ai_tools",    label: "AI Utilities",    icon: Brain },
-  { id: "data",        label: "Data & APIs",     icon: Database },
-  { id: "transform",   label: "Data Processing", icon: Layers },
-  { id: "research",    label: "Research",        icon: Search },
-  { id: "flow",        label: "Flow Control",    icon: GitFork },
-  { id: "code",        label: "Code",            icon: Code2 },
-  { id: "integration", label: "Integrations",    icon: Package },
-  { id: "devtools",    label: "Developer Tools", icon: Server },
-  { id: "payments",    label: "Payments",        icon: CreditCard },
-  { id: "crm",         label: "CRM & Commerce",  icon: Users },
-  { id: "social",      label: "Social Media",    icon: TrendingUp },
+  { id: "trigger",     label: "Triggers",        icon: Zap,         shape: "square" },
+  { id: "ai",          label: "AI",              icon: Sparkles,    shape: "glass" },
+  { id: "ai_tools",    label: "AI Utilities",    icon: Brain,       shape: "glass" },
+  { id: "data",        label: "Data & APIs",     icon: Database,    shape: "sharp" },
+  { id: "transform",   label: "Data Processing", icon: Layers,      shape: "sharp" },
+  { id: "research",    label: "Research",        icon: Search,      shape: "sharp" },
+  { id: "flow",        label: "Flow Control",    icon: GitFork,     shape: "sharp" },
+  { id: "code",        label: "Code",            icon: Code2,       shape: "sharp" },
+  { id: "integration", label: "Integrations",    icon: Package,     shape: "pill" },
+  { id: "devtools",    label: "Developer Tools", icon: Server,      shape: "rounded" },
+  { id: "payments",    label: "Payments",        icon: CreditCard,  shape: "rounded" },
+  { id: "crm",         label: "CRM & Commerce",  icon: ShoppingBag, shape: "rounded" },
+  { id: "social",      label: "Social Media",    icon: Users,       shape: "rounded" },
 ];
 
 export const NodeRegistry = {

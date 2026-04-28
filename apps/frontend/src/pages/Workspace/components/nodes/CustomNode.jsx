@@ -3,7 +3,7 @@ import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
 import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
-import { NodeRegistry } from "../../nodeRegistry";
+import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
@@ -398,6 +398,13 @@ export default function CustomNode({ id, data, selected }) {
   const isAgent = data.backendType === "ai_agent";
   const isMemory = isMemoryNode(data.backendType);
   const isAI = isAINode(data.backendType);
+
+  // Shape per category
+  const catShape = CATEGORIES.find((c) => c.id === nodeDef.category)?.shape ?? "rounded";
+  const shapeClass = catShape === "sharp" ? "rounded-sm"
+    : catShape === "pill" ? "rounded-3xl"
+    : catShape === "rounded" ? "rounded-xl"
+    : "rounded-2xl"; // glass / default
   const configHint = getConfigHint(data, edges, id);
   const isConfigured = !!(data.config && Object.keys(data.config).length > 0);
 
@@ -582,8 +589,8 @@ export default function CustomNode({ id, data, selected }) {
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         className={`relative border min-w-[240px] max-w-[280px] transition-all duration-300 overflow-visible
           ${isGlassmorphic
-            ? "rounded-2xl bg-zinc-900/70 backdrop-blur-xl border-zinc-700/20"
-            : "rounded-2xl bg-zinc-900/95 border-zinc-800/40"
+            ? `${shapeClass} bg-zinc-900/70 backdrop-blur-xl border-zinc-700/20`
+            : `${shapeClass} bg-zinc-900/95 border-zinc-800/40`
           }
           ${glowClass}
         `}
@@ -599,7 +606,7 @@ export default function CustomNode({ id, data, selected }) {
         {badge}
 
         {isGlassmorphic && (
-          <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ background: `radial-gradient(ellipse at 30% -20%, rgba(${accent},0.08) 0%, transparent 60%)` }} />
+          <div className={`absolute inset-0 pointer-events-none ${shapeClass}`} style={{ background: `radial-gradient(ellipse at 30% -20%, rgba(${accent},0.08) 0%, transparent 60%)` }} />
         )}
 
         {isGlassmorphic && (
