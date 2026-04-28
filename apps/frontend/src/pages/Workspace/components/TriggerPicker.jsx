@@ -262,10 +262,22 @@ export default function TriggerPicker() {
 
   // ── Row renderers ────────────────────────────────────────────────────────────
 
+  const dragStart = (e, trigger) => {
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: trigger.backendType,
+      label: trigger.label,
+      type: "trigger",
+      config: { triggerVariant: trigger.id },
+    }));
+  };
+
   const CoreRow = ({ trigger, icon: Icon }) => (
     <button
+      draggable
+      onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <Icon className="w-5 h-5 text-zinc-400 shrink-0" strokeWidth={1.6} />
       <div className="flex-1 min-w-0">
@@ -279,8 +291,10 @@ export default function TriggerPicker() {
 
   const AppRow = ({ trigger }) => (
     <button
+      draggable
+      onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <img
         src={trigger.logoUrl}

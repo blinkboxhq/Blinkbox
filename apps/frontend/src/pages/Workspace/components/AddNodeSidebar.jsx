@@ -71,10 +71,20 @@ export default function AddNodeSidebar() {
 
   const NodeRow = ({ nodeDef }) => {
     const Icon = nodeDef.icon;
+    const onDragStart = (e) => {
+      e.dataTransfer.effectAllowed = "copy";
+      e.dataTransfer.setData("application/json", JSON.stringify({
+        backendType: nodeDef.key,
+        label: nodeDef.label,
+        type: "action",
+      }));
+    };
     return (
       <button
+        draggable
+        onDragStart={onDragStart}
         onClick={() => handleAdd(nodeDef)}
-        className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
+        className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
       >
         <div className="w-8 h-8 shrink-0 flex items-center justify-center" style={{ minWidth: 32 }}>
           {nodeDef.logoUrl ? (

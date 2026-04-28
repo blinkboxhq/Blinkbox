@@ -275,7 +275,7 @@ export default function Canvas() {
         id: `${nodeData.backendType}-${crypto.randomUUID()}`,
         type: "custom",
         position,
-        data: { ...nodeData, config: {} },
+        data: { ...nodeData, config: nodeData.config || {} },
       });
     },
     [screenToFlowPosition, addNode],
