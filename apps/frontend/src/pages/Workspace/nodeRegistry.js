@@ -190,6 +190,16 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Education / Student nodes
+import FlashcardGeneratorNode from "./components/nodes/FlashcardGeneratorNode";
+import QuizGeneratorNode      from "./components/nodes/QuizGeneratorNode";
+import CitationFormatterNode  from "./components/nodes/CitationFormatterNode";
+import GrammarCheckNode       from "./components/nodes/GrammarCheckNode";
+import SummarizeNode          from "./components/nodes/SummarizeNode";
+import TranslationNode        from "./components/nodes/TranslationNode";
+import TextToSpeechNode       from "./components/nodes/TextToSpeechNode";
+import SpeechToTextNode       from "./components/nodes/SpeechToTextNode";
+import OcrNode                from "./components/nodes/OcrNode";
 // Research nodes
 import PubMedSearchNode     from "./components/nodes/PubMedSearchNode";
 import ArxivSearchNode      from "./components/nodes/ArxivSearchNode";
@@ -272,6 +282,7 @@ export const CATEGORIES = [
   { id: "payments",    label: "Payments",        icon: CreditCard,  shape: "rounded" },
   { id: "crm",         label: "CRM & Commerce",  icon: ShoppingBag, shape: "rounded" },
   { id: "social",      label: "Social Media",    icon: Users,       shape: "rounded" },
+  { id: "education",   label: "Education & AI",  icon: GraduationCap, shape: "rounded" },
 ];
 
 export const NodeRegistry = {
@@ -839,6 +850,53 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Education & AI Nodes ─────────────────────────────────────────────────
+  flashcard_generator: {
+    label: "Flashcard Generator", icon: BookMarked, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: FlashcardGeneratorNode, category: "education",
+    description: "AI-powered study cards from any text",
+  },
+  quiz_generator: {
+    label: "Quiz Generator", icon: ListChecks, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: QuizGeneratorNode, category: "education",
+    description: "Generate MCQs, true/false and short answer questions",
+  },
+  citation_formatter: {
+    label: "Citation Formatter", icon: GraduationCap, colorClass: "text-indigo-400", accentColor: "129,140,248",
+    ConfigPanel: CitationFormatterNode, category: "education",
+    description: "Format references in APA, MLA, Chicago, IEEE and more",
+  },
+  grammar_check: {
+    label: "Grammar Check", icon: CheckSquare, colorClass: "text-green-400", accentColor: "74,222,128",
+    ConfigPanel: GrammarCheckNode, category: "education",
+    description: "Correct grammar, spelling and writing style with AI",
+  },
+  summarize: {
+    label: "Summarize", icon: AlignLeft, colorClass: "text-cyan-400", accentColor: "34,211,238",
+    ConfigPanel: SummarizeNode, category: "education",
+    description: "AI summarization in paragraph, bullets or TL;DR format",
+  },
+  translation: {
+    label: "Translation", icon: Languages, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: TranslationNode, category: "education",
+    description: "Translate text between 25+ languages via OpenAI, Google or DeepL",
+  },
+  text_to_speech: {
+    label: "Text to Speech", icon: Headphones, colorClass: "text-purple-400", accentColor: "167,139,250",
+    ConfigPanel: TextToSpeechNode, category: "education",
+    description: "Convert text to natural-sounding audio via Whisper, ElevenLabs or Google",
+  },
+  speech_to_text: {
+    label: "Speech to Text", icon: Mic2, colorClass: "text-rose-400", accentColor: "251,113,133",
+    ConfigPanel: SpeechToTextNode, category: "education",
+    description: "Transcribe audio to text via Whisper, Google or AssemblyAI",
+  },
+  ocr: {
+    label: "OCR", icon: ScanLine, colorClass: "text-teal-400", accentColor: "45,212,191",
+    ConfigPanel: OcrNode, category: "education",
+    description: "Extract text from images and scanned documents",
   },
 
   // ── Data Processing Nodes ────────────────────────────────────────────────
