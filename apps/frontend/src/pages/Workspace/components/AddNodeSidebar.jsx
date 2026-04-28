@@ -81,11 +81,11 @@ export default function AddNodeSidebar() {
             <img
               src={nodeDef.logoUrl}
               alt={nodeDef.label}
-              className="w-6 h-6 object-contain"
+              className="w-7 h-7 object-contain"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
             />
           ) : (
-            <Icon className={`w-6 h-6 ${nodeDef.colorClass}`} strokeWidth={1.6} />
+            <Icon className={`w-7 h-7 ${nodeDef.colorClass}`} strokeWidth={1.6} />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -108,7 +108,7 @@ export default function AddNodeSidebar() {
         className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
       >
         <div className="w-9 h-9 flex items-center justify-center shrink-0">
-          <CatIcon className="w-5 h-5 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.6} />
+          <CatIcon className="w-7 h-7 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.6} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{cat.label}</div>
