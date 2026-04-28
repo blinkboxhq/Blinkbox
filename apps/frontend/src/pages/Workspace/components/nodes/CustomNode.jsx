@@ -408,7 +408,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── Toolbar handlers ──────────────────────────────────────────────────────
   const handlePlay = (e) => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
-  const handleAddNext = (e) => { e.stopPropagation(); if (setAddNodeSource) setAddNodeSource(id); };
+  const handleAddNext = (e) => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
   const handleOpenConfig = (e) => { e.stopPropagation(); setSelectedNodeId(id); };
   const handleDuplicate = (e) => { e.stopPropagation(); if (duplicateNode) duplicateNode(id); };
   const handleDelete = (e) => { e.stopPropagation(); deleteElements({ nodes: [{ id }] }); };
