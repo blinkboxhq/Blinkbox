@@ -42,7 +42,7 @@ export const createUISlice = (set, get) => ({
   togglePanel: (key) => set(s => ({ panels: { ...s.panels, [key]: !s.panels[key] } })),
   setWorkflowName: (name) => set({ workflowName: name }),
   setAddNodeSource: (nodeId) =>
-    set({ addNodeSource: nodeId, insertEdgeId: null }),
+    set({ addNodeSource: nodeId, insertEdgeId: null, isAddNodeOpen: true, isTriggerPickerOpen: false }),
   setInsertOnEdge: (edgeId) =>
     set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
   clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null }),
