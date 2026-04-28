@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <rect width="24" height="24" rx="5" fill="#7F54B3"/>
-  <rect x="3" y="6" width="18" height="12" rx="3" fill="white" opacity="0.15"/>
-  <path d="M4 8.5C4 7.4 4.9 6.5 6 6.5h12c1.1 0 2 .9 2 2v7c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-7z" fill="white" opacity="0.95"/>
-  <text x="12" y="14" text-anchor="middle" fill="#7F54B3" font-size="5" font-family="Arial" font-weight="bold">Woo</text>
-</svg>
+<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#96588A"><title>WooCommerce</title><path d="M2.047 0C.918 0 0 .918 0 2.047v15.01c0 1.13.918 2.047 2.047 2.047h8.863l3.613 4.896V19.104h7.43C23.082 19.104 24 18.187 24 17.057V2.047C24 .918 23.082 0 21.953 0zm1.562 4.313h16.782c.395 0 .704.316.704.705a.7.7 0 0 1-.704.704H3.609a.7.7 0 0 1-.703-.704c0-.39.315-.705.703-.705zm0 3.516h16.782c.395 0 .704.315.704.704a.7.7 0 0 1-.704.703H3.609A.7.7 0 0 1 2.906 8.533c0-.39.315-.704.703-.704zm0 3.516h9.375c.39 0 .703.315.703.703a.7.7 0 0 1-.703.704H3.609a.7.7 0 0 1-.703-.704c0-.388.315-.703.703-.703z"/></svg>

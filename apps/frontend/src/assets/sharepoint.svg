@@ -1,7 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <circle cx="9.5" cy="9.5" r="7.5" fill="#038387"/>
-  <circle cx="16" cy="14.5" r="6" fill="#1B6CCC"/>
-  <circle cx="9.5" cy="17" r="5" fill="#037C7C"/>
-  <circle cx="9.5" cy="17" r="3.5" fill="white" opacity="0.15"/>
-  <text x="9.5" y="17.5" text-anchor="middle" fill="white" font-size="5" font-family="Arial" font-weight="bold">S</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0078D4">
+  <path d="M12 2a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6zm0 2a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4zM4 14a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4zm10.5 1H22v6h-7.5v-6zm-9.5 1a2 2 0 0 0-2 2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0-2-2zm10.5 1V19H20v-2h-4.5z"/>
 </svg>
