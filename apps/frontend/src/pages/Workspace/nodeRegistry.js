@@ -6,6 +6,21 @@ import {
   CheckSquare, Server, QrCode, SplitSquareHorizontal, AlignLeft, CheckCircle2,
   GitFork, Image, Package, FileOutput, Mic2, Box, Video, MessageSquarePlus,
   TrendingUp, Youtube, Mail, Edit2,
+  // Flow control
+  CheckCheck, XCircle, RotateCcw, Timer,
+  // New icons
+  ToggleLeft, Hash, Sigma, Table2, BookOpen, HeartPulse,
+  FlaskConical, GraduationCap, Briefcase, Gamepad2, Camera, Music, DollarSign,
+  BarChart2, PieChart, LineChart, MapPin, Languages, Rss, Bell, BellOff,
+  CloudUpload, CloudDownload, FolderOpen, Archive, Trash2, RefreshCw,
+  AlarmClock, StickyNote, ListChecks, Clipboard, Send, PhoneCall,
+  MessageCircle, UserPlus, UserMinus, Key, Lock, Unlock, Eye, EyeOff,
+  Cpu, HardDrive, MemoryStick, Wifi, Activity, Thermometer, Pill,
+  Stethoscope, Microscope, Dna, Atom, Calculator, PenTool, Palette,
+  Film, Headphones, Radio, Podcast, BookMarked, Newspaper, Trophy,
+  Star, Heart, ThumbsUp, Share2, Link2, ExternalLink, Download, Upload,
+  Printer, ScanLine, Barcode, CaseSensitive, Replace, Regex,
+  Split, Combine, Shuffle, ArrowRightLeft,
 } from "lucide-react";
 
 // Local asset icons
@@ -174,6 +189,13 @@ import PipedriveTriggerNode        from "./components/nodes/PipedriveTriggerNode
 import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
+import GenericActionNode         from "./components/nodes/GenericActionNode";
+import ConditionNode            from "./components/nodes/ConditionNode";
+import RetryNode                from "./components/nodes/RetryNode";
+import StopErrorNode            from "./components/nodes/StopErrorNode";
+import RateLimiterNode          from "./components/nodes/RateLimiterNode";
+import WaitForEventNode         from "./components/nodes/WaitForEventNode";
+import SuccessFailedNode        from "./components/nodes/SuccessFailedNode";
 
 // Config Panels — Database nodes
 import SupabaseNode        from "./components/nodes/SupabaseNode";
@@ -743,5 +765,37 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Flow Control Nodes ────────────────────────────────────────────────────
+  condition: {
+    label: "Condition", icon: CheckCheck, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: ConditionNode, category: "flow",
+    description: "Branch into True or False path based on a condition",
+  },
+  success_failed: {
+    label: "Success / Failed", icon: CheckCircle2, colorClass: "text-white", accentColor: "161,161,170",
+    ConfigPanel: SuccessFailedNode, category: "flow",
+    description: "Explicitly mark this branch as succeeded or failed",
+  },
+  wait_for_event: {
+    label: "Wait for Event", icon: Clock, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: WaitForEventNode, category: "flow",
+    description: "Pause workflow until a webhook or condition is met",
+  },
+  retry: {
+    label: "Retry", icon: RotateCcw, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: RetryNode, category: "flow",
+    description: "Retry the previous node N times on failure",
+  },
+  stop_error: {
+    label: "Stop & Error", icon: XCircle, colorClass: "text-red-400", accentColor: "239,68,68",
+    ConfigPanel: StopErrorNode, category: "flow",
+    description: "Halt the workflow and throw a custom error",
+  },
+  rate_limiter: {
+    label: "Rate Limiter", icon: Timer, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: RateLimiterNode, category: "flow",
+    description: "Throttle workflow to N executions per time window",
   },
 };

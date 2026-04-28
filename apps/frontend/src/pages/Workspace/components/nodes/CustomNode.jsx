@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2 } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
@@ -367,6 +367,41 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
   );
 }
 
+// ── True / False dual output handles (for Condition node) ────────────────────
+function ConditionOutputHandles({ cardHeight, onAdd }) {
+  const topY = cardHeight * 0.33;
+  const botY = cardHeight * 0.67;
+  return (
+    <>
+      {/* TRUE handle */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="true"
+        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-emerald-500 touch-none"
+        style={{ top: topY, right: -8 }}
+      />
+      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -56, top: topY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">True</span>
+        <CheckCheck className="w-3 h-3 text-emerald-400" />
+      </div>
+
+      {/* FALSE handle */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="false"
+        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-red-500 touch-none"
+        style={{ top: botY, right: -8 }}
+      />
+      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -60, top: botY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider">False</span>
+        <XCircle className="w-3 h-3 text-red-400" />
+      </div>
+    </>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
@@ -662,14 +697,18 @@ export default function CustomNode({ id, data, selected }) {
         )}
       </motion.div>
 
-      <OutputHandle
-        nodeId={id}
-        hasConnection={hasOutputConnection}
-        onAdd={handleAddNext}
-        dotColor={dotColor}
-        statusGlow={statusGlow}
-        cardHeight={cardH}
-      />
+      {data.backendType === 'condition' ? (
+        <ConditionOutputHandles cardHeight={cardH} onAdd={handleAddNext} />
+      ) : (
+        <OutputHandle
+          nodeId={id}
+          hasConnection={hasOutputConnection}
+          onAdd={handleAddNext}
+          dotColor={dotColor}
+          statusGlow={statusGlow}
+          cardHeight={cardH}
+        />
+      )}
 
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
         <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
