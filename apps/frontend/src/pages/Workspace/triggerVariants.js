@@ -99,6 +99,29 @@ import imgPipedrive      from "../../assets/pipedrive.svg";
 import imgAsana          from "../../assets/asana.svg";
 import imgDns            from "../../assets/dns.svg";
 import imgPortMonitor    from "../../assets/port-monitor.svg";
+import imgGoogleDrive    from "../../assets/google-drive.svg";
+import imgGoogleDocs     from "../../assets/google-docs.svg";
+import imgGoogleForms    from "../../assets/google-forms.svg";
+import imgOneDrive       from "../../assets/onedrive.svg";
+import imgSharePoint     from "../../assets/sharepoint.svg";
+import imgAzureDevOps    from "../../assets/azure-devops.svg";
+import imgSentry         from "../../assets/sentry.svg";
+import imgNetlify        from "../../assets/netlify.svg";
+import imgPagerDuty      from "../../assets/pagerduty.svg";
+import imgDatadog        from "../../assets/datadog.svg";
+import imgZendesk        from "../../assets/zendesk.svg";
+import imgCalendly       from "../../assets/calendly.svg";
+import imgMailchimp      from "../../assets/mailchimp.svg";
+import imgClickUp        from "../../assets/clickup.svg";
+import imgMonday         from "../../assets/monday.svg";
+import imgFigma          from "../../assets/figma.svg";
+import imgInstagram      from "../../assets/instagram.svg";
+import imgTikTok         from "../../assets/tiktok.svg";
+import imgMastodon       from "../../assets/mastodon.svg";
+import imgProductHunt    from "../../assets/producthunt.svg";
+import imgIntercom       from "../../assets/intercom.svg";
+import imgWooCommerce    from "../../assets/woocommerce.svg";
+import imgVirusTotal     from "../../assets/virustotal.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -475,5 +498,237 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-[#F06A6A]",
     accentColor: "240,106,106",
     ConfigPanel: AsanaTriggerNode,
+  },
+
+  // Google
+  google_drive: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgGoogleDrive,
+    label: "On Google Drive Event",
+    colorClass: "text-[#4285F4]",
+    accentColor: "66,133,244",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  google_docs: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgGoogleDocs,
+    label: "On Google Docs Edit",
+    colorClass: "text-[#4285F4]",
+    accentColor: "66,133,244",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  google_forms: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgGoogleForms,
+    label: "On Google Forms Response",
+    colorClass: "text-[#673AB7]",
+    accentColor: "103,58,183",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // Microsoft
+  onedrive: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgOneDrive,
+    label: "On OneDrive Event",
+    colorClass: "text-[#0078D4]",
+    accentColor: "0,120,212",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  sharepoint: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgSharePoint,
+    label: "On SharePoint Event",
+    colorClass: "text-[#0078D4]",
+    accentColor: "0,120,212",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  azure_devops: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgAzureDevOps,
+    label: "On Azure DevOps Event",
+    colorClass: "text-[#0078D4]",
+    accentColor: "0,120,212",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // DevOps / Monitoring
+  sentry: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgSentry,
+    label: "On Sentry Alert",
+    colorClass: "text-[#362D59]",
+    accentColor: "84,70,138",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  vercel: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgVercel,
+    label: "On Vercel Deploy",
+    colorClass: "text-zinc-100",
+    accentColor: "228,228,231",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  netlify: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgNetlify,
+    label: "On Netlify Build",
+    colorClass: "text-[#00C7B7]",
+    accentColor: "0,199,183",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  pagerduty: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgPagerDuty,
+    label: "On PagerDuty Alert",
+    colorClass: "text-[#06AC38]",
+    accentColor: "6,172,56",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  datadog: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgDatadog,
+    label: "On Datadog Monitor Alert",
+    colorClass: "text-[#632CA6]",
+    accentColor: "99,44,166",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // Business / PM
+  zendesk: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgZendesk,
+    label: "On Zendesk Ticket",
+    colorClass: "text-[#03363D]",
+    accentColor: "3,54,61",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  calendly: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgCalendly,
+    label: "On Calendly Booking",
+    colorClass: "text-[#006BFF]",
+    accentColor: "0,107,255",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  mailchimp: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgMailchimp,
+    label: "On Mailchimp Event",
+    colorClass: "text-[#FFE01B]",
+    accentColor: "255,224,27",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  clickup: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgClickUp,
+    label: "On ClickUp Task Event",
+    colorClass: "text-[#7B68EE]",
+    accentColor: "123,104,238",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  monday: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgMonday,
+    label: "On Monday.com Item",
+    colorClass: "text-[#FF3D57]",
+    accentColor: "255,61,87",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // Design
+  figma: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgFigma,
+    label: "On Figma Event",
+    colorClass: "text-[#F24E1E]",
+    accentColor: "242,78,30",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // Social
+  instagram: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgInstagram,
+    label: "On Instagram Event",
+    colorClass: "text-[#E4405F]",
+    accentColor: "228,64,95",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  tiktok: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgTikTok,
+    label: "On TikTok Event",
+    colorClass: "text-[#FF0050]",
+    accentColor: "255,0,80",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  mastodon: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgMastodon,
+    label: "On Mastodon Event",
+    colorClass: "text-[#6364FF]",
+    accentColor: "99,100,255",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  producthunt: {
+    backendType: "hackernews_trigger",
+    icon: Webhook,
+    logoUrl: imgProductHunt,
+    label: "On Product Hunt Launch",
+    colorClass: "text-[#DA552F]",
+    accentColor: "218,85,47",
+    ConfigPanel: HackerNewsTriggerNode,
+  },
+
+  // CRM / Sales
+  intercom: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgIntercom,
+    label: "On Intercom Event",
+    colorClass: "text-[#1F8DED]",
+    accentColor: "31,141,237",
+    ConfigPanel: WebhookTriggerNode,
+  },
+  woocommerce: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgWooCommerce,
+    label: "On WooCommerce Order",
+    colorClass: "text-[#7F54B3]",
+    accentColor: "127,84,179",
+    ConfigPanel: WebhookTriggerNode,
+  },
+
+  // Infra / Security
+  virustotal: {
+    backendType: "webhook",
+    icon: Webhook,
+    logoUrl: imgVirusTotal,
+    label: "On VirusTotal Scan",
+    colorClass: "text-[#394EFF]",
+    accentColor: "57,78,255",
+    ConfigPanel: WebhookTriggerNode,
   },
 };
