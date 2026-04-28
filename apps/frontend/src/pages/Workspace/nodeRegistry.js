@@ -190,6 +190,14 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Design / Creative nodes
+import ImageGenerateNode    from "./components/nodes/ImageGenerateNode";
+import ImageCaptionNode     from "./components/nodes/ImageCaptionNode";
+import RemoveBackgroundNode from "./components/nodes/RemoveBackgroundNode";
+import FontPreviewNode      from "./components/nodes/FontPreviewNode";
+import ColorPaletteNode     from "./components/nodes/ColorPaletteNode";
+import FigmaCommentNode     from "./components/nodes/FigmaCommentNode";
+import CanvaExportNode      from "./components/nodes/CanvaExportNode";
 // Developer Tools nodes
 import EnvVariableNode      from "./components/nodes/EnvVariableNode";
 import GraphQLNode          from "./components/nodes/GraphQLNode";
@@ -293,6 +301,7 @@ export const CATEGORIES = [
   { id: "crm",         label: "CRM & Commerce",  icon: ShoppingBag, shape: "rounded" },
   { id: "social",      label: "Social Media",    icon: Users,       shape: "rounded" },
   { id: "education",   label: "Education & AI",  icon: GraduationCap, shape: "rounded" },
+  { id: "design",      label: "Design & Creative", icon: PenTool,    shape: "pill" },
 ];
 
 export const NodeRegistry = {
@@ -905,6 +914,43 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Design & Creative Nodes ──────────────────────────────────────────────
+  image_generate: {
+    label: "Image Generate", icon: Image, colorClass: "text-fuchsia-400", accentColor: "232,121,249",
+    ConfigPanel: ImageGenerateNode, category: "design",
+    description: "Generate images with DALL-E 3, Stable Diffusion or FLUX",
+  },
+  image_caption: {
+    label: "Image Caption", icon: Camera, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: ImageCaptionNode, category: "design",
+    description: "AI describe, tag, OCR or ask questions about an image",
+  },
+  remove_background: {
+    label: "Remove Background", icon: Scissors, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: RemoveBackgroundNode, category: "design",
+    description: "Strip image background, replace with transparent, color or image",
+  },
+  font_preview: {
+    label: "Font Preview", icon: PenTool, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: FontPreviewNode, category: "design",
+    description: "Render text in any Google Font and export as PNG",
+  },
+  color_palette: {
+    label: "Color Palette", icon: Palette, colorClass: "text-fuchsia-400", accentColor: "232,121,249",
+    ConfigPanel: ColorPaletteNode, category: "design",
+    description: "Generate a color palette from a prompt, image or seed color",
+  },
+  figma_comment: {
+    label: "Figma Comment", icon: MessageCircle, colorClass: "text-[#F24E1E]", accentColor: "242,78,30",
+    logoUrl: imgFigma, ConfigPanel: FigmaCommentNode, category: "design",
+    description: "Post, reply, list or resolve comments on a Figma file",
+  },
+  canva_export: {
+    label: "Canva Export", icon: Film, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: CanvaExportNode, category: "design",
+    description: "Export a Canva design as PDF, PNG, JPG, MP4, GIF or PPTX",
   },
 
   // ── Education & AI Nodes ─────────────────────────────────────────────────
