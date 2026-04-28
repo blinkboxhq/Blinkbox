@@ -12,7 +12,7 @@ import {
   ToggleLeft, Hash, Sigma, Table2, BookOpen, HeartPulse,
   FlaskConical, GraduationCap, Briefcase, Gamepad2, Camera, Music, DollarSign,
   BarChart2, PieChart, LineChart, MapPin, Languages, Rss, Bell, BellOff,
-  CloudUpload, CloudDownload, FolderOpen, Archive, Trash2, RefreshCw,
+  UploadCloud, DownloadCloud, FolderOpen, Archive, Trash2, RefreshCw,
   AlarmClock, StickyNote, ListChecks, Clipboard, Send, PhoneCall,
   MessageCircle, UserPlus, UserMinus, Key, Lock, Unlock, Eye, EyeOff,
   Cpu, HardDrive, MemoryStick, Wifi, Activity, Thermometer, Pill,
@@ -190,6 +190,16 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Developer Tools nodes
+import EnvVariableNode      from "./components/nodes/EnvVariableNode";
+import GraphQLNode          from "./components/nodes/GraphQLNode";
+import GrpcNode             from "./components/nodes/GrpcNode";
+import SftpNode             from "./components/nodes/SftpNode";
+import S3Node               from "./components/nodes/S3Node";
+import DockerRunNode        from "./components/nodes/DockerRunNode";
+import WebhookResponseNode  from "./components/nodes/WebhookResponseNode";
+import NpmPackageInfoNode   from "./components/nodes/NpmPackageInfoNode";
+import SemverCompareNode    from "./components/nodes/SemverCompareNode";
 // Education / Student nodes
 import FlashcardGeneratorNode from "./components/nodes/FlashcardGeneratorNode";
 import QuizGeneratorNode      from "./components/nodes/QuizGeneratorNode";
@@ -609,6 +619,51 @@ export const NodeRegistry = {
   },
 
   // Developer Tools
+  env_variable: {
+    label: "Environment Variable", icon: Key, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: EnvVariableNode, category: "devtools",
+    description: "Inject, read or assert environment variables in the workflow",
+  },
+  graphql_request: {
+    label: "GraphQL Request", icon: GitBranch, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: GraphQLNode, category: "devtools",
+    description: "Query or mutate any GraphQL API with variables and auth",
+  },
+  grpc_call: {
+    label: "gRPC Call", icon: Cpu, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: GrpcNode, category: "devtools",
+    description: "Invoke a gRPC service method with protobuf payload",
+  },
+  sftp: {
+    label: "SFTP", icon: UploadCloud, colorClass: "text-sky-400", accentColor: "56,189,248",
+    ConfigPanel: SftpNode, category: "devtools",
+    description: "Upload, download, list or delete files via SFTP",
+  },
+  s3: {
+    label: "S3", icon: DownloadCloud, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: S3Node, category: "devtools",
+    description: "AWS S3 (and S3-compatible) object storage — upload, download, presign",
+  },
+  docker_run: {
+    label: "Docker Run", icon: Box, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: DockerRunNode, category: "devtools",
+    description: "Spin up a container, run a command and capture stdout/stderr",
+  },
+  webhook_response: {
+    label: "Webhook Response", icon: Send, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: WebhookResponseNode, category: "devtools",
+    description: "Send a custom HTTP response to the webhook caller",
+  },
+  npm_package_info: {
+    label: "NPM Package Info", icon: Package, colorClass: "text-red-400", accentColor: "248,113,113",
+    ConfigPanel: NpmPackageInfoNode, category: "devtools",
+    description: "Fetch version, downloads, license and metadata from npm registry",
+  },
+  semver_compare: {
+    label: "Semver Compare", icon: GitBranch, colorClass: "text-indigo-400", accentColor: "129,140,248",
+    ConfigPanel: SemverCompareNode, category: "devtools",
+    description: "Compare, sort, validate and coerce semantic version strings",
+  },
   github: {
     label: "GitHub", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
     logoUrl: imgGitHub, ConfigPanel: GithubNode, category: "devtools",
