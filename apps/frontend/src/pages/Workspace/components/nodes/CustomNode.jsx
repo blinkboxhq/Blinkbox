@@ -323,7 +323,7 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
 // When disconnected: a Plus circle overlays on top — click = open picker,
 //   dragging the plus circle naturally hits the Handle beneath it.
 // When connected: only the dot shows (plus hidden).
-function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none" }) {
+function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight }) {
   return (
     <>
       {/* ReactFlow handle — positioned by ReactFlow on the right edge */}
@@ -343,8 +343,12 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
       {/* Plus button — rendered at same position as the handle when disconnected */}
       {!hasConnection && (
         <div
-          className="absolute top-1/2 z-10 nodrag"
-          style={{ right: -16, transform: "translateY(-50%)" }}
+          className="absolute z-10 nodrag"
+          style={
+            cardHeight
+              ? { right: -16, top: cardHeight / 2, transform: "translateY(-50%)" }
+              : { right: -16, top: "50%", transform: "translateY(-50%)" }
+          }
         >
           <button
             onClick={(e) => { e.stopPropagation(); onAdd(e); }}
@@ -546,6 +550,7 @@ export default function CustomNode({ id, data, selected }) {
           onAdd={handleAddNext}
           dotColor={dotColor}
           statusGlow={statusGlow}
+          cardHeight={cardH}
         />
 
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
