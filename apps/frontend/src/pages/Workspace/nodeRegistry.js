@@ -335,21 +335,21 @@ export const NodeRegistry = {
 
   // AI Tools (specialty)
   ai_classify: {
-    label: "AI Classify", icon: Tags, colorClass: "text-white", accentColor: "139,92,246",
+    label: "AI Classify", icon: Tags, colorClass: "text-violet-400", accentColor: "139,92,246",
     ConfigPanel: AIClassifyNode, category: "ai_tools",
   },
   ai_extract: {
-    label: "AI Extract", icon: Scissors, colorClass: "text-white", accentColor: "56,189,248",
+    label: "AI Extract", icon: Scissors, colorClass: "text-sky-400", accentColor: "56,189,248",
     ConfigPanel: AIExtractNode, category: "ai_tools",
   },
   ai_transform: {
-    label: "AI Transform", icon: Wand2, colorClass: "text-white", accentColor: "232,121,249",
+    label: "AI Transform", icon: Wand2, colorClass: "text-fuchsia-400", accentColor: "232,121,249",
     ConfigPanel: AITransformNode, category: "ai_tools",
   },
 
   // Data & APIs
   http_request: {
-    label: "HTTP Request", icon: Globe, colorClass: "text-white", accentColor: "59,130,246",
+    label: "HTTP Request", icon: Globe, colorClass: "text-blue-400", accentColor: "59,130,246",
     logoUrl: imgHTTP, ConfigPanel: HttpRequestNode, category: "data",
   },
   postgres: {
@@ -357,19 +357,19 @@ export const NodeRegistry = {
     logoUrl: imgPostgres, ConfigPanel: PostgresNode, category: "data",
   },
   supabase: {
-    label: "Supabase", icon: Database, colorClass: "text-white", accentColor: "52,211,153",
+    label: "Supabase", icon: Database, colorClass: "text-emerald-400", accentColor: "52,211,153",
     ConfigPanel: SupabaseNode, category: "data",
   },
   mongodb: {
-    label: "MongoDB", icon: Database, colorClass: "text-white", accentColor: "71,162,72",
+    label: "MongoDB", icon: Database, colorClass: "text-[#47A248]", accentColor: "71,162,72",
     ConfigPanel: MongoDBNode, category: "data",
   },
   redis_node: {
-    label: "Redis", icon: Server, colorClass: "text-white", accentColor: "255,68,56",
+    label: "Redis", icon: Server, colorClass: "text-[#FF4438]", accentColor: "255,68,56",
     ConfigPanel: RedisNode, category: "data",
   },
   firebase: {
-    label: "Firebase", icon: Database, colorClass: "text-white", accentColor: "255,202,40",
+    label: "Firebase", icon: Database, colorClass: "text-[#FFCA28]", accentColor: "255,202,40",
     ConfigPanel: FirebaseNode, category: "data",
   },
 
@@ -449,41 +449,41 @@ export const NodeRegistry = {
     logoUrl: imgCode, ConfigPanel: CodeNode, category: "code",
   },
 
-  // Integrations (comms)
+  // Integrations (comms) — all have logoUrl so colorClass is fallback only
   telegram: {
-    label: "Telegram", icon: Brain, colorClass: "text-white", accentColor: "38,165,228",
+    label: "Telegram", icon: Brain, colorClass: "text-[#26A5E4]", accentColor: "38,165,228",
     logoUrl: imgTelegram, ConfigPanel: TelegramNode, category: "integration",
   },
   whatsapp: {
-    label: "WhatsApp", icon: Brain, colorClass: "text-white", accentColor: "37,211,102",
+    label: "WhatsApp", icon: Brain, colorClass: "text-[#25D366]", accentColor: "37,211,102",
     logoUrl: imgWhatsApp, ConfigPanel: WhatsAppNode, category: "integration",
   },
   slack: {
-    label: "Slack", icon: Brain, colorClass: "text-white", accentColor: "224,30,90",
+    label: "Slack", icon: Brain, colorClass: "text-[#E01E5A]", accentColor: "224,30,90",
     logoUrl: imgSlack, ConfigPanel: SlackNode, category: "integration",
   },
   discord: {
-    label: "Discord", icon: Brain, colorClass: "text-white", accentColor: "88,101,242",
+    label: "Discord", icon: Brain, colorClass: "text-[#5865F2]", accentColor: "88,101,242",
     logoUrl: imgDiscord, ConfigPanel: DiscordNode, category: "integration",
   },
   gmail: {
-    label: "Gmail", icon: Brain, colorClass: "text-white", accentColor: "234,67,53",
+    label: "Gmail", icon: Brain, colorClass: "text-[#EA4335]", accentColor: "234,67,53",
     logoUrl: imgGmail, ConfigPanel: GmailNode, category: "integration",
   },
   twilio: {
-    label: "Twilio", icon: Brain, colorClass: "text-white", accentColor: "242,47,70",
+    label: "Twilio", icon: Brain, colorClass: "text-[#F22F46]", accentColor: "242,47,70",
     logoUrl: imgTwilio, ConfigPanel: TwilioNode, category: "integration",
   },
   sendgrid: {
-    label: "SendGrid", icon: Brain, colorClass: "text-white", accentColor: "26,130,226",
+    label: "SendGrid", icon: Brain, colorClass: "text-[#1A82E2]", accentColor: "26,130,226",
     logoUrl: imgSendGrid, ConfigPanel: SendGridNode, category: "integration",
   },
   airtable: {
-    label: "Airtable", icon: Brain, colorClass: "text-white", accentColor: "246,88,88",
+    label: "Airtable", icon: Brain, colorClass: "text-[#F65858]", accentColor: "246,88,88",
     logoUrl: imgAirtable, ConfigPanel: AirtableNode, category: "integration",
   },
   google_sheets: {
-    label: "Google Sheets", icon: Brain, colorClass: "text-white", accentColor: "15,157,88",
+    label: "Google Sheets", icon: Brain, colorClass: "text-[#0F9D58]", accentColor: "15,157,88",
     logoUrl: imgGoogleSheets, ConfigPanel: GoogleSheetsNode, category: "integration",
   },
   notion: {
@@ -493,47 +493,47 @@ export const NodeRegistry = {
 
   // Google Workspace
   google_calendar: {
-    label: "Google Calendar", icon: Calendar, colorClass: "text-white", accentColor: "66,133,244",
+    label: "Google Calendar", icon: Calendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
     logoUrl: imgGoogleCalendar, ConfigPanel: GoogleCalendarNode, category: "integration",
   },
   google_drive: {
-    label: "Google Drive", icon: Database, colorClass: "text-white", accentColor: "251,188,4",
+    label: "Google Drive", icon: Database, colorClass: "text-[#FBBC04]", accentColor: "251,188,4",
     logoUrl: imgGoogleDrive, ConfigPanel: GoogleDriveNode, category: "integration",
   },
 
   // Developer Tools
   github: {
-    label: "GitHub", icon: Github, colorClass: "text-white", accentColor: "244,244,245",
+    label: "GitHub", icon: Github, colorClass: "text-zinc-200", accentColor: "244,244,245",
     logoUrl: imgGitHub, ConfigPanel: GithubNode, category: "devtools",
   },
   jira: {
-    label: "Jira", icon: Ticket, colorClass: "text-white", accentColor: "38,132,255",
+    label: "Jira", icon: Ticket, colorClass: "text-[#2684FF]", accentColor: "38,132,255",
     logoUrl: imgJira, ConfigPanel: JiraNode, category: "devtools",
   },
   linear: {
-    label: "Linear", icon: Circle, colorClass: "text-white", accentColor: "94,106,210",
+    label: "Linear", icon: Circle, colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",
     logoUrl: imgLinear, ConfigPanel: LinearNode, category: "devtools",
   },
 
   // Payments
   stripe: {
-    label: "Stripe", icon: CreditCard, colorClass: "text-white", accentColor: "99,91,255",
+    label: "Stripe", icon: CreditCard, colorClass: "text-[#635BFF]", accentColor: "99,91,255",
     logoUrl: imgStripe, ConfigPanel: StripeNode, category: "payments",
   },
 
   // CRM & E-commerce
   hubspot: {
-    label: "HubSpot", icon: Users, colorClass: "text-white", accentColor: "255,122,89",
+    label: "HubSpot", icon: Users, colorClass: "text-[#FF7A59]", accentColor: "255,122,89",
     logoUrl: imgHubSpot, ConfigPanel: HubSpotNode, category: "crm",
   },
   shopify: {
-    label: "Shopify", icon: ShoppingBag, colorClass: "text-white", accentColor: "149,191,71",
+    label: "Shopify", icon: ShoppingBag, colorClass: "text-[#95BF47]", accentColor: "149,191,71",
     logoUrl: imgShopify, ConfigPanel: ShopifyNode, category: "crm",
   },
 
   // Social Media
   twitter: {
-    label: "Twitter / X", icon: Twitter, colorClass: "text-white", accentColor: "29,161,242",
+    label: "Twitter / X", icon: Twitter, colorClass: "text-[#1DA1F2]", accentColor: "29,161,242",
     ConfigPanel: TwitterNode, category: "social",
   },
 
