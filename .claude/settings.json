@@ -1,0 +1,33 @@
+{
+  "allowedCommands": [
+    "npm run dev",
+    "npm run build",
+    "npm run lint",
+    "npm run typecheck",
+    "npm test",
+    "npm install",
+    "node -e",
+    "node --input-type=module",
+    "git status",
+    "git diff",
+    "git diff --name-only",
+    "git log",
+    "git add",
+    "git commit",
+    "git push",
+    "git checkout",
+    "git show",
+    "git stash",
+    "git stash pop",
+    "ls",
+    "ls -la",
+    "find . -name",
+    "grep -r",
+    "grep -n",
+    "cat",
+    "wc -l",
+    "head",
+    "tail"
+  ],
+  "autoApproveFileModifications": true
+}
