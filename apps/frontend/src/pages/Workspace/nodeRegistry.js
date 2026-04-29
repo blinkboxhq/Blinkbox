@@ -326,7 +326,7 @@ import ShopifyNode         from "./components/nodes/ShopifyNode";
 import TwitterNode         from "./components/nodes/TwitterNode";
 
 // Config Panels — previously stubbed (now real panels)
-import GitHubNode          from "./components/nodes/GitHubNode";
+import GitHubNode          from "./components/nodes/GithubNode";
 import GitLabNode          from "./components/nodes/GitLabNode";
 import TrelloNode          from "./components/nodes/TrelloNode";
 import AsanaNode           from "./components/nodes/AsanaNode";
