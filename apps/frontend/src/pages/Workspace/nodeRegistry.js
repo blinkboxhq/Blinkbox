@@ -85,6 +85,13 @@ import imgDns            from "../../assets/dns.svg";
 import imgPortMonitor    from "../../assets/port-monitor.svg";
 import imgInstagram      from "../../assets/instagram.svg";
 import imgTikTok         from "../../assets/tiktok.svg";
+import imgMastodon       from "../../assets/mastodon.svg";
+import imgProductHunt    from "../../assets/producthunt.svg";
+import imgIntercom       from "../../assets/intercom.svg";
+import imgWooCommerce    from "../../assets/woocommerce.svg";
+import imgVirusTotal     from "../../assets/virustotal.svg";
+import imgPagerDuty      from "../../assets/pagerduty.svg";
+import imgDatadog        from "../../assets/datadog.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -958,6 +965,256 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Missing Integration Action Nodes ──────────────────────────────────────
+  // GitHub
+  github_issue: {
+    label: "GitHub Issues / PRs", icon: Github, colorClass: "text-white", accentColor: "244,244,245",
+    logoUrl: imgGitHub, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Create, update, comment on or close GitHub issues and pull requests",
+  },
+  gitlab: {
+    label: "GitLab", icon: Github, colorClass: "text-[#FC6D26]", accentColor: "252,109,38",
+    logoUrl: imgGitLab, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Manage GitLab issues, MRs, pipelines and repositories",
+  },
+  trello: {
+    label: "Trello", icon: Ticket, colorClass: "text-[#0052CC]", accentColor: "0,82,204",
+    logoUrl: imgTrello, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Create cards, move to lists, add comments and manage Trello boards",
+  },
+  asana: {
+    label: "Asana", icon: Circle, colorClass: "text-[#F06A6A]", accentColor: "240,106,106",
+    logoUrl: imgAsana, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Create tasks, update status and manage Asana projects",
+  },
+  clickup: {
+    label: "ClickUp", icon: CheckSquare, colorClass: "text-[#7B68EE]", accentColor: "123,104,238",
+    logoUrl: imgClickUp, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Create tasks, update status and manage ClickUp spaces",
+  },
+  monday: {
+    label: "Monday.com", icon: LayoutGrid, colorClass: "text-[#FF3D57]", accentColor: "255,61,87",
+    logoUrl: imgMonday, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Create items, update columns and manage Monday.com boards",
+  },
+  pipedrive: {
+    label: "Pipedrive", icon: Users, colorClass: "text-[#F55137]", accentColor: "245,81,55",
+    logoUrl: imgPipedrive, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Create deals, contacts, activities and manage Pipedrive CRM",
+  },
+  intercom: {
+    label: "Intercom", icon: MessageCircle, colorClass: "text-[#1F8DED]", accentColor: "31,141,237",
+    logoUrl: imgIntercom, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Send messages, create conversations and manage Intercom contacts",
+  },
+  woocommerce: {
+    label: "WooCommerce", icon: ShoppingBag, colorClass: "text-[#7F54B3]", accentColor: "127,84,179",
+    logoUrl: imgWooCommerce, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Manage WooCommerce orders, products and customers",
+  },
+  typeform: {
+    label: "Typeform", icon: FileText, colorClass: "text-white", accentColor: "161,161,170",
+    logoUrl: imgTypeform, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Create forms, fetch responses and manage Typeform workspaces",
+  },
+  // Microsoft
+  outlook: {
+    label: "Outlook", icon: Mail, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
+    logoUrl: imgOutlook, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Send emails, manage calendar and contacts via Microsoft Outlook",
+  },
+  teams: {
+    label: "Microsoft Teams", icon: MessageCircle, colorClass: "text-[#6264A7]", accentColor: "98,100,167",
+    logoUrl: imgTeams, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Send messages, create channels and manage Microsoft Teams",
+  },
+  onedrive: {
+    label: "OneDrive", icon: FolderOpen, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
+    logoUrl: imgOneDrive, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Upload, download and manage files in Microsoft OneDrive",
+  },
+  sharepoint: {
+    label: "SharePoint", icon: Database, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
+    logoUrl: imgSharePoint, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Manage SharePoint lists, libraries and pages",
+  },
+  azure_devops: {
+    label: "Azure DevOps", icon: GitBranch, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
+    logoUrl: imgAzureDevOps, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Manage work items, pipelines and repos in Azure DevOps",
+  },
+  // Google
+  google_docs: {
+    label: "Google Docs", icon: FileText, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
+    logoUrl: imgGoogleDocs, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Create, read and update Google Docs documents",
+  },
+  google_forms: {
+    label: "Google Forms", icon: ClipboardIcon, colorClass: "text-[#673AB7]", accentColor: "103,58,183",
+    logoUrl: imgGoogleForms, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Create forms, fetch responses and manage Google Forms",
+  },
+  // DevOps / Monitoring
+  sentry: {
+    label: "Sentry", icon: AlertTriangle, colorClass: "text-[#FB4226]", accentColor: "251,66,38",
+    logoUrl: imgSentry, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Resolve issues, assign errors and manage Sentry projects",
+  },
+  vercel: {
+    label: "Vercel", icon: Triangle, colorClass: "text-white", accentColor: "228,228,231",
+    logoUrl: imgVercel, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Trigger deployments, manage domains and fetch deploy status",
+  },
+  netlify: {
+    label: "Netlify", icon: Globe, colorClass: "text-[#00C7B7]", accentColor: "0,199,183",
+    logoUrl: imgNetlify, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Trigger builds, manage deploys and update site config",
+  },
+  pagerduty: {
+    label: "PagerDuty", icon: Bell, colorClass: "text-[#06AC38]", accentColor: "6,172,56",
+    logoUrl: imgPagerDuty, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Create incidents, acknowledge alerts and manage on-call schedules",
+  },
+  datadog: {
+    label: "Datadog", icon: Activity, colorClass: "text-[#632CA6]", accentColor: "99,44,166",
+    logoUrl: imgDatadog, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Send metrics, create monitors and query Datadog dashboards",
+  },
+  zendesk: {
+    label: "Zendesk", icon: MessageCircle, colorClass: "text-[#03363D]", accentColor: "3,54,61",
+    logoUrl: imgZendesk, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Create tickets, reply to customers and manage Zendesk support",
+  },
+  calendly: {
+    label: "Calendly", icon: Calendar, colorClass: "text-[#006BFF]", accentColor: "0,107,255",
+    logoUrl: imgCalendly, ConfigPanel: GenericActionNode, category: "crm",
+    description: "Fetch bookings, cancel meetings and manage Calendly event types",
+  },
+  mailchimp: {
+    label: "Mailchimp", icon: Mail, colorClass: "text-white", accentColor: "255,224,27",
+    logoUrl: imgMailchimp, ConfigPanel: GenericActionNode, category: "integration",
+    description: "Add subscribers, send campaigns and manage Mailchimp lists",
+  },
+  figma: {
+    label: "Figma", icon: PenTool, colorClass: "text-[#F24E1E]", accentColor: "242,78,30",
+    logoUrl: imgFigma, ConfigPanel: GenericActionNode, category: "design",
+    description: "Fetch files, post comments and export assets from Figma",
+  },
+  // Social
+  instagram: {
+    label: "Instagram", icon: Camera, colorClass: "text-[#E4405F]", accentColor: "228,64,95",
+    logoUrl: imgInstagram, ConfigPanel: InstagramPostNode, category: "social_pub",
+    description: "Post images, reels, stories and carousels to Instagram",
+  },
+  tiktok: {
+    label: "TikTok", icon: Video, colorClass: "text-white", accentColor: "238,29,82",
+    logoUrl: imgTikTok, ConfigPanel: TikTokPostNode, category: "social_pub",
+    description: "Publish videos to TikTok via Content Posting API",
+  },
+  mastodon: {
+    label: "Mastodon", icon: MessageSquarePlus, colorClass: "text-[#6364FF]", accentColor: "99,100,255",
+    logoUrl: imgMastodon, ConfigPanel: GenericActionNode, category: "social_pub",
+    description: "Post toots, boost and manage your Mastodon account",
+  },
+  producthunt: {
+    label: "Product Hunt", icon: TrendingUp, colorClass: "text-[#DA552F]", accentColor: "218,85,47",
+    logoUrl: imgProductHunt, ConfigPanel: GenericActionNode, category: "social_pub",
+    description: "Fetch product launches, upvotes and comments from Product Hunt",
+  },
+  hackernews: {
+    label: "Hacker News", icon: Rss, colorClass: "text-[#FF6600]", accentColor: "255,102,0",
+    logoUrl: imgHackerNews, ConfigPanel: GenericActionNode, category: "research",
+    description: "Fetch top stories, comments and job posts from Hacker News",
+  },
+  virustotal: {
+    label: "VirusTotal", icon: Shield, colorClass: "text-[#394EFF]", accentColor: "57,78,255",
+    logoUrl: imgVirusTotal, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Scan files and URLs for malware via VirusTotal API",
+  },
+  // Infra
+  ssh: {
+    label: "SSH Command", icon: Server, colorClass: "text-white", accentColor: "161,161,170",
+    logoUrl: imgSsh, ConfigPanel: SshTriggerNode, category: "devtools",
+    description: "Run a command on a remote server via SSH and capture output",
+  },
+  docker: {
+    label: "Docker", icon: Box, colorClass: "text-[#2496ED]", accentColor: "36,150,237",
+    logoUrl: imgDocker, ConfigPanel: DockerRunNode, category: "devtools",
+    description: "Manage Docker containers, images and events",
+  },
+  ssl: {
+    label: "SSL Cert Monitor", icon: Lock, colorClass: "text-green-400", accentColor: "74,222,128",
+    logoUrl: imgLetsEncrypt, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Check SSL certificate expiry and validity for any domain",
+  },
+  dns: {
+    label: "DNS Lookup", icon: Globe, colorClass: "text-white", accentColor: "56,189,248",
+    logoUrl: imgDns, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Query A, MX, TXT, CNAME and other DNS records for a domain",
+  },
+  port_monitor: {
+    label: "Port Monitor", icon: Wifi, colorClass: "text-white", accentColor: "167,139,250",
+    logoUrl: imgPortMonitor, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Check if a TCP port is open or closed on a server",
+  },
+  http_monitor: {
+    label: "HTTP Monitor", icon: Activity, colorClass: "text-white", accentColor: "248,113,113",
+    logoUrl: imgVercel, ConfigPanel: GenericActionNode, category: "devtools",
+    description: "Check URL uptime, response time and status code",
+  },
+  // Content / Feed
+  youtube: {
+    label: "YouTube", icon: Youtube, colorClass: "text-red-400", accentColor: "248,113,113",
+    logoUrl: imgYouTube, ConfigPanel: YouTubeUploadNode, category: "social_pub",
+    description: "Upload videos, manage playlists and fetch channel data",
+  },
+  reddit: {
+    label: "Reddit", icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",
+    logoUrl: imgReddit, ConfigPanel: GenericActionNode, category: "social_pub",
+    description: "Post to subreddits, comment and fetch hot posts",
+  },
+  rss: {
+    label: "RSS Feed", icon: Rss, colorClass: "text-orange-400", accentColor: "251,146,60",
+    logoUrl: imgRss, ConfigPanel: RssFeedGeneratorNode, category: "research",
+    description: "Read, parse and generate RSS / Atom feeds",
+  },
+  database: {
+    label: "Database", icon: Database, colorClass: "text-[#5B9BD5]", accentColor: "91,155,213",
+    logoUrl: imgPostgres, ConfigPanel: PostgresNode, category: "data",
+    description: "Query and write to PostgreSQL or MySQL databases",
+  },
+  price_alert: {
+    label: "Crypto Price Alert", icon: TrendingUp, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    logoUrl: imgBitcoin, ConfigPanel: GenericActionNode, category: "research",
+    description: "Fetch live crypto prices and trigger on threshold breaches",
+  },
+  // Workflow triggers as action nodes
+  cron: {
+    label: "Schedule (Cron)", icon: Clock, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: ScheduleTriggerNode, category: "flow",
+    description: "Run on a schedule — every minute, hour, day or custom cron expression",
+  },
+  chat: {
+    label: "Chat Trigger", icon: MessageSquarePlus, colorClass: "text-pink-400", accentColor: "236,72,153",
+    ConfigPanel: ChatTriggerNode, category: "integration",
+    description: "Receive messages from embedded chat widget",
+  },
+  email: {
+    label: "Email (Webhook)", icon: Mail, colorClass: "text-violet-400", accentColor: "139,92,246",
+    ConfigPanel: EmailTriggerNode, category: "integration",
+    description: "Receive inbound emails via Mailgun, SendGrid or Postmark webhook",
+  },
+  imap: {
+    label: "Email (IMAP)", icon: Mail, colorClass: "text-cyan-400", accentColor: "34,211,238",
+    ConfigPanel: ImapTriggerNode, category: "integration",
+    description: "Poll any IMAP inbox for new emails",
+  },
+  error: {
+    label: "Error Handler", icon: AlertTriangle, colorClass: "text-red-400", accentColor: "239,68,68",
+    ConfigPanel: ErrorTriggerNode, category: "flow",
+    description: "Catch and handle errors from other nodes in the workflow",
   },
 
   // ── Gaming Nodes ─────────────────────────────────────────────────────────
