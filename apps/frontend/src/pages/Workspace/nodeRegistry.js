@@ -204,6 +204,9 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+import EmailTriggerNode          from "./components/nodes/EmailTriggerNode";
+import ImapTriggerNode           from "./components/nodes/ImapTriggerNode";
+import ErrorTriggerNode          from "./components/nodes/ErrorTriggerNode";
 // Gamers nodes
 import SteamGameLookupNode    from "./components/nodes/SteamGameLookupNode";
 import TwitchStreamStatusNode from "./components/nodes/TwitchStreamStatusNode";
