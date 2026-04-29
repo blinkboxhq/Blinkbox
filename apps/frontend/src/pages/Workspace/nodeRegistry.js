@@ -20,7 +20,7 @@ import {
   Film, Headphones, Radio, Podcast, BookMarked, Newspaper, Trophy,
   Star, Heart, ThumbsUp, Share2, Link2, ExternalLink, Download, Upload,
   Printer, ScanLine, Barcode, CaseSensitive, Replace, Regex,
-  Split, Combine, Shuffle, ArrowRightLeft, Fingerprint, Triangle,
+  Split, Combine, Shuffle, ArrowRightLeft, Fingerprint, Triangle, AlertTriangle,
 } from "lucide-react";
 
 // Local asset icons
@@ -92,6 +92,11 @@ import imgWooCommerce    from "../../assets/woocommerce.svg";
 import imgVirusTotal     from "../../assets/virustotal.svg";
 import imgPagerDuty      from "../../assets/pagerduty.svg";
 import imgDatadog        from "../../assets/datadog.svg";
+import imgTwitter        from "../../assets/twitter.svg";
+import imgElevenLabs     from "../../assets/elevenlabs.svg";
+import imgZoom           from "../../assets/zoom.svg";
+import imgResend         from "../../assets/resend.svg";
+import imgCron           from "../../assets/cron.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -755,8 +760,8 @@ export const NodeRegistry = {
 
   // Social Media
   twitter: {
-    label: "Twitter / X", icon: Twitter, colorClass: "text-[#1DA1F2]", accentColor: "29,161,242",
-    ConfigPanel: TwitterNode, category: "social",
+    label: "Twitter / X", icon: Twitter, colorClass: "text-white", accentColor: "228,228,231",
+    logoUrl: imgTwitter, ConfigPanel: TwitterNode, category: "social",
   },
 
   // ── New Triggers ───────────────────────────────────────────────────────────
@@ -947,20 +952,20 @@ export const NodeRegistry = {
 
   // ── New Integration Nodes ──────────────────────────────────────────────────
   elevenlabs: {
-    label: "ElevenLabs", icon: Mic2, colorClass: "text-violet-400", accentColor: "167,139,250",
-    ConfigPanel: ElevenLabsNode, category: "integration",
+    label: "ElevenLabs", icon: Mic2, colorClass: "text-white", accentColor: "161,161,170",
+    logoUrl: imgElevenLabs, ConfigPanel: ElevenLabsNode, category: "integration",
   },
   pinecone: {
     label: "Pinecone", icon: Box, colorClass: "text-green-400", accentColor: "74,222,128",
     ConfigPanel: PineconeNode, category: "data",
   },
   zoom: {
-    label: "Zoom", icon: Video, colorClass: "text-blue-400", accentColor: "96,165,250",
-    ConfigPanel: ZoomNode, category: "integration",
+    label: "Zoom", icon: Video, colorClass: "text-[#2D8CFF]", accentColor: "45,140,255",
+    logoUrl: imgZoom, ConfigPanel: ZoomNode, category: "integration",
   },
   resend: {
-    label: "Resend", icon: Mail, colorClass: "text-orange-400", accentColor: "251,146,60",
-    ConfigPanel: ResendNode, category: "integration",
+    label: "Resend", icon: Mail, colorClass: "text-white", accentColor: "161,161,170",
+    logoUrl: imgResend, ConfigPanel: ResendNode, category: "integration",
   },
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
@@ -1193,7 +1198,7 @@ export const NodeRegistry = {
   // Workflow triggers as action nodes
   cron: {
     label: "Schedule (Cron)", icon: Clock, colorClass: "text-amber-400", accentColor: "251,191,36",
-    ConfigPanel: ScheduleTriggerNode, category: "flow",
+    logoUrl: imgCron, ConfigPanel: ScheduleTriggerNode, category: "flow",
     description: "Run on a schedule — every minute, hour, day or custom cron expression",
   },
   chat: {
