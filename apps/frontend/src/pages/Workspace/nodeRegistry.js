@@ -322,6 +322,44 @@ import HubSpotNode         from "./components/nodes/HubSpotNode";
 import ShopifyNode         from "./components/nodes/ShopifyNode";
 import TwitterNode         from "./components/nodes/TwitterNode";
 
+// Config Panels — previously stubbed (now real panels)
+import GitHubNode          from "./components/nodes/GitHubNode";
+import GitLabNode          from "./components/nodes/GitLabNode";
+import TrelloNode          from "./components/nodes/TrelloNode";
+import AsanaNode           from "./components/nodes/AsanaNode";
+import ClickUpNode         from "./components/nodes/ClickUpNode";
+import MondayNode          from "./components/nodes/MondayNode";
+import PipedriveNode       from "./components/nodes/PipedriveNode";
+import IntercomNode        from "./components/nodes/IntercomNode";
+import WooCommerceNode     from "./components/nodes/WooCommerceNode";
+import TypeformNode        from "./components/nodes/TypeformNode";
+import OutlookNode         from "./components/nodes/OutlookNode";
+import TeamsNode           from "./components/nodes/TeamsNode";
+import OneDriveNode        from "./components/nodes/OneDriveNode";
+import SharePointNode      from "./components/nodes/SharePointNode";
+import AzureDevOpsNode     from "./components/nodes/AzureDevOpsNode";
+import GoogleDocsNode      from "./components/nodes/GoogleDocsNode";
+import GoogleFormsNode     from "./components/nodes/GoogleFormsNode";
+import SentryNode          from "./components/nodes/SentryNode";
+import VercelNode          from "./components/nodes/VercelNode";
+import NetlifyNode         from "./components/nodes/NetlifyNode";
+import PagerDutyNode       from "./components/nodes/PagerDutyNode";
+import DatadogNode         from "./components/nodes/DatadogNode";
+import ZendeskNode         from "./components/nodes/ZendeskNode";
+import CalendlyNode        from "./components/nodes/CalendlyNode";
+import MailchimpNode       from "./components/nodes/MailchimpNode";
+import FigmaNode           from "./components/nodes/FigmaNode";
+import MastodonNode        from "./components/nodes/MastodonNode";
+import ProductHuntNode     from "./components/nodes/ProductHuntNode";
+import HackerNewsNode      from "./components/nodes/HackerNewsNode";
+import VirusTotalNode      from "./components/nodes/VirusTotalNode";
+import SSLMonitorNode      from "./components/nodes/SSLMonitorNode";
+import DNSLookupNode       from "./components/nodes/DNSLookupNode";
+import PortMonitorNode     from "./components/nodes/PortMonitorNode";
+import HttpMonitorNode     from "./components/nodes/HttpMonitorNode";
+import RedditNode          from "./components/nodes/RedditNode";
+import CryptoPriceNode     from "./components/nodes/CryptoPriceNode";
+
 // OpenAI-compatible providers
 const PerplexityNode = makeOpenAICompatNode({
   label: "Perplexity", accent: "cyan", subtitle: "Search-augmented AI",
@@ -979,135 +1017,135 @@ export const NodeRegistry = {
   // GitHub
   github_issue: {
     label: "GitHub Issues / PRs", icon: Github, colorClass: "text-white", accentColor: "244,244,245",
-    logoUrl: imgGitHub, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgGitHub, ConfigPanel: GitHubNode, category: "devtools",
     description: "Create, update, comment on or close GitHub issues and pull requests",
   },
   gitlab: {
     label: "GitLab", icon: Github, colorClass: "text-[#FC6D26]", accentColor: "252,109,38",
-    logoUrl: imgGitLab, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgGitLab, ConfigPanel: GitLabNode, category: "devtools",
     description: "Manage GitLab issues, MRs, pipelines and repositories",
   },
   trello: {
     label: "Trello", icon: Ticket, colorClass: "text-[#0052CC]", accentColor: "0,82,204",
-    logoUrl: imgTrello, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgTrello, ConfigPanel: TrelloNode, category: "devtools",
     description: "Create cards, move to lists, add comments and manage Trello boards",
   },
   asana: {
     label: "Asana", icon: Circle, colorClass: "text-[#F06A6A]", accentColor: "240,106,106",
-    logoUrl: imgAsana, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgAsana, ConfigPanel: AsanaNode, category: "crm",
     description: "Create tasks, update status and manage Asana projects",
   },
   clickup: {
     label: "ClickUp", icon: CheckSquare, colorClass: "text-[#7B68EE]", accentColor: "123,104,238",
-    logoUrl: imgClickUp, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgClickUp, ConfigPanel: ClickUpNode, category: "crm",
     description: "Create tasks, update status and manage ClickUp spaces",
   },
   monday: {
     label: "Monday.com", icon: LayoutGrid, colorClass: "text-[#FF3D57]", accentColor: "255,61,87",
-    logoUrl: imgMonday, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgMonday, ConfigPanel: MondayNode, category: "crm",
     description: "Create items, update columns and manage Monday.com boards",
   },
   pipedrive: {
     label: "Pipedrive", icon: Users, colorClass: "text-[#F55137]", accentColor: "245,81,55",
-    logoUrl: imgPipedrive, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgPipedrive, ConfigPanel: PipedriveNode, category: "crm",
     description: "Create deals, contacts, activities and manage Pipedrive CRM",
   },
   intercom: {
     label: "Intercom", icon: MessageCircle, colorClass: "text-[#1F8DED]", accentColor: "31,141,237",
-    logoUrl: imgIntercom, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgIntercom, ConfigPanel: IntercomNode, category: "crm",
     description: "Send messages, create conversations and manage Intercom contacts",
   },
   woocommerce: {
     label: "WooCommerce", icon: ShoppingBag, colorClass: "text-[#7F54B3]", accentColor: "127,84,179",
-    logoUrl: imgWooCommerce, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgWooCommerce, ConfigPanel: WooCommerceNode, category: "crm",
     description: "Manage WooCommerce orders, products and customers",
   },
   typeform: {
     label: "Typeform", icon: FileText, colorClass: "text-white", accentColor: "161,161,170",
-    logoUrl: imgTypeform, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgTypeform, ConfigPanel: TypeformNode, category: "integration",
     description: "Create forms, fetch responses and manage Typeform workspaces",
   },
   // Microsoft
   outlook: {
     label: "Outlook", icon: Mail, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
-    logoUrl: imgOutlook, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgOutlook, ConfigPanel: OutlookNode, category: "integration",
     description: "Send emails, manage calendar and contacts via Microsoft Outlook",
   },
   teams: {
     label: "Microsoft Teams", icon: MessageCircle, colorClass: "text-[#6264A7]", accentColor: "98,100,167",
-    logoUrl: imgTeams, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgTeams, ConfigPanel: TeamsNode, category: "integration",
     description: "Send messages, create channels and manage Microsoft Teams",
   },
   onedrive: {
     label: "OneDrive", icon: FolderOpen, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
-    logoUrl: imgOneDrive, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgOneDrive, ConfigPanel: OneDriveNode, category: "integration",
     description: "Upload, download and manage files in Microsoft OneDrive",
   },
   sharepoint: {
     label: "SharePoint", icon: Database, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
-    logoUrl: imgSharePoint, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgSharePoint, ConfigPanel: SharePointNode, category: "integration",
     description: "Manage SharePoint lists, libraries and pages",
   },
   azure_devops: {
     label: "Azure DevOps", icon: GitBranch, colorClass: "text-[#0078D4]", accentColor: "0,120,212",
-    logoUrl: imgAzureDevOps, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgAzureDevOps, ConfigPanel: AzureDevOpsNode, category: "devtools",
     description: "Manage work items, pipelines and repos in Azure DevOps",
   },
   // Google
   google_docs: {
     label: "Google Docs", icon: FileText, colorClass: "text-[#4285F4]", accentColor: "66,133,244",
-    logoUrl: imgGoogleDocs, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgGoogleDocs, ConfigPanel: GoogleDocsNode, category: "integration",
     description: "Create, read and update Google Docs documents",
   },
   google_forms: {
     label: "Google Forms", icon: Clipboard, colorClass: "text-[#673AB7]", accentColor: "103,58,183",
-    logoUrl: imgGoogleForms, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgGoogleForms, ConfigPanel: GoogleFormsNode, category: "integration",
     description: "Create forms, fetch responses and manage Google Forms",
   },
   // DevOps / Monitoring
   sentry: {
     label: "Sentry", icon: AlertTriangle, colorClass: "text-[#FB4226]", accentColor: "251,66,38",
-    logoUrl: imgSentry, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgSentry, ConfigPanel: SentryNode, category: "devtools",
     description: "Resolve issues, assign errors and manage Sentry projects",
   },
   vercel: {
     label: "Vercel", icon: Triangle, colorClass: "text-white", accentColor: "228,228,231",
-    logoUrl: imgVercel, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgVercel, ConfigPanel: VercelNode, category: "devtools",
     description: "Trigger deployments, manage domains and fetch deploy status",
   },
   netlify: {
     label: "Netlify", icon: Globe, colorClass: "text-[#00C7B7]", accentColor: "0,199,183",
-    logoUrl: imgNetlify, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgNetlify, ConfigPanel: NetlifyNode, category: "devtools",
     description: "Trigger builds, manage deploys and update site config",
   },
   pagerduty: {
     label: "PagerDuty", icon: Bell, colorClass: "text-[#06AC38]", accentColor: "6,172,56",
-    logoUrl: imgPagerDuty, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgPagerDuty, ConfigPanel: PagerDutyNode, category: "devtools",
     description: "Create incidents, acknowledge alerts and manage on-call schedules",
   },
   datadog: {
     label: "Datadog", icon: Activity, colorClass: "text-[#632CA6]", accentColor: "99,44,166",
-    logoUrl: imgDatadog, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgDatadog, ConfigPanel: DatadogNode, category: "devtools",
     description: "Send metrics, create monitors and query Datadog dashboards",
   },
   zendesk: {
     label: "Zendesk", icon: MessageCircle, colorClass: "text-[#03363D]", accentColor: "3,54,61",
-    logoUrl: imgZendesk, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgZendesk, ConfigPanel: ZendeskNode, category: "crm",
     description: "Create tickets, reply to customers and manage Zendesk support",
   },
   calendly: {
     label: "Calendly", icon: Calendar, colorClass: "text-[#006BFF]", accentColor: "0,107,255",
-    logoUrl: imgCalendly, ConfigPanel: GenericActionNode, category: "crm",
+    logoUrl: imgCalendly, ConfigPanel: CalendlyNode, category: "crm",
     description: "Fetch bookings, cancel meetings and manage Calendly event types",
   },
   mailchimp: {
     label: "Mailchimp", icon: Mail, colorClass: "text-white", accentColor: "255,224,27",
-    logoUrl: imgMailchimp, ConfigPanel: GenericActionNode, category: "integration",
+    logoUrl: imgMailchimp, ConfigPanel: MailchimpNode, category: "integration",
     description: "Add subscribers, send campaigns and manage Mailchimp lists",
   },
   figma: {
     label: "Figma", icon: PenTool, colorClass: "text-[#F24E1E]", accentColor: "242,78,30",
-    logoUrl: imgFigma, ConfigPanel: GenericActionNode, category: "design",
+    logoUrl: imgFigma, ConfigPanel: FigmaNode, category: "design",
     description: "Fetch files, post comments and export assets from Figma",
   },
   // Social
@@ -1123,22 +1161,22 @@ export const NodeRegistry = {
   },
   mastodon: {
     label: "Mastodon", icon: MessageSquarePlus, colorClass: "text-[#6364FF]", accentColor: "99,100,255",
-    logoUrl: imgMastodon, ConfigPanel: GenericActionNode, category: "social_pub",
+    logoUrl: imgMastodon, ConfigPanel: MastodonNode, category: "social_pub",
     description: "Post toots, boost and manage your Mastodon account",
   },
   producthunt: {
     label: "Product Hunt", icon: TrendingUp, colorClass: "text-[#DA552F]", accentColor: "218,85,47",
-    logoUrl: imgProductHunt, ConfigPanel: GenericActionNode, category: "social_pub",
+    logoUrl: imgProductHunt, ConfigPanel: ProductHuntNode, category: "social_pub",
     description: "Fetch product launches, upvotes and comments from Product Hunt",
   },
   hackernews: {
     label: "Hacker News", icon: Rss, colorClass: "text-[#FF6600]", accentColor: "255,102,0",
-    logoUrl: imgHackerNews, ConfigPanel: GenericActionNode, category: "research",
+    logoUrl: imgHackerNews, ConfigPanel: HackerNewsNode, category: "research",
     description: "Fetch top stories, comments and job posts from Hacker News",
   },
   virustotal: {
     label: "VirusTotal", icon: Shield, colorClass: "text-[#394EFF]", accentColor: "57,78,255",
-    logoUrl: imgVirusTotal, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgVirusTotal, ConfigPanel: VirusTotalNode, category: "devtools",
     description: "Scan files and URLs for malware via VirusTotal API",
   },
   // Infra
@@ -1154,22 +1192,22 @@ export const NodeRegistry = {
   },
   ssl: {
     label: "SSL Cert Monitor", icon: Lock, colorClass: "text-green-400", accentColor: "74,222,128",
-    logoUrl: imgLetsEncrypt, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgLetsEncrypt, ConfigPanel: SSLMonitorNode, category: "devtools",
     description: "Check SSL certificate expiry and validity for any domain",
   },
   dns: {
     label: "DNS Lookup", icon: Globe, colorClass: "text-white", accentColor: "56,189,248",
-    logoUrl: imgDns, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgDns, ConfigPanel: DNSLookupNode, category: "devtools",
     description: "Query A, MX, TXT, CNAME and other DNS records for a domain",
   },
   port_monitor: {
     label: "Port Monitor", icon: Wifi, colorClass: "text-white", accentColor: "167,139,250",
-    logoUrl: imgPortMonitor, ConfigPanel: GenericActionNode, category: "devtools",
+    logoUrl: imgPortMonitor, ConfigPanel: PortMonitorNode, category: "devtools",
     description: "Check if a TCP port is open or closed on a server",
   },
   http_monitor: {
     label: "HTTP Monitor", icon: Activity, colorClass: "text-white", accentColor: "248,113,113",
-    logoUrl: imgVercel, ConfigPanel: GenericActionNode, category: "devtools",
+    ConfigPanel: HttpMonitorNode, category: "devtools",
     description: "Check URL uptime, response time and status code",
   },
   // Content / Feed
@@ -1180,7 +1218,7 @@ export const NodeRegistry = {
   },
   reddit: {
     label: "Reddit", icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",
-    logoUrl: imgReddit, ConfigPanel: GenericActionNode, category: "social_pub",
+    logoUrl: imgReddit, ConfigPanel: RedditNode, category: "social_pub",
     description: "Post to subreddits, comment and fetch hot posts",
   },
   rss: {
@@ -1195,7 +1233,7 @@ export const NodeRegistry = {
   },
   price_alert: {
     label: "Crypto Price Alert", icon: TrendingUp, colorClass: "text-yellow-400", accentColor: "250,204,21",
-    logoUrl: imgBitcoin, ConfigPanel: GenericActionNode, category: "research",
+    logoUrl: imgBitcoin, ConfigPanel: CryptoPriceNode, category: "research",
     description: "Fetch live crypto prices and trigger on threshold breaches",
   },
   // Workflow triggers as action nodes
