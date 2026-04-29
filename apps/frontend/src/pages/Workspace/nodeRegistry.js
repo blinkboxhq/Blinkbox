@@ -20,7 +20,7 @@ import {
   Film, Headphones, Radio, Podcast, BookMarked, Newspaper, Trophy,
   Star, Heart, ThumbsUp, Share2, Link2, ExternalLink, Download, Upload,
   Printer, ScanLine, Barcode, CaseSensitive, Replace, Regex,
-  Split, Combine, Shuffle, ArrowRightLeft,
+  Split, Combine, Shuffle, ArrowRightLeft, Fingerprint,
 } from "lucide-react";
 
 // Local asset icons
@@ -192,6 +192,24 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Gamers nodes
+import SteamGameLookupNode    from "./components/nodes/SteamGameLookupNode";
+import TwitchStreamStatusNode from "./components/nodes/TwitchStreamStatusNode";
+import DiscordRoleAssignNode  from "./components/nodes/DiscordRoleAssignNode";
+import LeaderboardUpdateNode  from "./components/nodes/LeaderboardUpdateNode";
+import GameEventWebhookNode   from "./components/nodes/GameEventWebhookNode";
+// Automators nodes
+import VariableSetGetNode     from "./components/nodes/VariableSetGetNode";
+import CounterNode            from "./components/nodes/CounterNode";
+import RandomPickNode         from "./components/nodes/RandomPickNode";
+import ScheduleCheckNode      from "./components/nodes/ScheduleCheckNode";
+import IpWhitelistNode        from "./components/nodes/IpWhitelistNode";
+import PaginationHandlerNode  from "./components/nodes/PaginationHandlerNode";
+import FileUploadNode         from "./components/nodes/FileUploadNode";
+import FileDownloadNode       from "./components/nodes/FileDownloadNode";
+import ZipFilesNode           from "./components/nodes/ZipFilesNode";
+import Base64Node             from "./components/nodes/Base64Node";
+import HashNode               from "./components/nodes/HashNode";
 // Finance & Accounting nodes
 import GstCalculatorNode      from "./components/nodes/GstCalculatorNode";
 import InvoiceParserNode      from "./components/nodes/InvoiceParserNode";
@@ -326,6 +344,8 @@ export const CATEGORIES = [
   { id: "design",      label: "Design & Creative", icon: PenTool,    shape: "pill" },
   { id: "social_pub",  label: "Social Media",      icon: Share2,     shape: "rounded" },
   { id: "finance",     label: "Finance & Accounting", icon: DollarSign, shape: "rounded" },
+  { id: "gaming",      label: "Gaming",               icon: Gamepad2,   shape: "sharp" },
+  { id: "automation",  label: "Automation Utilities",  icon: Zap,        shape: "sharp" },
 ];
 
 export const NodeRegistry = {
@@ -938,6 +958,90 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Gaming Nodes ─────────────────────────────────────────────────────────
+  steam_game_lookup: {
+    label: "Steam Game Lookup", icon: Gamepad2, colorClass: "text-[#66c0f4]", accentColor: "102,192,244",
+    ConfigPanel: SteamGameLookupNode, category: "gaming",
+    description: "Search games, fetch info by App ID, or get player summary from Steam",
+  },
+  twitch_stream_status: {
+    label: "Twitch Stream Status", icon: Radio, colorClass: "text-[#9146FF]", accentColor: "145,70,255",
+    ConfigPanel: TwitchStreamStatusNode, category: "gaming",
+    description: "Check live status, stream info, top clips and schedule",
+  },
+  discord_role_assign: {
+    label: "Discord Role Assign", icon: Users, colorClass: "text-[#5865F2]", accentColor: "88,101,242",
+    logoUrl: imgDiscord, ConfigPanel: DiscordRoleAssignNode, category: "gaming",
+    description: "Add, remove, list or create Discord server roles via Bot API",
+  },
+  leaderboard_update: {
+    label: "Leaderboard Update", icon: Trophy, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    ConfigPanel: LeaderboardUpdateNode, category: "gaming",
+    description: "Submit scores, fetch top players, get rank, reset board",
+  },
+  game_event_webhook: {
+    label: "Game Event Webhook", icon: Zap, colorClass: "text-green-400", accentColor: "74,222,128",
+    ConfigPanel: GameEventWebhookNode, category: "gaming",
+    description: "Receive, filter and transform in-game events via webhook",
+  },
+
+  // ── Automation Utility Nodes ──────────────────────────────────────────────
+  variable_set_get: {
+    label: "Variable Set / Get", icon: ToggleLeft, colorClass: "text-cyan-400", accentColor: "34,211,238",
+    ConfigPanel: VariableSetGetNode, category: "automation",
+    description: "Store and retrieve values across nodes with execution/workflow/global scope",
+  },
+  counter: {
+    label: "Counter", icon: Hash, colorClass: "text-white", accentColor: "251,146,60",
+    ConfigPanel: CounterNode, category: "automation",
+    description: "Increment, decrement, reset or get a named counter",
+  },
+  random_pick: {
+    label: "Random Pick", icon: Shuffle, colorClass: "text-white", accentColor: "232,121,249",
+    ConfigPanel: RandomPickNode, category: "automation",
+    description: "Pick one, pick N, shuffle or weighted-random from any array",
+  },
+  schedule_check: {
+    label: "Schedule Check", icon: Clock, colorClass: "text-amber-400", accentColor: "251,191,36",
+    ConfigPanel: ScheduleCheckNode, category: "automation",
+    description: "Is it currently within business hours? With holiday exclusions",
+  },
+  ip_whitelist: {
+    label: "IP Whitelist Check", icon: Shield, colorClass: "text-white", accentColor: "248,113,113",
+    ConfigPanel: IpWhitelistNode, category: "automation",
+    description: "Allow or block IPs, CIDR ranges and countries",
+  },
+  pagination_handler: {
+    label: "Pagination Handler", icon: ArrowRightLeft, colorClass: "text-teal-400", accentColor: "45,212,191",
+    ConfigPanel: PaginationHandlerNode, category: "automation",
+    description: "Auto-paginate APIs — offset, cursor, page number or next link",
+  },
+  file_upload: {
+    label: "File Upload", icon: Upload, colorClass: "text-white", accentColor: "96,165,250",
+    ConfigPanel: FileUploadNode, category: "automation",
+    description: "Upload to S3, GCS, Azure Blob, SFTP or HTTP PUT",
+  },
+  file_download: {
+    label: "File Download", icon: Download, colorClass: "text-white", accentColor: "52,211,153",
+    ConfigPanel: FileDownloadNode, category: "automation",
+    description: "Download any URL into payload as base64, text, JSON or buffer",
+  },
+  zip_files: {
+    label: "Zip / Unzip", icon: Archive, colorClass: "text-white", accentColor: "161,161,170",
+    ConfigPanel: ZipFilesNode, category: "automation",
+    description: "Compress or extract ZIP, TAR and TAR.GZ archives with password support",
+  },
+  base64: {
+    label: "Base64 Encode/Decode", icon: Lock, colorClass: "text-white", accentColor: "129,140,248",
+    ConfigPanel: Base64Node, category: "automation",
+    description: "Encode or decode text, URLs and binary with URL-safe support",
+  },
+  hash: {
+    label: "Hash", icon: Fingerprint, colorClass: "text-white", accentColor: "251,113,133",
+    ConfigPanel: HashNode, category: "automation",
+    description: "MD5, SHA-256/512, SHA3, HMAC, bcrypt, Argon2 — with verify mode",
   },
 
   // ── Finance & Accounting Nodes ───────────────────────────────────────────
