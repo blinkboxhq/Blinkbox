@@ -20,7 +20,7 @@ import {
   Film, Headphones, Radio, Podcast, BookMarked, Newspaper, Trophy,
   Star, Heart, ThumbsUp, Share2, Link2, ExternalLink, Download, Upload,
   Printer, ScanLine, Barcode, CaseSensitive, Replace, Regex,
-  Split, Combine, Shuffle, ArrowRightLeft, Fingerprint,
+  Split, Combine, Shuffle, ArrowRightLeft, Fingerprint, Triangle,
 } from "lucide-react";
 
 // Local asset icons
@@ -1052,7 +1052,7 @@ export const NodeRegistry = {
     description: "Create, read and update Google Docs documents",
   },
   google_forms: {
-    label: "Google Forms", icon: ClipboardIcon, colorClass: "text-[#673AB7]", accentColor: "103,58,183",
+    label: "Google Forms", icon: Clipboard, colorClass: "text-[#673AB7]", accentColor: "103,58,183",
     logoUrl: imgGoogleForms, ConfigPanel: GenericActionNode, category: "integration",
     description: "Create forms, fetch responses and manage Google Forms",
   },
