@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
-  { key: 'workflows', icon: Network, label: 'Workflows' },
+  { key: 'workflows', icon: Network,  label: 'Workflows' },
+  { key: 'nodes',     icon: Layers,   label: 'Nodes' },
   { key: 'analytics', icon: BarChart2, label: 'Analytics' },
-  { key: 'logs', icon: Activity, label: 'History' },
-  { key: 'vault', icon: Key, label: 'Credentials' },
+  { key: 'logs',      icon: Activity, label: 'History' },
+  { key: 'vault',     icon: Key,      label: 'Credentials' },
 ];
 
 const NAV_BOTTOM = [

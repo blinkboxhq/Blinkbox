@@ -17,6 +17,7 @@ import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import BrianBar from './components/BrianBar';
+import NodeLibrary from './components/NodeLibrary';
 // ─── Templates ─────────────────────────────────────────────────────────────
 // Each template defines display info + the actual nodes/edges to pre-save.
 // Node format matches backend: { id, type, description, data, position }
@@ -488,6 +489,9 @@ export default function Dashboard() {
 
           {/* ═══ ANALYTICS ═══ */}
           {activeTab === 'analytics' && <Analytics />}
+
+          {/* ═══ NODE LIBRARY ═══ */}
+          {activeTab === 'nodes' && <NodeLibrary />}
 
           {/* ═══ VAULT ═══ */}
           {activeTab === 'vault' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><VaultManager /></div>}
