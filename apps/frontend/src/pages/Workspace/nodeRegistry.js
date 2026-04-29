@@ -83,6 +83,8 @@ import imgHackerNews     from "../../assets/hackernews.svg";
 import imgPipedrive      from "../../assets/pipedrive.svg";
 import imgDns            from "../../assets/dns.svg";
 import imgPortMonitor    from "../../assets/port-monitor.svg";
+import imgInstagram      from "../../assets/instagram.svg";
+import imgTikTok         from "../../assets/tiktok.svg";
 
 // Config Panels — existing
 import TriggerNode          from "./components/nodes/TriggerNode";
@@ -190,6 +192,18 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Social Media nodes
+import YouTubeUploadNode      from "./components/nodes/YouTubeUploadNode";
+import InstagramPostNode      from "./components/nodes/InstagramPostNode";
+import TikTokPostNode         from "./components/nodes/TikTokPostNode";
+import LinkedInPostNode       from "./components/nodes/LinkedInPostNode";
+import TwitterPostNode        from "./components/nodes/TwitterPostNode";
+import RssFeedGeneratorNode   from "./components/nodes/RssFeedGeneratorNode";
+import BlogPostNode           from "./components/nodes/BlogPostNode";
+import ThumbnailGeneratorNode from "./components/nodes/ThumbnailGeneratorNode";
+import HashtagSuggesterNode   from "./components/nodes/HashtagSuggesterNode";
+import CaptionWriterNode      from "./components/nodes/CaptionWriterNode";
+import AudienceInsightsNode   from "./components/nodes/AudienceInsightsNode";
 // Design / Creative nodes
 import ImageGenerateNode    from "./components/nodes/ImageGenerateNode";
 import ImageCaptionNode     from "./components/nodes/ImageCaptionNode";
@@ -302,6 +316,7 @@ export const CATEGORIES = [
   { id: "social",      label: "Social Media",    icon: Users,       shape: "rounded" },
   { id: "education",   label: "Education & AI",  icon: GraduationCap, shape: "rounded" },
   { id: "design",      label: "Design & Creative", icon: PenTool,    shape: "pill" },
+  { id: "social_pub",  label: "Social Media",      icon: Share2,     shape: "rounded" },
 ];
 
 export const NodeRegistry = {
@@ -914,6 +929,63 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Social Media Publishing Nodes ────────────────────────────────────────
+  youtube_upload: {
+    label: "YouTube Upload", icon: Youtube, colorClass: "text-red-400", accentColor: "248,113,113",
+    logoUrl: imgYouTube, ConfigPanel: YouTubeUploadNode, category: "social_pub",
+    description: "Upload a video to YouTube with title, tags, privacy and playlist",
+  },
+  instagram_post: {
+    label: "Instagram Post", icon: Camera, colorClass: "text-pink-400", accentColor: "244,114,182",
+    logoUrl: imgInstagram, ConfigPanel: InstagramPostNode, category: "social_pub",
+    description: "Post image, reel, carousel or story via Instagram Graph API",
+  },
+  tiktok_post: {
+    label: "TikTok Post", icon: Video, colorClass: "text-white", accentColor: "238,29,82",
+    logoUrl: imgTikTok, ConfigPanel: TikTokPostNode, category: "social_pub",
+    description: "Publish a video to TikTok via Content Posting API",
+  },
+  linkedin_post: {
+    label: "LinkedIn Post", icon: Users, colorClass: "text-[#0A66C2]", accentColor: "10,102,194",
+    ConfigPanel: LinkedInPostNode, category: "social_pub",
+    description: "Publish text, image, video, article or document to LinkedIn",
+  },
+  twitter_post: {
+    label: "Twitter / X Post", icon: Twitter, colorClass: "text-white", accentColor: "228,228,231",
+    ConfigPanel: TwitterPostNode, category: "social_pub",
+    description: "Post tweets, threads, replies and quotes via API v2",
+  },
+  rss_feed_generator: {
+    label: "RSS Feed Generator", icon: Rss, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: RssFeedGeneratorNode, category: "social_pub",
+    description: "Create and manage your own RSS 2.0 feed",
+  },
+  blog_post: {
+    label: "Blog Post", icon: Newspaper, colorClass: "text-white", accentColor: "161,161,170",
+    ConfigPanel: BlogPostNode, category: "social_pub",
+    description: "Publish or draft posts to Ghost or WordPress",
+  },
+  thumbnail_generator: {
+    label: "Thumbnail Generator", icon: Image, colorClass: "text-red-400", accentColor: "248,113,113",
+    ConfigPanel: ThumbnailGeneratorNode, category: "social_pub",
+    description: "AI-generate a platform-optimized thumbnail with face, logo and title",
+  },
+  hashtag_suggester: {
+    label: "Hashtag Suggester", icon: Hash, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: HashtagSuggesterNode, category: "social_pub",
+    description: "AI suggests viral, niche or trending hashtags for any platform",
+  },
+  caption_writer: {
+    label: "Caption Writer", icon: Edit2, colorClass: "text-pink-400", accentColor: "244,114,182",
+    ConfigPanel: CaptionWriterNode, category: "social_pub",
+    description: "AI writes scroll-stopping captions with tone, CTA and emoji control",
+  },
+  audience_insights: {
+    label: "Audience Insights", icon: BarChart2, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: AudienceInsightsNode, category: "social_pub",
+    description: "Pull analytics from Instagram, YouTube, Twitter, LinkedIn or TikTok",
   },
 
   // ── Design & Creative Nodes ──────────────────────────────────────────────
