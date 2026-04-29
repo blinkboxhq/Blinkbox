@@ -504,6 +504,7 @@ export const NodeRegistry = {
   ai_agent: {
     label: "AI Agent", icon: Bot, colorClass: "text-violet-400", accentColor: "139,92,246",
     ConfigPanel: AIAgentNode, category: "ai",
+    description: "Autonomous AI that reasons, uses tools, and completes multi-step tasks on its own",
   },
 
   // AI Tools (specialty)
