@@ -192,6 +192,14 @@ import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
 import VirtualComputerNode       from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode       from "./components/nodes/CodingAgentNode";
 import GenericActionNode         from "./components/nodes/GenericActionNode";
+// Finance & Accounting nodes
+import GstCalculatorNode      from "./components/nodes/GstCalculatorNode";
+import InvoiceParserNode      from "./components/nodes/InvoiceParserNode";
+import TaxRateLookupNode      from "./components/nodes/TaxRateLookupNode";
+import BankStatementParserNode from "./components/nodes/BankStatementParserNode";
+import LedgerEntryNode        from "./components/nodes/LedgerEntryNode";
+import CompoundInterestNode   from "./components/nodes/CompoundInterestNode";
+import PayrollCalculatorNode  from "./components/nodes/PayrollCalculatorNode";
 // Social Media nodes
 import YouTubeUploadNode      from "./components/nodes/YouTubeUploadNode";
 import InstagramPostNode      from "./components/nodes/InstagramPostNode";
@@ -317,6 +325,7 @@ export const CATEGORIES = [
   { id: "education",   label: "Education & AI",  icon: GraduationCap, shape: "rounded" },
   { id: "design",      label: "Design & Creative", icon: PenTool,    shape: "pill" },
   { id: "social_pub",  label: "Social Media",      icon: Share2,     shape: "rounded" },
+  { id: "finance",     label: "Finance & Accounting", icon: DollarSign, shape: "rounded" },
 ];
 
 export const NodeRegistry = {
@@ -929,6 +938,48 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants", icon: Brain, colorClass: "text-[#10A37F]", accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode, category: "ai",
+  },
+
+  // ── Finance & Accounting Nodes ───────────────────────────────────────────
+  gst_calculator: {
+    label: "GST Calculator", icon: Calculator, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: GstCalculatorNode, category: "finance",
+    description: "Indian GST with CGST/SGST/IGST breakdown, cess, inclusive/exclusive",
+  },
+  invoice_parser: {
+    label: "Invoice Parser", icon: ScanLine, colorClass: "text-blue-400", accentColor: "96,165,250",
+    ConfigPanel: InvoiceParserNode, category: "finance",
+    description: "Extract structured fields from invoice images or PDFs using AI vision",
+  },
+  tax_rate_lookup: {
+    label: "Tax Rate Lookup", icon: Search, colorClass: "text-emerald-400", accentColor: "52,211,153",
+    ConfigPanel: TaxRateLookupNode, category: "finance",
+    description: "Fetch tax rates by country/category, HSN lookup, GSTIN validation",
+  },
+  bank_statement_parser: {
+    label: "Bank Statement Parser", icon: Table2, colorClass: "text-indigo-400", accentColor: "129,140,248",
+    ConfigPanel: BankStatementParserNode, category: "finance",
+    description: "Parse CSV bank statements — SBI, HDFC, ICICI and more, with AI categorization",
+  },
+  ledger_entry: {
+    label: "Ledger Entry", icon: BookOpen, colorClass: "text-teal-400", accentColor: "45,212,191",
+    ConfigPanel: LedgerEntryNode, category: "finance",
+    description: "Double-entry bookkeeping — add debit/credit entries, query, balance, P&L",
+  },
+  currency_exchange: {
+    label: "Currency Exchange", icon: DollarSign, colorClass: "text-yellow-400", accentColor: "250,204,21",
+    ConfigPanel: CurrencyExchangeNode, category: "finance",
+    description: "Live FX rates and currency conversion — no API key needed",
+  },
+  compound_interest: {
+    label: "Compound Interest", icon: TrendingUp, colorClass: "text-green-400", accentColor: "74,222,128",
+    ConfigPanel: CompoundInterestNode, category: "finance",
+    description: "CI, SI, EMI, SIP, lumpsum and FD maturity calculations",
+  },
+  payroll_calculator: {
+    label: "Payroll Calculator", icon: Briefcase, colorClass: "text-violet-400", accentColor: "167,139,250",
+    ConfigPanel: PayrollCalculatorNode, category: "finance",
+    description: "Net salary with PF, ESI, TDS, LOP — India new/old tax regime",
   },
 
   // ── Social Media Publishing Nodes ────────────────────────────────────────
