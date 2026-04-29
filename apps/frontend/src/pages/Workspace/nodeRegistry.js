@@ -123,6 +123,9 @@ import HttpRequestNode     from "./components/nodes/HttpRequestNode";
 import DelayNode           from "./components/nodes/Delaynode";
 import InformerNode        from "./components/nodes/InformerNode";
 import AIAgentNode         from "./components/nodes/AIAgentNode";
+import AgentLLMNode        from "./components/nodes/AgentLLMNode";
+import AgentMemoryNode     from "./components/nodes/AgentMemoryNode";
+import AgentToolNode       from "./components/nodes/AgentToolNode";
 import DataMapperNode      from "./components/nodes/DataMapperNode";
 import SetFieldsNode      from "./components/nodes/SetFieldsNode";
 import LogicRouterNode     from "./components/nodes/LogicRouterNode";
@@ -505,6 +508,23 @@ export const NodeRegistry = {
     label: "AI Agent", icon: Bot, colorClass: "text-violet-400", accentColor: "139,92,246",
     ConfigPanel: AIAgentNode, category: "ai",
     description: "Autonomous AI that reasons, uses tools, and completes multi-step tasks on its own",
+  },
+
+  // ── Agent Sub-Nodes (agentOnly — hidden from step picker, only shown in agent dock) ──
+  agent_llm: {
+    label: "Language Model", icon: Brain, colorClass: "text-violet-300", accentColor: "167,139,250",
+    ConfigPanel: AgentLLMNode, category: "ai", agentOnly: true,
+    description: "LLM powering the AI Agent",
+  },
+  agent_memory: {
+    label: "Memory", icon: Database, colorClass: "text-purple-400", accentColor: "192,132,252",
+    ConfigPanel: AgentMemoryNode, category: "ai", agentOnly: true,
+    description: "Conversation memory for the AI Agent",
+  },
+  agent_tool: {
+    label: "Tool", icon: Zap, colorClass: "text-orange-400", accentColor: "251,146,60",
+    ConfigPanel: AgentToolNode, category: "ai", agentOnly: true,
+    description: "A capability the AI Agent can invoke",
   },
 
   // AI Tools (specialty)

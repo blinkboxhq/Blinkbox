@@ -6,7 +6,7 @@ import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
 
 const ALL_NODES = Object.entries(NodeRegistry)
-  .filter(([, def]) => def.category !== "trigger")
+  .filter(([, def]) => def.category !== "trigger" && !def.agentOnly)
   .map(([key, def]) => ({ key, ...def }));
 
 const ALL_SEARCHABLE = [
