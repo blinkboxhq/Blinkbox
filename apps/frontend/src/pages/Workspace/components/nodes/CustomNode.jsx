@@ -15,32 +15,32 @@ const AGENT_BOTTOM_SLOTS = [
   {
     id: "llm",
     label: "Model",
-    required: true,
     icon: Brain,
     color: "#a78bfa",
     accentColor: "167,139,250",
     allowedTypes: ["agent_llm"],
     single: true,
+    showPlus: false,
+  },
+  {
+    id: "memory",
+    label: "Memory",
+    icon: Database,
+    color: "#c084fc",
+    accentColor: "192,132,252",
+    allowedTypes: ["agent_memory"],
+    single: true,
+    showPlus: false,
   },
   {
     id: "tools",
-    label: "Tool",
-    required: false,
+    label: "Tools",
     icon: Zap,
     color: "#fb923c",
     accentColor: "251,146,60",
     allowedTypes: ["agent_tool"],
     single: false,
-  },
-  {
-    id: "memory",
-    label: "Output Parser",
-    required: false,
-    icon: Settings2,
-    color: "#6ee7b7",
-    accentColor: "110,231,183",
-    allowedTypes: ["agent_memory"],
-    single: true,
+    showPlus: true,
   },
 ];
 
@@ -121,29 +121,35 @@ function DockPopover({ slot, parentNodeId, onClose }) {
 // ─── Agent Slot Dot — sits on the bottom border line of the card ────────────
 function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct }) {
   const [open, setOpen] = useState(false);
-  return (
-    <div className="absolute nodrag" style={{ left: leftPct, bottom: -8, transform: "translateX(-50%)" }}>
-      {/* Invisible ReactFlow handle — edge connects here */}
-      <Handle type="target" position={Position.Bottom} id={slot.id}
-        className="!opacity-0 !w-4 !h-4 !pointer-events-none"
-        style={{ left: "50%", bottom: 0, transform: "translateX(-50%)" }} />
+  const [hovered, setHovered] = useState(false);
 
-      {/* Visible dot / + button */}
-      {hasConnection ? (
-        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#10b981" }} />
-      ) : (
+  return (
+    <div className="absolute nodrag" style={{ left: leftPct, bottom: -10, transform: "translateX(-50%)" }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+
+      {/* Invisible ReactFlow handle */}
+      <Handle type="target" position={Position.Bottom} id={slot.id}
+        className="!opacity-0 !w-5 !h-5 !pointer-events-none"
+        style={{ left: "50%", top: 0, transform: "translateX(-50%)" }} />
+
+      {/* Tools slot: show + on hover */}
+      {slot.showPlus && hovered ? (
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-600 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150"
-          title={slot.label}
+          className="w-5 h-5 rounded-full bg-zinc-800 border-[2.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
+          title="Add Tool"
         >
-          <Plus className="w-2 h-2 text-zinc-400" strokeWidth={3} />
+          <Plus className="w-2.5 h-2.5 text-zinc-300" strokeWidth={3} />
         </button>
+      ) : (
+        /* Standard ring dot — same look as input/output handles */
+        <div className="w-5 h-5 rounded-full border-[3px] border-[#1a1a1e] transition-colors duration-150"
+          style={{ backgroundColor: hasConnection ? "#71717a" : "#3f3f46" }} />
       )}
 
       <AnimatePresence>
-        {open && !hasConnection && (
+        {open && (
           <DockPopover slot={slot} parentNodeId={parentNodeId} onClose={() => setOpen(false)} />
         )}
       </AnimatePresence>
@@ -399,7 +405,7 @@ export default function CustomNode({ id, data, selected }) {
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
     const cardW = 180;
-    const cardH = 120;
+    const cardH = 130;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
@@ -433,15 +439,22 @@ export default function CustomNode({ id, data, selected }) {
           <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{data.label || "AI Agent"}</p>
           <p className="text-[9px] text-zinc-600 mt-0.5">ReAct Agent</p>
 
-          {/* 3 clickable dots sitting on the bottom border line */}
-          {AGENT_BOTTOM_SLOTS.map((slot, i) => {
-            const leftPct = `${Math.round(100 * (2 * i + 1) / (2 * n))}%`;
-            const connected = getSlotConnected(slot.id);
-            return (
-              <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
-                hasConnection={connected} leftPct={leftPct} />
-            );
-          })}
+          {/* Labels inside card just above the bottom border */}
+          <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
+            style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}>
+            {AGENT_BOTTOM_SLOTS.map(slot => (
+              <span key={slot.id} className="text-center text-[8px] font-medium text-zinc-600 tracking-wide">
+                {slot.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Dots on the bottom border line */}
+          {AGENT_BOTTOM_SLOTS.map((slot, i) => (
+            <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
+              hasConnection={getSlotConnected(slot.id)}
+              leftPct={`${Math.round(100 * (2 * i + 1) / (2 * n))}%`} />
+          ))}
         </motion.div>
 
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
