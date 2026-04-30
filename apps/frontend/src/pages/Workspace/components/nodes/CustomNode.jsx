@@ -226,7 +226,7 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
     <>
       <Handle type="source" position={Position.Right} id={handleId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0 }}
+        style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0, ...(cardHeight ? { top: cardHeight / 2, transform: "translateY(-50%)" } : {}) }}
       />
       {!hasConnection && (
         <div className="absolute z-10 nodrag"
@@ -369,7 +369,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 140, cardH = 140;
+    const cardW = 120, cardH = 120;
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
