@@ -119,32 +119,32 @@ function DockPopover({ slot, parentNodeId, onClose }) {
 }
 
 // ─── Agent Slot Dot — sits on the bottom border line of the card ────────────
-function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct }) {
+function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
 
+  const showPlus = !hasConnection || (slot.showPlus && hovered);
+
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, bottom: -10, transform: "translateX(-50%)" }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 10, transform: "translateX(-50%)" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
-      {/* Invisible ReactFlow handle */}
       <Handle type="target" position={Position.Bottom} id={slot.id}
         className="!opacity-0 !w-5 !h-5 !pointer-events-none"
         style={{ left: "50%", top: 0, transform: "translateX(-50%)" }} />
 
-      {/* Tools: always show + on hover. Model/Memory: just the dot, no interaction */}
-      {slot.showPlus && hovered ? (
+      {showPlus ? (
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
           onMouseDown={e => e.stopPropagation()}
           className="w-5 h-5 rounded-full bg-zinc-800 border-[2.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
-          title="Add Tool"
+          title={slot.label}
         >
           <Plus className="w-2.5 h-2.5 text-zinc-300" strokeWidth={3} />
         </button>
       ) : (
         <div className="w-5 h-5 rounded-full border-[3px] border-[#1a1a1e]"
-          style={{ backgroundColor: hasConnection ? "#71717a" : "#3f3f46" }} />
+          style={{ backgroundColor: "#71717a" }} />
       )}
 
       <AnimatePresence>
@@ -403,8 +403,8 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 180;
-    const cardH = 130;
+    const cardW = 120;
+    const cardH = 120;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
@@ -437,7 +437,7 @@ export default function CustomNode({ id, data, selected }) {
           <Bot className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
           <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{data.label || "AI Agent"}</p>
 
-          {/* Labels inside card just above the bottom border */}
+          {/* Slot labels above bottom edge */}
           <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
             style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}>
             {AGENT_BOTTOM_SLOTS.map(slot => (
@@ -446,14 +446,15 @@ export default function CustomNode({ id, data, selected }) {
               </span>
             ))}
           </div>
-
-          {/* Dots on the bottom border line */}
-          {AGENT_BOTTOM_SLOTS.map((slot, i) => (
-            <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
-              hasConnection={getSlotConnected(slot.id)}
-              leftPct={`${Math.round(100 * (2 * i + 1) / (2 * n))}%`} />
-          ))}
         </motion.div>
+
+        {/* Slot dots — siblings of card so they're never clipped */}
+        {AGENT_BOTTOM_SLOTS.map((slot, i) => (
+          <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
+            hasConnection={getSlotConnected(slot.id)}
+            leftPct={`${Math.round(100 * (2 * i + 1) / (2 * n))}%`}
+            cardH={cardH} />
+        ))}
 
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       </div>
