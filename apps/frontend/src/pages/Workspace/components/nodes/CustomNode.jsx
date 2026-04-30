@@ -118,28 +118,32 @@ function DockPopover({ slot, parentNodeId, onClose }) {
   );
 }
 
-// ─── Agent Slot Button (visual only — handle is rendered separately in card) ─
-function AgentSlotDot({ slot, parentNodeId, hasConnection }) {
+// ─── Agent Slot Dot — sits on the bottom border line of the card ────────────
+function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="relative flex flex-col items-center gap-1">
-      <span className="text-[8px] font-medium text-zinc-600 whitespace-nowrap select-none leading-none">
-        {slot.label}{slot.required && ' *'}
-      </span>
+    <div className="absolute nodrag" style={{ left: leftPct, bottom: -8, transform: "translateX(-50%)" }}>
+      {/* Invisible ReactFlow handle — edge connects here */}
+      <Handle type="target" position={Position.Bottom} id={slot.id}
+        className="!opacity-0 !w-4 !h-4 !pointer-events-none"
+        style={{ left: "50%", bottom: 0, transform: "translateX(-50%)" }} />
+
+      {/* Visible dot / + button */}
       {hasConnection ? (
-        <div className="w-5 h-5 rounded-full bg-zinc-800 border border-emerald-500/40 flex items-center justify-center">
-          <Check className="w-2.5 h-2.5 text-emerald-400" strokeWidth={2.5} />
+        <div className="w-4 h-4 rounded-full bg-zinc-900 border-2 border-emerald-500 flex items-center justify-center shadow-sm shadow-emerald-500/20">
+          <Check className="w-2 h-2 text-emerald-400" strokeWidth={3} />
         </div>
       ) : (
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-5 h-5 rounded-full bg-zinc-800 border border-zinc-600 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 nodrag"
-          title={`Add ${slot.label}`}
+          className="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-600 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150"
+          title={slot.label}
         >
-          <Plus className="w-2.5 h-2.5 text-zinc-400" strokeWidth={3} />
+          <Plus className="w-2 h-2 text-zinc-400" strokeWidth={3} />
         </button>
       )}
+
       <AnimatePresence>
         {open && !hasConnection && (
           <DockPopover slot={slot} parentNodeId={parentNodeId} onClose={() => setOpen(false)} />
@@ -394,11 +398,11 @@ export default function CustomNode({ id, data, selected }) {
     );
   }
 
-  // ── AI AGENT NODE ── dark card (matches standard nodes) + slots on bottom edge
+  // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
     const cardW = 180;
-    const cardH = 132;
-    const stripH = 46;
+    const cardH = 120;
+    const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
@@ -407,7 +411,6 @@ export default function CustomNode({ id, data, selected }) {
     const cardShadow = selected
       ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
-    const n = AGENT_BOTTOM_SLOTS.length;
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
@@ -419,7 +422,7 @@ export default function CustomNode({ id, data, selected }) {
           style={{ top: cardH / 2 }} />
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig} className="relative cursor-pointer transition-all duration-300"
+          onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}>
 
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: shapeRadius - 1, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
@@ -428,41 +431,23 @@ export default function CustomNode({ id, data, selected }) {
           {badge}
           {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
 
-          {/* Icon + text centered in the top portion above the strip */}
-          <div className="absolute inset-x-0 top-0 flex flex-col items-center justify-center"
-            style={{ height: cardH - stripH }}>
-            <Bot className={`w-10 h-10 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
-            <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors truncate px-3 text-center">{data.label || "AI Agent"}</p>
-            <p className="text-[9px] text-zinc-600 mt-0.5">ReAct Agent</p>
-          </div>
+          <Bot className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
+          <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{data.label || "AI Agent"}</p>
+          <p className="text-[9px] text-zinc-600 mt-0.5">ReAct Agent</p>
 
-          {/* Bottom strip — inside the card */}
-          <div className="absolute bottom-0 left-0 right-0 grid nodrag"
-            style={{ gridTemplateColumns: `repeat(${n}, 1fr)`, height: stripH, borderTop: "1px solid rgba(255,255,255,0.05)", borderRadius: `0 0 ${shapeRadius - 1}px ${shapeRadius - 1}px` }}>
-            {AGENT_BOTTOM_SLOTS.map(slot => (
-              <div key={slot.id} className="flex items-center justify-center">
-                <AgentSlotDot slot={slot} parentNodeId={id} hasConnection={getSlotConnected(slot.id)} />
-              </div>
-            ))}
-          </div>
-
-          {/* Handles sit on the bottom edge, aligned with each grid column center */}
-          {AGENT_BOTTOM_SLOTS.map((slot, i) => (
-            <Handle key={`h-${slot.id}`} type="target" position={Position.Bottom} id={slot.id}
-              className="!w-3 !h-3 !rounded-full !border-[1.5px] !border-[#1a1a1e] !pointer-events-none"
-              style={{
-                left: `${Math.round(100 * (2 * i + 1) / (2 * n))}%`,
-                bottom: -6,
-                backgroundColor: getSlotConnected(slot.id) ? "#10b981" : "#3f3f46",
-                transform: "translateX(-50%)",
-              }}
-            />
-          ))}
+          {/* 3 clickable dots sitting on the bottom border line */}
+          {AGENT_BOTTOM_SLOTS.map((slot, i) => {
+            const leftPct = `${Math.round(100 * (2 * i + 1) / (2 * n))}%`;
+            const connected = getSlotConnected(slot.id);
+            return (
+              <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
+                hasConnection={connected} leftPct={leftPct} />
+            );
+          })}
         </motion.div>
 
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
 
-        {/* Node label */}
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
           <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{data.label}</span>
           {configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
