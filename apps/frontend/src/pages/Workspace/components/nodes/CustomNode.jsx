@@ -403,7 +403,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 120;
+    const cardW = 180;
     const cardH = 120;
     const n = AGENT_BOTTOM_SLOTS.length;
 
