@@ -30,8 +30,10 @@ export const createUISlice = (set, get) => ({
   isSaving: false,
   isActivating: false,
   isLoading: true,
-  addNodeSource: null, // nodeId that triggered "Add Next Step" modal
-  insertEdgeId: null, // edgeId when inserting node between two nodes
+  addNodeSource: null,
+  insertEdgeId: null,
+  isAgentPickerOpen: false,
+  agentPickerParentId: null,
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -46,6 +48,8 @@ export const createUISlice = (set, get) => ({
   setInsertOnEdge: (edgeId) =>
     set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
   clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null, isAddNodeOpen: false }),
+  openAgentPicker: (parentId) => set({ isAgentPickerOpen: true, agentPickerParentId: parentId, isAddNodeOpen: false, isTriggerPickerOpen: false }),
+  closeAgentPicker: () => set({ isAgentPickerOpen: false, agentPickerParentId: null }),
 
   // ── API: Load Workflow ───────────────────────────────────────────────────
   loadEngine: async (automationId) => {

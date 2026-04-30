@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, X, Search, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot } from "lucide-react";
+import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
@@ -49,79 +49,11 @@ const AGENT_BOTTOM_SLOTS = [
 const AGENT_SUB_TYPES = ["agent_llm", "agent_memory", "agent_tool"];
 
 // ─── Dock Popover: spawns the correct agent sub-node ───────────────────────
-function DockPopover({ slot, parentNodeId, onClose }) {
-  const addNode = useWorkspaceStore(s => s.addNode);
-  const onConnect = useWorkspaceStore(s => s.onConnect);
-  const { getNode } = useReactFlow();
-
-  const handleSelect = useCallback((nodeKey) => {
-    const parentNode = getNode(parentNodeId);
-    if (!parentNode) return;
-    const newId = `${nodeKey}-${crypto.randomUUID()}`;
-    const nodeDef = NodeRegistry[nodeKey];
-
-    addNode({
-      id: newId,
-      type: "custom",
-      position: {
-        x: parentNode.position.x + (slot.id === "llm" ? -120 : slot.id === "memory" ? 80 : 280),
-        y: parentNode.position.y + 200,
-      },
-      data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {} },
-    });
-
-    setTimeout(() => {
-      onConnect({ source: newId, sourceHandle: "agent_out", target: parentNodeId, targetHandle: slot.id });
-    }, 50);
-    onClose();
-  }, [parentNodeId, slot, addNode, onConnect, getNode, onClose]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -6, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -6, scale: 0.97 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
-      className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-44
-        bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-2xl shadow-black/60"
-      onClick={e => e.stopPropagation()}
-    >
-      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/60">
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: slot.color }}>
-          Add {slot.label}
-        </span>
-        <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
-          <X className="w-3 h-3" />
-        </button>
-      </div>
-      <div className="py-1">
-        {slot.allowedTypes.map(key => {
-          const def = NodeRegistry[key];
-          if (!def) return null;
-          const Icon = def.icon;
-          return (
-            <button key={key} onClick={() => handleSelect(key)}
-              className="flex items-center gap-2.5 w-full px-3 py-2.5 hover:bg-zinc-800/60 transition-colors text-left group">
-              <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                style={{ background: slot.color + "20", border: `1px solid ${slot.color}30` }}>
-                <Icon className="w-3 h-3" style={{ color: slot.color }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-zinc-300 group-hover:text-zinc-100 transition-colors font-medium">{def.label}</p>
-                <p className="text-[9px] text-zinc-600 truncate">{def.description}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-}
 
 // ─── Agent Slot Dot — sits on the bottom border line of the card ────────────
 function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
-  const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const openAgentPicker = useWorkspaceStore(s => s.openAgentPicker);
 
   const showPlus = !hasConnection || (slot.showPlus && hovered);
 
@@ -135,7 +67,7 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
 
       {showPlus ? (
         <button
-          onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+          onClick={e => { e.stopPropagation(); openAgentPicker(parentNodeId); }}
           onMouseDown={e => e.stopPropagation()}
           className="w-5 h-5 rounded-full bg-zinc-800 border-[2.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
           title={slot.label}
@@ -146,12 +78,6 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
         <div className="w-5 h-5 rounded-full border-[3px] border-[#1a1a1e]"
           style={{ backgroundColor: "#71717a" }} />
       )}
-
-      <AnimatePresence>
-        {open && (
-          <DockPopover slot={slot} parentNodeId={parentNodeId} onClose={() => setOpen(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
