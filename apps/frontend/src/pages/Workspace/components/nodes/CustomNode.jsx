@@ -226,7 +226,7 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
     <>
       <Handle type="source" position={Position.Right} id={handleId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0, ...(cardHeight ? { top: cardHeight / 2, transform: "translateY(-50%)" } : {}) }}
+        style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0, ...(cardHeight ? { top: cardHeight / 2, transform: "translate(50%, -50%)" } : {}) }}
       />
       {!hasConnection && (
         <div className="absolute z-10 nodrag"
