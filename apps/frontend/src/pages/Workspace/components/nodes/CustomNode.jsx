@@ -130,9 +130,7 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct }) {
 
       {/* Visible dot / + button */}
       {hasConnection ? (
-        <div className="w-4 h-4 rounded-full bg-zinc-900 border-2 border-emerald-500 flex items-center justify-center shadow-sm shadow-emerald-500/20">
-          <Check className="w-2 h-2 text-emerald-400" strokeWidth={3} />
-        </div>
+        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#10b981" }} />
       ) : (
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
@@ -447,11 +445,6 @@ export default function CustomNode({ id, data, selected }) {
         </motion.div>
 
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
-
-        <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{data.label}</span>
-          {configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
-        </div>
       </div>
     );
   }
