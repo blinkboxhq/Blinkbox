@@ -121,31 +121,27 @@ function DockPopover({ slot, parentNodeId, onClose }) {
 // ─── Agent Slot Dot — sits on the bottom border line of the card ────────────
 function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct }) {
   const [open, setOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, bottom: -10, transform: "translateX(-50%)" }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    <div className="absolute nodrag" style={{ left: leftPct, bottom: -10, transform: "translateX(-50%)" }}>
 
       {/* Invisible ReactFlow handle */}
       <Handle type="target" position={Position.Bottom} id={slot.id}
         className="!opacity-0 !w-5 !h-5 !pointer-events-none"
         style={{ left: "50%", top: 0, transform: "translateX(-50%)" }} />
 
-      {/* Tools slot: show + on hover */}
-      {slot.showPlus && hovered ? (
+      {hasConnection ? (
+        <div className="w-5 h-5 rounded-full border-[3px] border-[#1a1a1e]"
+          style={{ backgroundColor: "#71717a" }} />
+      ) : (
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-5 h-5 rounded-full bg-zinc-800 border-[2.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
-          title="Add Tool"
+          className="w-5 h-5 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600 flex items-center justify-center hover:border-zinc-400 active:scale-95 transition-all duration-100"
+          title={`Add ${slot.label}`}
         >
-          <Plus className="w-2.5 h-2.5 text-zinc-300" strokeWidth={3} />
+          <Plus className="w-2.5 h-2.5 text-zinc-400" strokeWidth={3} />
         </button>
-      ) : (
-        /* Standard ring dot — same look as input/output handles */
-        <div className="w-5 h-5 rounded-full border-[3px] border-[#1a1a1e] transition-colors duration-150"
-          style={{ backgroundColor: hasConnection ? "#71717a" : "#3f3f46" }} />
       )}
 
       <AnimatePresence>
@@ -437,7 +433,6 @@ export default function CustomNode({ id, data, selected }) {
 
           <Bot className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
           <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{data.label || "AI Agent"}</p>
-          <p className="text-[9px] text-zinc-600 mt-0.5">ReAct Agent</p>
 
           {/* Labels inside card just above the bottom border */}
           <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
