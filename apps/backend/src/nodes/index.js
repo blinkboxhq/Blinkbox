@@ -10,6 +10,9 @@
  * NEW v2:  utility nodes, AI specialty nodes, 10 new integrations
  */
 
+// Agent Tool Nodes (all 98 tool_* implementations)
+import * as agentToolNodes from "./agentTools.nodes.js";
+
 // Triggers
 import cronTrigger from "./cronTrigger.node.js";
 
@@ -423,4 +426,9 @@ export const nodeRegistry = {
   transform: dataMapper,
   filter: dataMapper,
   if_condition: logicRouter,
+
+  // Agent Tool Nodes — spread all tool_* exports
+  ...Object.fromEntries(
+    Object.entries(agentToolNodes).map(([key, val]) => [key, val])
+  ),
 };
