@@ -217,6 +217,7 @@ function ConditionOutputHandles({ cardHeight }) {
 // ═════════════════════════════════════════════════════════════════════════════
 export default function CustomNode({ id, data, selected }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { id: automationId } = useParams();
   const { deleteElements } = useReactFlow();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
@@ -233,6 +234,7 @@ export default function CustomNode({ id, data, selected }) {
   const setAddNodeSource = useWorkspaceStore(s => s.setAddNodeSource);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const duplicateNode = useWorkspaceStore(s => s.duplicateNode);
+  const updateNodeConfig = useWorkspaceStore(s => s.updateNodeConfig);
 
   const status = isExecutionLive ? getNodeStatus(id) : null;
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
@@ -389,9 +391,11 @@ export default function CustomNode({ id, data, selected }) {
   }
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
-  // Perfect circle, logo only, single top dot connecting back to agent slot
   if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
-    const d = 72; // diameter — width === height, mathematically equal
+    const d = 72;
+    const models = nodeDef.models || [];
+    const selectedModel = data.config?.model || nodeDef.defaultModel || "";
+    const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
 
     const cardBorder = selected
       ? `1.5px solid rgba(${accent},0.5)`
@@ -401,58 +405,63 @@ export default function CustomNode({ id, data, selected }) {
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
-      <div className="relative group" style={{ width: d, height: d }}
+      <div className="relative group" style={{ width: d, height: d + 22 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
 
+        {/* Model picker popup — floats above the circle */}
+        {pickerOpen && models.length > 0 && (
+          <div className="absolute nodrag" style={{ bottom: d + 10, left: "50%", transform: "translateX(-50%)", zIndex: 9999, minWidth: 180 }}>
+            <div className="bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-2xl shadow-black/60 overflow-hidden py-1">
+              {models.map(m => (
+                <button key={m.value}
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={e => { e.stopPropagation(); updateNodeConfig(id, "model", m.value); setPickerOpen(false); }}
+                  className={`w-full px-4 py-2 text-left text-[12px] transition-colors ${
+                    selectedModel === m.value
+                      ? "text-zinc-100 bg-zinc-800 font-semibold"
+                      : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                  }`}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Single top dot — connects back up to agent slot */}
-        <Handle
-          type="source"
-          position={Position.Top}
-          id="agent_out"
+        <Handle type="source" position={Position.Top} id="agent_out"
           className="!rounded-full !border-2 !border-[#1a1a1e] touch-none"
-          style={{
-            width: 10, height: 10,
-            backgroundColor: "#52525b",
-            top: -5, left: "50%", transform: "translateX(-50%)",
-          }}
+          style={{ width: 10, height: 10, backgroundColor: "#52525b", top: -5, left: "50%", transform: "translateX(-50%)" }}
         />
 
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig}
+          onClick={e => { e.stopPropagation(); setPickerOpen(p => !p); }}
           className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
-          style={{
-            width: d, height: d,
-            borderRadius: 9999,
-            background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-            border: cardBorder,
-            boxShadow: cardShadow,
-          }}
+          style={{ width: d, height: d, borderRadius: 9999, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}
         >
           <div className="absolute inset-0 rounded-full pointer-events-none"
             style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
-
           {badge}
-
           {nodeDef.logoUrl ? (
-            <img
-              src={nodeDef.logoUrl}
-              alt={data.label}
-              className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-              style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
-            />
+            <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+              style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon
-              className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
-              strokeWidth={1.4}
-            />
+            <Icon className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
+
+        {/* Model name below circle */}
+        <div className="absolute text-center select-none pointer-events-none" style={{ top: d + 5, left: 0, width: d }}>
+          <span className="text-[9px] text-zinc-500 block truncate leading-tight">
+            {selectedLabel || nodeDef.label}
+          </span>
+        </div>
       </div>
     );
   }
