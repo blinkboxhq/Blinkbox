@@ -1,20 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <g fill="#F97316">
-    <!-- body -->
-    <ellipse cx="50" cy="72" rx="18" ry="14"/>
-    <!-- neck -->
-    <rect x="43" y="46" width="14" height="28" rx="7"/>
-    <!-- head -->
-    <ellipse cx="50" cy="40" rx="16" ry="14"/>
-    <!-- snout -->
-    <ellipse cx="62" cy="46" rx="9" ry="6"/>
-    <!-- left ear -->
-    <ellipse cx="38" cy="28" rx="5" ry="9" transform="rotate(-15 38 28)"/>
-    <!-- right ear -->
-    <ellipse cx="56" cy="26" rx="5" ry="9" transform="rotate(10 56 26)"/>
+    <ellipse cx="9" cy="20.5" rx="6.5" ry="3"/>
+    <polygon points="8,16 12.5,10 15,10 11.5,16"/>
+    <circle cx="14.5" cy="8" r="4"/>
+    <polygon points="11,6.5 9.5,2 12.5,5"/>
+    <polygon points="16,6 17.5,2 18.5,5.5"/>
   </g>
-  <!-- eye -->
-  <circle cx="55" cy="38" r="2.5" fill="#7C2D12"/>
-  <!-- nostril -->
-  <circle cx="66" cy="47" r="1.8" fill="#7C2D12"/>
+  <circle cx="15.5" cy="7" r="1.1" fill="#7C2D12"/>
 </svg>

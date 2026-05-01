@@ -30,6 +30,7 @@ import imgGemini     from "../../assets/gemini-color.svg";
 import imgPerplexity from "../../assets/perplexity-color.svg";
 import imgDeepSeek   from "../../assets/deepseek-color.svg";
 import imgGrok       from "../../assets/grok-color.svg";
+import imgGroq       from "../../assets/groq.svg";
 import imgOllama     from "../../assets/ollama.svg";
 import imgComputer   from "../../assets/computer.png";
 import imgHTTP       from "../../assets/Globe--Streamline-Unicons.svg";
@@ -989,7 +990,7 @@ export const NodeRegistry = {
     category: "code",
   },
   groq: {
-    label: "Groq", icon: Zap, logoUrl: imgGrok,
+    label: "Groq", icon: Zap, logoUrl: imgGroq,
     colorClass: "text-[#F55036]", accentColor: "245,80,54",
     ConfigPanel: makeCodingAgentNode({ label: "Groq", accent: "red", credentialType: "Groq", defaultModel: "llama-3.3-70b-versatile", models: [{ value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" }, { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" }, { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" }] }),
     category: "code",
