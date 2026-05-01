@@ -240,6 +240,8 @@ export default function CustomNode({ id, data, selected }) {
   const isTrigger = data.type === "trigger";
   const isAgent = data.backendType === "ai_agent";
   const isAgentSub = AGENT_SUB_TYPES.includes(data.backendType);
+  // Infer from edge state so the circle survives page refresh even if flag is lost
+  const hasAgentOutConnection = edges.some(e => e.source === id && e.sourceHandle === "agent_out");
 
   // Shape per category
   const catShape = CATEGORIES.find(c => c.id === nodeDef.category)?.shape ?? "rounded";
@@ -248,7 +250,6 @@ export default function CustomNode({ id, data, selected }) {
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
   const hasOutputConnection = edges.some(e => e.source === id && e.sourceHandle === "output");
-  const hasAgentOutConnection = edges.some(e => e.source === id && e.sourceHandle === "agent_out");
 
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
   const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
@@ -389,7 +390,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
   // Perfect circle, logo only, single top dot connecting back to agent slot
-  if (data.isAgentComponent || isAgentSub) {
+  if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
     const d = 72; // diameter — width === height, mathematically equal
 
     const cardBorder = selected
