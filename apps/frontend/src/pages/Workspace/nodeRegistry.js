@@ -30,6 +30,7 @@ import imgGemini     from "../../assets/gemini-color.svg";
 import imgPerplexity from "../../assets/perplexity-color.svg";
 import imgDeepSeek   from "../../assets/deepseek-color.svg";
 import imgGrok       from "../../assets/grok-color.svg";
+import imgOllama     from "../../assets/ollama.svg";
 import imgComputer   from "../../assets/computer.png";
 import imgHTTP       from "../../assets/Globe--Streamline-Unicons.svg";
 import imgCode       from "../../assets/Brackets-Curly--Streamline-Unicons.svg";
@@ -994,8 +995,8 @@ export const NodeRegistry = {
     category: "code",
   },
   ollama: {
-    label: "Ollama", icon: Server,
-    colorClass: "text-zinc-300", accentColor: "212,212,216",
+    label: "Ollama", icon: Server, logoUrl: imgOllama,
+    colorClass: "text-orange-400", accentColor: "249,115,22",
     ConfigPanel: makeCodingAgentNode({ label: "Ollama (Local)", accent: "zinc", defaultModel: "llama3.2", hasBaseUrl: true }),
     category: "code",
   },
