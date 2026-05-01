@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
@@ -241,7 +241,9 @@ export default function CustomNode({ id, data, selected }) {
 
   const isTrigger = data.type === "trigger";
   const isAgent = data.backendType === "ai_agent";
-  const isAgentSub = AGENT_SUB_TYPES.includes(data.backendType);
+  const isAgentSub = AGENT_SUB_TYPES.includes(data.backendType)
+    || data.backendType?.startsWith("tool_")
+    || data.backendType?.startsWith("agent_memory_");
   // Infer from edge state so the circle survives page refresh even if flag is lost
   const hasAgentOutConnection = edges.some(e => e.source === id && e.sourceHandle === "agent_out");
 
@@ -461,6 +463,55 @@ export default function CustomNode({ id, data, selected }) {
           <span className="text-[9px] text-zinc-500 block truncate leading-tight">
             {selectedLabel || nodeDef.label}
           </span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── DISTRIBUTOR NODE ──────────────────────────────────────────────────────
+  if (data.backendType === "distributor") {
+    const workers = data.config?.workers || 3;
+    const strategy = data.config?.strategy || "parallel";
+    const cardW = 220;
+    const cardH = Math.max(110, workers * 24 + 30);
+
+    return (
+      <div className="relative group" style={{ width: cardW, height: cardH + 28 }}
+        onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        {toolbar}
+        <Handle type="target" position={Position.Left} id="input"
+          className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
+          style={{ top: cardH / 2 }} />
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+          onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
+          style={{ width: cardW, height: cardH, borderRadius: 16,
+            background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
+            border: selected ? `1.5px solid rgba(${accent},0.5)` : `1px solid rgba(${accent},0.25)`,
+            boxShadow: selected ? `0 0 24px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6)` : "0 12px 40px rgba(0,0,0,0.6)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+          <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
+            <div className="flex items-center gap-2">
+              <Split className="w-5 h-5 text-violet-400 shrink-0" strokeWidth={1.75} />
+              <span className="text-[12px] font-bold text-zinc-100">{data.label || "Distributor"}</span>
+            </div>
+            <span className="text-[10px] text-zinc-500">{workers} workers · <span className="text-violet-400">{strategy.replace("_", " ")}</span></span>
+          </div>
+          {Array.from({ length: workers }, (_, i) => {
+            const y = cardH * (i + 0.5) / workers;
+            const isConnected = edges.some(e => e.source === id && e.sourceHandle === `worker_${i + 1}`);
+            return (
+              <div key={i}>
+                <Handle type="source" position={Position.Right} id={`worker_${i + 1}`}
+                  className="!w-4 !h-4 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
+                  style={{ backgroundColor: isConnected ? "#a78bfa" : "#52525b", top: y, right: -8 }} />
+                <span className="absolute text-[8px] text-zinc-600 font-bold select-none pointer-events-none"
+                  style={{ right: 10, top: y, transform: "translateY(-50%)" }}>W{i + 1}</span>
+              </div>
+            );
+          })}
+        </motion.div>
+        <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
+          <span className="text-[11px] font-semibold text-zinc-400">{data.label || "Distributor"}</span>
         </div>
       </div>
     );
