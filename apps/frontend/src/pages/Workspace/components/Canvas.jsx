@@ -110,6 +110,15 @@ export default function Canvas() {
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const applyRemoteNodeMove = useWorkspaceStore((s) => s.applyRemoteNodeMove);
   const applyGraphSync      = useWorkspaceStore((s) => s.applyGraphSync);
+  const watchAutomation     = useWorkspaceStore((s) => s.watchAutomation);
+  const unwatchAutomation   = useWorkspaceStore((s) => s.unwatchAutomation);
+
+  // Auto-subscribe to live node:status events for scheduled/webhook-triggered runs
+  useEffect(() => {
+    if (!automationId) return;
+    watchAutomation(automationId);
+    return () => unwatchAutomation(automationId);
+  }, [automationId, watchAutomation, unwatchAutomation]);
 
   // Undo/redo
   const undo = useWorkspaceStore((s) => s.undo);

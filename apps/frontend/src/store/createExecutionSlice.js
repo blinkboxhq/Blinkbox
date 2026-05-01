@@ -78,6 +78,28 @@ export const createExecutionSlice = (set, get) => ({
 
   closeTraceSidebar: () => set({ isTraceSidebarOpen: false }),
 
+  // ── Watch Automation — called on Canvas mount for scheduled/webhook triggers ──
+  // Subscribes to node:status events so any execution (manual or scheduled)
+  // shows live animation without the user having to click Run.
+  watchAutomation: (automationId) => {
+    if (!automationId) return;
+    const already = get()._subscribedAutomationId;
+    if (already === automationId) return;
+
+    // Unsubscribe previous if switching workflows
+    if (already) {
+      getSocket().emit("unsubscribe:automation", already);
+    }
+
+    _subscribeToNodeStatus(set, get, automationId, true);
+  },
+
+  unwatchAutomation: (automationId) => {
+    if (!automationId) return;
+    getSocket().emit("unsubscribe:automation", automationId);
+    set({ _subscribedAutomationId: null, nodeStatuses: {}, isExecutionLive: false });
+  },
+
   // ── Run Engine ────────────────────────────────────────────────────────────
   runEngine: async (automationId) => {
     const state = get();
@@ -199,18 +221,51 @@ export const createExecutionSlice = (set, get) => ({
 
 // ── Granular node:status subscription (canvas animation) ────────────────────
 
-function _subscribeToNodeStatus(set, get, automationId) {
+function _subscribeToNodeStatus(set, get, automationId, passive = false) {
   const socket = getSocket();
   socket.emit("subscribe:automation", automationId);
   set({ _subscribedAutomationId: automationId });
+
+  let idleTimer = null;
 
   const handler = (data) => {
     if (data.automationId !== automationId) return;
 
     const displayStatus = STATUS_MAP[data.status] || data.status;
+
+    // For passive (scheduled/webhook) runs: auto-activate the live UI
+    if (passive && !get().isExecutionLive) {
+      set({ isExecutionLive: true, nodeStatuses: {}, lastRunOutputs: {} });
+    }
+
     set((prev) => ({
       nodeStatuses: { ...prev.nodeStatuses, [data.nodeId]: displayStatus },
     }));
+
+    // Auto-deactivate live UI after 4s of silence (execution ended)
+    if (passive) {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(async () => {
+        set({ isExecutionLive: false });
+        // Fetch the latest execution logs to populate output previews
+        try {
+          const state = get();
+          const latestExec = state.liveExecutionState?._id;
+          if (latestExec) {
+            const res = await api.get(`/api/execution/${latestExec}/logs`);
+            if (res.data?.logs) {
+              const outputs = {};
+              for (const log of res.data.logs) {
+                if (log.type === "node_step" && log.nodeId && log.output !== undefined) {
+                  outputs[log.nodeId] = log.output;
+                }
+              }
+              set({ lastRunOutputs: outputs });
+            }
+          }
+        } catch { /* non-critical */ }
+      }, 4000);
+    }
   };
 
   // Remove any stale listener before adding

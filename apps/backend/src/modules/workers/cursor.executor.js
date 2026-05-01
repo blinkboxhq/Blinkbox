@@ -9,7 +9,7 @@ import { emitExecutionEvent } from "../execution/execution.events.js";
 import { resolveConfig } from "../../modules/automation/engine/expression.parser.js";
 
 import { acquireLock, releaseLock } from "../../infra/redis.lock.js";
-import { emitExecutionUpdate } from "../../infra/socket.server.js";
+import { emitExecutionUpdate, emitNodeStatus } from "../../infra/socket.server.js";
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
@@ -209,6 +209,14 @@ export async function processCursor({ executionId, cursorId }) {
       message: `Executing ${node.type} node "${node.data?.label || node.id}"`,
     });
 
+    // Emit live node:status so Canvas animates in real time (manual + scheduled runs)
+    emitNodeStatus(execution.automationId?.toString() || execution.workflowId?.toString(), {
+      automationId: execution.automationId?.toString() || execution.workflowId?.toString(),
+      nodeId: node.id,
+      status: "started",
+      executionId: execution._id?.toString(),
+    });
+
     // VAULT RECONSTRUCTION: Retrieve all historical data for this execution
     const allPastData = await ExecutionData.find({ executionId: execution._id });
     allPastData.forEach((doc) => {
@@ -385,6 +393,13 @@ export async function processCursor({ executionId, cursorId }) {
         meta: { duration },
       });
 
+      emitNodeStatus(execution.automationId?.toString() || execution.workflowId?.toString(), {
+        automationId: execution.automationId?.toString() || execution.workflowId?.toString(),
+        nodeId: node.id,
+        status: "completed",
+        executionId: execution._id?.toString(),
+      });
+
       await routeEdges(
         automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
         finalOutputs.__loopFanOut ? finalOutputs.__loopItems : null,
@@ -456,6 +471,13 @@ export async function processCursor({ executionId, cursorId }) {
           nodeId: node.id,
           message: executionError,
           meta: { category, hint, duration },
+        });
+
+        emitNodeStatus(execution.automationId?.toString() || execution.workflowId?.toString(), {
+          automationId: execution.automationId?.toString() || execution.workflowId?.toString(),
+          nodeId: node.id,
+          status: "failed",
+          executionId: execution._id?.toString(),
         });
 
         // Route to onFailure edges if any
