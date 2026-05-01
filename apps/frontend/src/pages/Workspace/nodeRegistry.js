@@ -997,7 +997,7 @@ export const NodeRegistry = {
   },
   ollama: {
     label: "Ollama", icon: Server, logoUrl: imgOllama,
-    colorClass: "text-orange-400", accentColor: "249,115,22",
+    colorClass: "text-zinc-300", accentColor: "212,212,216",
     ConfigPanel: makeCodingAgentNode({ label: "Ollama (Local)", accent: "zinc", defaultModel: "llama3.2", hasBaseUrl: true }),
     category: "code",
   },
