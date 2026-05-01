@@ -77,25 +77,15 @@ body {
 
 /* ── Edge flow animation ───────────────────────────────────────────────────── */
 @keyframes edgeFlow {
-  to {
-    stroke-dashoffset: -10;
-  }
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -26; }
 }
 
 /* Completed edge: green flash then fade back to idle */
 @keyframes edgeFadeToIdle {
-  0% {
-    stroke: #10b981;
-    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
-  }
-  60% {
-    stroke: #10b981;
-    filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
-  }
-  100% {
-    stroke: #3f3f46;
-    filter: none;
-  }
+  0%   { stroke: #10b981; filter: drop-shadow(0 0 6px rgba(16,185,129,0.8)); stroke-width: 5; }
+  40%  { stroke: #10b981; filter: drop-shadow(0 0 3px rgba(16,185,129,0.4)); }
+  100% { stroke: #3f3f46; filter: none; stroke-width: 5; }
 }
 
 /* ── Node hover shimmer ──────────────────────────────────────────────────── */

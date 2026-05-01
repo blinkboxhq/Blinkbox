@@ -7,6 +7,8 @@ export const EDGE_ARROW_ID = "blinkbox-arrow";
 
 export default function ConfigurableEdge({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -19,6 +21,8 @@ export default function ConfigurableEdge({
   markerEnd,
 }) {
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
+  const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
+  const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const { deleteElements } = useReactFlow();
 
   // Soft cursive curvature — gentle bend that avoids going under nodes
@@ -35,11 +39,21 @@ export default function ConfigurableEdge({
     curvature,
   });
 
-  // ── Status-driven styling ─────────────────────────────────────────────────
-  const status = data?.status;
+  // ── Status-driven styling — derived live from source node's execution status ──
+  const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
+  const targetStatus = isExecutionLive ? nodeStatuses[target] : null;
+  // Edge is "running" while the target node is executing (data flowing into it)
+  // Edge is "completed" once the target node finishes successfully
+  // Edge is "failed" if the target node failed
+  const status = targetStatus === "running" ? "running"
+    : targetStatus === "completed" ? "completed"
+    : targetStatus === "failed" ? "failed"
+    : sourceStatus === "completed" && !targetStatus ? "ready"
+    : data?.status;
   const isRunning = status === "running";
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
+  const isReady = status === "ready";
 
   // Dark grey, bold, uniform
   let stroke = "#3f3f46";
@@ -49,17 +63,25 @@ export default function ConfigurableEdge({
   let filter = "none";
 
   if (isRunning) {
-    stroke = "#3b82f6";
-    strokeDasharray = "6 4";
-    animation = "edgeFlow 0.5s linear infinite";
-    filter = "drop-shadow(0 0 4px rgba(59,130,246,0.5))";
+    stroke = "#22d3ee";
+    strokeWidth = 5;
+    strokeDasharray = "8 5";
+    animation = "edgeFlow 0.4s linear infinite";
+    filter = "drop-shadow(0 0 6px rgba(34,211,238,0.6))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    animation = "edgeFadeToIdle 1.5s ease-out forwards";
-    filter = "drop-shadow(0 0 3px rgba(16,185,129,0.4))";
+    strokeWidth = 5;
+    animation = "edgeFadeToIdle 2s ease-out forwards";
+    filter = "drop-shadow(0 0 4px rgba(16,185,129,0.5))";
   } else if (isFailed) {
     stroke = "#ef4444";
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
+  } else if (isReady) {
+    stroke = "#10b981";
+    strokeWidth = 5;
+    strokeDasharray = "3 6";
+    animation = "edgeFlow 1.2s linear infinite";
+    filter = "drop-shadow(0 0 3px rgba(16,185,129,0.3))";
   } else if (selected) {
     stroke = "#52525b";
   }
@@ -77,14 +99,14 @@ export default function ConfigurableEdge({
   return (
     <>
       {/* Glow underlay for active edges */}
-      {isRunning && (
+      {(isRunning || isCompleted) && (
         <path
           d={edgePath}
-          strokeWidth={8}
-          stroke="#3b82f6"
+          strokeWidth={isRunning ? 12 : 8}
+          stroke={isRunning ? "#22d3ee" : "#10b981"}
           fill="none"
-          opacity={0.1}
-          style={{ filter: "blur(4px)" }}
+          opacity={isRunning ? 0.12 : 0.08}
+          style={{ filter: "blur(6px)" }}
         />
       )}
 
@@ -118,8 +140,19 @@ export default function ConfigurableEdge({
 
       {/* Traveling dot for running edges */}
       {isRunning && (
-        <circle r="3" fill="#60a5fa" filter="drop-shadow(0 0 4px rgba(96,165,250,0.9))">
-          <animateMotion dur="1s" repeatCount="indefinite" path={edgePath} />
+        <>
+          <circle r="4" fill="#22d3ee" filter="drop-shadow(0 0 6px rgba(34,211,238,1))">
+            <animateMotion dur="0.8s" repeatCount="indefinite" path={edgePath} />
+          </circle>
+          <circle r="2.5" fill="white" opacity="0.8">
+            <animateMotion dur="0.8s" repeatCount="indefinite" path={edgePath} />
+          </circle>
+        </>
+      )}
+      {/* Completion pulse dot */}
+      {isCompleted && (
+        <circle r="3" fill="#10b981" filter="drop-shadow(0 0 5px rgba(16,185,129,0.9))">
+          <animateMotion dur="1.2s" repeatCount="1" path={edgePath} fill="freeze" />
         </circle>
       )}
 
