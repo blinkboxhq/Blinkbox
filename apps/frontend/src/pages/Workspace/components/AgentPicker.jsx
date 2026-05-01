@@ -83,7 +83,7 @@ export default function AgentPicker() {
             className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <CatIcon className="w-5 h-5 shrink-0" style={{ color: currentCat.color }} strokeWidth={1.6} />
+          <CatIcon className="w-5 h-5 shrink-0 text-white" strokeWidth={1.6} />
           <div>
             <div className="text-[15px] font-bold text-zinc-100 leading-tight">{currentCat.label}</div>
             <div className="text-[11px] text-zinc-500 mt-0.5">{currentCat.nodes.filter(k => NodeRegistry[k]).length} available</div>
@@ -105,7 +105,7 @@ export default function AgentPicker() {
                     <img src={def.logoUrl} alt={def.label} className="w-7 h-7 object-contain"
                       style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
                   ) : (
-                    <Icon className={`w-7 h-7 ${def.colorClass}`} strokeWidth={1.6} />
+                    <Icon className="w-7 h-7 text-white" strokeWidth={1.6} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export default function AgentPicker() {
             <button key={cat.id} onClick={() => setPage(cat.id)}
               className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group">
               <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                <CatIcon className="w-7 h-7 transition-colors" style={{ color: cat.color }} strokeWidth={1.6} />
+                <CatIcon className="w-7 h-7 text-white transition-colors" strokeWidth={1.6} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{cat.label}</div>
