@@ -21,7 +21,7 @@ import {
   Star, Heart, ThumbsUp, Share2, Link2, ExternalLink, Download, Upload,
   Printer, ScanLine, Barcode, CaseSensitive, Replace, Regex,
   Split, Combine, Shuffle, ArrowRightLeft, Fingerprint, Triangle, AlertTriangle,
-  Terminal, Network, Wrench, Monitor,
+  Terminal, Network, Wrench, Monitor, Bitcoin,
 } from "lucide-react";
 
 // Local asset icons
