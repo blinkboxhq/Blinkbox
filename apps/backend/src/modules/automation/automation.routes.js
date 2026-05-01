@@ -13,9 +13,11 @@ import { parseWorkflowBody } from "./engine/automation.validator.js";
 import { verifyToken } from "../auth/auth.middleware.js";
 import versionRouter from "./version.routes.js";
 import { listCollaborators, addCollaborator, removeCollaborator } from "./collaborator.controller.js";
+import { testNode } from "./engine/testNode.controller.js";
 
 const router = express.Router();
 
+router.post("/test-node", verifyToken, testNode);
 router.get("/", verifyToken, getAutomations);
 router.post("/", verifyToken, parseWorkflowBody, saveAutomation);
 router.put("/:id", verifyToken, parseWorkflowBody, saveAutomation);

@@ -7,6 +7,46 @@ import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
+// ─── Inline output preview chip shown below completed action nodes ────────────
+function NodeOutputChip({ output }) {
+  const [open, setOpen] = useState(false);
+  const items = Array.isArray(output) ? output : [{ json: output }];
+  const first = items[0]?.json ?? items[0] ?? {};
+  const keys = Object.keys(first).slice(0, 3);
+  return (
+    <div className="mt-1.5 nodrag" onClick={e => { e.stopPropagation(); setOpen(o => !o); }}>
+      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/15 transition-colors">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+        <span className="text-[9px] font-mono text-emerald-400">{items.length} item{items.length !== 1 ? "s" : ""}</span>
+      </div>
+      {open && (
+        <div className="absolute z-50 mt-1 left-1/2 -translate-x-1/2 w-56 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl shadow-black/70 overflow-hidden text-left"
+          onMouseDown={e => e.stopPropagation()}>
+          <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Last Output</span>
+            <span className="text-[9px] text-zinc-600">{items.length} item{items.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div className="p-2 max-h-48 overflow-y-auto">
+            {keys.length > 0 ? keys.map(k => (
+              <div key={k} className="flex items-start gap-2 px-2 py-1">
+                <span className="text-[10px] font-mono text-zinc-500 shrink-0">{k}</span>
+                <span className="text-[10px] font-mono text-emerald-400 truncate">
+                  {typeof first[k] === "object" ? "{…}" : String(first[k]).slice(0, 40)}
+                </span>
+              </div>
+            )) : (
+              <span className="text-[10px] text-zinc-600 px-2 py-1 block">No fields</span>
+            )}
+            {Object.keys(first).length > 3 && (
+              <span className="text-[9px] text-zinc-600 px-2 block">+{Object.keys(first).length - 3} more fields</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Agent Bottom Dock Slots ────────────────────────────────────────────────
 // The AI Agent node has 3 fixed slots on its bottom edge.
 // Only one LLM, one Memory (enforced by connection logic), infinite Tools.
@@ -235,8 +275,10 @@ export default function CustomNode({ id, data, selected }) {
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const duplicateNode = useWorkspaceStore(s => s.duplicateNode);
   const updateNodeConfig = useWorkspaceStore(s => s.updateNodeConfig);
+  const lastRunOutputs = useWorkspaceStore(s => s.lastRunOutputs);
 
   const status = isExecutionLive ? getNodeStatus(id) : null;
+  const nodeOutput = lastRunOutputs?.[id];
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
@@ -254,6 +296,7 @@ export default function CustomNode({ id, data, selected }) {
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
   const hasOutputConnection = edges.some(e => e.source === id && e.sourceHandle === "output");
+  const hasErrorConnection = edges.some(e => e.source === id && e.sourceHandle === "onFailure");
 
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
   const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
@@ -568,9 +611,24 @@ export default function CustomNode({ id, data, selected }) {
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       )}
 
+      {/* Error/onFailure output handle — shown when error path is configured or connected */}
+      {(hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
+        <Handle type="source" position={Position.Right} id="onFailure"
+          className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
+          style={{ backgroundColor: hasErrorConnection ? "#ef4444" : "#7f1d1d", top: cardH * 0.72, right: -7 }}
+        />
+      )}
+      {(hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
+        <span className="absolute text-[7px] font-bold text-red-600 select-none pointer-events-none"
+          style={{ right: 14, top: cardH * 0.72, transform: "translateY(-50%)" }}>ERR</span>
+      )}
+
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
         <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{data.label}</span>
         {configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
+        {nodeOutput && status === "completed" && (
+          <NodeOutputChip output={nodeOutput} />
+        )}
       </div>
     </div>
   );

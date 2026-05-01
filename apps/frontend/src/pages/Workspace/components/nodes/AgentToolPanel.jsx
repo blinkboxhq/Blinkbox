@@ -1,7 +1,8 @@
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
+import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 export default function makeAgentToolPanel({ label, description = "", fields = [] }) {
-  return function AgentToolPanel({ config = {}, updateConfig }) {
+  return function AgentToolPanel({ config = {}, updateConfig, nodeId }) {
     return (
       <div className="flex flex-col gap-4 p-4">
         <div>
@@ -17,14 +18,27 @@ export default function makeAgentToolPanel({ label, description = "", fields = [
               label={field.label}
               placeholder={`Select ${field.label}…`}
             />
+          ) : field.type === "textarea" ? (
+            <div key={field.key}>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">{field.label}</label>
+              <SmartVariableInput
+                value={config[field.key] || ""}
+                onChange={v => updateConfig(field.key, v)}
+                placeholder={field.placeholder || ""}
+                label={field.label}
+                multiline
+                nodeId={nodeId}
+              />
+            </div>
           ) : (
             <div key={field.key}>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">{field.label}</label>
-              <input
+              <SmartVariableInput
                 value={config[field.key] || ""}
-                onChange={e => updateConfig(field.key, e.target.value)}
+                onChange={v => updateConfig(field.key, v)}
                 placeholder={field.placeholder || ""}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500"
+                label={field.label}
+                nodeId={nodeId}
               />
             </div>
           )

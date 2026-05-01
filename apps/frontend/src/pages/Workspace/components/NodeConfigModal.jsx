@@ -1,11 +1,12 @@
 import { useEffect, useCallback, useRef, useState } from "react";
-import { X, Zap, ChevronRight, ChevronDown, Settings2, HelpCircle } from "lucide-react";
+import { X, Zap, ChevronRight, ChevronDown, Settings2, HelpCircle, Play, CheckCircle, XCircle, Loader } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { NODE_DOCS } from "../../../lib/nodeDocumentation";
+import api from "../../../lib/api";
 
 // ── Per-trigger output variable schemas ──────────────────────────────────────
 const TRIGGER_OUTPUT_SCHEMA = {
@@ -151,6 +152,31 @@ export default function NodeConfigModal() {
   const node = nodes.find((n) => n.id === selectedNodeId) ?? null;
   const isOpen = !!selectedNodeId && !!node;
 
+  const [testOpen, setTestOpen] = useState(false);
+  const [testInput, setTestInput] = useState("{}");
+  const [testResult, setTestResult] = useState(null);
+  const [testLoading, setTestLoading] = useState(false);
+
+  const runTest = useCallback(async () => {
+    if (!node) return;
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      let parsedInput = {};
+      try { parsedInput = JSON.parse(testInput); } catch { parsedInput = { raw: testInput }; }
+      const res = await api.post("/api/automation/test-node", {
+        nodeType: node.data.backendType,
+        config: node.data.config || {},
+        input: parsedInput,
+      });
+      setTestResult(res.data);
+    } catch (err) {
+      setTestResult({ success: false, error: err.response?.data?.error || err.message });
+    } finally {
+      setTestLoading(false);
+    }
+  }, [node, testInput]);
+
   // Close on Escape
   const handleKeyDown = useCallback((e) => {
     if (e.key === "Escape") setSelectedNodeId(null);
@@ -256,6 +282,18 @@ export default function NodeConfigModal() {
                   </div>
                 </div>
 
+                {/* Test node button */}
+                {!node?.data.type === "trigger" || node?.data.backendType !== "trigger" ? (
+                  <button
+                    onClick={() => { setTestOpen(v => !v); setTestResult(null); }}
+                    title="Test this node"
+                    className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-[11px] font-semibold transition-all ${testOpen ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.07]"}`}
+                  >
+                    <Play className="w-3 h-3" strokeWidth={2.5} />
+                    Test
+                  </button>
+                ) : null}
+
                 {/* Docs toggle */}
                 {NODE_DOCS[node.data.backendType] && (
                   <button
@@ -358,6 +396,60 @@ export default function NodeConfigModal() {
 
                   {/* ── Advanced Settings ── */}
                   {!isTrigger && <AdvancedSettings retryPolicy={retryPolicy} updateRetryPolicy={updateRetryPolicy} timeoutMs={config.timeoutMs} onTimeoutChange={(v) => updateConfig('timeoutMs', v)} />}
+
+                  {/* ── Test Panel ── */}
+                  <AnimatePresence>
+                    {testOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden w-full max-w-[320px] mx-auto"
+                      >
+                        <div className="mt-2 p-4 bg-[#0d0d0f] border border-emerald-500/15 rounded-xl flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Test Node</span>
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-1.5 block">Input JSON</label>
+                            <textarea
+                              value={testInput}
+                              onChange={e => setTestInput(e.target.value)}
+                              rows={4}
+                              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-[11px] text-zinc-200 font-mono focus:outline-none focus:border-emerald-500/40 resize-none transition-colors"
+                              placeholder='{"query": "hello world"}'
+                            />
+                          </div>
+                          <button
+                            onClick={runTest}
+                            disabled={testLoading}
+                            className="w-full py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[12px] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-500/15 transition-all disabled:opacity-50"
+                          >
+                            {testLoading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" strokeWidth={2.5} />}
+                            {testLoading ? "Running…" : "Run Test"}
+                          </button>
+                          {testResult && (
+                            <div className={`rounded-lg border p-3 ${testResult.success ? "bg-emerald-500/5 border-emerald-500/15" : "bg-red-500/5 border-red-500/20"}`}>
+                              <div className="flex items-center gap-1.5 mb-2">
+                                {testResult.success
+                                  ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                                  : <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                                <span className={`text-[10px] font-bold ${testResult.success ? "text-emerald-400" : "text-red-400"}`}>
+                                  {testResult.success ? `Success · ${testResult.durationMs}ms` : "Failed"}
+                                </span>
+                              </div>
+                              <pre className="text-[10px] font-mono text-zinc-300 whitespace-pre-wrap break-all max-h-48 overflow-y-auto leading-relaxed">
+                                {testResult.success
+                                  ? JSON.stringify(testResult.output, null, 2)
+                                  : testResult.error}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* RIGHT — output variables */}
