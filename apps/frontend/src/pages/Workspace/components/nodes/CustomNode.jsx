@@ -412,7 +412,7 @@ export default function CustomNode({ id, data, selected }) {
           className="!rounded-full !border-2 !border-[#1a1a1e] touch-none"
           style={{
             width: 10, height: 10,
-            backgroundColor: hasAgentOutConnection ? "#10b981" : "#52525b",
+            backgroundColor: "#52525b",
             top: -5, left: "50%", transform: "translateX(-50%)",
           }}
         />
