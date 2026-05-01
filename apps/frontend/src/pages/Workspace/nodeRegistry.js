@@ -128,6 +128,7 @@ import AIAgentNode         from "./components/nodes/AIAgentNode";
 import AgentLLMNode        from "./components/nodes/AgentLLMNode";
 import AgentMemoryNode     from "./components/nodes/AgentMemoryNode";
 import AgentToolNode       from "./components/nodes/AgentToolNode";
+import makeAgentModelPanel from "./components/nodes/AgentModelPanel";
 import DataMapperNode      from "./components/nodes/DataMapperNode";
 import SetFieldsNode      from "./components/nodes/SetFieldsNode";
 import LogicRouterNode     from "./components/nodes/LogicRouterNode";
@@ -527,6 +528,64 @@ export const NodeRegistry = {
     label: "Tool", icon: Zap, colorClass: "text-orange-400", accentColor: "251,146,60",
     ConfigPanel: AgentToolNode, category: "ai", agentOnly: true,
     description: "A capability the AI Agent can invoke",
+  },
+
+  // ── Dedicated Agent Model Nodes (agentOnly — only usable inside an AI Agent) ──
+  agent_openai: {
+    label: "OpenAI", icon: Brain, logoUrl: imgOpenAI,
+    colorClass: "text-[#10A37F]", accentColor: "16,163,127",
+    category: "ai", agentOnly: true,
+    description: "GPT models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "OpenAI", color: "#10A37F", credentialType: "OpenAI", defaultModel: "gpt-4o", models: [{ value: "gpt-4o", label: "GPT-4o" }, { value: "gpt-4o-mini", label: "GPT-4o Mini" }, { value: "o3-mini", label: "o3-mini" }, { value: "gpt-4-turbo", label: "GPT-4 Turbo" }] }),
+  },
+  agent_anthropic: {
+    label: "Anthropic", icon: Brain, logoUrl: imgAnthropic,
+    colorClass: "text-[#D4C1B3]", accentColor: "212,193,179",
+    category: "ai", agentOnly: true,
+    description: "Claude models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "Anthropic", color: "#D4C1B3", credentialType: "Anthropic", defaultModel: "claude-sonnet-4-6", models: [{ value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" }, { value: "claude-opus-4-7", label: "Claude Opus 4.7" }, { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" }] }),
+  },
+  agent_gemini: {
+    label: "Google Gemini", icon: Brain, logoUrl: imgGemini,
+    colorClass: "text-[#4285F4]", accentColor: "66,133,244",
+    category: "ai", agentOnly: true,
+    description: "Gemini models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "Gemini", color: "#4285F4", credentialType: "Gemini", defaultModel: "gemini-2.0-flash", models: [{ value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" }, { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }, { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" }] }),
+  },
+  agent_xai: {
+    label: "xAI Grok", icon: Sparkles, logoUrl: imgGrok,
+    colorClass: "text-zinc-100", accentColor: "244,244,245",
+    category: "ai", agentOnly: true,
+    description: "Grok models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "xAI Grok", color: "#e4e4e7", credentialType: "xAI", defaultModel: "grok-2", models: [{ value: "grok-2", label: "Grok 2" }, { value: "grok-beta", label: "Grok Beta" }] }),
+  },
+  agent_deepseek: {
+    label: "DeepSeek", icon: Brain, logoUrl: imgDeepSeek,
+    colorClass: "text-[#4D9BF8]", accentColor: "77,155,248",
+    category: "ai", agentOnly: true,
+    description: "DeepSeek models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "DeepSeek", color: "#4D9BF8", credentialType: "DeepSeek", defaultModel: "deepseek-chat", models: [{ value: "deepseek-chat", label: "DeepSeek Chat" }, { value: "deepseek-reasoner", label: "DeepSeek Reasoner" }] }),
+  },
+  agent_groq: {
+    label: "Groq", icon: Zap, logoUrl: imgGroq,
+    colorClass: "text-[#F55036]", accentColor: "245,80,54",
+    category: "ai", agentOnly: true,
+    description: "Groq fast inference powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "Groq", color: "#F55036", credentialType: "Groq", defaultModel: "llama-3.3-70b-versatile", models: [{ value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" }, { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" }, { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" }] }),
+  },
+  agent_ollama: {
+    label: "Ollama", icon: Brain, logoUrl: imgOllama,
+    colorClass: "text-zinc-300", accentColor: "212,212,216",
+    category: "ai", agentOnly: true,
+    description: "Local Ollama models powering the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "Ollama", color: "#a1a1aa", defaultModel: "llama3.2", hasBaseUrl: true }),
+  },
+  agent_perplexity: {
+    label: "Perplexity", icon: Brain, logoUrl: imgPerplexity,
+    colorClass: "text-[#22d3ee]", accentColor: "34,211,238",
+    category: "ai", agentOnly: true,
+    description: "Perplexity search-augmented models for the AI Agent",
+    ConfigPanel: makeAgentModelPanel({ label: "Perplexity", color: "#22d3ee", credentialType: "Perplexity", defaultModel: "llama-3.1-sonar-large-128k-online", models: [{ value: "llama-3.1-sonar-large-128k-online", label: "Sonar Large (online)" }, { value: "llama-3.1-sonar-small-128k-online", label: "Sonar Small (online)" }, { value: "llama-3.1-sonar-large-128k-chat", label: "Sonar Large (chat)" }] }),
   },
 
   // AI Tools (specialty)

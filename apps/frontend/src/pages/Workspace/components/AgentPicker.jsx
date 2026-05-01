@@ -11,7 +11,7 @@ const AGENT_CATEGORIES = [
     icon: Brain,
     color: "#a78bfa",
     slotId: "llm",
-    nodes: ["openai", "anthropic", "gemini", "perplexity", "xai", "deepseek", "groq", "ollama"],
+    nodes: ["agent_openai", "agent_anthropic", "agent_gemini", "agent_perplexity", "agent_xai", "agent_deepseek", "agent_groq", "agent_ollama"],
   },
   {
     id: "memory",
