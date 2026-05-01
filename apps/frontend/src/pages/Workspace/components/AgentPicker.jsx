@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Brain, Database, Zap, ArrowLeft, X } from "lucide-react";
+import { Brain, Database, ArrowLeft, X } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -19,15 +19,7 @@ const AGENT_CATEGORIES = [
     icon: Database,
     color: "#c084fc",
     slotId: "memory",
-    nodes: ["agent_memory"],
-  },
-  {
-    id: "tools",
-    label: "Tools",
-    icon: Zap,
-    color: "#fb923c",
-    slotId: "tools",
-    nodes: ["agent_tool"],
+    nodes: ["agent_memory_window", "agent_memory_redis", "agent_memory_mongodb", "agent_memory_postgres", "agent_memory_pinecone", "agent_memory_supabase", "agent_memory_zep"],
   },
 ];
 
@@ -129,7 +121,7 @@ export default function AgentPicker() {
       <div className="flex items-start justify-between px-6 pt-6 pb-4 shrink-0">
         <div>
           <h2 className="text-[16px] font-bold text-zinc-100 tracking-tight">Add to Agent</h2>
-          <p className="text-[13px] text-zinc-500 mt-1">Choose a model, memory, or tool</p>
+          <p className="text-[13px] text-zinc-500 mt-1">Choose a model or memory provider</p>
         </div>
         <button onClick={handleClose} className="p-1.5 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors shrink-0">
           <X className="w-4 h-4" />
