@@ -163,8 +163,8 @@ export const createExecutionSlice = (set, get) => ({
       const executionId = response.data.execution._id;
       set({ liveExecutionState: response.data.execution });
 
-      // Subscribe to both channels
-      _subscribeToNodeStatus(set, get, automationId);
+      // watchAutomation() already subscribed to node:status on Canvas mount —
+      // no need to re-subscribe here. Just wire the execution-level channel.
       _subscribeToExecution(set, get, executionId, automationId);
     } catch (error) {
       console.error("Execution failed:", error);
@@ -223,6 +223,11 @@ export const createExecutionSlice = (set, get) => ({
 
 function _subscribeToNodeStatus(set, get, automationId, passive = false) {
   const socket = getSocket();
+
+  // Remove the PREVIOUS handler (not a newly created one — that's the old bug)
+  const existing = get()._nodeStatusHandler;
+  if (existing) socket.off("node:status", existing);
+
   socket.emit("subscribe:automation", automationId);
   set({ _subscribedAutomationId: automationId });
 
@@ -233,8 +238,8 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
 
     const displayStatus = STATUS_MAP[data.status] || data.status;
 
-    // For passive (scheduled/webhook) runs: auto-activate the live UI
-    if (passive && !get().isExecutionLive) {
+    // Auto-activate live UI for passive (scheduled/webhook) runs
+    if (!get().isExecutionLive) {
       set({ isExecutionLive: true, nodeStatuses: {}, lastRunOutputs: {} });
     }
 
@@ -242,17 +247,19 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
       nodeStatuses: { ...prev.nodeStatuses, [data.nodeId]: displayStatus },
     }));
 
-    // Auto-deactivate live UI after 4s of silence (execution ended)
+    // Auto-deactivate: only in passive mode and only when NOT a manual active run
     if (passive) {
       clearTimeout(idleTimer);
       idleTimer = setTimeout(async () => {
+        // Don't kill live UI if runEngine is still waiting
+        if (get().isRunning) return;
         set({ isExecutionLive: false });
-        // Fetch the latest execution logs to populate output previews
+        // Fetch logs to populate inline output previews
         try {
-          const state = get();
-          const latestExec = state.liveExecutionState?._id;
-          if (latestExec) {
-            const res = await api.get(`/api/execution/${latestExec}/logs`);
+          const liveExec = get().liveExecutionState;
+          const execId = liveExec?._id;
+          if (execId) {
+            const res = await api.get(`/api/execution/${execId}/logs`);
             if (res.data?.logs) {
               const outputs = {};
               for (const log of res.data.logs) {
@@ -268,11 +275,7 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
     }
   };
 
-  // Remove any stale listener before adding
-  socket.off("node:status", handler);
   socket.on("node:status", handler);
-
-  // Store handler ref for cleanup
   set({ _nodeStatusHandler: handler });
 }
 
