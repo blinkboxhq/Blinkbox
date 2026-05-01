@@ -387,67 +387,71 @@ export default function CustomNode({ id, data, selected }) {
     );
   }
 
-  // ── AGENT SUB-NODE (agent_llm, agent_memory, agent_tool) ────────────────
-  // Compact card: workflow input on top, agent output on bottom
-  if (isAgentSub) {
-    const subW = 140;
-    const subH = 56;
-
-    const subTypeColors = {
-      agent_llm:    { color: "#a78bfa", accentColor: "167,139,250", label: "LLM" },
-      agent_memory: { color: "#c084fc", accentColor: "192,132,252", label: "Memory" },
-      agent_tool:   { color: "#fb923c", accentColor: "251,146,60",  label: "Tool" },
-    };
-    const subMeta = subTypeColors[data.backendType] || subTypeColors.agent_tool;
+  // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
+  // Perfect circle, logo only, single top dot connecting back to agent slot
+  if (data.isAgentComponent || isAgentSub) {
+    const d = 72; // diameter — width === height, mathematically equal
 
     const cardBorder = selected
-      ? `1.5px solid ${subMeta.color}60`
-      : `1px solid ${subMeta.color}25`;
+      ? `1.5px solid rgba(${accent},0.5)`
+      : `1px solid rgba(${accent},0.2)`;
     const cardShadow = selected
-      ? `0 0 16px ${subMeta.color}15, 0 8px 24px rgba(0,0,0,0.6)`
-      : `0 4px 16px rgba(0,0,0,0.5)`;
-
-    const hint = getConfigHint(data, edges, id);
+      ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
+      : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
-      <div className="relative group" style={{ width: subW, height: subH + 40 }}
+      <div className="relative group" style={{ width: d, height: d }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
 
-        {/* Top handle: receives workflow data */}
-        <AgentInHandle />
+        {/* Single top dot — connects back up to agent slot */}
+        <Handle
+          type="source"
+          position={Position.Top}
+          id="agent_out"
+          className="!rounded-full !border-2 !border-[#1a1a1e] touch-none"
+          style={{
+            width: 10, height: 10,
+            backgroundColor: hasAgentOutConnection ? "#10b981" : "#52525b",
+            top: -5, left: "50%", transform: "translateX(-50%)",
+          }}
+        />
 
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig} className="relative cursor-pointer transition-all duration-300 mt-3"
-          style={{ width: subW, height: subH, borderRadius: 12, background: "linear-gradient(145deg, #1e1e24 0%, #19191d 100%)", border: cardBorder, boxShadow: cardShadow }}>
-
-          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 11, background: `radial-gradient(ellipse at 50% 0%, ${subMeta.color}08 0%, transparent 60%)` }} />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          onClick={handleOpenConfig}
+          className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
+          style={{
+            width: d, height: d,
+            borderRadius: 9999,
+            background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
+            border: cardBorder,
+            boxShadow: cardShadow,
+          }}
+        >
+          <div className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+          <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
 
           {badge}
 
-          <div className="flex items-center gap-2.5 px-3 h-full">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: subMeta.color + "18", border: `1px solid ${subMeta.color}30` }}>
-              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: subMeta.color }} strokeWidth={1.5} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold truncate" style={{ color: subMeta.color }}>{subMeta.label}</p>
-              {hint ? (
-                <p className="text-[9px] text-zinc-600 truncate font-mono">{hint}</p>
-              ) : (
-                <p className="text-[9px] text-zinc-700">configure</p>
-              )}
-            </div>
-          </div>
+          {nodeDef.logoUrl ? (
+            <img
+              src={nodeDef.logoUrl}
+              alt={data.label}
+              className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+              style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
+            />
+          ) : (
+            <Icon
+              className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`}
+              strokeWidth={1.4}
+            />
+          )}
         </motion.div>
-
-        {/* Bottom handle: connects up to agent dock */}
-        <AgentOutHandle hasConnection={hasAgentOutConnection} cardHeight={subH} />
-
-        {/* Label */}
-        <div className="absolute text-center select-none" style={{ left: 0, width: subW, top: subH + 14 }}>
-          <span className="text-[10px] font-semibold text-zinc-600 block truncate px-1">{data.label}</span>
-        </div>
       </div>
     );
   }

@@ -31,10 +31,12 @@ const AGENT_CATEGORIES = [
   },
 ];
 
+// Agent card is 180px wide; slots at 1/6, 3/6, 5/6 = x+30, x+90, x+150
+// Circle diameter is 72px; offset = slotCenterX - 36 (half of 72)
 const SLOT_OFFSETS = {
-  llm:    { x: -160, y: 220 },
-  memory: { x:   60, y: 220 },
-  tools:  { x:  280, y: 220 },
+  llm:    { x: -6,  y: 160 },
+  memory: { x: 54,  y: 160 },
+  tools:  { x: 114, y: 160 },
 };
 
 export default function AgentPicker() {
@@ -62,7 +64,7 @@ export default function AgentPicker() {
       id: newId,
       type: "custom",
       position: { x: parentNode.position.x + off.x, y: parentNode.position.y + off.y },
-      data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {} },
+      data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {}, isAgentComponent: true },
     });
 
     setTimeout(() => {
