@@ -624,8 +624,13 @@ export default function CustomNode({ id, data, selected }) {
       )}
 
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{nodeDef.label || data.label}</span>
-        {configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
+        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
+          {data.config?.selectedAction || nodeDef.label || data.label}
+        </span>
+        {data.config?.selectedAction && (
+          <span className="text-[9px] font-semibold text-zinc-600 mt-0.5 block truncate px-1">{nodeDef.label}</span>
+        )}
+        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
         {nodeOutput && status === "completed" && (
           <NodeOutputChip output={nodeOutput} />
         )}
