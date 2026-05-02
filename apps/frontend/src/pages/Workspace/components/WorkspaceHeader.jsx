@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Loader2, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users, CloudOff } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ArrowLeft, Loader2, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users, CloudOff, Play, CheckCircle2, XCircle, Activity } from 'lucide-react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
@@ -52,18 +52,45 @@ export default function WorkspaceHeader() {
     try { return JSON.parse(localStorage.getItem('blinkbox_user') || '{}'); } catch { return {}; }
   });
 
-  const workflowName = useWorkspaceStore(s => s.workflowName);
-  const isSaving     = useWorkspaceStore(s => s.isSaving);
-  const isActive       = useWorkspaceStore(s => s.isActive);
-  const isActivating   = useWorkspaceStore(s => s.isActivating);
-  const saveEngine     = useWorkspaceStore(s => s.saveEngine);
-  const runEngine      = useWorkspaceStore(s => s.runEngine);
-  const activateEngine = useWorkspaceStore(s => s.activateEngine);
-  const nodes          = useWorkspaceStore(s => s.nodes);
-  const panels         = useWorkspaceStore(s => s.panels);
-  const togglePanel    = useWorkspaceStore(s => s.togglePanel);
-  const isBrianOpen    = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen   = useWorkspaceStore(s => s.setBrianOpen);
+  const workflowName        = useWorkspaceStore(s => s.workflowName);
+  const isSaving            = useWorkspaceStore(s => s.isSaving);
+  const isActive            = useWorkspaceStore(s => s.isActive);
+  const isActivating        = useWorkspaceStore(s => s.isActivating);
+  const saveEngine          = useWorkspaceStore(s => s.saveEngine);
+  const runEngine           = useWorkspaceStore(s => s.runEngine);
+  const activateEngine      = useWorkspaceStore(s => s.activateEngine);
+  const nodes               = useWorkspaceStore(s => s.nodes);
+  const panels              = useWorkspaceStore(s => s.panels);
+  const togglePanel         = useWorkspaceStore(s => s.togglePanel);
+  const isBrianOpen         = useWorkspaceStore(s => s.isBrianOpen);
+  const setBrianOpen        = useWorkspaceStore(s => s.setBrianOpen);
+  const isRunning           = useWorkspaceStore(s => s.isRunning);
+  const liveExecutionState  = useWorkspaceStore(s => s.liveExecutionState);
+  const executionError      = useWorkspaceStore(s => s.executionError);
+  const nodeStatuses        = useWorkspaceStore(s => s.nodeStatuses);
+  const openTraceSidebar    = useWorkspaceStore(s => s.openTraceSidebar);
+
+  // Track last run result for the status badge
+  const [lastRunResult, setLastRunResult] = useState(null); // null | "success" | "error"
+  const [runDurationMs, setRunDurationMs] = useState(null);
+  const runStartRef = useRef(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      runStartRef.current = Date.now();
+      setLastRunResult(null);
+    } else if (runStartRef.current) {
+      const duration = Date.now() - runStartRef.current;
+      setRunDurationMs(duration);
+      const statuses = Object.values(nodeStatuses);
+      if (statuses.includes("failed") || executionError) {
+        setLastRunResult("error");
+      } else if (statuses.includes("completed") || statuses.length > 0) {
+        setLastRunResult("success");
+      }
+      runStartRef.current = null;
+    }
+  }, [isRunning, nodeStatuses, executionError]);
 
   const nodeCount = nodes.length;
 
@@ -213,6 +240,45 @@ export default function WorkspaceHeader() {
         <button onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" className={ICON_BTN}>
           <Keyboard className="w-3.5 h-3.5" />
         </button>
+
+        {/* Run button with status */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => runEngine(id)}
+            disabled={isRunning || nodeCount === 0}
+            title="Run workflow (⌘↵)"
+            className={`${TEXT_BTN} disabled:opacity-40 disabled:cursor-not-allowed
+              ${isRunning
+                ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 cursor-not-allowed'
+                : 'bg-neutral-900 border-[#333] text-neutral-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400'}`}
+          >
+            {isRunning
+              ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Running…</>
+              : <><Play className="w-3.5 h-3.5" /> Run</>
+            }
+          </button>
+          {/* Last run result badge */}
+          {!isRunning && lastRunResult === "success" && (
+            <button
+              onClick={() => openTraceSidebar?.()}
+              className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+              title="View last run results"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              {runDurationMs ? `${(runDurationMs / 1000).toFixed(1)}s` : "done"}
+            </button>
+          )}
+          {!isRunning && lastRunResult === "error" && (
+            <button
+              onClick={() => openTraceSidebar?.()}
+              className="flex items-center gap-1 text-[10px] font-semibold text-red-400 hover:text-red-300 transition-colors"
+              title="View error details"
+            >
+              <XCircle className="w-3 h-3" />
+              Failed
+            </button>
+          )}
+        </div>
 
         <div className="w-px h-4 bg-[#333]" />
 

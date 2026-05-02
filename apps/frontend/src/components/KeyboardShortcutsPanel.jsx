@@ -7,7 +7,8 @@ const SHORTCUTS = [
     group: "Workflow",
     items: [
       { keys: ["⌘", "S"], label: "Save workflow" },
-      { keys: ["⌘", "↵"], label: "Run test" },
+      { keys: ["⌘", "↵"], label: "Run workflow" },
+      { keys: ["⌘", "K"], label: "Quick add node (command palette)" },
       { keys: ["?"], label: "Toggle shortcuts panel" },
     ],
   },
@@ -18,7 +19,9 @@ const SHORTCUTS = [
       { keys: ["⌘", "⇧", "Z"], label: "Redo" },
       { keys: ["⌘", "D"], label: "Duplicate selected node" },
       { keys: ["Del"], label: "Delete selected nodes" },
-      { keys: ["L"], label: "Auto-layout" },
+      { keys: ["L"], label: "Auto-layout all nodes" },
+      { keys: ["2-finger scroll"], label: "Pan canvas" },
+      { keys: ["Pinch"], label: "Zoom in/out" },
     ],
   },
   {
@@ -26,7 +29,17 @@ const SHORTCUTS = [
     items: [
       { keys: ["Click"], label: "Select node" },
       { keys: ["Shift", "Click"], label: "Add to selection" },
-      { keys: ["Drag"], label: "Pan canvas" },
+      { keys: ["Drag"], label: "Box-select multiple nodes" },
+      { keys: ["Esc"], label: "Close panel / deselect" },
+    ],
+  },
+  {
+    group: "Command Palette",
+    items: [
+      { keys: ["↑", "↓"], label: "Navigate results" },
+      { keys: ["↵"], label: "Select item" },
+      { keys: ["⌫"], label: "Back to node list" },
+      { keys: ["Esc"], label: "Close palette" },
     ],
   },
 ];
