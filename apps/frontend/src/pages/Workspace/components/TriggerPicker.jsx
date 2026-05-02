@@ -487,12 +487,10 @@ export default function TriggerPicker() {
               onClick={() => commitNode(pendingTrigger, action.name)}
               className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
             >
-              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
-                {logoUrl
-                  ? <img src={logoUrl} alt={pendingTrigger.label} className="w-4.5 h-4.5 w-[18px] h-[18px] object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
-                  : <Zap className="w-4 h-4 text-zinc-400" strokeWidth={1.6} />
-                }
-              </div>
+              {logoUrl
+                ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
+                : <Zap className="w-5 h-5 text-zinc-400 shrink-0" strokeWidth={1.6} />
+              }
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{action.name}</div>
                 <div className="text-[11px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 leading-relaxed">{action.description}</div>
