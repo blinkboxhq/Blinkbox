@@ -11,8 +11,10 @@ import {
   X,
   Zap,
   ArrowLeft,
+  ChevronRight,
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import { TRIGGER_ACTIONS } from "../triggerActions";
 
 import imgTelegram       from "../../../assets/telegram.png";
 import imgSlack          from "../../../assets/slack.png";
@@ -213,7 +215,8 @@ const CATEGORIES = [
 
 export default function TriggerPicker() {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState("home"); // "home" | category.id
+  const [page, setPage] = useState("home"); // "home" | category.id | "actions"
+  const [pendingTrigger, setPendingTrigger] = useState(null);
   const addNode = useWorkspaceStore((s) => s.addNode);
   const nodes = useWorkspaceStore((s) => s.nodes);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
@@ -234,7 +237,7 @@ export default function TriggerPicker() {
       )
     : null;
 
-  const handleSelect = (trigger) => {
+  const commitNode = (trigger, selectedAction) => {
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
     const existingTriggers = nodes.filter((n) => n.data?.type === "trigger");
     const position = existingTriggers.length > 0
@@ -248,11 +251,18 @@ export default function TriggerPicker() {
         backendType: trigger.backendType,
         label: trigger.label,
         type: "trigger",
-        config: { triggerVariant: trigger.id },
+        config: { triggerVariant: trigger.id, selectedAction },
       },
     });
     setTriggerPickerOpen(false);
     setSelectedNodeId(newId);
+  };
+
+  const handleSelect = (trigger) => {
+    const actions = TRIGGER_ACTIONS[trigger.id] || TRIGGER_ACTIONS[trigger.backendType] || [];
+    if (actions.length === 0) { commitNode(trigger, null); return; }
+    setPendingTrigger(trigger);
+    setPage("actions");
   };
 
   const handleCategoryClick = (cat) => {
@@ -437,9 +447,61 @@ export default function TriggerPicker() {
     </div>
   );
 
+  const renderActionPage = () => {
+    if (!pendingTrigger) return null;
+    const actions = TRIGGER_ACTIONS[pendingTrigger.id] || TRIGGER_ACTIONS[pendingTrigger.backendType] || [];
+    const logoUrl = pendingTrigger.logoUrl;
+    const imgFilter = pendingTrigger.imgFilter;
+
+    return (
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
+          <button
+            onClick={() => { setPendingTrigger(null); setPage("home"); }}
+            className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          {logoUrl
+            ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
+            : <Zap className="w-5 h-5 text-zinc-400 shrink-0" strokeWidth={1.6} />
+          }
+          <div className="flex-1 min-w-0">
+            <div className="text-[15px] font-bold text-zinc-100 leading-tight">{pendingTrigger.label}</div>
+            <div className="text-[11px] text-zinc-500 mt-0.5">Choose what triggers this node</div>
+          </div>
+          <button
+            onClick={() => setTriggerPickerOpen(false)}
+            className="p-1.5 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Action list */}
+        <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
+          {actions.map((action) => (
+            <button
+              key={action.name}
+              onClick={() => commitNode(pendingTrigger, action.name)}
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{action.name}</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 leading-relaxed">{action.description}</div>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 shrink-0 transition-colors" />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {page === "home" ? renderHome() : renderSubPage()}
+      {page === "actions" ? renderActionPage() : page === "home" ? renderHome() : renderSubPage()}
     </div>
   );
 }
