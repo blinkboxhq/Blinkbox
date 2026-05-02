@@ -55,22 +55,22 @@ export default function ConfigurableEdge({
   const isFailed = status === "failed";
   const isReady = status === "ready";
 
-  // Dark grey, bold, uniform
+  // Dark grey, uniform
   let stroke = "#3f3f46";
-  let strokeWidth = 5;
+  let strokeWidth = 2.5;
   let strokeDasharray = "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
     stroke = "#22d3ee";
-    strokeWidth = 5;
+    strokeWidth = 3;
     strokeDasharray = "8 5";
     animation = "edgeFlow 0.4s linear infinite";
     filter = "drop-shadow(0 0 6px rgba(34,211,238,0.6))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 5;
+    strokeWidth = 3;
     animation = "edgeFadeToIdle 2s ease-out forwards";
     filter = "drop-shadow(0 0 4px rgba(16,185,129,0.5))";
   } else if (isFailed) {
@@ -78,7 +78,7 @@ export default function ConfigurableEdge({
     filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
   } else if (isReady) {
     stroke = "#10b981";
-    strokeWidth = 5;
+    strokeWidth = 2.5;
     strokeDasharray = "3 6";
     animation = "edgeFlow 1.2s linear infinite";
     filter = "drop-shadow(0 0 3px rgba(16,185,129,0.3))";
