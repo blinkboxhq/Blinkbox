@@ -63,8 +63,8 @@ const defaultEdgeOptions = {
   style: { strokeWidth: 5 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 24,
-    height: 24,
+    width: 14,
+    height: 14,
     color: EDGE_COLOR,
   },
 };
