@@ -258,7 +258,10 @@ export default function TriggerPicker() {
     setSelectedNodeId(newId);
   };
 
+  const NO_ACTION_PICKER = ["manual", "chat"];
+
   const handleSelect = (trigger) => {
+    if (NO_ACTION_PICKER.includes(trigger.id)) { commitNode(trigger, null); return; }
     const actions = TRIGGER_ACTIONS[trigger.id] || TRIGGER_ACTIONS[trigger.backendType] || [];
     if (actions.length === 0) { commitNode(trigger, null); return; }
     setPendingTrigger(trigger);
