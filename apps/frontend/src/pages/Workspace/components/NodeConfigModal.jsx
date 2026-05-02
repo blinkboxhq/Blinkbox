@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from "react";
-import { X, ChevronDown, Settings2, Play, CheckCircle, XCircle, Loader, Hash, Box, ToggleLeft, ListOrdered, Type, HelpCircle, Braces } from "lucide-react";
+import { X, ChevronDown, Settings2, Play, CheckCircle, XCircle, Loader, Hash, Box, ToggleLeft, ListOrdered, Type, HelpCircle, Braces, Table2, Code2, ChevronRight, AlertCircle, Clock, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -57,16 +57,165 @@ function TypeIcon({ type }) {
   return <Braces className={`${cls} text-zinc-500`} strokeWidth={2} />;
 }
 
+// ── Output Data Viewer (n8n-style) ────────────────────────────────────────────
+function OutputDataViewer({ data }) {
+  const [viewMode, setViewMode] = useState("table"); // "table" | "json"
+  const [expandedItem, setExpandedItem] = useState(0);
+
+  const items = Array.isArray(data) ? data : (data ? [data] : []);
+  const isEmpty = items.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
+        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
+          <Layers className="w-5 h-5 text-zinc-600" />
+        </div>
+        <p className="text-[13px] font-semibold text-zinc-500">No output data</p>
+        <p className="text-[11px] text-zinc-700 mt-1">Run the workflow to see output here</p>
+      </div>
+    );
+  }
+
+  const currentItem = items[expandedItem] ?? items[0];
+  const jsonObj = currentItem?.json ?? currentItem ?? {};
+  const fields = Object.entries(jsonObj);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-[#252527] shrink-0">
+        <div className="flex items-center gap-1 bg-[#111] rounded-lg p-0.5 border border-[#2a2a2d]">
+          <button
+            onClick={() => setViewMode("table")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "table" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+          >
+            <Table2 className="w-3 h-3" /> Table
+          </button>
+          <button
+            onClick={() => setViewMode("json")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "json" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+          >
+            <Code2 className="w-3 h-3" /> JSON
+          </button>
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
+            {items.length} item{items.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Item selector — only shown when > 1 item */}
+      {items.length > 1 && (
+        <div className="flex gap-1 px-5 py-2 overflow-x-auto shrink-0 border-b border-[#252527]">
+          {items.slice(0, 20).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setExpandedItem(i)}
+              className={`shrink-0 w-7 h-7 rounded-lg text-[11px] font-bold transition-all ${
+                i === expandedItem ? "bg-zinc-700 text-white" : "bg-[#1a1a1c] text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          {items.length > 20 && (
+            <span className="text-[10px] text-zinc-600 self-center ml-1">+{items.length - 20} more</span>
+          )}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto sidebar-scroll">
+        {viewMode === "table" ? (
+          <div className="px-5 py-3">
+            {fields.length === 0 ? (
+              <p className="text-[11px] text-zinc-600 text-center py-4">Empty object</p>
+            ) : (
+              <div className="flex flex-col gap-0.5">
+                {fields.map(([key, value]) => {
+                  const isObj = typeof value === "object" && value !== null;
+                  const display = isObj ? JSON.stringify(value) : String(value ?? "");
+                  const typeLabel = Array.isArray(value) ? "array" : typeof value;
+                  const typeColors = {
+                    string: "text-emerald-400",
+                    number: "text-orange-400",
+                    boolean: "text-amber-400",
+                    object: "text-blue-400",
+                    array: "text-violet-400",
+                  };
+                  return (
+                    <div key={key} className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-[#1e1e22] transition-colors group">
+                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 shrink-0 ${typeColors[typeLabel] || "text-zinc-500"}`}>
+                        {typeLabel.slice(0, 3)}
+                      </span>
+                      <span className="text-[12px] font-semibold text-zinc-400 shrink-0 min-w-[80px] max-w-[100px] truncate">{key}</span>
+                      <span className={`text-[12px] font-mono flex-1 min-w-0 truncate ${isObj ? "text-zinc-500 italic" : "text-zinc-200"}`}>
+                        {display.length > 60 ? display.slice(0, 60) + "…" : display}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="px-5 py-3">
+            <pre className="text-[11px] font-mono text-zinc-300 whitespace-pre-wrap break-all leading-relaxed">
+              <JsonHighlight data={jsonObj} />
+            </pre>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function JsonHighlight({ data }) {
+  const json = JSON.stringify(data, null, 2);
+  const lines = json.split("\n");
+  return (
+    <>
+      {lines.map((line, i) => {
+        const keyMatch = line.match(/^(\s*)("[\w-]+")(:\s*)(.*)/);
+        if (keyMatch) {
+          const [, indent, key, colon, val] = keyMatch;
+          const isStr = val.startsWith('"');
+          const isNum = /^-?\d/.test(val);
+          const isBool = val === "true," || val === "false," || val === "true" || val === "false";
+          const isNull = val === "null," || val === "null";
+          return (
+            <span key={i}>
+              {indent}
+              <span className="text-violet-300">{key}</span>
+              {colon}
+              <span className={isStr ? "text-emerald-300" : isNum ? "text-orange-300" : isBool ? "text-amber-300" : isNull ? "text-zinc-500" : "text-zinc-300"}>
+                {val}
+              </span>
+              {"\n"}
+            </span>
+          );
+        }
+        return <span key={i}>{line}{"\n"}</span>;
+      })}
+    </>
+  );
+}
+
 // ── Main Sidebar ─────────────────────────────────────────────────────────────
 export default function NodeConfigModal() {
   const selectedNodeId = useWorkspaceStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const nodes = useWorkspaceStore((s) => s.nodes);
   const updateNodeConfig = useWorkspaceStore((s) => s.updateNodeConfig);
+  const lastRunOutputs = useWorkspaceStore((s) => s.lastRunOutputs);
+  const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
 
   const node = nodes.find((n) => n.id === selectedNodeId) ?? null;
   const isOpen = !!selectedNodeId && !!node;
 
+  const [activeTab, setActiveTab] = useState("config"); // "config" | "output"
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [testInput, setTestInput] = useState("{}");
@@ -74,7 +223,15 @@ export default function NodeConfigModal() {
   const [testLoading, setTestLoading] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
 
-  useEffect(() => { setSettingsOpen(false); setTestOpen(false); setTestResult(null); }, [selectedNodeId]);
+  const nodeOutput = lastRunOutputs?.[selectedNodeId];
+  const nodeStatus = nodeStatuses?.[selectedNodeId];
+
+  useEffect(() => {
+    setSettingsOpen(false);
+    setTestOpen(false);
+    setTestResult(null);
+    setActiveTab("config");
+  }, [selectedNodeId]);
 
   const runTest = useCallback(async () => {
     if (!node) return;
@@ -162,34 +319,88 @@ export default function NodeConfigModal() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="flex items-center gap-3 px-5 py-4 shrink-0 border-b border-[#252527]">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-              style={{ backgroundColor: `rgba(${accent},0.12)` }}
-            >
-              {logoUrl
-                ? <img src={logoUrl} alt={label} className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
-                : Icon && <Icon className={`w-4 h-4 ${colorClass}`} strokeWidth={1.5} />
-              }
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold text-white truncate leading-tight">{label}</p>
-              <p className="text-[10px] text-[#666] font-mono mt-0.5">{isTrigger ? "trigger" : "action"}</p>
-            </div>
-            {NODE_DOCS[node.data.backendType] && (
-              <button
-                onClick={() => setShowDocs(v => !v)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shrink-0 ${showDocs ? "text-blue-400 bg-blue-500/10" : "text-[#555] hover:text-[#aaa] hover:bg-white/[0.05]"}`}
+          <div className="shrink-0 border-b border-[#252527]">
+            <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                style={{ backgroundColor: `rgba(${accent},0.12)` }}
               >
-                <HelpCircle className="w-3.5 h-3.5" />
+                {logoUrl
+                  ? <img src={logoUrl} alt={label} className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
+                  : Icon && <Icon className={`w-4 h-4 ${colorClass}`} strokeWidth={1.5} />
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-bold text-white truncate leading-tight">{label}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[10px] text-[#666] font-mono">{isTrigger ? "trigger" : "action"}</p>
+                  {nodeStatus === "completed" && (
+                    <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                      <CheckCircle className="w-2.5 h-2.5" /> Success
+                    </span>
+                  )}
+                  {nodeStatus === "failed" && (
+                    <span className="text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                      <AlertCircle className="w-2.5 h-2.5" /> Failed
+                    </span>
+                  )}
+                  {nodeStatus === "running" && (
+                    <span className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                      <Loader className="w-2.5 h-2.5 animate-spin" /> Running
+                    </span>
+                  )}
+                </div>
+              </div>
+              {NODE_DOCS[node.data.backendType] && (
+                <button
+                  onClick={() => setShowDocs(v => !v)}
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shrink-0 ${showDocs ? "text-blue-400 bg-blue-500/10" : "text-[#555] hover:text-[#aaa] hover:bg-white/[0.05]"}`}
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedNodeId(null)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[#555] hover:text-white hover:bg-white/[0.06] transition-all shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
               </button>
-            )}
-            <button
-              onClick={() => setSelectedNodeId(null)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#555] hover:text-white hover:bg-white/[0.06] transition-all shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            </div>
+
+            {/* Tab bar */}
+            <div className="flex items-center gap-0 px-5 pb-0">
+              {["config", "output"].map((tab) => {
+                const isActive = activeTab === tab;
+                const hasOutput = tab === "output" && nodeOutput;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border-b-2 transition-all ${
+                      isActive
+                        ? "border-white text-white"
+                        : "border-transparent text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    {tab === "config" ? (
+                      <><Settings2 className="w-3 h-3" /> Configure</>
+                    ) : (
+                      <>
+                        <Layers className="w-3 h-3" />
+                        Output
+                        {hasOutput && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-0.5 ${
+                            nodeStatus === "failed" ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
+                          }`}>
+                            {Array.isArray(nodeOutput) ? nodeOutput.length : 1}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Docs band ── */}
@@ -210,8 +421,15 @@ export default function NodeConfigModal() {
             })()}
           </AnimatePresence>
 
-          {/* ── Scrollable body ── */}
-          <div className="flex-1 overflow-y-auto sidebar-scroll">
+          {/* ── Output tab content ── */}
+          {activeTab === "output" && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <OutputDataViewer data={nodeOutput} />
+            </div>
+          )}
+
+          {/* ── Config tab content ── */}
+          {activeTab === "config" && <div className="flex-1 overflow-y-auto sidebar-scroll">
 
             {/* ── Actions / Output section (primary) ── */}
             <div className="px-5 pt-5 pb-2">
@@ -362,7 +580,7 @@ export default function NodeConfigModal() {
               <p className="text-[9px] font-bold text-[#444] uppercase tracking-widest mb-1">Node ID</p>
               <code className="text-[10px] font-mono text-[#555] break-all">{selectedNodeId}</code>
             </div>
-          </div>
+          </div>}
         </motion.div>
       )}
     </AnimatePresence>

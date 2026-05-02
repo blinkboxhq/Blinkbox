@@ -12,6 +12,7 @@ import NodeConfigModal from './components/NodeConfigModal';
 import BrianPanel from './components/BrianPanel';
 import BottomChatPanel from './components/BottomChatPanel';
 import WorkspaceHeader from './components/WorkspaceHeader';
+import CommandPalette from './components/CommandPalette';
 
 export { NodeRegistry } from './nodeRegistry';
 
@@ -145,6 +146,7 @@ export default function Workspace() {
               {/* Right sidebar with drag handle */}
               <WorkspaceRightSidebar width={rightW} onResizeStart={onRightResize} />
               <NodeConfigModal />
+              <CommandPalette />
             </ReactFlowProvider>
 
             {/* Brian panel with drag handle on its left edge */}

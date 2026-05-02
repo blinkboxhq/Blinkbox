@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import {
   ReactFlow,
   Controls,
+  MiniMap,
   Background,
   BackgroundVariant,
   useReactFlow,
@@ -332,6 +333,19 @@ export default function Canvas() {
             [&>button:hover]:!bg-zinc-800 [&>button:hover]:!text-zinc-200
             [&>button]:!rounded-lg [&>button]:!transition-all [&>button]:!duration-200"
         />
+        <MiniMap
+          nodeColor={(node) => {
+            if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";
+            return "rgba(82,82,91,0.5)";
+          }}
+          maskColor="rgba(0,0,0,0.6)"
+          style={{
+            background: "#0d0d0f",
+            border: "1px solid #27272a",
+            borderRadius: 8,
+          }}
+          className="!bg-[#0d0d0f] !border-zinc-800 !rounded-xl"
+        />
       </ReactFlow>
 
       {/* ── Multi-select floating toolbar ── */}
@@ -439,6 +453,14 @@ export default function Canvas() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* ── Cmd+K hint ── */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/70 border border-zinc-800/60 backdrop-blur-sm">
+          <kbd className="text-[10px] text-zinc-600 font-mono">⌘K</kbd>
+          <span className="text-[10px] text-zinc-700">Quick add node</span>
+        </div>
+      </div>
 
     </div>
   );
