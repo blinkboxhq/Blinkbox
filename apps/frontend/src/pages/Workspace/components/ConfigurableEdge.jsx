@@ -64,13 +64,11 @@ export default function ConfigurableEdge({
 
   if (isRunning) {
     stroke = "#22d3ee";
-    strokeWidth = 3;
     strokeDasharray = "8 5";
     animation = "edgeFlow 0.4s linear infinite";
     filter = "drop-shadow(0 0 6px rgba(34,211,238,0.6))";
   } else if (isCompleted) {
     stroke = "#10b981";
-    strokeWidth = 3;
     animation = "edgeFadeToIdle 2s ease-out forwards";
     filter = "drop-shadow(0 0 4px rgba(16,185,129,0.5))";
   } else if (isFailed) {

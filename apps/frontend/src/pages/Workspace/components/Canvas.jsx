@@ -60,11 +60,11 @@ const edgeTypes = { configurable: ConfigurableEdge };
 const EDGE_COLOR = "#3f3f46";
 const defaultEdgeOptions = {
   type: "configurable",
-  style: { strokeWidth: 5 },
+  style: { strokeWidth: 2.5 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 14,
-    height: 14,
+    width: 3,
+    height: 3,
     color: EDGE_COLOR,
   },
 };
