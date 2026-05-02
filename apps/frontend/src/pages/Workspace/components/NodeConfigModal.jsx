@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from "react";
-import { X, Zap, ChevronRight, ChevronDown, Settings2, HelpCircle, Play, CheckCircle, XCircle, Loader } from "lucide-react";
+import { X, Zap, ChevronDown, Settings2, HelpCircle, Play, CheckCircle, XCircle, Loader, Braces, SlidersHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -141,21 +141,25 @@ function VarRow({ path, type, note }) {
   );
 }
 
-// ── Main Modal ────────────────────────────────────────────────────────────────
+// ── Node Config Sidebar ───────────────────────────────────────────────────────
 export default function NodeConfigModal() {
   const selectedNodeId = useWorkspaceStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const nodes = useWorkspaceStore((s) => s.nodes);
   const updateNodeConfig = useWorkspaceStore((s) => s.updateNodeConfig);
-  const [showDocs, setShowDocs] = useState(false);
 
   const node = nodes.find((n) => n.id === selectedNodeId) ?? null;
   const isOpen = !!selectedNodeId && !!node;
 
+  const [activeTab, setActiveTab] = useState("settings");
   const [testOpen, setTestOpen] = useState(false);
   const [testInput, setTestInput] = useState("{}");
   const [testResult, setTestResult] = useState(null);
   const [testLoading, setTestLoading] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
+
+  // Reset tab when switching nodes
+  useEffect(() => { setActiveTab("settings"); setTestOpen(false); setTestResult(null); }, [selectedNodeId]);
 
   const runTest = useCallback(async () => {
     if (!node) return;
@@ -177,7 +181,6 @@ export default function NodeConfigModal() {
     }
   }, [node, testInput]);
 
-  // Close on Escape
   const handleKeyDown = useCallback((e) => {
     if (e.key === "Escape") setSelectedNodeId(null);
   }, [setSelectedNodeId]);
@@ -189,7 +192,6 @@ export default function NodeConfigModal() {
     }
   }, [isOpen, handleKeyDown]);
 
-  // Derived — safe to compute because AnimatePresence only renders children when isOpen=true
   const isTrigger = node?.data.type === "trigger";
   const variant = isTrigger && node?.data.config?.triggerVariant
     ? TRIGGER_VARIANTS[node.data.config.triggerVariant]
@@ -198,6 +200,8 @@ export default function NodeConfigModal() {
   const def = variant || nodeDef;
 
   const Icon = def?.icon;
+  const logoUrl = variant?.logoUrl || nodeDef?.logoUrl;
+  const imgFilter = variant?.imgFilter || nodeDef?.imgFilter;
   const accent = def?.accentColor || "161,161,170";
   const colorClass = def?.colorClass || "text-zinc-400";
   const label = variant?.label || nodeDef?.label || node?.data.label || node?.data.backendType || "";
@@ -222,267 +226,225 @@ export default function NodeConfigModal() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]"
-            onClick={() => setSelectedNodeId(null)}
-          />
-
-          {/* Modal card */}
-          <motion.div
-            key="modal"
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.97 }}
-            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-6"
+        <motion.div
+          key="sidebar"
+          initial={{ x: 420, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 420, opacity: 0 }}
+          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+          className="fixed right-0 top-0 bottom-0 z-30 flex flex-col"
+          style={{
+            width: 400,
+            background: "linear-gradient(180deg, #141416 0%, #111113 100%)",
+            borderLeft: `1px solid rgba(${accent},0.15)`,
+            boxShadow: `-8px 0 40px rgba(0,0,0,0.6), inset 1px 0 0 rgba(255,255,255,0.03)`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ── Header ── */}
+          <div
+            className="flex items-center gap-3 px-4 py-4 shrink-0 border-b border-white/[0.06]"
+            style={{ background: `rgba(${accent},0.03)` }}
           >
             <div
-              className="pointer-events-auto w-full max-w-[920px] h-[82vh] max-h-[720px] flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-black/70"
-              style={{
-                background: "linear-gradient(160deg, #1a1a1e 0%, #141416 100%)",
-                border: `1px solid rgba(${accent},0.18)`,
-                boxShadow: `0 0 0 1px rgba(${accent},0.08), 0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)`,
-              }}
-              onClick={(e) => e.stopPropagation()}
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+              style={{ backgroundColor: `rgba(${accent},0.12)` }}
             >
-
-              {/* ── Top bar ── */}
-              <div
-                className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.06] shrink-0"
-                style={{ background: `rgba(${accent},0.04)` }}
+              {logoUrl
+                ? <img src={logoUrl} alt={label} className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
+                : Icon && <Icon className={`w-4.5 h-4.5 ${colorClass}`} strokeWidth={1.5} />
+              }
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-zinc-100 truncate leading-tight">{label}</p>
+              <p className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate">{node.data.backendType}</p>
+            </div>
+            {/* Docs */}
+            {NODE_DOCS[node.data.backendType] && (
+              <button
+                onClick={() => setShowDocs(v => !v)}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shrink-0 ${showDocs ? "text-blue-400 bg-blue-500/10" : "text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.06]"}`}
+                title="Docs"
               >
-                {/* Icon */}
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{
-                    backgroundColor: `rgba(${accent},0.12)`,
-                    boxShadow: `0 0 16px rgba(${accent},0.12)`,
-                  }}
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {/* Close */}
+            <button
+              onClick={() => setSelectedNodeId(null)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.06] transition-all shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* ── Docs band ── */}
+          <AnimatePresence>
+            {showDocs && NODE_DOCS[node.data.backendType] && (() => {
+              const doc = NODE_DOCS[node.data.backendType];
+              return (
+                <motion.div
+                  key="docs"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden border-b border-white/[0.05] shrink-0"
                 >
-                  {Icon && <Icon className={`w-5 h-5 ${colorClass}`} strokeWidth={1.5} />}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-[15px] font-semibold text-zinc-100 tracking-tight truncate">{label}</h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-zinc-600 font-mono">{node.data.backendType}</span>
-                    {isTrigger && (
-                      <>
-                        <ChevronRight className="w-2.5 h-2.5 text-zinc-700" />
-                        <span className="text-[10px] text-zinc-600">trigger</span>
-                      </>
-                    )}
+                  <div className="p-4 space-y-2 bg-zinc-900/40">
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">{doc.description}</p>
                   </div>
-                </div>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
 
-                {/* Test node button */}
-                {!node?.data.type === "trigger" || node?.data.backendType !== "trigger" ? (
-                  <button
-                    onClick={() => { setTestOpen(v => !v); setTestResult(null); }}
-                    title="Test this node"
-                    className={`flex items-center gap-1.5 px-3 h-8 rounded-lg text-[11px] font-semibold transition-all ${testOpen ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.07]"}`}
-                  >
-                    <Play className="w-3 h-3" strokeWidth={2.5} />
-                    Test
-                  </button>
-                ) : null}
+          {/* ── Tabs ── */}
+          <div className="flex items-center gap-1 px-4 pt-3 pb-0 shrink-0">
+            <TabBtn id="settings" active={activeTab} onClick={setActiveTab} icon={SlidersHorizontal} label="Settings" />
+            <TabBtn id="events" active={activeTab} onClick={setActiveTab} icon={Braces} label="Output Events" />
+          </div>
 
-                {/* Docs toggle */}
-                {NODE_DOCS[node.data.backendType] && (
-                  <button
-                    onClick={() => setShowDocs((v) => !v)}
-                    title="Node documentation"
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${showDocs ? "text-blue-400 bg-blue-500/10" : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.07]"}`}
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                  </button>
+          {/* ── Scrollable body ── */}
+          <div className="flex-1 overflow-y-auto sidebar-scroll">
+
+            {/* ──── SETTINGS TAB ──── */}
+            {activeTab === "settings" && (
+              <div className="flex flex-col gap-4 p-4">
+
+                {ConfigPanel ? (
+                  <ConfigPanelWrapper
+                    Panel={ConfigPanel}
+                    config={config}
+                    updateConfig={updateConfig}
+                    selected={true}
+                    nodeId={selectedNodeId}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-14 text-center">
+                    <Zap className="w-7 h-7 text-zinc-700 mb-2.5" strokeWidth={1.5} />
+                    <p className="text-[13px] text-zinc-500">No configuration needed</p>
+                    <p className="text-[11px] text-zinc-700 mt-1">This node works automatically</p>
+                  </div>
                 )}
 
-                {/* Close */}
-                <button
-                  onClick={() => setSelectedNodeId(null)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.07] transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+                {/* Advanced */}
+                {!isTrigger && (
+                  <AdvancedSettings
+                    retryPolicy={retryPolicy}
+                    updateRetryPolicy={updateRetryPolicy}
+                    timeoutMs={config.timeoutMs}
+                    onTimeoutChange={(v) => updateConfig('timeoutMs', v)}
+                  />
+                )}
 
-              {/* ── Two-column body ── */}
-              {/* ── Docs panel ── */}
-              <AnimatePresence>
-                {showDocs && NODE_DOCS[node.data.backendType] && (() => {
-                  const doc = NODE_DOCS[node.data.backendType];
-                  return (
-                    <motion.div
-                      key="docs-panel"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden border-b border-white/[0.05]"
+                {/* Test node */}
+                {!isTrigger && (
+                  <div className="rounded-xl border border-white/[0.06] overflow-hidden">
+                    <button
+                      onClick={() => { setTestOpen(v => !v); setTestResult(null); }}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-left hover:bg-white/[0.03] transition-colors group"
                     >
-                      <div className="p-5 space-y-3 bg-zinc-900/50">
-                        <p className="text-xs text-zinc-400 leading-relaxed">{doc.description}</p>
-                        {doc.inputs?.length > 0 && (
-                          <div>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">Inputs</p>
-                            <div className="space-y-1">
-                              {doc.inputs.map((inp) => (
-                                <div key={inp.name} className="flex items-start gap-2 text-[10px]">
-                                  <code className="text-zinc-300 font-mono shrink-0">{inp.name}</code>
-                                  <span className="text-zinc-700">·</span>
-                                  <span className="text-blue-400 shrink-0">{inp.type}</span>
-                                  <span className="text-zinc-600">{inp.desc}</span>
-                                </div>
-                              ))}
+                      <Play className="w-3.5 h-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
+                      <span className="text-[11px] font-semibold text-zinc-400 group-hover:text-zinc-200 transition-colors flex-1">Test this node</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-zinc-600 transition-transform duration-200 ${testOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {testOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden border-t border-white/[0.05]"
+                        >
+                          <div className="p-4 flex flex-col gap-3">
+                            <div>
+                              <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-1.5 block">Input JSON</label>
+                              <textarea
+                                value={testInput}
+                                onChange={e => setTestInput(e.target.value)}
+                                rows={3}
+                                className="w-full bg-[#0d0d0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-[11px] text-zinc-200 font-mono focus:outline-none focus:border-emerald-500/40 resize-none transition-colors"
+                                placeholder='{"query": "hello world"}'
+                              />
                             </div>
-                          </div>
-                        )}
-                        {doc.outputs?.length > 0 && (
-                          <div>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">Outputs</p>
-                            <div className="space-y-1">
-                              {doc.outputs.map((out) => (
-                                <div key={out.name} className="flex items-start gap-2 text-[10px]">
-                                  <code className="text-emerald-400 font-mono shrink-0">{out.name}</code>
-                                  <span className="text-zinc-700">·</span>
-                                  <span className="text-blue-400 shrink-0">{out.type}</span>
-                                  <span className="text-zinc-600">{out.desc}</span>
+                            <button
+                              onClick={runTest}
+                              disabled={testLoading}
+                              className="w-full py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[12px] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-500/15 transition-all disabled:opacity-50"
+                            >
+                              {testLoading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" strokeWidth={2.5} />}
+                              {testLoading ? "Running…" : "Run Test"}
+                            </button>
+                            {testResult && (
+                              <div className={`rounded-lg border p-3 ${testResult.success ? "bg-emerald-500/5 border-emerald-500/15" : "bg-red-500/5 border-red-500/20"}`}>
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  {testResult.success ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                                  <span className={`text-[10px] font-bold ${testResult.success ? "text-emerald-400" : "text-red-400"}`}>
+                                    {testResult.success ? `Success · ${testResult.durationMs}ms` : "Failed"}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-              </AnimatePresence>
-
-              <div className="flex flex-1 min-h-0">
-
-                {/* LEFT — config inputs */}
-                <div className="flex-1 min-w-0 overflow-y-auto border-r border-white/[0.05] p-5 flex flex-col gap-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Configuration</span>
-                    <div className="flex-1 h-px bg-white/[0.04]" />
-                  </div>
-
-                  {ConfigPanel ? (
-                    <div className="flex justify-center">
-                      <div className="w-full max-w-[320px]">
-                        <ConfigPanelWrapper
-                          Panel={ConfigPanel}
-                          config={config}
-                          updateConfig={updateConfig}
-                          selected={true}
-                          nodeId={selectedNodeId}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
-                      <Zap className="w-8 h-8 text-zinc-700 mb-3" strokeWidth={1.5} />
-                      <p className="text-sm text-zinc-500">No configuration needed</p>
-                      <p className="text-xs text-zinc-700 mt-1">This node works automatically</p>
-                    </div>
-                  )}
-
-                  {/* ── Advanced Settings ── */}
-                  {!isTrigger && <AdvancedSettings retryPolicy={retryPolicy} updateRetryPolicy={updateRetryPolicy} timeoutMs={config.timeoutMs} onTimeoutChange={(v) => updateConfig('timeoutMs', v)} />}
-
-                  {/* ── Test Panel ── */}
-                  <AnimatePresence>
-                    {testOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden w-full max-w-[320px] mx-auto"
-                      >
-                        <div className="mt-2 p-4 bg-[#0d0d0f] border border-emerald-500/15 rounded-xl flex flex-col gap-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Test Node</span>
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-1.5 block">Input JSON</label>
-                            <textarea
-                              value={testInput}
-                              onChange={e => setTestInput(e.target.value)}
-                              rows={4}
-                              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-[11px] text-zinc-200 font-mono focus:outline-none focus:border-emerald-500/40 resize-none transition-colors"
-                              placeholder='{"query": "hello world"}'
-                            />
-                          </div>
-                          <button
-                            onClick={runTest}
-                            disabled={testLoading}
-                            className="w-full py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[12px] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-500/15 transition-all disabled:opacity-50"
-                          >
-                            {testLoading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" strokeWidth={2.5} />}
-                            {testLoading ? "Running…" : "Run Test"}
-                          </button>
-                          {testResult && (
-                            <div className={`rounded-lg border p-3 ${testResult.success ? "bg-emerald-500/5 border-emerald-500/15" : "bg-red-500/5 border-red-500/20"}`}>
-                              <div className="flex items-center gap-1.5 mb-2">
-                                {testResult.success
-                                  ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                                  : <XCircle className="w-3.5 h-3.5 text-red-400" />}
-                                <span className={`text-[10px] font-bold ${testResult.success ? "text-emerald-400" : "text-red-400"}`}>
-                                  {testResult.success ? `Success · ${testResult.durationMs}ms` : "Failed"}
-                                </span>
+                                <pre className="text-[10px] font-mono text-zinc-300 whitespace-pre-wrap break-all max-h-40 overflow-y-auto leading-relaxed">
+                                  {testResult.success ? JSON.stringify(testResult.output, null, 2) : testResult.error}
+                                </pre>
                               </div>
-                              <pre className="text-[10px] font-mono text-zinc-300 whitespace-pre-wrap break-all max-h-48 overflow-y-auto leading-relaxed">
-                                {testResult.success
-                                  ? JSON.stringify(testResult.output, null, 2)
-                                  : testResult.error}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* RIGHT — output variables */}
-                <div className="w-[320px] shrink-0 overflow-y-auto flex flex-col">
-                  <div className="px-5 pt-5 pb-3 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Output fields</span>
-                      <div className="flex-1 h-px bg-white/[0.04]" />
-                    </div>
-                    <p className="text-[10px] text-zinc-700 mt-2 leading-relaxed">
-                      Copy these into downstream nodes to reference this node's output.
-                    </p>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-
-                  <div className="flex-1 px-2 pb-4">
-                    {outputSchema.map((v) => (
-                      <VarRow key={v.path} {...v} />
-                    ))}
-                  </div>
-
-                  {/* Node ID reference */}
-                  <div className="px-5 py-4 border-t border-white/[0.04] shrink-0">
-                    <p className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest mb-1.5">Node ID</p>
-                    <code className="text-[10px] font-mono text-zinc-500 break-all">{selectedNodeId}</code>
-                  </div>
-                </div>
-
+                )}
               </div>
-            </div>
-          </motion.div>
-        </>
+            )}
+
+            {/* ──── EVENTS TAB ──── */}
+            {activeTab === "events" && (
+              <div className="flex flex-col">
+                <div className="px-4 pt-4 pb-2">
+                  <p className="text-[10px] text-zinc-600 leading-relaxed">
+                    Use these in downstream nodes to reference this node&apos;s output.
+                  </p>
+                </div>
+                <div className="px-2 pb-4">
+                  {outputSchema.length > 0
+                    ? outputSchema.map((v) => <VarRow key={v.path} {...v} />)
+                    : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Braces className="w-7 h-7 text-zinc-700 mb-2.5" strokeWidth={1.5} />
+                        <p className="text-[13px] text-zinc-500">No output schema yet</p>
+                        <p className="text-[11px] text-zinc-700 mt-1">Run this node to see its output fields</p>
+                      </div>
+                    )
+                  }
+                </div>
+                <div className="px-4 py-3 border-t border-white/[0.04] mx-4 mb-4">
+                  <p className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest mb-1">Node ID</p>
+                  <code className="text-[10px] font-mono text-zinc-600 break-all">{selectedNodeId}</code>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function TabBtn({ id, active, onClick, icon: Icon, label }) {
+  const isActive = active === id;
+  return (
+    <button
+      onClick={() => onClick(id)}
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all ${
+        isActive
+          ? "bg-white/[0.08] text-zinc-100"
+          : "text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04]"
+      }`}
+    >
+      <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+      {label}
+    </button>
   );
 }
 

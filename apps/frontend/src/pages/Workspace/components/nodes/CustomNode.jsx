@@ -368,7 +368,7 @@ export default function CustomNode({ id, data, selected }) {
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[13px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{data.label}</span>
+          <span className="text-[13px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{variantDef?.label || nodeDef.label || data.label}</span>
           <span className="text-[10px] font-semibold text-zinc-600 mt-0.5 block">Click to run</span>
         </div>
       </div>
@@ -409,7 +409,7 @@ export default function CustomNode({ id, data, selected }) {
           {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
 
           <Bot className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
-          <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{data.label || "AI Agent"}</p>
+          <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{nodeDef.label || data.label || "AI Agent"}</p>
 
           {/* Slot labels above bottom edge */}
           <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
@@ -554,7 +554,7 @@ export default function CustomNode({ id, data, selected }) {
           })}
         </motion.div>
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[11px] font-semibold text-zinc-400">{data.label || "Distributor"}</span>
+          <span className="text-[11px] font-semibold text-zinc-400">{nodeDef.label || data.label || "Distributor"}</span>
         </div>
       </div>
     );
@@ -624,7 +624,7 @@ export default function CustomNode({ id, data, selected }) {
       )}
 
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{data.label}</span>
+        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">{nodeDef.label || data.label}</span>
         {configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
         {nodeOutput && status === "completed" && (
           <NodeOutputChip output={nodeOutput} />
