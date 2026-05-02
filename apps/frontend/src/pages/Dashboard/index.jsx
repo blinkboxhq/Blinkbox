@@ -327,16 +327,16 @@ export default function Dashboard() {
                 <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
               ) : viewMode === 'list' ? (
                 /* ── LIST VIEW ── */
-                <div className="border border-zinc-800/80 rounded-lg overflow-hidden">
+                <div className="border border-[#1e1e20] rounded-xl overflow-hidden">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-zinc-900/50">
+                      <tr className="bg-[#0d0d0f]">
                         <th className="w-10" />
-                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Name</th>
-                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
-                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
-                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Updated</th>
-                        <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Team</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Name</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Status</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Trigger</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Updated</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Team</th>
                         <th className="w-10" />
                       </tr>
                     </thead>
@@ -345,7 +345,7 @@ export default function Dashboard() {
                         <tr
                           key={wf._id || wf.id}
                           onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                          className="group border-t border-zinc-800/50 hover:bg-white/[0.015] cursor-pointer transition-colors"
+                          className="group border-t border-[#1a1a1c] hover:bg-white/[0.02] cursor-pointer transition-colors"
                           style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}
                         >
                           {/* Toggle */}
@@ -358,8 +358,8 @@ export default function Dashboard() {
                             </button>
                           </td>
                           <td className="px-4 py-2.5">
-                            <p className="text-[13px] font-medium text-neutral-200 group-hover:text-white truncate max-w-[280px]">{wf.name}</p>
-                            {wf.description && <p className="text-[11px] text-neutral-700 truncate max-w-[280px] mt-0.5">{wf.description}</p>}
+                            <p className="text-[13px] font-medium text-[#ccc] group-hover:text-white truncate max-w-[280px]">{wf.name}</p>
+                            {wf.description && <p className="text-[11px] text-[#444] truncate max-w-[280px] mt-0.5">{wf.description}</p>}
                           </td>
                           <td className="px-4 py-2.5">
                             <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-600'}`}>
@@ -367,8 +367,8 @@ export default function Dashboard() {
                               {wf.status === 'active' ? 'Active' : 'Draft'}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{wf.trigger || 'manual'}</td>
-                          <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(wf.updatedAt)}</td>
+                          <td className="px-4 py-2.5 text-[11px] text-[#444] capitalize">{wf.trigger || 'manual'}</td>
+                          <td className="px-4 py-2.5 text-[11px] text-[#444]">{timeAgo(wf.updatedAt)}</td>
                           <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
                           <td className="px-3 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
                             <button
@@ -393,7 +393,7 @@ export default function Dashboard() {
                     <div
                       key={wf._id || wf.id}
                       onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-lg border border-zinc-800/80 bg-[#0a0a0a] hover:bg-[#0f0f0f] hover:border-zinc-700/80 cursor-pointer transition-all duration-150 overflow-visible"
+                      className="group relative flex flex-col p-4 rounded-xl border border-[#1e1e20] bg-[#0d0d0f] hover:bg-[#111113] hover:border-[#2a2a2d] cursor-pointer transition-all duration-150 overflow-visible"
                       style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
                     >
                       <div className="flex items-start justify-between mb-2.5">
@@ -418,12 +418,12 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      <p className="text-[11px] text-neutral-600 mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
-                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/50">
-                        <span className="text-[10px] text-neutral-700 capitalize">{wf.trigger || 'manual'}</span>
+                      <p className="text-[11px] text-[#555] mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
+                        <span className="text-[10px] text-[#444] capitalize">{wf.trigger || 'manual'}</span>
                         <div className="flex items-center gap-2">
                           <CollabAvatarStack collaborators={wf.collaborators || []} />
-                          <span className="text-[10px] text-neutral-700">{timeAgo(wf.updatedAt)}</span>
+                          <span className="text-[10px] text-[#444]">{timeAgo(wf.updatedAt)}</span>
                         </div>
                       </div>
                     </div>
