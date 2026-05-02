@@ -1053,6 +1053,7 @@ export default function NodeConfigModal() {
 
   const updateConfig = (key, value) => updateNodeConfig(selectedNodeId, key, value);
   const config = node?.data.config || {};
+  const selectedAction = config.selectedAction || null;
   const retryPolicy = config.retryPolicy || {};
   const updateRetryPolicy = (field, value) => updateConfig('retryPolicy', { ...retryPolicy, [field]: value });
 
@@ -1144,7 +1145,13 @@ export default function NodeConfigModal() {
                 ) : (
                   <div className="flex flex-col">
                     {triggerActions.map((action) => (
-                      <ActionRow key={action.name} name={action.name} description={action.description} />
+                      <ActionRow
+                        key={action.name}
+                        name={action.name}
+                        description={action.description}
+                        selected={selectedAction === action.name}
+                        onSelect={() => updateConfig("selectedAction", action.name)}
+                      />
                     ))}
                   </div>
                 )}
@@ -1277,12 +1284,21 @@ export default function NodeConfigModal() {
 }
 
 // ── Action row — trigger event type card ─────────────────────────────────────
-function ActionRow({ name, description }) {
+function ActionRow({ name, description, selected, onSelect }) {
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-[#1e1e20] last:border-0">
-      <div className="w-1.5 h-1.5 rounded-full bg-[#3a3a3d] mt-[7px] shrink-0" />
+    <div
+      onClick={onSelect}
+      className={`flex items-start gap-3 py-3 border-b border-[#1e1e20] last:border-0 cursor-pointer rounded-lg px-2 -mx-2 transition-all duration-100 ${
+        selected ? "bg-white/[0.05]" : "hover:bg-white/[0.03]"
+      }`}
+    >
+      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-[2px] shrink-0 transition-all ${
+        selected ? "border-emerald-500 bg-emerald-500/20" : "border-[#3a3a3d]"
+      }`}>
+        {selected && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+      </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#d4d4d8] leading-snug">{name}</p>
+        <p className={`text-[13px] font-semibold leading-snug transition-colors ${selected ? "text-white" : "text-[#d4d4d8]"}`}>{name}</p>
         <p className="text-[11px] text-[#555] mt-0.5 leading-relaxed">{description}</p>
       </div>
     </div>

@@ -368,8 +368,8 @@ export default function CustomNode({ id, data, selected }) {
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[13px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-zinc-600 mt-0.5 block">Click to run</span>
+          <span className="text-[13px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
+          <span className="text-[10px] font-semibold text-zinc-600 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
