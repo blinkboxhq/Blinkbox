@@ -17,14 +17,10 @@ export async function listCredentials(req, res) {
 
 export async function createCredential(req, res) {
   try {
-    const { name, type, secret } = req.body;
+    const { name, secret, type = "api_key" } = req.body;
 
-    if (!name || !type || !secret) {
-      return res.status(400).json({ message: "Name, type, and secret are required." });
-    }
-
-    if (!["bearer", "api_key", "basic", "oauth"].includes(type)) {
-      return res.status(400).json({ message: "Type must be bearer, api_key, basic, or oauth." });
+    if (!name || !secret) {
+      return res.status(400).json({ message: "Name and secret are required." });
     }
 
     if (name.length > 100) {

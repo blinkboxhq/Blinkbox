@@ -1,38 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import { KeyRound, Plus, Shield, Loader2, ChevronDown, X } from 'lucide-react';
+import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff } from 'lucide-react';
 import api from '../../lib/api';
 
-const TYPE_OPTIONS = [
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'api_key', label: 'API Key' },
-  { value: 'basic', label: 'Basic Auth' },
-];
-
-/**
- * CredentialPicker — replaces raw credential ID text inputs.
- *
- * Props:
- *   value        — current credentialId
- *   onChange      — (credentialId: string) => void
- *   accentColor   — tailwind color class stem (e.g. "emerald", "blue", "violet")
- *   label         — optional label override (default: "Credential")
- *   placeholder   — hint text when nothing selected
- */
 export default function CredentialPicker({
   value,
   onChange,
-  accentColor = 'blue',
   label = 'Credential',
-  placeholder = 'Select a credential...',
+  placeholder = 'Select a credential…',
 }) {
   const [credentials, setCredentials] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Create form state
   const [newName, setNewName] = useState('');
-  const [newType, setNewType] = useState('api_key');
   const [newSecret, setNewSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
 
@@ -40,27 +23,14 @@ export default function CredentialPicker({
     try {
       const res = await api.get('/api/credentials');
       setCredentials(res.data.credentials || []);
-    } catch {
-      // silent
-    } finally {
+    } catch { /* silent */ } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchCredentials();
-  }, [fetchCredentials]);
+  useEffect(() => { fetchCredentials(); }, [fetchCredentials]);
 
   const selectedCred = credentials.find((c) => c._id === value);
-
-  const handleSelect = (e) => {
-    const val = e.target.value;
-    if (val === '__new__') {
-      setShowCreate(true);
-    } else {
-      onChange(val || '');
-    }
-  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -68,130 +38,117 @@ export default function CredentialPicker({
       setCreateError('Name and secret are required.');
       return;
     }
-
     setIsCreating(true);
     setCreateError(null);
-
     try {
-      const res = await api.post('/api/credentials', {
-        name: newName.trim(),
-        type: newType,
-        secret: newSecret,
-      });
+      const res = await api.post('/api/credentials', { name: newName.trim(), secret: newSecret });
       const created = res.data.credential;
       setCredentials((prev) => [created, ...prev]);
       onChange(created._id);
-      setNewName('');
-      setNewType('api_key');
-      setNewSecret('');
-      setShowCreate(false);
+      setNewName(''); setNewSecret(''); setShowCreate(false);
     } catch (err) {
-      setCreateError(err.response?.data?.message || 'Failed to create credential.');
+      setCreateError(err.response?.data?.message || 'Failed to save.');
     } finally {
       setIsCreating(false);
     }
   };
 
-  const accentBorder = `focus:border-${accentColor}-500/50`;
-  const accentText = `text-${accentColor}-400`;
-
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-        <KeyRound className={`w-3.5 h-3.5 ${accentText}`} /> {label}
+      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+        <KeyRound className="w-3 h-3" /> {label}
       </label>
 
-      {/* Dropdown */}
       <div className="relative">
-        <select
-          value={value || ''}
-          onChange={handleSelect}
-          disabled={isLoading}
-          className={`w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-zinc-300 font-medium ${accentBorder} transition-colors shadow-inner cursor-pointer appearance-none pr-8 outline-none`}
+        <button
+          type="button"
+          onClick={() => setOpen((p) => !p)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-[#0d0d0f] border border-[#333] rounded-lg text-[13px] text-neutral-300 hover:border-neutral-600 transition-colors"
         >
-          <option value="">{isLoading ? 'Loading...' : placeholder}</option>
-          {credentials.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name} ({c.type})
-            </option>
-          ))}
-          <option value="__new__">+ Add New Credential</option>
-        </select>
-        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 pointer-events-none" />
+          <span className={selectedCred ? 'text-neutral-200' : 'text-neutral-600'}>
+            {isLoading ? 'Loading…' : (selectedCred?.name || placeholder)}
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+        </button>
+
+        {open && (
+          <div className="absolute top-full mt-1 left-0 right-0 z-20 bg-[#111] border border-[#333] rounded-lg shadow-xl overflow-hidden">
+            {credentials.map((c) => (
+              <button
+                key={c._id}
+                type="button"
+                onClick={() => { onChange(c._id); setOpen(false); }}
+                className="w-full px-3 py-2.5 text-left text-[13px] text-neutral-300 hover:bg-white/[0.06] transition-colors flex items-center gap-2"
+              >
+                <Shield className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+                <span className="flex-1 truncate">{c.name}</span>
+                {c._id === value && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
+              </button>
+            ))}
+            {credentials.length === 0 && !isLoading && (
+              <p className="px-3 py-2.5 text-[12px] text-neutral-600">No credentials yet</p>
+            )}
+            <div className="border-t border-[#1e1e20]">
+              <button
+                type="button"
+                onClick={() => { setShowCreate(true); setOpen(false); }}
+                className="w-full px-3 py-2.5 text-left text-[12px] text-violet-400 hover:bg-white/[0.04] flex items-center gap-2 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> New credential
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Selected indicator */}
       {selectedCred && (
         <div className="flex items-center gap-2 px-2.5 py-1.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
           <Shield className="w-3 h-3 text-emerald-500 shrink-0" />
-          <span className="text-[10px] text-emerald-400 font-medium truncate">
-            {selectedCred.name}
-          </span>
-          <span className="text-[10px] text-zinc-600 font-mono">{selectedCred.type}</span>
+          <span className="text-[11px] text-emerald-400 font-medium truncate">{selectedCred.name}</span>
         </div>
       )}
 
-      {/* Inline Create Form */}
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="flex flex-col gap-3 p-3 bg-zinc-900/80 border border-zinc-700/50 rounded-lg animate-in fade-in slide-in-from-top-1 duration-150"
+          className="flex flex-col gap-2.5 p-3 bg-[#0d0d0f] border border-[#2a2a2d] rounded-lg mt-1"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-              New Credential
-            </span>
-            <button
-              type="button"
-              onClick={() => { setShowCreate(false); setCreateError(null); }}
-              className="p-0.5 text-zinc-600 hover:text-zinc-300 transition-colors"
-            >
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">New Credential</span>
+            <button type="button" onClick={() => { setShowCreate(false); setCreateError(null); }}
+              className="text-neutral-600 hover:text-neutral-400 transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-
           <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="e.g. OpenAI Production"
-            className="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-zinc-600 transition-colors"
+            type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+            placeholder="Name (e.g. OpenAI Production)"
+            className="bg-[#111] border border-[#333] rounded-md px-3 py-2 text-[13px] text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
           />
-
-          <select
-            value={newType}
-            onChange={(e) => setNewType(e.target.value)}
-            className="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-600 transition-colors cursor-pointer appearance-none"
-          >
-            {TYPE_OPTIONS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-
-          <input
-            type="password"
-            value={newSecret}
-            onChange={(e) => setNewSecret(e.target.value)}
-            placeholder="sk-••••••••••••••••"
-            className="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white font-mono placeholder-zinc-700 focus:outline-none focus:border-zinc-600 transition-colors"
-          />
-
-          {createError && (
-            <p className="text-[10px] text-red-400 font-medium">{createError}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isCreating}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-zinc-200 transition-all disabled:opacity-50"
-          >
-            {isCreating ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Shield className="w-3.5 h-3.5" />
-            )}
-            Encrypt & Save
-          </button>
+          <div className="relative">
+            <input
+              type={showSecret ? 'text' : 'password'} value={newSecret}
+              onChange={(e) => setNewSecret(e.target.value)}
+              placeholder="Secret / API key"
+              className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 pr-9 text-[13px] text-white placeholder-neutral-600 font-mono focus:outline-none focus:border-neutral-500 transition-colors"
+            />
+            <button type="button" onClick={() => setShowSecret((p) => !p)}
+              className="absolute right-2.5 top-2.5 text-neutral-600 hover:text-neutral-400">
+              {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+          {createError && <p className="text-[11px] text-red-400">{createError}</p>}
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={() => { setShowCreate(false); setCreateError(null); setNewName(''); setNewSecret(''); }}
+              className="px-3 py-1.5 text-[12px] text-neutral-500 hover:text-white transition-colors">
+              Cancel
+            </button>
+            <button type="submit" disabled={isCreating || !newName.trim() || !newSecret.trim()}
+              className="px-3 py-1.5 text-[12px] font-semibold bg-violet-500/15 border border-violet-500/30 text-violet-300 rounded-md hover:bg-violet-500/25 disabled:opacity-40 transition-colors">
+              {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}
+              Save
+            </button>
+          </div>
         </form>
       )}
     </div>

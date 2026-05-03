@@ -342,6 +342,17 @@ export const createGraphSlice = (set, get) => ({
     });
   },
 
+  renameNode: (nodeId, customLabel) => {
+    const state = get();
+    set({
+      nodes: state.nodes.map((n) =>
+        n.id === nodeId
+          ? { ...n, data: { ...n.data, config: { ...n.data.config, customLabel } } }
+          : n
+      ),
+    });
+  },
+
   updateNodeConfig: (nodeId, key, value) => {
     const state = get();
     const newNodes = state.nodes.map((node) =>
