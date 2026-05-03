@@ -69,7 +69,6 @@ export async function oauthAuthorize(req, res) {
     });
 
     const callbackUrl = `${BACKEND_URL}/api/oauth/${providerName}/callback`;
-    const scopes = provider.scopes.join(provider.scopeDelimiter || ",");
 
     // Build authorize URL
     const params = new URLSearchParams({
@@ -79,11 +78,17 @@ export async function oauthAuthorize(req, res) {
       state,
     });
 
-    // Slack uses `scope` for bot scopes (comma-separated)
-    if (providerName === "slack") {
-      params.set("scope", scopes);
-    } else {
-      params.set("scope", provider.scopes.join(" "));
+    // Slack uses comma-separated scopes; everyone else uses space
+    const scopeStr = providerName === "slack"
+      ? provider.scopes.join(",")
+      : provider.scopes.join(" ");
+    if (scopeStr) params.set("scope", scopeStr);
+
+    // Provider-specific extra params (e.g. Google needs access_type=offline)
+    if (provider.extraParams) {
+      for (const [k, v] of Object.entries(provider.extraParams)) {
+        params.set(k, v);
+      }
     }
 
     // Airtable requires PKCE
@@ -160,13 +165,19 @@ export async function oauthCallback(req, res) {
 
     let tokenData;
     try {
-      // Airtable wants Basic auth header instead of body params
       const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-      if (providerName === "airtable") {
+
+      // Providers that use Basic auth for token exchange (Airtable, Notion)
+      if (provider.useBasicAuth || providerName === "airtable") {
         const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
         headers["Authorization"] = `Basic ${basic}`;
         delete tokenParams.client_id;
         delete tokenParams.client_secret;
+      }
+
+      // GitHub wants JSON response but sends form-encoded; request JSON explicitly
+      if (provider.tokenResponseType !== "form") {
+        headers["Accept"] = "application/json";
       }
 
       const tokenRes = await axios.post(
@@ -174,7 +185,13 @@ export async function oauthCallback(req, res) {
         new URLSearchParams(tokenParams).toString(),
         { headers, timeout: 15000 },
       );
-      tokenData = tokenRes.data;
+
+      // GitHub can return form-encoded even with Accept: application/json header
+      if (typeof tokenRes.data === "string" && tokenRes.data.includes("access_token=")) {
+        tokenData = Object.fromEntries(new URLSearchParams(tokenRes.data));
+      } else {
+        tokenData = tokenRes.data;
+      }
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.message || err.message;
       console.error(`[OAuth] Token exchange failed for ${providerName}:`, msg);
