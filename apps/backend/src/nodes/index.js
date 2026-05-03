@@ -25,6 +25,8 @@ import logicRouter from "./logicRouter.node.js";
 
 // Flow Control
 import condition from "./condition.node.js";
+import successFailed from "./successFailed.node.js";
+import stopError from "./stopError.node.js";
 import approval from "./approval.node.js";
 import subWorkflow from "./subWorkflow.node.js";
 
@@ -284,6 +286,8 @@ export const nodeRegistry = {
 
   // Flow Control
   condition: condition,
+  success_failed: successFailed,
+  stop_error: stopError,
   approval: approval,
   sub_workflow: subWorkflow,
 
