@@ -55,7 +55,7 @@ function TypeIcon({ type }) {
   if (type === "array")   return <ListOrdered className={`${cls} text-violet-400`} strokeWidth={2} />;
   if (type === "boolean") return <ToggleLeft className={`${cls} text-amber-400`} strokeWidth={2} />;
   if (type === "number")  return <Hash className={`${cls} text-orange-400`} strokeWidth={2} />;
-  return <Braces className={`${cls} text-zinc-500`} strokeWidth={2} />;
+  return <Braces className={`${cls} text-neutral-500`} strokeWidth={2} />;
 }
 
 // ── Output Data Viewer (n8n-style) ────────────────────────────────────────────
@@ -69,11 +69,11 @@ function OutputDataViewer({ data }) {
   if (isEmpty) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
-        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
-          <Layers className="w-5 h-5 text-zinc-600" />
+        <div className="w-10 h-10 rounded-full bg-[#1e1e20] flex items-center justify-center mb-3">
+          <Layers className="w-5 h-5 text-neutral-600" />
         </div>
-        <p className="text-[13px] font-semibold text-zinc-500">No output data</p>
-        <p className="text-[11px] text-zinc-700 mt-1">Run the workflow to see output here</p>
+        <p className="text-[13px] font-semibold text-neutral-500">No output data</p>
+        <p className="text-[11px] text-neutral-700 mt-1">Run the workflow to see output here</p>
       </div>
     );
   }
@@ -89,19 +89,19 @@ function OutputDataViewer({ data }) {
         <div className="flex items-center gap-1 bg-[#111] rounded-lg p-0.5 border border-[#2a2a2d]">
           <button
             onClick={() => setViewMode("table")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "table" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "table" ? "bg-[#2a2a2d] text-white" : "text-neutral-500 hover:text-neutral-300"}`}
           >
             <Table2 className="w-3 h-3" /> Table
           </button>
           <button
             onClick={() => setViewMode("json")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "json" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${viewMode === "json" ? "bg-[#2a2a2d] text-white" : "text-neutral-500 hover:text-neutral-300"}`}
           >
             <Code2 className="w-3 h-3" /> JSON
           </button>
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-wider">
             {items.length} item{items.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -115,14 +115,14 @@ function OutputDataViewer({ data }) {
               key={i}
               onClick={() => setExpandedItem(i)}
               className={`shrink-0 w-7 h-7 rounded-lg text-[11px] font-bold transition-all ${
-                i === expandedItem ? "bg-zinc-700 text-white" : "bg-[#1a1a1c] text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800"
+                i === expandedItem ? "bg-[#2a2a2d] text-white" : "bg-[#1a1a1c] text-neutral-600 hover:text-neutral-300 hover:bg-[#1e1e20]"
               }`}
             >
               {i + 1}
             </button>
           ))}
           {items.length > 20 && (
-            <span className="text-[10px] text-zinc-600 self-center ml-1">+{items.length - 20} more</span>
+            <span className="text-[10px] text-neutral-600 self-center ml-1">+{items.length - 20} more</span>
           )}
         </div>
       )}
@@ -132,7 +132,7 @@ function OutputDataViewer({ data }) {
         {viewMode === "table" ? (
           <div className="px-5 py-3">
             {fields.length === 0 ? (
-              <p className="text-[11px] text-zinc-600 text-center py-4">Empty object</p>
+              <p className="text-[11px] text-neutral-600 text-center py-4">Empty object</p>
             ) : (
               <div className="flex flex-col gap-0.5">
                 {fields.map(([key, value]) => {
@@ -148,11 +148,11 @@ function OutputDataViewer({ data }) {
                   };
                   return (
                     <div key={key} className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-[#1e1e22] transition-colors group">
-                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 shrink-0 ${typeColors[typeLabel] || "text-zinc-500"}`}>
+                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 shrink-0 ${typeColors[typeLabel] || "text-neutral-500"}`}>
                         {typeLabel.slice(0, 3)}
                       </span>
-                      <span className="text-[12px] font-semibold text-zinc-400 shrink-0 min-w-[80px] max-w-[100px] truncate">{key}</span>
-                      <span className={`text-[12px] font-mono flex-1 min-w-0 truncate ${isObj ? "text-zinc-500 italic" : "text-zinc-200"}`}>
+                      <span className="text-[12px] font-semibold text-neutral-400 shrink-0 min-w-[80px] max-w-[100px] truncate">{key}</span>
+                      <span className={`text-[12px] font-mono flex-1 min-w-0 truncate ${isObj ? "text-neutral-500 italic" : "text-neutral-200"}`}>
                         {display.length > 60 ? display.slice(0, 60) + "…" : display}
                       </span>
                     </div>
@@ -163,7 +163,7 @@ function OutputDataViewer({ data }) {
           </div>
         ) : (
           <div className="px-5 py-3">
-            <pre className="text-[11px] font-mono text-zinc-300 whitespace-pre-wrap break-all leading-relaxed">
+            <pre className="text-[11px] font-mono text-neutral-300 whitespace-pre-wrap break-all leading-relaxed">
               <JsonHighlight data={jsonObj} />
             </pre>
           </div>
@@ -191,7 +191,7 @@ function JsonHighlight({ data }) {
               {indent}
               <span className="text-violet-300">{key}</span>
               {colon}
-              <span className={isStr ? "text-emerald-300" : isNum ? "text-orange-300" : isBool ? "text-amber-300" : isNull ? "text-zinc-500" : "text-zinc-300"}>
+              <span className={isStr ? "text-emerald-300" : isNum ? "text-orange-300" : isBool ? "text-amber-300" : isNull ? "text-neutral-500" : "text-neutral-300"}>
                 {val}
               </span>
               {"\n"}
@@ -277,7 +277,7 @@ export default function NodeConfigModal() {
   const logoUrl = variant?.logoUrl || nodeDef?.logoUrl;
   const imgFilter = variant?.imgFilter || nodeDef?.imgFilter;
   const accent = def?.accentColor || "161,161,170";
-  const colorClass = def?.colorClass || "text-zinc-400";
+  const colorClass = def?.colorClass || "text-neutral-400";
   const label = variant?.label || nodeDef?.label || node?.data.label || node?.data.backendType || "";
 
   const ConfigPanel = variant?.ConfigPanel || nodeDef?.ConfigPanel;
@@ -314,8 +314,8 @@ export default function NodeConfigModal() {
           className="fixed right-0 top-0 bottom-0 z-30 flex flex-col will-change-transform"
           style={{
             width: 380,
-            background: "#1a1a1c",
-            borderLeft: "1px solid #2a2a2d",
+            background: "#0d0d0f",
+            borderLeft: "1px solid #333",
             boxShadow: "-8px 0 40px rgba(0,0,0,0.5)",
           }}
           onClick={(e) => e.stopPropagation()}
@@ -386,7 +386,7 @@ export default function NodeConfigModal() {
                     className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border-b-2 transition-all ${
                       isActive
                         ? "border-white text-white"
-                        : "border-transparent text-zinc-500 hover:text-zinc-300"
+                        : "border-transparent text-neutral-500 hover:text-neutral-300"
                     }`}
                   >
                     {tab === "config" ? (
@@ -552,7 +552,7 @@ export default function NodeConfigModal() {
                                   value={testInput}
                                   onChange={e => setTestInput(e.target.value)}
                                   rows={3}
-                                  className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2 text-[11px] text-zinc-200 font-mono focus:outline-none focus:border-emerald-500/40 resize-none"
+                                  className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2 text-[11px] text-neutral-200 font-mono focus:outline-none focus:border-emerald-500/40 resize-none"
                                   placeholder='{"query": "hello world"}'
                                 />
                                 <button
@@ -571,7 +571,7 @@ export default function NodeConfigModal() {
                                         {testResult.success ? `Success · ${testResult.durationMs}ms` : "Failed"}
                                       </span>
                                     </div>
-                                    <pre className="text-[10px] font-mono text-zinc-300 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+                                    <pre className="text-[10px] font-mono text-neutral-300 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
                                       {testResult.success ? JSON.stringify(testResult.output, null, 2) : testResult.error}
                                     </pre>
                                   </div>

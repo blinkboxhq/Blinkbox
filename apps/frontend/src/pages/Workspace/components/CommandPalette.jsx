@@ -159,11 +159,11 @@ export default function CommandPalette() {
               exit={{ scale: 0.95, opacity: 0, y: -8 }}
               transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.7 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-[560px] mx-4 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden"
+              className="relative w-full max-w-[560px] mx-4 bg-[#0d0d0f] border border-[#333] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden"
               style={{ maxHeight: "70vh" }}
             >
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/80">
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#333]">
                 {pendingNode ? (
                   <>
                     <div className="flex items-center gap-2 shrink-0">
@@ -173,12 +173,12 @@ export default function CommandPalette() {
                       ) : (
                         <pendingNode.icon className={`w-5 h-5 ${pendingNode.colorClass}`} strokeWidth={1.6} />
                       )}
-                      <span className="text-[13px] font-semibold text-zinc-300">{pendingNode.label}</span>
-                      <span className="text-zinc-700">›</span>
+                      <span className="text-[13px] font-semibold text-neutral-300">{pendingNode.label}</span>
+                      <span className="text-neutral-700">›</span>
                     </div>
                   </>
                 ) : (
-                  <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+                  <Search className="w-4 h-4 text-neutral-500 shrink-0" />
                 )}
                 <input
                   ref={inputRef}
@@ -186,10 +186,10 @@ export default function CommandPalette() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={pendingNode ? "Filter actions…" : "Search nodes, actions…"}
-                  className="flex-1 bg-transparent text-[14px] text-zinc-100 outline-none placeholder:text-zinc-600"
+                  className="flex-1 bg-transparent text-[14px] text-neutral-100 outline-none placeholder:text-neutral-600"
                 />
                 <div className="flex items-center gap-1 shrink-0">
-                  <kbd className="text-[10px] text-zinc-600 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-md font-mono">esc</kbd>
+                  <kbd className="text-[10px] text-neutral-600 bg-[#111] border border-[#333] px-1.5 py-0.5 rounded-md font-mono">esc</kbd>
                 </div>
               </div>
 
@@ -197,8 +197,8 @@ export default function CommandPalette() {
               <div className="overflow-y-auto" style={{ maxHeight: "calc(70vh - 60px)" }}>
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <Search className="w-7 h-7 text-zinc-700 mb-2" />
-                    <p className="text-[13px] text-zinc-600">No results for "{query}"</p>
+                    <Search className="w-7 h-7 text-neutral-700 mb-2" />
+                    <p className="text-[13px] text-neutral-600">No results for "{query}"</p>
                   </div>
                 ) : pendingNode ? (
                   // Action list for a pending node
@@ -209,15 +209,15 @@ export default function CommandPalette() {
                         onClick={() => selectItem(item)}
                         onMouseEnter={() => setCursor(i)}
                         className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all text-left ${
-                          i === cursor ? "bg-zinc-800 text-white" : "text-zinc-300 hover:bg-zinc-800/60"
+                          i === cursor ? "bg-[#1e1e20] text-white" : "text-neutral-300 hover:bg-white/[0.04]"
                         }`}
                       >
-                        <ArrowRight className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <span className="text-[13px] font-semibold block">{item.name}</span>
-                          <span className="text-[11px] text-zinc-500 truncate block">{item.description}</span>
+                          <span className="text-[11px] text-neutral-500 truncate block">{item.description}</span>
                         </div>
-                        {i === cursor && <CornerDownLeft className="w-3.5 h-3.5 text-zinc-600 shrink-0" />}
+                        {i === cursor && <CornerDownLeft className="w-3.5 h-3.5 text-neutral-600 shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -233,7 +233,7 @@ export default function CommandPalette() {
                           onClick={() => selectItem(item)}
                           onMouseEnter={() => setCursor(i)}
                           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all text-left ${
-                            i === cursor ? "bg-zinc-800" : "hover:bg-zinc-800/60"
+                            i === cursor ? "bg-[#1e1e20]" : "hover:bg-white/[0.04]"
                           }`}
                         >
                           <div className="w-8 h-8 shrink-0 flex items-center justify-center">
@@ -245,17 +245,17 @@ export default function CommandPalette() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-[13px] font-semibold text-zinc-100 block">{item.label}</span>
+                            <span className="text-[13px] font-semibold text-neutral-100 block">{item.label}</span>
                             {item.description && (
-                              <span className="text-[11px] text-zinc-500 truncate block">{item.description}</span>
+                              <span className="text-[11px] text-neutral-500 truncate block">{item.description}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-[10px] text-zinc-600 bg-zinc-800 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] text-neutral-600 bg-[#1e1e20] px-2 py-0.5 rounded-full">
                               {catLabel(item.category)}
                             </span>
-                            {hasActions && <ArrowRight className="w-3.5 h-3.5 text-zinc-600" />}
-                            {!hasActions && i === cursor && <CornerDownLeft className="w-3.5 h-3.5 text-zinc-600" />}
+                            {hasActions && <ArrowRight className="w-3.5 h-3.5 text-neutral-600" />}
+                            {!hasActions && i === cursor && <CornerDownLeft className="w-3.5 h-3.5 text-neutral-600" />}
                           </div>
                         </button>
                       );
@@ -265,22 +265,22 @@ export default function CommandPalette() {
               </div>
 
               {/* Footer hint */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-t border-zinc-800/60 bg-zinc-950">
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-                  <kbd className="bg-zinc-900 border border-zinc-800 px-1 py-0.5 rounded text-[9px] font-mono">↑↓</kbd>
+              <div className="flex items-center gap-3 px-4 py-2.5 border-t border-[#333] bg-[#0d0d0f]">
+                <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
+                  <kbd className="bg-[#111] border border-[#333] px-1 py-0.5 rounded text-[9px] font-mono">↑↓</kbd>
                   navigate
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-                  <kbd className="bg-zinc-900 border border-zinc-800 px-1 py-0.5 rounded text-[9px] font-mono">↵</kbd>
+                <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
+                  <kbd className="bg-[#111] border border-[#333] px-1 py-0.5 rounded text-[9px] font-mono">↵</kbd>
                   select
                 </div>
                 {pendingNode && (
-                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-                    <kbd className="bg-zinc-900 border border-zinc-800 px-1 py-0.5 rounded text-[9px] font-mono">⌫</kbd>
+                  <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
+                    <kbd className="bg-[#111] border border-[#333] px-1 py-0.5 rounded text-[9px] font-mono">⌫</kbd>
                     back
                   </div>
                 )}
-                <div className="ml-auto flex items-center gap-1 text-[10px] text-zinc-700">
+                <div className="ml-auto flex items-center gap-1 text-[10px] text-neutral-700">
                   <Command className="w-3 h-3" />K to close
                 </div>
               </div>

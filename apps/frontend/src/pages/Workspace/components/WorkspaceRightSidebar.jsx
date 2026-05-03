@@ -35,15 +35,15 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: width, opacity: 0 }}
           transition={springIn}
-          className="h-full flex flex-row bg-zinc-950 border-l border-zinc-800/60 z-20 will-change-transform"
+          className="h-full flex flex-row bg-neutral-950 border-l border-[#333] z-20 will-change-transform"
           style={{ width }}
         >
           {/* Drag handle */}
           <div
             onMouseDown={onResizeStart}
-            className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-zinc-800/40 group"
+            className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#2a2a2d] group"
           >
-            <div className="w-0.5 h-8 bg-zinc-700 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+            <div className="w-0.5 h-8 bg-[#444] group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
           </div>
 
           {/* Panel content — fades in slightly after the slide */}
