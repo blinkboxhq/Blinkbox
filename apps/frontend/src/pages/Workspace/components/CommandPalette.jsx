@@ -154,10 +154,10 @@ export default function CommandPalette() {
 
             {/* Palette */}
             <motion.div
-              initial={{ scale: 0.96, opacity: 0, y: -8 }}
+              initial={{ scale: 0.93, opacity: 0, y: -12 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.96, opacity: 0, y: -8 }}
-              transition={{ duration: 0.12 }}
+              exit={{ scale: 0.95, opacity: 0, y: -8 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.7 }}
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-[560px] mx-4 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden"
               style={{ maxHeight: "70vh" }}

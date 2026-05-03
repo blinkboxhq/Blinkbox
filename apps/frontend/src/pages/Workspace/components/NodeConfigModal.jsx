@@ -307,11 +307,11 @@ export default function NodeConfigModal() {
       {isOpen && (
         <motion.div
           key="sidebar"
-          initial={{ x: 420, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 420, opacity: 0 }}
-          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-          className="fixed right-0 top-0 bottom-0 z-30 flex flex-col"
+          initial={{ x: 400, opacity: 0.3, scale: 0.98 }}
+          animate={{ x: 0, opacity: 1, scale: 1 }}
+          exit={{ x: 400, opacity: 0, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.85 }}
+          className="fixed right-0 top-0 bottom-0 z-30 flex flex-col will-change-transform"
           style={{
             width: 380,
             background: "#1a1a1c",
@@ -321,7 +321,12 @@ export default function NodeConfigModal() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="shrink-0 border-b border-[#252527]">
+          <motion.div
+            className="shrink-0 border-b border-[#252527]"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.06, duration: 0.2, ease: "easeOut" }}
+          >
             <div className="flex items-center gap-3 px-5 pt-4 pb-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
@@ -403,7 +408,7 @@ export default function NodeConfigModal() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
           {/* ── Docs band ── */}
           <AnimatePresence>
@@ -431,7 +436,12 @@ export default function NodeConfigModal() {
           )}
 
           {/* ── Config tab content ── */}
-          {activeTab === "config" && <div className="flex-1 overflow-y-auto sidebar-scroll">
+          {activeTab === "config" && <motion.div
+            className="flex-1 overflow-y-auto sidebar-scroll"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
+          >
 
             {/* ── Actions / Output section (primary) ── */}
             <div className="px-5 pt-5 pb-2">
@@ -582,7 +592,7 @@ export default function NodeConfigModal() {
               <p className="text-[9px] font-bold text-[#444] uppercase tracking-widest mb-1">Node ID</p>
               <code className="text-[10px] font-mono text-[#555] break-all">{selectedNodeId}</code>
             </div>
-          </div>}
+          </motion.div>}
         </motion.div>
       )}
     </AnimatePresence>

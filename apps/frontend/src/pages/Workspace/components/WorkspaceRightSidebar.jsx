@@ -1,9 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import TriggerPicker from './TriggerPicker';
 import AddNodeSidebar from './AddNodeSidebar';
 import AgentPicker from './AgentPicker';
 import { playPanelOpen } from '../../../lib/sounds';
+
+const springIn = {
+  type: "spring",
+  stiffness: 420,
+  damping: 32,
+  mass: 0.8,
+};
 
 export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
   const isTriggerPickerOpen = useWorkspaceStore(s => s.isTriggerPickerOpen);
@@ -18,23 +26,39 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
     prevOpen.current = isOpen;
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <aside className="h-full flex flex-row bg-zinc-950 border-l border-zinc-800/60 z-20" style={{ width }}>
-      {/* Drag handle on left edge */}
-      <div
-        onMouseDown={onResizeStart}
-        className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-zinc-800/40 group"
-      >
-        <div className="w-0.5 h-8 bg-zinc-700 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
-      </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.aside
+          key="right-sidebar"
+          initial={{ x: width, opacity: 0.4 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: width, opacity: 0 }}
+          transition={springIn}
+          className="h-full flex flex-row bg-zinc-950 border-l border-zinc-800/60 z-20 will-change-transform"
+          style={{ width }}
+        >
+          {/* Drag handle */}
+          <div
+            onMouseDown={onResizeStart}
+            className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-zinc-800/40 group"
+          >
+            <div className="w-0.5 h-8 bg-zinc-700 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+          </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {isTriggerPickerOpen && <TriggerPicker />}
-        {isAddNodeOpen && <AddNodeSidebar />}
-        {isAgentPickerOpen && <AgentPicker />}
-      </div>
-    </aside>
+          {/* Panel content — fades in slightly after the slide */}
+          <motion.div
+            className="flex-1 flex flex-col overflow-hidden"
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.04, duration: 0.18, ease: "easeOut" }}
+          >
+            {isTriggerPickerOpen && <TriggerPicker />}
+            {isAddNodeOpen && <AddNodeSidebar />}
+            {isAgentPickerOpen && <AgentPicker />}
+          </motion.div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
   );
 }
