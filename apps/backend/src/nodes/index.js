@@ -27,6 +27,10 @@ import logicRouter from "./logicRouter.node.js";
 import condition from "./condition.node.js";
 import successFailed from "./successFailed.node.js";
 import stopError from "./stopError.node.js";
+import retry from "./retry.node.js";
+import rateLimiter from "./rateLimiter.node.js";
+import distributor from "./distributor.node.js";
+import waitForEvent from "./waitForEvent.node.js";
 import approval from "./approval.node.js";
 import subWorkflow from "./subWorkflow.node.js";
 
@@ -288,6 +292,10 @@ export const nodeRegistry = {
   condition: condition,
   success_failed: successFailed,
   stop_error: stopError,
+  retry: retry,
+  rate_limiter: rateLimiter,
+  distributor: distributor,
+  wait_for_event: waitForEvent,
   approval: approval,
   sub_workflow: subWorkflow,
 
