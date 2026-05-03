@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { Plus, Mail, Copy, Check, Lock, ChevronDown } from 'lucide-react';
+import { Mail, Copy, Check, Lock, ChevronDown } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
 
@@ -49,7 +48,7 @@ const PROVIDERS = [
   },
 ];
 
-export default function EmailTriggerNode({ config = {}, updateConfig, selected }) {
+export default function EmailTriggerNode({ config = {}, updateConfig, nodeId }) {
   const { id: automationId } = useParams();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('setup');
@@ -66,17 +65,7 @@ export default function EmailTriggerNode({ config = {}, updateConfig, selected }
   };
 
   return (
-    <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border transition-colors shadow-2xl font-sans group ${selected ? 'border-violet-500/50' : 'border-[#2A2A2A]'}`}>
-
-      <Handle
-        id="output"
-        type="source"
-        position={Position.Right}
-        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-violet-500 hover:!border-violet-500 text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
-        style={{ top: '20px', right: '-10px', transform: 'translateY(-50%)' }}
-      >
-        <Plus className="w-3 h-3 pointer-events-none" />
-      </Handle>
+    <div className="flex flex-col">
 
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">

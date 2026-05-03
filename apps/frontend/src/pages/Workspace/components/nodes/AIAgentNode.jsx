@@ -54,8 +54,9 @@ function SlotRow({ label, icon: Icon, color, node, onGoTo }) {
 }
 
 // ─── Main config panel ────────────────────────────────────────────────────────
-export default function AIAgentNode({ config = {}, updateConfig, nodeId, edges = [] }) {
+export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const nodes = useWorkspaceStore(s => s.nodes);
+  const edges = useWorkspaceStore(s => s.edges);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const [advOpen, setAdvOpen] = useState(false);
 

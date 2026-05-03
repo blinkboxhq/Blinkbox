@@ -212,7 +212,11 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
       <div className="flex-1 overflow-y-auto">
         <div ref={configRef} className="px-1 py-2">
           {ConfigPanel ? (
-            <ConfigPanel config={config} updateConfig={(key, val) => updateConfig(node.id, key, val)} />
+            <ConfigPanel
+              config={config}
+              updateConfig={(key, val) => updateConfig(node.id, key, val)}
+              nodeId={node.id}
+            />
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">
               <p className="text-[13px] text-neutral-600">No configuration needed.</p>
