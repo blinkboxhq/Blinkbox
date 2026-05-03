@@ -255,24 +255,51 @@ export async function oauthCallback(req, res) {
   }
 }
 
+// HTML-encode a string to safely embed in HTML context
+function htmlEncode(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+// Allowed origins for postMessage targeting (never use "*")
+const POPUP_ALLOWED_ORIGINS = (
+  process.env.CORS_ORIGINS ||
+  "http://localhost:5173,http://localhost:5174,https://blinkbox.net,https://www.blinkbox.net"
+)
+  .split(",")
+  .map((o) => o.trim().replace(/['"]/g, "").replace(/\/$/, ""))
+  .filter(Boolean);
+
 /**
  * Renders a small HTML page that sends the result to the opener window via postMessage.
  */
 function renderPopupResult(res, data) {
   const payload = JSON.stringify(data);
+  // Encode the human-readable error message for safe HTML embedding
+  const safeError = data.error ? htmlEncode(data.error) : "";
+
   res.setHeader("Content-Type", "text/html");
+  res.setHeader("X-Content-Type-Options", "nosniff");
   res.send(`<!DOCTYPE html>
 <html>
 <head><title>BlinkBox — OAuth</title></head>
 <body style="background:#09090b;color:#a1a1aa;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
   <div style="text-align:center">
-    <p style="font-size:14px">${data.error ? "Authorization failed" : "Connected! You can close this window."}</p>
-    ${data.error ? `<p style="color:#f87171;font-size:12px;margin-top:8px">${data.error}</p>` : ""}
+    <p style="font-size:14px">${safeError ? "Authorization failed" : "Connected! You can close this window."}</p>
+    ${safeError ? `<p style="color:#f87171;font-size:12px;margin-top:8px">${safeError}</p>` : ""}
   </div>
   <script>
+    var allowedOrigins = ${JSON.stringify(POPUP_ALLOWED_ORIGINS)};
+    var payload = ${payload};
     if (window.opener) {
-      window.opener.postMessage({ type: "blinkbox:oauth", payload: ${payload} }, "*");
-      setTimeout(() => window.close(), 1500);
+      allowedOrigins.forEach(function(origin) {
+        try { window.opener.postMessage({ type: "blinkbox:oauth", payload: payload }, origin); } catch(e) {}
+      });
+      setTimeout(function() { window.close(); }, 1500);
     }
   </script>
 </body>

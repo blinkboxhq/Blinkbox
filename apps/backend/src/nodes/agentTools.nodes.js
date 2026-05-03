@@ -1423,6 +1423,17 @@ export const tool_js = {
   },
 };
 
+// Shell execution tools are disabled by default — they execute arbitrary commands on
+// the server. Set ENABLE_SHELL_TOOLS=true in .env to opt in (local dev only).
+function assertShellToolsEnabled() {
+  if (process.env.ENABLE_SHELL_TOOLS !== "true") {
+    throw new Error(
+      "Shell execution tools (bash, python, npm, git) are disabled on this server. " +
+      "Set ENABLE_SHELL_TOOLS=true in .env to enable them (local development only)."
+    );
+  }
+}
+
 export const tool_python = {
   toolDefinition: td(
     "tool_python",
@@ -1434,10 +1445,11 @@ export const tool_python = {
     ["code"]
   ),
   async run(config, args) {
-    const tmpFile = `/tmp/blinkbox_py_${Date.now()}.py`;
+    assertShellToolsEnabled();
+    const tmpFile = `/tmp/blinkbox_py_${Date.now()}_${Math.random().toString(36).slice(2)}.py`;
     await fs.writeFile(tmpFile, args.code, "utf8");
     try {
-      const result = await safeExec(`python3 "${tmpFile}"`, (args.timeout || 10) * 1000);
+      const result = await safeExec(`python3 ${JSON.stringify(tmpFile)}`, (args.timeout || 10) * 1000);
       return result;
     } finally {
       await fs.unlink(tmpFile).catch(() => {});
@@ -1457,7 +1469,11 @@ export const tool_bash = {
     ["command"]
   ),
   async run(config, args) {
-    const cmd = args.workingDir ? `cd "${args.workingDir}" && ${args.command}` : args.command;
+    assertShellToolsEnabled();
+    // Use JSON.stringify for workingDir to safely quote the path
+    const cmd = args.workingDir
+      ? `cd ${JSON.stringify(args.workingDir)} && ${args.command}`
+      : args.command;
     return safeExec(cmd, (args.timeout || 15) * 1000);
   },
 };
@@ -1473,7 +1489,10 @@ export const tool_npm = {
     ["command"]
   ),
   async run(config, args) {
-    const cmd = args.directory ? `cd "${args.directory}" && npm ${args.command}` : `npm ${args.command}`;
+    assertShellToolsEnabled();
+    const cmd = args.directory
+      ? `cd ${JSON.stringify(args.directory)} && npm ${args.command}`
+      : `npm ${args.command}`;
     return safeExec(cmd, 60000);
   },
 };
@@ -1489,7 +1508,10 @@ export const tool_git = {
     ["command"]
   ),
   async run(config, args) {
-    const cmd = args.repoPath ? `git -C "${args.repoPath}" ${args.command}` : `git ${args.command}`;
+    assertShellToolsEnabled();
+    const cmd = args.repoPath
+      ? `git -C ${JSON.stringify(args.repoPath)} ${args.command}`
+      : `git ${args.command}`;
     return safeExec(cmd, 30000);
   },
 };
@@ -1798,6 +1820,7 @@ export const tool_docker_exec = {
     ["containerId", "command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     return safeExec(`docker exec ${args.containerId} sh -c ${JSON.stringify(args.command)}`, 30000);
   },
 };
@@ -1813,8 +1836,9 @@ export const tool_docker_compose = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     const cmd = args.directory
-      ? `docker compose -f "${args.directory}/docker-compose.yml" ${args.command}`
+      ? `docker compose -f ${JSON.stringify(`${args.directory}/docker-compose.yml`)} ${args.command}`
       : `docker compose ${args.command}`;
     return safeExec(cmd, 60000);
   },
@@ -1831,6 +1855,7 @@ export const tool_kubernetes = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     const ns = args.namespace ? `-n ${args.namespace}` : "";
     return safeExec(`kubectl ${args.command} ${ns}`, 30000);
   },
@@ -1847,8 +1872,9 @@ export const tool_terraform = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     const cmd = args.directory
-      ? `cd "${args.directory}" && terraform ${args.command}`
+      ? `cd ${JSON.stringify(args.directory)} && terraform ${args.command}`
       : `terraform ${args.command}`;
     return safeExec(cmd, 120000);
   },
@@ -1865,6 +1891,7 @@ export const tool_ansible = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     const bin = args.type === "playbook" ? "ansible-playbook" : "ansible";
     return safeExec(`${bin} ${args.command}`, 120000);
   },
@@ -1880,6 +1907,7 @@ export const tool_aws = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     const env = {};
     if (config.accessKeyId) env.AWS_ACCESS_KEY_ID = config.accessKeyId;
     if (config.secretAccessKey) env.AWS_SECRET_ACCESS_KEY = config.secretAccessKey;
@@ -1906,6 +1934,7 @@ export const tool_gcp = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     return safeExec(`gcloud ${args.command} --format=json`, 60000);
   },
 };
@@ -1920,6 +1949,7 @@ export const tool_azure = {
     ["command"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     return safeExec(`az ${args.command} -o json`, 60000);
   },
 };
@@ -1958,6 +1988,7 @@ export const tool_nmap = {
     ["target"]
   ),
   async run(config, args) {
+    assertShellToolsEnabled();
     return safeExec(`nmap ${args.flags || "-sV --open"} ${args.target}`, 60000);
   },
 };

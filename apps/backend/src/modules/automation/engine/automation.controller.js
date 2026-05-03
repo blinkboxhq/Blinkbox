@@ -57,15 +57,21 @@ export async function saveAutomation(req, res) {
   try {
     let automation;
 
-    // Never let a save overwrite activation state
+    // Strip fields that must never be overwritten via save
     delete req.body.active;
     delete req.body.status;
+    delete req.body._id;
+    delete req.body.__v;
+    delete req.body.createdAt;
+    delete req.body.updatedAt;
 
     if (req.params.id) {
       // Updating an existing automation —
       // allow owner OR an editor-role collaborator to save.
       // Do NOT overwrite workspaceId (ownership stays with original creator).
+      // Do NOT let an editor overwrite collaborators (privilege escalation).
       delete req.body.workspaceId;
+      delete req.body.collaborators;
 
       const accessFilter = {
         _id: req.params.id,
@@ -81,7 +87,7 @@ export async function saveAutomation(req, res) {
       await snapshotBeforeSave(existing, existing.workspaceId);
 
       automation = await Automation.findOneAndUpdate(
-        { _id: req.params.id },
+        { _id: req.params.id, workspaceId: existing.workspaceId },
         req.body,
         { returnDocument: "after" },
       );
