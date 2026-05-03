@@ -24,6 +24,7 @@ import dataMapper from "./dataMapper.node.js";
 import logicRouter from "./logicRouter.node.js";
 
 // Flow Control
+import condition from "./condition.node.js";
 import approval from "./approval.node.js";
 import subWorkflow from "./subWorkflow.node.js";
 
@@ -282,6 +283,7 @@ export const nodeRegistry = {
   logic_router: logicRouter,
 
   // Flow Control
+  condition: condition,
   approval: approval,
   sub_workflow: subWorkflow,
 

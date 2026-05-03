@@ -324,6 +324,11 @@ export async function processCursor({ executionId, cursorId }) {
         break; // loop node only runs once per trigger item
       }
 
+      // Condition node false-path signal — mark for non-error routing to false edges
+      if (rawOutput && rawOutput.__conditionResult === false) {
+        finalOutputs.__conditionFalse = true;
+      }
+
       const formatted = Array.isArray(rawOutput)
         ? rawOutput.map((r) => (r.json ? r : { json: r }))
         : [{ json: rawOutput }];
@@ -400,10 +405,15 @@ export async function processCursor({ executionId, cursorId }) {
         executionId: execution._id?.toString(),
       });
 
-      await routeEdges(
-        automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
-        finalOutputs.__loopFanOut ? finalOutputs.__loopItems : null,
-      );
+      // Condition node false-path: route to "false" edges but keep cursor completed
+      if (finalOutputs.__conditionFalse) {
+        await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
+      } else {
+        await routeEdges(
+          automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
+          finalOutputs.__loopFanOut ? finalOutputs.__loopItems : null,
+        );
+      }
     } else {
       // FAILURE PATH — check retry budget
       const currentRetries = latestCursor.retries || 0;
