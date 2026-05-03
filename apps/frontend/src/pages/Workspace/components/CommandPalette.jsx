@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NODE_ACTIONS } from "../nodeActions";
+import { playPanelOpen, playNodeLand } from "../../../lib/sounds";
 
 const ALL_NODES = Object.entries(NodeRegistry)
   .filter(([, def]) => def.category !== "trigger" && !def.agentOnly)
@@ -33,7 +34,10 @@ export default function CommandPalette() {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((v) => {
+          if (!v) playPanelOpen();
+          return !v;
+        });
         setQuery("");
         setPending(null);
         setCursor(0);
@@ -110,6 +114,7 @@ export default function CommandPalette() {
       }
     }
 
+    playNodeLand();
     setOpen(false);
     setPending(null);
     setQuery("");

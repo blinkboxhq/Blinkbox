@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NodeContextMenu from "./NodeContextMenu";
+import { playNodeLand, playDelete } from "../../../lib/sounds";
 import {
   ReactFlow,
   Controls,
@@ -290,6 +291,7 @@ export default function Canvas() {
         position,
         data: { ...nodeData, config: nodeData.config || {} },
       });
+      playNodeLand();
     },
     [screenToFlowPosition, addNode],
   );
@@ -374,6 +376,7 @@ export default function Canvas() {
           }}
           onDelete={() => {
             useWorkspaceStore.getState().deleteNode(ctxMenu.nodeId);
+            playDelete();
             setCtxMenu(null);
           }}
           onTest={() => {

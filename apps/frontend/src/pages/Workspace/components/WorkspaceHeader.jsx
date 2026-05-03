@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { ArrowLeft, Loader2, Clock, Keyboard, Power, PanelLeft, PanelBottom, Users, CloudOff, Play, CheckCircle2, XCircle, Activity } from 'lucide-react';
+import { playRunStart, playSuccess, playError } from '../../../lib/sounds';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
@@ -79,14 +80,17 @@ export default function WorkspaceHeader() {
     if (isRunning) {
       runStartRef.current = Date.now();
       setLastRunResult(null);
+      playRunStart();
     } else if (runStartRef.current) {
       const duration = Date.now() - runStartRef.current;
       setRunDurationMs(duration);
       const statuses = Object.values(nodeStatuses);
       if (statuses.includes("failed") || executionError) {
         setLastRunResult("error");
+        playError();
       } else if (statuses.includes("completed") || statuses.length > 0) {
         setLastRunResult("success");
+        playSuccess();
       }
       runStartRef.current = null;
     }

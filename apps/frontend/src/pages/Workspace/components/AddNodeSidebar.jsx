@@ -3,6 +3,7 @@ import { Search, X, ArrowLeft, ChevronRight } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import { NODE_ACTIONS } from "../nodeActions";
+import { playNodeLand } from "../../../lib/sounds";
 
 const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
 
@@ -62,6 +63,7 @@ export default function AddNodeSidebar() {
       }
     }
 
+    playNodeLand();
     handleClose();
     setSelectedNodeId(newId);
   };

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_ACTIONS } from "../triggerActions";
+import { playNodeLand } from "../../../lib/sounds";
 
 import imgTelegram       from "../../../assets/telegram.png";
 import imgSlack          from "../../../assets/slack.png";
@@ -254,6 +255,7 @@ export default function TriggerPicker() {
         config: { triggerVariant: trigger.id, selectedAction },
       },
     });
+    playNodeLand();
     setTriggerPickerOpen(false);
     setSelectedNodeId(newId);
   };

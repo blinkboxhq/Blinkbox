@@ -8,6 +8,7 @@ import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { NODE_DOCS } from "../../../lib/nodeDocumentation";
 import api from "../../../lib/api";
 import { TRIGGER_ACTIONS } from '../triggerActions';
+import { playPanelOpen } from '../../../lib/sounds';
 
 // ── Per-trigger available actions/events ─────────────────────────────────────
 
@@ -227,6 +228,7 @@ export default function NodeConfigModal() {
   const nodeStatus = nodeStatuses?.[selectedNodeId];
 
   useEffect(() => {
+    if (selectedNodeId) playPanelOpen();
     setSettingsOpen(false);
     setTestOpen(false);
     setTestResult(null);

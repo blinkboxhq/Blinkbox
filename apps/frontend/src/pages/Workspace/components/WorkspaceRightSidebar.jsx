@@ -1,14 +1,24 @@
+import { useEffect, useRef } from 'react';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import TriggerPicker from './TriggerPicker';
 import AddNodeSidebar from './AddNodeSidebar';
 import AgentPicker from './AgentPicker';
+import { playPanelOpen } from '../../../lib/sounds';
 
 export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
   const isTriggerPickerOpen = useWorkspaceStore(s => s.isTriggerPickerOpen);
   const isAddNodeOpen       = useWorkspaceStore(s => s.isAddNodeOpen);
   const isAgentPickerOpen   = useWorkspaceStore(s => s.isAgentPickerOpen);
 
-  if (!isTriggerPickerOpen && !isAddNodeOpen && !isAgentPickerOpen) return null;
+  const isOpen = isTriggerPickerOpen || isAddNodeOpen || isAgentPickerOpen;
+  const prevOpen = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !prevOpen.current) playPanelOpen();
+    prevOpen.current = isOpen;
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <aside className="h-full flex flex-row bg-zinc-950 border-l border-zinc-800/60 z-20" style={{ width }}>
