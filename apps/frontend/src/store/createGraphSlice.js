@@ -140,6 +140,44 @@ export const createGraphSlice = (set, get) => ({
     set({ selectedNodeIds: selectedNodes.map((n) => n.id) });
   },
 
+  deleteNode: (nodeId) => {
+    const { nodes, edges, nodeOutputSchemas } = get();
+    const newNodes = nodes.filter((n) => n.id !== nodeId);
+    const newEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+    const newVars = calculateAllAvailableVariables(newNodes, newEdges, nodeOutputSchemas);
+    set({
+      ...pushHistory(get),
+      nodes: newNodes,
+      edges: newEdges,
+      selectedNodeIds: [],
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(newNodes, newVars),
+      _schemaGeneration: get()._schemaGeneration + 1,
+    });
+  },
+
+  duplicateNode: (nodeId) => {
+    const { nodes, edges, nodeOutputSchemas } = get();
+    const node = nodes.find((n) => n.id === nodeId);
+    if (!node) return;
+    const clone = {
+      ...node,
+      id: `${node.data.backendType}-${crypto.randomUUID()}`,
+      position: { x: node.position.x + 60, y: node.position.y + 70 },
+      data: { ...node.data, config: { ...node.data.config } },
+      selected: false,
+    };
+    const newNodes = [...nodes, clone];
+    const newVars = calculateAllAvailableVariables(newNodes, edges, nodeOutputSchemas);
+    set({
+      ...pushHistory(get),
+      nodes: newNodes,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(newNodes, newVars),
+      selectedNodeIds: [clone.id],
+    });
+  },
+
   deleteSelectedNodes: () => {
     const { nodes, edges, selectedNodeIds } = get();
     if (selectedNodeIds.length === 0) return;

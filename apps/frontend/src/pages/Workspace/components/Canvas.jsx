@@ -1,7 +1,8 @@
 import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useCallback, useRef, useMemo, useEffect } from "react";
+import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import NodeContextMenu from "./NodeContextMenu";
 import {
   ReactFlow,
   Controls,
@@ -225,6 +226,8 @@ export default function Canvas() {
   }, [addNode, automationId]);
 
   // Multi-select
+  const [ctxMenu, setCtxMenu] = useState(null); // { x, y, nodeId, nodeLabel }
+
   const selectedNodeIds = useWorkspaceStore((s) => s.selectedNodeIds);
   const onSelectionChange = useWorkspaceStore((s) => s.onSelectionChange);
   const deleteSelectedNodes = useWorkspaceStore((s) => s.deleteSelectedNodes);
@@ -306,7 +309,12 @@ export default function Canvas() {
         onConnect={onConnect}
         isValidConnection={isValidConnection}
         onNodeClick={(e, node) => { if (node.id !== "__placeholder__") setSelectedNodeId(node.id); }}
-        onPaneClick={() => setSelectedNodeId(null)}
+        onNodeContextMenu={(e, node) => {
+          if (node.id === "__placeholder__") return;
+          e.preventDefault();
+          setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, nodeLabel: node.data?.config?.selectedAction || node.data?.label || node.id });
+        }}
+        onPaneClick={() => { setSelectedNodeId(null); setCtxMenu(null); }}
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -347,6 +355,44 @@ export default function Canvas() {
           className="!bg-[#0d0d0f] !border-zinc-800 !rounded-xl"
         />
       </ReactFlow>
+
+      {/* ── Node right-click context menu ── */}
+      {ctxMenu && (
+        <NodeContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          nodeId={ctxMenu.nodeId}
+          nodeLabel={ctxMenu.nodeLabel}
+          onClose={() => setCtxMenu(null)}
+          onConfigure={() => {
+            setSelectedNodeId(ctxMenu.nodeId);
+            setCtxMenu(null);
+          }}
+          onDuplicate={() => {
+            useWorkspaceStore.getState().duplicateNode(ctxMenu.nodeId);
+            setCtxMenu(null);
+          }}
+          onDelete={() => {
+            useWorkspaceStore.getState().deleteNode(ctxMenu.nodeId);
+            setCtxMenu(null);
+          }}
+          onTest={() => {
+            setSelectedNodeId(ctxMenu.nodeId);
+            setCtxMenu(null);
+          }}
+          onAddNote={() => {
+            const node = storeNodes.find(n => n.id === ctxMenu.nodeId);
+            if (!node) return;
+            useWorkspaceStore.getState().addNode({
+              id: `note-${crypto.randomUUID()}`,
+              type: "custom",
+              position: { x: node.position.x + 160, y: node.position.y - 60 },
+              data: { backendType: "sticky_note", label: "Note", type: "note", config: { text: "" } },
+            });
+            setCtxMenu(null);
+          }}
+        />
+      )}
 
       {/* ── Multi-select floating toolbar ── */}
       <AnimatePresence>
