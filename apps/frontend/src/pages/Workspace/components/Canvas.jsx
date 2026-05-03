@@ -376,7 +376,6 @@ export default function Canvas() {
           }}
           onDelete={() => {
             useWorkspaceStore.getState().deleteNode(ctxMenu.nodeId);
-            playDelete();
             setCtxMenu(null);
           }}
           onTest={() => {

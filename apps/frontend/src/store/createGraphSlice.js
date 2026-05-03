@@ -63,8 +63,10 @@ export const createGraphSlice = (set, get) => ({
   _future: [],
 
   // ── XYFlow callbacks ─────────────────────────────────────────────────────
-  onNodesChange: (changes) =>
-    set({ nodes: applyNodeChanges(changes, get().nodes) }),
+  onNodesChange: (changes) => {
+    if (changes.some((c) => c.type === "remove")) playDelete();
+    set({ nodes: applyNodeChanges(changes, get().nodes) });
+  },
 
   onEdgesChange: (changes) => {
     const newEdges = applyEdgeChanges(changes, get().edges);
