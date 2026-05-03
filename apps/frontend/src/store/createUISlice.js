@@ -1,5 +1,6 @@
 import api from "../lib/api";
 import { toast } from "sonner";
+import { playBottomPanel } from "../lib/sounds";
 import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
 
 // Build a reverse map: backendType → first matching variantId
@@ -40,8 +41,12 @@ export const createUISlice = (set, get) => ({
   setRightSidebarOpen: (isOpen) => set({ isRightSidebarOpen: isOpen }),
   setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen, ...(isOpen ? { isAddNodeOpen: false } : {}) }),
   setAddNodeOpen: (isOpen) => set({ isAddNodeOpen: isOpen, ...(isOpen ? { isTriggerPickerOpen: false } : {}) }),
-  setBrianOpen: (isOpen) => set({ isBrianOpen: isOpen }),
-  togglePanel: (key) => set(s => ({ panels: { ...s.panels, [key]: !s.panels[key] } })),
+  setBrianOpen: (isOpen) => { if (isOpen) playBottomPanel(); set({ isBrianOpen: isOpen }); },
+  togglePanel: (key) => set(s => {
+    const opening = !s.panels[key];
+    if (opening) playBottomPanel();
+    return { panels: { ...s.panels, [key]: opening } };
+  }),
   setWorkflowName: (name) => set({ workflowName: name }),
   setAddNodeSource: (nodeId) =>
     set({ addNodeSource: nodeId, insertEdgeId: null, isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),

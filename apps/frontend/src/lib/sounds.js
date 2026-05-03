@@ -107,6 +107,24 @@ export function playConnect() {
   } catch (_) {}
 }
 
+// ── Bottom / Brian panel open — single soft breath ────────────────────────────
+export function playBottomPanel() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g   = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.linearRampToValueAtTime(560, now + 0.06);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.055, now + 0.018);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    osc.start(now); osc.stop(now + 0.15);
+  } catch (_) {}
+}
+
 // ── Delete — fast downward crunch ─────────────────────────────────────────────
 export function playDelete() {
   try {

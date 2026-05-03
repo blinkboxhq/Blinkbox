@@ -1,4 +1,5 @@
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
+import { playConnect } from "../lib/sounds";
 import dagre from "dagre";
 import {
   calculateAllAvailableVariables,
@@ -113,6 +114,7 @@ export const createGraphSlice = (set, get) => ({
       nodeOutputSchemas,
     );
 
+    playConnect();
     set({
       ...pushHistory(get),
       edges: newEdges,
