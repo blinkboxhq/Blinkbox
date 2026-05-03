@@ -21,7 +21,7 @@ const OPERATIONS = [
   { value: 'deleteEmail',  label: 'Delete',        icon: Trash2 },
 ];
 
-export default function GmailNode({ config = {}, updateConfig }) {
+export default function GmailNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendEmail';
   const isCompose = ['sendEmail', 'createDraft', 'replyToEmail'].includes(operation);
   const needsMsgId = ['readEmail', 'markRead', 'deleteEmail'].includes(operation);
@@ -64,25 +64,25 @@ export default function GmailNode({ config = {}, updateConfig }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">To</label>
-            <SmartVariableInput value={config.to || ''} onChange={(val) => updateConfig('to', val)} placeholder="recipient@example.com" />
+            <SmartVariableInput value={config.to || ''} onChange={(val) => updateConfig('to', val)} placeholder="recipient@example.com" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">From <span className="text-zinc-700">(optional — defaults to your account)</span></label>
-            <SmartVariableInput value={config.from || ''} onChange={(val) => updateConfig('from', val)} placeholder="Your Name <you@gmail.com>" />
+            <SmartVariableInput value={config.from || ''} onChange={(val) => updateConfig('from', val)} placeholder="Your Name <you@gmail.com>" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Subject</label>
-            <SmartVariableInput value={config.subject || ''} onChange={(val) => updateConfig('subject', val)} placeholder="Hello from BlinkBox!" />
+            <SmartVariableInput value={config.subject || ''} onChange={(val) => updateConfig('subject', val)} placeholder="Hello from BlinkBox!" nodeId={nodeId} />
           </div>
           {operation === 'replyToEmail' && (
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Thread ID</label>
-              <SmartVariableInput value={config.threadId || ''} onChange={(val) => updateConfig('threadId', val)} placeholder="{{trigger.data.threadId}}" />
+              <SmartVariableInput value={config.threadId || ''} onChange={(val) => updateConfig('threadId', val)} placeholder="{{trigger.data.threadId}}" nodeId={nodeId} />
             </div>
           )}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Body</label>
-            <SmartVariableInput value={config.body || ''} onChange={(val) => updateConfig('body', val)} placeholder="Hello {{trigger.data.name}}, ..." multiline />
+            <SmartVariableInput value={config.body || ''} onChange={(val) => updateConfig('body', val)} placeholder="Hello {{trigger.data.name}}, ..." multiline nodeId={nodeId} />
           </div>
         </>
       )}
@@ -91,7 +91,7 @@ export default function GmailNode({ config = {}, updateConfig }) {
       {needsMsgId && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Message ID</label>
-          <SmartVariableInput value={config.messageId || ''} onChange={(val) => updateConfig('messageId', val)} placeholder="{{trigger.data.messageId}}" />
+          <SmartVariableInput value={config.messageId || ''} onChange={(val) => updateConfig('messageId', val)} placeholder="{{trigger.data.messageId}}" nodeId={nodeId} />
         </div>
       )}
 
@@ -100,7 +100,7 @@ export default function GmailNode({ config = {}, updateConfig }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Query</label>
-            <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder='from:user@example.com is:unread' />
+            <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder='from:user@example.com is:unread' nodeId={nodeId} />
             <p className="text-[10px] text-zinc-600">Gmail search syntax — from:, subject:, is:unread, after:2024/01/01, etc.</p>
           </div>
           <div className="flex flex-col gap-2">

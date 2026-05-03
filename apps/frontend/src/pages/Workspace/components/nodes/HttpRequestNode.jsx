@@ -3,7 +3,7 @@ import { Globe, Code, KeyRound, Braces, ListPlus, Trash2 } from 'lucide-react';
 import SmartJsonEditor from '../../../../components/ui/SmartJsonEditor';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function HttpRequestNode({ config = {}, updateConfig }) {
+export default function HttpRequestNode({ config = {}, updateConfig, nodeId }) {
   const [activeTab, setActiveTab] = useState('endpoint');
   const method = config.method || 'GET';
 
@@ -11,7 +11,8 @@ export default function HttpRequestNode({ config = {}, updateConfig }) {
     GET: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
     POST: 'text-green-400 bg-green-500/10 border-green-500/30',
     PUT: 'text-orange-400 bg-orange-500/10 border-orange-500/30',
-    DELETE: 'text-red-400 bg-red-500/10 border-red-500/30'
+    PATCH: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
+    DELETE: 'text-red-400 bg-red-500/10 border-red-500/30',
   };
 
   // 📝 Helper to manage Headers as an Array in the UI, but Object in the config
@@ -94,6 +95,7 @@ export default function HttpRequestNode({ config = {}, updateConfig }) {
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
                 <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
                 <option value="DELETE">DELETE</option>
               </select>
             </div>
@@ -103,6 +105,7 @@ export default function HttpRequestNode({ config = {}, updateConfig }) {
                 value={config.url || ''}
                 onChange={(val) => updateConfig('url', val)}
                 placeholder="https://api.example.com/v1/users"
+                nodeId={nodeId}
               />
             </div>
           </div>
