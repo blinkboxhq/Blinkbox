@@ -1,4 +1,7 @@
 {
+  "autoCompactEnabled": true,
+  "autoCompactWindow": 150000,
+  "verbose": false,
   "permissions": {
     "defaultMode": "auto",
     "allow": [
