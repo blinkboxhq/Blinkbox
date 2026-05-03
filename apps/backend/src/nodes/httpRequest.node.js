@@ -64,6 +64,39 @@ export default {
 
     if (!url) throw new Error("HTTP Request: 'url' is required.");
 
+    // SSRF guard — block internal/cloud-metadata addresses
+    function assertSafeUrl(rawUrl) {
+      let parsed;
+      try { parsed = new URL(rawUrl); } catch { throw new Error(`HTTP Request: invalid URL "${rawUrl}"`); }
+
+      const hostname = parsed.hostname.toLowerCase();
+
+      const blocked = [
+        /^localhost$/,
+        /^127\./,
+        /^0\.0\.0\.0$/,
+        /^::1$/,
+        /^10\./,
+        /^172\.(1[6-9]|2\d|3[01])\./,
+        /^192\.168\./,
+        /^169\.254\./,    // AWS/GCP/Azure metadata
+        /^fc00:/i,        // IPv6 unique local
+        /^fe80:/i,        // IPv6 link-local
+        /^fd[0-9a-f]{2}:/i,
+        /^0\b/,
+      ];
+
+      if (blocked.some((re) => re.test(hostname))) {
+        throw new Error(`HTTP Request: requests to internal addresses are not allowed (${hostname})`);
+      }
+
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        throw new Error(`HTTP Request: only http/https protocols are allowed`);
+      }
+    }
+
+    assertSafeUrl(url);
+
     const finalHeaders = { "Content-Type": "application/json", ...headers };
     const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
 
