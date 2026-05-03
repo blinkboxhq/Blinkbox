@@ -21,7 +21,7 @@ const NO_RIGHT = new Set(['exists', 'notExists', 'isEmpty', 'isNotEmpty']);
 
 const emptyCondition = () => ({ left: '', operator: 'equals', right: '' });
 
-export default function ConditionNode({ config = {}, updateConfig }) {
+export default function ConditionNode({ config = {}, updateConfig, nodeId }) {
   const mode = config.mode || 'simple'; // 'simple' | 'and' | 'or'
   const condition = config.condition || emptyCondition();
   const conditions = config.conditions || [emptyCondition()];
@@ -86,7 +86,7 @@ export default function ConditionNode({ config = {}, updateConfig }) {
 
       {/* Condition builder */}
       {mode === 'simple' ? (
-        <ConditionRow condition={condition} onChange={(c) => updateConfig('condition', c)} />
+        <ConditionRow condition={condition} onChange={(c) => updateConfig('condition', c)} nodeId={nodeId} />
       ) : (
         <div className="flex flex-col gap-2">
           {conditions.map((c, i) => (
@@ -106,6 +106,7 @@ export default function ConditionNode({ config = {}, updateConfig }) {
                 }}
                 onRemove={() => removeCondition(i)}
                 showRemove={conditions.length > 1}
+                nodeId={nodeId}
               />
             </div>
           ))}
@@ -122,7 +123,7 @@ export default function ConditionNode({ config = {}, updateConfig }) {
   );
 }
 
-function ConditionRow({ condition, onChange, onRemove, showRemove }) {
+function ConditionRow({ condition, onChange, onRemove, showRemove, nodeId }) {
   const needsRight = !NO_RIGHT.has(condition.operator);
   return (
     <div className="flex flex-col gap-1.5">
@@ -130,6 +131,7 @@ function ConditionRow({ condition, onChange, onRemove, showRemove }) {
         value={condition.left}
         onChange={(v) => onChange({ ...condition, left: v })}
         placeholder="{{ $json.field }}"
+        nodeId={nodeId}
       />
       <div className="flex gap-1.5 items-center">
         <select
@@ -152,6 +154,7 @@ function ConditionRow({ condition, onChange, onRemove, showRemove }) {
           value={condition.right}
           onChange={(v) => onChange({ ...condition, right: v })}
           placeholder="value"
+          nodeId={nodeId}
         />
       )}
     </div>

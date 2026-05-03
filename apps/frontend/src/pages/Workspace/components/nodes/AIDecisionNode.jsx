@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 export default function AIDecisionNode({ config = {}, updateConfig, nodeId }) {
   const provider = config.provider || "openai";
@@ -32,15 +33,13 @@ export default function AIDecisionNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential (API Key)</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="OpenAI or Anthropic credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-indigo-500/40"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ""}
+        onChange={(id) => updateConfig("credentialId", id)}
+        accentColor="indigo"
+        label="API Key"
+        placeholder="Select OpenAI or Anthropic credential..."
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Scenario / Context</label>
