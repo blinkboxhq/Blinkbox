@@ -1,13 +1,16 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, Zap } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
+import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
-// ── Syntax-colored JSON ───────────────────────────────────────────────────────
+const PANEL_HEADER_H = 52; // px — all three panels share this header height
+
+// ── JSON syntax view ──────────────────────────────────────────────────────────
 function JsonView({ data }) {
   const text = JSON.stringify(data, null, 2);
   return (
@@ -35,9 +38,23 @@ function JsonView({ data }) {
   );
 }
 
+// ── Resizable divider ─────────────────────────────────────────────────────────
+function Divider({ onMouseDown }) {
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      className="w-px shrink-0 bg-[#1e1e20] hover:bg-violet-500/40 active:bg-violet-500/60 transition-colors cursor-col-resize relative group"
+      style={{ zIndex: 1 }}
+    >
+      <div className="absolute inset-y-0 -left-1.5 -right-1.5 group-hover:bg-violet-500/5 transition-colors" />
+    </div>
+  );
+}
+
 // ── Panel 1: Input ────────────────────────────────────────────────────────────
 function InputPanel({ canvasNodes, currentNodeId }) {
-  const [copied, setCopied] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+  const [copied, setCopied]    = useState(null);
 
   const copy = (text) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -49,42 +66,74 @@ function InputPanel({ canvasNodes, currentNodeId }) {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
-      <div className="px-5 pt-5 pb-4 border-b border-[#1e1e20] shrink-0">
+      {/* Panel header — fixed height matches others */}
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-neutral-200">Input</p>
-        <p className="text-[11px] text-neutral-600 mt-0.5">Canvas nodes — click to copy variable</p>
+        <p className="text-[10px] text-neutral-600 mt-0.5">Click a node to see its output variables</p>
       </div>
-      <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-0.5">
+
+      <div className="flex-1 overflow-y-auto py-2">
         {others.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-10 h-10 rounded-full bg-neutral-900 border border-[#1e1e20] flex items-center justify-center mb-3">
-              <Zap className="w-4 h-4 text-neutral-700" />
-            </div>
-            <p className="text-[12px] text-neutral-600">No other nodes on canvas</p>
+          <div className="flex flex-col items-center justify-center h-40 text-center px-5">
+            <Zap className="w-5 h-5 text-neutral-700 mb-2" />
+            <p className="text-[12px] text-neutral-600">No other nodes on canvas yet</p>
           </div>
         ) : others.map((n) => {
           const def = NodeRegistry[n.data.backendType];
-          const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.label || n.data.backendType;
-          const varRef = `{{${n.id}.output}}`;
-          const isCopied = copied === varRef;
+          const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
+          const isOpen = expanded === n.id;
+
+          const schema = DEFAULT_SCHEMAS[n.data.backendType];
+          const vars = schema
+            ? Object.entries(schema).filter(([k]) => !k.startsWith("_")).map(([k]) => ({ key: k, ref: `{{${n.id}.${k}}}` }))
+            : [
+                { key: "output",  ref: `{{${n.id}.output}}`  },
+                { key: "success", ref: `{{${n.id}.success}}` },
+              ];
+
           return (
-            <button key={n.id} onClick={() => copy(varRef)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/[0.04] transition-colors group text-left w-full">
-              <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-neutral-900 border border-[#1e1e20]">
-                {def?.logoUrl
-                  ? <img src={def.logoUrl} alt="" className="w-5 h-5 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
-                  : def?.icon
-                    ? <def.icon className={`w-4.5 h-4.5 ${def.colorClass || "text-neutral-500"}`} strokeWidth={1.5} style={{ width: 18, height: 18 }} />
-                    : <div className="w-4 h-4 rounded bg-neutral-700" />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[13px] text-neutral-300 group-hover:text-neutral-100 font-medium truncate block transition-colors">{name}</span>
-                <span className="text-[10px] text-neutral-700 font-mono truncate block">{varRef}</span>
-              </div>
-              {isCopied
-                ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                : <Copy className="w-3.5 h-3.5 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors" />}
-            </button>
+            <div key={n.id}>
+              <button
+                onClick={() => setExpanded(isOpen ? null : n.id)}
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] transition-colors group text-left"
+              >
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border border-[#1e1e20] bg-[#111]">
+                  {def?.logoUrl
+                    ? <img src={def.logoUrl} alt="" className="w-5 h-5 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
+                    : def?.icon
+                      ? <def.icon style={{ width: 16, height: 16 }} className={def.colorClass || "text-neutral-500"} strokeWidth={1.5} />
+                      : <div className="w-4 h-4 rounded bg-neutral-700" />
+                  }
+                </div>
+                <span className="flex-1 text-[13px] font-medium text-neutral-300 group-hover:text-neutral-100 truncate transition-colors">{name}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-neutral-600 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isOpen && (
+                <div className="px-4 pb-2 flex flex-col gap-0.5">
+                  {vars.map(({ key, ref }) => {
+                    const isCopied = copied === ref;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => copy(ref)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group text-left"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-700 shrink-0 group-hover:bg-violet-400 transition-colors" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200 transition-colors block">{key}</span>
+                          <span className="text-[10px] text-neutral-700 font-mono truncate block">{ref}</span>
+                        </div>
+                        {isCopied
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          : <Copy className="w-3 h-3 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors" />
+                        }
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -94,70 +143,82 @@ function InputPanel({ canvasNodes, currentNodeId }) {
 
 // ── Panel 2: Configure ────────────────────────────────────────────────────────
 function ConfigurePanel({ node, updateConfig, renameNode }) {
-  const backendType = node?.data.backendType;
-  const nodeDef  = backendType ? NodeRegistry[backendType] : null;
-  const variant  = node?.data.type === "trigger" && node?.data.config?.triggerVariant
+  const backendType  = node?.data.backendType;
+  const nodeDef      = backendType ? NodeRegistry[backendType] : null;
+  const variant      = node?.data.type === "trigger" && node?.data.config?.triggerVariant
     ? TRIGGER_VARIANTS[node.data.config.triggerVariant] : null;
-  const def = variant || nodeDef;
-  const ConfigPanel = variant?.ConfigPanel || nodeDef?.ConfigPanel;
-  const config = node?.data.config || {};
+  const def          = variant || nodeDef;
+  const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
+  const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
 
   const currentName = config.customLabel || selectedAction || def?.label || node?.data.label || "";
-  const [editingName, setEditingName] = useState(false);
-  const [nameVal, setNameVal]  = useState(currentName);
+  const [editing, setEditing] = useState(false);
+  const [nameVal, setNameVal] = useState(currentName);
+
+  // DOM-based operation section hider — runs after every render when action is locked
+  const configRef = useRef(null);
+  useEffect(() => {
+    if (!selectedAction || !configRef.current) return;
+    const allEls = configRef.current.querySelectorAll("label, span");
+    for (const el of allEls) {
+      if (/^operations?$/i.test(el.textContent.trim())) {
+        const section = el.closest(".flex-col") || el.parentElement;
+        if (section && section !== configRef.current) section.style.display = "none";
+      }
+    }
+  });
 
   useEffect(() => {
     setNameVal(config.customLabel || selectedAction || def?.label || node?.data.label || "");
-    setEditingName(false);
+    setEditing(false);
   }, [node?.id]);
 
   const commitRename = () => {
     if (nameVal.trim()) renameNode(node.id, nameVal.trim());
-    setEditingName(false);
+    setEditing(false);
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden" style={{ background: "#111113" }}>
-      {/* Name row */}
-      <div className="px-5 pt-5 pb-4 border-b border-[#1e1e20] shrink-0">
-        <p className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider mb-2">Configure</p>
-        {editingName ? (
+      {/* Panel header */}
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
+        {editing ? (
           <div className="flex items-center gap-2">
-            <input autoFocus value={nameVal}
+            <input
+              autoFocus value={nameVal}
               onChange={(e) => setNameVal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setEditingName(false); }}
-              className="flex-1 bg-[#0d0d0f] border border-[#444] rounded-lg px-3 py-2 text-[14px] font-semibold text-white focus:outline-none focus:border-neutral-500 transition-colors"
+              onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setEditing(false); }}
+              className="flex-1 bg-[#0d0d0f] border border-[#444] rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white focus:outline-none focus:border-neutral-500 transition-colors"
             />
-            <button onClick={commitRename} className="p-2 text-emerald-400 hover:text-emerald-300 transition-colors shrink-0"><Check className="w-4 h-4" /></button>
-            <button onClick={() => setEditingName(false)} className="p-2 text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"><X className="w-4 h-4" /></button>
+            <button onClick={commitRename} className="p-1.5 text-emerald-400 hover:text-emerald-300 transition-colors shrink-0"><Check className="w-4 h-4" /></button>
+            <button onClick={() => setEditing(false)} className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"><X className="w-4 h-4" /></button>
           </div>
         ) : (
-          <button onClick={() => { setNameVal(currentName); setEditingName(true); }}
-            className="flex items-center gap-2.5 group text-left">
-            <span className="text-[15px] font-semibold text-neutral-200 group-hover:text-white transition-colors leading-tight">
-              {currentName || "Unnamed node"}
-            </span>
+          <button onClick={() => { setNameVal(currentName); setEditing(true); }} className="flex items-center gap-2 group text-left w-fit">
+            <span className="text-[13px] font-semibold text-neutral-200 group-hover:text-white transition-colors">{currentName || "Unnamed"}</span>
             <Pencil className="w-3.5 h-3.5 text-neutral-700 group-hover:text-neutral-400 transition-colors shrink-0" />
           </button>
         )}
-        {selectedAction && (
-          <div className="flex items-center gap-2 mt-2.5">
-            <span className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider">Action</span>
-            <span className="text-[11px] font-semibold text-violet-300 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">{selectedAction}</span>
+        {selectedAction && !editing && (
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[10px] text-neutral-600">Action:</span>
+            <span className="text-[10px] font-semibold text-violet-300">{selectedAction}</span>
           </div>
         )}
       </div>
 
-      {/* Config fields */}
+      {/* Config fields — padded wrapper */}
       <div className="flex-1 overflow-y-auto">
-        {ConfigPanel ? (
-          <ConfigPanel config={config} updateConfig={(key, val) => updateConfig(node.id, key, val)} />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-center px-6">
-            <p className="text-[13px] text-neutral-600">No configuration required for this node.</p>
-          </div>
-        )}
+        <div ref={configRef} className="px-1 py-2">
+          {ConfigPanel ? (
+            <ConfigPanel config={config} updateConfig={(key, val) => updateConfig(node.id, key, val)} />
+          ) : (
+            <div className="flex items-center justify-center h-32 px-6 text-center">
+              <p className="text-[13px] text-neutral-600">No configuration needed.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -165,9 +226,9 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
 
 // ── Panel 3: Output ───────────────────────────────────────────────────────────
 function OutputPanel({ node, nodeStatus, lastOutput }) {
-  const [testInput, setTestInput] = useState("{\n  \n}");
-  const [result, setResult]  = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [testInput, setTestInput] = useState("{}");
+  const [result, setResult]        = useState(null);
+  const [loading, setLoading]      = useState(false);
 
   useEffect(() => { setResult(null); }, [node?.id]);
 
@@ -177,43 +238,43 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
     setResult(null);
     let parsed = {};
     try { parsed = JSON.parse(testInput); } catch { parsed = {}; }
-    const t0 = Date.now();
     try {
+      const t0 = Date.now();
       const res = await api.post("/api/automation/test-node", {
         nodeType: node.data.backendType,
         config: node.data.config || {},
         input: parsed,
       });
-      const dur = Date.now() - t0;
-      setResult({ ...res.data, durationMs: res.data.durationMs ?? dur });
+      setResult({ ...res.data, clientMs: Date.now() - t0 });
       if (res.data.success) playSuccess(); else playError();
     } catch (err) {
-      setResult({ success: false, error: err.response?.data?.error || err.message, durationMs: Date.now() - t0 });
+      setResult({ success: false, error: err.response?.data?.error || err.message });
       playError();
     } finally {
       setLoading(false);
     }
   }, [node, testInput]);
 
-  const displayResult = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
+  const display = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
-      <div className="px-5 pt-5 pb-4 border-b border-[#1e1e20] shrink-0">
+      {/* Panel header */}
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-neutral-200">Output</p>
-        <p className="text-[11px] text-neutral-600 mt-0.5">Test this node with sample input</p>
+        <p className="text-[10px] text-neutral-600 mt-0.5">Test this node with sample data</p>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Test input */}
+        {/* Input area */}
         <div className="px-4 pt-4 pb-3 border-b border-[#1e1e20] shrink-0">
           <p className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider mb-2">Test Input (JSON)</p>
           <textarea
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
-            rows={4}
+            rows={3}
             spellCheck={false}
-            className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2.5 text-[12px] text-neutral-300 font-mono focus:outline-none focus:border-neutral-600 resize-none transition-colors placeholder-neutral-700"
+            className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2.5 text-[12px] text-neutral-300 font-mono focus:outline-none focus:border-neutral-600 resize-none transition-colors"
             placeholder="{}"
           />
         </div>
@@ -223,37 +284,38 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
           <button
             onClick={runTest}
             disabled={loading || !node}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold transition-all disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold transition-all disabled:opacity-40 active:scale-[0.98]"
             style={{
-              background: loading ? "rgba(16,185,129,0.06)" : "rgba(16,185,129,0.1)",
-              border: "1px solid rgba(16,185,129,0.2)",
+              background: "rgba(16,185,129,0.08)",
+              border: "1px solid rgba(16,185,129,0.22)",
               color: "#34d399",
             }}
           >
             {loading
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Running…</>
-              : <><Play className="w-4 h-4" /> Run Test</>
+              ? <><Loader2 className="w-4 h-4 animate-spin" />Running…</>
+              : <><Play className="w-4 h-4" />Run Test</>
             }
           </button>
         </div>
 
         {/* Result */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {displayResult ? (
+          {display ? (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                {displayResult.success
+              <div className="flex items-center gap-2">
+                {display.success
                   ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  : <XCircle className="w-4 h-4 text-red-400 shrink-0" />}
-                <span className={`text-[13px] font-semibold ${displayResult.success ? "text-emerald-400" : "text-red-400"}`}>
-                  {displayResult.success ? "Success" : "Failed"}
+                  : <XCircle className="w-4 h-4 text-red-400 shrink-0" />
+                }
+                <span className={`text-[13px] font-semibold ${display.success ? "text-emerald-400" : "text-red-400"}`}>
+                  {display.success ? "Success" : "Failed"}
                 </span>
-                {displayResult.durationMs != null && (
-                  <span className="ml-auto text-[11px] text-neutral-600 font-mono">{displayResult.durationMs}ms</span>
+                {(display.durationMs ?? display.clientMs) != null && (
+                  <span className="ml-auto text-[11px] text-neutral-600 font-mono">{display.durationMs ?? display.clientMs}ms</span>
                 )}
               </div>
-              <div className="bg-[#111] border border-[#1e1e20] rounded-xl p-4 overflow-auto">
-                <JsonView data={displayResult.output ?? displayResult.error ?? displayResult} />
+              <div className="bg-[#111] border border-[#1e1e20] rounded-xl p-4 overflow-auto max-h-[420px]">
+                <JsonView data={display.output ?? display.error ?? display} />
               </div>
             </div>
           ) : !loading ? (
@@ -277,20 +339,52 @@ export default function NodeConfigModal() {
   const lastRunOutputs    = useWorkspaceStore((s) => s.lastRunOutputs);
   const nodeStatuses      = useWorkspaceStore((s) => s.nodeStatuses);
 
-  const node    = nodes.find((n) => n.id === selectedNodeId) ?? null;
-  const isOpen  = !!selectedNodeId && !!node;
+  const node       = nodes.find((n) => n.id === selectedNodeId) ?? null;
+  const isOpen     = !!selectedNodeId && !!node;
 
-  const isTrigger = node?.data.type === "trigger";
-  const variant   = isTrigger && node?.data.config?.triggerVariant
+  const isTrigger  = node?.data.type === "trigger";
+  const variant    = isTrigger && node?.data.config?.triggerVariant
     ? TRIGGER_VARIANTS[node.data.config.triggerVariant] : null;
-  const nodeDef = node ? NodeRegistry[node.data.backendType] : null;
-  const def     = variant || nodeDef;
-
-  const logoUrl   = variant?.logoUrl || nodeDef?.logoUrl;
-  const imgFilter = variant?.imgFilter || nodeDef?.imgFilter;
-  const nodeLabel = node?.data.config?.customLabel || node?.data.config?.selectedAction || def?.label || node?.data.label || "";
+  const nodeDef    = node ? NodeRegistry[node.data.backendType] : null;
+  const def        = variant || nodeDef;
+  const logoUrl    = variant?.logoUrl || nodeDef?.logoUrl;
+  const imgFilter  = variant?.imgFilter || nodeDef?.imgFilter;
+  const nodeLabel  = node?.data.config?.customLabel || node?.data.config?.selectedAction || def?.label || node?.data.label || "";
   const nodeStatus = nodeStatuses?.[selectedNodeId];
   const lastOutput = lastRunOutputs?.[selectedNodeId];
+
+  // Resizable panels — percentages [p0, p1, p2]
+  const containerRef = useRef(null);
+  const [pw, setPw]  = useState([33.33, 33.33, 33.34]);
+  const drag         = useRef(null);
+
+  const startDrag = (dividerIdx, e) => {
+    e.preventDefault();
+    drag.current = { dividerIdx, startX: e.clientX, startPw: [...pw] };
+    const onMove = (ev) => {
+      if (!drag.current || !containerRef.current) return;
+      const totalW = containerRef.current.getBoundingClientRect().width;
+      const deltaPct = ((ev.clientX - drag.current.startX) / totalW) * 100;
+      const { dividerIdx: di, startPw: sp } = drag.current;
+      const a = di, b = di + 1;
+      const newA = Math.max(15, Math.min(60, sp[a] + deltaPct));
+      const diff = newA - sp[a];
+      const newB = Math.max(15, sp[b] - diff);
+      const next = [...sp];
+      next[a] = newA;
+      next[b] = newB;
+      // Keep third panel getting the remainder
+      next[2] = Math.max(15, 100 - next[0] - next[1]);
+      setPw(next);
+    };
+    const onUp = () => {
+      drag.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
 
   useEffect(() => { if (isOpen) playPanelOpen(); }, [selectedNodeId]);
 
@@ -306,14 +400,14 @@ export default function NodeConfigModal() {
       {isOpen && (
         <motion.div
           key="ncm"
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-          className="fixed inset-0 z-50 flex flex-col"
-          style={{ background: "#0a0a0a" }}
+          exit={{ opacity: 0, y: 6 }}
+          transition={{ duration: 0.16, ease: "easeOut" }}
+          className="fixed inset-0 flex flex-col"
+          style={{ zIndex: 60, background: "#0a0a0a" }}
         >
-          {/* Header */}
+          {/* Top bar */}
           <div className="flex items-center gap-3 px-5 shrink-0 border-b border-[#333]" style={{ height: 52, background: "#0a0a0a" }}>
             <div className="w-7 h-7 shrink-0 flex items-center justify-center">
               {logoUrl
@@ -321,10 +415,10 @@ export default function NodeConfigModal() {
                 : def?.icon && <def.icon className={`w-5 h-5 ${def.colorClass || "text-neutral-400"}`} strokeWidth={1.5} />
               }
             </div>
-            <div className="flex-1 min-w-0 flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2 flex-1 min-w-0">
               <span className="text-[14px] font-semibold text-neutral-200 truncate">{nodeLabel}</span>
               {def?.label && def.label !== nodeLabel && (
-                <span className="text-[11px] text-neutral-600 truncate">{def.label}</span>
+                <span className="text-[11px] text-neutral-600 shrink-0">{def.label}</span>
               )}
             </div>
             {nodeStatus && (
@@ -337,23 +431,27 @@ export default function NodeConfigModal() {
                 {nodeStatus}
               </div>
             )}
-            <button
-              onClick={() => setSelectedNodeId(null)}
-              className="p-1.5 text-neutral-600 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all ml-1 shrink-0"
-            >
+            <button onClick={() => setSelectedNodeId(null)}
+              className="p-1.5 text-neutral-600 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all shrink-0 ml-1">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Three equal panels */}
-          <div className="flex-1 flex flex-row overflow-hidden">
-            <div className="flex-1 border-r border-[#1e1e20] overflow-hidden">
+          {/* Three resizable panels */}
+          <div ref={containerRef} className="flex-1 flex flex-row overflow-hidden select-none">
+            <div style={{ width: `${pw[0]}%` }} className="overflow-hidden">
               <InputPanel canvasNodes={nodes} currentNodeId={selectedNodeId} />
             </div>
-            <div className="flex-1 border-r border-[#1e1e20] overflow-hidden">
+
+            <Divider onMouseDown={(e) => startDrag(0, e)} />
+
+            <div style={{ width: `${pw[1]}%` }} className="overflow-hidden">
               <ConfigurePanel node={node} updateConfig={updateNodeConfig} renameNode={renameNode} />
             </div>
-            <div className="flex-1 overflow-hidden">
+
+            <Divider onMouseDown={(e) => startDrag(1, e)} />
+
+            <div style={{ width: `${pw[2]}%` }} className="overflow-hidden">
               <OutputPanel node={node} nodeStatus={nodeStatus} lastOutput={lastOutput} />
             </div>
           </div>
