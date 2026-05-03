@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap, GripVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -55,6 +55,7 @@ function Divider({ onMouseDown }) {
 function InputPanel({ canvasNodes, currentNodeId }) {
   const [expanded, setExpanded] = useState(null);
   const [copied, setCopied]    = useState(null);
+  const [dragging, setDragging] = useState(null);
 
   const copy = (text) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -113,13 +114,21 @@ function InputPanel({ canvasNodes, currentNodeId }) {
                 <div className="px-4 pb-2 flex flex-col gap-0.5">
                   {vars.map(({ key, ref }) => {
                     const isCopied = copied === ref;
+                    const isDraggingThis = dragging === ref;
                     return (
                       <button
                         key={key}
+                        draggable
                         onClick={() => copy(ref)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group text-left"
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("text/plain", ref);
+                          e.dataTransfer.effectAllowed = "copy";
+                          setDragging(ref);
+                        }}
+                        onDragEnd={() => setDragging(null)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group text-left ${isDraggingThis ? "opacity-50" : ""}`}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-700 shrink-0 group-hover:bg-violet-400 transition-colors" />
+                        <GripVertical className="w-3 h-3 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors cursor-grab" />
                         <div className="flex-1 min-w-0">
                           <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200 transition-colors block">{key}</span>
                           <span className="text-[10px] text-neutral-700 font-mono truncate block">{ref}</span>

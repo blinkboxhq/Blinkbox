@@ -290,6 +290,7 @@ export default function SmartVariableInput({
   const [open, setOpen] = useState(false);
   const [hoveredToken, setHoveredToken] = useState(null);
   const [tokenAnchorRect, setTokenAnchorRect] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const editableRef = useRef(null);
   const isComposing = useRef(false);
 
@@ -364,6 +365,35 @@ export default function SmartVariableInput({
     }
   }, []);
 
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const handleDragEnter = useCallback(() => setIsDragOver(true), []);
+
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const text = e.dataTransfer.getData("text/plain");
+    if (!text) return;
+    const el = editableRef.current;
+    if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      range.collapse(false);
+    } else {
+      el.textContent += text;
+    }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, []);
+
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
@@ -396,6 +426,10 @@ export default function SmartVariableInput({
             }}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             data-placeholder={placeholder}
             className={[
               "w-full bg-surface-1 border border-neutral-800 rounded-lg px-3 py-2.5 pr-9",
@@ -404,6 +438,7 @@ export default function SmartVariableInput({
               "empty:before:text-neutral-700 empty:before:pointer-events-none",
               "min-h-[38px]",
               multiline ? "leading-relaxed" : "whitespace-nowrap overflow-x-auto",
+              isDragOver ? "ring-2 ring-violet-500/40 bg-violet-500/5" : "",
             ].join(" ")}
           />
 
