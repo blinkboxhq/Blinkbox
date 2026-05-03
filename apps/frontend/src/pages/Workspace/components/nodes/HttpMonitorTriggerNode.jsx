@@ -1,5 +1,3 @@
-import { Handle, Position } from '@xyflow/react';
-import { Plus } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const ALERT_MODES = [
@@ -14,15 +12,10 @@ const INTERVALS = [
   { label: 'Every 5 min', value: '300' }, { label: 'Every 15 min', value: '900' },
 ];
 
-export default function HttpMonitorTriggerNode({ config = {}, updateConfig, selected }) {
+export default function HttpMonitorTriggerNode({ config = {}, updateConfig, nodeId }) {
   const alertOn = config.alertOn || 'down';
   return (
-    <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border shadow-2xl font-sans group ${selected ? 'border-red-500/50' : 'border-[#2A2A2A]'}`}>
-      <Handle id="output" type="source" position={Position.Right}
-        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-red-500 hover:!border-red-500 z-50 cursor-crosshair"
-        style={{ top: '20px', right: '-10px', transform: 'translateY(-50%)' }}>
-        <Plus className="w-3 h-3 pointer-events-none" />
-      </Handle>
+    <div className="flex flex-col">
       <div className="px-3 py-2 border-b border-[#2A2A2A] bg-[#111] rounded-t-xl">
         <span className="text-[11px] font-semibold text-red-400">HTTP Monitor</span>
       </div>

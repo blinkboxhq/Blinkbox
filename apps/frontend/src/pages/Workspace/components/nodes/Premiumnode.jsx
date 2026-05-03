@@ -1,4 +1,3 @@
-import { Handle, Position } from "@xyflow/react";
 import {
   Zap, Globe, Code2, Clock,
   AlertTriangle, Play, Database, Network
@@ -36,45 +35,21 @@ const ACCENT_MAP = {
   data_mapper: "52,211,153",
 };
 
-export default function PremiumNode({ id, data, selected, isConnectable }) {
-  const Icon = ICON_MAP[data.backendType] || Play;
-  const colorClass = COLOR_MAP[data.backendType] || "text-zinc-400";
-  const accent = ACCENT_MAP[data.backendType] || "161,161,170";
-  const status = data.status || "idle";
+export default function PremiumNode({ id, data, config = {}, updateConfig, nodeId }) {
+  const Icon = ICON_MAP[data?.backendType] || Play;
+  const colorClass = COLOR_MAP[data?.backendType] || "text-zinc-400";
+  const accent = ACCENT_MAP[data?.backendType] || "161,161,170";
+  const status = data?.status || "idle";
   const getMappingWarnings = useWorkspaceStore((s) => s.getMappingWarnings);
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   return (
-    <div
-      className={clsx(
-        "relative min-w-[260px] bg-zinc-900 rounded-xl overflow-hidden transition-colors duration-150",
-        "border",
-        selected
-          ? "border-zinc-600"
-          : status === "failed"
-            ? "border-red-500/25"
-            : status === "success"
-              ? "border-emerald-500/25"
-              : hasMappingWarning && status === "idle"
-                ? "border-amber-500/25"
-                : "border-zinc-800/60"
-      )}
-    >
+    <div className="flex flex-col">
       {/* Accent bar */}
       <div
         className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-xl"
         style={{ backgroundColor: `rgba(${accent},0.3)` }}
       />
-
-      {/* Target Handle */}
-      {data.backendType !== "trigger" && data.backendType !== "webhook" && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          isConnectable={isConnectable}
-          className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
-        />
-      )}
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/40">
@@ -122,13 +97,6 @@ export default function PremiumNode({ id, data, selected, isConnectable }) {
         )}
       </div>
 
-      {/* Source Handle */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        isConnectable={isConnectable}
-        className="!w-2 !h-2 !bg-zinc-700 !border-0 !rounded-full hover:!bg-zinc-500 transition-colors"
-      />
     </div>
   );
 }

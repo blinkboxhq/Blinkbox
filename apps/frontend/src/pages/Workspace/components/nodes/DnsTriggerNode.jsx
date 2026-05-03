@@ -1,5 +1,3 @@
-import { Handle, Position } from '@xyflow/react';
-import { Plus } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'SOA'];
@@ -10,15 +8,10 @@ const INTERVALS = [
   { label: 'Every 1 hour', value: '3600' },
 ];
 
-export default function DnsTriggerNode({ config = {}, updateConfig, selected }) {
+export default function DnsTriggerNode({ config = {}, updateConfig, nodeId }) {
   const recordType = config.recordType || 'A';
   return (
-    <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border shadow-2xl font-sans group ${selected ? 'border-sky-500/50' : 'border-[#2A2A2A]'}`}>
-      <Handle id="output" type="source" position={Position.Right}
-        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-sky-500 hover:!border-sky-500 z-50 cursor-crosshair"
-        style={{ top: '20px', right: '-10px', transform: 'translateY(-50%)' }}>
-        <Plus className="w-3 h-3 pointer-events-none" />
-      </Handle>
+    <div className="flex flex-col">
       <div className="px-3 py-2 border-b border-[#2A2A2A] bg-[#111] rounded-t-xl">
         <span className="text-[11px] font-semibold text-sky-400">DNS Record Change</span>
       </div>

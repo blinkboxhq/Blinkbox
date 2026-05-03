@@ -547,7 +547,7 @@ export const NodeRegistry = {
     description: "GPT models powering the AI Agent",
     defaultModel: "gpt-4o",
     models: [{ value: "gpt-4o", label: "GPT-4o" }, { value: "gpt-4o-mini", label: "GPT-4o Mini" }, { value: "o3-mini", label: "o3-mini" }, { value: "gpt-4-turbo", label: "GPT-4 Turbo" }],
-    ConfigPanel: makeAgentModelPanel({ label: "OpenAI", credentialType: "OpenAI" }),
+    ConfigPanel: makeAgentModelPanel({ label: "OpenAI", credentialType: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1-preview", "o3-mini"], color: "#10A37F" }),
   },
   agent_anthropic: {
     label: "Anthropic", icon: Brain, logoUrl: imgAnthropic,
@@ -556,7 +556,7 @@ export const NodeRegistry = {
     description: "Claude models powering the AI Agent",
     defaultModel: "claude-sonnet-4-6",
     models: [{ value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" }, { value: "claude-opus-4-7", label: "Claude Opus 4.7" }, { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" }],
-    ConfigPanel: makeAgentModelPanel({ label: "Anthropic", credentialType: "Anthropic" }),
+    ConfigPanel: makeAgentModelPanel({ label: "Anthropic", credentialType: "Anthropic", models: ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"], color: "#D4A27A" }),
   },
   agent_gemini: {
     label: "Google Gemini", icon: Brain, logoUrl: imgGemini,
@@ -565,7 +565,7 @@ export const NodeRegistry = {
     description: "Gemini models powering the AI Agent",
     defaultModel: "gemini-2.0-flash",
     models: [{ value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" }, { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }, { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" }, { value: "gemini-2.0-flash-thinking", label: "Gemini 2.0 Thinking" }],
-    ConfigPanel: makeAgentModelPanel({ label: "Gemini", credentialType: "Gemini" }),
+    ConfigPanel: makeAgentModelPanel({ label: "Gemini", credentialType: "Gemini", models: ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"], color: "#4285F4" }),
   },
   agent_xai: {
     label: "xAI Grok", icon: Sparkles, logoUrl: imgGrok,
@@ -574,7 +574,7 @@ export const NodeRegistry = {
     description: "Grok models powering the AI Agent",
     defaultModel: "grok-2",
     models: [{ value: "grok-2", label: "Grok 2" }, { value: "grok-beta", label: "Grok Beta" }, { value: "grok-3", label: "Grok 3" }],
-    ConfigPanel: makeAgentModelPanel({ label: "xAI", credentialType: "xAI" }),
+    ConfigPanel: makeAgentModelPanel({ label: "xAI", credentialType: "xAI", models: ["grok-3", "grok-3-mini"], color: "#6B7280" }),
   },
   agent_deepseek: {
     label: "DeepSeek", icon: Brain, logoUrl: imgDeepSeek,
@@ -583,7 +583,7 @@ export const NodeRegistry = {
     description: "DeepSeek models powering the AI Agent",
     defaultModel: "deepseek-chat",
     models: [{ value: "deepseek-chat", label: "DeepSeek Chat" }, { value: "deepseek-reasoner", label: "DeepSeek Reasoner" }],
-    ConfigPanel: makeAgentModelPanel({ label: "DeepSeek", credentialType: "DeepSeek" }),
+    ConfigPanel: makeAgentModelPanel({ label: "DeepSeek", credentialType: "DeepSeek", models: ["deepseek-chat", "deepseek-reasoner"], color: "#4D9BF8" }),
   },
   agent_groq: {
     label: "Groq", icon: Zap, logoUrl: imgGroq,
@@ -592,7 +592,7 @@ export const NodeRegistry = {
     description: "Groq fast inference powering the AI Agent",
     defaultModel: "llama-3.3-70b-versatile",
     models: [{ value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" }, { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" }, { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" }, { value: "gemma2-9b-it", label: "Gemma 2 9B" }],
-    ConfigPanel: makeAgentModelPanel({ label: "Groq", credentialType: "Groq" }),
+    ConfigPanel: makeAgentModelPanel({ label: "Groq", credentialType: "Groq", models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"], color: "#F97316" }),
   },
   agent_ollama: {
     label: "Ollama", icon: Brain, logoUrl: imgOllama,
@@ -601,7 +601,7 @@ export const NodeRegistry = {
     description: "Local Ollama models powering the AI Agent",
     defaultModel: "llama3.2",
     models: null,
-    ConfigPanel: makeAgentModelPanel({ label: "Ollama", hasBaseUrl: true }),
+    ConfigPanel: makeAgentModelPanel({ label: "Ollama", hasBaseUrl: true, models: ["llama3.2", "mistral", "codellama", "phi3"], color: "#7C3AED" }),
   },
   agent_perplexity: {
     label: "Perplexity", icon: Brain, logoUrl: imgPerplexity,
@@ -610,7 +610,7 @@ export const NodeRegistry = {
     description: "Perplexity search-augmented models for the AI Agent",
     defaultModel: "llama-3.1-sonar-large-128k-online",
     models: [{ value: "llama-3.1-sonar-large-128k-online", label: "Sonar Large Online" }, { value: "llama-3.1-sonar-small-128k-online", label: "Sonar Small Online" }, { value: "llama-3.1-sonar-large-128k-chat", label: "Sonar Large Chat" }],
-    ConfigPanel: makeAgentModelPanel({ label: "Perplexity", credentialType: "Perplexity" }),
+    ConfigPanel: makeAgentModelPanel({ label: "Perplexity", credentialType: "Perplexity", models: ["llama-3.1-sonar-large-128k-online", "llama-3.1-sonar-small-128k-online"], color: "#20B2AA" }),
   },
 
   // ── Dedicated Agent Memory Nodes ──
@@ -618,7 +618,7 @@ export const NodeRegistry = {
     label: "Window Buffer", icon: MemoryStick, colorClass: "text-violet-400", accentColor: "167,139,250",
     category: "ai", agentOnly: true,
     description: "In-memory sliding window of recent messages",
-    ConfigPanel: makeAgentMemoryPanel({ label: "Window Buffer" }),
+    ConfigPanel: makeAgentMemoryPanel({ label: "Window Buffer", hasWindowSize: true }),
   },
   agent_memory_redis: {
     label: "Redis", icon: Database, logoUrl: imgRedis, colorClass: "text-[#DC382D]", accentColor: "220,56,45",
@@ -642,19 +642,19 @@ export const NodeRegistry = {
     label: "Pinecone", icon: Database, logoUrl: imgPinecone, colorClass: "text-[#1A73E8]", accentColor: "26,115,232",
     category: "ai", agentOnly: true,
     description: "Vector memory using Pinecone",
-    ConfigPanel: makeAgentMemoryPanel({ label: "Pinecone", credentialType: "Pinecone" }),
+    ConfigPanel: makeAgentMemoryPanel({ label: "Pinecone", credentialType: "Pinecone", isVector: true }),
   },
   agent_memory_supabase: {
     label: "Supabase", icon: Database, logoUrl: imgSupabase, colorClass: "text-[#3ECF8E]", accentColor: "62,207,142",
     category: "ai", agentOnly: true,
     description: "Persist conversation memory in Supabase",
-    ConfigPanel: makeAgentMemoryPanel({ label: "Supabase", credentialType: "Supabase" }),
+    ConfigPanel: makeAgentMemoryPanel({ label: "Supabase", credentialType: "Supabase", isVector: true }),
   },
   agent_memory_zep: {
     label: "Zep", icon: Database, logoUrl: imgZep, colorClass: "text-[#7C3AED]", accentColor: "124,58,237",
     category: "ai", agentOnly: true,
     description: "Long-term memory with Zep",
-    ConfigPanel: makeAgentMemoryPanel({ label: "Zep", hasConnectionString: true, connectionStringPlaceholder: "http://localhost:8000" }),
+    ConfigPanel: makeAgentMemoryPanel({ label: "Zep", hasConnectionString: true, connectionStringPlaceholder: "http://localhost:8000", hasWindowSize: true }),
   },
 
   // ── Agent Tools — Search (12) ────────────────────────────────────────────────

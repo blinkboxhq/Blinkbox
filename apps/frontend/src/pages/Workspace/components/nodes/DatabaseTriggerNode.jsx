@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { Plus, Database, ChevronDown, Info } from 'lucide-react';
+import { Database, ChevronDown, Info } from 'lucide-react';
 
 const POLL_INTERVALS = [
   { label: 'Every 30 seconds', value: '*/1 * * * *' }, // BullMQ handles sub-minute via every:ms
@@ -21,7 +20,7 @@ const WATCH_MODES = [
   { value: 'new_or_updated', label: 'New or updated rows' },
 ];
 
-export default function DatabaseTriggerNode({ config = {}, updateConfig, selected }) {
+export default function DatabaseTriggerNode({ config = {}, updateConfig, nodeId }) {
   const [activeTab, setActiveTab] = useState('setup');
 
   const dbType = config.dbType || 'postgres';
@@ -33,17 +32,7 @@ export default function DatabaseTriggerNode({ config = {}, updateConfig, selecte
   const maxRowsPerPoll = config.maxRowsPerPoll || 100;
 
   return (
-    <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border transition-colors shadow-2xl font-sans group ${selected ? 'border-emerald-500/50' : 'border-[#2A2A2A]'}`}>
-
-      <Handle
-        id="output"
-        type="source"
-        position={Position.Right}
-        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-emerald-500 hover:!border-emerald-500 text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
-        style={{ top: '20px', right: '-10px', transform: 'translateY(-50%)' }}
-      >
-        <Plus className="w-3 h-3 pointer-events-none" />
-      </Handle>
+    <div className="flex flex-col">
 
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">

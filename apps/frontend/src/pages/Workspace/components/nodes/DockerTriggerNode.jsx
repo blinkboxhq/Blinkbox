@@ -1,18 +1,11 @@
-import { Handle, Position } from '@xyflow/react';
-import { Plus } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const EVENT_TYPES = ['all', 'container', 'image', 'volume', 'network', 'plugin'];
 
-export default function DockerTriggerNode({ config = {}, updateConfig, selected }) {
+export default function DockerTriggerNode({ config = {}, updateConfig, nodeId }) {
   const eventType = config.eventType || 'all';
   return (
-    <div className={`relative flex flex-col w-[280px] bg-[#0A0A0A] rounded-xl border transition-colors shadow-2xl font-sans group ${selected ? 'border-[#2496ED]/50' : 'border-[#2A2A2A]'}`}>
-      <Handle id="output" type="source" position={Position.Right}
-        className="!w-5 !h-5 !flex items-center justify-center !bg-[#111] !border !border-[#2A2A2A] !rounded-full !opacity-0 group-hover:!opacity-100 transition-all hover:!bg-[#2496ED] hover:!border-[#2496ED] text-zinc-500 hover:text-white shadow-xl z-50 cursor-crosshair"
-        style={{ top: '20px', right: '-10px', transform: 'translateY(-50%)' }}>
-        <Plus className="w-3 h-3 pointer-events-none" />
-      </Handle>
+    <div className="flex flex-col">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111] rounded-t-xl">
         <span className="text-[11px] font-semibold text-[#2496ED]">Docker Events</span>
       </div>
