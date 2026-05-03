@@ -16,7 +16,7 @@ const OPERATIONS = [
   { value: 'remove_html', label: 'Strip HTML' },
 ];
 
-export default function TextFormatNode({ config = {}, updateConfig }) {
+export default function TextFormatNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation ?? 'uppercase';
   const field = config.field ?? '';
   const length = config.length ?? 100;
@@ -39,7 +39,7 @@ export default function TextFormatNode({ config = {}, updateConfig }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Input Field</label>
-        <SmartVariableInput value={field} onChange={(v) => updateConfig('field', v)} placeholder="{{ $json.name }}" />
+        <SmartVariableInput value={field} onChange={(v) => updateConfig('field', v)} placeholder="{{ $json.name }}" nodeId={nodeId} />
       </div>
 
       <div>

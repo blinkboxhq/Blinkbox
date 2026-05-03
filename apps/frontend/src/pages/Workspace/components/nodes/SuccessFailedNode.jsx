@@ -1,7 +1,7 @@
 import { CheckCheck, XCircle } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function SuccessFailedNode({ config = {}, updateConfig }) {
+export default function SuccessFailedNode({ config = {}, updateConfig, nodeId }) {
   const outcome = config.outcome ?? 'success'; // 'success' | 'failed'
   const message = config.message ?? '';
 
@@ -54,6 +54,7 @@ export default function SuccessFailedNode({ config = {}, updateConfig }) {
           onChange={(v) => updateConfig('message', v)}
           placeholder={outcome === 'success' ? 'Workflow completed successfully' : 'Workflow failed: {{ $json.reason }}'}
           multiline
+          nodeId={nodeId}
         />
       </div>
 

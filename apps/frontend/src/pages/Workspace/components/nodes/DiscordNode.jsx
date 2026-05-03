@@ -15,7 +15,7 @@ const OPERATIONS = [
   { value: 'sendFile',    label: 'Send File',     icon: FileText },
 ];
 
-export default function DiscordNode({ config = {}, updateConfig }) {
+export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "sendMessage";
   const fields = Array.isArray(config.fields) ? config.fields : [];
 
@@ -69,6 +69,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
           value={config.webhookUrl || ""}
           onChange={(val) => updateConfig("webhookUrl", val)}
           placeholder="https://discord.com/api/webhooks/..."
+          nodeId={nodeId}
         />
         <p className="text-[10px] text-zinc-600">Server Settings → Integrations → Webhooks → New Webhook</p>
       </div>
@@ -93,6 +94,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
             onChange={(val) => updateConfig("message", val)}
             placeholder="Alert: {{trigger.data.event}} just happened!"
             multiline
+            nodeId={nodeId}
           />
           <p className="text-[10px] text-zinc-600">Max 2000 characters. Supports Discord markdown.</p>
         </div>
@@ -107,6 +109,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
               value={config.title || ""}
               onChange={(val) => updateConfig("title", val)}
               placeholder="New Event"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -116,6 +119,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
               onChange={(val) => updateConfig("description", val)}
               placeholder="Something happened that you should know about..."
               multiline
+              nodeId={nodeId}
             />
           </div>
           <div className="flex gap-3">
@@ -134,6 +138,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
                 value={config.thumbnailUrl || ""}
                 onChange={(val) => updateConfig("thumbnailUrl", val)}
                 placeholder="https://..."
+                nodeId={nodeId}
               />
             </div>
           </div>
@@ -162,6 +167,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
                       value={f.value}
                       onChange={(val) => updateField(i, 'value', val)}
                       placeholder="Value"
+                      nodeId={nodeId}
                     />
                     <button
                       onClick={() => updateField(i, 'inline', !f.inline)}
@@ -184,6 +190,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
               value={config.footerText || ""}
               onChange={(val) => updateConfig("footerText", val)}
               placeholder="Sent by BlinkBox"
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -208,6 +215,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
               onChange={(val) => updateConfig("content", val)}
               placeholder="{{previousNode.result}}"
               multiline
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -216,6 +224,7 @@ export default function DiscordNode({ config = {}, updateConfig }) {
               value={config.message || ""}
               onChange={(val) => updateConfig("message", val)}
               placeholder="Here's the file you requested"
+              nodeId={nodeId}
             />
           </div>
         </>

@@ -1,7 +1,7 @@
 import { Search, Target, Globe, ShieldCheck } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function InformerNode({ config = {}, updateConfig }) {
+export default function InformerNode({ config = {}, updateConfig, nodeId }) {
   const source = config.source || '';
   const particularThing = config.particularThing || '';
 
@@ -37,6 +37,7 @@ export default function InformerNode({ config = {}, updateConfig }) {
           value={source}
           onChange={(val) => updateConfig('source', val)}
           placeholder="https://example.com/page"
+          nodeId={nodeId}
         />
       </div>
 
@@ -50,6 +51,7 @@ export default function InformerNode({ config = {}, updateConfig }) {
           onChange={(val) => updateConfig('particularThing', val)}
           placeholder="e.g. Find all pricing plans and the features included in the Pro tier..."
           multiline
+          nodeId={nodeId}
         />
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Box } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function DockerRunNode({ config = {}, updateConfig }) {
+export default function DockerRunNode({ config = {}, updateConfig, nodeId }) {
   const image = config.image ?? '';
   const command = config.command ?? '';
   const envVars = config.envVars ?? '';
@@ -27,13 +27,13 @@ export default function DockerRunNode({ config = {}, updateConfig }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Image</label>
-        <SmartVariableInput value={image} onChange={(v) => updateConfig('image', v)} placeholder="python:3.12-slim  or  node:20-alpine" />
+        <SmartVariableInput value={image} onChange={(v) => updateConfig('image', v)} placeholder="python:3.12-slim  or  node:20-alpine" nodeId={nodeId} />
       </div>
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Command</label>
         <SmartVariableInput value={command} onChange={(v) => updateConfig('command', v)}
-          placeholder='python -c "print({{ $json.value }} * 2)"' multiline />
+          placeholder='python -c "print({{ $json.value }} * 2)"' multiline nodeId={nodeId} />
       </div>
 
       <div>

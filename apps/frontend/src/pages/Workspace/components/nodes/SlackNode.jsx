@@ -23,7 +23,7 @@ const OPERATIONS = [
   { value: 'setTopic',        label: 'Set Topic',         icon: AlignLeft },
 ];
 
-export default function SlackNode({ config = {}, updateConfig }) {
+export default function SlackNode({ config = {}, updateConfig, nodeId }) {
   const [authMode, setAuthMode] = useState(config.credentialId ? "oauth" : "webhook");
   const operation = config.operation || "postMessage";
   const message = config.message || config.text || "";
@@ -103,6 +103,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             value={webhookUrl}
             onChange={handleWebhookUrl}
             placeholder="https://hooks.slack.com/services/T00/B00/xxx"
+            nodeId={nodeId}
           />
           <p className="text-[10px] text-zinc-600">api.slack.com/apps → Incoming Webhooks</p>
         </div>
@@ -116,6 +117,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             value={channel}
             onChange={handleChannel}
             placeholder="#general or C01ABCDEF"
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -129,6 +131,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             onChange={handleMessage}
             placeholder="New lead: {{trigger.data.name}} signed up!"
             multiline
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -142,6 +145,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               value={config.title || ''}
               onChange={(val) => updateConfig('title', val)}
               placeholder="Alert: New signup"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -151,6 +155,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               onChange={(val) => updateConfig('text', val)}
               placeholder="*Name:* {{trigger.data.name}}\n*Email:* {{trigger.data.email}}"
               multiline
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -159,6 +164,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               value={config.buttonLabel || ''}
               onChange={(val) => updateConfig('buttonLabel', val)}
               placeholder="View in Dashboard"
+              nodeId={nodeId}
             />
           </div>
           {config.buttonLabel && (
@@ -168,6 +174,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
                 value={config.buttonUrl || ''}
                 onChange={(val) => updateConfig('buttonUrl', val)}
                 placeholder="https://app.example.com/..."
+                nodeId={nodeId}
               />
             </div>
           )}
@@ -193,6 +200,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               onChange={(val) => updateConfig('content', val)}
               placeholder="{{previousNode.result}}"
               multiline
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -206,6 +214,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             value={config.email || ''}
             onChange={(val) => updateConfig('email', val)}
             placeholder="user@company.com"
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -219,6 +228,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               value={config.channelName || ''}
               onChange={(val) => updateConfig('channelName', val)}
               placeholder="team-alerts"
+              nodeId={nodeId}
             />
           </div>
           <button
@@ -242,6 +252,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             value={config.userId || ''}
             onChange={(val) => updateConfig('userId', val)}
             placeholder="U01ABCDEF"
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -255,6 +266,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               value={config.emoji || ''}
               onChange={(val) => updateConfig('emoji', val)}
               placeholder="thumbsup"
+              nodeId={nodeId}
             />
             <p className="text-[10px] text-zinc-600">Without colons — e.g. thumbsup, rocket, white_check_mark</p>
           </div>
@@ -264,6 +276,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
               value={config.timestamp || ''}
               onChange={(val) => updateConfig('timestamp', val)}
               placeholder="{{previousNode.messageId}}"
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -277,6 +290,7 @@ export default function SlackNode({ config = {}, updateConfig }) {
             value={config.topic || ''}
             onChange={(val) => updateConfig('topic', val)}
             placeholder="Weekly standup at 10am"
+            nodeId={nodeId}
           />
         </div>
       )}

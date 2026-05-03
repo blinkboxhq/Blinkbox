@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function SortArrayNode({ config = {}, updateConfig }) {
+export default function SortArrayNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
@@ -16,6 +16,7 @@ export default function SortArrayNode({ config = {}, updateConfig }) {
           value={config.arrayPath || ""}
           onChange={(v) => updateConfig("arrayPath", v)}
           placeholder="items  (blank = use entire input)"
+          nodeId={nodeId}
         />
       </div>
 
@@ -25,6 +26,7 @@ export default function SortArrayNode({ config = {}, updateConfig }) {
           value={config.field || ""}
           onChange={(v) => updateConfig("field", v)}
           placeholder="createdAt  (dot-path within each item)"
+          nodeId={nodeId}
         />
       </div>
 

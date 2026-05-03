@@ -1,7 +1,7 @@
 import { Regex } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function RegexMatchNode({ config = {}, updateConfig }) {
+export default function RegexMatchNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const pattern = config.pattern ?? '';
   const flags = config.flags ?? 'gi';
@@ -23,7 +23,7 @@ export default function RegexMatchNode({ config = {}, updateConfig }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Input Field</label>
-        <SmartVariableInput value={field} onChange={(v) => updateConfig('field', v)} placeholder="{{ $json.text }}" />
+        <SmartVariableInput value={field} onChange={(v) => updateConfig('field', v)} placeholder="{{ $json.text }}" nodeId={nodeId} />
       </div>
 
       <div>

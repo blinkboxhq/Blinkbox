@@ -1,7 +1,7 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
-export default function PostgresNode({ config = {}, updateConfig }) {
+export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "query";
 
   return (
@@ -38,6 +38,7 @@ export default function PostgresNode({ config = {}, updateConfig }) {
               onChange={(v) => updateConfig("sql", v)}
               placeholder={op === "query" ? "SELECT * FROM users WHERE id = $1" : "UPDATE users SET name = $1 WHERE id = $2"}
               multiline
+              nodeId={nodeId}
             />
             <p className="text-[10px] text-zinc-600">Use $1, $2, ... for parameterized queries</p>
           </div>
@@ -48,6 +49,7 @@ export default function PostgresNode({ config = {}, updateConfig }) {
               value={typeof config.params === "string" ? config.params : (config.params ? JSON.stringify(config.params) : "")}
               onChange={(v) => updateConfig("params", v)}
               placeholder='["{{n1.userId}}"]'
+              nodeId={nodeId}
             />
           </div>
 
@@ -70,6 +72,7 @@ export default function PostgresNode({ config = {}, updateConfig }) {
             onChange={(v) => updateConfig("statements", v)}
             placeholder='["INSERT INTO logs (msg) VALUES ($1)", "UPDATE counters SET n = n + 1"]'
             multiline
+            nodeId={nodeId}
           />
           <p className="text-[10px] text-zinc-600">Array of SQL strings or {"{ sql, params }"} objects. All run in one transaction.</p>
         </div>

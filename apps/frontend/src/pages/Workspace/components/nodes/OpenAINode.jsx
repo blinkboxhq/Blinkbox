@@ -132,7 +132,7 @@ function OperationPicker({ value, onChange }) {
 
 // ── Per-operation config fields ────────────────────────────────────────────
 
-function MessageFields({ config, updateConfig }) {
+function MessageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
@@ -146,36 +146,36 @@ function MessageFields({ config, updateConfig }) {
         />
       </Field>
       <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Summarize the following data..." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Summarize the following data..." multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function AnalyzeImageFields({ config, updateConfig }) {
+function AnalyzeImageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'gpt-4o'} onChange={(v) => updateConfig('model', v)} options={MODELS_VISION} />
       </Field>
       <Field label="Image URL">
-        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" nodeId={nodeId} />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function GenerateImageFields({ config, updateConfig }) {
+function GenerateImageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'dall-e-3'} onChange={(v) => updateConfig('model', v)} options={MODELS_IMAGE} />
       </Field>
       <Field label="Image description">
-        <SmartVariableInput value={config.imagePrompt || ''} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="A photorealistic cat in a spacesuit..." multiline />
+        <SmartVariableInput value={config.imagePrompt || ''} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="A photorealistic cat in a spacesuit..." multiline nodeId={nodeId} />
       </Field>
       <Field label="Size">
         <Select value={config.imageSize || '1024x1024'} onChange={(v) => updateConfig('imageSize', v)} options={IMAGE_SIZES} />
@@ -191,64 +191,64 @@ function GenerateImageFields({ config, updateConfig }) {
   );
 }
 
-function TranscribeAudioFields({ config, updateConfig }) {
+function TranscribeAudioFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Audio URL">
-        <SmartVariableInput value={config.audioUrl || ''} onChange={(v) => updateConfig('audioUrl', v)} placeholder="https://... mp3/mp4/m4a/wav/webm" />
+        <SmartVariableInput value={config.audioUrl || ''} onChange={(v) => updateConfig('audioUrl', v)} placeholder="https://... mp3/mp4/m4a/wav/webm" nodeId={nodeId} />
       </Field>
       <Field label="Language (optional)">
-        <SmartVariableInput value={config.language || ''} onChange={(v) => updateConfig('language', v)} placeholder="en  (leave blank for auto-detect)" />
+        <SmartVariableInput value={config.language || ''} onChange={(v) => updateConfig('language', v)} placeholder="en  (leave blank for auto-detect)" nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function AnalyzeDocumentFields({ config, updateConfig }) {
+function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline nodeId={nodeId} />
       </Field>
       <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank to use previous node output" multiline />
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank to use previous node output" multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function ModerateContentFields({ config, updateConfig }) {
+function ModerateContentFields({ config, updateConfig, nodeId }) {
   return (
     <Field label="Text to moderate">
-      <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly..." multiline />
+      <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly..." multiline nodeId={nodeId} />
     </Field>
   );
 }
 
-function GeneratePromptFields({ config, updateConfig }) {
+function GeneratePromptFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
       </Field>
       <Field label="Task description">
-        <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by priority..." multiline />
+        <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by priority..." multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function ImprovePromptFields({ config, updateConfig }) {
+function ImprovePromptFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
       </Field>
       <Field label="Prompt to improve">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline nodeId={nodeId} />
       </Field>
     </>
   );
@@ -267,7 +267,7 @@ const OP_FIELDS = {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export default function OpenAINode({ config = {}, updateConfig }) {
+export default function OpenAINode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'message';
   const OpFields = OP_FIELDS[operation] || MessageFields;
   const needsCredential = operation !== 'generateImage' || true; // all ops need key
@@ -281,7 +281,7 @@ export default function OpenAINode({ config = {}, updateConfig }) {
       <div className="border-t border-[#222]" />
 
       {/* Operation-specific fields */}
-      <OpFields config={config} updateConfig={updateConfig} />
+      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
 
       {/* Credential — always shown */}
       <CredentialPicker

@@ -20,7 +20,7 @@ const OPERATORS = [
 
 const NO_RIGHT = new Set(["isEmpty", "isNotEmpty", "exists", "notExists"]);
 
-export default function LoopNode({ config = {}, updateConfig }) {
+export default function LoopNode({ config = {}, updateConfig, nodeId }) {
   const arrayPath = config.arrayPath || "";
   const maxIterations = config.maxIterations || 1000;
   const breakCondition = config.breakCondition || null;
@@ -68,6 +68,7 @@ export default function LoopNode({ config = {}, updateConfig }) {
           value={arrayPath}
           onChange={(val) => updateConfig("arrayPath", val)}
           placeholder="e.g. data.items or users"
+          nodeId={nodeId}
         />
         <p className="text-[10px] text-zinc-600 leading-relaxed">
           Dot-path to the array. Leave blank to loop over the entire input.
@@ -108,6 +109,7 @@ export default function LoopNode({ config = {}, updateConfig }) {
                 value={bc.left}
                 onChange={(v) => updateBreak("left", v)}
                 placeholder="{{ field }}"
+                nodeId={nodeId}
               />
               <select
                 value={bc.operator}
@@ -121,6 +123,7 @@ export default function LoopNode({ config = {}, updateConfig }) {
                   value={bc.right}
                   onChange={(v) => updateBreak("right", v)}
                   placeholder="value"
+                  nodeId={nodeId}
                 />
               ) : (
                 <div className="text-[10px] text-zinc-600 italic px-1">—</div>

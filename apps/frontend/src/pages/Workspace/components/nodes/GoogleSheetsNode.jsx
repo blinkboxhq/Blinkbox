@@ -19,7 +19,7 @@ const OPERATIONS = [
   { value: 'getSheet',   label: 'Get Metadata', icon: Settings2 },
 ];
 
-export default function GoogleSheetsNode({ config = {}, updateConfig }) {
+export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'readRange';
   const needsRange = operation !== 'getSheet';
   const needsValues = ['writeRange', 'appendRow'].includes(operation);
@@ -77,6 +77,7 @@ export default function GoogleSheetsNode({ config = {}, updateConfig }) {
             value={config.range || ''}
             onChange={(val) => updateConfig('range', val)}
             placeholder={operation === 'appendRow' ? 'Sheet1!A:Z' : 'Sheet1!A1:D10'}
+            nodeId={nodeId}
           />
           <p className="text-[10px] text-zinc-600">A1 notation — e.g. Sheet1!A1:D10</p>
         </div>
@@ -93,6 +94,7 @@ export default function GoogleSheetsNode({ config = {}, updateConfig }) {
             onChange={(val) => { try { updateConfig('values', JSON.parse(val)); } catch { updateConfig('values', val); } }}
             placeholder={operation === 'appendRow' ? '["Alice", "alice@example.com", 42]' : '[["Name","Email"],["Alice","alice@example.com"]]'}
             multiline
+            nodeId={nodeId}
           />
           <div className="flex items-center gap-2 mt-1">
             <button

@@ -1,7 +1,7 @@
 import { Table2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function BankStatementParserNode({ config = {}, updateConfig }) {
+export default function BankStatementParserNode({ config = {}, updateConfig, nodeId }) {
   const csvData     = config.csvData     ?? '';
   const bank        = config.bank        ?? 'auto';
   const dateFormat  = config.dateFormat  ?? 'auto';
@@ -40,7 +40,7 @@ export default function BankStatementParserNode({ config = {}, updateConfig }) {
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">CSV Data</label>
         <SmartVariableInput value={csvData} onChange={(v) => updateConfig('csvData', v)}
-          placeholder="{{ $json.csvContent }}  (raw CSV string or URL)" multiline />
+          placeholder="{{ $json.csvContent }}  (raw CSV string or URL)" multiline nodeId={nodeId} />
       </div>
 
       <div>

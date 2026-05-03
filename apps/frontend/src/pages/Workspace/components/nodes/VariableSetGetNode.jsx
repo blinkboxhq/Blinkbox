@@ -1,7 +1,7 @@
 import { ToggleLeft } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function VariableSetGetNode({ config = {}, updateConfig }) {
+export default function VariableSetGetNode({ config = {}, updateConfig, nodeId }) {
   const mode    = config.mode    ?? 'set'; // set | get | delete | list
   const key     = config.key     ?? '';
   const value   = config.value   ?? '';
@@ -53,7 +53,7 @@ export default function VariableSetGetNode({ config = {}, updateConfig }) {
       {mode !== 'list' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Variable Key</label>
-          <SmartVariableInput value={key} onChange={(v) => updateConfig('key', v)} placeholder='userCount  or  {{ $json.varName }}' />
+          <SmartVariableInput value={key} onChange={(v) => updateConfig('key', v)} placeholder='userCount  or  {{ $json.varName }}' nodeId={nodeId} />
         </div>
       )}
 
@@ -61,7 +61,7 @@ export default function VariableSetGetNode({ config = {}, updateConfig }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Value</label>
-            <SmartVariableInput value={value} onChange={(v) => updateConfig('value', v)} placeholder='{{ $json.result }}  or  "hello"  or  42' multiline />
+            <SmartVariableInput value={value} onChange={(v) => updateConfig('value', v)} placeholder='{{ $json.result }}  or  "hello"  or  42' multiline nodeId={nodeId} />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">TTL in seconds (0 = no expiry)</label>
@@ -74,7 +74,7 @@ export default function VariableSetGetNode({ config = {}, updateConfig }) {
       {mode === 'get' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Default Value (if not found)</label>
-          <SmartVariableInput value={defaultVal} onChange={(v) => updateConfig('defaultVal', v)} placeholder='null  or  0  or  ""' />
+          <SmartVariableInput value={defaultVal} onChange={(v) => updateConfig('defaultVal', v)} placeholder='null  or  0  or  ""' nodeId={nodeId} />
         </div>
       )}
 
