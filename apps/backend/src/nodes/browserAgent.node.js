@@ -9,7 +9,6 @@
  *   type       — type into a selector
  *   extract    — extract text from matching elements
  *   screenshot — capture page as base64 PNG
- *   script     — run arbitrary JS on the page
  *   ai_goal    — autonomous AI-driven navigation toward a goal
  *
  * The ai_goal operation is unique: it screenshots the page, reads the DOM,
@@ -123,7 +122,6 @@ export default {
       operation = "navigate",
       selector,
       value,
-      script,
       goal,
       provider = "openai",
       model,
@@ -225,12 +223,12 @@ export default {
     }
 
     // Non-AI operations — use browserCluster for browser ops
-    if (["navigate", "click", "type", "extract", "screenshot", "script"].includes(operation)) {
-      if (!url && operation !== "click" && operation !== "type" && operation !== "extract" && operation !== "screenshot" && operation !== "script") {
+    if (["navigate", "click", "type", "extract", "screenshot"].includes(operation)) {
+      if (!url && operation !== "click" && operation !== "type" && operation !== "extract" && operation !== "screenshot") {
         throw new Error("Browser Agent: 'url' is required.");
       }
 
-      return browserCluster.execute({ url, selector, value, script, waitFor, operation, pageTimeout }, async ({ page, data }) => {
+      return browserCluster.execute({ url, selector, value, waitFor, operation, pageTimeout }, async ({ page, data }) => {
         await page.setViewport({ width: 1280, height: 800 });
         await page.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36");
 
@@ -266,12 +264,6 @@ export default {
         if (data.operation === "screenshot") {
           const shot = await page.screenshot({ encoding: "base64" });
           return { screenshot: `data:image/png;base64,${shot}`, url: page.url(), title: await page.title() };
-        }
-
-        if (data.operation === "script") {
-          if (!data.script) throw new Error("Browser Agent: 'script' is required for script operation.");
-          const result = await page.evaluate(new Function(`return (async () => { ${data.script} })()`));
-          return { result, url: page.url() };
         }
 
         throw new Error(`Browser Agent: unknown operation "${data.operation}"`);

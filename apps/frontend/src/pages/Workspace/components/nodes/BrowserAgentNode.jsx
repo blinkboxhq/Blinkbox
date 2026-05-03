@@ -6,7 +6,6 @@ const OPERATIONS = [
   { id: "type", label: "Type" },
   { id: "extract", label: "Extract" },
   { id: "screenshot", label: "Screenshot" },
-  { id: "script", label: "Run Script" },
   { id: "ai_goal", label: "✨ AI Goal" },
 ];
 
@@ -14,7 +13,6 @@ const AI_GOAL_OP = "ai_goal";
 const NEEDS_URL = ["navigate", "ai_goal"];
 const NEEDS_SELECTOR = ["click", "type", "extract"];
 const NEEDS_VALUE = ["type"];
-const NEEDS_SCRIPT = ["script"];
 
 export default function BrowserAgentNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "navigate";
@@ -94,19 +92,6 @@ export default function BrowserAgentNode({ config = {}, updateConfig, nodeId }) 
             value={config.value || ""}
             onChange={(v) => updateConfig("value", v)}
             placeholder="{{upstream.email}} or hello@example.com"
-            nodeId={nodeId}
-          />
-        </div>
-      )}
-
-      {NEEDS_SCRIPT.includes(operation) && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">JavaScript to Execute</label>
-          <SmartVariableInput
-            value={config.script || ""}
-            onChange={(v) => updateConfig("script", v)}
-            placeholder={"return document.title;"}
-            multiline
             nodeId={nodeId}
           />
         </div>
