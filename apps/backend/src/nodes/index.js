@@ -169,6 +169,13 @@ import teams from "./integrations/teams.node.js";
 import onedrive from "./integrations/onedrive.node.js";
 import netlify from "./integrations/netlify.node.js";
 import vercel from "./integrations/vercel.node.js";
+import monday from "./integrations/monday.node.js";
+import pagerduty from "./integrations/pagerduty.node.js";
+import pipedrive from "./integrations/pipedrive.node.js";
+import youtube from "./integrations/youtube.node.js";
+import intercom from "./integrations/intercom.node.js";
+import woocommerce from "./integrations/woocommerce.node.js";
+import calendly from "./integrations/calendly.node.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
@@ -485,6 +492,13 @@ export const nodeRegistry = {
   onedrive: onedrive,
   netlify: netlify,
   vercel: vercel,
+  monday: monday,
+  pagerduty: pagerduty,
+  pipedrive: pipedrive,
+  youtube: youtube,
+  intercom: intercom,
+  woocommerce: woocommerce,
+  calendly: calendly,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,
