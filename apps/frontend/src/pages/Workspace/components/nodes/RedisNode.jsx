@@ -1,3 +1,4 @@
+import { Database } from 'lucide-react';
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
@@ -34,9 +35,14 @@ export default function RedisNode({ config = {}, updateConfig, nodeId, nodes, ed
 
   return (
     <div className="flex flex-col gap-5 w-full">
-      <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20">
-        <span className="text-sm font-bold text-red-400">Redis</span>
-        <p className="text-[10px] text-zinc-500 mt-0.5">In-memory key-value store — cache, queues, pub/sub</p>
+      <div className="flex items-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-[#DC382D]/10 border border-[#DC382D]/20 flex items-center justify-center shrink-0">
+          <Database className="w-4 h-4 text-[#DC382D]" />
+        </div>
+        <div>
+          <span className="text-sm font-bold text-red-400">Redis</span>
+          <p className="text-[10px] text-zinc-500 mt-0.5">In-memory key-value store — cache, queues, pub/sub</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

@@ -1,3 +1,4 @@
+import { Database } from 'lucide-react';
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
@@ -25,9 +26,14 @@ export default function MongoDBNode({ config = {}, updateConfig, nodeId, nodes, 
 
   return (
     <div className="flex flex-col gap-5 w-full">
-      <div className="p-3 rounded-xl bg-green-500/5 border border-green-500/20">
-        <span className="text-sm font-bold text-green-400">MongoDB</span>
-        <p className="text-[10px] text-zinc-500 mt-0.5">Document database — query, insert, update, aggregate</p>
+      <div className="flex items-center gap-3 p-4 bg-green-500/5 border border-green-500/20 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-[#47A248]/10 border border-[#47A248]/20 flex items-center justify-center shrink-0">
+          <Database className="w-4 h-4 text-[#47A248]" />
+        </div>
+        <div>
+          <span className="text-sm font-bold text-green-400">MongoDB</span>
+          <p className="text-[10px] text-zinc-500 mt-0.5">Document database — query, insert, update, aggregate</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
