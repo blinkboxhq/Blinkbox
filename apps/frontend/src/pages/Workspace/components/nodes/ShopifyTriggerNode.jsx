@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const SHOPIFY_TOPICS = [
   { group: 'Orders',
@@ -99,11 +100,11 @@ export default function ShopifyTriggerNode({ config = {}, updateConfig, nodeId }
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Webhook Secret</label>
-              <input type="password" value={config.shopifyWebhookSecret || ''}
-                onChange={(e) => updateConfig?.('shopifyWebhookSecret', e.target.value)}
-                placeholder="From Shopify Notifications settings"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#95BF47]/50 transition-colors"
+              <CredentialPicker
+                label="Webhook Secret"
+                value={config.shopifyWebhookSecret || ''}
+                onChange={(v) => updateConfig?.('shopifyWebhookSecret', v)}
+                placeholder="Select webhook secret credential…"
               />
               <p className="text-[9px] text-zinc-600">BlinkBox verifies <span className="font-mono text-zinc-500">X-Shopify-Hmac-Sha256</span> (base64 SHA-256 HMAC).</p>
             </div>

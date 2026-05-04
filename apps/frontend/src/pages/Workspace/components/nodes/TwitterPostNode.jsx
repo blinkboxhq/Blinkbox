@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function TwitterPostNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'tweet'; // tweet | thread | reply | quote
@@ -109,22 +110,12 @@ export default function TwitterPostNode({ config = {}, updateConfig, nodeId }) {
       </div>
 
       <div className="border-t border-zinc-800 pt-3">
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 block">API v2 Credentials</label>
-        <div className="flex flex-col gap-2">
-          {[
-            { key: 'apiKey',       label: 'API Key',           ph: 'Consumer Key' },
-            { key: 'apiSecret',    label: 'API Secret',        ph: 'Consumer Secret' },
-            { key: 'accessToken',  label: 'Access Token',      ph: 'OAuth Access Token' },
-            { key: 'accessSecret', label: 'Access Token Secret', ph: 'OAuth Access Secret' },
-          ].map(({ key, label, ph }) => (
-            <div key={key}>
-              <label className="text-[10px] text-zinc-600 mb-1 block">{label}</label>
-              <input type="password" value={config[key] ?? ''} onChange={(e) => updateConfig(key, e.target.value)}
-                placeholder={ph}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-            </div>
-          ))}
-        </div>
+        <CredentialPicker
+          label="Twitter API Keys (stored as credential)"
+          value={config.credentialId ?? ''}
+          onChange={(v) => updateConfig('credentialId', v)}
+          placeholder="Select Twitter API credential…"
+        />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

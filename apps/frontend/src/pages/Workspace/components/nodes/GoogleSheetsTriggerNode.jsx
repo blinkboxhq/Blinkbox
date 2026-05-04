@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const INTERVALS = [
   { label: 'Every 1 min', value: '1' }, { label: 'Every 5 min', value: '5' },
@@ -21,10 +22,12 @@ export default function GoogleSheetsTriggerNode({ config = {}, updateConfig, nod
           <SmartVariableInput value={config.range || 'Sheet1'} onChange={(v) => updateConfig?.('range', v)} placeholder="Sheet1 or Sheet1!A:Z" />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Access Token</label>
-          <input type="password" value={config.accessToken || ''} onChange={(e) => updateConfig?.('accessToken', e.target.value)}
-            placeholder="Google OAuth access token"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#34A853]/50" />
+          <CredentialPicker
+            label="Google OAuth Access Token"
+            value={config.accessToken || ''}
+            onChange={(v) => updateConfig?.('accessToken', v)}
+            placeholder="Select Google credential…"
+          />
         </div>
         <div className="flex items-center justify-between p-2 bg-[#111] border border-[#1e1e1e] rounded-lg">
           <span className="text-[10px] text-zinc-300">First row is header</span>

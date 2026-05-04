@@ -3,6 +3,7 @@ import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
 import imgSlack from '../../../../assets/slack.png';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const SLACK_EVENTS = [
   { value: 'message',             label: 'New Message',        desc: 'Any message posted in a channel' },
@@ -69,21 +70,21 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Signing Secret</label>
-              <input type="password" value={config.slackSigningSecret || ''}
-                onChange={(e) => updateConfig?.('slackSigningSecret', e.target.value)}
-                placeholder="From Slack App → Basic Information"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#E01E5A]/50 transition-colors"
+              <CredentialPicker
+                label="Signing Secret"
+                value={config.slackSigningSecret || ''}
+                onChange={(v) => updateConfig?.('slackSigningSecret', v)}
+                placeholder="Select signing secret credential…"
               />
               <p className="text-[9px] text-zinc-600">BlinkBox verifies the <span className="font-mono text-zinc-500">X-Slack-Signature</span> header on every request.</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Bot OAuth Token (optional)</label>
-              <input type="password" value={config.botToken || ''}
-                onChange={(e) => updateConfig?.('botToken', e.target.value)}
-                placeholder="xoxb-… (for sending replies)"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#E01E5A]/50 transition-colors"
+              <CredentialPicker
+                label="Bot OAuth Token (optional)"
+                value={config.botToken || ''}
+                onChange={(v) => updateConfig?.('botToken', v)}
+                placeholder="Select bot token credential…"
               />
             </div>
 

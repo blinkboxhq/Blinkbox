@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const OBJECT_TYPES = [
   { value: 'contacts', label: 'Contacts' },
@@ -45,11 +46,11 @@ export default function HubSpotTriggerNode({ config = {}, updateConfig, nodeId }
         {activeTab === 'setup' && (
           <>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Private App Token</label>
-              <input type="password" value={config.apiKey || ''}
-                onChange={(e) => updateConfig?.('apiKey', e.target.value)}
-                placeholder="pat-na1-…"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#FF7A59]/50 transition-colors"
+              <CredentialPicker
+                label="Private App Token"
+                value={config.apiKey || ''}
+                onChange={(v) => updateConfig?.('apiKey', v)}
+                placeholder="Select HubSpot token credential…"
               />
               <p className="text-[9px] text-zinc-600">From HubSpot → Settings → Integrations → Private Apps.</p>
             </div>

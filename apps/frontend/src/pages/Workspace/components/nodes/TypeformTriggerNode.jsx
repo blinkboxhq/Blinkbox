@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId }) {
   const { id: automationId } = useParams();
@@ -60,21 +61,21 @@ export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId 
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Webhook Secret</label>
-              <input type="password" value={config.typeformWebhookSecret || ''}
-                onChange={(e) => updateConfig?.('typeformWebhookSecret', e.target.value)}
-                placeholder="Set in Typeform webhook settings"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-zinc-500/50 transition-colors"
+              <CredentialPicker
+                label="Webhook Secret"
+                value={config.typeformWebhookSecret || ''}
+                onChange={(v) => updateConfig?.('typeformWebhookSecret', v)}
+                placeholder="Select webhook secret credential…"
               />
               <p className="text-[9px] text-zinc-600">BlinkBox verifies <span className="font-mono text-zinc-500">Typeform-Signature</span> (sha256=base64 HMAC).</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Personal Access Token (optional)</label>
-              <input type="password" value={config.apiKey || ''}
-                onChange={(e) => updateConfig?.('apiKey', e.target.value)}
-                placeholder="For auto-registering the webhook"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-zinc-500/50 transition-colors"
+              <CredentialPicker
+                label="Personal Access Token (optional)"
+                value={config.apiKey || ''}
+                onChange={(v) => updateConfig?.('apiKey', v)}
+                placeholder="Select personal access token credential…"
               />
             </div>
           </>
