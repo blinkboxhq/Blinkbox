@@ -25,7 +25,7 @@ function hashDedup(message, channels) {
 }
 
 async function getToken(credentialId, workspaceId, label) {
-  if (!credentialId) throw new Error(`${label}: credentialId is required`);
+  if (!credentialId) return { success: false, error: `${label}: credentialId is required — configure this field.`, skipped: true };
   const cred = await resolveCredential(credentialId, workspaceId, label);
   return decrypt(cred.encryptedData, cred.iv, cred.authTag);
 }
@@ -44,7 +44,7 @@ async function sendSlack(ch, message, workspaceId) {
 async function sendTelegram(ch, message, workspaceId) {
   const token = await getToken(ch.credentialId, workspaceId, "Telegram");
   const chatId = ch.chatId;
-  if (!chatId) throw new Error("Telegram: chatId is required");
+  if (!chatId) return { success: false, error: "Telegram: chatId is required — configure this field.", skipped: true };
   await axios.post(
     `https://api.telegram.org/bot${token}/sendMessage`,
     { chat_id: chatId, text: message, parse_mode: "Markdown" },
@@ -132,14 +132,14 @@ export default {
     } = config;
 
     const message = config.message ?? input?.message ?? (typeof input === "string" ? input : "");
-    if (!message) throw new Error("Notification Hub: 'message' is required.");
+    if (!message) return { success: false, error: "Notification Hub: 'message' is required — configure this field.", skipped: true };
 
     const subject = config.subject ?? input?.subject ?? "";
     const channels = (config.channels || []).filter((ch) => ch.enabled !== false && ch.type);
     const fallbackChannels = (config.fallbackChannels || []).filter((ch) => ch.enabled !== false && ch.type);
     const workspaceId = context.workspaceId;
 
-    if (channels.length === 0) throw new Error("Notification Hub: at least one channel is required.");
+    if (channels.length === 0) return { success: false, error: "Notification Hub: at least one channel is required — configure this field.", skipped: true };
 
     // Deduplication
     if (parseInt(dedupeWindowSeconds) > 0) {

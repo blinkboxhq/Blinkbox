@@ -74,7 +74,7 @@ export default {
         }
 
         case "getCustomer": {
-          if (!config.customerId) throw new Error("Stripe getCustomer: 'customerId' is required.");
+          if (!config.customerId) return { success: false, error: "Stripe getCustomer: 'customerId' is required — configure this field.", skipped: true };
           const res = await stripeReq("GET", `/customers/${config.customerId}`, null, apiKey);
           return { id: res.data.id, email: res.data.email, name: res.data.name, balance: res.data.balance, currency: res.data.currency };
         }
@@ -85,14 +85,14 @@ export default {
         }
 
         case "createPaymentIntent": {
-          if (!config.amount) throw new Error("Stripe createPaymentIntent: 'amount' (in cents) is required.");
-          if (!config.currency) throw new Error("Stripe createPaymentIntent: 'currency' is required.");
+          if (!config.amount) return { success: false, error: "Stripe createPaymentIntent: 'amount' (in cents) is required — configure this field.", skipped: true };
+          if (!config.currency) return { success: false, error: "Stripe createPaymentIntent: 'currency' is required — configure this field.", skipped: true };
           const res = await stripeReq("POST", "/payment_intents", { amount: config.amount, currency: config.currency, customer: config.customerId, description: config.description, metadata: config.metadata }, apiKey);
           return { id: res.data.id, status: res.data.status, amount: res.data.amount, currency: res.data.currency, clientSecret: res.data.client_secret };
         }
 
         case "getPaymentIntent": {
-          if (!config.paymentIntentId) throw new Error("Stripe getPaymentIntent: 'paymentIntentId' is required.");
+          if (!config.paymentIntentId) return { success: false, error: "Stripe getPaymentIntent: 'paymentIntentId' is required — configure this field.", skipped: true };
           const res = await stripeReq("GET", `/payment_intents/${config.paymentIntentId}`, null, apiKey);
           return { id: res.data.id, status: res.data.status, amount: res.data.amount, currency: res.data.currency, customer: res.data.customer };
         }
@@ -113,13 +113,13 @@ export default {
         }
 
         case "createProduct": {
-          if (!config.name) throw new Error("Stripe createProduct: 'name' is required.");
+          if (!config.name) return { success: false, error: "Stripe createProduct: 'name' is required — configure this field.", skipped: true };
           const res = await stripeReq("POST", "/products", { name: config.name, description: config.description }, apiKey);
           return { id: res.data.id, name: res.data.name, active: res.data.active };
         }
 
         case "createPrice": {
-          if (!config.productId || !config.unitAmount || !config.currency) throw new Error("Stripe createPrice: 'productId', 'unitAmount', 'currency' are required.");
+          if (!config.productId || !config.unitAmount || !config.currency) return { success: false, error: "Stripe createPrice: 'productId', 'unitAmount', 'currency' are required — configure these fields.", skipped: true };
           const res = await stripeReq("POST", "/prices", { product: config.productId, unit_amount: config.unitAmount, currency: config.currency, recurring: config.interval ? { interval: config.interval } : undefined }, apiKey);
           return { id: res.data.id, unitAmount: res.data.unit_amount, currency: res.data.currency, type: res.data.type };
         }

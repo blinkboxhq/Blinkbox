@@ -59,7 +59,7 @@ export default {
         return { user };
       }
 
-      if (!table) throw new Error("Supabase: 'table' is required.");
+      if (!table) return { success: false, error: "Supabase: 'table' is required — configure this field.", skipped: true };
 
       if (operation === "select") {
         let q = supabase.from(table).select(column || "*").limit(Number(limit));
@@ -79,7 +79,7 @@ export default {
       }
 
       if (operation === "update") {
-        if (!filter || filterValue === undefined) throw new Error("Supabase update: 'filter' (column) and 'filterValue' are required.");
+        if (!filter || filterValue === undefined) return { success: false, error: "Supabase update: 'filter' (column) and 'filterValue' are required — configure this field.", skipped: true };
         let payload = data;
         if (typeof payload === "string") { try { payload = JSON.parse(payload); } catch {} }
         const { data: result, error } = await supabase.from(table).update(payload).eq(filter, filterValue).select();
@@ -98,7 +98,7 @@ export default {
       }
 
       if (operation === "delete") {
-        if (!filter || filterValue === undefined) throw new Error("Supabase delete: 'filter' (column) and 'filterValue' are required.");
+        if (!filter || filterValue === undefined) return { success: false, error: "Supabase delete: 'filter' (column) and 'filterValue' are required — configure this field.", skipped: true };
         const { data: result, error } = await supabase.from(table).delete().eq(filter, filterValue).select();
         if (error) throw error;
         return { deleted: result, count: result?.length ?? 0, table };

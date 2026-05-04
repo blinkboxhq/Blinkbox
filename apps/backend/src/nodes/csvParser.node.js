@@ -68,7 +68,7 @@ export default {
 
     if (mode === "toJson") {
       const csvText = config.csv ?? (typeof input === "string" ? input : input?.csv ?? "");
-      if (!csvText) throw new Error("CSV Parser: 'csv' input is required for toJson mode.");
+      if (!csvText) return { success: false, error: "CSV Parser: 'csv' input is required for toJson mode — configure this field.", skipped: true };
       const rows = parseCSV(String(csvText), delimiter, hasHeader);
       return { [outputKey]: rows, count: rows.length };
     }

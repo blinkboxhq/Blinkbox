@@ -44,10 +44,10 @@ function parseAddress(addr) {
 }
 
 async function opSendEmail(config, token) {
-  if (!config.to) throw new Error("SendGrid sendEmail: 'to' is required.");
-  if (!config.from) throw new Error("SendGrid sendEmail: 'from' is required.");
-  if (!config.subject) throw new Error("SendGrid sendEmail: 'subject' is required.");
-  if (!config.body && !config.html) throw new Error("SendGrid sendEmail: 'body' or 'html' is required.");
+  if (!config.to) return { success: false, error: "SendGrid sendEmail: 'to' is required — configure this field.", skipped: true };
+  if (!config.from) return { success: false, error: "SendGrid sendEmail: 'from' is required — configure this field.", skipped: true };
+  if (!config.subject) return { success: false, error: "SendGrid sendEmail: 'subject' is required — configure this field.", skipped: true };
+  if (!config.body && !config.html) return { success: false, error: "SendGrid sendEmail: 'body' or 'html' is required — configure this field.", skipped: true };
 
   const toList = String(config.to).split(",").map((a) => parseAddress(a.trim()));
   const payload = {
@@ -66,9 +66,9 @@ async function opSendEmail(config, token) {
 }
 
 async function opSendTemplate(config, token) {
-  if (!config.to) throw new Error("SendGrid sendTemplate: 'to' is required.");
-  if (!config.from) throw new Error("SendGrid sendTemplate: 'from' is required.");
-  if (!config.templateId) throw new Error("SendGrid sendTemplate: 'templateId' is required.");
+  if (!config.to) return { success: false, error: "SendGrid sendTemplate: 'to' is required — configure this field.", skipped: true };
+  if (!config.from) return { success: false, error: "SendGrid sendTemplate: 'from' is required — configure this field.", skipped: true };
+  if (!config.templateId) return { success: false, error: "SendGrid sendTemplate: 'templateId' is required — configure this field.", skipped: true };
 
   const toList = String(config.to).split(",").map((a) => parseAddress(a.trim()));
   const dynamicData = typeof config.dynamicData === "string" ? JSON.parse(config.dynamicData) : (config.dynamicData || {});
@@ -88,10 +88,10 @@ async function opSendBulk(config, token) {
   // config.recipients: array of { email, name?, data? } or JSON string
   const recipients = typeof config.recipients === "string" ? JSON.parse(config.recipients) : config.recipients;
   if (!Array.isArray(recipients) || recipients.length === 0)
-    throw new Error("SendGrid sendBulk: 'recipients' must be a non-empty array of { email, name?, data? }.");
-  if (!config.from) throw new Error("SendGrid sendBulk: 'from' is required.");
-  if (!config.subject) throw new Error("SendGrid sendBulk: 'subject' is required.");
-  if (!config.body && !config.html && !config.templateId) throw new Error("SendGrid sendBulk: 'body', 'html', or 'templateId' is required.");
+    return { success: false, error: "SendGrid sendBulk: 'recipients' must be a non-empty array of { email, name?, data? } — configure this field.", skipped: true };
+  if (!config.from) return { success: false, error: "SendGrid sendBulk: 'from' is required — configure this field.", skipped: true };
+  if (!config.subject) return { success: false, error: "SendGrid sendBulk: 'subject' is required — configure this field.", skipped: true };
+  if (!config.body && !config.html && !config.templateId) return { success: false, error: "SendGrid sendBulk: 'body', 'html', or 'templateId' is required — configure this field.", skipped: true };
 
   const personalizations = recipients.map((r) => ({
     to: [{ email: r.email, name: r.name }],
@@ -117,7 +117,7 @@ async function opSendBulk(config, token) {
 }
 
 async function opAddContact(config, token) {
-  if (!config.email) throw new Error("SendGrid addContact: 'email' is required.");
+  if (!config.email) return { success: false, error: "SendGrid addContact: 'email' is required — configure this field.", skipped: true };
   const contact = { email: config.email };
   if (config.firstName) contact.first_name = config.firstName;
   if (config.lastName) contact.last_name = config.lastName;

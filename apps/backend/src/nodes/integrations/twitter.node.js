@@ -45,7 +45,7 @@ export default {
     try {
       switch (operation) {
         case "postTweet": {
-          if (!config.text) throw new Error("Twitter postTweet: 'text' is required.");
+          if (!config.text) return { success: false, error: "Twitter postTweet: 'text' is required — configure this field.", skipped: true };
           const body = { text: config.text };
           if (config.replyToId) body.reply = { in_reply_to_tweet_id: config.replyToId };
           const res = await axios.post(`${BASE}/tweets`, body, { headers, timeout: 15000 });
@@ -53,19 +53,19 @@ export default {
         }
 
         case "replyTweet": {
-          if (!config.text || !config.replyToId) throw new Error("Twitter replyTweet: 'text' and 'replyToId' are required.");
+          if (!config.text || !config.replyToId) return { success: false, error: "Twitter replyTweet: 'text' and 'replyToId' are required — configure this field.", skipped: true };
           const res = await axios.post(`${BASE}/tweets`, { text: config.text, reply: { in_reply_to_tweet_id: config.replyToId } }, { headers, timeout: 15000 });
           return { id: res.data.data.id, text: res.data.data.text };
         }
 
         case "deleteTweet": {
-          if (!config.tweetId) throw new Error("Twitter deleteTweet: 'tweetId' is required.");
+          if (!config.tweetId) return { success: false, error: "Twitter deleteTweet: 'tweetId' is required — configure this field.", skipped: true };
           const res = await axios.delete(`${BASE}/tweets/${config.tweetId}`, { headers, timeout: 15000 });
           return { deleted: res.data.data?.deleted ?? true, tweetId: config.tweetId };
         }
 
         case "searchTweets": {
-          if (!config.query) throw new Error("Twitter searchTweets: 'query' is required.");
+          if (!config.query) return { success: false, error: "Twitter searchTweets: 'query' is required — configure this field.", skipped: true };
           const res = await axios.get(`${BASE}/tweets/search/recent`, {
             headers, timeout: 15000,
             params: { query: config.query, max_results: Math.min(Math.max(10, Number(config.limit ?? 10)), 100), "tweet.fields": "created_at,author_id,public_metrics" },
@@ -74,7 +74,7 @@ export default {
         }
 
         case "getUserTweets": {
-          if (!config.userId) throw new Error("Twitter getUserTweets: 'userId' is required.");
+          if (!config.userId) return { success: false, error: "Twitter getUserTweets: 'userId' is required — configure this field.", skipped: true };
           const res = await axios.get(`${BASE}/users/${config.userId}/tweets`, {
             headers, timeout: 15000,
             params: { max_results: Math.min(Math.max(5, Number(config.limit ?? 10)), 100), "tweet.fields": "created_at,public_metrics", exclude: "retweets,replies" },
@@ -83,7 +83,7 @@ export default {
         }
 
         case "getUser": {
-          if (!config.username) throw new Error("Twitter getUser: 'username' is required.");
+          if (!config.username) return { success: false, error: "Twitter getUser: 'username' is required — configure this field.", skipped: true };
           const res = await axios.get(`${BASE}/users/by/username/${config.username}`, {
             headers, timeout: 15000,
             params: { "user.fields": "id,name,username,description,public_metrics,profile_image_url" },
@@ -93,7 +93,7 @@ export default {
         }
 
         case "likeTweet": {
-          if (!config.userId || !config.tweetId) throw new Error("Twitter likeTweet: 'userId' and 'tweetId' are required.");
+          if (!config.userId || !config.tweetId) return { success: false, error: "Twitter likeTweet: 'userId' and 'tweetId' are required — configure this field.", skipped: true };
           const res = await axios.post(`${BASE}/users/${config.userId}/likes`, { tweet_id: config.tweetId }, { headers, timeout: 15000 });
           return { liked: res.data.data?.liked ?? true };
         }

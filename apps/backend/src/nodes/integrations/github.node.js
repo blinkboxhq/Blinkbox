@@ -44,8 +44,8 @@ function handleError(err) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "listIssues", owner, repo } = config;
-    if (!owner) throw new Error("GitHub: 'owner' (GitHub username or org) is required.");
-    if (!repo && operation !== "getRepo") throw new Error("GitHub: 'repo' is required.");
+    if (!owner) return { success: false, error: "GitHub: 'owner' (GitHub username or org) is required — configure this field.", skipped: true };
+    if (!repo && operation !== "getRepo") return { success: false, error: "GitHub: 'repo' is required — configure this field.", skipped: true };
 
     const token = await getToken(config.credentialId, context.workspaceId);
     const h = headers(token);
@@ -54,7 +54,7 @@ export default {
       switch (operation) {
         case "createIssue": {
           const { title, body, labels, assignees } = config;
-          if (!title) throw new Error("GitHub createIssue: 'title' is required.");
+          if (!title) return { success: false, error: "GitHub createIssue: 'title' is required — configure this field.", skipped: true };
           const res = await axios.post(`${BASE}/repos/${owner}/${repo}/issues`, {
             title, body,
             labels: labels ? String(labels).split(",").map((l) => l.trim()) : undefined,
@@ -64,7 +64,7 @@ export default {
         }
 
         case "getIssue": {
-          if (!config.issueNumber) throw new Error("GitHub getIssue: 'issueNumber' is required.");
+          if (!config.issueNumber) return { success: false, error: "GitHub getIssue: 'issueNumber' is required — configure this field.", skipped: true };
           const res = await axios.get(`${BASE}/repos/${owner}/${repo}/issues/${config.issueNumber}`, { headers: h, timeout: 15000 });
           return { number: res.data.number, title: res.data.title, body: res.data.body, state: res.data.state, url: res.data.html_url, author: res.data.user?.login, labels: res.data.labels?.map((l) => l.name) };
         }
@@ -78,8 +78,8 @@ export default {
         }
 
         case "createComment": {
-          if (!config.issueNumber) throw new Error("GitHub createComment: 'issueNumber' is required.");
-          if (!config.body) throw new Error("GitHub createComment: 'body' is required.");
+          if (!config.issueNumber) return { success: false, error: "GitHub createComment: 'issueNumber' is required — configure this field.", skipped: true };
+          if (!config.body) return { success: false, error: "GitHub createComment: 'body' is required — configure this field.", skipped: true };
           const res = await axios.post(`${BASE}/repos/${owner}/${repo}/issues/${config.issueNumber}/comments`, { body: config.body }, { headers: h, timeout: 15000 });
           return { id: res.data.id, url: res.data.html_url, body: res.data.body };
         }

@@ -56,15 +56,15 @@ async function opPostMessage(config, token) {
     if (!/^https:\/\/hooks\.slack\.com\//.test(config.webhookUrl))
       throw new Error("Slack: Invalid webhook URL.");
     const text = config.message || config.text;
-    if (!text) throw new Error("Slack postMessage: 'text' is required.");
+    if (!text) return { success: false, error: "Slack postMessage: 'text' is required — configure this field.", skipped: true };
     await axios.post(config.webhookUrl, { text }, { timeout: 10000 });
     return { ok: true, ts: null, channel: null };
   }
 
   const channel = config.channel;
   const text = config.message || config.text;
-  if (!channel) throw new Error("Slack postMessage: 'channel' is required.");
-  if (!text) throw new Error("Slack postMessage: 'text' is required.");
+  if (!channel) return { success: false, error: "Slack postMessage: 'channel' is required — configure this field.", skipped: true };
+  if (!text) return { success: false, error: "Slack postMessage: 'text' is required — configure this field.", skipped: true };
 
   const payload = { channel, text, unfurl_links: config.unfurlLinks || false };
   if (config.username) payload.username = config.username;
@@ -76,7 +76,7 @@ async function opPostMessage(config, token) {
 
 async function opPostRichMessage(config, token) {
   const channel = config.channel;
-  if (!channel) throw new Error("Slack postRichMessage: 'channel' is required.");
+  if (!channel) return { success: false, error: "Slack postRichMessage: 'channel' is required — configure this field.", skipped: true };
 
   // blocks can be passed directly or assembled from simple fields
   let blocks = config.blocks;
@@ -109,7 +109,7 @@ async function opPostRichMessage(config, token) {
   }
 
   if (!blocks || blocks.length === 0)
-    throw new Error("Slack postRichMessage: 'blocks' or at least 'text'/'title' is required.");
+    return { success: false, error: "Slack postRichMessage: 'blocks' or at least 'text'/'title' is required — configure this field.", skipped: true };
 
   const payload = { channel, blocks, text: config.fallbackText || config.text || "New message" };
   const data = await slackCall(token, "chat.postMessage", payload);
@@ -119,8 +119,8 @@ async function opPostRichMessage(config, token) {
 async function opUploadFile(config, token) {
   const channel = config.channel;
   const content = config.content || config.text;
-  if (!channel) throw new Error("Slack uploadFile: 'channel' is required.");
-  if (!content) throw new Error("Slack uploadFile: 'content' is required.");
+  if (!channel) return { success: false, error: "Slack uploadFile: 'channel' is required — configure this field.", skipped: true };
+  if (!content) return { success: false, error: "Slack uploadFile: 'content' is required — configure this field.", skipped: true };
 
   const payload = {
     channels: channel,
@@ -135,7 +135,7 @@ async function opUploadFile(config, token) {
 
 async function opGetUser(config, token) {
   const email = config.email;
-  if (!email) throw new Error("Slack getUser: 'email' is required.");
+  if (!email) return { success: false, error: "Slack getUser: 'email' is required — configure this field.", skipped: true };
 
   const response = await axios.get(`${API}/users.lookupByEmail`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -160,7 +160,7 @@ async function opGetUser(config, token) {
 
 async function opCreateChannel(config, token) {
   const name = config.channelName || config.name;
-  if (!name) throw new Error("Slack createChannel: 'channelName' is required.");
+  if (!name) return { success: false, error: "Slack createChannel: 'channelName' is required — configure this field.", skipped: true };
 
   const payload = {
     name: name.replace(/[^a-z0-9-_]/gi, "-").toLowerCase(),
@@ -178,8 +178,8 @@ async function opCreateChannel(config, token) {
 async function opInviteToChannel(config, token) {
   const channel = config.channel;
   const users = config.userId || config.users;
-  if (!channel) throw new Error("Slack inviteToChannel: 'channel' is required.");
-  if (!users) throw new Error("Slack inviteToChannel: 'userId' is required.");
+  if (!channel) return { success: false, error: "Slack inviteToChannel: 'channel' is required — configure this field.", skipped: true };
+  if (!users) return { success: false, error: "Slack inviteToChannel: 'userId' is required — configure this field.", skipped: true };
 
   const data = await slackCall(token, "conversations.invite", {
     channel,
@@ -190,8 +190,8 @@ async function opInviteToChannel(config, token) {
 
 async function opSetTopic(config, token) {
   const channel = config.channel;
-  if (!channel) throw new Error("Slack setTopic: 'channel' is required.");
-  if (!config.topic) throw new Error("Slack setTopic: 'topic' is required.");
+  if (!channel) return { success: false, error: "Slack setTopic: 'channel' is required — configure this field.", skipped: true };
+  if (!config.topic) return { success: false, error: "Slack setTopic: 'topic' is required — configure this field.", skipped: true };
 
   const data = await slackCall(token, "conversations.setTopic", { channel, topic: config.topic });
   return { ok: true, topic: data.topic };
@@ -201,9 +201,9 @@ async function opAddReaction(config, token) {
   const channel = config.channel;
   const timestamp = config.timestamp || config.ts;
   const emoji = (config.emoji || "").replace(/:/g, "");
-  if (!channel) throw new Error("Slack addReaction: 'channel' is required.");
-  if (!timestamp) throw new Error("Slack addReaction: 'timestamp' (message ts) is required.");
-  if (!emoji) throw new Error("Slack addReaction: 'emoji' is required (e.g. 'thumbsup').");
+  if (!channel) return { success: false, error: "Slack addReaction: 'channel' is required — configure this field.", skipped: true };
+  if (!timestamp) return { success: false, error: "Slack addReaction: 'timestamp' (message ts) is required — configure this field.", skipped: true };
+  if (!emoji) return { success: false, error: "Slack addReaction: 'emoji' is required (e.g. 'thumbsup') — configure this field.", skipped: true };
 
   await slackCall(token, "reactions.add", { channel, timestamp, name: emoji });
   return { ok: true, emoji, channel, timestamp };

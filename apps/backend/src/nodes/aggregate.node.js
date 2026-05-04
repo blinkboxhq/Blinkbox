@@ -3,7 +3,7 @@ import { redis } from "../infra/redis.client.js";
 export default {
   async run(config, input) {
     const sessionId = config.sessionId;
-    if (!sessionId) throw new Error("Aggregate: 'sessionId' is required.");
+    if (!sessionId) return { success: false, error: "Aggregate: 'sessionId' is required — configure this field.", skipped: true };
 
     const expectedCount = parseInt(config.expectedCount);
     if (!expectedCount || expectedCount < 1) throw new Error("Aggregate: 'expectedCount' must be a positive number.");

@@ -8,7 +8,7 @@ export default {
     if (typeof schema === "string") {
       try { schema = JSON.parse(schema); } catch { throw new Error("JSON Validator: 'schema' is not valid JSON."); }
     }
-    if (!schema || typeof schema !== "object") throw new Error("JSON Validator: 'schema' is required.");
+    if (!schema || typeof schema !== "object") return { success: false, error: "JSON Validator: 'schema' is required — configure this field.", skipped: true };
 
     let data = config.data;
     if (typeof data === "string") {

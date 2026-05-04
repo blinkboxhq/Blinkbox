@@ -50,7 +50,7 @@ function stripId(id) {
 }
 
 async function opCreatePage(config, token) {
-  if (!config.parentId) throw new Error("Notion createPage: 'parentId' (database or page ID) is required.");
+  if (!config.parentId) return { success: false, error: "Notion createPage: 'parentId' (database or page ID) is required — configure this field.", skipped: true };
   const parentType = config.parentType === "page" ? "page_id" : "database_id";
   const body = {
     parent: { [parentType]: stripId(config.parentId) },
@@ -67,7 +67,7 @@ async function opCreatePage(config, token) {
 }
 
 async function opUpdatePage(config, token) {
-  if (!config.pageId) throw new Error("Notion updatePage: 'pageId' is required.");
+  if (!config.pageId) return { success: false, error: "Notion updatePage: 'pageId' is required — configure this field.", skipped: true };
   const properties = typeof config.properties === "string" ? JSON.parse(config.properties) : (config.properties || {});
   const body = { properties };
   if (config.archived !== undefined) body.archived = config.archived;
@@ -76,7 +76,7 @@ async function opUpdatePage(config, token) {
 }
 
 async function opQueryDatabase(config, token) {
-  if (!config.databaseId) throw new Error("Notion queryDatabase: 'databaseId' is required.");
+  if (!config.databaseId) return { success: false, error: "Notion queryDatabase: 'databaseId' is required — configure this field.", skipped: true };
   const body = {};
   if (config.filter) body.filter = typeof config.filter === "string" ? JSON.parse(config.filter) : config.filter;
   if (config.sorts) body.sorts = typeof config.sorts === "string" ? JSON.parse(config.sorts) : config.sorts;
@@ -95,7 +95,7 @@ async function opQueryDatabase(config, token) {
 }
 
 async function opGetPage(config, token) {
-  if (!config.pageId) throw new Error("Notion getPage: 'pageId' is required.");
+  if (!config.pageId) return { success: false, error: "Notion getPage: 'pageId' is required — configure this field.", skipped: true };
   const response = await axios.get(`${BASE}/pages/${stripId(config.pageId)}`, { headers: headers(token), timeout: 15000 });
   const page = response.data;
   // Extract plain title if present
@@ -105,8 +105,8 @@ async function opGetPage(config, token) {
 }
 
 async function opAppendBlock(config, token) {
-  if (!config.pageId) throw new Error("Notion appendBlock: 'pageId' is required.");
-  if (!config.content && !config.blocks) throw new Error("Notion appendBlock: 'content' or 'blocks' is required.");
+  if (!config.pageId) return { success: false, error: "Notion appendBlock: 'pageId' is required — configure this field.", skipped: true };
+  if (!config.content && !config.blocks) return { success: false, error: "Notion appendBlock: 'content' or 'blocks' is required — configure this field.", skipped: true };
 
   let children;
   if (config.blocks) {

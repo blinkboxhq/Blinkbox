@@ -40,7 +40,7 @@ function handleError(err) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "searchIssues", domain } = config;
-    if (!domain) throw new Error("Jira: 'domain' is required (e.g. mycompany.atlassian.net).");
+    if (!domain) return { success: false, error: "Jira: 'domain' is required (e.g. mycompany.atlassian.net) — configure this field.", skipped: true };
 
     const base64Auth = await getAuth(config.credentialId, context.workspaceId);
     const headers = { Authorization: `Basic ${base64Auth}`, "Content-Type": "application/json", Accept: "application/json" };
@@ -50,7 +50,7 @@ export default {
       switch (operation) {
         case "createIssue": {
           const { project, issueType = "Task", summary, description, assignee, priority } = config;
-          if (!project || !summary) throw new Error("Jira createIssue: 'project' key and 'summary' are required.");
+          if (!project || !summary) return { success: false, error: "Jira createIssue: 'project' key and 'summary' are required — configure this field.", skipped: true };
           const body = {
             fields: {
               project: { key: project },
@@ -66,14 +66,14 @@ export default {
         }
 
         case "getIssue": {
-          if (!config.issueKey) throw new Error("Jira getIssue: 'issueKey' (e.g. PROJ-123) is required.");
+          if (!config.issueKey) return { success: false, error: "Jira getIssue: 'issueKey' (e.g. PROJ-123) is required — configure this field.", skipped: true };
           const res = await axios.get(`${BASE}/issue/${config.issueKey}`, { headers, timeout: 15000 });
           const f = res.data.fields;
           return { id: res.data.id, key: res.data.key, summary: f.summary, status: f.status?.name, assignee: f.assignee?.displayName, priority: f.priority?.name, url: `https://${domain}/browse/${res.data.key}` };
         }
 
         case "updateIssue": {
-          if (!config.issueKey) throw new Error("Jira updateIssue: 'issueKey' is required.");
+          if (!config.issueKey) return { success: false, error: "Jira updateIssue: 'issueKey' is required — configure this field.", skipped: true };
           const fields = {};
           if (config.summary) fields.summary = config.summary;
           if (config.assignee) fields.assignee = { id: config.assignee };
@@ -84,13 +84,13 @@ export default {
         }
 
         case "transitionIssue": {
-          if (!config.issueKey || !config.transitionId) throw new Error("Jira transitionIssue: 'issueKey' and 'transitionId' are required.");
+          if (!config.issueKey || !config.transitionId) return { success: false, error: "Jira transitionIssue: 'issueKey' and 'transitionId' are required — configure this field.", skipped: true };
           await axios.post(`${BASE}/issue/${config.issueKey}/transitions`, { transition: { id: config.transitionId } }, { headers, timeout: 15000 });
           return { transitioned: true, issueKey: config.issueKey };
         }
 
         case "addComment": {
-          if (!config.issueKey || !config.comment) throw new Error("Jira addComment: 'issueKey' and 'comment' are required.");
+          if (!config.issueKey || !config.comment) return { success: false, error: "Jira addComment: 'issueKey' and 'comment' are required — configure this field.", skipped: true };
           const body = { body: { type: "doc", version: 1, content: [{ type: "paragraph", content: [{ type: "text", text: config.comment }] }] } };
           const res = await axios.post(`${BASE}/issue/${config.issueKey}/comment`, body, { headers, timeout: 15000 });
           return { id: res.data.id, created: res.data.created };

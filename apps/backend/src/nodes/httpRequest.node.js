@@ -62,7 +62,7 @@ export default {
       nodeId,
     } = config;
 
-    if (!url) throw new Error("HTTP Request: 'url' is required.");
+    if (!url) return { success: false, error: "HTTP Request: 'url' is required — configure this field.", skipped: true };
 
     // SSRF guard — block internal/cloud-metadata addresses
     function assertSafeUrl(rawUrl) {

@@ -83,7 +83,7 @@ async function opRead(config, token) {
 }
 
 async function opUpdate(config, token) {
-  if (!config.recordId) throw new Error("Airtable update: 'recordId' is required.");
+  if (!config.recordId) return { success: false, error: "Airtable update: 'recordId' is required — configure this field.", skipped: true };
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
   const response = await axios.patch(url,
     { fields: config.fields || {}, typecast: config.typecast !== false },
@@ -93,23 +93,23 @@ async function opUpdate(config, token) {
 }
 
 async function opDelete(config, token) {
-  if (!config.recordId) throw new Error("Airtable delete: 'recordId' is required.");
+  if (!config.recordId) return { success: false, error: "Airtable delete: 'recordId' is required — configure this field.", skipped: true };
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
   const response = await axios.delete(url, { headers: headers(token), timeout: 15000 });
   return { id: response.data.id, deleted: response.data.deleted };
 }
 
 async function opGetRecord(config, token) {
-  if (!config.recordId) throw new Error("Airtable getRecord: 'recordId' is required.");
+  if (!config.recordId) return { success: false, error: "Airtable getRecord: 'recordId' is required — configure this field.", skipped: true };
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
   const response = await axios.get(url, { headers: headers(token), timeout: 15000 });
   return { id: response.data.id, fields: response.data.fields, createdTime: response.data.createdTime };
 }
 
 async function opSearch(config, token) {
-  if (!config.searchField) throw new Error("Airtable search: 'searchField' is required.");
+  if (!config.searchField) return { success: false, error: "Airtable search: 'searchField' is required — configure this field.", skipped: true };
   if (config.searchValue === undefined || config.searchValue === null)
-    throw new Error("Airtable search: 'searchValue' is required.");
+    return { success: false, error: "Airtable search: 'searchValue' is required — configure this field.", skipped: true };
 
   // Build a filterByFormula for the search
   const escaped = String(config.searchValue).replace(/'/g, "\\'");
@@ -121,9 +121,9 @@ async function opSearch(config, token) {
 async function opBulkCreate(config, token) {
   const records = config.records;
   if (!Array.isArray(records) || records.length === 0)
-    throw new Error("Airtable bulkCreate: 'records' must be a non-empty array of field objects.");
+    return { success: false, error: "Airtable bulkCreate: 'records' must be a non-empty array of field objects — configure this field.", skipped: true };
   if (records.length > BULK_LIMIT)
-    throw new Error(`Airtable bulkCreate: maximum ${BULK_LIMIT} records per call. Split into batches.`);
+    return { success: false, error: `Airtable bulkCreate: maximum ${BULK_LIMIT} records per call. Split into batches.`, skipped: true };
 
   const url = tableUrl(config.baseId, config.tableName);
   const response = await axios.post(url,
@@ -182,8 +182,8 @@ export default {
     if (!handler)
       throw new Error(`Airtable: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    if (!config.baseId) throw new Error("Airtable: 'baseId' is required.");
-    if (!config.tableName) throw new Error("Airtable: 'tableName' is required.");
+    if (!config.baseId) return { success: false, error: "Airtable: 'baseId' is required — configure this field.", skipped: true };
+    if (!config.tableName) return { success: false, error: "Airtable: 'tableName' is required — configure this field.", skipped: true };
 
     const token = await getToken(config.credentialId, context.workspaceId);
 

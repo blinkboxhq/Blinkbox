@@ -134,8 +134,8 @@ export default {
     const url = config.url ?? input?.url ?? (typeof input === "string" ? input : null);
 
     if (operation === "ai_goal") {
-      if (!url) throw new Error("Browser Agent: 'url' is required for ai_goal operation.");
-      if (!goal) throw new Error("Browser Agent: 'goal' is required for ai_goal operation.");
+      if (!url) return { success: false, error: "Browser Agent: 'url' is required for ai_goal operation — configure this field.", skipped: true };
+      if (!goal) return { success: false, error: "Browser Agent: 'goal' is required for ai_goal operation — configure this field.", skipped: true };
 
       const cred = await resolveCredential(config.credentialId, context.workspaceId, "Browser Agent");
       const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
@@ -225,7 +225,7 @@ export default {
     // Non-AI operations — use browserCluster for browser ops
     if (["navigate", "click", "type", "extract", "screenshot"].includes(operation)) {
       if (!url && operation !== "click" && operation !== "type" && operation !== "extract" && operation !== "screenshot") {
-        throw new Error("Browser Agent: 'url' is required.");
+        return { success: false, error: "Browser Agent: 'url' is required — configure this field.", skipped: true };
       }
 
       return browserCluster.execute({ url, selector, value, waitFor, operation, pageTimeout }, async ({ page, data }) => {
@@ -242,21 +242,21 @@ export default {
         }
 
         if (data.operation === "click") {
-          if (!data.selector) throw new Error("Browser Agent: 'selector' is required for click.");
+          if (!data.selector) return { success: false, error: "Browser Agent: 'selector' is required for click — configure this field.", skipped: true };
           await page.waitForSelector(data.selector, { timeout: 5000 }).catch(() => {});
           await page.click(data.selector);
           return { clicked: true, selector: data.selector, url: page.url() };
         }
 
         if (data.operation === "type") {
-          if (!data.selector) throw new Error("Browser Agent: 'selector' is required for type.");
+          if (!data.selector) return { success: false, error: "Browser Agent: 'selector' is required for type — configure this field.", skipped: true };
           await page.waitForSelector(data.selector, { timeout: 5000 }).catch(() => {});
           await page.type(data.selector, data.value || "");
           return { typed: data.value, selector: data.selector, url: page.url() };
         }
 
         if (data.operation === "extract") {
-          if (!data.selector) throw new Error("Browser Agent: 'selector' is required for extract.");
+          if (!data.selector) return { success: false, error: "Browser Agent: 'selector' is required for extract — configure this field.", skipped: true };
           const items = await page.$$eval(data.selector, (els) => els.map((e) => e.innerText.trim()).filter(Boolean));
           return { items, count: items.length, selector: data.selector, url: page.url() };
         }

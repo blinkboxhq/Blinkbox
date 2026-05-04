@@ -62,7 +62,7 @@ export default {
         }
 
         case "getContact": {
-          if (!config.contactId && !config.email) throw new Error("HubSpot getContact: 'contactId' or 'email' is required.");
+          if (!config.contactId && !config.email) return { success: false, error: "HubSpot getContact: 'contactId' or 'email' is required — configure this field.", skipped: true };
           if (config.email) {
             const res = await axios.post(`${BASE}/crm/v3/objects/contacts/search`, {
               filterGroups: [{ filters: [{ propertyName: "email", operator: "EQ", value: config.email }] }],
@@ -77,7 +77,7 @@ export default {
         }
 
         case "updateContact": {
-          if (!config.contactId) throw new Error("HubSpot updateContact: 'contactId' is required.");
+          if (!config.contactId) return { success: false, error: "HubSpot updateContact: 'contactId' is required — configure this field.", skipped: true };
           const properties = {};
           if (config.email) properties.email = config.email;
           if (config.firstName) properties.firstname = config.firstName;
@@ -101,7 +101,7 @@ export default {
         }
 
         case "createDeal": {
-          if (!config.dealName) throw new Error("HubSpot createDeal: 'dealName' is required.");
+          if (!config.dealName) return { success: false, error: "HubSpot createDeal: 'dealName' is required — configure this field.", skipped: true };
           const properties = { dealname: config.dealName };
           if (config.amount) properties.amount = String(config.amount);
           if (config.stage) properties.dealstage = config.stage;

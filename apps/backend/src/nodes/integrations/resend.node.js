@@ -25,16 +25,16 @@ function headers(apiKey) {
 }
 
 async function opSendEmail(config, apiKey) {
-  if (!config.from) throw new Error("Resend sendEmail: 'from' is required.");
-  if (!config.to) throw new Error("Resend sendEmail: 'to' is required.");
-  if (!config.subject) throw new Error("Resend sendEmail: 'subject' is required.");
+  if (!config.from) return { success: false, error: "Resend sendEmail: 'from' is required — configure this field.", skipped: true };
+  if (!config.to) return { success: false, error: "Resend sendEmail: 'to' is required — configure this field.", skipped: true };
+  if (!config.subject) return { success: false, error: "Resend sendEmail: 'subject' is required — configure this field.", skipped: true };
 
   const to = Array.isArray(config.to) ? config.to : [config.to];
   const body = { from: config.from, to, subject: config.subject };
 
   if (config.html) body.html = config.html;
   else if (config.text) body.text = config.text;
-  else throw new Error("Resend sendEmail: 'html' or 'text' is required.");
+  else return { success: false, error: "Resend sendEmail: 'html' or 'text' is required — configure this field.", skipped: true };
 
   if (config.cc) body.cc = Array.isArray(config.cc) ? config.cc : [config.cc];
   if (config.bcc) body.bcc = Array.isArray(config.bcc) ? config.bcc : [config.bcc];
@@ -55,20 +55,20 @@ async function opSendEmail(config, apiKey) {
 async function opSendBatch(config, apiKey) {
   let emails = config.emails;
   if (typeof emails === "string") { try { emails = JSON.parse(emails); } catch { emails = []; } }
-  if (!Array.isArray(emails) || emails.length === 0) throw new Error("Resend sendBatch: 'emails' must be a non-empty array.");
+  if (!Array.isArray(emails) || emails.length === 0) return { success: false, error: "Resend sendBatch: 'emails' must be a non-empty array — configure this field.", skipped: true };
 
   const res = await axios.post(`${BASE}/emails/batch`, emails, { headers: headers(apiKey), timeout: 15000 });
   return { data: res.data.data || [], count: emails.length };
 }
 
 async function opGetEmail(config, apiKey) {
-  if (!config.emailId) throw new Error("Resend getEmail: 'emailId' is required.");
+  if (!config.emailId) return { success: false, error: "Resend getEmail: 'emailId' is required — configure this field.", skipped: true };
   const res = await axios.get(`${BASE}/emails/${config.emailId}`, { headers: headers(apiKey), timeout: 10000 });
   return res.data;
 }
 
 async function opCancelEmail(config, apiKey) {
-  if (!config.emailId) throw new Error("Resend cancelEmail: 'emailId' is required.");
+  if (!config.emailId) return { success: false, error: "Resend cancelEmail: 'emailId' is required — configure this field.", skipped: true };
   const res = await axios.post(`${BASE}/emails/${config.emailId}/cancel`, {}, { headers: headers(apiKey), timeout: 10000 });
   return { cancelled: true, ...res.data };
 }
