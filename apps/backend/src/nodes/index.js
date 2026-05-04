@@ -144,6 +144,25 @@ import zoom from "./integrations/zoom.node.js";
 import resend from "./integrations/resend.node.js";
 import openaiAssistant from "./integrations/openaiAssistant.node.js";
 
+// New Utility Nodes
+import urlParser from "./urlParser.node.js";
+import xmlParser from "./xmlParser.node.js";
+import weather from "./weather.node.js";
+import translation from "./translation.node.js";
+import speechToText from "./speechToText.node.js";
+import textToSpeech from "./textToSpeech.node.js";
+import rss from "./rss.node.js";
+
+// New Integrations (batch 2)
+import s3 from "./integrations/s3.node.js";
+import datadog from "./integrations/datadog.node.js";
+import sentry from "./integrations/sentry.node.js";
+import reddit from "./integrations/reddit.node.js";
+import trello from "./integrations/trello.node.js";
+import asana from "./integrations/asana.node.js";
+import clickup from "./integrations/clickup.node.js";
+import typeform from "./integrations/typeform.node.js";
+
 export const nodeRegistry = {
   // Triggers (genesis nodes)
   manual: {
@@ -432,6 +451,26 @@ export const nodeRegistry = {
   zoom: zoom,
   resend: resend,
   openai_assistant: openaiAssistant,
+
+  // Utility nodes
+  url_parser: urlParser,
+  xml_parser: xmlParser,
+  weather: weather,
+  translation: translation,
+  speech_to_text: speechToText,
+  text_to_speech: textToSpeech,
+  rss: rss,
+  rss_feed_generator: rss,
+
+  // New integrations
+  s3: s3,
+  datadog: datadog,
+  sentry: sentry,
+  reddit: reddit,
+  trello: trello,
+  asana: asana,
+  clickup: clickup,
+  typeform: typeform,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,
