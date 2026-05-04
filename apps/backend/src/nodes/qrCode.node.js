@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 export default {
   async run(config) {
     const content = config.content;
-    if (!content) throw new Error("QR Code: 'content' is required.");
+    if (!content) return { success: false, error: "QR Code: 'content' is required — configure this field.", skipped: true };
 
     const size = Math.min(Math.max(parseInt(config.size) || 300, 100), 1000);
     const errorCorrectionLevel = ["L", "M", "Q", "H"].includes(config.errorCorrection)

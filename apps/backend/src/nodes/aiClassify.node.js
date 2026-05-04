@@ -26,10 +26,10 @@ export default {
     } = config;
 
     const inputText = text ?? input?.text ?? (typeof input === "string" ? input : JSON.stringify(input));
-    if (!inputText) throw new Error("AI Classify: 'text' is required.");
+    if (!inputText) return { success: false, error: "AI Classify: 'text' is required — configure this field.", skipped: true };
 
     const cats = String(categories).split(",").map((c) => c.trim()).filter(Boolean);
-    if (cats.length < 2) throw new Error("AI Classify: at least 2 categories required.");
+    if (cats.length < 2) return { success: false, error: "AI Classify: at least 2 categories required — configure this field.", skipped: true };
 
     const cred = await resolveCredential(config.credentialId, context.workspaceId, "AI Classify");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);

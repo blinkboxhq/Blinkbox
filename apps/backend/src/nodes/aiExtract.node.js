@@ -35,10 +35,10 @@ export default {
     const { text, model = "gpt-4o-mini", returnNulls = true } = config;
 
     const inputText = text ?? input?.text ?? (typeof input === "string" ? input : JSON.stringify(input));
-    if (!inputText) throw new Error("AI Extract: 'text' is required.");
+    if (!inputText) return { success: false, error: "AI Extract: 'text' is required — configure this field.", skipped: true };
 
     const fields = parseFields(config.fields);
-    if (fields.length === 0) throw new Error("AI Extract: 'fields' is required — define what to extract.");
+    if (fields.length === 0) return { success: false, error: "AI Extract: 'fields' is required — define what to extract — configure this field.", skipped: true };
 
     const cred = await resolveCredential(config.credentialId, context.workspaceId, "AI Extract");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);

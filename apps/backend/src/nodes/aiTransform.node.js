@@ -33,15 +33,15 @@ export default {
     const { text, operation = "summarize", model = "gpt-4o-mini" } = config;
 
     const inputText = text ?? input?.text ?? (typeof input === "string" ? input : JSON.stringify(input));
-    if (!inputText) throw new Error("AI Transform: 'text' is required.");
+    if (!inputText) return { success: false, error: "AI Transform: 'text' is required — configure this field.", skipped: true };
 
     const promptFn = OPERATION_PROMPTS[operation];
     if (!promptFn) {
       throw new Error(`AI Transform: Unknown operation "${operation}". Valid: translate | summarize | tone | grammar | expand | shorten | custom`);
     }
-    if (operation === "translate" && !config.language) throw new Error("AI Transform: 'language' is required for translate operation.");
-    if (operation === "tone" && !config.tone) throw new Error("AI Transform: 'tone' is required for tone operation.");
-    if (operation === "custom" && !config.customPrompt) throw new Error("AI Transform: 'customPrompt' is required for custom operation.");
+    if (operation === "translate" && !config.language) return { success: false, error: "AI Transform: 'language' is required for translate operation — configure this field.", skipped: true };
+    if (operation === "tone" && !config.tone) return { success: false, error: "AI Transform: 'tone' is required for tone operation — configure this field.", skipped: true };
+    if (operation === "custom" && !config.customPrompt) return { success: false, error: "AI Transform: 'customPrompt' is required for custom operation — configure this field.", skipped: true };
 
     const cred = await resolveCredential(config.credentialId, context.workspaceId, "AI Transform");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);

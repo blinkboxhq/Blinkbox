@@ -91,10 +91,10 @@ export default {
     } = config;
 
     const scenario = config.scenario ?? input?.scenario ?? (typeof input === "string" ? input : "");
-    if (!scenario) throw new Error("AI Decision: 'scenario' is required.");
+    if (!scenario) return { success: false, error: "AI Decision: 'scenario' is required — configure this field.", skipped: true };
 
     const options = parseOptions(config.options);
-    if (options.length < 2) throw new Error("AI Decision: at least 2 options are required.");
+    if (options.length < 2) return { success: false, error: "AI Decision: at least 2 options required — add options in the config.", skipped: true };
 
     const criteria = parseCriteria(config.criteria);
     const rules = config.rules || "";

@@ -132,7 +132,7 @@ export default {
     const emailSubject = config.emailSubject ?? input?.subject ?? "";
     const emailFrom = config.emailFrom ?? input?.from ?? "";
 
-    if (!emailText) throw new Error("Email Parser: 'emailText' is required.");
+    if (!emailText) return { success: false, error: "Email Parser: 'emailText' is required — configure this field.", skipped: true };
 
     const cred = await resolveCredential(config.credentialId, context.workspaceId, "Email Parser");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
@@ -141,7 +141,7 @@ export default {
     let hint = "";
     if (operation === "extractCustom") {
       fields = parseCustomFields(config.customSchema);
-      if (fields.length === 0) throw new Error("Email Parser: 'customSchema' is required for extractCustom operation.");
+      if (fields.length === 0) return { success: false, error: "Email Parser: 'customSchema' is required for extractCustom operation — configure this field.", skipped: true };
     } else {
       const schema = SCHEMAS[operation];
       if (!schema) throw new Error(`Email Parser: unknown operation "${operation}"`);

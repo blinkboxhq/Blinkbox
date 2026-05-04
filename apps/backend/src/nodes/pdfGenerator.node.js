@@ -3,7 +3,7 @@ import { marked } from "marked";
 export default {
   async run(config) {
     const content = config.content;
-    if (!content) throw new Error("PDF Generator: 'content' is required.");
+    if (!content) return { success: false, error: "PDF Generator: 'content' is required — configure this field.", skipped: true };
 
     const contentType = config.contentType || "html";
     const format = ["A4", "Letter", "A3", "Legal"].includes(config.format) ? config.format : "A4";

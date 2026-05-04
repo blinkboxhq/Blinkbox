@@ -4,7 +4,7 @@ import axios from "axios";
 export default {
   async run(config) {
     const source = config.source;
-    if (!source) throw new Error("Image Resize: 'source' is required.");
+    if (!source) return { success: false, error: "Image Resize: 'source' is required — configure this field.", skipped: true };
 
     let inputBuffer;
     if (/^https?:\/\//i.test(source)) {
