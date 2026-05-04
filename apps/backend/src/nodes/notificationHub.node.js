@@ -55,14 +55,14 @@ async function sendTelegram(ch, message, workspaceId) {
 
 async function sendDiscord(ch, message) {
   const webhookUrl = ch.webhookUrl;
-  if (!webhookUrl) throw new Error("Discord: webhookUrl is required");
+  if (!webhookUrl) return { success: false, error: "Discord: webhookUrl is required.", skipped: true };
   await axios.post(webhookUrl, { content: message }, { timeout: 15000 });
   return { type: "discord", success: true };
 }
 
 async function sendEmail(ch, message, subject, workspaceId) {
   const to = ch.to;
-  if (!to) throw new Error("Email: 'to' is required");
+  if (!to) return { success: false, error: "Email: 'to' is required.", skipped: true };
 
   if (ch.type === "sendgrid") {
     const token = await getToken(ch.credentialId, workspaceId, "SendGrid");
@@ -87,7 +87,7 @@ async function sendSms(ch, message, workspaceId) {
   const token = await getToken(ch.credentialId, workspaceId, "Twilio");
   const to = ch.to;
   const from = ch.phoneFrom;
-  if (!to || !from) throw new Error("SMS: 'to' and 'phoneFrom' are required");
+  if (!to || !from) return { success: false, error: "SMS: 'to' and 'phoneFrom' are required.", skipped: true };
 
   const [accountSid, authToken] = token.split(":");
   if (!accountSid || !authToken) throw new Error("SMS: credential must be 'accountSid:authToken'");

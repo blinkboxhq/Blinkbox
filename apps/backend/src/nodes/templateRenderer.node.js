@@ -3,7 +3,7 @@ import Handlebars from "handlebars";
 export default {
   async run(config) {
     const template = config.template;
-    if (!template) throw new Error("Template Renderer: 'template' is required.");
+    if (!template) return { success: false, error: "Template Renderer: 'template' is required.", skipped: true };
 
     let ctx = config.context;
     if (typeof ctx === "string") {

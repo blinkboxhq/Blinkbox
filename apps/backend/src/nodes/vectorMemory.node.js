@@ -72,7 +72,7 @@ export default {
     }
 
     if (operation === "forget") {
-      if (!memoryKey) throw new Error("Vector Memory: 'memoryKey' is required for forget operation.");
+      if (!memoryKey) return { success: false, error: "Vector Memory: 'memoryKey' is required.", skipped: true };
       const result = await VectorMemory.deleteOne({ workspaceId, namespace, memoryKey });
       return { deleted: result.deletedCount > 0, memoryKey, namespace };
     }
@@ -82,7 +82,7 @@ export default {
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
     if (operation === "remember") {
-      if (!text) throw new Error("Vector Memory: 'text' is required for remember operation.");
+      if (!text) return { success: false, error: "Vector Memory: 'text' is required.", skipped: true };
       const key = memoryKey || `mem_${Date.now()}`;
       const embedding = await getEmbedding(text, apiKey);
 
@@ -115,7 +115,7 @@ export default {
     }
 
     if (operation === "recall") {
-      if (!text) throw new Error("Vector Memory: 'text' is required for recall operation.");
+      if (!text) return { success: false, error: "Vector Memory: 'text' is required.", skipped: true };
 
       const allDocs = await VectorMemory.find({ workspaceId, namespace })
         .select("memoryKey text tags metadata embedding createdAt")

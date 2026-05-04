@@ -57,7 +57,7 @@ export default {
       credentialId,
     } = config;
 
-    if (!source) throw new Error("Web Scraper: 'source' URL is required.");
+    if (!source) return { success: false, error: "Web Scraper: 'source' URL is required.", skipped: true };
 
     // SSRF guard — block internal/cloud-metadata addresses
     function assertSafeUrl(rawUrl) {

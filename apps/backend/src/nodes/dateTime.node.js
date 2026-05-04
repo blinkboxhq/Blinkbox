@@ -81,7 +81,7 @@ export default {
       case "diff": {
         const d1 = parseDate(date ?? input?.date);
         const d2 = parseDate(date2 ?? input?.date2);
-        if (isNaN(d1) || isNaN(d2)) throw new Error("DateTime: Both 'date' and 'date2' required for diff.");
+        if (isNaN(d1) || isNaN(d2)) return { success: false, error: "DateTime: Both 'date' and 'date2' are required for diff.", skipped: true };
         const diffMs = d2.getTime() - d1.getTime();
         return {
           ms: diffMs, s: diffMs / 1000, m: diffMs / 60000,

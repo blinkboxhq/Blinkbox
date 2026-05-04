@@ -5,7 +5,7 @@ export default {
     const { to, subject, body, smtpConfig } = config;
 
     if (!to || !subject || !body) {
-      throw new Error("Send Email: 'to', 'subject', and 'body' are required.");
+      return { success: false, error: "Send Email: 'to', 'subject', and 'body' are required.", skipped: true };
     }
 
     if (!smtpConfig || !smtpConfig.user || !smtpConfig.pass) {
