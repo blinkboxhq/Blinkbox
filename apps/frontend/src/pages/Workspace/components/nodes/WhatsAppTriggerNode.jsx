@@ -3,6 +3,7 @@ import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
 import imgWhatsApp from '../../../../assets/whatsapp.png';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const PROVIDERS = [
   { value: 'twilio',  label: 'Twilio',       desc: 'WhatsApp Business via Twilio' },
@@ -84,11 +85,11 @@ export default function WhatsAppTriggerNode({ config = {}, updateConfig, nodeId 
             {provider === 'twilio' && (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Twilio Auth Token</label>
-                  <input type="password" value={config.twilioAuthToken || ''}
-                    onChange={(e) => updateConfig?.('twilioAuthToken', e.target.value)}
-                    placeholder="From Twilio Console dashboard"
-                    className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#25D366]/50 transition-colors"
+                  <CredentialPicker
+                    label="Twilio Auth Token"
+                    value={config.twilioAuthToken || ''}
+                    onChange={(v) => updateConfig?.('twilioAuthToken', v)}
+                    placeholder="Select Twilio auth token credential…"
                   />
                   <p className="text-[9px] text-zinc-600">Used to verify the Twilio request signature.</p>
                 </div>
@@ -106,11 +107,11 @@ export default function WhatsAppTriggerNode({ config = {}, updateConfig, nodeId 
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">App Secret</label>
-                  <input type="password" value={config.metaAppSecret || ''}
-                    onChange={(e) => updateConfig?.('metaAppSecret', e.target.value)}
-                    placeholder="From Meta App Dashboard"
-                    className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#25D366]/50 transition-colors"
+                  <CredentialPicker
+                    label="App Secret"
+                    value={config.metaAppSecret || ''}
+                    onChange={(v) => updateConfig?.('metaAppSecret', v)}
+                    placeholder="Select Meta app secret credential…"
                   />
                 </div>
               </>
