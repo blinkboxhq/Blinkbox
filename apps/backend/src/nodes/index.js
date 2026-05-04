@@ -162,6 +162,13 @@ import trello from "./integrations/trello.node.js";
 import asana from "./integrations/asana.node.js";
 import clickup from "./integrations/clickup.node.js";
 import typeform from "./integrations/typeform.node.js";
+import virustotal from "./integrations/virustotal.node.js";
+import sharepoint from "./integrations/sharepoint.node.js";
+import outlook from "./integrations/outlook.node.js";
+import teams from "./integrations/teams.node.js";
+import onedrive from "./integrations/onedrive.node.js";
+import netlify from "./integrations/netlify.node.js";
+import vercel from "./integrations/vercel.node.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
@@ -471,6 +478,13 @@ export const nodeRegistry = {
   asana: asana,
   clickup: clickup,
   typeform: typeform,
+  virustotal: virustotal,
+  sharepoint: sharepoint,
+  outlook: outlook,
+  teams: teams,
+  onedrive: onedrive,
+  netlify: netlify,
+  vercel: vercel,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,
