@@ -52,7 +52,7 @@ async function opCreateMeeting(config, token) {
 }
 
 async function opGetMeeting(config, token) {
-  if (!config.meetingId) throw new Error("Zoom getMeeting: 'meetingId' is required.");
+  if (!config.meetingId) return { success: false, error: "Zoom getMeeting: 'meetingId' is required., skipped: true };
   const res = await axios.get(`${BASE}/meetings/${config.meetingId}`, { headers: headers(token), timeout: 10000 });
   const m = res.data;
   return { meetingId: String(m.id), topic: m.topic, joinUrl: m.join_url, startTime: m.start_time, duration: m.duration, status: m.status };
@@ -66,13 +66,13 @@ async function opListMeetings(config, token) {
 }
 
 async function opDeleteMeeting(config, token) {
-  if (!config.meetingId) throw new Error("Zoom deleteMeeting: 'meetingId' is required.");
+  if (!config.meetingId) return { success: false, error: "Zoom deleteMeeting: 'meetingId' is required., skipped: true };
   await axios.delete(`${BASE}/meetings/${config.meetingId}`, { headers: headers(token), timeout: 10000 });
   return { deleted: true, meetingId: config.meetingId };
 }
 
 async function opUpdateMeeting(config, token) {
-  if (!config.meetingId) throw new Error("Zoom updateMeeting: 'meetingId' is required.");
+  if (!config.meetingId) return { success: false, error: "Zoom updateMeeting: 'meetingId' is required., skipped: true };
   const body = {};
   if (config.topic) body.topic = config.topic;
   if (config.startTime) body.start_time = config.startTime;

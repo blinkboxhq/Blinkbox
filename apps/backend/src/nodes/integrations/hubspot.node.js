@@ -112,13 +112,13 @@ export default {
         }
 
         case "getDeal": {
-          if (!config.dealId) throw new Error("HubSpot getDeal: 'dealId' is required.");
+          if (!config.dealId) return { success: false, error: "HubSpot getDeal: 'dealId' is required., skipped: true };
           const res = await axios.get(`${BASE}/crm/v3/objects/deals/${config.dealId}`, { headers: h, timeout: 15000, params: { properties: "dealname,amount,dealstage,closedate,hubspot_owner_id" } });
           return { id: res.data.id, ...res.data.properties };
         }
 
         case "updateDeal": {
-          if (!config.dealId) throw new Error("HubSpot updateDeal: 'dealId' is required.");
+          if (!config.dealId) return { success: false, error: "HubSpot updateDeal: 'dealId' is required., skipped: true };
           const properties = {};
           if (config.dealName) properties.dealname = config.dealName;
           if (config.amount) properties.amount = String(config.amount);
@@ -129,7 +129,7 @@ export default {
         }
 
         case "createNote": {
-          if (!config.body) throw new Error("HubSpot createNote: 'body' is required.");
+          if (!config.body) return { success: false, error: "HubSpot createNote: 'body' is required., skipped: true };
           const properties = { hs_note_body: config.body, hs_timestamp: new Date().toISOString() };
           const res = await axios.post(`${BASE}/crm/v3/objects/notes`, { properties }, { headers: h, timeout: 15000 });
           return { id: res.data.id, createdAt: res.data.createdAt };

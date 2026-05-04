@@ -18,7 +18,7 @@ import axios from "axios";
 const DISCORD_WEBHOOK_RE = /^https:\/\/discord\.com\/api\/webhooks\//;
 
 function validateWebhook(url) {
-  if (!url) throw new Error("Discord: 'webhookUrl' is required.");
+  if (!url) return { success: false, error: "Discord: 'webhookUrl' is required.", skipped: true };
   if (!DISCORD_WEBHOOK_RE.test(url))
     throw new Error("Discord: Invalid webhook URL. Must start with https://discord.com/api/webhooks/");
 }
@@ -58,7 +58,7 @@ async function post(webhookUrl, payload) {
 async function opSendMessage(config) {
   const { webhookUrl, message, username, avatarUrl } = config;
   validateWebhook(webhookUrl);
-  if (!message) throw new Error("Discord sendMessage: 'message' is required (max 2000 chars).");
+  if (!message) return { success: false, error: "Discord sendMessage: 'message' is required (max 2000 chars)., skipped: true };
   if (message.length > 2000) throw new Error("Discord sendMessage: message exceeds 2000 characters.");
 
   const payload = { content: message };
@@ -102,7 +102,7 @@ async function opSendEmbed(config) {
   }
 
   if (!embed.title && !embed.description && !embed.fields)
-    throw new Error("Discord sendEmbed: at least one of 'title', 'description', or 'fields' is required.");
+    return { success: false, error: "Discord sendEmbed: at least one of 'title', 'description', or 'fields' is required., skipped: true };
 
   const payload = { embeds: [embed] };
   if (username) payload.username = username;
@@ -118,7 +118,7 @@ async function opSendFile(config) {
   validateWebhook(webhookUrl);
 
   const content = config.content || config.fileContent || config.text;
-  if (!content) throw new Error("Discord sendFile: 'content' (file text) is required.");
+  if (!content) return { success: false, error: "Discord sendFile: 'content' (file text) is required., skipped: true };
 
   const filename = config.filename || "output.txt";
   const { FormData, Blob } = await import("buffer"); // Node 18+ has Blob

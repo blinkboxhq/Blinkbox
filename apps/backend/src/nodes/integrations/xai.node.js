@@ -23,7 +23,7 @@ export default {
       maxTokens = 2000,
     } = config;
 
-    if (!prompt) throw new Error("xAI: 'prompt' is required.");
+    if (!prompt) return { success: false, error: "xAI: 'prompt' is required., skipped: true };
     const cred = await resolveCredential(credentialId, context.workspaceId, "xAI");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 

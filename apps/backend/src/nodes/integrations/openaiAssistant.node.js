@@ -55,8 +55,8 @@ async function opCreateThread(config, apiKey) {
 }
 
 async function opAddMessageAndRun(config, apiKey) {
-  if (!config.assistantId) throw new Error("OpenAI Assistants: 'assistantId' is required.");
-  if (!config.message) throw new Error("OpenAI Assistants: 'message' is required.");
+  if (!config.assistantId) return { success: false, error: "OpenAI Assistants: 'assistantId' is required., skipped: true };
+  if (!config.message) return { success: false, error: "OpenAI Assistants: 'message' is required., skipped: true };
 
   let threadId = config.threadId?.trim();
 
@@ -112,7 +112,7 @@ async function opAddMessageAndRun(config, apiKey) {
 }
 
 async function opListMessages(config, apiKey) {
-  if (!config.threadId) throw new Error("OpenAI Assistants listMessages: 'threadId' is required.");
+  if (!config.threadId) return { success: false, error: "OpenAI Assistants listMessages: 'threadId' is required., skipped: true };
   const limit = Math.min(parseInt(config.limit) || 20, 100);
   const res = await axios.get(
     `${BASE}/threads/${config.threadId}/messages?order=asc&limit=${limit}`,
@@ -127,7 +127,7 @@ async function opListMessages(config, apiKey) {
 }
 
 async function opDeleteThread(config, apiKey) {
-  if (!config.threadId) throw new Error("OpenAI Assistants deleteThread: 'threadId' is required.");
+  if (!config.threadId) return { success: false, error: "OpenAI Assistants deleteThread: 'threadId' is required., skipped: true };
   await axios.delete(`${BASE}/threads/${config.threadId}`, { headers: headers(apiKey), timeout: 10000 });
   return { deleted: true, threadId: config.threadId };
 }

@@ -58,9 +58,9 @@ async function send(phoneNumberId, token, payload) {
 
 async function opSendMessage(config, token) {
   const { phoneNumberId, to, text } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendMessage: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendMessage: 'to' is required.");
-  if (!text) throw new Error("WhatsApp sendMessage: 'text' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendMessage: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendMessage: 'to' is required., skipped: true };
+  if (!text) return { success: false, error: "WhatsApp sendMessage: 'text' is required., skipped: true };
 
   return send(phoneNumberId, token, {
     messaging_product: "whatsapp",
@@ -72,9 +72,9 @@ async function opSendMessage(config, token) {
 
 async function opSendImage(config, token) {
   const { phoneNumberId, to, imageUrl } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendImage: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendImage: 'to' is required.");
-  if (!imageUrl) throw new Error("WhatsApp sendImage: 'imageUrl' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendImage: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendImage: 'to' is required., skipped: true };
+  if (!imageUrl) return { success: false, error: "WhatsApp sendImage: 'imageUrl' is required., skipped: true };
   if (!/^https?:\/\//i.test(imageUrl)) throw new Error("WhatsApp sendImage: 'imageUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
@@ -87,9 +87,9 @@ async function opSendImage(config, token) {
 
 async function opSendDocument(config, token) {
   const { phoneNumberId, to, documentUrl } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendDocument: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendDocument: 'to' is required.");
-  if (!documentUrl) throw new Error("WhatsApp sendDocument: 'documentUrl' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendDocument: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendDocument: 'to' is required., skipped: true };
+  if (!documentUrl) return { success: false, error: "WhatsApp sendDocument: 'documentUrl' is required., skipped: true };
   if (!/^https?:\/\//i.test(documentUrl)) throw new Error("WhatsApp sendDocument: 'documentUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
@@ -106,9 +106,9 @@ async function opSendDocument(config, token) {
 
 async function opSendAudio(config, token) {
   const { phoneNumberId, to, audioUrl } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendAudio: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendAudio: 'to' is required.");
-  if (!audioUrl) throw new Error("WhatsApp sendAudio: 'audioUrl' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendAudio: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendAudio: 'to' is required., skipped: true };
+  if (!audioUrl) return { success: false, error: "WhatsApp sendAudio: 'audioUrl' is required., skipped: true };
   if (!/^https?:\/\//i.test(audioUrl)) throw new Error("WhatsApp sendAudio: 'audioUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
@@ -121,10 +121,10 @@ async function opSendAudio(config, token) {
 
 async function opSendLocation(config, token) {
   const { phoneNumberId, to, latitude, longitude } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendLocation: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendLocation: 'to' is required.");
-  if (latitude === undefined || latitude === null) throw new Error("WhatsApp sendLocation: 'latitude' is required.");
-  if (longitude === undefined || longitude === null) throw new Error("WhatsApp sendLocation: 'longitude' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendLocation: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendLocation: 'to' is required., skipped: true };
+  if (latitude === undefined || latitude === null) return { success: false, error: "WhatsApp sendLocation: 'latitude' is required., skipped: true };
+  if (longitude === undefined || longitude === null) return { success: false, error: "WhatsApp sendLocation: 'longitude' is required., skipped: true };
 
   return send(phoneNumberId, token, {
     messaging_product: "whatsapp",
@@ -141,9 +141,9 @@ async function opSendLocation(config, token) {
 
 async function opSendTemplate(config, token) {
   const { phoneNumberId, to, templateName, templateLang = "en_US" } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp sendTemplate: 'phoneNumberId' is required.");
-  if (!to) throw new Error("WhatsApp sendTemplate: 'to' is required.");
-  if (!templateName) throw new Error("WhatsApp sendTemplate: 'templateName' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendTemplate: 'phoneNumberId' is required., skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendTemplate: 'to' is required., skipped: true };
+  if (!templateName) return { success: false, error: "WhatsApp sendTemplate: 'templateName' is required., skipped: true };
 
   const template = { name: templateName, language: { code: templateLang } };
 
@@ -162,8 +162,8 @@ async function opSendTemplate(config, token) {
 
 async function opMarkRead(config, token) {
   const { phoneNumberId, messageId } = config;
-  if (!phoneNumberId) throw new Error("WhatsApp markRead: 'phoneNumberId' is required.");
-  if (!messageId) throw new Error("WhatsApp markRead: 'messageId' is required.");
+  if (!phoneNumberId) return { success: false, error: "WhatsApp markRead: 'phoneNumberId' is required., skipped: true };
+  if (!messageId) return { success: false, error: "WhatsApp markRead: 'messageId' is required., skipped: true };
 
   const url = `https://graph.facebook.com/${API_VERSION}/${phoneNumberId}/messages`;
   await axios.post(url,

@@ -52,7 +52,7 @@ export default {
 
       if (operation === "batch") {
         const statements = Array.isArray(config.statements) ? config.statements : JSON.parse(config.statements ?? "[]");
-        if (!statements.length) throw new Error("PostgreSQL batch: 'statements' array is required.");
+        if (!statements.length) return { success: false, error: "PostgreSQL batch: 'statements' array is required., skipped: true };
         await client.query("BEGIN");
         const results = [];
         for (const stmt of statements) {
@@ -63,7 +63,7 @@ export default {
         return { results, statementCount: results.length };
       }
 
-      if (!config.sql) throw new Error("PostgreSQL: 'sql' is required.");
+      if (!config.sql) return { success: false, error: "PostgreSQL: 'sql' is required., skipped: true };
       let params = config.params ?? [];
       if (typeof params === "string") { try { params = JSON.parse(params); } catch {} }
 

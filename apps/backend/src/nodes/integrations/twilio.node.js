@@ -42,9 +42,9 @@ function encodeForm(obj) {
 }
 
 async function opSendSms(config, { accountSid, authToken }) {
-  if (!config.to) throw new Error("Twilio sendSms: 'to' (recipient phone number) is required.");
-  if (!config.from) throw new Error("Twilio sendSms: 'from' (Twilio phone number) is required.");
-  if (!config.body) throw new Error("Twilio sendSms: 'body' (message text) is required.");
+  if (!config.to) return { success: false, error: "Twilio sendSms: 'to' (recipient phone number) is required., skipped: true };
+  if (!config.from) return { success: false, error: "Twilio sendSms: 'from' (Twilio phone number) is required., skipped: true };
+  if (!config.body) return { success: false, error: "Twilio sendSms: 'body' (message text) is required., skipped: true };
 
   const url = `${BASE}/Accounts/${accountSid}/Messages.json`;
   const response = await axios.post(url, encodeForm({
@@ -67,9 +67,9 @@ async function opSendSms(config, { accountSid, authToken }) {
 }
 
 async function opMakeCall(config, { accountSid, authToken }) {
-  if (!config.to) throw new Error("Twilio makeCall: 'to' is required.");
-  if (!config.from) throw new Error("Twilio makeCall: 'from' is required.");
-  if (!config.url) throw new Error("Twilio makeCall: 'url' (TwiML URL) is required.");
+  if (!config.to) return { success: false, error: "Twilio makeCall: 'to' is required., skipped: true };
+  if (!config.from) return { success: false, error: "Twilio makeCall: 'from' is required., skipped: true };
+  if (!config.url) return { success: false, error: "Twilio makeCall: 'url' (TwiML URL) is required., skipped: true };
   if (!/^https?:\/\//i.test(config.url)) throw new Error("Twilio makeCall: 'url' must be a valid https:// URL.");
 
   const callUrl = `${BASE}/Accounts/${accountSid}/Calls.json`;
@@ -92,7 +92,7 @@ async function opMakeCall(config, { accountSid, authToken }) {
 }
 
 async function opLookupNumber(config, { accountSid, authToken }) {
-  if (!config.phoneNumber) throw new Error("Twilio lookupNumber: 'phoneNumber' is required (E.164 format, e.g. +14155551234).");
+  if (!config.phoneNumber) return { success: false, error: "Twilio lookupNumber: 'phoneNumber' is required (E.164 format, e.g. +14155551234)., skipped: true };
   const encoded = encodeURIComponent(config.phoneNumber);
   const url = `https://lookups.twilio.com/v1/PhoneNumbers/${encoded}`;
   const response = await axios.get(url, {

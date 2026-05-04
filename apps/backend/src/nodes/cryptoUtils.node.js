@@ -33,7 +33,7 @@ export default {
       }
 
       case "hmac": {
-        if (!secret) throw new Error("Crypto Utils: 'secret' is required for HMAC.");
+        if (!secret) return { success: false, error: "Crypto Utils: 'secret' is required for HMAC.", skipped: true };
         const hmac = crypto.createHmac(algorithm, String(secret)).update(String(text)).digest(encoding === "base64url" ? "base64url" : encoding);
         return { hmac, algorithm, encoding };
       }

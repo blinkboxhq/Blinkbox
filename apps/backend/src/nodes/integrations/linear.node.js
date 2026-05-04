@@ -51,7 +51,7 @@ export default {
       switch (operation) {
         case "createIssue": {
           const { teamId, title, description, priority, stateId, assigneeId } = config;
-          if (!teamId || !title) throw new Error("Linear createIssue: 'teamId' and 'title' are required.");
+          if (!teamId || !title) return { success: false, error: "Linear createIssue: 'teamId' and 'title' are required., skipped: true };
           const data = await gql(`mutation CreateIssue($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id identifier title url } } }`,
             { input: { teamId, title, description, priority: priority ? Number(priority) : undefined, stateId, assigneeId } }, apiKey);
           const issue = data.issueCreate.issue;
@@ -59,7 +59,7 @@ export default {
         }
 
         case "getIssue": {
-          if (!config.issueId) throw new Error("Linear getIssue: 'issueId' or identifier is required.");
+          if (!config.issueId) return { success: false, error: "Linear getIssue: 'issueId' or identifier is required., skipped: true };
           const byId = config.issueId.includes("-") ? "identifier" : "id";
           const query = byId === "identifier"
             ? `query($id: String!) { issue(id: $id) { id identifier title description state { name } assignee { name } url priority } }`
@@ -70,7 +70,7 @@ export default {
         }
 
         case "updateIssue": {
-          if (!config.issueId) throw new Error("Linear updateIssue: 'issueId' is required.");
+          if (!config.issueId) return { success: false, error: "Linear updateIssue: 'issueId' is required., skipped: true };
           const input = {};
           if (config.title) input.title = config.title;
           if (config.description) input.description = config.description;
@@ -82,7 +82,7 @@ export default {
         }
 
         case "listIssues": {
-          if (!config.teamId) throw new Error("Linear listIssues: 'teamId' is required.");
+          if (!config.teamId) return { success: false, error: "Linear listIssues: 'teamId' is required., skipped: true };
           const data = await gql(`query($teamId: String!, $first: Int) { team(id: $teamId) { issues(first: $first, orderBy: updatedAt) { nodes { id identifier title state { name } assignee { name } url priority } } } }`,
             { teamId: config.teamId, first: Math.min(Number(config.limit ?? 25), 100) }, apiKey);
           const issues = data.team.issues.nodes;
@@ -90,7 +90,7 @@ export default {
         }
 
         case "createComment": {
-          if (!config.issueId || !config.body) throw new Error("Linear createComment: 'issueId' and 'body' are required.");
+          if (!config.issueId || !config.body) return { success: false, error: "Linear createComment: 'issueId' and 'body' are required., skipped: true };
           const data = await gql(`mutation CreateComment($input: CommentCreateInput!) { commentCreate(input: $input) { success comment { id createdAt } } }`,
             { input: { issueId: config.issueId, body: config.body } }, apiKey);
           return { id: data.commentCreate.comment.id, created: true };

@@ -54,7 +54,7 @@ export default {
       upsert = false, arrayFilters,
     } = config;
 
-    if (!collection) throw new Error("MongoDB: 'collection' is required.");
+    if (!collection) return { success: false, error: "MongoDB: 'collection' is required., skipped: true };
 
     let conn;
     try {

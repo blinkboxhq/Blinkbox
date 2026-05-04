@@ -44,7 +44,7 @@ function authHeaders(token) {
 }
 
 async function opReadRange(config, token) {
-  if (!config.range) throw new Error("Google Sheets readRange: 'range' is required.");
+  if (!config.range) return { success: false, error: "Google Sheets readRange: 'range' is required., skipped: true };
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}`;
   const response = await axios.get(url, {
     headers: authHeaders(token),
@@ -56,7 +56,7 @@ async function opReadRange(config, token) {
 }
 
 async function opWriteRange(config, token) {
-  if (!config.range) throw new Error("Google Sheets writeRange: 'range' is required.");
+  if (!config.range) return { success: false, error: "Google Sheets writeRange: 'range' is required., skipped: true };
   const values = Array.isArray(config.values) ? config.values : JSON.parse(config.values);
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}`;
   const response = await axios.put(url, {
@@ -77,7 +77,7 @@ async function opWriteRange(config, token) {
 }
 
 async function opAppendRow(config, token) {
-  if (!config.range) throw new Error("Google Sheets appendRow: 'range' is required (e.g. Sheet1!A:Z).");
+  if (!config.range) return { success: false, error: "Google Sheets appendRow: 'range' is required (e.g. Sheet1!A:Z)., skipped: true };
   const values = Array.isArray(config.values) ? config.values : JSON.parse(config.values);
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}:append`;
   const response = await axios.post(url, {
@@ -96,7 +96,7 @@ async function opAppendRow(config, token) {
 }
 
 async function opClearRange(config, token) {
-  if (!config.range) throw new Error("Google Sheets clearRange: 'range' is required.");
+  if (!config.range) return { success: false, error: "Google Sheets clearRange: 'range' is required., skipped: true };
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}:clear`;
   const response = await axios.post(url, {}, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
@@ -139,7 +139,7 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler)
       throw new Error(`Google Sheets: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
-    if (!config.spreadsheetId) throw new Error("Google Sheets: 'spreadsheetId' is required.");
+    if (!config.spreadsheetId) return { success: false, error: "Google Sheets: 'spreadsheetId' is required., skipped: true };
 
     const token = await getToken(config.credentialId, context.workspaceId);
     try {

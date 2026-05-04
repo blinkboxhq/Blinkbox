@@ -69,14 +69,14 @@ export default {
         }
 
         case "getEvent": {
-          if (!config.eventId) throw new Error("Google Calendar getEvent: 'eventId' is required.");
+          if (!config.eventId) return { success: false, error: "Google Calendar getEvent: 'eventId' is required., skipped: true };
           const res = await axios.get(`${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${config.eventId}`, { headers: h, timeout: 15000 });
           return { id: res.data.id, summary: res.data.summary, description: res.data.description, start: res.data.start?.dateTime ?? res.data.start?.date, end: res.data.end?.dateTime ?? res.data.end?.date, location: res.data.location, attendees: res.data.attendees?.map((a) => a.email) ?? [] };
         }
 
         case "createEvent": {
-          if (!config.summary) throw new Error("Google Calendar createEvent: 'summary' (title) is required.");
-          if (!config.startTime) throw new Error("Google Calendar createEvent: 'startTime' (ISO) is required.");
+          if (!config.summary) return { success: false, error: "Google Calendar createEvent: 'summary' (title) is required., skipped: true };
+          if (!config.startTime) return { success: false, error: "Google Calendar createEvent: 'startTime' (ISO) is required., skipped: true };
           const body = {
             summary: config.summary,
             description: config.description,
@@ -90,7 +90,7 @@ export default {
         }
 
         case "updateEvent": {
-          if (!config.eventId) throw new Error("Google Calendar updateEvent: 'eventId' is required.");
+          if (!config.eventId) return { success: false, error: "Google Calendar updateEvent: 'eventId' is required., skipped: true };
           const existing = await axios.get(`${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${config.eventId}`, { headers: h, timeout: 15000 });
           const patch = { ...existing.data };
           if (config.summary) patch.summary = config.summary;
@@ -103,7 +103,7 @@ export default {
         }
 
         case "deleteEvent": {
-          if (!config.eventId) throw new Error("Google Calendar deleteEvent: 'eventId' is required.");
+          if (!config.eventId) return { success: false, error: "Google Calendar deleteEvent: 'eventId' is required., skipped: true };
           await axios.delete(`${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${config.eventId}`, { headers: h, timeout: 15000 });
           return { deleted: true, eventId: config.eventId };
         }

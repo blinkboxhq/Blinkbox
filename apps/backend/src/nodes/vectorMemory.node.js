@@ -51,7 +51,7 @@ export default {
     } = config;
 
     const workspaceId = context.workspaceId;
-    if (!workspaceId) throw new Error("Vector Memory: workspaceId is required.");
+    if (!workspaceId) return { success: false, error: "Vector Memory: workspaceId is required., skipped: true };
 
     const text = config.text ?? input?.text ?? (typeof input === "string" ? input : null);
     const memoryKey = config.memoryKey || null;

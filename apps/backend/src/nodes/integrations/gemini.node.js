@@ -85,7 +85,7 @@ async function opMessage(config, input, apiKey) {
     maxTokens = 2000,
   } = config;
 
-  if (!prompt) throw new Error("Gemini message: 'prompt' is required.");
+  if (!prompt) return { success: false, error: "Gemini message: 'prompt' is required., skipped: true };
 
   const system =
     outputFormat === "json"
@@ -122,7 +122,7 @@ async function opAnalyzeImage(config, input, apiKey) {
   } = config;
 
   const imageUrl = config.imageUrl || input?.imageUrl || input?.url;
-  if (!imageUrl) throw new Error("Gemini analyzeImage: 'imageUrl' is required.");
+  if (!imageUrl) return { success: false, error: "Gemini analyzeImage: 'imageUrl' is required., skipped: true };
 
   // Gemini supports inline base64 or URL fetch — fetch and inline
   let inlinePart;
@@ -195,7 +195,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
 async function opGeneratePrompt(config, input, apiKey) {
   const { model = "gemini-2.0-flash", maxTokens = 1000, temperature = 0.8 } = config;
   const taskDescription = config.task || config.prompt || input?.task || inputSummary(input);
-  if (!taskDescription) throw new Error("Gemini generatePrompt: 'task' description is required.");
+  if (!taskDescription) return { success: false, error: "Gemini generatePrompt: 'task' description is required., skipped: true };
 
   const { text, tokensUsed } = await callGemini(
     apiKey, model,
