@@ -1,5 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
+import imgStripe from "../../../../assets/stripe.svg";
 
 const OPERATIONS = [
   { value: "createCustomer",      label: "Create Customer" },
@@ -20,6 +21,9 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-[#635BFF]/5 border border-[#635BFF]/20 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0">
+          <img src={imgStripe} alt="Stripe" className="w-5 h-5" />
+        </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-[#635BFF]">Stripe</span>
           <span className="text-[10px] text-zinc-500">Customers, payments, refunds, invoices</span>
@@ -41,21 +45,21 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
       {["createCustomer", "listCustomers", "getCustomer"].includes(op) && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Email</label>
-          <SmartVariableInput value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{n1.email}}" />
+          <SmartVariableInput nodeId={nodeId} value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{n1.email}}" />
         </div>
       )}
 
       {op === "createCustomer" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Name</label>
-          <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{n1.name}}" />
+          <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{n1.name}}" />
         </div>
       )}
 
       {op === "getCustomer" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Customer ID</label>
-          <SmartVariableInput value={config.customerId || ""} onChange={(v) => updateConfig("customerId", v)} placeholder="cus_..." />
+          <SmartVariableInput nodeId={nodeId} value={config.customerId || ""} onChange={(v) => updateConfig("customerId", v)} placeholder="cus_..." />
         </div>
       )}
 
@@ -64,16 +68,16 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Amount (cents)</label>
-              <SmartVariableInput value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="2000" />
+              <SmartVariableInput nodeId={nodeId} value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="2000" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Currency</label>
-              <SmartVariableInput value={config.currency || "usd"} onChange={(v) => updateConfig("currency", v)} placeholder="usd" />
+              <SmartVariableInput nodeId={nodeId} value={config.currency || "usd"} onChange={(v) => updateConfig("currency", v)} placeholder="usd" />
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Customer ID (optional)</label>
-            <SmartVariableInput value={config.customerId || ""} onChange={(v) => updateConfig("customerId", v)} placeholder="cus_..." />
+            <SmartVariableInput nodeId={nodeId} value={config.customerId || ""} onChange={(v) => updateConfig("customerId", v)} placeholder="cus_..." />
           </div>
         </>
       )}
@@ -81,7 +85,7 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
       {op === "getPaymentIntent" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Payment Intent ID</label>
-          <SmartVariableInput value={config.paymentIntentId || ""} onChange={(v) => updateConfig("paymentIntentId", v)} placeholder="pi_..." />
+          <SmartVariableInput nodeId={nodeId} value={config.paymentIntentId || ""} onChange={(v) => updateConfig("paymentIntentId", v)} placeholder="pi_..." />
         </div>
       )}
 
@@ -89,11 +93,11 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Charge ID (or Payment Intent ID)</label>
-            <SmartVariableInput value={config.chargeId || ""} onChange={(v) => updateConfig("chargeId", v)} placeholder="ch_..." />
+            <SmartVariableInput nodeId={nodeId} value={config.chargeId || ""} onChange={(v) => updateConfig("chargeId", v)} placeholder="ch_..." />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Amount (cents, blank = full refund)</label>
-            <SmartVariableInput value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="1000" />
+            <SmartVariableInput nodeId={nodeId} value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="1000" />
           </div>
         </>
       )}
@@ -101,7 +105,7 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
       {op === "createProduct" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Product Name</label>
-          <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Premium Plan" />
+          <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Premium Plan" />
         </div>
       )}
 
@@ -109,16 +113,16 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Product ID</label>
-            <SmartVariableInput value={config.productId || ""} onChange={(v) => updateConfig("productId", v)} placeholder="prod_..." />
+            <SmartVariableInput nodeId={nodeId} value={config.productId || ""} onChange={(v) => updateConfig("productId", v)} placeholder="prod_..." />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Unit Amount (cents)</label>
-              <SmartVariableInput value={config.unitAmount || ""} onChange={(v) => updateConfig("unitAmount", v)} placeholder="999" />
+              <SmartVariableInput nodeId={nodeId} value={config.unitAmount || ""} onChange={(v) => updateConfig("unitAmount", v)} placeholder="999" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Currency</label>
-              <SmartVariableInput value={config.currency || "usd"} onChange={(v) => updateConfig("currency", v)} placeholder="usd" />
+              <SmartVariableInput nodeId={nodeId} value={config.currency || "usd"} onChange={(v) => updateConfig("currency", v)} placeholder="usd" />
             </div>
           </div>
           <div className="flex flex-col gap-2">

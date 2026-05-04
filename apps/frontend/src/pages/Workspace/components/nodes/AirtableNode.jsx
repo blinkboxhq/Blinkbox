@@ -1,7 +1,8 @@
-import { Table2, Settings2, PlusCircle, Search, Pencil, Trash2, Download, Layers, Copy } from 'lucide-react';
+import { Settings2, PlusCircle, Search, Pencil, Trash2, Download, Layers, Copy } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
 import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
+import imgAirtable from '../../../../assets/Airtable--Streamline-Svg-Logos.svg';
 
 const OPERATIONS = [
   { value: 'create',     label: 'Create Record',   icon: PlusCircle },
@@ -37,8 +38,8 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
     <div className="flex flex-col gap-5 w-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
-        <div className="p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 shrink-0">
-          <Table2 className="w-5 h-5" />
+        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+          <img src={imgAirtable} alt="Airtable" className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-yellow-400">Airtable</span>
@@ -91,7 +92,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
       {needsRecordId && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Record ID</label>
-          <SmartVariableInput value={config.recordId || ''} onChange={(val) => updateConfig('recordId', val)} placeholder="recXXXXXXXXXXXXXX" />
+          <SmartVariableInput nodeId={nodeId} value={config.recordId || ''} onChange={(val) => updateConfig('recordId', val)} placeholder="recXXXXXXXXXXXXXX" />
         </div>
       )}
 
@@ -113,7 +114,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
                   <input value={k} onChange={(e) => updateField(k, e.target.value, v)} placeholder="Column Name"
                     className="w-1/3 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-500 transition-colors" />
                   <div className="flex-1">
-                    <SmartVariableInput value={v} onChange={(val) => updateField(k, k, val)} placeholder="Value" />
+                    <SmartVariableInput nodeId={nodeId} value={v} onChange={(val) => updateField(k, k, val)} placeholder="Value" />
                   </div>
                   <button onClick={() => removeField(k)} className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors">
                     <Trash2 className="w-4 h-4" />
@@ -159,7 +160,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Value</label>
-            <SmartVariableInput value={config.searchValue || ''} onChange={(val) => updateConfig('searchValue', val)} placeholder="{{trigger.data.email}}" />
+            <SmartVariableInput nodeId={nodeId} value={config.searchValue || ''} onChange={(val) => updateConfig('searchValue', val)} placeholder="{{trigger.data.email}}" />
           </div>
         </>
       )}
@@ -171,6 +172,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
             Records <span className="text-zinc-700">(array, max 10)</span>
           </label>
           <SmartVariableInput
+            nodeId={nodeId}
             value={typeof config.records === 'string' ? config.records : (config.records ? JSON.stringify(config.records, null, 2) : '')}
             onChange={(val) => { try { updateConfig('records', JSON.parse(val)); } catch { updateConfig('records', val); } }}
             placeholder={operation === 'bulkCreate'
@@ -186,7 +188,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
 
       {/* Authorization */}
       <OAuthConnectButton provider="airtable" providerLabel="Airtable" accentColor="yellow"
-        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} icon={Table2} />
+        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} />
       <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
       <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
         accentColor="yellow" label="Airtable Token" placeholder="Select Airtable credential..." />
