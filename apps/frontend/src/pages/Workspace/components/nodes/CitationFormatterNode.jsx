@@ -12,7 +12,7 @@ const SOURCE_TYPES = [
   { value: 'conference',label: 'Conference Paper' },
 ];
 
-export default function CitationFormatterNode({ config = {}, updateConfig }) {
+export default function CitationFormatterNode({ config = {}, updateConfig, nodeId }) {
   const style = config.style ?? 'APA';
   const sourceType = config.sourceType ?? 'article';
   const authors = config.authors ?? '';

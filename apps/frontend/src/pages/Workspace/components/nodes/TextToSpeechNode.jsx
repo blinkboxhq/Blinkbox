@@ -26,7 +26,7 @@ const VOICES = {
   ],
 };
 
-export default function TextToSpeechNode({ config = {}, updateConfig }) {
+export default function TextToSpeechNode({ config = {}, updateConfig, nodeId }) {
   const text = config.text ?? '';
   const provider = config.provider ?? 'openai';
   const voice = config.voice ?? 'alloy';

@@ -143,7 +143,7 @@ function RouteConditionBuilder({ route, updateRoute, index }) {
   );
 }
 
-export default function LogicRouterNode({ config = {}, updateConfig }) {
+export default function LogicRouterNode({ config = {}, updateConfig, nodeId }) {
   const routes = config.routes || [];
 
   const addRoute = () => updateConfig('routes', [...routes, {

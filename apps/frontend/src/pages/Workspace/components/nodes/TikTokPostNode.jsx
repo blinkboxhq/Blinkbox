@@ -1,7 +1,7 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import imgTikTok from '../../../../assets/tiktok.svg';
 
-export default function TikTokPostNode({ config = {}, updateConfig }) {
+export default function TikTokPostNode({ config = {}, updateConfig, nodeId }) {
   const videoUrl    = config.videoUrl    ?? '';
   const caption     = config.caption     ?? '';
   const privacy     = config.privacy     ?? 'PUBLIC_TO_EVERYONE';

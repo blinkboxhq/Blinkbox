@@ -2,7 +2,7 @@ import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 const METHODS = ["GET","POST","PUT","HEAD","OPTIONS"];
 
-export default function HttpMonitorNode({ config = {}, updateConfig }) {
+export default function HttpMonitorNode({ config = {}, updateConfig, nodeId }) {
   const method = config.method || "GET";
   const expectedStatus = config.expectedStatus || 200;
 

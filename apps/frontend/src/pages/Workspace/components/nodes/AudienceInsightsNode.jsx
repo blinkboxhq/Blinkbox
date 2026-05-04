@@ -1,7 +1,7 @@
 import { BarChart2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function AudienceInsightsNode({ config = {}, updateConfig }) {
+export default function AudienceInsightsNode({ config = {}, updateConfig, nodeId }) {
   const platform    = config.platform    ?? 'instagram';
   const metric      = config.metric      ?? 'overview'; // overview | reach | engagement | followers | posts
   const period      = config.period      ?? '28d'; // 7d | 28d | 90d

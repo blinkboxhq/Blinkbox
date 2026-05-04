@@ -1,7 +1,7 @@
 import { Image } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function ThumbnailGeneratorNode({ config = {}, updateConfig }) {
+export default function ThumbnailGeneratorNode({ config = {}, updateConfig, nodeId }) {
   const title       = config.title       ?? '';
   const style       = config.style       ?? 'youtube'; // youtube | podcast | blog | twitter
   const bgType      = config.bgType      ?? 'ai'; // ai | color | image

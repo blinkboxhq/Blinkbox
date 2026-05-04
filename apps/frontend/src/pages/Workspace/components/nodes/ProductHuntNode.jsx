@@ -13,7 +13,7 @@ const OPERATIONS = [
 const SORT_OPTIONS = ["votes","created_at","featured_at"];
 const CATEGORIES = ["artificial_intelligence","developer_tools","design_tools","productivity","marketing","finance","health_fitness","games"];
 
-export default function ProductHuntNode({ config = {}, updateConfig }) {
+export default function ProductHuntNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listPosts";
 
   return (

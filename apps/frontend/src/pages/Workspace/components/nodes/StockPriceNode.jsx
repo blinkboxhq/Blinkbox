@@ -1,7 +1,7 @@
 import { TrendingUp } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function StockPriceNode({ config = {}, updateConfig }) {
+export default function StockPriceNode({ config = {}, updateConfig, nodeId }) {
   const symbol = config.symbol ?? '';
   const mode = config.mode ?? 'quote'; // 'quote' | 'history' | 'search'
   const interval = config.interval ?? 'daily';

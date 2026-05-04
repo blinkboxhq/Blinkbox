@@ -2,7 +2,7 @@ import { Globe, Search, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
-export default function WebSearchNode({ config = {}, updateConfig }) {
+export default function WebSearchNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Header */}

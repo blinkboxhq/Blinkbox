@@ -15,7 +15,7 @@ function DeepSeekIcon({ className }) {
   );
 }
 
-export default function DeepSeekNode({ config = {}, updateConfig }) {
+export default function DeepSeekNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Header */}

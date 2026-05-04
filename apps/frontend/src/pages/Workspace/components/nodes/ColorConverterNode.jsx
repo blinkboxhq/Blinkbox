@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const FORMATS = ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsv'];
 
-export default function ColorConverterNode({ config = {}, updateConfig }) {
+export default function ColorConverterNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const from = config.from ?? 'hex';
   const to = config.to ?? 'rgb';

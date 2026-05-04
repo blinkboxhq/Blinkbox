@@ -1,7 +1,7 @@
 import { ListChecks } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function QuizGeneratorNode({ config = {}, updateConfig }) {
+export default function QuizGeneratorNode({ config = {}, updateConfig, nodeId }) {
   const content = config.content ?? '';
   const count = config.count ?? 5;
   const model = config.model ?? 'gpt-4o-mini';

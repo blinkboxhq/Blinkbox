@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "createBoard",  label: "Create Board" },
 ];
 
-export default function MondayNode({ config = {}, updateConfig }) {
+export default function MondayNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createItem";
 
   return (

@@ -15,7 +15,7 @@ const OPERATIONS = [
 const PRIORITIES = ["low","normal","high","urgent"];
 const STATUSES = ["new","open","pending","hold","solved","closed"];
 
-export default function ZendeskNode({ config = {}, updateConfig }) {
+export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createTicket";
 
   return (

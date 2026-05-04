@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "searchStories",  label: "Search (Algolia)" },
 ];
 
-export default function HackerNewsNode({ config = {}, updateConfig }) {
+export default function HackerNewsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "getTopStories";
 
   return (

@@ -19,7 +19,7 @@ const QUESTION_TYPES = [
   { value: "DATE",           label: "Date" },
 ];
 
-export default function GoogleFormsNode({ config = {}, updateConfig }) {
+export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listResponses";
 
   return (

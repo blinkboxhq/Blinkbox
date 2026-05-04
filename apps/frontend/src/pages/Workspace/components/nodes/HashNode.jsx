@@ -17,7 +17,7 @@ const ALGORITHMS = [
   { value: 'argon2',    label: 'Argon2id',  bits: null, warning: 'Recommended for passwords' },
 ];
 
-export default function HashNode({ config = {}, updateConfig }) {
+export default function HashNode({ config = {}, updateConfig, nodeId }) {
   const input       = config.input       ?? '';
   const algorithm   = config.algorithm   ?? 'sha256';
   const encoding    = config.encoding    ?? 'hex'; // hex | base64 | base64url

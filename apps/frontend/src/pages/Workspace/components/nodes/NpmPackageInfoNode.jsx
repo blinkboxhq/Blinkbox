@@ -16,7 +16,7 @@ const INFO_FIELDS = [
   { value: 'maintainers',     label: 'Maintainers' },
 ];
 
-export default function NpmPackageInfoNode({ config = {}, updateConfig }) {
+export default function NpmPackageInfoNode({ config = {}, updateConfig, nodeId }) {
   const packageName = config.packageName ?? '';
   const version = config.version ?? 'latest';
   const fields = config.fields ?? ['version', 'description', 'author', 'license', 'homepage', 'downloads'];

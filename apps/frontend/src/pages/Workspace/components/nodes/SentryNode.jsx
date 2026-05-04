@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "listProjects",  label: "List Projects" },
 ];
 
-export default function SentryNode({ config = {}, updateConfig }) {
+export default function SentryNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listIssues";
 
   return (

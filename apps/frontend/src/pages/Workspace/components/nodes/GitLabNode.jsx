@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "listIssues",    label: "List Issues" },
 ];
 
-export default function GitLabNode({ config = {}, updateConfig }) {
+export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createIssue";
 
   return (

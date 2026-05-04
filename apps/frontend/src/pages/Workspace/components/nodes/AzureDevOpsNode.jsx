@@ -15,7 +15,7 @@ const OPERATIONS = [
 const WORK_ITEM_TYPES = ["Bug","Task","User Story","Feature","Epic","Issue","Test Case"];
 const STATES = ["Active","Resolved","Closed","New","To Do","Doing","Done"];
 
-export default function AzureDevOpsNode({ config = {}, updateConfig }) {
+export default function AzureDevOpsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createWorkItem";
 
   return (

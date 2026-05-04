@@ -9,7 +9,7 @@ const EXAMPLES = [
   'floor(random() * 100)',
 ];
 
-export default function MathExpressionNode({ config = {}, updateConfig }) {
+export default function MathExpressionNode({ config = {}, updateConfig, nodeId }) {
   const expression = config.expression ?? '';
   const outputField = config.outputField ?? 'result';
   const precision = config.precision ?? -1; // -1 = no rounding

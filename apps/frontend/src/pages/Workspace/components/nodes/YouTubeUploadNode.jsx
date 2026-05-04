@@ -1,7 +1,7 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import imgYouTube from '../../../../assets/youtube.png';
 
-export default function YouTubeUploadNode({ config = {}, updateConfig }) {
+export default function YouTubeUploadNode({ config = {}, updateConfig, nodeId }) {
   const videoUrl    = config.videoUrl    ?? '';
   const title       = config.title       ?? '';
   const description = config.description ?? '';

@@ -14,7 +14,7 @@ const OPERATIONS = [
   { value: "listCustomers",  label: "List Customers" },
 ];
 
-export default function ShopifyNode({ config = {}, updateConfig }) {
+export default function ShopifyNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listOrders";
 
   return (

@@ -13,7 +13,7 @@ const OPERATIONS = [
   { value: "createRelease", label: "Create Release" },
 ];
 
-export default function GithubNode({ config = {}, updateConfig }) {
+export default function GithubNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listIssues";
 
   return (

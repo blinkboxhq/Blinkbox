@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const GST_RATES = [0, 0.1, 0.25, 3, 5, 12, 18, 28];
 
-export default function GstCalculatorNode({ config = {}, updateConfig }) {
+export default function GstCalculatorNode({ config = {}, updateConfig, nodeId }) {
   const amount      = config.amount      ?? '';
   const gstRate     = config.gstRate     ?? 18;
   const mode        = config.mode        ?? 'exclusive'; // exclusive | inclusive

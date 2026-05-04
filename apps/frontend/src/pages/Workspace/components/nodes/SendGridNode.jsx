@@ -17,7 +17,7 @@ const OPERATIONS = [
   { value: 'addContact',   label: 'Add Contact',   icon: UserPlus },
 ];
 
-export default function SendGridNode({ config = {}, updateConfig }) {
+export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendEmail';
   const isEmail = ['sendEmail', 'sendTemplate', 'sendBulk'].includes(operation);
 

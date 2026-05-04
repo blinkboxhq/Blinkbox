@@ -1,7 +1,7 @@
 import { Film } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function CanvaExportNode({ config = {}, updateConfig }) {
+export default function CanvaExportNode({ config = {}, updateConfig, nodeId }) {
   const designId   = config.designId   ?? '';
   const format     = config.format     ?? 'pdf'; // pdf | png | jpg | mp4 | gif | pptx
   const quality    = config.quality    ?? 'regular'; // regular | pro

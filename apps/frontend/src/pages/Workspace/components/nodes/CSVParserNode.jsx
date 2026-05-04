@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function CSVParserNode({ config = {}, updateConfig }) {
+export default function CSVParserNode({ config = {}, updateConfig, nodeId }) {
   const mode = config.mode || "toJson";
 
   return (

@@ -1,7 +1,7 @@
 import { HeartPulse } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function ClinicalTrialsNode({ config = {}, updateConfig }) {
+export default function ClinicalTrialsNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const condition = config.condition ?? '';
   const status = config.status ?? ''; // 'Recruiting' | 'Completed' | etc.

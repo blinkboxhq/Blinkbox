@@ -14,7 +14,7 @@ const OPERATIONS = [
 const URGENCIES = ["high","low"];
 const SEVERITIES = ["critical","error","warning","info"];
 
-export default function PagerDutyNode({ config = {}, updateConfig }) {
+export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createIncident";
 
   return (

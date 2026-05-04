@@ -1,7 +1,7 @@
 import { Hash } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function HashtagSuggesterNode({ config = {}, updateConfig }) {
+export default function HashtagSuggesterNode({ config = {}, updateConfig, nodeId }) {
   const content     = config.content     ?? '';
   const platform    = config.platform    ?? 'instagram';
   const count       = config.count       ?? 20;

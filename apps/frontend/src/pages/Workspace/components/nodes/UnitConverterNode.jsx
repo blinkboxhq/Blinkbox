@@ -12,7 +12,7 @@ const CATEGORIES = {
   time:        { label: 'Time',        units: ['ms', 's', 'min', 'hr', 'day', 'week', 'month', 'year'] },
 };
 
-export default function UnitConverterNode({ config = {}, updateConfig }) {
+export default function UnitConverterNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const category = config.category ?? 'weight';
   const from = config.from ?? 'kg';

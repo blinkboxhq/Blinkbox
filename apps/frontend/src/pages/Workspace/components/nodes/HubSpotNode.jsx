@@ -15,7 +15,7 @@ const OPERATIONS = [
 
 const DEAL_STAGES = ["appointmentscheduled", "qualifiedtobuy", "presentationscheduled", "decisionmakerboughtin", "contractsent", "closedwon", "closedlost"];
 
-export default function HubSpotNode({ config = {}, updateConfig }) {
+export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createContact";
 
   return (

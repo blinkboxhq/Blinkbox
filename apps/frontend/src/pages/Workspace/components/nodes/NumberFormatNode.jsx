@@ -14,7 +14,7 @@ const OPERATIONS = [
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'AUD', 'CAD'];
 
-export default function NumberFormatNode({ config = {}, updateConfig }) {
+export default function NumberFormatNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation ?? 'round';
   const field = config.field ?? '';
   const decimals = config.decimals ?? 2;

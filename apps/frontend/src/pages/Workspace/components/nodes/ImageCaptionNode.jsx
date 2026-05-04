@@ -1,7 +1,7 @@
 import { Camera } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function ImageCaptionNode({ config = {}, updateConfig }) {
+export default function ImageCaptionNode({ config = {}, updateConfig, nodeId }) {
   const imageUrl   = config.imageUrl   ?? '';
   const provider   = config.provider   ?? 'openai';
   const model      = config.model      ?? 'gpt-4o-mini';

@@ -1,7 +1,7 @@
 import { TrendingUp } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function CompoundInterestNode({ config = {}, updateConfig }) {
+export default function CompoundInterestNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'compound'; // compound | simple | emi | sip | lumpsum | fd
   const principal   = config.principal   ?? '';
   const rate        = config.rate        ?? '';

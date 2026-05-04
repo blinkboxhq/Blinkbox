@@ -14,7 +14,7 @@ const OPERATIONS = [
 const METRIC_TYPES = ["gauge","count","rate","distribution"];
 const ALERT_TYPES = ["metric alert","query alert","log alert","process alert"];
 
-export default function DatadogNode({ config = {}, updateConfig }) {
+export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "submitMetric";
 
   return (

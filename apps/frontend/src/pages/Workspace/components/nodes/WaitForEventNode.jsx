@@ -1,7 +1,7 @@
 import { Clock, Webhook } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function WaitForEventNode({ config = {}, updateConfig }) {
+export default function WaitForEventNode({ config = {}, updateConfig, nodeId }) {
   const type = config.type ?? 'webhook'; // 'webhook' | 'condition' | 'time'
   const timeout = config.timeout ?? 3600;
   const conditionField = config.conditionField ?? '';

@@ -19,7 +19,7 @@ const FIELDS = [
   { value: 'dlc',               label: 'DLC List' },
 ];
 
-export default function SteamGameLookupNode({ config = {}, updateConfig }) {
+export default function SteamGameLookupNode({ config = {}, updateConfig, nodeId }) {
   const query   = config.query   ?? '';
   const mode    = config.mode    ?? 'search'; // search | appid | player_summary
   const fields  = config.fields  ?? ['name','description','price','review_score','genres','header_image'];

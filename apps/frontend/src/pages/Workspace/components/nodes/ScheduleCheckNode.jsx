@@ -4,7 +4,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 const TIMEZONES = ['Asia/Kolkata','UTC','America/New_York','America/Los_Angeles','Europe/London','Europe/Berlin','Asia/Tokyo','Asia/Singapore','Australia/Sydney'];
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-export default function ScheduleCheckNode({ config = {}, updateConfig }) {
+export default function ScheduleCheckNode({ config = {}, updateConfig, nodeId }) {
   const timezone    = config.timezone    ?? 'Asia/Kolkata';
   const startTime   = config.startTime   ?? '09:00';
   const endTime     = config.endTime     ?? '18:00';

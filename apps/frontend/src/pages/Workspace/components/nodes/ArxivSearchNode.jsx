@@ -12,7 +12,7 @@ const CATEGORIES = [
   { value: 'eess', label: 'Electrical Engineering' },
 ];
 
-export default function ArxivSearchNode({ config = {}, updateConfig }) {
+export default function ArxivSearchNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const category = config.category ?? '';
   const maxResults = config.maxResults ?? 10;

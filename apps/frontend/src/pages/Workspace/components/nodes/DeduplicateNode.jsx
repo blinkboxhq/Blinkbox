@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function DeduplicateNode({ config = {}, updateConfig }) {
+export default function DeduplicateNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl">

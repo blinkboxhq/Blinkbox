@@ -13,7 +13,7 @@ const OPERATIONS = [
   { value: "searchDeals",   label: "Search Deals" },
 ];
 
-export default function PipedriveNode({ config = {}, updateConfig }) {
+export default function PipedriveNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createDeal";
 
   return (

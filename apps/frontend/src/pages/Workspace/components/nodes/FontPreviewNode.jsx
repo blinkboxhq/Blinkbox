@@ -7,7 +7,7 @@ const SAMPLE_FONTS = [
   'Pacifico', 'Dancing Script', 'Bebas Neue', 'Anton', 'Oswald',
 ];
 
-export default function FontPreviewNode({ config = {}, updateConfig }) {
+export default function FontPreviewNode({ config = {}, updateConfig, nodeId }) {
   const text        = config.text        ?? 'The quick brown fox';
   const font        = config.font        ?? 'Inter';
   const fontSize    = config.fontSize    ?? 48;

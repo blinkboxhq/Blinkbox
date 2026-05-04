@@ -1,7 +1,7 @@
 import { Edit2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function CaptionWriterNode({ config = {}, updateConfig }) {
+export default function CaptionWriterNode({ config = {}, updateConfig, nodeId }) {
   const topic       = config.topic       ?? '';
   const platform    = config.platform    ?? 'instagram';
   const tone        = config.tone        ?? 'engaging'; // engaging | funny | professional | inspirational | educational | casual

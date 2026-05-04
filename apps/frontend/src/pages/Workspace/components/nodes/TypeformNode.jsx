@@ -10,7 +10,7 @@ const OPERATIONS = [
   { value: "deleteResponse", label: "Delete Response" },
 ];
 
-export default function TypeformNode({ config = {}, updateConfig }) {
+export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listResponses";
 
   return (

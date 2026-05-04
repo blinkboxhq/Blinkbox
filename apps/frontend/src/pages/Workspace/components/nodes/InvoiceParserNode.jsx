@@ -19,7 +19,7 @@ const FIELDS = [
   { value: 'bank_details',   label: 'Bank Details' },
 ];
 
-export default function InvoiceParserNode({ config = {}, updateConfig }) {
+export default function InvoiceParserNode({ config = {}, updateConfig, nodeId }) {
   const imageUrl  = config.imageUrl  ?? '';
   const provider  = config.provider  ?? 'openai';
   const model     = config.model     ?? 'gpt-4o';

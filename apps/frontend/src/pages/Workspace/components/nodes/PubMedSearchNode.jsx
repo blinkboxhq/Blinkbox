@@ -1,7 +1,7 @@
 import { Microscope } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function PubMedSearchNode({ config = {}, updateConfig }) {
+export default function PubMedSearchNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const maxResults = config.maxResults ?? 10;
   const sortBy = config.sortBy ?? 'relevance';

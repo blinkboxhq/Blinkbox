@@ -1,7 +1,7 @@
 import { Palette } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function ColorPaletteNode({ config = {}, updateConfig }) {
+export default function ColorPaletteNode({ config = {}, updateConfig, nodeId }) {
   const source      = config.source      ?? 'prompt'; // prompt | image | color
   const prompt      = config.prompt      ?? '';
   const imageUrl    = config.imageUrl    ?? '';

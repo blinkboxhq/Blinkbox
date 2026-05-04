@@ -14,7 +14,7 @@ const DALLE_STYLE    = ['vivid', 'natural'];
 const SD_MODELS      = ['stable-diffusion-xl-1024-v1-0', 'stable-diffusion-v1-6'];
 const FAL_MODELS     = ['fal-ai/flux/schnell', 'fal-ai/flux/dev', 'fal-ai/flux-pro'];
 
-export default function ImageGenerateNode({ config = {}, updateConfig }) {
+export default function ImageGenerateNode({ config = {}, updateConfig, nodeId }) {
   const provider  = config.provider  ?? 'openai';
   const prompt    = config.prompt    ?? '';
   const negative  = config.negative  ?? '';

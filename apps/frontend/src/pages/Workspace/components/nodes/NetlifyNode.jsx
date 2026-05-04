@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "updateEnvVar",    label: "Update Env Variable" },
 ];
 
-export default function NetlifyNode({ config = {}, updateConfig }) {
+export default function NetlifyNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "triggerBuild";
 
   return (

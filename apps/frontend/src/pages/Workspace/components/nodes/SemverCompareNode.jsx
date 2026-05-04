@@ -16,7 +16,7 @@ const OPERATIONS = [
   { value: 'valid',        label: 'is valid',     desc: 'Is A a valid semver string?' },
 ];
 
-export default function SemverCompareNode({ config = {}, updateConfig }) {
+export default function SemverCompareNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation ?? 'gt';
   const versionA = config.versionA ?? '';
   const versionB = config.versionB ?? '';

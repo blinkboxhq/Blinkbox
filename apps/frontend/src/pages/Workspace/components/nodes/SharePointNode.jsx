@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "listFiles",      label: "List Library Files" },
 ];
 
-export default function SharePointNode({ config = {}, updateConfig }) {
+export default function SharePointNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listItems";
 
   return (

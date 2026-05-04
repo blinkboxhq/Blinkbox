@@ -1,6 +1,6 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function TwitterPostNode({ config = {}, updateConfig }) {
+export default function TwitterPostNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'tweet'; // tweet | thread | reply | quote
   const text        = config.text        ?? '';
   const thread      = config.thread      ?? '';

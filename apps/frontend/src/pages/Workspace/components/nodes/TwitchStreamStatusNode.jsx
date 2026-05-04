@@ -1,7 +1,7 @@
 import { Radio } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function TwitchStreamStatusNode({ config = {}, updateConfig }) {
+export default function TwitchStreamStatusNode({ config = {}, updateConfig, nodeId }) {
   const username    = config.username    ?? '';
   const mode        = config.mode        ?? 'status'; // status | info | clips | schedule
   const clientId    = config.clientId    ?? '';

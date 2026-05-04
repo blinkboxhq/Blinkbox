@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function SSLMonitorNode({ config = {}, updateConfig }) {
+export default function SSLMonitorNode({ config = {}, updateConfig, nodeId }) {
   const warningDays = config.warningDays ?? 30;
   const criticalDays = config.criticalDays ?? 7;
 

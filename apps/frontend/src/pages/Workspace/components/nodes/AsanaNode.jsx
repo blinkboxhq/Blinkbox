@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "listProjects",  label: "List Projects" },
 ];
 
-export default function AsanaNode({ config = {}, updateConfig }) {
+export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createTask";
 
   return (

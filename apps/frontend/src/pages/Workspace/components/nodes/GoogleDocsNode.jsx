@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "exportDoc",      label: "Export as PDF / DOCX" },
 ];
 
-export default function GoogleDocsNode({ config = {}, updateConfig }) {
+export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createDoc";
 
   return (

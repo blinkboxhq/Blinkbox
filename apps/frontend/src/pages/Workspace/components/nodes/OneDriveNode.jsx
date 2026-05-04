@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "getFileInfo",   label: "Get File Info" },
 ];
 
-export default function OneDriveNode({ config = {}, updateConfig }) {
+export default function OneDriveNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "uploadFile";
 
   return (

@@ -1,7 +1,7 @@
 import { FileText } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function HtmlToTextNode({ config = {}, updateConfig }) {
+export default function HtmlToTextNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const preserveLinks = config.preserveLinks ?? false;
   const preserveLineBreaks = config.preserveLineBreaks ?? true;

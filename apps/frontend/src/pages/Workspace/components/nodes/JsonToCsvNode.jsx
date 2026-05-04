@@ -1,7 +1,7 @@
 import { Table2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function JsonToCsvNode({ config = {}, updateConfig }) {
+export default function JsonToCsvNode({ config = {}, updateConfig, nodeId }) {
   const direction = config.direction ?? 'json_to_csv'; // 'json_to_csv' | 'csv_to_json'
   const field = config.field ?? '';
   const delimiter = config.delimiter ?? ',';

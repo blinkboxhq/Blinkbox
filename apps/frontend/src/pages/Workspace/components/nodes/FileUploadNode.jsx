@@ -1,7 +1,7 @@
 import { Upload } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function FileUploadNode({ config = {}, updateConfig }) {
+export default function FileUploadNode({ config = {}, updateConfig, nodeId }) {
   const content     = config.content     ?? '';
   const filename    = config.filename    ?? '';
   const destination = config.destination ?? 's3'; // s3 | gcs | azure | sftp | local | url

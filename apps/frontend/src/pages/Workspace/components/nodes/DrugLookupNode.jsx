@@ -1,7 +1,7 @@
 import { Pill } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function DrugLookupNode({ config = {}, updateConfig }) {
+export default function DrugLookupNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const searchBy = config.searchBy ?? 'name'; // 'name' | 'ndc' | 'application_number'
   const infoFields = config.infoFields ?? ['brand_name', 'generic_name', 'dosage_form', 'route', 'warnings', 'indications_and_usage'];

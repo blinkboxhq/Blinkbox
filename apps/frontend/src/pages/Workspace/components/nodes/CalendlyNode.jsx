@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "createWebhook",   label: "Create Webhook" },
 ];
 
-export default function CalendlyNode({ config = {}, updateConfig }) {
+export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listEvents";
 
   return (

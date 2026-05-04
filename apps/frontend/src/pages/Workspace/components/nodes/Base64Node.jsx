@@ -1,7 +1,7 @@
 import { Lock } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function Base64Node({ config = {}, updateConfig }) {
+export default function Base64Node({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'encode'; // encode | decode
   const input       = config.input       ?? '';
   const inputType   = config.inputType   ?? 'text'; // text | url | binary

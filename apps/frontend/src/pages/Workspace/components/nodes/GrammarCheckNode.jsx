@@ -1,7 +1,7 @@
 import { CheckSquare } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function GrammarCheckNode({ config = {}, updateConfig }) {
+export default function GrammarCheckNode({ config = {}, updateConfig, nodeId }) {
   const text = config.text ?? '';
   const model = config.model ?? 'gpt-4o-mini';
   const language = config.language ?? 'English';

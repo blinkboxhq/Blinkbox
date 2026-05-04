@@ -1,7 +1,7 @@
 import { XCircle } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function StopErrorNode({ config = {}, updateConfig }) {
+export default function StopErrorNode({ config = {}, updateConfig, nodeId }) {
   const message = config.message ?? '';
   const code = config.code ?? 'WORKFLOW_ERROR';
 

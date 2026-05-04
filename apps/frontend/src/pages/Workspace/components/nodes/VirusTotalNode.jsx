@@ -10,7 +10,7 @@ const OPERATIONS = [
   { value: "getDomainReport", label: "Get Domain Report" },
 ];
 
-export default function VirusTotalNode({ config = {}, updateConfig }) {
+export default function VirusTotalNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "scanUrl";
 
   return (

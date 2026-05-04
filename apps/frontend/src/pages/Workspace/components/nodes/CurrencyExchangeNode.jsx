@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const COMMON_CURRENCIES = ['USD','EUR','GBP','INR','JPY','AUD','CAD','CHF','CNY','SGD','AED','SAR','MXN','BRL','KRW','HKD'];
 
-export default function CurrencyExchangeNode({ config = {}, updateConfig }) {
+export default function CurrencyExchangeNode({ config = {}, updateConfig, nodeId }) {
   const from = config.from ?? 'USD';
   const to = config.to ?? 'INR';
   const amount = config.amount ?? '1';

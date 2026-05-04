@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "createEvent",     label: "Track Event" },
 ];
 
-export default function IntercomNode({ config = {}, updateConfig }) {
+export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createContact";
 
   return (

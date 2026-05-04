@@ -13,7 +13,7 @@ const OPERATIONS = [
   { value: "flagEmail",       label: "Flag / Unflag" },
 ];
 
-export default function OutlookNode({ config = {}, updateConfig }) {
+export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "sendEmail";
 
   return (

@@ -16,7 +16,7 @@ const OPERATIONS = [
   { value: 'lookupNumber', label: 'Lookup Number', icon: Search },
 ];
 
-export default function TwilioNode({ config = {}, updateConfig }) {
+export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendSms';
 
   return (

@@ -14,7 +14,7 @@ const OPERATIONS = [
   { value: 'bulkUpdate', label: 'Bulk Update',     icon: Copy },
 ];
 
-export default function AirtableNode({ config = {}, updateConfig }) {
+export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'create';
   const fields = config.fields || {};
   const fieldEntries = Object.entries(fields);

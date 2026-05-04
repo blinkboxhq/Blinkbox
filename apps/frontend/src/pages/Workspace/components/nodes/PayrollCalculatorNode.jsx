@@ -1,7 +1,7 @@
 import { Briefcase } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function PayrollCalculatorNode({ config = {}, updateConfig }) {
+export default function PayrollCalculatorNode({ config = {}, updateConfig, nodeId }) {
   const country     = config.country     ?? 'IN';
   const ctc         = config.ctc         ?? '';
   const employeeName= config.employeeName?? '';

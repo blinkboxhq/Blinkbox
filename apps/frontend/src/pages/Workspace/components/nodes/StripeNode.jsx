@@ -14,7 +14,7 @@ const OPERATIONS = [
   { value: "createPrice",         label: "Create Price" },
 ];
 
-export default function StripeNode({ config = {}, updateConfig }) {
+export default function StripeNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createCustomer";
 
   return (

@@ -1,7 +1,7 @@
 import { BookMarked } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function FlashcardGeneratorNode({ config = {}, updateConfig }) {
+export default function FlashcardGeneratorNode({ config = {}, updateConfig, nodeId }) {
   const content = config.content ?? '';
   const count = config.count ?? 10;
   const model = config.model ?? 'gpt-4o-mini';

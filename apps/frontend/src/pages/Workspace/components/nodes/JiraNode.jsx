@@ -13,7 +13,7 @@ const OPERATIONS = [
 
 const PRIORITIES = ["Highest", "High", "Medium", "Low", "Lowest"];
 
-export default function JiraNode({ config = {}, updateConfig }) {
+export default function JiraNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "searchIssues";
 
   return (

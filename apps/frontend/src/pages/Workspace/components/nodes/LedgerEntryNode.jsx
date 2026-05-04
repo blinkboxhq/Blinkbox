@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const ACCOUNT_TYPES = ['Assets','Liabilities','Equity','Revenue','Expenses','Bank','Cash','Receivables','Payables','Tax'];
 
-export default function LedgerEntryNode({ config = {}, updateConfig }) {
+export default function LedgerEntryNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'add'; // add | query | balance | report
   const date        = config.date        ?? '';
   const description = config.description ?? '';

@@ -19,7 +19,7 @@ function CalIcon({ className }) {
   );
 }
 
-export default function GoogleCalendarNode({ config = {}, updateConfig }) {
+export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listEvents";
 
   return (

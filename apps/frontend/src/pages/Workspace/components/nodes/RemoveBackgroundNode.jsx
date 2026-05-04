@@ -1,7 +1,7 @@
 import { Scissors } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function RemoveBackgroundNode({ config = {}, updateConfig }) {
+export default function RemoveBackgroundNode({ config = {}, updateConfig, nodeId }) {
   const imageUrl    = config.imageUrl    ?? '';
   const provider    = config.provider    ?? 'removebg'; // removebg | bria | fal
   const apiKey      = config.apiKey      ?? '';

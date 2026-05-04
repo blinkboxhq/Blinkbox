@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const PARTS = ['href', 'protocol', 'hostname', 'port', 'pathname', 'search', 'hash', 'origin'];
 
-export default function UrlParserNode({ config = {}, updateConfig }) {
+export default function UrlParserNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const extract = config.extract ?? 'all'; // 'all' | specific part
   const outputField = config.outputField ?? 'parsed';

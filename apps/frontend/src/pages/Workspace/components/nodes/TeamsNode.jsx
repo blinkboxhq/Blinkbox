@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "createMeeting",   label: "Create Meeting" },
 ];
 
-export default function TeamsNode({ config = {}, updateConfig }) {
+export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "sendMessage";
 
   return (

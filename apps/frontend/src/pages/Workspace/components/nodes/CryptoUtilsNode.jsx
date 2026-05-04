@@ -12,7 +12,7 @@ const OPERATIONS = [
 const ALGORITHMS = ["sha256", "sha512", "sha1", "md5"];
 const ENCODINGS  = ["hex", "base64", "base64url"];
 
-export default function CryptoUtilsNode({ config = {}, updateConfig }) {
+export default function CryptoUtilsNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "hash";
   const needsInput  = !["uuid", "random"].includes(op);
   const needsAlgo   = ["hash", "hmac"].includes(op);

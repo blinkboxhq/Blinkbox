@@ -3,7 +3,7 @@ import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 const TOP_COINS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","MATIC","DOT","LINK","UNI","ATOM","LTC","BCH"];
 const CURRENCIES = ["USD","EUR","GBP","INR","JPY","BTC","ETH"];
 
-export default function CryptoPriceNode({ config = {}, updateConfig }) {
+export default function CryptoPriceNode({ config = {}, updateConfig, nodeId }) {
   const selectedCoins = config.coins || ["BTC"];
   const currency = config.currency || "USD";
 

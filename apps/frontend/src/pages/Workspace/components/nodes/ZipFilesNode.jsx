@@ -1,7 +1,7 @@
 import { Archive } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function ZipFilesNode({ config = {}, updateConfig }) {
+export default function ZipFilesNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'zip'; // zip | unzip
   const files       = config.files       ?? '';
   const zipInput    = config.zipInput    ?? '';

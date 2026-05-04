@@ -18,7 +18,7 @@ const PRIORITIES = [
   { value: 4, label: "Low" },
 ];
 
-export default function ClickUpNode({ config = {}, updateConfig }) {
+export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createTask";
 
   return (

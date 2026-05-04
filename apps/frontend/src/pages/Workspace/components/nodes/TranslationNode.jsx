@@ -14,7 +14,7 @@ const PROVIDERS = [
   { value: 'anthropic',label: 'Claude' },
 ];
 
-export default function TranslationNode({ config = {}, updateConfig }) {
+export default function TranslationNode({ config = {}, updateConfig, nodeId }) {
   const text = config.text ?? '';
   const from = config.from ?? 'Auto Detect';
   const to = config.to ?? 'English';

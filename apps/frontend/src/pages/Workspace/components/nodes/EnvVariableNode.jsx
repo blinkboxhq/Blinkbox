@@ -1,7 +1,7 @@
 import { Key } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function EnvVariableNode({ config = {}, updateConfig }) {
+export default function EnvVariableNode({ config = {}, updateConfig, nodeId }) {
   const vars = config.vars ?? [{ key: '', value: '' }];
   const mode = config.mode ?? 'inject'; // 'inject' | 'read' | 'check'
 

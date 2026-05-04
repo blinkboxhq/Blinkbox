@@ -1,7 +1,7 @@
 import { Thermometer } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function WeatherNode({ config = {}, updateConfig }) {
+export default function WeatherNode({ config = {}, updateConfig, nodeId }) {
   const location = config.location ?? '';
   const mode = config.mode ?? 'current'; // 'current' | 'forecast'
   const days = config.days ?? 3;

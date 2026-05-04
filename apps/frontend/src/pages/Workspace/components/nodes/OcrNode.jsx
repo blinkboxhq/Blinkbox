@@ -16,7 +16,7 @@ const LANGUAGES_OCR = [
   { value: 'kor', label: 'Korean' },
 ];
 
-export default function OcrNode({ config = {}, updateConfig }) {
+export default function OcrNode({ config = {}, updateConfig, nodeId }) {
   const imageUrl = config.imageUrl ?? '';
   const provider = config.provider ?? 'openai'; // 'openai' | 'google' | 'tesseract'
   const language = config.language ?? 'eng';

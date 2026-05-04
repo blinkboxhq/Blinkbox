@@ -1,7 +1,7 @@
 import { Shuffle } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function RandomPickNode({ config = {}, updateConfig }) {
+export default function RandomPickNode({ config = {}, updateConfig, nodeId }) {
   const mode   = config.mode   ?? 'one'; // one | multiple | shuffle | weighted
   const array  = config.array  ?? '';
   const count  = config.count  ?? 1;

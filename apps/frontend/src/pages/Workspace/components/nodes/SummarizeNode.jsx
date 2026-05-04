@@ -1,7 +1,7 @@
 import { AlignLeft } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function SummarizeNode({ config = {}, updateConfig }) {
+export default function SummarizeNode({ config = {}, updateConfig, nodeId }) {
   const text = config.text ?? '';
   const model = config.model ?? 'gpt-4o-mini';
   const format = config.format ?? 'paragraph'; // 'paragraph' | 'bullets' | 'tldr' | 'structured'

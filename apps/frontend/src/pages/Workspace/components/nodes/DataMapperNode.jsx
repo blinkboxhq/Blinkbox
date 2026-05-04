@@ -8,7 +8,7 @@ const MODES = [
   { value: 'remove', label: 'Remove Fields', icon: Trash2 },
 ];
 
-export default function DataMapperNode({ config = {}, updateConfig }) {
+export default function DataMapperNode({ config = {}, updateConfig, nodeId }) {
   const mode = config.mode || 'set';
   const items = config.items || [];
 

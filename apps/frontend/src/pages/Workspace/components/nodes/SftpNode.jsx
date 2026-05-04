@@ -1,7 +1,7 @@
 import { UploadCloud } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function SftpNode({ config = {}, updateConfig }) {
+export default function SftpNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation ?? 'upload'; // upload | download | list | delete | mkdir
   const host = config.host ?? '';
   const port = config.port ?? 22;

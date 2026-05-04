@@ -13,7 +13,7 @@ const OPERATIONS = [
 
 const VISIBILITIES = ["public","unlisted","private","direct"];
 
-export default function MastodonNode({ config = {}, updateConfig }) {
+export default function MastodonNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "postStatus";
 
   return (

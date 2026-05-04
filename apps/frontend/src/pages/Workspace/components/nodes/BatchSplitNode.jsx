@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function BatchSplitNode({ config = {}, updateConfig }) {
+export default function BatchSplitNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">

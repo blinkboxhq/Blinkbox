@@ -1,6 +1,6 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function LinkedInPostNode({ config = {}, updateConfig }) {
+export default function LinkedInPostNode({ config = {}, updateConfig, nodeId }) {
   const type        = config.type        ?? 'text'; // text | image | video | article | document
   const text        = config.text        ?? '';
   const mediaUrl    = config.mediaUrl    ?? '';

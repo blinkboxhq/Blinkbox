@@ -15,7 +15,7 @@ const OPERATIONS = [
 
 const ORDER_STATUSES = ["pending","processing","on-hold","completed","cancelled","refunded","failed"];
 
-export default function WooCommerceNode({ config = {}, updateConfig }) {
+export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listOrders";
 
   return (

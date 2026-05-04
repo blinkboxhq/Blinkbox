@@ -1,7 +1,7 @@
 import { Hash } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function CounterNode({ config = {}, updateConfig }) {
+export default function CounterNode({ config = {}, updateConfig, nodeId }) {
   const mode      = config.mode      ?? 'increment'; // increment | decrement | reset | get | set
   const counterId = config.counterId ?? 'counter_1';
   const amount    = config.amount    ?? 1;

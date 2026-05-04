@@ -8,7 +8,7 @@ const DEFAULT_QUERY = `query {
   }
 }`;
 
-export default function GraphQLNode({ config = {}, updateConfig }) {
+export default function GraphQLNode({ config = {}, updateConfig, nodeId }) {
   const endpoint = config.endpoint ?? '';
   const query = config.query ?? DEFAULT_QUERY;
   const variables = config.variables ?? '';

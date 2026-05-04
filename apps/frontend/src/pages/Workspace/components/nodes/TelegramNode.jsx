@@ -13,7 +13,7 @@ const OPERATIONS = [
   { value: 'getChat',       label: 'Get Chat Info',   icon: Info },
 ];
 
-export default function TelegramNode({ config = {}, updateConfig }) {
+export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendMessage';
 
   return (

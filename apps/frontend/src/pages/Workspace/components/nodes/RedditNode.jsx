@@ -14,7 +14,7 @@ const OPERATIONS = [
 
 const TIME_FILTERS = ["hour","day","week","month","year","all"];
 
-export default function RedditNode({ config = {}, updateConfig }) {
+export default function RedditNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "getHotPosts";
 
   return (

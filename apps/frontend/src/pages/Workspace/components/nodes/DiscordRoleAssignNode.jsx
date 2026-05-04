@@ -1,7 +1,7 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import imgDiscord from '../../../../assets/discord.png';
 
-export default function DiscordRoleAssignNode({ config = {}, updateConfig }) {
+export default function DiscordRoleAssignNode({ config = {}, updateConfig, nodeId }) {
   const mode      = config.mode      ?? 'add'; // add | remove | list | create
   const guildId   = config.guildId   ?? '';
   const userId    = config.userId    ?? '';

@@ -1,7 +1,7 @@
 import { Code2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function XmlParserNode({ config = {}, updateConfig }) {
+export default function XmlParserNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const mode = config.mode ?? 'parse'; // 'parse' | 'build'
   const extractPath = config.extractPath ?? '';

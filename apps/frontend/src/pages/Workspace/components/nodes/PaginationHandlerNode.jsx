@@ -1,7 +1,7 @@
 import { ArrowRightLeft } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function PaginationHandlerNode({ config = {}, updateConfig }) {
+export default function PaginationHandlerNode({ config = {}, updateConfig, nodeId }) {
   const strategy    = config.strategy    ?? 'offset'; // offset | cursor | page | link
   const url         = config.url         ?? '';
   const pageSize    = config.pageSize    ?? 100;

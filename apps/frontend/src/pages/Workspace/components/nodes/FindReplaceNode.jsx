@@ -1,7 +1,7 @@
 import { Replace } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function FindReplaceNode({ config = {}, updateConfig }) {
+export default function FindReplaceNode({ config = {}, updateConfig, nodeId }) {
   const field = config.field ?? '';
   const find = config.find ?? '';
   const replace = config.replace ?? '';

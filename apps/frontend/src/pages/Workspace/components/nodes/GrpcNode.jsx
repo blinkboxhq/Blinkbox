@@ -1,7 +1,7 @@
 import { Cpu } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function GrpcNode({ config = {}, updateConfig }) {
+export default function GrpcNode({ config = {}, updateConfig, nodeId }) {
   const host = config.host ?? '';
   const port = config.port ?? 50051;
   const service = config.service ?? '';

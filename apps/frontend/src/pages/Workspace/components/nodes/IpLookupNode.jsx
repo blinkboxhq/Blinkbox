@@ -17,7 +17,7 @@ const FIELDS = [
   { value: 'languages',    label: 'Languages' },
 ];
 
-export default function IpLookupNode({ config = {}, updateConfig }) {
+export default function IpLookupNode({ config = {}, updateConfig, nodeId }) {
   const ip = config.ip ?? '';
   const fields = config.fields ?? ['ip', 'city', 'region', 'country_name', 'latitude', 'longitude', 'timezone', 'org'];
 

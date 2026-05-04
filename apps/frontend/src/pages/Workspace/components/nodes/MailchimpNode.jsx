@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "listLists",        label: "List Audiences" },
 ];
 
-export default function MailchimpNode({ config = {}, updateConfig }) {
+export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "addSubscriber";
 
   return (

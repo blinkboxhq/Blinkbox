@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const COMMON_STATUSES = [200, 201, 204, 400, 401, 403, 404, 422, 429, 500, 502, 503];
 
-export default function WebhookResponseNode({ config = {}, updateConfig }) {
+export default function WebhookResponseNode({ config = {}, updateConfig, nodeId }) {
   const statusCode = config.statusCode ?? 200;
   const body = config.body ?? '';
   const contentType = config.contentType ?? 'application/json';

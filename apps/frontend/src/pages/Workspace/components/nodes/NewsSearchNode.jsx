@@ -1,7 +1,7 @@
 import { Newspaper } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function NewsSearchNode({ config = {}, updateConfig }) {
+export default function NewsSearchNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const language = config.language ?? 'en';
   const sortBy = config.sortBy ?? 'publishedAt';

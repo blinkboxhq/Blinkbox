@@ -21,7 +21,7 @@ function DriveIcon({ className }) {
   );
 }
 
-export default function GoogleDriveNode({ config = {}, updateConfig }) {
+export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listFiles";
 
   return (

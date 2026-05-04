@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function ApprovalNode({ config = {}, updateConfig }) {
+export default function ApprovalNode({ config = {}, updateConfig, nodeId }) {
   const channels = config.notifyChannels || ["email"];
   const toggle = (ch) => {
     const next = channels.includes(ch) ? channels.filter((c) => c !== ch) : [...channels, ch];

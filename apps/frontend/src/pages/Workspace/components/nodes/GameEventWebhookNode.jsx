@@ -7,7 +7,7 @@ const COMMON_EVENTS = [
   'quest.complete','boss.defeat','purchase.made','season.end','ban.issued',
 ];
 
-export default function GameEventWebhookNode({ config = {}, updateConfig }) {
+export default function GameEventWebhookNode({ config = {}, updateConfig, nodeId }) {
   const eventType   = config.eventType   ?? '';
   const filter      = config.filter      ?? '';
   const secret      = config.secret      ?? '';

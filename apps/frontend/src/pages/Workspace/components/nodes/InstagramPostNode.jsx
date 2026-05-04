@@ -1,7 +1,7 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import imgInstagram from '../../../../assets/instagram.svg';
 
-export default function InstagramPostNode({ config = {}, updateConfig }) {
+export default function InstagramPostNode({ config = {}, updateConfig, nodeId }) {
   const type        = config.type        ?? 'image'; // image | reel | carousel | story
   const mediaUrl    = config.mediaUrl    ?? '';
   const caption     = config.caption     ?? '';

@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "listCards",    label: "List Cards in List" },
 ];
 
-export default function TrelloNode({ config = {}, updateConfig }) {
+export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "createCard";
 
   return (

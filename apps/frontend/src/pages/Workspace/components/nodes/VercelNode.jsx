@@ -12,7 +12,7 @@ const OPERATIONS = [
   { value: "getEnvVars",      label: "Get Env Variables" },
 ];
 
-export default function VercelNode({ config = {}, updateConfig }) {
+export default function VercelNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listDeployments";
 
   return (

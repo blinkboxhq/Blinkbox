@@ -18,7 +18,7 @@ const PRIORITIES = [
   { value: "4", label: "Low" },
 ];
 
-export default function LinearNode({ config = {}, updateConfig }) {
+export default function LinearNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "listIssues";
 
   return (

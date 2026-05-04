@@ -3,7 +3,7 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const REGIONS = ['us-east-1','us-west-2','eu-west-1','eu-central-1','ap-south-1','ap-southeast-1','ap-northeast-1','sa-east-1'];
 
-export default function S3Node({ config = {}, updateConfig }) {
+export default function S3Node({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation ?? 'upload';
   const bucket = config.bucket ?? '';
   const key = config.key ?? '';

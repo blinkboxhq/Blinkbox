@@ -1,7 +1,7 @@
 import { Download } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function FileDownloadNode({ config = {}, updateConfig }) {
+export default function FileDownloadNode({ config = {}, updateConfig, nodeId }) {
   const url         = config.url         ?? '';
   const method      = config.method      ?? 'GET';
   const headers     = config.headers     ?? '';

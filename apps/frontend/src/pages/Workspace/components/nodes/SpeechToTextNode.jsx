@@ -1,7 +1,7 @@
 import { Mic2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function SpeechToTextNode({ config = {}, updateConfig }) {
+export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) {
   const audioUrl = config.audioUrl ?? '';
   const provider = config.provider ?? 'openai'; // 'openai' | 'google' | 'assemblyai'
   const language = config.language ?? 'en';

@@ -1,7 +1,7 @@
 import { Trophy } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function LeaderboardUpdateNode({ config = {}, updateConfig }) {
+export default function LeaderboardUpdateNode({ config = {}, updateConfig, nodeId }) {
   const mode          = config.mode          ?? 'upsert'; // upsert | get | top | reset | rank
   const leaderboardId = config.leaderboardId ?? 'global';
   const playerId      = config.playerId      ?? '';

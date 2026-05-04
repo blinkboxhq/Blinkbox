@@ -19,7 +19,7 @@ const OPERATIONS = [
   { value: 'searchPages',   label: 'Search',          icon: Search },
 ];
 
-export default function NotionNode({ config = {}, updateConfig }) {
+export default function NotionNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'createPage';
 
   return (

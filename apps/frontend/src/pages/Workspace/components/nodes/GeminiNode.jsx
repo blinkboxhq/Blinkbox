@@ -179,7 +179,7 @@ const OP_FIELDS = {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export default function GeminiNode({ config = {}, updateConfig }) {
+export default function GeminiNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'message';
   const OpFields = OP_FIELDS[operation] || MessageFields;
 

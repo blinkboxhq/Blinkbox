@@ -1,7 +1,7 @@
 import { Newspaper } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function BlogPostNode({ config = {}, updateConfig }) {
+export default function BlogPostNode({ config = {}, updateConfig, nodeId }) {
   const platform    = config.platform    ?? 'ghost'; // ghost | wordpress
   const mode        = config.mode        ?? 'publish'; // publish | draft | update
   const title       = config.title       ?? '';

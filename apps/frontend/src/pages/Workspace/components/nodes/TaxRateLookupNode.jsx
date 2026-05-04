@@ -16,7 +16,7 @@ const COUNTRIES = [
   { code: 'ZA', label: 'South Africa (VAT)' },
 ];
 
-export default function TaxRateLookupNode({ config = {}, updateConfig }) {
+export default function TaxRateLookupNode({ config = {}, updateConfig, nodeId }) {
   const country   = config.country   ?? 'IN';
   const category  = config.category  ?? 'general'; // general | food | medical | services | luxury
   const state     = config.state     ?? '';

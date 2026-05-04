@@ -1,7 +1,7 @@
 import { Rss } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function RssFeedGeneratorNode({ config = {}, updateConfig }) {
+export default function RssFeedGeneratorNode({ config = {}, updateConfig, nodeId }) {
   const mode        = config.mode        ?? 'add_item'; // add_item | generate | read
   const feedTitle   = config.feedTitle   ?? '';
   const feedDesc    = config.feedDesc    ?? '';

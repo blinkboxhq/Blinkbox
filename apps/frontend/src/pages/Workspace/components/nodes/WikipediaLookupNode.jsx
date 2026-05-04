@@ -1,7 +1,7 @@
 import { BookOpen } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function WikipediaLookupNode({ config = {}, updateConfig }) {
+export default function WikipediaLookupNode({ config = {}, updateConfig, nodeId }) {
   const query = config.query ?? '';
   const language = config.language ?? 'en';
   const summaryOnly = config.summaryOnly ?? true;

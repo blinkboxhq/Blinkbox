@@ -2,7 +2,7 @@ import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 const RECORD_TYPES = ["A","AAAA","MX","CNAME","TXT","NS","SOA","SRV","PTR","CAA"];
 
-export default function DNSLookupNode({ config = {}, updateConfig }) {
+export default function DNSLookupNode({ config = {}, updateConfig, nodeId }) {
   const selectedTypes = config.recordTypes || ["A"];
 
   const toggleType = (type) => {

@@ -19,7 +19,7 @@ const OPERATORS = [
 
 const noValueOps = ["isEmpty", "isNotEmpty", "exists", "notExists"];
 
-export default function FilterArrayNode({ config = {}, updateConfig }) {
+export default function FilterArrayNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operator || "equals";
   const needsValue = !noValueOps.includes(op);
 

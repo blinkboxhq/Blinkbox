@@ -1,7 +1,7 @@
 import { Edit2, Database, ArrowRight } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function SetFieldsNode({ config = {}, updateConfig }) {
+export default function SetFieldsNode({ config = {}, updateConfig, nodeId }) {
   const fields = config.fields || [{ key: '', value: '' }];
 
   const addField = () => updateConfig('fields', [...fields, { key: '', value: '' }]);

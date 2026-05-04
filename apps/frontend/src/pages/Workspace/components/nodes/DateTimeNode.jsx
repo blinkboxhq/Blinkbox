@@ -21,7 +21,7 @@ const UNITS = [
   { value: "y",  label: "Years" },
 ];
 
-export default function DateTimeNode({ config = {}, updateConfig }) {
+export default function DateTimeNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "now";
   const needsDate = op !== "now";
   const needsDate2 = op === "diff";

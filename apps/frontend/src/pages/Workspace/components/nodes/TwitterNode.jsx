@@ -11,7 +11,7 @@ const OPERATIONS = [
   { value: "likeTweet",    label: "Like Tweet" },
 ];
 
-export default function TwitterNode({ config = {}, updateConfig }) {
+export default function TwitterNode({ config = {}, updateConfig, nodeId }) {
   const op = config.operation || "postTweet";
 
   return (

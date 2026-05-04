@@ -1,6 +1,6 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
-export default function PortMonitorNode({ config = {}, updateConfig }) {
+export default function PortMonitorNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-2.5">

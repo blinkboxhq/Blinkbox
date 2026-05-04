@@ -20,7 +20,7 @@ const OPERATIONS = [
   { value: 'markRead',     label: 'Mark Read',     icon: CheckCircle },
 ];
 
-export default function WhatsAppNode({ config = {}, updateConfig }) {
+export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "sendMessage";
 
   return (

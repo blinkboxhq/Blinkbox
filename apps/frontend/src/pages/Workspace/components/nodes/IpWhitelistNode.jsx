@@ -1,7 +1,7 @@
 import { Shield } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
-export default function IpWhitelistNode({ config = {}, updateConfig }) {
+export default function IpWhitelistNode({ config = {}, updateConfig, nodeId }) {
   const ip          = config.ip          ?? '';
   const whitelist   = config.whitelist   ?? '';
   const mode        = config.mode        ?? 'whitelist'; // whitelist | blacklist
