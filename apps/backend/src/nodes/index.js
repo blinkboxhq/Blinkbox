@@ -176,6 +176,13 @@ import youtube from "./integrations/youtube.node.js";
 import intercom from "./integrations/intercom.node.js";
 import woocommerce from "./integrations/woocommerce.node.js";
 import calendly from "./integrations/calendly.node.js";
+import zendesk from "./integrations/zendesk.node.js";
+import linkedin from "./integrations/linkedin.node.js";
+import sftp from "./integrations/sftp.node.js";
+import mailchimp from "./integrations/mailchimp.node.js";
+import tiktok from "./integrations/tiktok.node.js";
+import instagram from "./integrations/instagram.node.js";
+import ocr from "./ocr.node.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
@@ -499,6 +506,15 @@ export const nodeRegistry = {
   intercom: intercom,
   woocommerce: woocommerce,
   calendly: calendly,
+  zendesk: zendesk,
+  linkedin: linkedin,
+  sftp: sftp,
+  mailchimp: mailchimp,
+  tiktok: tiktok,
+  tiktok_post: tiktok,
+  instagram: instagram,
+  instagram_post: instagram,
+  ocr: ocr,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,
