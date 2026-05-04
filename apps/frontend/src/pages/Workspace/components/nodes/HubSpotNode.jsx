@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
@@ -21,6 +22,9 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-[#FF7A59]/5 border border-[#FF7A59]/20 rounded-xl">
+        <div className="p-2 bg-[#FF7A59]/10 rounded-lg border border-[#FF7A59]/20 shrink-0 flex items-center justify-center">
+          <Users className="w-5 h-5 text-[#FF7A59]" />
+        </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-[#FF7A59]">HubSpot</span>
           <span className="text-[10px] text-zinc-500">CRM contacts, deals, and notes</span>
@@ -90,11 +94,14 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Stage</label>
-            <select value={config.stage || ""} onChange={(e) => updateConfig("stage", e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF7A59]/40">
-              <option value="">Select stage...</option>
-              {DEAL_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <div className="flex flex-wrap gap-1.5">
+              {DEAL_STAGES.map((s) => (
+                <button key={s} onClick={() => updateConfig("stage", s)}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${config.stage === s ? "bg-[#FF7A59]/10 border-[#FF7A59]/40 text-[#FF7A59]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}

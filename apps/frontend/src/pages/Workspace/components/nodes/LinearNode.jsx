@@ -1,3 +1,4 @@
+import { CheckSquare } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
@@ -24,6 +25,9 @@ export default function LinearNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-[#5E6AD2]/5 border border-[#5E6AD2]/20 rounded-xl">
+        <div className="p-2 bg-[#5E6AD2]/10 rounded-lg border border-[#5E6AD2]/20 shrink-0 flex items-center justify-center">
+          <CheckSquare className="w-5 h-5 text-[#5E6AD2]" />
+        </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-[#5E6AD2]">Linear</span>
           <span className="text-[10px] text-zinc-500">Issues, comments, and teams</span>
