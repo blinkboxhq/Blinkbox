@@ -1,4 +1,6 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 
 export default function LinkedInPostNode({ config = {}, updateConfig, nodeId }) {
   const type        = config.type        ?? 'text'; // text | image | video | article | document
@@ -10,7 +12,6 @@ export default function LinkedInPostNode({ config = {}, updateConfig, nodeId }) 
   const visibility  = config.visibility  ?? 'PUBLIC'; // PUBLIC | CONNECTIONS
   const postAs      = config.postAs      ?? 'person'; // person | organization
   const orgId       = config.orgId       ?? '';
-  const accessToken = config.accessToken ?? '';
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -101,10 +102,14 @@ export default function LinkedInPostNode({ config = {}, updateConfig, nodeId }) 
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Access Token</label>
-        <input type="password" value={accessToken} onChange={(e) => updateConfig('accessToken', e.target.value)}
-          placeholder="LinkedIn OAuth 2.0 access token"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <OAuthConnectButton provider="linkedin" />
+        <CredentialPicker
+          value={config.credentialId || ''}
+          onChange={(id) => updateConfig('credentialId', id)}
+          accentColor="blue"
+          label="LinkedIn OAuth Token"
+          placeholder="Select OAuth token..."
+        />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

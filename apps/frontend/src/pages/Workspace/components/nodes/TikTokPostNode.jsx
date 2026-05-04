@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 import imgTikTok from '../../../../assets/tiktok.svg';
 
 export default function TikTokPostNode({ config = {}, updateConfig, nodeId }) {
@@ -9,7 +10,6 @@ export default function TikTokPostNode({ config = {}, updateConfig, nodeId }) {
   const stitch      = config.stitch      ?? false;
   const comment     = config.comment     ?? true;
   const coverTime   = config.coverTime   ?? 0;
-  const accessToken = config.accessToken ?? '';
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -77,10 +77,13 @@ export default function TikTokPostNode({ config = {}, updateConfig, nodeId }) {
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Access Token</label>
-        <input type="password" value={accessToken} onChange={(e) => updateConfig('accessToken', e.target.value)}
-          placeholder="TikTok OAuth access token"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <CredentialPicker
+          value={config.credentialId || ''}
+          onChange={(id) => updateConfig('credentialId', id)}
+          accentColor="black"
+          label="TikTok Access Token"
+          placeholder="Select access token..."
+        />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

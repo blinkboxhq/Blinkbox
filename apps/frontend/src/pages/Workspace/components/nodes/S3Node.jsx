@@ -1,5 +1,6 @@
 import { DownloadCloud } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const REGIONS = ['us-east-1','us-west-2','eu-west-1','eu-central-1','ap-south-1','ap-southeast-1','ap-northeast-1','sa-east-1'];
 
@@ -8,8 +9,6 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
   const bucket = config.bucket ?? '';
   const key = config.key ?? '';
   const region = config.region ?? 'us-east-1';
-  const accessKeyId = config.accessKeyId ?? '';
-  const secretAccessKey = config.secretAccessKey ?? '';
   const content = config.content ?? '';
   const contentType = config.contentType ?? 'application/octet-stream';
   const acl = config.acl ?? 'private';
@@ -104,15 +103,13 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
       )}
 
       <div className="border-t border-zinc-800 pt-3">
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 block">AWS Credentials</label>
-        <div className="flex flex-col gap-2">
-          <input type="password" value={accessKeyId} onChange={(e) => updateConfig('accessKeyId', e.target.value)}
-            placeholder="Access Key ID"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-          <input type="password" value={secretAccessKey} onChange={(e) => updateConfig('secretAccessKey', e.target.value)}
-            placeholder="Secret Access Key"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-        </div>
+        <CredentialPicker
+          value={config.credentialId || ''}
+          onChange={(id) => updateConfig('credentialId', id)}
+          accentColor="amber"
+          label="AWS Credentials (JSON: {accessKeyId, secretAccessKey})"
+          placeholder="Select AWS credentials..."
+        />
         <div className="mt-2">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Custom Endpoint (S3-compatible, optional)</label>
           <input value={endpoint} onChange={(e) => updateConfig('endpoint', e.target.value)} placeholder="https://s3.example.com"

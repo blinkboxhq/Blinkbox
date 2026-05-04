@@ -1,5 +1,6 @@
 import { Table2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function BankStatementParserNode({ config = {}, updateConfig, nodeId }) {
   const csvData     = config.csvData     ?? '';
@@ -9,7 +10,6 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
   const categorize  = config.categorize  ?? true;
   const summary     = config.summary     ?? true;
   const aiModel     = config.aiModel     ?? 'gpt-4o-mini';
-  const aiKey       = config.aiKey       ?? '';
   const debitCol    = config.debitCol    ?? '';
   const creditCol   = config.creditCol   ?? '';
   const dateCol     = config.dateCol     ?? '';
@@ -118,9 +118,13 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
             </select>
           </div>
           <div className="flex-1">
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">AI API Key</label>
-            <input type="password" value={aiKey} onChange={(e) => updateConfig('aiKey', e.target.value)} placeholder="API Key"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+            <CredentialPicker
+              value={config.credentialId || ''}
+              onChange={(id) => updateConfig('credentialId', id)}
+              accentColor="emerald"
+              label="LLM API Key"
+              placeholder="Select API key..."
+            />
           </div>
         </div>
       )}
