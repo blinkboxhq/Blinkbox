@@ -3,6 +3,7 @@ import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
 import imgDiscord from '../../../../assets/discord.png';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const DISCORD_EVENTS = [
   { value: 'MESSAGE_CREATE',           label: 'New Message',         desc: 'Message sent in a channel' },
@@ -69,20 +70,22 @@ export default function DiscordTriggerNode({ config = {}, updateConfig, nodeId }
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Bot Token</label>
-              <input type="password" value={config.botToken || ''}
-                onChange={(e) => updateConfig?.('botToken', e.target.value)}
-                placeholder="Bot token from Developer Portal"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#5865F2]/50 transition-colors"
+              <CredentialPicker
+                value={config.botToken || ''}
+                onChange={(id) => updateConfig?.('botToken', id)}
+                accentColor="indigo"
+                label="Discord Bot Token"
+                placeholder="Select Discord Bot Token..."
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Application Public Key</label>
-              <input type="password" value={config.publicKey || ''}
-                onChange={(e) => updateConfig?.('publicKey', e.target.value)}
-                placeholder="Ed25519 public key from Developer Portal"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#5865F2]/50 transition-colors"
+              <CredentialPicker
+                value={config.publicKey || ''}
+                onChange={(id) => updateConfig?.('publicKey', id)}
+                accentColor="indigo"
+                label="Application Public Key"
+                placeholder="Select Application Public Key..."
               />
               <p className="text-[9px] text-zinc-600">Used to verify request signatures (Ed25519).</p>
             </div>

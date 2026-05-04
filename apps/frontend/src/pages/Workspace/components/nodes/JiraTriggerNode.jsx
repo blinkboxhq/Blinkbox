@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const INTERVALS = [
   { label: 'Every 5 min',  value: '5' },
@@ -23,10 +24,13 @@ export default function JiraTriggerNode({ config = {}, updateConfig, nodeId }) {
           <SmartVariableInput value={config.email || ''} onChange={(v) => updateConfig?.('email', v)} placeholder="you@company.com" />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Token</label>
-          <input type="password" value={config.token || ''} onChange={(e) => updateConfig?.('token', e.target.value)}
-            placeholder="Generate at id.atlassian.com"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#0052CC]/50" />
+          <CredentialPicker
+            value={config.token || ''}
+            onChange={(id) => updateConfig?.('token', id)}
+            accentColor="blue"
+            label="API Token"
+            placeholder="Select Jira API Token..."
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">JQL Filter</label>

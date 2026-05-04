@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import imgNotion from '../../../../assets/Notion-Logo--Streamline-Radix.svg';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const POLL_INTERVALS = [
   { value: '*/1 * * * *',  label: 'Every minute' },
@@ -39,11 +40,12 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
         {activeTab === 'setup' && (
           <>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Integration Secret</label>
-              <input type="password" value={config.apiKey || ''}
-                onChange={(e) => updateConfig?.('apiKey', e.target.value)}
-                placeholder="secret_…"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-white/30 transition-colors"
+              <CredentialPicker
+                value={config.apiKey || ''}
+                onChange={(id) => updateConfig?.('apiKey', id)}
+                accentColor="zinc"
+                label="Notion Integration Token"
+                placeholder="Select credential..."
               />
               <p className="text-[9px] text-zinc-600">From notion.so/profile/integrations. Share the database with your integration.</p>
             </div>

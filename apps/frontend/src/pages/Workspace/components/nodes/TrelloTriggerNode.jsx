@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const WATCH_TYPES = [
   { value: 'new_card',    label: 'New card created' },
@@ -15,16 +16,22 @@ export default function TrelloTriggerNode({ config = {}, updateConfig, nodeId })
       </div>
       <div className="p-3 flex flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Key</label>
-          <input type="password" value={config.apiKey || ''} onChange={(e) => updateConfig?.('apiKey', e.target.value)}
-            placeholder="From trello.com/app-key"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#0052CC]/50" />
+          <CredentialPicker
+            value={config.apiKey || ''}
+            onChange={(id) => updateConfig?.('apiKey', id)}
+            accentColor="blue"
+            label="API Key"
+            placeholder="Select Trello API Key..."
+          />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Token</label>
-          <input type="password" value={config.token || ''} onChange={(e) => updateConfig?.('token', e.target.value)}
-            placeholder="OAuth token"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#0052CC]/50" />
+          <CredentialPicker
+            value={config.token || ''}
+            onChange={(id) => updateConfig?.('token', id)}
+            accentColor="blue"
+            label="Token"
+            placeholder="Select Trello Token..."
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Board ID</label>

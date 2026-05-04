@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import imgAirtable from '../../../../assets/Airtable--Streamline-Svg-Logos.svg';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const POLL_INTERVALS = [
   { value: '*/1 * * * *',  label: 'Every minute' },
@@ -39,11 +40,12 @@ export default function AirtableTriggerNode({ config = {}, updateConfig, nodeId 
         {activeTab === 'setup' && (
           <>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Personal Access Token</label>
-              <input type="password" value={config.apiKey || ''}
-                onChange={(e) => updateConfig?.('apiKey', e.target.value)}
-                placeholder="pat…"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#F65858]/50 transition-colors"
+              <CredentialPicker
+                value={config.apiKey || ''}
+                onChange={(id) => updateConfig?.('apiKey', id)}
+                accentColor="red"
+                label="Personal Access Token"
+                placeholder="Select Airtable credential..."
               />
               <p className="text-[9px] text-zinc-600">From airtable.com/create/tokens — needs <span className="font-mono text-zinc-500">data.records:read</span> scope.</p>
             </div>

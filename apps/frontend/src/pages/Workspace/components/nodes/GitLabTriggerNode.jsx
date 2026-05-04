@@ -1,4 +1,5 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const EVENT_TYPES = [
   { value: 'merge_request', label: 'Merge Request' },
@@ -23,10 +24,13 @@ export default function GitLabTriggerNode({ config = {}, updateConfig, nodeId })
           <SmartVariableInput value={config.projectId || ''} onChange={(v) => updateConfig?.('projectId', v)} placeholder="namespace/project" />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Access Token</label>
-          <input type="password" value={config.token || ''} onChange={(e) => updateConfig?.('token', e.target.value)}
-            placeholder="Personal or project access token"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#FC6D26]/50" />
+          <CredentialPicker
+            value={config.token || ''}
+            onChange={(id) => updateConfig?.('token', id)}
+            accentColor="orange"
+            label="Access Token"
+            placeholder="Select GitLab Access Token..."
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Event type</label>
