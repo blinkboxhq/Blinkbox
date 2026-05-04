@@ -2,73 +2,127 @@ import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
+async function getCreds(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "WooCommerce");
+  const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { consumerKey: raw, consumerSecret: "" };
+  }
+}
+
+function client(storeUrl, consumerKey, consumerSecret) {
+  const base = storeUrl.replace(/\/$/, "") + "/wp-json/wc/v3";
+  return axios.create({
+    baseURL: base,
+    auth: { username: consumerKey, password: consumerSecret },
+  });
+}
+
 export default {
   async run(config, input, context = {}) {
     const operation = config.operation || "listOrders";
-    const siteUrl = (config.siteUrl || input.siteUrl || "").replace(/\/$/, "");
-    if (!siteUrl) return { success: false, error: "WooCommerce: 'siteUrl' is required.", skipped: true };
 
-    let ck = config.consumerKey, cs = config.consumerSecret;
-    if (config.credentialId) {
-      const cred = await resolveCredential(config.credentialId, context.workspaceId, "WooCommerce");
-      const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-      try { const j = JSON.parse(raw); ck = j.consumerKey; cs = j.consumerSecret; } catch { ck = raw; }
+    if (!config.credentialId) {
+      return { success: false, error: "WooCommerce: credential required.", skipped: true };
     }
-    if (!ck || !cs) return { success: false, error: "WooCommerce: consumerKey and consumerSecret required.", skipped: true };
+    if (!config.storeUrl) {
+      return { success: false, error: "WooCommerce: storeUrl required.", skipped: true };
+    }
 
-    const BASE = `${siteUrl}/wp-json/wc/v3`;
-    const auth = { username: ck, password: cs };
+    const { consumerKey, consumerSecret } = await getCreds(config.credentialId, context.workspaceId);
+    if (!consumerKey) return { success: false, error: "WooCommerce: consumerKey missing in credential.", skipped: true };
+
+    const api = client(config.storeUrl, consumerKey, consumerSecret);
 
     switch (operation) {
       case "listOrders": {
-        const { data } = await axios.get(`${BASE}/orders`, { auth, params: { per_page: config.limit || 20, status: config.status || "any", page: config.page || 1 }, timeout: 15000 });
-        return { orders: data, count: data.length };
+        const params = { per_page: Number(config.limit) || 20 };
+        if (config.statusFilter && config.statusFilter !== "any") params.status = config.statusFilter;
+        const { data } = await api.get("/orders", { params });
+        return { success: true, orders: data };
       }
+
       case "getOrder": {
-        const id = config.orderId || input.orderId;
-        if (!id) return { success: false, error: "WooCommerce getOrder: 'orderId' required.", skipped: true };
-        const { data } = await axios.get(`${BASE}/orders/${id}`, { auth, timeout: 10000 });
-        return data;
+        if (!config.orderId) return { success: false, error: "WooCommerce: orderId required.", skipped: true };
+        const { data } = await api.get(`/orders/${config.orderId}`);
+        return { success: true, ...data };
       }
+
       case "updateOrder": {
-        const id = config.orderId || input.orderId;
-        if (!id) return { success: false, error: "WooCommerce updateOrder: 'orderId' required.", skipped: true };
-        const update = {};
-        if (config.status) update.status = config.status;
-        if (config.note) update.customer_note = config.note;
-        const { data } = await axios.put(`${BASE}/orders/${id}`, update, { auth, timeout: 10000 });
-        return data;
+        if (!config.orderId) return { success: false, error: "WooCommerce: orderId required.", skipped: true };
+        if (!config.status) return { success: false, error: "WooCommerce: status required.", skipped: true };
+        const { data } = await api.put(`/orders/${config.orderId}`, { status: config.status });
+        return { success: true, ...data };
       }
+
       case "listProducts": {
-        const { data } = await axios.get(`${BASE}/products`, { auth, params: { per_page: config.limit || 20, category: config.categoryId, search: config.search, page: config.page || 1 }, timeout: 15000 });
-        return { products: data, count: data.length };
+        const { data } = await api.get("/products", {
+          params: { per_page: Number(config.limit) || 20 },
+        });
+        return { success: true, products: data };
       }
+
       case "getProduct": {
-        const id = config.productId || input.productId;
-        if (!id) return { success: false, error: "WooCommerce getProduct: 'productId' required.", skipped: true };
-        const { data } = await axios.get(`${BASE}/products/${id}`, { auth, timeout: 10000 });
-        return data;
+        if (!config.productId) return { success: false, error: "WooCommerce: productId required.", skipped: true };
+        const { data } = await api.get(`/products/${config.productId}`);
+        return { success: true, ...data };
       }
+
       case "createProduct": {
-        const body = { name: config.name || "New Product", regular_price: String(config.price || "0"), description: config.description || "", type: config.type || "simple", status: config.status || "draft" };
-        const { data } = await axios.post(`${BASE}/products`, body, { auth, timeout: 15000 });
-        return data;
+        if (!config.name) return { success: false, error: "WooCommerce: name required.", skipped: true };
+        const body = { name: config.name, type: "simple", status: "publish" };
+        if (config.regularPrice) body.regular_price = String(config.regularPrice);
+        if (config.description) body.description = config.description;
+        if (config.stockQuantity !== undefined && config.stockQuantity !== "") {
+          body.manage_stock = true;
+          body.stock_quantity = Number(config.stockQuantity);
+        }
+        const { data } = await api.post("/products", body);
+        return { success: true, ...data };
       }
+
       case "updateProduct": {
-        const id = config.productId || input.productId;
-        if (!id) return { success: false, error: "WooCommerce updateProduct: 'productId' required.", skipped: true };
-        const update = {};
-        if (config.name) update.name = config.name;
-        if (config.price) update.regular_price = String(config.price);
-        if (config.status) update.status = config.status;
-        if (config.stock !== undefined) { update.manage_stock = true; update.stock_quantity = config.stock; }
-        const { data } = await axios.put(`${BASE}/products/${id}`, update, { auth, timeout: 10000 });
-        return data;
+        if (!config.productId) return { success: false, error: "WooCommerce: productId required.", skipped: true };
+        const body = {};
+        if (config.name) body.name = config.name;
+        if (config.regularPrice) body.regular_price = String(config.regularPrice);
+        if (config.description) body.description = config.description;
+        if (config.stockQuantity !== undefined && config.stockQuantity !== "") {
+          body.manage_stock = true;
+          body.stock_quantity = Number(config.stockQuantity);
+        }
+        const { data } = await api.put(`/products/${config.productId}`, body);
+        return { success: true, ...data };
       }
+
       case "listCustomers": {
-        const { data } = await axios.get(`${BASE}/customers`, { auth, params: { per_page: config.limit || 20, role: config.role || "all", search: config.search }, timeout: 15000 });
-        return { customers: data, count: data.length };
+        const { data } = await api.get("/customers", {
+          params: { per_page: Number(config.limit) || 20 },
+        });
+        return { success: true, customers: data };
       }
+
+      case "getCustomer": {
+        const customerId = config.customerId || config.id;
+        if (!customerId) return { success: false, error: "WooCommerce: customerId required.", skipped: true };
+        const { data } = await api.get(`/customers/${customerId}`);
+        return { success: true, ...data };
+      }
+
+      case "createCoupon": {
+        if (!config.code) return { success: false, error: "WooCommerce: code required.", skipped: true };
+        const body = {
+          code: config.code,
+          discount_type: config.discountType || "percent",
+          amount: String(config.amount || "0"),
+        };
+        if (config.dateExpires) body.date_expires = config.dateExpires;
+        const { data } = await api.post("/coupons", body);
+        return { success: true, ...data };
+      }
+
       default:
         return { success: false, error: `WooCommerce: Unknown operation "${operation}".`, skipped: true };
     }

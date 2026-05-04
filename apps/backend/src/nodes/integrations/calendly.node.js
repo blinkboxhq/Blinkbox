@@ -2,64 +2,117 @@ import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
+const BASE_URL = "https://api.calendly.com";
+
+async function getToken(credentialId, workspaceId) {
+  const cred = await resolveCredential(credentialId, workspaceId, "Calendly");
+  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+}
+
+function client(token) {
+  return axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+async function getCurrentUser(api) {
+  const { data } = await api.get("/users/me");
+  return data.resource;
+}
+
 export default {
   async run(config, input, context = {}) {
-    const operation = config.operation || "getUser";
-    let token;
-    if (config.credentialId) {
-      const cred = await resolveCredential(config.credentialId, context.workspaceId, "Calendly");
-      token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-    }
-    if (!token) return { success: false, error: "Calendly: personal access token required.", skipped: true };
+    const operation = config.operation || "listEvents";
 
-    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-    const BASE = "https://api.calendly.com";
-
-    // Helper: get current user URI
-    async function getUserUri() {
-      const { data } = await axios.get(`${BASE}/users/me`, { headers, timeout: 10000 });
-      return data.resource.uri;
+    if (!config.credentialId) {
+      return { success: false, error: "Calendly: credential required.", skipped: true };
     }
+
+    const token = await getToken(config.credentialId, context.workspaceId);
+    const api = client(token);
 
     switch (operation) {
       case "getUser": {
-        const { data } = await axios.get(`${BASE}/users/me`, { headers, timeout: 10000 });
-        return data.resource;
+        const user = await getCurrentUser(api);
+        return { success: true, ...user };
       }
+
       case "listEventTypes": {
-        const userUri = await getUserUri();
-        const { data } = await axios.get(`${BASE}/event_types`, { headers, params: { user: userUri, count: config.limit || 20, active: config.activeOnly !== false }, timeout: 15000 });
-        return { eventTypes: data.collection, count: data.collection.length };
+        const user = await getCurrentUser(api);
+        const { data } = await api.get("/event_types", {
+          params: { user: user.uri, count: Number(config.count) || 20 },
+        });
+        return { success: true, eventTypes: data.collection, pagination: data.pagination };
       }
+
       case "listEvents": {
-        const userUri = await getUserUri();
-        const params = { user: userUri, count: config.limit || 20, status: config.status || "active" };
-        if (config.from) params.min_start_time = config.from;
-        if (config.to) params.max_start_time = config.to;
-        const { data } = await axios.get(`${BASE}/scheduled_events`, { headers, params, timeout: 15000 });
-        return { events: data.collection, count: data.collection.length, nextPage: data.pagination?.next_page };
+        const user = await getCurrentUser(api);
+        const params = {
+          user: user.uri,
+          count: Number(config.count) || 20,
+        };
+        if (config.eventUri) params.organization = config.eventUri;
+        if (config.status) params.status = config.status;
+        if (config.minStartTime) params.min_start_time = config.minStartTime;
+        if (config.maxStartTime) params.max_start_time = config.maxStartTime;
+        const { data } = await api.get("/scheduled_events", { params });
+        return { success: true, events: data.collection, pagination: data.pagination };
       }
+
       case "getEvent": {
-        const uri = config.eventUri || input.eventUri || "";
-        if (!uri) return { success: false, error: "Calendly getEvent: 'eventUri' required.", skipped: true };
-        const uuid = uri.split("/").pop();
-        const { data } = await axios.get(`${BASE}/scheduled_events/${uuid}`, { headers, timeout: 10000 });
-        return data.resource;
+        const eventUri = config.eventUri;
+        if (!eventUri) return { success: false, error: "Calendly: eventUri required.", skipped: true };
+        const uuid = eventUri.split("/").pop();
+        const { data } = await api.get(`/scheduled_events/${uuid}`);
+        return { success: true, ...data.resource };
       }
+
       case "listInvitees": {
-        const uri = config.eventUri || input.eventUri || "";
-        if (!uri) return { success: false, error: "Calendly listInvitees: 'eventUri' required.", skipped: true };
-        const uuid = uri.split("/").pop();
-        const { data } = await axios.get(`${BASE}/scheduled_events/${uuid}/invitees`, { headers, params: { count: config.limit || 50 }, timeout: 15000 });
-        return { invitees: data.collection, count: data.collection.length };
+        const eventUri = config.eventUri;
+        if (!eventUri) return { success: false, error: "Calendly: eventUri required.", skipped: true };
+        const uuid = eventUri.split("/").pop();
+        const { data } = await api.get(`/scheduled_events/${uuid}/invitees`, {
+          params: { count: Number(config.count) || 20 },
+        });
+        return { success: true, invitees: data.collection, pagination: data.pagination };
       }
+
       case "cancelEvent": {
-        const uri = config.eventUri || input.eventUri || "";
-        if (!uri) return { success: false, error: "Calendly cancelEvent: 'eventUri' required.", skipped: true };
-        const uuid = uri.split("/").pop();
-        const { data } = await axios.post(`${BASE}/scheduled_events/${uuid}/cancellation`, { reason: config.reason || "Cancelled via BlinkBox" }, { headers, timeout: 10000 });
-        return { success: true, uuid, reason: data.resource?.reason };
+        const eventUri = config.eventUri;
+        if (!eventUri) return { success: false, error: "Calendly: eventUri required.", skipped: true };
+        const uuid = eventUri.split("/").pop();
+        const body = {};
+        if (config.reason) body.reason = config.reason;
+        await api.post(`/scheduled_events/${uuid}/cancellation`, body);
+        return { success: true, canceled: true, eventUri };
       }
+
+      case "getInvitee": {
+        if (!config.inviteeUuid) return { success: false, error: "Calendly: inviteeUuid required.", skipped: true };
+        const { data } = await api.get(`/invitees/${config.inviteeUuid}`);
+        return { success: true, ...data.resource };
+      }
+
+      case "createWebhook": {
+        if (!config.url) return { success: false, error: "Calendly: url required.", skipped: true };
+        const events = Array.isArray(config.events) && config.events.length
+          ? config.events
+          : ["invitee.created", "invitee.canceled"];
+        const user = await getCurrentUser(api);
+        const { data } = await api.post("/webhook_subscriptions", {
+          url: config.url,
+          events,
+          organization: user.current_organization,
+          user: user.uri,
+          scope: "user",
+        });
+        return { success: true, ...data.resource };
+      }
+
       default:
         return { success: false, error: `Calendly: Unknown operation "${operation}".`, skipped: true };
     }
