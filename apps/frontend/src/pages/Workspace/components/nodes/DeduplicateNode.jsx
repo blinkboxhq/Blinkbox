@@ -1,9 +1,13 @@
+import { Copy } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 export default function DeduplicateNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center shrink-0">
+            <Copy className="w-4 h-4 text-[#06B6D4]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-violet-400">Deduplicate</span>
           <span className="text-[10px] text-zinc-500">Remove duplicate items from array</span>

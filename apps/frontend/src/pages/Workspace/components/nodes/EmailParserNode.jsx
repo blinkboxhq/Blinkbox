@@ -1,3 +1,4 @@
+import { Mail } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 const OPERATIONS = [
@@ -15,6 +16,9 @@ export default function EmailParserNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#EC4899]/10 border border-[#EC4899]/20 flex items-center justify-center shrink-0">
+            <Mail className="w-4 h-4 text-[#EC4899]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-orange-400">Email Parser</span>
           <span className="text-[10px] text-zinc-500">AI-powered email → structured JSON extraction</span>

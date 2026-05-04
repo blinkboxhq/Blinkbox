@@ -1,3 +1,4 @@
+import { Bell } from 'lucide-react';
 import { useState } from "react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
@@ -87,6 +88,9 @@ export default function NotificationHubNode({ config = {}, updateConfig, nodeId 
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 border border-[#F59E0B]/20 flex items-center justify-center shrink-0">
+            <Bell className="w-4 h-4 text-[#F59E0B]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-amber-400">Notification Hub</span>
           <span className="text-[10px] text-zinc-500">Blast to ALL channels at once — Slack, Telegram, Email, SMS, Discord</span>

@@ -17,6 +17,9 @@ export default function TwitterNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-[#1DA1F2]/5 border border-[#1DA1F2]/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#1DA1F2]/10 border border-[#1DA1F2]/20 flex items-center justify-center shrink-0">
+            <Twitter className="w-4 h-4 text-[#1DA1F2]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-[#1DA1F2]">Twitter / X</span>
           <span className="text-[10px] text-zinc-500">Post, search, and read tweets</span>

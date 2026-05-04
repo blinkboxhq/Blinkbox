@@ -1,3 +1,4 @@
+import { Mic } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 export default function ElevenLabsNode({ config = {}, updateConfig, nodeId }) {
@@ -6,6 +7,9 @@ export default function ElevenLabsNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/10 border border-[#7C3AED]/20 flex items-center justify-center shrink-0">
+            <Mic className="w-4 h-4 text-[#7C3AED]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-violet-400">ElevenLabs</span>
           <span className="text-[10px] text-zinc-500">Text to speech with ultra-realistic voices</span>

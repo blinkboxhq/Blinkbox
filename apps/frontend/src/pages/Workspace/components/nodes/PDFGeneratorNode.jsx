@@ -1,9 +1,13 @@
+import { FileText } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 export default function PDFGeneratorNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center justify-center shrink-0">
+            <FileText className="w-4 h-4 text-[#EF4444]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-rose-400">PDF Generator</span>
           <span className="text-[10px] text-zinc-500">Generate a PDF from HTML or Markdown content</span>

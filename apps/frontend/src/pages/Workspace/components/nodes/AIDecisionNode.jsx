@@ -1,3 +1,4 @@
+import { Brain } from 'lucide-react';
 import { useState } from "react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
@@ -27,6 +28,9 @@ export default function AIDecisionNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#6366F1]/10 border border-[#6366F1]/20 flex items-center justify-center shrink-0">
+            <Brain className="w-4 h-4 text-[#6366F1]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-indigo-400">AI Decision Engine</span>
           <span className="text-[10px] text-zinc-500">Multi-factor decisions with full reasoning trace</span>

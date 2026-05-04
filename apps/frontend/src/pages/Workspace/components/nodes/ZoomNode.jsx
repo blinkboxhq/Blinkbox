@@ -1,3 +1,4 @@
+import { Video } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
@@ -6,6 +7,9 @@ export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#2D8CFF]/10 border border-[#2D8CFF]/20 flex items-center justify-center shrink-0">
+            <Video className="w-4 h-4 text-[#2D8CFF]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-blue-400">Zoom</span>
           <span className="text-[10px] text-zinc-500">Create and manage Zoom video meetings</span>

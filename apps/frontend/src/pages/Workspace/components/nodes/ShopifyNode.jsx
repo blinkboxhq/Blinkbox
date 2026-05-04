@@ -1,3 +1,4 @@
+import { ShoppingBag } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
@@ -20,6 +21,9 @@ export default function ShopifyNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-[#95BF47]/5 border border-[#95BF47]/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#95BF47]/10 border border-[#95BF47]/20 flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-4 h-4 text-[#95BF47]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-[#95BF47]">Shopify</span>
           <span className="text-[10px] text-zinc-500">Products, orders, and customers</span>

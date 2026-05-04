@@ -15,6 +15,9 @@ export default function DataDiffNode({ config = {}, updateConfig, nodeId }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center shrink-0">
+            <Diff className="w-4 h-4 text-[#F97316]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-cyan-400">Data Diff</span>
           <span className="text-[10px] text-zinc-500">Deep compare two objects or arrays, detect exactly what changed</span>

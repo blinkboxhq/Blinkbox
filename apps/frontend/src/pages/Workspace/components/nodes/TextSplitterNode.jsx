@@ -1,3 +1,4 @@
+import { Scissors } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 
 const MODES = [
@@ -14,6 +15,9 @@ export default function TextSplitterNode({ config = {}, updateConfig, nodeId }) 
   return (
     <div className="flex flex-col gap-5 w-full">
       <div className="flex items-center gap-3 p-4 bg-sky-500/5 border border-sky-500/20 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center shrink-0">
+            <Scissors className="w-4 h-4 text-[#06B6D4]" />
+          </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-sky-400">Text Splitter</span>
           <span className="text-[10px] text-zinc-500">Split text into chunks for AI/RAG pipelines</span>
