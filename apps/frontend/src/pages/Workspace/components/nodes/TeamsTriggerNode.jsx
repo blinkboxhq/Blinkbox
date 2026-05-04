@@ -1,4 +1,6 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 
 export default function TeamsTriggerNode({ config = {}, updateConfig, nodeId }) {
   return (
@@ -7,12 +9,10 @@ export default function TeamsTriggerNode({ config = {}, updateConfig, nodeId }) 
         <span className="text-[11px] font-semibold text-[#6264A7]">Microsoft Teams — Message</span>
       </div>
       <div className="p-3 flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Access Token</label>
-          <input type="password" value={config.accessToken || ''} onChange={(e) => updateConfig?.('accessToken', e.target.value)}
-            placeholder="Microsoft Graph OAuth token"
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#6264A7]/50" />
-        </div>
+        <OAuthConnectButton provider="microsoft" providerLabel="Microsoft" accentColor="blue"
+          value={config.accessToken || ''} onChange={(id) => updateConfig?.('accessToken', id)} />
+        <CredentialPicker value={config.accessToken || ''} onChange={(id) => updateConfig?.('accessToken', id)}
+          accentColor="indigo" label="Access Token" credentialType="Microsoft" placeholder="Select Microsoft OAuth token..." />
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Team ID</label>
           <SmartVariableInput value={config.teamId || ''} onChange={(v) => updateConfig?.('teamId', v)} placeholder="From Teams URL or Graph API" />

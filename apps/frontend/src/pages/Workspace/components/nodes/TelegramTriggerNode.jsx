@@ -3,6 +3,7 @@ import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
 import imgTelegram from '../../../../assets/telegram.png';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const UPDATE_TYPES = [
   { value: 'message',           label: 'Message',           desc: 'New message in chat' },
@@ -69,24 +70,24 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, nodeId 
               </p>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Bot Token</label>
-              <input type="password" value={config.botToken || ''}
-                onChange={(e) => updateConfig?.('botToken', e.target.value)}
-                placeholder="123456:ABC-DEF1234…"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#26A5E4]/50 transition-colors"
-              />
-            </div>
+            <CredentialPicker
+              value={config.botToken || ''}
+              onChange={(id) => updateConfig?.('botToken', id)}
+              accentColor="sky"
+              label="Bot Token"
+              credentialType="Telegram"
+              placeholder="Select Telegram Bot Token..."
+              hint="Create a bot with @BotFather and paste the token here."
+            />
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Secret Token (optional)</label>
-              <input type="password" value={config.telegramSecretToken || ''}
-                onChange={(e) => updateConfig?.('telegramSecretToken', e.target.value)}
-                placeholder="Random string for request verification"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#26A5E4]/50 transition-colors"
-              />
-              <p className="text-[9px] text-zinc-600">BlinkBox verifies the <span className="font-mono text-zinc-500">X-Telegram-Bot-Api-Secret-Token</span> header.</p>
-            </div>
+            <CredentialPicker
+              value={config.telegramSecretToken || ''}
+              onChange={(id) => updateConfig?.('telegramSecretToken', id)}
+              accentColor="zinc"
+              label="Secret Token (optional)"
+              placeholder="Select secret token for request verification..."
+              hint="BlinkBox verifies the X-Telegram-Bot-Api-Secret-Token header."
+            />
 
             <div className="p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               <p className="text-[9px] text-zinc-600 leading-relaxed">

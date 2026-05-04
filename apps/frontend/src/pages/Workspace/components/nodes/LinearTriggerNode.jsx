@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const LINEAR_EVENTS = [
   { value: 'Issue',             label: 'Issue Created / Updated', desc: 'Any issue event in the workspace' },
@@ -81,15 +82,15 @@ export default function LinearTriggerNode({ config = {}, updateConfig, nodeId })
               <p className="text-[9px] text-zinc-600">Add in Linear → Settings → API → Webhooks.</p>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Webhook Secret</label>
-              <input type="password" value={config.linearWebhookSecret || ''}
-                onChange={(e) => updateConfig?.('linearWebhookSecret', e.target.value)}
-                placeholder="From Linear webhook settings"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#5E6AD2]/50 transition-colors"
-              />
-              <p className="text-[9px] text-zinc-600">BlinkBox verifies the <span className="font-mono text-zinc-500">linear-signature</span> header.</p>
-            </div>
+            <CredentialPicker
+              value={config.linearWebhookSecret || ''}
+              onChange={(id) => updateConfig?.('linearWebhookSecret', id)}
+              accentColor="indigo"
+              label="Webhook Secret"
+              credentialType="Linear"
+              placeholder="Select Linear webhook secret..."
+              hint="BlinkBox verifies the linear-signature header."
+            />
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Team ID (optional)</label>
