@@ -1,5 +1,6 @@
 import { ScanLine } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const LANGUAGES_OCR = [
   { value: 'eng', label: 'English' },
@@ -99,9 +100,13 @@ export default function OcrNode({ config = {}, updateConfig, nodeId }) {
       {provider !== 'tesseract' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">API Key</label>
-          <input type="password" value={apiKey} onChange={(e) => updateConfig('apiKey', e.target.value)}
-            placeholder={provider === 'openai' ? 'OpenAI API Key' : 'Google Cloud API Key'}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="sky"
+        label="OpenAI / Google API Key"
+        placeholder="Select OpenAI / Google API Key..."
+      />
         </div>
       )}
 

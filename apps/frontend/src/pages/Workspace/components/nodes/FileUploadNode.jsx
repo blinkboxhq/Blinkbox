@@ -1,5 +1,6 @@
 import { Upload } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function FileUploadNode({ config = {}, updateConfig, nodeId }) {
   const content     = config.content     ?? '';
@@ -101,9 +102,13 @@ export default function FileUploadNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Credentials / API Key</label>
-        <input type="password" value={apiKey} onChange={(e) => updateConfig('apiKey', e.target.value)}
-          placeholder="Access key or connection string"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="zinc"
+        label="Storage Credential"
+        placeholder="Select Storage Credential..."
+      />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

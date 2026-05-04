@@ -1,5 +1,6 @@
 import { GitBranch } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const DEFAULT_QUERY = `query {
   user(id: "{{ $json.id }}") {
@@ -59,9 +60,13 @@ export default function GraphQLNode({ config = {}, updateConfig, nodeId }) {
           ))}
         </div>
         {authType !== 'none' && (
-          <input type="password" value={authToken} onChange={(e) => updateConfig('authToken', e.target.value)}
-            placeholder={authType === 'bearer' ? 'Bearer token' : 'API key value'}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="pink"
+        label="Bearer Token"
+        placeholder="Select Bearer Token..."
+      />
         )}
       </div>
 

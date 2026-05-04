@@ -1,5 +1,7 @@
 import { Video } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 
 export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "createMeeting";

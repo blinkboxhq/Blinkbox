@@ -1,5 +1,6 @@
 import { Zap } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const COMMON_EVENTS = [
   'player.join','player.leave','player.death','player.kill','player.levelup',

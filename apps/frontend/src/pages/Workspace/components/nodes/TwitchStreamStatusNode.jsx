@@ -1,5 +1,6 @@
 import { Radio } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function TwitchStreamStatusNode({ config = {}, updateConfig, nodeId }) {
   const username    = config.username    ?? '';
@@ -70,8 +71,13 @@ export default function TwitchStreamStatusNode({ config = {}, updateConfig, node
         <div className="flex flex-col gap-2">
           <input value={clientId} onChange={(e) => updateConfig('clientId', e.target.value)} placeholder="Client ID (dev.twitch.tv)"
             className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-          <input type="password" value={accessToken} onChange={(e) => updateConfig('accessToken', e.target.value)} placeholder="App Access Token"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="violet"
+        label="Twitch API Key"
+        placeholder="Select Twitch API Key..."
+      />
         </div>
       </div>
 

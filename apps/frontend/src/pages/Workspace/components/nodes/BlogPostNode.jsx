@@ -1,5 +1,6 @@
 import { Newspaper } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function BlogPostNode({ config = {}, updateConfig, nodeId }) {
   const platform    = config.platform    ?? 'ghost'; // ghost | wordpress
@@ -119,9 +120,13 @@ export default function BlogPostNode({ config = {}, updateConfig, nodeId }) {
           <input value={apiUrl} onChange={(e) => updateConfig('apiUrl', e.target.value)}
             placeholder={platform === 'ghost' ? 'https://myblog.ghost.io' : 'https://myblog.com/wp-json'}
             className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500" />
-          <input type="password" value={apiKey} onChange={(e) => updateConfig('apiKey', e.target.value)}
-            placeholder={platform === 'ghost' ? 'Admin API key (ID:Secret)' : 'Application Password or JWT token'}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="emerald"
+        label="LLM API Key"
+        placeholder="Select LLM API Key..."
+      />
         </div>
       </div>
 

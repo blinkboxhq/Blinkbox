@@ -1,5 +1,6 @@
 import { BarChart2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function AudienceInsightsNode({ config = {}, updateConfig, nodeId }) {
   const platform    = config.platform    ?? 'instagram';
@@ -84,9 +85,13 @@ export default function AudienceInsightsNode({ config = {}, updateConfig, nodeId
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Access Token</label>
-        <input type="password" value={accessToken} onChange={(e) => updateConfig('accessToken', e.target.value)}
-          placeholder="Platform OAuth access token"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="blue"
+        label="API Key"
+        placeholder="Select API Key..."
+      />
       </div>
 
       <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">

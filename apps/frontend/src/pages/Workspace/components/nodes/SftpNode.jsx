@@ -1,5 +1,6 @@
 import { UploadCloud } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function SftpNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation ?? 'upload'; // upload | download | list | delete | mkdir
@@ -77,8 +78,13 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
       {authType === 'password' ? (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Password</label>
-          <input type="password" value={password} onChange={(e) => updateConfig('password', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="zinc"
+        label="SFTP Credential"
+        placeholder="Select SFTP Credential..."
+      />
         </div>
       ) : (
         <div>

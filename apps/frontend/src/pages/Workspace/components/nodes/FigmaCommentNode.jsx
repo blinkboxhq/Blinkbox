@@ -1,5 +1,6 @@
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import imgFigma from '../../../../assets/figma.svg';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function FigmaCommentNode({ config = {}, updateConfig }) {
   const fileKey    = config.fileKey    ?? '';

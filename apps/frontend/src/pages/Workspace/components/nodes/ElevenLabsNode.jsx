@@ -1,5 +1,6 @@
 import { Mic } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function ElevenLabsNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "textToSpeech";

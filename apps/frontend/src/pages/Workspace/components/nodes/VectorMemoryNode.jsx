@@ -1,5 +1,6 @@
 import { Cpu } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const OPERATIONS = [
   { id: "remember", label: "Remember", icon: "🧠" },

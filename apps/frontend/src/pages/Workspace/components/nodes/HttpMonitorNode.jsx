@@ -1,4 +1,5 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const METHODS = ["GET","POST","PUT","HEAD","OPTIONS"];
 

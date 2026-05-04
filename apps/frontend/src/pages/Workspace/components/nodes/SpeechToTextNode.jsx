@@ -1,5 +1,6 @@
 import { Mic2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) {
   const audioUrl = config.audioUrl ?? '';
@@ -86,9 +87,13 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">API Key</label>
-        <input type="password" value={apiKey} onChange={(e) => updateConfig('apiKey', e.target.value)}
-          placeholder={provider === 'openai' ? 'OpenAI API Key' : provider === 'google' ? 'Google Cloud API Key' : 'AssemblyAI API Key'}
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="violet"
+        label="OpenAI / AssemblyAI Key"
+        placeholder="Select OpenAI / AssemblyAI Key..."
+      />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

@@ -1,5 +1,6 @@
 import { Image } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 export default function ThumbnailGeneratorNode({ config = {}, updateConfig, nodeId }) {
   const title       = config.title       ?? '';
@@ -119,9 +120,13 @@ export default function ThumbnailGeneratorNode({ config = {}, updateConfig, node
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">API Key</label>
-        <input type="password" value={apiKey} onChange={(e) => updateConfig('apiKey', e.target.value)}
-          placeholder="OpenAI / Google API Key"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+        <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="violet"
+        label="API Key"
+        placeholder="Select API Key..."
+      />
       </div>
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
