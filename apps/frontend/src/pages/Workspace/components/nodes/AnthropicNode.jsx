@@ -116,7 +116,7 @@ function OperationPicker({ value, onChange }) {
 
 // ── Per-operation config fields ────────────────────────────────────────────
 
-function MessageFields({ config, updateConfig }) {
+function MessageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
@@ -130,29 +130,29 @@ function MessageFields({ config, updateConfig }) {
         />
       </Field>
       <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Analyze this dataset and extract key insights..." multiline />
+        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Analyze this dataset and extract key insights..." multiline />
       </Field>
     </>
   );
 }
 
-function AnalyzeImageFields({ config, updateConfig }) {
+function AnalyzeImageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'claude-opus-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_VISION} />
       </Field>
       <Field label="Image URL">
-        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
+        <SmartVariableInput nodeId={nodeId} value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
+        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
       </Field>
     </>
   );
 }
 
-function AnalyzeDocumentFields({ config, updateConfig }) {
+function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
@@ -166,27 +166,27 @@ function AnalyzeDocumentFields({ config, updateConfig }) {
         />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
+        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
       </Field>
       <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline />
+        <SmartVariableInput nodeId={nodeId} value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline />
       </Field>
     </>
   );
 }
 
-function ImprovePromptFields({ config, updateConfig }) {
+function ImprovePromptFields({ config, updateConfig, nodeId }) {
   return (
     <Field label="Prompt to improve">
-      <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline />
+      <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline />
     </Field>
   );
 }
 
-function GeneratePromptFields({ config, updateConfig }) {
+function GeneratePromptFields({ config, updateConfig, nodeId }) {
   return (
     <Field label="Task description">
-      <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by urgency..." multiline />
+      <SmartVariableInput nodeId={nodeId} value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by urgency..." multiline />
     </Field>
   );
 }
@@ -201,7 +201,7 @@ const OP_FIELDS = {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export default function AnthropicNode({ config = {}, updateConfig }) {
+export default function AnthropicNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'message';
   const OpFields = OP_FIELDS[operation] || MessageFields;
 
@@ -209,7 +209,7 @@ export default function AnthropicNode({ config = {}, updateConfig }) {
     <div className="flex flex-col gap-5 w-full">
       <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
       <div className="border-t border-[#222]" />
-      <OpFields config={config} updateConfig={updateConfig} />
+      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
