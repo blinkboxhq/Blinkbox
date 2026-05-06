@@ -1,4 +1,5 @@
 import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyflow/react";
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -20,6 +21,7 @@ export default function ConfigurableEdge({
   selected,
   markerEnd,
 }) {
+  const [hovered, setHovered] = useState(false);
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
@@ -55,8 +57,8 @@ export default function ConfigurableEdge({
   const isFailed = status === "failed";
   const isReady = status === "ready";
 
-  // Dark grey, uniform
-  let stroke = "#3f3f46";
+  // Dark grey, brightens on hover
+  let stroke = hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46";
   let strokeWidth = 2.5;
   let strokeDasharray = "none";
   let animation = "none";
@@ -115,6 +117,8 @@ export default function ConfigurableEdge({
         stroke="transparent"
         fill="none"
         className="react-flow__edge-interaction"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       />
 
       {/* Main visible edge */}
@@ -164,26 +168,30 @@ export default function ConfigurableEdge({
           }}
           className="nodrag nopan"
         >
-          <div className="opacity-0 edge-action-buttons transition-all duration-150 flex items-center gap-2">
+          <div
+            className={`edge-action-buttons flex items-center gap-1.5 transition-all duration-150 ${hovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+          >
             <button
               onClick={handleInsert}
-              className="w-8 h-8 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600
+              className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600
                 flex items-center justify-center
                 hover:bg-zinc-700 hover:border-zinc-400 active:scale-95
-                transition-all duration-150 shadow-lg shadow-black/50 group/btn"
-              title="Add step between"
+                transition-all duration-150 shadow-xl shadow-black/60 group/btn"
+              title="Insert node here"
             >
-              <Plus className="w-4 h-4 text-zinc-300 group-hover/btn:text-white" strokeWidth={3} />
+              <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/btn:text-white" strokeWidth={3} />
             </button>
             <button
               onClick={handleDelete}
-              className="w-8 h-8 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600
+              className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600
                 flex items-center justify-center
-                hover:bg-red-500/20 hover:border-red-500/50 active:scale-95
-                transition-all duration-150 shadow-lg shadow-black/50 group/btn"
-              title="Delete connection"
+                hover:bg-red-500/20 hover:border-red-500/60 active:scale-95
+                transition-all duration-150 shadow-xl shadow-black/60 group/btn"
+              title="Remove connection"
             >
-              <Trash2 className="w-3.5 h-3.5 text-zinc-400 group-hover/btn:text-red-400" strokeWidth={2.5} />
+              <Trash2 className="w-3 h-3 text-zinc-500 group-hover/btn:text-red-400" strokeWidth={2.5} />
             </button>
           </div>
         </div>
