@@ -1,5 +1,5 @@
 import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyflow/react";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -22,6 +22,9 @@ export default function ConfigurableEdge({
   markerEnd,
 }) {
   const [hovered, setHovered] = useState(false);
+  const hideTimer = useRef(null);
+  const show = useCallback(() => { clearTimeout(hideTimer.current); setHovered(true); }, []);
+  const hide = useCallback(() => { hideTimer.current = setTimeout(() => setHovered(false), 80); }, []);
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
@@ -117,8 +120,8 @@ export default function ConfigurableEdge({
         stroke="transparent"
         fill="none"
         className="react-flow__edge-interaction"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={show}
+        onMouseLeave={hide}
       />
 
       {/* Main visible edge */}
@@ -169,9 +172,9 @@ export default function ConfigurableEdge({
           className="nodrag nopan"
         >
           <div
-            className={`edge-action-buttons flex items-center gap-1.5 transition-all duration-150 ${hovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            className={`edge-action-buttons flex items-center gap-1.5 transition-opacity duration-75 ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            onMouseEnter={show}
+            onMouseLeave={hide}
           >
             <button
               onClick={handleInsert}
