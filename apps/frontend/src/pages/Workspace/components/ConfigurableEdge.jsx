@@ -6,6 +6,9 @@ import useWorkspaceStore from "../../../store/workspaceStore";
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
 export const EDGE_ARROW_ID = "blinkbox-arrow";
 
+const AGENT_TYPES = new Set(["agent_llm", "agent_memory", "agent_tool", "ai_agent"]);
+const AGENT_HANDLE = "agent_out";
+
 export default function ConfigurableEdge({
   id,
   source,
@@ -20,12 +23,19 @@ export default function ConfigurableEdge({
   data,
   selected,
   markerEnd,
+  sourceHandleId,
 }) {
   const [hovered, setHovered] = useState(false);
   const hideTimer = useRef(null);
   const show = useCallback(() => { clearTimeout(hideTimer.current); setHovered(true); }, []);
   const hide = useCallback(() => { hideTimer.current = setTimeout(() => setHovered(false), 80); }, []);
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
+  const nodes = useWorkspaceStore((s) => s.nodes);
+  const isAgentEdge = sourceHandleId === AGENT_HANDLE
+    || AGENT_TYPES.has(nodes.find(n => n.id === source)?.data?.backendType)
+    || AGENT_TYPES.has(nodes.find(n => n.id === target)?.data?.backendType)
+    || nodes.find(n => n.id === source)?.data?.backendType?.startsWith("agent_memory_")
+    || nodes.find(n => n.id === target)?.data?.backendType?.startsWith("agent_memory_");
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const { deleteElements } = useReactFlow();
@@ -176,16 +186,18 @@ export default function ConfigurableEdge({
             onMouseEnter={show}
             onMouseLeave={hide}
           >
-            <button
-              onClick={handleInsert}
-              className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600
-                flex items-center justify-center
-                hover:bg-zinc-700 hover:border-zinc-400 active:scale-95
-                transition-all duration-150 shadow-xl shadow-black/60 group/btn"
-              title="Insert node here"
-            >
-              <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/btn:text-white" strokeWidth={3} />
-            </button>
+            {!isAgentEdge && (
+              <button
+                onClick={handleInsert}
+                className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600
+                  flex items-center justify-center
+                  hover:bg-zinc-700 hover:border-zinc-400 active:scale-95
+                  transition-all duration-75 shadow-xl shadow-black/60 group/btn"
+                title="Insert node here"
+              >
+                <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/btn:text-white" strokeWidth={3} />
+              </button>
+            )}
             <button
               onClick={handleDelete}
               className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600

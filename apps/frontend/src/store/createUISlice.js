@@ -51,7 +51,7 @@ export const createUISlice = (set, get) => ({
   setAddNodeSource: (nodeId) =>
     set({ addNodeSource: nodeId, insertEdgeId: null, isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
   setInsertOnEdge: (edgeId) =>
-    set({ insertEdgeId: edgeId, addNodeSource: "__edge__" }),
+    set({ insertEdgeId: edgeId, addNodeSource: "__edge__", isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
   clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null, isAddNodeOpen: false }),
   openAgentPicker: (parentId) => set({ isAgentPickerOpen: true, agentPickerParentId: parentId, isAddNodeOpen: false, isTriggerPickerOpen: false }),
   closeAgentPicker: () => set({ isAgentPickerOpen: false, agentPickerParentId: null }),
