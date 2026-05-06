@@ -1,4 +1,4 @@
-import { Plus, Search, LayoutGrid, List, Box } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List } from 'lucide-react';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -17,9 +17,9 @@ export default function DashboardHeader({ onInitialize, search, setSearch, statu
         </div>
         <button
           onClick={onInitialize}
-          className="flex items-center gap-1.5 px-4 py-[7px] bg-white text-black text-[13px] font-semibold rounded-lg hover:bg-neutral-200 transition-all active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-4 py-[7px] bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-semibold rounded-lg transition-all active:scale-[0.97] shadow-lg shadow-violet-900/40 ring-1 ring-violet-500/40"
         >
-          <Box className="w-3.5 h-3.5" /> New Box
+          <Plus className="w-3.5 h-3.5" /> New Box
         </button>
       </div>
 

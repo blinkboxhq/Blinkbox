@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
   Copy, Trash2, Pencil, Check, X, Loader2,
-  Activity, Power,
+  Activity, Power, Zap, Clock, Box, Layers,
 } from 'lucide-react';
 import api from '../../lib/api';
 
@@ -18,11 +18,28 @@ import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
-// ─── Templates ─────────────────────────────────────────────────────────────
-// Each template defines display info + the actual nodes/edges to pre-save.
-// Node format matches backend: { id, type, description, data, position }
-// Edge format: { id, source, target, type: 'onSuccess', conditionPath: '' }
+const TRIGGER_BADGE = {
+  webhook:  'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  schedule: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  cron:     'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  http:     'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  email:    'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  manual:   'bg-zinc-900 text-neutral-600 border-zinc-800',
+};
 
+function StatCard({ label, value, icon: Icon, colorClass, ringClass }) {
+  return (
+    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-[#1e1e20] bg-[#0d0d0f]">
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${ringClass}`}>
+        <Icon className={`w-3.5 h-3.5 ${colorClass}`} />
+      </div>
+      <div>
+        <p className="text-[22px] font-bold text-white leading-none">{value}</p>
+        <p className="text-[9px] font-semibold text-neutral-600 mt-1 uppercase tracking-wider">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 // Stacked avatars for collaborators on a card
 function CollabAvatarStack({ collaborators = [] }) {
@@ -319,6 +336,15 @@ export default function Dashboard() {
                 total={workflows.length}
               />
 
+              {/* Stats row */}
+              {!workflowsLoading && workflows.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  <StatCard label="Total Boxes" value={workflows.length} icon={Layers} colorClass="text-violet-400" ringClass="bg-violet-500/10 border-violet-500/20" />
+                  <StatCard label="Active" value={workflows.filter(w => w.status === 'active').length} icon={Zap} colorClass="text-emerald-400" ringClass="bg-emerald-500/10 border-emerald-500/20" />
+                  <StatCard label="Drafts" value={workflows.filter(w => w.status !== 'active').length} icon={Clock} colorClass="text-neutral-500" ringClass="bg-zinc-900 border-zinc-800" />
+                </div>
+              )}
+
               {workflowsLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   {Array.from({ length: 6 }).map((_, i) => <NodeCardSkeleton key={i} />)}
@@ -330,44 +356,54 @@ export default function Dashboard() {
                 <div className="border border-[#1e1e20] rounded-xl overflow-hidden">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-[#0d0d0f]">
+                      <tr className="bg-[#0a0a0c]">
+                        <th className="w-1" />
                         <th className="w-10" />
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Name</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Status</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Trigger</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Updated</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Team</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#3a3a3e] uppercase tracking-wider">Name</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#3a3a3e] uppercase tracking-wider">Status</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#3a3a3e] uppercase tracking-wider">Trigger</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#3a3a3e] uppercase tracking-wider">Updated</th>
+                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#3a3a3e] uppercase tracking-wider">Team</th>
                         <th className="w-10" />
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((wf, i) => (
+                      {filtered.map((wf, i) => {
+                        const isActive = wf.status === 'active';
+                        const trigK = (wf.trigger||'manual').toLowerCase();
+                        return (
                         <tr
                           key={wf._id || wf.id}
                           onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                          className="group border-t border-[#1a1a1c] hover:bg-white/[0.02] cursor-pointer transition-colors"
+                          className="group border-t border-[#1a1a1c] hover:bg-white/[0.025] cursor-pointer transition-colors"
                           style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}
                         >
+                          {/* Left accent */}
+                          <td className="p-0 w-1">
+                            <div className={`w-[3px] min-h-[42px] ${isActive ? 'bg-emerald-500' : 'bg-transparent'} rounded-r`} />
+                          </td>
                           {/* Toggle */}
                           <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => handleToggleActive(wf)}
-                              className={`w-7 h-4 rounded-full relative transition-colors duration-200 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
+                              className={`w-7 h-4 rounded-full relative transition-colors duration-200 ${isActive ? 'bg-emerald-500' : 'bg-neutral-800'}`}
                             >
-                              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
+                              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${isActive ? 'left-3.5' : 'left-0.5'}`} />
                             </button>
                           </td>
                           <td className="px-4 py-2.5">
-                            <p className="text-[13px] font-medium text-[#ccc] group-hover:text-white truncate max-w-[280px]">{wf.name}</p>
+                            <p className="text-[13px] font-semibold text-[#ccc] group-hover:text-white truncate max-w-[280px]">{wf.name}</p>
                             {wf.description && <p className="text-[11px] text-[#444] truncate max-w-[280px] mt-0.5">{wf.description}</p>}
                           </td>
                           <td className="px-4 py-2.5">
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-600'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-700'}`} />
-                              {wf.status === 'active' ? 'Active' : 'Draft'}
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${isActive ? 'text-emerald-400' : 'text-neutral-600'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-neutral-700'}`} />
+                              {isActive ? 'Active' : 'Draft'}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-[11px] text-[#444] capitalize">{wf.trigger || 'manual'}</td>
+                          <td className="px-4 py-2.5">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${TRIGGER_BADGE[trigK]||TRIGGER_BADGE.manual}`}>{wf.trigger||'manual'}</span>
+                          </td>
                           <td className="px-4 py-2.5 text-[11px] text-[#444]">{timeAgo(wf.updatedAt)}</td>
                           <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
                           <td className="px-3 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
@@ -382,52 +418,75 @@ export default function Dashboard() {
                             )}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               ) : (
                 /* ── GRID VIEW ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {filtered.map((wf, i) => (
-                    <div
-                      key={wf._id || wf.id}
-                      onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-xl border border-[#1e1e20] bg-[#0d0d0f] hover:bg-[#111113] hover:border-[#2a2a2d] cursor-pointer transition-all duration-150 overflow-visible"
-                      style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
-                    >
-                      <div className="flex items-start justify-between mb-2.5">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleToggleActive(wf); }}
-                            className={`w-7 h-4 rounded-full relative transition-colors duration-200 shrink-0 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
-                          >
-                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
-                          </button>
-                          <h3 className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate">{wf.name}</h3>
-                        </div>
-                        <div className="relative shrink-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
-                            className={`p-1 text-neutral-700 hover:text-neutral-400 rounded transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                          {openMenuId === (wf._id || wf.id) && (
-                            <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
-                          )}
+                  {filtered.map((wf, i) => {
+                    const isActive = wf.status === 'active';
+                    const triggerKey = (wf.trigger || 'manual').toLowerCase();
+                    const badgeCls = TRIGGER_BADGE[triggerKey] || TRIGGER_BADGE.manual;
+                    return (
+                      <div
+                        key={wf._id || wf.id}
+                        onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
+                        className="group relative flex flex-col rounded-xl border border-[#1e1e20] bg-[#0d0d0f] hover:border-[#2e2e32] hover:bg-[#0f0f12] cursor-pointer transition-all duration-150 overflow-hidden"
+                        style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
+                      >
+                        {/* Left accent strip */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-[3px] transition-colors duration-300 ${isActive ? 'bg-emerald-500' : 'bg-[#252528]'}`} />
+
+                        <div className="pl-5 pr-4 pt-4 pb-4 flex flex-col h-full">
+                          {/* Header: toggle + name + menu */}
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleActive(wf); }}
+                                className={`w-7 h-4 rounded-full relative transition-colors duration-200 shrink-0 ${isActive ? 'bg-emerald-500' : 'bg-neutral-800'}`}
+                              >
+                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${isActive ? 'left-3.5' : 'left-0.5'}`} />
+                              </button>
+                              <h3 className="text-[13px] font-semibold text-neutral-300 group-hover:text-white truncate">{wf.name}</h3>
+                            </div>
+                            <div className="relative shrink-0">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
+                                className={`p-1 text-neutral-700 hover:text-neutral-400 rounded transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </button>
+                              {openMenuId === (wf._id || wf.id) && (
+                                <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-[11px] text-[#525258] mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
+
+                          {/* Footer */}
+                          <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${badgeCls}`}>
+                              {wf.trigger || 'manual'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <CollabAvatarStack collaborators={wf.collaborators || []} />
+                              {wf.nodes?.length > 0 && (
+                                <span className="flex items-center gap-0.5 text-[10px] text-neutral-700">
+                                  <Box className="w-2.5 h-2.5" />{wf.nodes.length}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-[#444]">{timeAgo(wf.updatedAt)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-[11px] text-[#555] mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
-                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
-                        <span className="text-[10px] text-[#444] capitalize">{wf.trigger || 'manual'}</span>
-                        <div className="flex items-center gap-2">
-                          <CollabAvatarStack collaborators={wf.collaborators || []} />
-                          <span className="text-[10px] text-[#444]">{timeAgo(wf.updatedAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -445,9 +504,23 @@ export default function Dashboard() {
           {/* ═══ EXECUTION LOGS ═══ */}
           {activeTab === 'logs' && (
             <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Execution History</h2>
-                <p className="text-xs text-neutral-600 mt-0.5">Recent runs across all workflows.</p>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-[15px] font-bold text-white">Execution History</h2>
+                  <p className="text-[11px] text-neutral-600 mt-0.5">Recent runs across all workflows.</p>
+                </div>
+                {executions.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {executions.filter(e => ['executed','completed'].includes(e.status)).length} succeeded
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[11px] text-red-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                      {executions.filter(e => e.status === 'failed').length} failed
+                    </span>
+                  </div>
+                )}
               </div>
               {execLoading ? (
                 <div className="flex items-center justify-center py-20"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>
@@ -500,64 +573,95 @@ export default function Dashboard() {
           {activeTab === 'settings' && (
             <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Settings</h2>
-                <p className="text-xs text-neutral-600 mt-0.5">Workspace configuration and account.</p>
+                <h2 className="text-[15px] font-bold text-white">Settings</h2>
+                <p className="text-[11px] text-neutral-600 mt-0.5">Workspace configuration and account.</p>
               </div>
 
               {/* Profile */}
-              <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Profile</h3>
+              <section className="mb-4 p-5 border border-[#1e1e20] rounded-xl bg-[#0d0d0f]">
+                <h3 className="text-[9px] font-bold text-neutral-600 uppercase tracking-wider mb-4">Profile</h3>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-semibold text-neutral-400 uppercase">{user?.name?.charAt(0) || '?'}</div>
+                  {user?.picture
+                    ? <img src={user.picture} referrerPolicy="no-referrer" alt="" className="w-12 h-12 rounded-full object-cover border border-neutral-800" />
+                    : <div className="w-12 h-12 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-[16px] font-bold text-violet-400 uppercase">{user?.name?.charAt(0) || '?'}</div>
+                  }
                   <div className="flex-1">
-                    <p className="text-[13px] font-medium text-white">{user?.name}</p>
-                    <p className="text-[11px] text-neutral-600">{user?.email}</p>
+                    <p className="text-[14px] font-semibold text-white">{user?.name}</p>
+                    <p className="text-[12px] text-neutral-500 mt-0.5">{user?.email}</p>
                   </div>
-                  <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-zinc-700/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
+                  <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full">{user?.role || 'user'}</span>
                 </div>
               </section>
 
               {/* Usage */}
               {billingUsage && (
-                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                  <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Plan & Usage</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Plan</p><p className="text-[13px] font-medium text-white capitalize">{billingUsage.plan || 'Free'}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Used</p><p className="text-[13px] font-medium text-white">{billingUsage.creditsUsed || 0}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Limit</p><p className="text-[13px] font-medium text-white">{billingUsage.monthlyLimit || 0}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Remaining</p><p className="text-[13px] font-medium text-white">{billingUsage.remaining || 0}</p></div>
+                <section className="mb-4 p-5 border border-[#1e1e20] rounded-xl bg-[#0d0d0f]">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[9px] font-bold text-neutral-600 uppercase tracking-wider">Plan & Usage</h3>
+                    <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded-full capitalize">{billingUsage.plan || 'Free'}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    {[
+                      { label: 'Used', value: billingUsage.creditsUsed || 0 },
+                      { label: 'Limit', value: billingUsage.monthlyLimit || 0 },
+                      { label: 'Remaining', value: billingUsage.remaining || 0 },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="p-3 rounded-lg bg-zinc-950 border border-[#1a1a1c]">
+                        <p className="text-[9px] font-semibold text-neutral-600 uppercase tracking-wider mb-1">{label}</p>
+                        <p className="text-[18px] font-bold text-white leading-none">{value.toLocaleString()}</p>
+                      </div>
+                    ))}
                   </div>
                   {billingUsage.monthlyLimit > 0 && (
-                    <div className="mt-4">
-                      <div className="w-full bg-neutral-900 rounded-full h-1"><div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, billingUsage.percentUsed || 0)}%` }} /></div>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] text-neutral-600">Credit usage</span>
+                        <span className="text-[10px] text-neutral-500">{Math.min(100, billingUsage.percentUsed || 0).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-zinc-950 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-1.5 rounded-full transition-all duration-700 ${(billingUsage.percentUsed||0) > 80 ? 'bg-red-400' : (billingUsage.percentUsed||0) > 50 ? 'bg-amber-400' : 'bg-violet-500'}`}
+                          style={{ width: `${Math.min(100, billingUsage.percentUsed || 0)}%` }}
+                        />
+                      </div>
+                    </>
                   )}
                 </section>
               )}
 
               {/* System */}
               {systemStats && (
-                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
+                <section className="mb-4 p-5 border border-[#1e1e20] rounded-xl bg-[#0d0d0f]">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">System</h3>
-                    <button onClick={handleToggleWorkers} disabled={isTogglingPause} className={`text-[11px] font-medium px-3 py-1 rounded border transition-all ${systemStats.status.includes('OFFLINE') ? 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10' : 'text-red-400 border-red-500/20 hover:bg-red-500/10'}`}>
-                      {systemStats.status.includes('OFFLINE') ? 'Resume' : 'Pause'}
+                    <h3 className="text-[9px] font-bold text-neutral-600 uppercase tracking-wider">System</h3>
+                    <button onClick={handleToggleWorkers} disabled={isTogglingPause} className={`text-[11px] font-semibold px-3 py-1 rounded-full border transition-all disabled:opacity-50 ${systemStats.status.includes('OFFLINE') ? 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10' : 'text-red-400 border-red-500/20 hover:bg-red-500/10'}`}>
+                      {systemStats.status.includes('OFFLINE') ? 'Resume workers' : 'Pause workers'}
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Status</p><p className={`text-[13px] font-medium ${systemStats.status.includes('ONLINE') ? 'text-emerald-400' : 'text-red-400'}`}>{systemStats.status.includes('ONLINE') ? 'Online' : 'Offline'}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Uptime</p><p className="text-[13px] font-medium text-white">{systemStats.uptime}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Memory</p><p className="text-[13px] font-medium text-white">{systemStats.hardware?.freeMem} free</p></div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: 'Status', value: systemStats.status.includes('ONLINE') ? 'Online' : 'Offline', cls: systemStats.status.includes('ONLINE') ? 'text-emerald-400' : 'text-red-400' },
+                      { label: 'Uptime', value: systemStats.uptime, cls: 'text-white' },
+                      { label: 'Free Memory', value: systemStats.hardware?.freeMem, cls: 'text-white' },
+                    ].map(({ label, value, cls }) => (
+                      <div key={label} className="p-3 rounded-lg bg-zinc-950 border border-[#1a1a1c]">
+                        <p className="text-[9px] font-semibold text-neutral-600 uppercase tracking-wider mb-1">{label}</p>
+                        <p className={`text-[13px] font-semibold ${cls}`}>{value}</p>
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}
 
               {/* Danger */}
-              <section className="p-5 border border-red-500/10 rounded-lg bg-zinc-900/30">
-                <h3 className="text-[10px] font-medium text-red-400/50 uppercase tracking-wider mb-3">Danger Zone</h3>
+              <section className="p-5 border border-red-500/10 rounded-xl bg-red-500/[0.02]">
+                <h3 className="text-[9px] font-bold text-red-400/40 uppercase tracking-wider mb-4">Danger Zone</h3>
                 <div className="flex items-center justify-between">
-                  <div><p className="text-[13px] text-neutral-300">End session</p><p className="text-[11px] text-neutral-700 mt-0.5">Log out of your account.</p></div>
-                  <button onClick={handleLogout} className="text-[12px] font-medium text-red-400 border border-red-500/20 px-3.5 py-1.5 rounded hover:bg-red-500/10 transition-all">Log Out</button>
+                  <div>
+                    <p className="text-[13px] font-medium text-neutral-300">End session</p>
+                    <p className="text-[11px] text-neutral-700 mt-0.5">Log out of your account on this device.</p>
+                  </div>
+                  <button onClick={handleLogout} className="text-[12px] font-semibold text-red-400 border border-red-500/20 px-4 py-1.5 rounded-lg hover:bg-red-500/10 transition-all">Log Out</button>
                 </div>
               </section>
             </div>
