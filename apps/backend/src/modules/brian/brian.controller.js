@@ -1,26 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
 
-// ── Config ─────────────────────────────────────────────────────────────────────
-//
-// Priority order:
-//   1. BRIAN_WEBHOOK_URL  — your BlinkBox workflow (webhook?wait=true)  ← preferred
-//   2. ANTHROPIC_API_KEY  — direct Claude call
-//   3. GROQ_API_KEY       — direct Groq call
-//   4. GOOGLE_AI_KEY      — direct Gemini call
-//
-// Set up BRIAN_WEBHOOK_URL in Railway:
-//   https://your-domain.railway.app/webhook/<automationId>?wait=true
-//
+const ANTHROPIC_MODEL = "claude-sonnet-4-6";
+const GROQ_URL        = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL      = "llama-3.3-70b-versatile";
+const GROQ_FAST       = "llama-3.1-8b-instant";
+const sleep           = ms => new Promise(r => setTimeout(r, ms));
+
 const BRIAN_WEBHOOK_URL = process.env.BRIAN_WEBHOOK_URL || "";
-const ANTHROPIC_MODEL   = "claude-opus-4-7";
-const GROQ_URL          = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL        = "llama-3.3-70b-versatile";
-const GROQ_FAST         = "llama-3.1-8b-instant";
-const sleep             = ms => new Promise(r => setTimeout(r, ms));
 
-// ── Trigger types (for normalizer) ────────────────────────────────────────────
 const TRIGGERS = new Set([
   "manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger",
   "slack_trigger","discord_trigger","telegram_trigger","github_trigger",
@@ -30,73 +20,69 @@ const TRIGGERS = new Set([
   "db_trigger","error_trigger",
 ]);
 
-// ── System prompt (used by direct AI fallbacks) ────────────────────────────────
-const SYSTEM_PROMPT = `You are Brian, the AI workflow builder for BlinkBox — an automation platform like Zapier.
+// Build the node reference once at startup — injected into every system prompt
+const NODE_REF = buildNodeRef();
 
-You MUST always respond with ONLY a valid JSON object, no markdown, no prose.
+const SYSTEM_PROMPT = `You are Brian — the AI workflow architect inside BlinkBox, an automation platform.
 
-TRIGGER backendTypes (nodeType:"trigger", always first, exactly one):
-manual, webhook, cron_trigger, rss_trigger, imap_trigger, gmail_trigger,
-slack_trigger, discord_trigger, telegram_trigger, github_trigger,
-shopify_trigger, linear_trigger, notion_trigger, airtable_trigger,
-stripe_trigger, hubspot_trigger, youtube_trigger, reddit_trigger,
-google_calendar_trigger, price_alert_trigger, chat_trigger, form_trigger,
-db_trigger, error_trigger
+You build precise, production-ready workflows. Your superpower: you know the config schema for every node and fill real values — never empty objects.
 
-ACTION backendTypes (nodeType:"action"):
-http_request, code, data_mapper, logic_router, web_scraper,
-ai_agent, ai_classify, ai_extract, ai_transform, ai_decision, email_parser,
-slack, discord, telegram, whatsapp, twilio, sendgrid, gmail, resend,
-airtable, google_sheets, notion, mongodb, postgres, redis, firebase, supabase,
-github, jira, linear, stripe, shopify, hubspot, zoom,
-openai, anthropic, gemini, deepseek, groq, perplexity,
-loop, merge, filter_array, sort_array, deduplicate, batch_split,
-delay, approval, sub_workflow, csv_parser, json_validator, template_renderer,
-text_splitter, date_time, crypto_utils, data_diff, aggregate, set_fields,
-qr_code, image_resize, pdf_generator, twitter, web_search, elevenlabs,
-pinecone, notify_hub, vector_memory
+## Node Config Reference
+Each line: backendType: requiredField(ex:"value") | opt:optionalFields → outputFields
+${NODE_REF}
 
-Required JSON shape:
-{
-  "text": "1-3 sentence explanation",
-  "flow": {
-    "nodes": [
-      {"id":"n1","type":"custom","position":{"x":300,"y":200},"data":{"label":"Webhook","backendType":"webhook","type":"trigger","config":{}}},
-      {"id":"n2","type":"custom","position":{"x":300,"y":400},"data":{"label":"Process","backendType":"code","type":"action","config":{}}}
-    ],
-    "edges": [
-      {"id":"e1","source":"n1","target":"n2","type":"configurable","data":{"conditionPath":""}}
-    ]
-  }
-}
+## Variable Syntax
+- Reference previous node output: \`{{$json.fieldName}}\`
+- Reference trigger data: \`{{trigger.data.fieldName}}\`
+- Reference specific node: \`{{nodes.n2.output.fieldName}}\`
+- JS expressions work: \`{{$json.price * 1.1}}\`, \`{{new Date().toISOString()}}\`
+- String interpolation: \`"Hello {{$json.firstName}} {{$json.lastName}}"\`
 
-Rules:
-- Trigger at x:300 y:200, each next node y+=200, branches x±300
-- 3-7 nodes unless more is asked
-- Vague prompt → webhook → code → slack
-- Pure question → flow:null, answer in text`;
+## Smart Chaining Rules
+- After gmail_trigger: downstream gmail node \`to\` = \`"{{trigger.data.from}}"\`, \`threadId\` = \`"{{trigger.data.threadId}}"\`
+- After slack_trigger: downstream slack node \`channel\` = \`"{{trigger.data.channel}}"\`
+- After webhook: use \`"{{trigger.data.body.fieldName}}"\` or \`"{{$json.fieldName}}"\`
+- After ai_classify/ai_extract: use \`"{{$json.category}}"\` or \`"{{$json.extracted.fieldName}}"\`
+- After loop: \`"{{$json.item.fieldName}}"\` refers to current iteration item
+- credentialId: always set to \`""\` — user fills this in. Never invent credential IDs.
 
-// ── Claude tool definition (for Anthropic path) ───────────────────────────────
+## Layout Rules
+- Trigger: x:300, y:100
+- Each sequential node: y += 220
+- Branch left: x -= 350, Branch right: x += 350
+- Build 3–8 nodes unless the user asks for more
+- Vague prompt → webhook trigger → code → slack notification
+- Pure question (no automation) → set flow to null, answer in text
+
+## Output Format
+Respond ONLY by calling the create_workflow tool. No prose outside the tool call.`;
+
+// ── Anthropic tool definition ─────────────────────────────────────────────────
 const WORKFLOW_TOOL = {
   name: "create_workflow",
-  description: "Create a BlinkBox automation workflow. Always call this tool.",
+  description: "Create a BlinkBox automation workflow with fully configured nodes.",
   input_schema: {
     type: "object",
     properties: {
-      text: { type: "string", description: "1-3 sentence explanation" },
+      text: {
+        type: "string",
+        description: "1–2 sentence explanation of what this workflow does.",
+      },
       nodes: {
         type: "array",
+        description: "Workflow nodes. Every node must have a populated config object — no empty configs.",
         items: {
           type: "object",
           properties: {
-            id:          { type: "string" },
-            backendType: { type: "string" },
-            label:       { type: "string" },
+            id:          { type: "string", description: "Unique ID like n1, n2, n3" },
+            backendType: { type: "string", description: "Node backendType from the reference" },
+            label:       { type: "string", description: "Human-readable node label" },
             nodeType:    { type: "string", enum: ["trigger", "action"] },
             x:           { type: "number" },
             y:           { type: "number" },
+            config:      { type: "object", description: "Fully populated config. Use the node reference to fill real values." },
           },
-          required: ["id", "backendType", "label", "nodeType", "x", "y"],
+          required: ["id", "backendType", "label", "nodeType", "x", "y", "config"],
           additionalProperties: false,
         },
       },
@@ -105,9 +91,10 @@ const WORKFLOW_TOOL = {
         items: {
           type: "object",
           properties: {
-            id:     { type: "string" },
-            source: { type: "string" },
-            target: { type: "string" },
+            id:           { type: "string" },
+            source:       { type: "string" },
+            target:       { type: "string" },
+            sourceHandle: { type: "string", description: "Only set for condition nodes: 'true' or 'false'" },
           },
           required: ["id", "source", "target"],
           additionalProperties: false,
@@ -119,44 +106,45 @@ const WORKFLOW_TOOL = {
   },
 };
 
-// ── Convert Claude tool output → ReactFlow canvas format ──────────────────────
+// ── Convert tool output → ReactFlow canvas format ─────────────────────────────
 function toolToCanvas({ nodes = [], edges = [] }) {
   if (!nodes.length) return null;
 
   const canvasNodes = nodes.map((n, i) => ({
     id:       String(n.id || `n${i + 1}`),
     type:     "custom",
-    position: { x: Number(n.x) || 300, y: Number(n.y) || (200 + i * 200) },
+    position: { x: Number(n.x) || 300, y: Number(n.y) || (100 + i * 220) },
     data: {
       label:       n.label || n.backendType,
       backendType: n.backendType || "manual",
       type:        n.nodeType === "trigger" ? "trigger" : "action",
-      config:      {},
+      config:      n.config || {},
     },
   }));
 
   let canvasEdges = edges
     .map((e, i) => ({
-      id:     String(e.id || `e${i + 1}`),
-      source: String(e.source || ""),
-      target: String(e.target || ""),
-      type:   "configurable",
-      data:   { conditionPath: "" },
-      style:  {},
+      id:           String(e.id || `e${i + 1}`),
+      source:       String(e.source || ""),
+      target:       String(e.target || ""),
+      sourceHandle: e.sourceHandle || null,
+      type:         "configurable",
+      data:         { conditionPath: "" },
+      style:        {},
     }))
     .filter(e => e.source && e.target);
 
   if (!canvasEdges.length && canvasNodes.length > 1) {
     canvasEdges = canvasNodes.slice(0, -1).map((n, i) => ({
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
-      type: "configurable", data: { conditionPath: "" }, style: {},
+      sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
     }));
   }
 
   return { nodes: canvasNodes, edges: canvasEdges };
 }
 
-// ── Normalise plain-JSON response (Groq / Gemini paths) ───────────────────────
+// ── Normalize plain-JSON response (Groq / Gemini) ─────────────────────────────
 function normalizeFlow(parsed) {
   const src   = parsed.flow || parsed.workflow || parsed;
   const nodes = src.nodes || parsed.nodes || [];
@@ -171,7 +159,7 @@ function normalizeFlow(parsed) {
     return {
       id:       String(n.id || `n${i + 1}`),
       type:     "custom",
-      position: { x: Number(pos.x) || 300, y: Number(pos.y) || 200 + i * 200 },
+      position: { x: Number(pos.x) || 300, y: Number(pos.y) || 100 + i * 220 },
       data: {
         label:       n.label || n.data?.label || n.name || cleanBt,
         backendType: cleanBt,
@@ -182,57 +170,58 @@ function normalizeFlow(parsed) {
   });
 
   let normEdges = edges.map((e, i) => ({
-    id:     String(e.id || `e${i + 1}`),
-    source: String(e.source || e.from || ""),
-    target: String(e.target || e.to   || ""),
-    type:   "configurable",
-    data:   { conditionPath: "" },
-    style:  {},
+    id:           String(e.id || `e${i + 1}`),
+    source:       String(e.source || e.from || ""),
+    target:       String(e.target || e.to   || ""),
+    sourceHandle: e.sourceHandle || null,
+    type:         "configurable",
+    data:         { conditionPath: "" },
+    style:        {},
   })).filter(e => e.source && e.target);
 
   if (!normEdges.length && normNodes.length > 1) {
     normEdges = normNodes.slice(0, -1).map((n, i) => ({
       id: `e${i + 1}`, source: n.id, target: normNodes[i + 1].id,
-      type: "configurable", data: { conditionPath: "" }, style: {},
+      sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
     }));
   }
 
   return { nodes: normNodes, edges: normEdges };
 }
 
-// ── Provider 1: Your BlinkBox webhook ─────────────────────────────────────────
-// Calls your admin workflow with ?wait=true — synchronous, returns result directly.
-// Workflow format: webhook_trigger → ai_node → code_node → respond_webhook
-// The respond_webhook node body should be: { "text": "...", "flow": {...} }
+// ── Provider 1: BlinkBox webhook ──────────────────────────────────────────────
 async function callBlinkBoxWebhook(webhookUrl, userText, history) {
   const res = await axios.post(
     webhookUrl,
     { prompt: userText, history },
     { timeout: 60_000, headers: { "Content-Type": "application/json" } },
   );
-
   const data = res.data;
-
-  // If using respond_webhook node: data IS the body { text, flow }
   if (data?.text !== undefined) return data;
-
-  // Without respond_webhook: { success, output }
   if (data?.output) return data.output;
-
   return data;
 }
 
-// ── Provider 2: Anthropic Claude ──────────────────────────────────────────────
-async function callAnthropic(apiKey, messages, userText) {
+// ── Provider 2: Anthropic Claude (primary) ────────────────────────────────────
+async function callAnthropic(apiKey, messages) {
   const client = new Anthropic({ apiKey });
 
-  let history = messages.slice(0, -1).map(m => ({
-    role:    m.role === "user" ? "user" : "assistant",
-    content: (m.content || m.text || " ").trim(),
-  }));
+  // Build clean alternating history — Anthropic requires user/assistant alternation
+  const rawHistory = messages.slice(0, -1);
+  let history = rawHistory
+    .filter(m => m.content || m.text)
+    .map(m => ({
+      role:    m.role === "user" ? "user" : "assistant",
+      content: String(m.content || m.text || "").trim(),
+    }));
+
+  // Ensure it starts with a user message
   const firstUser = history.findIndex(m => m.role === "user");
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
+
+  const lastMsg  = messages[messages.length - 1];
+  const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const response = await client.messages.create({
     model:       ANTHROPIC_MODEL,
@@ -243,12 +232,13 @@ async function callAnthropic(apiKey, messages, userText) {
     tool_choice: { type: "tool", name: "create_workflow" },
   });
 
-  console.log("[Brian] Claude model:", response.model, "stop:", response.stop_reason);
-
   const toolUse = response.content.find(b => b.type === "tool_use");
   if (toolUse?.input) {
     const { text, nodes, edges } = toolUse.input;
-    return { text: text || "", flow: nodes?.length ? toolToCanvas({ nodes, edges }) : null };
+    return {
+      text: text || "",
+      flow: nodes?.length ? toolToCanvas({ nodes, edges }) : null,
+    };
   }
 
   const textBlock = response.content.find(b => b.type === "text");
@@ -262,7 +252,7 @@ async function callGroq(apiKey, model, payload) {
     try {
       const res = await axios.post(GROQ_URL, {
         model,
-        messages: payload,
+        messages:        payload,
         temperature:     0.2,
         max_tokens:      4096,
         response_format: { type: "json_object" },
@@ -278,7 +268,10 @@ async function callGroq(apiKey, model, payload) {
 }
 
 // ── Provider 4: Google Gemini ─────────────────────────────────────────────────
-async function callGemini(apiKey, messages, userText) {
+async function callGemini(apiKey, messages) {
+  const lastMsg  = messages[messages.length - 1];
+  const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
@@ -286,12 +279,14 @@ async function callGemini(apiKey, messages, userText) {
     generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
   });
 
-  let history = messages.slice(0, -1).map(m => ({
-    role:  m.role === "user" ? "user" : "model",
-    parts: [{ text: m.content || m.text || " " }],
-  }));
+  let history = messages.slice(0, -1)
+    .filter(m => m.content || m.text)
+    .map(m => ({
+      role:  m.role === "user" ? "user" : "model",
+      parts: [{ text: String(m.content || m.text || " ") }],
+    }));
   const firstUser = history.findIndex(m => m.role === "user");
-  if (firstUser > 0) history = history.slice(firstUser);
+  if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
 
   const chat   = model.startChat({ history });
@@ -299,18 +294,20 @@ async function callGemini(apiKey, messages, userText) {
   return result.response.text();
 }
 
-// ── Route handler ──────────────────────────────────────────────────────────────
+// ── Route handler ─────────────────────────────────────────────────────────────
 export async function brianChat(req, res) {
   const { messages = [] } = req.body;
+  if (!messages.length) return res.status(400).json({ message: "Empty messages." });
+
   const lastMsg  = messages[messages.length - 1];
-  const userText = (lastMsg?.content || lastMsg?.text || "").trim();
+  const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
   if (!userText) return res.status(400).json({ message: "Empty message." });
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const groqKey      = process.env.GROQ_API_KEY;
   const googleKey    = process.env.GOOGLE_AI_KEY;
 
-  // ── Path 1: BlinkBox webhook (your admin workflow) ─────────────────────────
+  // ── Path 1: BlinkBox webhook ───────────────────────────────────────────────
   if (BRIAN_WEBHOOK_URL) {
     try {
       const history = messages.slice(0, -1).map(m => ({
@@ -318,30 +315,23 @@ export async function brianChat(req, res) {
         content: m.content || m.text || "",
       }));
       const result = await callBlinkBoxWebhook(BRIAN_WEBHOOK_URL, userText, history);
-      console.log("[Brian] webhook result:", JSON.stringify(result)?.slice(0, 200));
-
-      if (result?.flow) {
-        return res.json({ text: result.text || "", flow: normalizeFlow(result) });
-      }
+      if (result?.flow) return res.json({ text: result.text || "", flow: normalizeFlow(result) });
       return res.json({ text: result?.text || String(result || ""), flow: null });
     } catch (err) {
-      console.warn("[Brian] webhook failed:", err.message, "— falling back to AI provider");
+      console.warn("[Brian] webhook failed:", err.message, "— falling back");
     }
   }
 
-  // Check at least one AI key is available
   if (!anthropicKey && !groqKey && !googleKey) {
     return res.status(503).json({
-      message: BRIAN_WEBHOOK_URL
-        ? "Brian webhook failed and no AI key fallback is configured."
-        : "Brian needs an API key. Set BRIAN_WEBHOOK_URL in Railway (recommended) or ANTHROPIC_API_KEY / GROQ_API_KEY.",
+      message: "Set ANTHROPIC_API_KEY in Railway to activate Brian.",
     });
   }
 
-  // ── Path 2: Anthropic Claude ───────────────────────────────────────────────
+  // ── Path 2: Anthropic (primary — best quality) ────────────────────────────
   if (anthropicKey) {
     try {
-      return res.json(await callAnthropic(anthropicKey, messages, userText));
+      return res.json(await callAnthropic(anthropicKey, messages));
     } catch (err) {
       const status = err.status || err.response?.status;
       console.warn("[Brian] Anthropic failed:", status, err.message);
@@ -354,11 +344,13 @@ export async function brianChat(req, res) {
     }
   }
 
-  // Shared Groq/Gemini history format
-  let history = messages.slice(0, -1).map(m => ({
-    role:    m.role === "user" ? "user" : "assistant",
-    content: (m.content || m.text || " ").trim(),
-  }));
+  // Build shared history format for Groq / Gemini
+  let history = messages.slice(0, -1)
+    .filter(m => m.content || m.text)
+    .map(m => ({
+      role:    m.role === "user" ? "user" : "assistant",
+      content: String(m.content || m.text || " ").trim(),
+    }));
   const firstUser = history.findIndex(m => m.role === "user");
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
@@ -368,11 +360,11 @@ export async function brianChat(req, res) {
     const payload = [
       { role: "system", content: SYSTEM_PROMPT },
       ...history,
-      { role: "user",   content: userText },
+      { role: "user", content: userText },
     ];
     try {
-      let raw = await callGroq(groqKey, GROQ_MODEL, payload)
-                  .catch(() => callGroq(groqKey, GROQ_FAST, payload));
+      const raw     = await callGroq(groqKey, GROQ_MODEL, payload)
+                        .catch(() => callGroq(groqKey, GROQ_FAST, payload));
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
@@ -383,10 +375,10 @@ export async function brianChat(req, res) {
     }
   }
 
-  // ── Path 4: Google Gemini ──────────────────────────────────────────────────
+  // ── Path 4: Gemini ─────────────────────────────────────────────────────────
   if (googleKey) {
     try {
-      const raw = await callGemini(googleKey, messages, userText);
+      const raw     = await callGemini(googleKey, messages);
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
