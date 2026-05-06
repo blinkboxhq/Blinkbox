@@ -230,9 +230,59 @@ export default function Dashboard() {
   }, [activeTab, workflows]);
 
   const handleBrianSubmit = async (prompt) => {
-    // TODO: POST /api/ai/chat with prompt, get back a box name/config, navigate to it
-    await new Promise((r) => setTimeout(r, 1200));
-    setActiveTab('workflows');
+    try {
+      const { data } = await api.post('/api/brian/chat', {
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      if (data?.flow?.nodes?.length) {
+        const triggerNode = data.flow.nodes.find(n => n.data?.type === 'trigger');
+        const workflowName = prompt.length > 50 ? prompt.slice(0, 47) + '…' : prompt;
+
+        const created = await api.post('/api/automation', {
+          name: workflowName,
+          description: data.text || '',
+          trigger: triggerNode?.data?.backendType || 'manual',
+        });
+
+        if (created.data?.success) {
+          const wfId = created.data.automation._id;
+          const entryNode = triggerNode || data.flow.nodes[0];
+          await api.put(`/api/automation/${wfId}`, {
+            name: workflowName,
+            trigger: entryNode.data?.backendType || 'manual',
+            entryNodeId: entryNode.id,
+            settings: { maxParallel: 10 },
+            nodes: data.flow.nodes.map(n => ({
+              id: n.id,
+              type: n.data?.backendType || 'manual',
+              data: n.data?.config || {},
+              description: n.data?.label || n.data?.backendType || 'Node',
+              position: n.position || { x: 300, y: 200 },
+            })),
+            edges: (data.flow.edges || []).map(e => ({
+              id: e.id,
+              source: e.source,
+              target: e.target,
+              sourceHandle: e.sourceHandle || null,
+              targetHandle: e.targetHandle || null,
+              type: 'onSuccess',
+              conditionPath: '',
+            })),
+          });
+
+          setWorkflows(prev => [created.data.automation, ...prev]);
+          navigate(`/workspace/${wfId}`);
+        }
+      } else if (data?.text) {
+        setSystemError(`Brian: ${data.text}`);
+        setTimeout(() => setSystemError(null), 6000);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Brian failed to respond.';
+      setSystemError(`Brian: ${msg}`);
+      setTimeout(() => setSystemError(null), 5000);
+    }
   };
 
   const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch {} setIsTogglingPause(false); };
