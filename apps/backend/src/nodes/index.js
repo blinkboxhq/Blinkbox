@@ -153,6 +153,14 @@ import speechToText from "./speechToText.node.js";
 import textToSpeech from "./textToSpeech.node.js";
 import rss from "./rss.node.js";
 
+// Batch 3 — utility, network, public APIs, AI content, dev tools, social
+import * as utilityNodes from "./utility.nodes.js";
+import * as networkNodes from "./network.nodes.js";
+import * as publicApiNodes from "./publicApis.nodes.js";
+import * as aiContentNodes from "./aiContent.nodes.js";
+import * as devToolNodes from "./devTools.nodes.js";
+import * as socialNodes from "./social.nodes.js";
+
 // New Integrations (batch 2)
 import s3 from "./integrations/s3.node.js";
 import datadog from "./integrations/datadog.node.js";
@@ -515,6 +523,128 @@ export const nodeRegistry = {
   instagram: instagram,
   instagram_post: instagram,
   ocr: ocr,
+
+  // ── Utility nodes ──────────────────────────────────────────────────────────
+  base64:              utilityNodes.base64,
+  hash:                utilityNodes.hash,
+  color_converter:     utilityNodes.color_converter,
+  unit_converter:      utilityNodes.unit_converter,
+  number_format:       utilityNodes.number_format,
+  find_replace:        utilityNodes.find_replace,
+  regex_match:         utilityNodes.regex_match,
+  math_expression:     utilityNodes.math_expression,
+  html_to_text:        utilityNodes.html_to_text,
+  json_to_csv:         utilityNodes.json_to_csv,
+  markdown_renderer:   utilityNodes.markdown_renderer,
+  text_format:         utilityNodes.text_format,
+  random_pick:         utilityNodes.random_pick,
+  pagination_handler:  utilityNodes.pagination_handler,
+  counter:             utilityNodes.counter,
+  variable_set_get:    utilityNodes.variable_set_get,
+  schedule_check:      utilityNodes.schedule_check,
+  semver_compare:      utilityNodes.semver_compare,
+  env_variable:        utilityNodes.env_variable,
+  error:               utilityNodes.error,
+  zip_files:           utilityNodes.zip_files,
+  color_palette:       utilityNodes.color_palette,
+  compound_interest:   utilityNodes.compound_interest,
+  gst_calculator:      utilityNodes.gst_calculator,
+  payroll_calculator:  utilityNodes.payroll_calculator,
+  tax_rate_lookup:     utilityNodes.tax_rate_lookup,
+  price_alert:         utilityNodes.price_alert,
+  leaderboard_update:  utilityNodes.leaderboard_update,
+  ledger_entry:        utilityNodes.ledger_entry,
+
+  // ── Network / infra nodes ──────────────────────────────────────────────────
+  dns:                 networkNodes.dns_lookup,
+  ssl:                 networkNodes.ssl,
+  http_monitor:        networkNodes.http_monitor,
+  port_monitor:        networkNodes.port_monitor,
+  ip_lookup:           networkNodes.ip_lookup,
+  ip_whitelist:        networkNodes.ip_whitelist,
+
+  // ── Public API nodes ───────────────────────────────────────────────────────
+  arxiv_search:        publicApiNodes.arxiv_search,
+  pubmed_search:       publicApiNodes.pubmed_search,
+  clinical_trials:     publicApiNodes.clinical_trials,
+  drug_lookup:         publicApiNodes.drug_lookup,
+  hackernews:          publicApiNodes.hackernews,
+  wikipedia_lookup:    publicApiNodes.wikipedia_lookup,
+  npm_package_info:    publicApiNodes.npm_package_info,
+  news_search:         publicApiNodes.news_search,
+  producthunt:         publicApiNodes.producthunt,
+  steam_game_lookup:   publicApiNodes.steam_game_lookup,
+  stock_price:         publicApiNodes.stock_price,
+  currency_exchange:   publicApiNodes.currency_exchange,
+  twitch_stream_status: publicApiNodes.twitch_stream_status,
+
+  // ── AI content nodes ───────────────────────────────────────────────────────
+  image_caption:       aiContentNodes.image_caption,
+  image_generate:      aiContentNodes.image_generate,
+  grammar_check:       aiContentNodes.grammar_check,
+  blog_post:           aiContentNodes.blog_post,
+  caption_writer:      aiContentNodes.caption_writer,
+  flashcard_generator: aiContentNodes.flashcard_generator,
+  quiz_generator:      aiContentNodes.quiz_generator,
+  hashtag_suggester:   aiContentNodes.hashtag_suggester,
+  citation_formatter:  aiContentNodes.citation_formatter,
+  summarize:           aiContentNodes.summarize,
+  remove_background:   aiContentNodes.remove_background,
+  invoice_parser:      aiContentNodes.invoice_parser,
+  bank_statement_parser: aiContentNodes.bank_statement_parser,
+  audience_insights:   aiContentNodes.audience_insights,
+  chat:                aiContentNodes.chat,
+  thumbnail_generator: aiContentNodes.thumbnail_generator,
+
+  // ── Dev tools nodes ────────────────────────────────────────────────────────
+  graphql_request:     devToolNodes.graphql_request,
+  grpc_call:           devToolNodes.grpc_call,
+  gitlab:              devToolNodes.gitlab,
+  azure_devops:        devToolNodes.azure_devops,
+  github_issue:        devToolNodes.github_issue,
+  docker:              devToolNodes.docker,
+  docker_run:          devToolNodes.docker_run,
+  ssh:                 devToolNodes.ssh,
+  google_docs:         devToolNodes.google_docs,
+  google_forms:        devToolNodes.google_forms,
+  figma:               devToolNodes.figma,
+  figma_comment:       devToolNodes.figma_comment,
+
+  // ── Social / publishing nodes ──────────────────────────────────────────────
+  twitter_post:        socialNodes.twitter_post,
+  linkedin_post:       socialNodes.linkedin_post,
+  youtube_upload:      socialNodes.youtube_upload,
+  discord_role_assign: socialNodes.discord_role_assign,
+  mastodon:            socialNodes.mastodon,
+  imap:                socialNodes.imap,
+  email:               socialNodes.email,
+  file_download:       socialNodes.file_download,
+  webhook_response:    socialNodes.webhook_response,
+  game_event_webhook:  socialNodes.game_event_webhook,
+
+  // ── Agent sub-node aliases (handled by ai_agent core or dedicated nodes) ──
+  agent_openai:        openai,
+  agent_anthropic:     anthropic,
+  agent_gemini:        gemini,
+  agent_deepseek:      deepseek,
+  agent_perplexity:    perplexity,
+  agent_xai:           xai,
+  agent_groq:          groq,
+  agent_ollama:        ollama,
+  agent_llm:           openai,
+  agent_memory:        vectorMemory,
+  agent_memory_mongodb:   mongodb,
+  agent_memory_pinecone:  pinecone,
+  agent_memory_postgres:  postgres,
+  agent_memory_redis:     redisNode,
+  agent_memory_supabase:  supabase,
+  agent_memory_window:    vectorMemory,
+  agent_memory_zep:       vectorMemory,
+  agent_tool:          aiAgent,
+
+  // ── Misc aliases ───────────────────────────────────────────────────────────
+  cron:                cronTrigger,
+  database:            postgres,
 
   // Backward Compatibility Aliases
   advanced_scraper: webScraper,
