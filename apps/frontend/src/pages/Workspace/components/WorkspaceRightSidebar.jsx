@@ -35,7 +35,7 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: width, opacity: 0 }}
           transition={springIn}
-          className="h-full flex flex-row bg-neutral-950 border-l border-[#333] z-20 will-change-transform"
+          className="absolute top-0 right-0 h-full flex flex-row bg-neutral-950 border-l border-[#333] z-20 will-change-transform"
           style={{ width }}
         >
           {/* Drag handle */}

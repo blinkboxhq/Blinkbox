@@ -139,7 +139,7 @@ export default function Workspace() {
 
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* Canvas row */}
-          <div className="flex-1 flex overflow-hidden min-h-0">
+          <div className="flex-1 flex overflow-hidden min-h-0 relative">
             <ReactFlowProvider>
               <Canvas />
 
