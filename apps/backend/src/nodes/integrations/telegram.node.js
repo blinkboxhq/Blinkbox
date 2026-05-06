@@ -68,8 +68,8 @@ async function call(token, method, payload) {
 async function opSendMessage(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : String(config.chatId ?? "");
   const text = typeof config.text === "string" ? config.text.trim() : config.text;
-  if (!chatId) return { success: false, error: "Telegram sendMessage: 'chatId' is required. Leave it blank to auto-reply to the trigger sender., skipped: true };
-  if (!text) return { success: false, error: "Telegram sendMessage: 'text' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram sendMessage: 'chatId' is required. Leave it blank to auto-reply to the trigger sender.", skipped: true };
+  if (!text) return { success: false, error: "Telegram sendMessage: 'text' is required.", skipped: true };
 
   const payload = {
     chat_id: chatId,
@@ -85,8 +85,8 @@ async function opSendMessage(config, token) {
 async function opSendPhoto(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
   const photoUrl = config.photoUrl || config.imageUrl;
-  if (!chatId) return { success: false, error: "Telegram sendPhoto: 'chatId' is required., skipped: true };
-  if (!photoUrl) return { success: false, error: "Telegram sendPhoto: 'photoUrl' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram sendPhoto: 'chatId' is required.", skipped: true };
+  if (!photoUrl) return { success: false, error: "Telegram sendPhoto: 'photoUrl' is required.", skipped: true };
   if (!/^https?:\/\//i.test(photoUrl)) throw new Error("Telegram sendPhoto: 'photoUrl' must be an http/https URL.");
 
   const payload = { chat_id: chatId, photo: photoUrl };
@@ -100,8 +100,8 @@ async function opSendPhoto(config, token) {
 async function opSendDocument(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
   const documentUrl = config.documentUrl || config.fileUrl;
-  if (!chatId) return { success: false, error: "Telegram sendDocument: 'chatId' is required., skipped: true };
-  if (!documentUrl) return { success: false, error: "Telegram sendDocument: 'documentUrl' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram sendDocument: 'chatId' is required.", skipped: true };
+  if (!documentUrl) return { success: false, error: "Telegram sendDocument: 'documentUrl' is required.", skipped: true };
   if (!/^https?:\/\//i.test(documentUrl)) throw new Error("Telegram sendDocument: 'documentUrl' must be an http/https URL.");
 
   const payload = { chat_id: chatId, document: documentUrl };
@@ -114,8 +114,8 @@ async function opSendDocument(config, token) {
 
 async function opSendPoll(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  if (!chatId) return { success: false, error: "Telegram sendPoll: 'chatId' is required., skipped: true };
-  if (!config.question) return { success: false, error: "Telegram sendPoll: 'question' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram sendPoll: 'chatId' is required.", skipped: true };
+  if (!config.question) return { success: false, error: "Telegram sendPoll: 'question' is required.", skipped: true };
   if (!Array.isArray(config.options) || config.options.length < 2)
     throw new Error("Telegram sendPoll: 'options' must be an array with at least 2 items.");
 
@@ -140,9 +140,9 @@ async function opSendPoll(config, token) {
 
 async function opEditMessage(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  if (!chatId) return { success: false, error: "Telegram editMessage: 'chatId' is required., skipped: true };
-  if (!config.messageId) return { success: false, error: "Telegram editMessage: 'messageId' is required., skipped: true };
-  if (!config.text) return { success: false, error: "Telegram editMessage: 'text' (new text) is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram editMessage: 'chatId' is required.", skipped: true };
+  if (!config.messageId) return { success: false, error: "Telegram editMessage: 'messageId' is required.", skipped: true };
+  if (!config.text) return { success: false, error: "Telegram editMessage: 'text' (new text) is required.", skipped: true };
 
   const payload = {
     chat_id: chatId,
@@ -156,8 +156,8 @@ async function opEditMessage(config, token) {
 
 async function opDeleteMessage(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  if (!chatId) return { success: false, error: "Telegram deleteMessage: 'chatId' is required., skipped: true };
-  if (!config.messageId) return { success: false, error: "Telegram deleteMessage: 'messageId' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram deleteMessage: 'chatId' is required.", skipped: true };
+  if (!config.messageId) return { success: false, error: "Telegram deleteMessage: 'messageId' is required.", skipped: true };
 
   const data = await call(token, "deleteMessage", { chat_id: chatId, message_id: config.messageId });
   return { ok: data.ok, deleted: data.result === true };
@@ -165,8 +165,8 @@ async function opDeleteMessage(config, token) {
 
 async function opPinMessage(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  if (!chatId) return { success: false, error: "Telegram pinMessage: 'chatId' is required., skipped: true };
-  if (!config.messageId) return { success: false, error: "Telegram pinMessage: 'messageId' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram pinMessage: 'chatId' is required.", skipped: true };
+  if (!config.messageId) return { success: false, error: "Telegram pinMessage: 'messageId' is required.", skipped: true };
 
   const data = await call(token, "pinChatMessage", {
     chat_id: chatId,
@@ -178,7 +178,7 @@ async function opPinMessage(config, token) {
 
 async function opGetChat(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  if (!chatId) return { success: false, error: "Telegram getChat: 'chatId' is required., skipped: true };
+  if (!chatId) return { success: false, error: "Telegram getChat: 'chatId' is required.", skipped: true };
 
   const data = await call(token, "getChat", { chat_id: chatId });
   const chat = data.result;

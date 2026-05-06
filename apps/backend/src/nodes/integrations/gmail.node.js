@@ -61,7 +61,7 @@ function buildRawEmail({ to, from, subject, body, html, replyTo, threadId, inRep
 }
 
 async function opSendEmail(config, token) {
-  if (!config.to) return { success: false, error: "Gmail sendEmail: 'to' is required., skipped: true };
+  if (!config.to) return { success: false, error: "Gmail sendEmail: 'to' is required.", skipped: true };
   const raw = buildRawEmail(config);
   const body = { raw };
   if (config.threadId) body.threadId = config.threadId;
@@ -73,7 +73,7 @@ async function opSendEmail(config, token) {
 }
 
 async function opReadEmail(config, token) {
-  if (!config.messageId) return { success: false, error: "Gmail readEmail: 'messageId' is required., skipped: true };
+  if (!config.messageId) return { success: false, error: "Gmail readEmail: 'messageId' is required.", skipped: true };
   const response = await axios.get(`${BASE}/messages/${encodeURIComponent(config.messageId)}`, {
     headers: auth(token),
     params: { format: "full" },
@@ -97,7 +97,7 @@ async function opReadEmail(config, token) {
 }
 
 async function opSearchEmails(config, token) {
-  if (!config.query) return { success: false, error: "Gmail searchEmails: 'query' is required (e.g. 'from:user@example.com is:unread')., skipped: true };
+  if (!config.query) return { success: false, error: "Gmail searchEmails: 'query' is required (e.g. 'from:user@example.com is:unread').", skipped: true };
   const response = await axios.get(`${BASE}/messages`, {
     headers: auth(token),
     params: { q: config.query, maxResults: Math.min(config.maxResults || 10, 100) },
@@ -108,7 +108,7 @@ async function opSearchEmails(config, token) {
 }
 
 async function opCreateDraft(config, token) {
-  if (!config.to) return { success: false, error: "Gmail createDraft: 'to' is required., skipped: true };
+  if (!config.to) return { success: false, error: "Gmail createDraft: 'to' is required.", skipped: true };
   const raw = buildRawEmail(config);
   const response = await axios.post(`${BASE}/drafts`, { message: { raw } }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
@@ -118,8 +118,8 @@ async function opCreateDraft(config, token) {
 }
 
 async function opReplyToEmail(config, token) {
-  if (!config.to) return { success: false, error: "Gmail replyToEmail: 'to' is required., skipped: true };
-  if (!config.threadId) return { success: false, error: "Gmail replyToEmail: 'threadId' is required., skipped: true };
+  if (!config.to) return { success: false, error: "Gmail replyToEmail: 'to' is required.", skipped: true };
+  if (!config.threadId) return { success: false, error: "Gmail replyToEmail: 'threadId' is required.", skipped: true };
   const raw = buildRawEmail(config);
   const response = await axios.post(`${BASE}/messages/send`, { raw, threadId: config.threadId }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
@@ -129,7 +129,7 @@ async function opReplyToEmail(config, token) {
 }
 
 async function opMarkRead(config, token) {
-  if (!config.messageId) return { success: false, error: "Gmail markRead: 'messageId' is required., skipped: true };
+  if (!config.messageId) return { success: false, error: "Gmail markRead: 'messageId' is required.", skipped: true };
   await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/modify`, {
     removeLabelIds: ["UNREAD"],
   }, {
@@ -140,7 +140,7 @@ async function opMarkRead(config, token) {
 }
 
 async function opDeleteEmail(config, token) {
-  if (!config.messageId) return { success: false, error: "Gmail deleteEmail: 'messageId' is required., skipped: true };
+  if (!config.messageId) return { success: false, error: "Gmail deleteEmail: 'messageId' is required.", skipped: true };
   await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/trash`, {}, {
     headers: { ...auth(token), "Content-Type": "application/json" },
     timeout: 10000,

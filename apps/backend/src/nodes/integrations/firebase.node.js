@@ -76,40 +76,40 @@ export default {
     try {
       // ── Firestore ────────────────────────────────────────────────────
       if (operation === "getDocument") {
-        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required., skipped: true };
+        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required.", skipped: true };
         const snap = await db.collection(collection).doc(docId).get();
         return { document: snap.exists ? { id: snap.id, ...snap.data() } : null, found: snap.exists, collection, docId };
       }
 
       if (operation === "setDocument") {
-        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required., skipped: true };
+        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required.", skipped: true };
         const payload = parseJson(data, "data");
         await db.collection(collection).doc(docId).set(payload, { merge: config.merge === true });
         return { set: true, collection, docId };
       }
 
       if (operation === "addDocument") {
-        if (!collection) return { success: false, error: "Firebase: 'collection' is required., skipped: true };
+        if (!collection) return { success: false, error: "Firebase: 'collection' is required.", skipped: true };
         const payload = parseJson(data, "data");
         const ref = await db.collection(collection).add(payload);
         return { docId: ref.id, collection, added: true };
       }
 
       if (operation === "updateDocument") {
-        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required., skipped: true };
+        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required.", skipped: true };
         const payload = parseJson(updateData ?? data, "updateData");
         await db.collection(collection).doc(docId).update(payload);
         return { updated: true, collection, docId };
       }
 
       if (operation === "deleteDocument") {
-        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required., skipped: true };
+        if (!collection || !docId) return { success: false, error: "Firebase: 'collection' and 'docId' are required.", skipped: true };
         await db.collection(collection).doc(docId).delete();
         return { deleted: true, collection, docId };
       }
 
       if (operation === "queryCollection") {
-        if (!collection) return { success: false, error: "Firebase: 'collection' is required., skipped: true };
+        if (!collection) return { success: false, error: "Firebase: 'collection' is required.", skipped: true };
         let q = db.collection(collection);
         if (field && filterValue !== undefined) q = q.where(field, operator, filterValue);
         if (orderBy) q = q.orderBy(orderBy, orderDir);
@@ -121,26 +121,26 @@ export default {
 
       // ── Auth ─────────────────────────────────────────────────────────
       if (operation === "getUser") {
-        if (!userId && !email) return { success: false, error: "Firebase: 'userId' or 'email' is required., skipped: true };
+        if (!userId && !email) return { success: false, error: "Firebase: 'userId' or 'email' is required.", skipped: true };
         const user = userId ? await auth.getUser(userId) : await auth.getUserByEmail(email);
         return { user: { uid: user.uid, email: user.email, displayName: user.displayName, disabled: user.disabled, metadata: user.metadata } };
       }
 
       if (operation === "createUser") {
-        if (!email) return { success: false, error: "Firebase: 'email' is required., skipped: true };
+        if (!email) return { success: false, error: "Firebase: 'email' is required.", skipped: true };
         const user = await auth.createUser({ email, password, displayName });
         return { uid: user.uid, email: user.email, displayName: user.displayName, created: true };
       }
 
       if (operation === "deleteUser") {
-        if (!userId) return { success: false, error: "Firebase: 'userId' is required., skipped: true };
+        if (!userId) return { success: false, error: "Firebase: 'userId' is required.", skipped: true };
         await auth.deleteUser(userId);
         return { deleted: true, userId };
       }
 
       // ── Push Notifications ────────────────────────────────────────────
       if (operation === "sendNotification") {
-        if (!fcmToken) return { success: false, error: "Firebase: 'fcmToken' is required., skipped: true };
+        if (!fcmToken) return { success: false, error: "Firebase: 'fcmToken' is required.", skipped: true };
         const notif = parseJson(notification, "notification");
         const messageId = await messaging.send({ token: fcmToken, notification: notif });
         return { messageId, sent: true, fcmToken };

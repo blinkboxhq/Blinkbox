@@ -75,7 +75,7 @@ async function opMessage(config, input, apiKey) {
     maxTokens = 2000,
   } = config;
 
-  if (!prompt) return { success: false, error: "OpenAI message: 'prompt' is required., skipped: true };
+  if (!prompt) return { success: false, error: "OpenAI message: 'prompt' is required.", skipped: true };
 
   const systemMessage =
     outputFormat === "json"
@@ -115,7 +115,7 @@ async function opMessage(config, input, apiKey) {
 async function opAnalyzeImage(config, input, apiKey) {
   const { model = "gpt-4o", prompt = "Describe this image in detail.", imageUrl } = config;
   const url = imageUrl || input?.imageUrl || input?.url;
-  if (!url) return { success: false, error: "OpenAI analyzeImage: 'imageUrl' is required., skipped: true };
+  if (!url) return { success: false, error: "OpenAI analyzeImage: 'imageUrl' is required.", skipped: true };
   if (!url.startsWith("data:") && !/^https?:\/\//i.test(url)) {
     throw new Error("OpenAI analyzeImage: imageUrl must be an http/https URL or base64 data URI.");
   }
@@ -150,7 +150,7 @@ async function opGenerateImage(config, input, apiKey) {
   } = config;
 
   const description = imagePrompt || prompt || input?.prompt || input?.description;
-  if (!description) return { success: false, error: "OpenAI generateImage: 'imagePrompt' is required., skipped: true };
+  if (!description) return { success: false, error: "OpenAI generateImage: 'imagePrompt' is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/images/generations`,
@@ -171,7 +171,7 @@ async function opGenerateImage(config, input, apiKey) {
 async function opTranscribeAudio(config, input, apiKey) {
   const { audioUrl, language } = config;
   const url = audioUrl || input?.audioUrl || input?.url;
-  if (!url) return { success: false, error: "OpenAI transcribeAudio: 'audioUrl' is required., skipped: true };
+  if (!url) return { success: false, error: "OpenAI transcribeAudio: 'audioUrl' is required.", skipped: true };
 
   if (!/^https?:\/\//i.test(url)) {
     throw new Error("OpenAI transcribeAudio: audioUrl must be an http/https URL.");
@@ -232,7 +232,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
 
 async function opModerateContent(config, input, apiKey) {
   const text = config.prompt || config.text || input?.text || inputSummary(input);
-  if (!text) return { success: false, error: "OpenAI moderateContent: text to moderate is required., skipped: true };
+  if (!text) return { success: false, error: "OpenAI moderateContent: text to moderate is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/moderations`,
@@ -253,7 +253,7 @@ async function opModerateContent(config, input, apiKey) {
 async function opGeneratePrompt(config, input, apiKey) {
   const { model = "gpt-4o-mini", task } = config;
   const taskDescription = task || config.prompt || input?.task || inputSummary(input);
-  if (!taskDescription) return { success: false, error: "OpenAI generatePrompt: 'task' description is required., skipped: true };
+  if (!taskDescription) return { success: false, error: "OpenAI generatePrompt: 'task' description is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
@@ -276,7 +276,7 @@ async function opGeneratePrompt(config, input, apiKey) {
 async function opImprovePrompt(config, input, apiKey) {
   const { model = "gpt-4o-mini" } = config;
   const originalPrompt = config.prompt || input?.prompt || input?.text || inputSummary(input);
-  if (!originalPrompt) return { success: false, error: "OpenAI improvePrompt: 'prompt' to improve is required., skipped: true };
+  if (!originalPrompt) return { success: false, error: "OpenAI improvePrompt: 'prompt' to improve is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/chat/completions`,

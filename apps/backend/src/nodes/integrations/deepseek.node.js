@@ -23,7 +23,7 @@ export default {
       maxTokens = 2000,
     } = config;
 
-    if (!prompt) return { success: false, error: "DeepSeek: 'prompt' is required., skipped: true };
+    if (!prompt) return { success: false, error: "DeepSeek: 'prompt' is required.", skipped: true };
     const cred = await resolveCredential(credentialId, context.workspaceId, "DeepSeek");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 

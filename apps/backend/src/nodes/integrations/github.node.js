@@ -86,13 +86,13 @@ export default {
 
         case "createPR": {
           const { title, body: prBody, head, base = "main" } = config;
-          if (!title || !head) return { success: false, error: "GitHub createPR: 'title' and 'head' branch are required., skipped: true };
+          if (!title || !head) return { success: false, error: "GitHub createPR: 'title' and 'head' branch are required.", skipped: true };
           const res = await axios.post(`${BASE}/repos/${owner}/${repo}/pulls`, { title, body: prBody, head, base }, { headers: h, timeout: 15000 });
           return { number: res.data.number, url: res.data.html_url, title: res.data.title, state: res.data.state };
         }
 
         case "mergePR": {
-          if (!config.prNumber) return { success: false, error: "GitHub mergePR: 'prNumber' is required., skipped: true };
+          if (!config.prNumber) return { success: false, error: "GitHub mergePR: 'prNumber' is required.", skipped: true };
           const res = await axios.put(`${BASE}/repos/${owner}/${repo}/pulls/${config.prNumber}/merge`, {
             commit_title: config.commitTitle,
             merge_method: config.mergeMethod ?? "merge",
@@ -115,7 +115,7 @@ export default {
 
         case "createRelease": {
           const { tagName, name: relName, body: relBody, draft = false, prerelease = false } = config;
-          if (!tagName) return { success: false, error: "GitHub createRelease: 'tagName' is required., skipped: true };
+          if (!tagName) return { success: false, error: "GitHub createRelease: 'tagName' is required.", skipped: true };
           const res = await axios.post(`${BASE}/repos/${owner}/${repo}/releases`, { tag_name: tagName, name: relName ?? tagName, body: relBody, draft, prerelease }, { headers: h, timeout: 15000 });
           return { id: res.data.id, url: res.data.html_url, tagName: res.data.tag_name, name: res.data.name };
         }

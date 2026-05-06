@@ -53,7 +53,7 @@ export default {
       topic = "general",
     } = config;
 
-    if (!searchQuery) return { success: false, error: "Web Search: 'query' is required., skipped: true };
+    if (!searchQuery) return { success: false, error: "Web Search: 'query' is required.", skipped: true };
     // Vault: resolve + decrypt API key
     const cred = await resolveCredential(credentialId, context.workspaceId, "Web Search");
     const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);

@@ -78,7 +78,7 @@ async function opMessage(config, input, apiKey) {
     maxTokens = 2000,
   } = config;
 
-  if (!prompt) return { success: false, error: "Anthropic message: 'prompt' is required., skipped: true };
+  if (!prompt) return { success: false, error: "Anthropic message: 'prompt' is required.", skipped: true };
 
   const system =
     outputFormat === "json"
@@ -102,7 +102,7 @@ async function opMessage(config, input, apiKey) {
 async function opAnalyzeImage(config, input, apiKey) {
   const { model = "claude-opus-4-20250514", prompt = "Describe this image in detail.", maxTokens = 1000, temperature = 0.5 } = config;
   const imageUrl = config.imageUrl || input?.imageUrl || input?.url;
-  if (!imageUrl) return { success: false, error: "Anthropic analyzeImage: 'imageUrl' is required., skipped: true };
+  if (!imageUrl) return { success: false, error: "Anthropic analyzeImage: 'imageUrl' is required.", skipped: true };
 
   let imageContent;
   if (imageUrl.startsWith("data:")) {
@@ -166,7 +166,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
 async function opImprovePrompt(config, input, apiKey) {
   const { model = "claude-haiku-4-5-20251001", maxTokens = 1000, temperature = 0.7 } = config;
   const originalPrompt = config.prompt || input?.prompt || input?.text || inputSummary(input);
-  if (!originalPrompt) return { success: false, error: "Anthropic improvePrompt: 'prompt' to improve is required., skipped: true };
+  if (!originalPrompt) return { success: false, error: "Anthropic improvePrompt: 'prompt' to improve is required.", skipped: true };
 
   const { text, tokensUsed } = await callAnthropic(
     apiKey, model,
@@ -181,7 +181,7 @@ async function opImprovePrompt(config, input, apiKey) {
 async function opGeneratePrompt(config, input, apiKey) {
   const { model = "claude-haiku-4-5-20251001", maxTokens = 1000, temperature = 0.8 } = config;
   const taskDescription = config.task || config.prompt || input?.task || inputSummary(input);
-  if (!taskDescription) return { success: false, error: "Anthropic generatePrompt: 'task' description is required., skipped: true };
+  if (!taskDescription) return { success: false, error: "Anthropic generatePrompt: 'task' description is required.", skipped: true };
 
   const { text, tokensUsed } = await callAnthropic(
     apiKey, model,

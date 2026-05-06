@@ -21,7 +21,7 @@ function handleError(err) {
 }
 
 async function opTextToSpeech(config, apiKey) {
-  if (!config.text) return { success: false, error: "ElevenLabs textToSpeech: 'text' is required., skipped: true };
+  if (!config.text) return { success: false, error: "ElevenLabs textToSpeech: 'text' is required.", skipped: true };
   const voiceId = config.voiceId || "21m00Tcm4TlvDq8ikWAM";
   const model = config.model || "eleven_monolingual_v1";
 

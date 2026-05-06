@@ -59,7 +59,7 @@ export default {
         }
 
         case "getFile": {
-          if (!config.fileId) return { success: false, error: "Google Drive getFile: 'fileId' is required., skipped: true };
+          if (!config.fileId) return { success: false, error: "Google Drive getFile: 'fileId' is required.", skipped: true };
           const res = await axios.get(`${BASE}/files/${config.fileId}`, {
             headers: h(token), timeout: 15000,
             params: { fields: "id,name,mimeType,size,modifiedTime,webViewLink,parents" },
@@ -68,7 +68,7 @@ export default {
         }
 
         case "createFolder": {
-          if (!config.name) return { success: false, error: "Google Drive createFolder: 'name' is required., skipped: true };
+          if (!config.name) return { success: false, error: "Google Drive createFolder: 'name' is required.", skipped: true };
           const res = await axios.post(`${BASE}/files`, {
             name: config.name,
             mimeType: "application/vnd.google-apps.folder",
@@ -78,7 +78,7 @@ export default {
         }
 
         case "uploadText": {
-          if (!config.name || config.content === undefined) return { success: false, error: "Google Drive uploadText: 'name' and 'content' are required., skipped: true };
+          if (!config.name || config.content === undefined) return { success: false, error: "Google Drive uploadText: 'name' and 'content' are required.", skipped: true };
           const mimeType = config.mimeType ?? "text/plain";
           const metadata = { name: config.name, parents: config.folderId ? [config.folderId] : undefined };
           const formData = `--boundary\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n--boundary\r\nContent-Type: ${mimeType}\r\n\r\n${config.content}\r\n--boundary--`;
@@ -89,19 +89,19 @@ export default {
         }
 
         case "downloadText": {
-          if (!config.fileId) return { success: false, error: "Google Drive downloadText: 'fileId' is required., skipped: true };
+          if (!config.fileId) return { success: false, error: "Google Drive downloadText: 'fileId' is required.", skipped: true };
           const res = await axios.get(`${BASE}/files/${config.fileId}?alt=media`, { headers: h(token), timeout: 30000, responseType: "text" });
           return { content: res.data, fileId: config.fileId };
         }
 
         case "deleteFile": {
-          if (!config.fileId) return { success: false, error: "Google Drive deleteFile: 'fileId' is required., skipped: true };
+          if (!config.fileId) return { success: false, error: "Google Drive deleteFile: 'fileId' is required.", skipped: true };
           await axios.delete(`${BASE}/files/${config.fileId}`, { headers: h(token), timeout: 15000 });
           return { deleted: true, fileId: config.fileId };
         }
 
         case "moveFile": {
-          if (!config.fileId || !config.targetFolderId) return { success: false, error: "Google Drive moveFile: 'fileId' and 'targetFolderId' are required., skipped: true };
+          if (!config.fileId || !config.targetFolderId) return { success: false, error: "Google Drive moveFile: 'fileId' and 'targetFolderId' are required.", skipped: true };
           const meta = await axios.get(`${BASE}/files/${config.fileId}`, { headers: h(token), params: { fields: "parents" }, timeout: 15000 });
           const oldParents = (meta.data.parents ?? []).join(",");
           const res = await axios.patch(`${BASE}/files/${config.fileId}`, {}, { headers: h(token), params: { addParents: config.targetFolderId, removeParents: oldParents, fields: "id,parents" }, timeout: 15000 });
@@ -109,7 +109,7 @@ export default {
         }
 
         case "shareFile": {
-          if (!config.fileId || !config.email) return { success: false, error: "Google Drive shareFile: 'fileId' and 'email' are required., skipped: true };
+          if (!config.fileId || !config.email) return { success: false, error: "Google Drive shareFile: 'fileId' and 'email' are required.", skipped: true };
           const res = await axios.post(`${BASE}/files/${config.fileId}/permissions`, {
             type: "user", role: config.role ?? "reader", emailAddress: config.email,
           }, { headers: { ...h(token), "Content-Type": "application/json" }, timeout: 15000 });

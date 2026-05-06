@@ -58,7 +58,7 @@ async function post(webhookUrl, payload) {
 async function opSendMessage(config) {
   const { webhookUrl, message, username, avatarUrl } = config;
   validateWebhook(webhookUrl);
-  if (!message) return { success: false, error: "Discord sendMessage: 'message' is required (max 2000 chars)., skipped: true };
+  if (!message) return { success: false, error: "Discord sendMessage: 'message' is required (max 2000 chars).", skipped: true };
   if (message.length > 2000) throw new Error("Discord sendMessage: message exceeds 2000 characters.");
 
   const payload = { content: message };
@@ -102,7 +102,7 @@ async function opSendEmbed(config) {
   }
 
   if (!embed.title && !embed.description && !embed.fields)
-    return { success: false, error: "Discord sendEmbed: at least one of 'title', 'description', or 'fields' is required., skipped: true };
+    return { success: false, error: "Discord sendEmbed: at least one of 'title', 'description', or 'fields' is required.", skipped: true };
 
   const payload = { embeds: [embed] };
   if (username) payload.username = username;
@@ -118,7 +118,7 @@ async function opSendFile(config) {
   validateWebhook(webhookUrl);
 
   const content = config.content || config.fileContent || config.text;
-  if (!content) return { success: false, error: "Discord sendFile: 'content' (file text) is required., skipped: true };
+  if (!content) return { success: false, error: "Discord sendFile: 'content' (file text) is required.", skipped: true };
 
   const filename = config.filename || "output.txt";
   const { FormData, Blob } = await import("buffer"); // Node 18+ has Blob

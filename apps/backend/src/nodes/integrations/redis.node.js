@@ -55,7 +55,7 @@ export default {
 
     try {
       if (operation === "get") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const result = await redis.get(key);
         let parsed = result;
         try { parsed = JSON.parse(result); } catch {}
@@ -63,7 +63,7 @@ export default {
       }
 
       if (operation === "set") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const stored = typeof value === "object" ? JSON.stringify(value) : String(value ?? "");
         if (ttl) {
           await redis.set(key, stored, "EX", Number(ttl));
@@ -74,64 +74,64 @@ export default {
       }
 
       if (operation === "del") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const count = await redis.del(key);
         return { key, deleted: count > 0, count };
       }
 
       if (operation === "exists") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const count = await redis.exists(key);
         return { key, exists: count > 0 };
       }
 
       if (operation === "incr") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const newVal = await redis.incrby(key, Number(value || 1));
         return { key, value: newVal };
       }
 
       if (operation === "decr") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const newVal = await redis.decrby(key, Number(value || 1));
         return { key, value: newVal };
       }
 
       if (operation === "expire") {
-        if (!key || !ttl) return { success: false, error: "Redis: 'key' and 'ttl' are required., skipped: true };
+        if (!key || !ttl) return { success: false, error: "Redis: 'key' and 'ttl' are required.", skipped: true };
         const result = await redis.expire(key, Number(ttl));
         return { key, set: result === 1 };
       }
 
       if (operation === "ttl") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const result = await redis.ttl(key);
         return { key, ttl: result };
       }
 
       if (operation === "lpush") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const stored = typeof value === "object" ? JSON.stringify(value) : String(value ?? "");
         const length = await redis.lpush(key, stored);
         return { key, length };
       }
 
       if (operation === "rpush") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const stored = typeof value === "object" ? JSON.stringify(value) : String(value ?? "");
         const length = await redis.rpush(key, stored);
         return { key, length };
       }
 
       if (operation === "lrange") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const items = await redis.lrange(key, Number(start), Number(stop));
         const parsed = items.map(i => { try { return JSON.parse(i); } catch { return i; } });
         return { key, items: parsed, count: parsed.length };
       }
 
       if (operation === "sadd") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         let ms = members;
         if (typeof ms === "string") { try { ms = JSON.parse(ms); } catch {} }
         if (!Array.isArray(ms)) ms = [ms];
@@ -140,20 +140,20 @@ export default {
       }
 
       if (operation === "smembers") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const result = await redis.smembers(key);
         return { key, members: result, count: result.length };
       }
 
       if (operation === "hset") {
-        if (!key || !field) return { success: false, error: "Redis: 'key' and 'field' are required., skipped: true };
+        if (!key || !field) return { success: false, error: "Redis: 'key' and 'field' are required.", skipped: true };
         const stored = typeof value === "object" ? JSON.stringify(value) : String(value ?? "");
         await redis.hset(key, field, stored);
         return { key, field, set: true };
       }
 
       if (operation === "hget") {
-        if (!key || !field) return { success: false, error: "Redis: 'key' and 'field' are required., skipped: true };
+        if (!key || !field) return { success: false, error: "Redis: 'key' and 'field' are required.", skipped: true };
         const result = await redis.hget(key, field);
         let parsed = result;
         try { parsed = JSON.parse(result); } catch {}
@@ -161,7 +161,7 @@ export default {
       }
 
       if (operation === "hgetall") {
-        if (!key) return { success: false, error: "Redis: 'key' is required., skipped: true };
+        if (!key) return { success: false, error: "Redis: 'key' is required.", skipped: true };
         const result = await redis.hgetall(key);
         const parsed = {};
         for (const [k, v] of Object.entries(result ?? {})) {
@@ -176,7 +176,7 @@ export default {
       }
 
       if (operation === "publish") {
-        if (!channel) return { success: false, error: "Redis: 'channel' is required., skipped: true };
+        if (!channel) return { success: false, error: "Redis: 'channel' is required.", skipped: true };
         const stored = typeof message === "object" ? JSON.stringify(message) : String(message ?? "");
         const receivers = await redis.publish(channel, stored);
         return { channel, receivers };
