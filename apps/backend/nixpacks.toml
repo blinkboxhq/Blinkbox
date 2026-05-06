@@ -2,7 +2,10 @@
 nixPkgs = ["nodejs_22", "chromium", "python3", "vips", "pkg-config", "gcc", "gnumake"]
 
 [phases.install]
-cmds = ["PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install"]
+cmds = ["PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install --prefer-offline"]
+
+[phases.build]
+cmds = []
 
 [start]
 cmd = "PUPPETEER_EXECUTABLE_PATH=$(which chromium) node_modules/.bin/tsx src/index.js"
