@@ -44,7 +44,15 @@ async function bootstrap() {
       console.warn("Temporal worker skipped:", err.message);
     }
 
-    // 5. Start server + workers
+    // 5. Start uptime monitor (non-fatal)
+    try {
+      const { startUptimeMonitor } = await import("./infra/uptime.monitor.js");
+      startUptimeMonitor();
+    } catch (err) {
+      console.warn("Uptime monitor skipped:", err.message);
+    }
+
+    // 6. Start server + workers
     await startServer();
 
     console.log("BOOTSTRAP: server started");
