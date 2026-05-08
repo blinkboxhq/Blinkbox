@@ -37,7 +37,7 @@ export function initSocketServer(httpServer) {
       origin: ALLOWED_ORIGINS,
       credentials: true,
     },
-    transports: ["websocket", "polling"],
+    transports: ["polling", "websocket"],
   });
 
   // Authenticate socket connections via JWT

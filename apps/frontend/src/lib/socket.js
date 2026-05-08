@@ -9,7 +9,7 @@ export function getSocket() {
     const token = localStorage.getItem("blinkbox_token");
     socket = io(API_URL, {
       auth: { token },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
