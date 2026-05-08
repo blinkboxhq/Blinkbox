@@ -1,6 +1,7 @@
 import { Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import FeedbackWidget from './components/FeedbackWidget';
 
 const Landing   = lazy(() => import('./pages/Landing'));
 const Auth      = lazy(() => import('./pages/auth'));
@@ -57,6 +58,7 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Toaster theme="dark" position="bottom-right" richColors />
+        <FeedbackWidget />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<RequireGuest><Landing /></RequireGuest>} />

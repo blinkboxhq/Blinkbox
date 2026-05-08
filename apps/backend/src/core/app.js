@@ -12,6 +12,7 @@ import analyticsRoutes from "../modules/execution/analytics.routes.js";
 import credentialRoutes from "../modules/credentials/credential.routes.js";
 import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
+import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
@@ -106,6 +107,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/credentials", credentialRoutes);
 app.use("/api/oauth", oauthRoutes);
 app.use("/api/billing", billingRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // Catches anything thrown with next(err) or unhandled express errors
