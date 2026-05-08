@@ -47,6 +47,8 @@ import {
   unregisterTelegramWebhook,
 } from "../../../infra/telegram.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
+import { resolveCredential } from "../../../utils/resolveCredential.js";
+import { decrypt } from "../../../utils/crypto.js";
 
 /**
  * ===============================
@@ -197,13 +199,17 @@ export async function activateAutomation(req, res) {
     }
 
     if (trigger === "telegram_trigger") {
-      const botToken = cfg.botToken;
-      if (!botToken)
-        throw new Error("Telegram trigger requires a Bot Token. Open the trigger node and paste your bot token.");
-      // Non-blocking — activation succeeds even if Telegram's API is temporarily unreachable
-      registerTelegramWebhook(automation._id.toString(), botToken).catch((err) =>
-        console.error(`[Telegram] Webhook registration failed for ${automation._id}:`, err.message)
-      );
+      const credentialId = cfg.botToken;
+      if (!credentialId)
+        throw new Error("Telegram trigger requires a Bot Token credential. Open the trigger node and select your bot token.");
+      resolveCredential(credentialId, automation.workspaceId, "Telegram trigger")
+        .then((cred) => {
+          const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+          return registerTelegramWebhook(automation._id.toString(), token);
+        })
+        .catch((err) =>
+          console.error(`[Telegram] Webhook registration failed for ${automation._id}:`, err.message)
+        );
     }
 
     automation.active = true;
