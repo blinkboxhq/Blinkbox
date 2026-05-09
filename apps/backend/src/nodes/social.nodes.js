@@ -2,6 +2,19 @@ import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
+function assertSafeUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = u.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
+    /\.internal$/, /\.local$/,
+  ];
+  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
+}
+
 async function getKey(credentialId, workspaceId, type) {
   const cred = await resolveCredential(credentialId, workspaceId, type);
   return decrypt(cred.encryptedData, cred.iv, cred.authTag);
@@ -82,6 +95,7 @@ export const youtube_upload = {
     );
 
     const uploadUrl = initRes.headers.location;
+    assertSafeUrl(videoUrl);
     const videoRes = await axios.get(videoUrl, { responseType: "arraybuffer", timeout: 120000 });
     const uploadRes = await axios.put(uploadUrl, videoRes.data, {
       headers: { "Content-Type": "video/*", "Content-Length": videoRes.data.byteLength },
@@ -126,6 +140,7 @@ export const mastodon = {
     const token = config.accessToken || (config.credentialId && await getKey(config.credentialId, context?.workspaceId, "Mastodon"));
     if (!token) throw new Error("mastodon: Mastodon access token required.");
 
+    assertSafeUrl(`https://${instance}`);
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
     const base = `https://${instance}/api/v1`;
 
@@ -230,6 +245,7 @@ export const file_download = {
     const url = config.url || input?.url;
     if (!url) return { success: false, error: "file_download: 'url' is required.", skipped: true };
 
+    assertSafeUrl(url);
     const res = await axios.get(url, {
       responseType: "arraybuffer",
       timeout: parseInt(config.timeout || 60000),
