@@ -524,12 +524,12 @@ export async function sendApprovalNotificationActivity(
         await transporter.sendMail({
           from: `"BlinkBox Governor" <${smtpUser}>`,
           to: notifyTo,
-          subject: `Approval Required: ${nodeLabel}`,
+          subject: `Approval Required: ${nodeLabel.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`,
           html: `
             <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #1a1a1a;">Approval Required</h2>
               <p style="color: #555; font-size: 15px;">
-                The automation <strong>${nodeLabel}</strong> is waiting for your decision.
+                The automation <strong>${escapeHtml(nodeLabel)}</strong> is waiting for your decision.
               </p>
               ${contextSummary ? `
                 <div style="background: #f5f5f5; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
@@ -546,7 +546,7 @@ export async function sendApprovalNotificationActivity(
                 </a>
               </div>
               <p style="color: #999; font-size: 12px;">
-                Workflow: ${workflowId} &bull; Node: ${nodeId}
+                Workflow: ${escapeHtml(workflowId)} &bull; Node: ${escapeHtml(nodeId)}
               </p>
             </div>
           `,
