@@ -126,6 +126,14 @@ export const createUISlice = (set, get) => ({
       });
     } catch (error) {
       console.error("Load error:", error);
+      const status = error.response?.status;
+      if (status === 404) {
+        toast.error("Workflow not found — it may have been deleted.");
+      } else if (status === 403) {
+        toast.error("Access denied — you don't have permission to view this workflow.");
+      } else {
+        toast.error("Failed to load workflow. Check your connection and try again.");
+      }
       set({ isLoading: false });
     }
   },
