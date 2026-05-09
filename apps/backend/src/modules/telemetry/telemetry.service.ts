@@ -60,6 +60,16 @@ export interface ITelemetryService {
   logExecutionEnd(params: Omit<ExecutionEndLog, "type" | "timestamp">): Promise<void>;
 }
 
+// Cap serialized payload to prevent large blobs inflating Redis/MongoDB
+const LOG_PAYLOAD_MAX_BYTES = 32 * 1024; // 32 KB
+
+function capPayload(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  const str = JSON.stringify(value);
+  if (str.length <= LOG_PAYLOAD_MAX_BYTES) return value;
+  return { __truncated: true, preview: str.slice(0, 200) };
+}
+
 // ── Redis Implementation ────────────────────────────────────────────────────────
 
 class RedisTelemetryService implements ITelemetryService {
@@ -82,6 +92,8 @@ class RedisTelemetryService implements ITelemetryService {
   ): Promise<void> {
     await this.push({
       ...params,
+      input: capPayload(params.input),
+      output: capPayload(params.output),
       type: "node_step",
       timestamp: new Date().toISOString(),
     });

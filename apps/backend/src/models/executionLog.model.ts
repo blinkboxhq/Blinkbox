@@ -44,5 +44,7 @@ const ExecutionLogSchema = new mongoose.Schema(
 
 // Compound index for the most common query: "show me all logs for this workflow run"
 ExecutionLogSchema.index({ workflowId: 1, timestamp: 1 });
+// Analytics queries filter by automationId + type + time range
+ExecutionLogSchema.index({ automationId: 1, type: 1, timestamp: -1 });
 
 export default mongoose.model("ExecutionLog", ExecutionLogSchema);
