@@ -57,7 +57,7 @@ async function opReadRange(config, token) {
 
 async function opWriteRange(config, token) {
   if (!config.range) return { success: false, error: "Google Sheets writeRange: 'range' is required.", skipped: true };
-  const values = Array.isArray(config.values) ? config.values : JSON.parse(config.values);
+  const values = Array.isArray(config.values) ? config.values : (() => { try { return JSON.parse(config.values); } catch { throw new Error("Google Sheets writeRange: 'values' must be valid JSON array."); } })();
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}`;
   const response = await axios.put(url, {
     range: config.range,
@@ -78,7 +78,7 @@ async function opWriteRange(config, token) {
 
 async function opAppendRow(config, token) {
   if (!config.range) return { success: false, error: "Google Sheets appendRow: 'range' is required (e.g. Sheet1!A:Z).", skipped: true };
-  const values = Array.isArray(config.values) ? config.values : JSON.parse(config.values);
+  const values = Array.isArray(config.values) ? config.values : (() => { try { return JSON.parse(config.values); } catch { throw new Error("Google Sheets appendRow: 'values' must be valid JSON array."); } })();
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}:append`;
   const response = await axios.post(url, {
     majorDimension: "ROWS",

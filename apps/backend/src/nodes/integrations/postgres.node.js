@@ -51,7 +51,7 @@ export default {
       client = await getClient(config.credentialId, context.workspaceId);
 
       if (operation === "batch") {
-        const statements = Array.isArray(config.statements) ? config.statements : JSON.parse(config.statements ?? "[]");
+        const statements = Array.isArray(config.statements) ? config.statements : (() => { try { return JSON.parse(config.statements ?? "[]"); } catch { throw new Error("PostgreSQL batch: 'statements' must be valid JSON array."); } })();
         if (!statements.length) return { success: false, error: "PostgreSQL batch: 'statements' array is required.", skipped: true };
         await client.query("BEGIN");
         const results = [];

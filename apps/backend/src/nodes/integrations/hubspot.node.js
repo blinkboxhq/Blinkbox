@@ -56,7 +56,7 @@ export default {
           if (config.lastName) properties.lastname = config.lastName;
           if (config.phone) properties.phone = config.phone;
           if (config.company) properties.company = config.company;
-          if (config.extraProperties) Object.assign(properties, typeof config.extraProperties === "string" ? JSON.parse(config.extraProperties) : config.extraProperties);
+          if (config.extraProperties) Object.assign(properties, typeof config.extraProperties === "string" ? (() => { try { return JSON.parse(config.extraProperties); } catch { throw new Error("HubSpot createContact: 'extraProperties' must be valid JSON."); } })() : config.extraProperties);
           const res = await axios.post(`${BASE}/crm/v3/objects/contacts`, { properties }, { headers: h, timeout: 15000 });
           return { id: res.data.id, email: res.data.properties?.email, createdAt: res.data.createdAt };
         }
@@ -84,14 +84,14 @@ export default {
           if (config.lastName) properties.lastname = config.lastName;
           if (config.phone) properties.phone = config.phone;
           if (config.company) properties.company = config.company;
-          if (config.extraProperties) Object.assign(properties, typeof config.extraProperties === "string" ? JSON.parse(config.extraProperties) : config.extraProperties);
+          if (config.extraProperties) Object.assign(properties, typeof config.extraProperties === "string" ? (() => { try { return JSON.parse(config.extraProperties); } catch { throw new Error("HubSpot updateContact: 'extraProperties' must be valid JSON."); } })() : config.extraProperties);
           await axios.patch(`${BASE}/crm/v3/objects/contacts/${config.contactId}`, { properties }, { headers: h, timeout: 15000 });
           return { updated: true, contactId: config.contactId };
         }
 
         case "searchContacts": {
           const body = {
-            filterGroups: config.filterGroups ? (typeof config.filterGroups === "string" ? JSON.parse(config.filterGroups) : config.filterGroups) : [],
+            filterGroups: config.filterGroups ? (typeof config.filterGroups === "string" ? (() => { try { return JSON.parse(config.filterGroups); } catch { throw new Error("HubSpot searchContacts: 'filterGroups' must be valid JSON."); } })() : config.filterGroups) : [],
             query: config.query,
             limit: Math.min(Number(config.limit ?? 20), 100),
             properties: ["email", "firstname", "lastname", "phone", "company"],

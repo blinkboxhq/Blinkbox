@@ -54,7 +54,7 @@ async function opCreatePage(config, token) {
   const parentType = config.parentType === "page" ? "page_id" : "database_id";
   const body = {
     parent: { [parentType]: stripId(config.parentId) },
-    properties: typeof config.properties === "string" ? JSON.parse(config.properties) : (config.properties || {}),
+    properties: typeof config.properties === "string" ? (() => { try { return JSON.parse(config.properties); } catch { throw new Error("Notion createPage: 'properties' must be valid JSON."); } })() : (config.properties || {}),
   };
   if (config.title) {
     body.properties["title"] = { title: [{ text: { content: config.title } }] };
@@ -68,7 +68,7 @@ async function opCreatePage(config, token) {
 
 async function opUpdatePage(config, token) {
   if (!config.pageId) return { success: false, error: "Notion updatePage: 'pageId' is required — configure this field.", skipped: true };
-  const properties = typeof config.properties === "string" ? JSON.parse(config.properties) : (config.properties || {});
+  const properties = typeof config.properties === "string" ? (() => { try { return JSON.parse(config.properties); } catch { throw new Error("Notion updatePage: 'properties' must be valid JSON."); } })() : (config.properties || {});
   const body = { properties };
   if (config.archived !== undefined) body.archived = config.archived;
   const response = await axios.patch(`${BASE}/pages/${stripId(config.pageId)}`, body, { headers: headers(token), timeout: 15000 });
@@ -78,8 +78,8 @@ async function opUpdatePage(config, token) {
 async function opQueryDatabase(config, token) {
   if (!config.databaseId) return { success: false, error: "Notion queryDatabase: 'databaseId' is required — configure this field.", skipped: true };
   const body = {};
-  if (config.filter) body.filter = typeof config.filter === "string" ? JSON.parse(config.filter) : config.filter;
-  if (config.sorts) body.sorts = typeof config.sorts === "string" ? JSON.parse(config.sorts) : config.sorts;
+  if (config.filter) body.filter = typeof config.filter === "string" ? (() => { try { return JSON.parse(config.filter); } catch { throw new Error("Notion queryDatabase: 'filter' must be valid JSON."); } })() : config.filter;
+  if (config.sorts) body.sorts = typeof config.sorts === "string" ? (() => { try { return JSON.parse(config.sorts); } catch { throw new Error("Notion queryDatabase: 'sorts' must be valid JSON."); } })() : config.sorts;
   if (config.pageSize) body.page_size = Math.min(Number(config.pageSize) || 10, 100);
   if (config.startCursor) body.start_cursor = config.startCursor;
 
@@ -110,7 +110,7 @@ async function opAppendBlock(config, token) {
 
   let children;
   if (config.blocks) {
-    children = typeof config.blocks === "string" ? JSON.parse(config.blocks) : config.blocks;
+    children = typeof config.blocks === "string" ? (() => { try { return JSON.parse(config.blocks); } catch { throw new Error("Notion appendBlock: 'blocks' must be valid JSON."); } })() : config.blocks;
   } else {
     // Simple paragraph block from plain text content
     children = config.content.split("\n\n").filter(Boolean).map((para) => ({
