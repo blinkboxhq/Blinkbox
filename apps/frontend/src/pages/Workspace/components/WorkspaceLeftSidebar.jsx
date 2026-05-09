@@ -148,7 +148,7 @@ export default function WorkspaceLeftSidebar() {
                 animate={{ opacity: 1 }}
                 className="text-zinc-300 font-semibold tracking-widest text-xs whitespace-nowrap"
               >
-                BLINKBOX
+                Blinkbox
               </motion.span>
             )}
           </div>

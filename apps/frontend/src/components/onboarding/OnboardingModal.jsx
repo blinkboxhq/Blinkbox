@@ -8,7 +8,7 @@ const STEPS = [
     icon: Zap,
     iconColor: "text-blue-400",
     iconBg: "bg-blue-500/10",
-    title: "Welcome to BlinkBox",
+    title: "Welcome to Blinkbox",
     body: "Build powerful automations visually — no code required. Connect any app, trigger on any event, and let your workflows run 24/7.",
     cta: "Get Started",
   },

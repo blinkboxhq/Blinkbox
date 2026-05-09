@@ -19,7 +19,7 @@ export default function DashboardHeader({ onInitialize, search, setSearch, statu
           onClick={onInitialize}
           className="flex items-center gap-1.5 px-4 py-[7px] bg-white text-black text-[13px] font-semibold rounded-lg hover:bg-neutral-200 transition-all active:scale-[0.97]"
         >
-          <Box className="w-3.5 h-3.5" /> New Box
+          <Box className="w-3.5 h-3.5" /> New Workflow
         </button>
       </div>
 

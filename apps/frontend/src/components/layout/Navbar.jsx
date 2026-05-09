@@ -8,9 +8,9 @@ export default function Navbar() {
         
         {/* The Brand */}
         <div className="flex items-center gap-3">
-          <img src={logo} alt="BlinkBox Logo" className="w-10 h-10 object-contain rounded-full" />
+          <img src={logo} alt="Blinkbox Logo" className="w-10 h-10 object-contain rounded-full" />
           <span className="text-2xl font-bold tracking-wide text-white">
-            BLINKBOX
+            Blinkbox
           </span>
         </div>
 

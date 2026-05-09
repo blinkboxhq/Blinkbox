@@ -246,8 +246,8 @@ function Header() {
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full items-center justify-between lg:w-auto">
               <Link to="/" className="flex items-center gap-2.5">
-                <img src={logo} alt="BlinkBox" className="w-7 h-7 object-contain" />
-                <span className="text-sm font-bold tracking-[0.15em] text-white/90">BLINKBOX</span>
+                <img src={logo} alt="Blinkbox" className="w-7 h-7 object-contain" />
+                <span className="text-sm font-bold tracking-[0.05em] text-white/90">Blinkbox</span>
               </Link>
 
               <button
@@ -679,8 +679,8 @@ export default function Landing() {
       <footer className="py-10 border-t border-white/[0.03]">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
-            <img src={logo} alt="BlinkBox" className="w-5 h-5 object-contain opacity-50" />
-            <span className="text-xs font-semibold text-neutral-600 tracking-[0.12em]">BLINKBOX</span>
+            <img src={logo} alt="Blinkbox" className="w-5 h-5 object-contain opacity-50" />
+            <span className="text-xs font-semibold text-neutral-600 tracking-[0.04em]">Blinkbox</span>
           </div>
           <div className="flex items-center gap-8 text-[11px] text-neutral-600">
             <a href="#features" className="hover:text-neutral-400 transition-colors">Features</a>

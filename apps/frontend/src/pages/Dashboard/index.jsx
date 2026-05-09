@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
   Copy, Trash2, Pencil, Check, X, Loader2,
-  Activity, Power,
+  Activity, Power, Globe, Clock, Mail, Zap, Hash,
+  Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
@@ -19,10 +20,33 @@ import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
-// ─── Templates ─────────────────────────────────────────────────────────────
-// Each template defines display info + the actual nodes/edges to pre-save.
-// Node format matches backend: { id, type, description, data, position }
-// Edge format: { id, source, target, type: 'onSuccess', conditionPath: '' }
+const TRIGGER_META = {
+  manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
+  webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
+  cron_trigger:      { label: 'Scheduled',      Icon: Clock,         color: 'text-amber-400',    bg: 'bg-amber-500/10' },
+  gmail_trigger:     { label: 'Gmail',          Icon: Mail,          color: 'text-red-400',      bg: 'bg-red-500/10' },
+  imap_trigger:      { label: 'Email (IMAP)',   Icon: Mail,          color: 'text-blue-400',     bg: 'bg-blue-500/10' },
+  slack_trigger:     { label: 'Slack',          Icon: Hash,          color: 'text-purple-400',   bg: 'bg-purple-500/10' },
+  discord_trigger:   { label: 'Discord',        Icon: MessageSquare, color: 'text-indigo-400',   bg: 'bg-indigo-500/10' },
+  github_trigger:    { label: 'GitHub',         Icon: GitBranch,     color: 'text-neutral-300',  bg: 'bg-neutral-800/60' },
+  gitlab_trigger:    { label: 'GitLab',         Icon: GitBranch,     color: 'text-orange-400',   bg: 'bg-orange-500/10' },
+  rss_trigger:       { label: 'RSS Feed',       Icon: Rss,           color: 'text-orange-400',   bg: 'bg-orange-500/10' },
+  shopify_trigger:   { label: 'Shopify',        Icon: ShoppingCart,  color: 'text-emerald-400',  bg: 'bg-emerald-500/10' },
+  stripe_trigger:    { label: 'Stripe',         Icon: CreditCard,    color: 'text-violet-400',   bg: 'bg-violet-500/10' },
+  database_trigger:  { label: 'Database',       Icon: Database,      color: 'text-cyan-400',     bg: 'bg-cyan-500/10' },
+  telegram_trigger:  { label: 'Telegram',       Icon: MessageSquare, color: 'text-sky-400',      bg: 'bg-sky-500/10' },
+};
+
+function TriggerBadge({ trigger }) {
+  const meta = TRIGGER_META[trigger] || { label: trigger || 'Manual', Icon: Zap, color: 'text-neutral-500', bg: 'bg-neutral-800/60' };
+  const { label, Icon, color, bg } = meta;
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${color} ${bg}`}>
+      <Icon className="w-2.5 h-2.5 shrink-0" />
+      {label}
+    </span>
+  );
+}
 
 
 // Stacked avatars for collaborators on a card
@@ -449,9 +473,11 @@ export default function Dashboard() {
                               {wf.status === 'active' ? 'Active' : 'Draft'}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-[11px] text-[#444] capitalize">
-                            {wf.trigger || 'manual'}
-                            {wf.nodeCount > 0 && <span className="ml-1.5 text-[#333]">· {wf.nodeCount}n</span>}
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <TriggerBadge trigger={wf.trigger || 'manual'} />
+                              {wf.nodeCount > 0 && <span className="text-[10px] text-[#333]">{wf.nodeCount}n</span>}
+                            </div>
                           </td>
                           <td className="px-4 py-2.5 text-[11px] text-[#444]">{timeAgo(wf.updatedAt)}</td>
                           <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
@@ -503,12 +529,12 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      <p className="text-[11px] text-[#555] mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
+                      <p className="text-[11px] leading-relaxed mb-auto line-clamp-2 min-h-[2rem] text-[#555]">{wf.description || <span className="italic text-[#333]">No description</span>}</p>
                       <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-[#444] capitalize">{wf.trigger || 'manual'}</span>
+                          <TriggerBadge trigger={wf.trigger || 'manual'} />
                           {(wf.nodeCount > 0) && (
-                            <span className="text-[10px] text-[#333]">· {wf.nodeCount} node{wf.nodeCount !== 1 ? 's' : ''}</span>
+                            <span className="text-[10px] text-[#333]">{wf.nodeCount}n</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -581,7 +607,7 @@ export default function Dashboard() {
                               </div>
                             </td>
                             <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.automationName || '—'}</td>
-                            <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{ex.trigger || 'manual'}</td>
+                            <td className="px-4 py-2.5"><TriggerBadge trigger={ex.trigger || 'manual'} /></td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600 font-mono">{durationStr}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(ex.createdAt)}</td>
                           </tr>

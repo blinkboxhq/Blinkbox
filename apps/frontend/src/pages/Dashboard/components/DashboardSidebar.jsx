@@ -60,7 +60,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           {expanded ? (
             <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
-              <span className="text-[13px] font-semibold tracking-[0.1em] text-white">BLINKBOX</span>
+              <span className="text-[13px] font-semibold tracking-[0.05em] text-white">Blinkbox</span>
             </Link>
           ) : (
             <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
@@ -143,7 +143,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]" style={{ animation: 'dbFadeIn 0.12s ease-out' }}>
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
-            <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out of BlinkBox?</h3>
+            <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out of Blinkbox?</h3>
             <p className="text-[13px] text-neutral-500 mb-5">You'll need to sign in again to access your workspace.</p>
             <div className="flex items-center gap-2.5 justify-end">
               <button onClick={() => setShowLogout(false)} className="px-3.5 py-1.5 text-[13px] font-medium text-neutral-400 hover:text-white rounded-md transition-colors">Cancel</button>

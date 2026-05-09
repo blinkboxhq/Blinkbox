@@ -299,7 +299,7 @@ export default function Auth() {
             />
           </div>
 
-          <h1 className="text-3xl font-black tracking-[0.2em] mb-2">BLINKBOX</h1>
+          <h1 className="text-3xl font-black tracking-[0.05em] mb-2">Blinkbox</h1>
           <p className="text-[11px] tracking-[0.3em] text-neutral-600 uppercase mb-10">Automation Engine</p>
 
           {/* Typing line */}
@@ -340,8 +340,8 @@ export default function Auth() {
         >
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-10">
-            <img src={logo} alt="BlinkBox" className="w-6 h-6 object-contain" />
-            <span className="text-sm font-bold tracking-[0.15em]">BLINKBOX</span>
+            <img src={logo} alt="Blinkbox" className="w-6 h-6 object-contain" />
+            <span className="text-sm font-bold tracking-[0.05em]">Blinkbox</span>
           </Link>
 
           {/* Mode toggle — hidden on reset-password route */}
