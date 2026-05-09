@@ -323,11 +323,13 @@ async function callGemini(apiKey, messages) {
 // ── Route handler ─────────────────────────────────────────────────────────────
 export async function brianChat(req, res) {
   const { messages = [] } = req.body;
-  if (!messages.length) return res.status(400).json({ message: "Empty messages." });
+  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ message: "Empty messages." });
+  if (messages.length > 100) return res.status(400).json({ message: "Too many messages in history." });
 
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
   if (!userText) return res.status(400).json({ message: "Empty message." });
+  if (userText.length > 8000) return res.status(400).json({ message: "Message too long (max 8000 characters)." });
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const groqKey      = process.env.GROQ_API_KEY;
