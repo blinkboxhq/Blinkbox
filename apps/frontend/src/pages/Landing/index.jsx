@@ -14,6 +14,25 @@ import { BGPattern } from '@/components/ui/bg-pattern';
 import { DottedSurface } from '@/components/ui/dotted-surface';
 import { ParticleTextEffect } from '@/components/ui/particle-text-effect';
 import logo from '../../assets/logo.svg';
+import imgSlack from '../../assets/slack.png';
+import imgGmail from '../../assets/gmail.png';
+import imgStripe from '../../assets/stripe.svg';
+import imgGithub from '../../assets/github.svg';
+import imgNotion from '../../assets/notion.svg';
+import imgHubspot from '../../assets/hubspot.svg';
+import imgShopify from '../../assets/shopify.svg';
+import imgLinear from '../../assets/linear.svg';
+import imgAirtable from '../../assets/Airtable--Streamline-Svg-Logos.svg';
+import imgGoogleSheets from '../../assets/google-sheets.svg';
+import imgTelegram from '../../assets/telegram.png';
+import imgDiscord from '../../assets/discord-n8n.svg';
+import imgOpenAI from '../../assets/openai.svg';
+import imgAnthropicLogo from '../../assets/anthropic.svg';
+import imgZoom from '../../assets/zoom.svg';
+import imgJira from '../../assets/jira.svg';
+import imgSalesforce from '../../assets/salesforce.svg';
+import imgTypeform from '../../assets/typeform.svg';
+import imgTrello from '../../assets/trello.svg';
 
 // Silently swallows crashes in visual-only decorative components
 class SilentBoundary extends Component {
@@ -266,6 +285,58 @@ function Header() {
   );
 }
 
+// ── Integrations marquee strip ────────────────────────────────────────────
+const INTEGRATIONS = [
+  { src: imgSlack,       name: 'Slack' },
+  { src: imgGmail,       name: 'Gmail' },
+  { src: imgStripe,      name: 'Stripe' },
+  { src: imgGithub,      name: 'GitHub' },
+  { src: imgNotion,      name: 'Notion' },
+  { src: imgHubspot,     name: 'HubSpot' },
+  { src: imgShopify,     name: 'Shopify' },
+  { src: imgLinear,      name: 'Linear' },
+  { src: imgAirtable,    name: 'Airtable' },
+  { src: imgGoogleSheets,name: 'Sheets' },
+  { src: imgTelegram,    name: 'Telegram' },
+  { src: imgDiscord,     name: 'Discord' },
+  { src: imgOpenAI,      name: 'OpenAI' },
+  { src: imgAnthropicLogo, name: 'Anthropic' },
+  { src: imgZoom,        name: 'Zoom' },
+  { src: imgJira,        name: 'Jira' },
+  { src: imgSalesforce,  name: 'Salesforce' },
+  { src: imgTypeform,    name: 'Typeform' },
+  { src: imgTrello,      name: 'Trello' },
+];
+
+function IntegrationsStrip() {
+  const doubled = [...INTEGRATIONS, ...INTEGRATIONS];
+  return (
+    <section className="py-20 overflow-hidden border-y border-white/[0.04]">
+      <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] text-center mb-10">Works with your stack</p>
+      <div className="relative">
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
+        <div className="flex gap-8 w-max" style={{ animation: 'marquee 40s linear infinite' }}>
+          {doubled.map((app, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 shrink-0 group">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center group-hover:border-white/[0.12] group-hover:bg-white/[0.07] transition-all duration-300">
+                <img src={app.src} alt={app.name} className="w-5 h-5 object-contain" />
+              </div>
+              <span className="text-[10px] text-neutral-700 group-hover:text-neutral-500 transition-colors">{app.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @keyframes marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 export default function Landing() {
   const pageRef = useScrollReveal();
@@ -445,6 +516,11 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          INTEGRATIONS — scrolling logo strip
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <IntegrationsStrip />
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           INTERSTITIAL — the "why" statement
