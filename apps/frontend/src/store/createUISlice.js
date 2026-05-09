@@ -60,10 +60,8 @@ export const createUISlice = (set, get) => ({
   loadEngine: async (automationId) => {
     set({ isLoading: true });
     try {
-      const response = await api.get("/api/automation");
-      const workflow = response.data.automations.find(
-        (a) => a._id === automationId,
-      );
+      const response = await api.get(`/api/automation/${automationId}`);
+      const workflow = response.data.automation;
       if (!workflow) throw new Error("Workflow not found");
 
       // Normalize legacy node types to current frontend names

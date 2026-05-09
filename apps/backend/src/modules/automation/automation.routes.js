@@ -4,6 +4,7 @@ import {
   activateAutomation,
   deactivateAutomation,
   triggerAutomation,
+  getAutomation,
   getAutomations,
   deleteAutomation,
   duplicateAutomation,
@@ -19,6 +20,7 @@ const router = express.Router();
 
 router.post("/test-node", verifyToken, testNode);
 router.get("/", verifyToken, getAutomations);
+router.get("/:id", verifyToken, getAutomation);
 router.post("/", verifyToken, parseWorkflowBody, saveAutomation);
 router.put("/:id", verifyToken, parseWorkflowBody, saveAutomation);
 router.delete("/:id", verifyToken, deleteAutomation);

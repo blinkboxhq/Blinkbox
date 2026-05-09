@@ -486,6 +486,28 @@ export async function renameAutomation(req, res) {
 
 /**
  * ===============================
+ * GET SINGLE AUTOMATION (WORKSPACE)
+ * ===============================
+ */
+export async function getAutomation(req, res) {
+  try {
+    if (!req.user?.id) return res.status(401).json({ success: false, message: "Unauthorized." });
+    const automation = await Automation.findOne({
+      _id: req.params.id,
+      $or: [
+        { workspaceId: req.user.id },
+        { "collaborators.userId": String(req.user.id) },
+      ],
+    });
+    if (!automation) return res.status(404).json({ success: false, message: "Not found." });
+    res.json({ success: true, automation });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to load workflow." });
+  }
+}
+
+/**
+ * ===============================
  * GET ALL AUTOMATIONS (DASHBOARD)
  * ===============================
  */
