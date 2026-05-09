@@ -66,6 +66,7 @@ Nodes in 2D space, never a single column.
 - 3 services: x:100, x:400, x:700, same y
 
 Never place two nodes at the same (x,y). Build 4–8 nodes for typical requests.
+**Always include a trigger node as the first node.** Triggers: manual (for testing), webhook, cron_trigger, gmail_trigger, slack_trigger, etc.
 
 ## ✅ REQUIRED: Config Quality Bar
 Every node config MUST have real, meaningful values. A workflow that would require manual editing before it can run is a failure.
@@ -217,6 +218,22 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
       sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
     }));
+  }
+
+  // Auto-fix: ensure no two nodes share the same position
+  const positionsSeen = new Set();
+  canvasNodes.forEach(n => {
+    const key = `${n.position.x},${n.position.y}`;
+    if (positionsSeen.has(key)) {
+      n.position.x += 220;
+    }
+    positionsSeen.add(`${n.position.x},${n.position.y}`);
+  });
+
+  // Auto-fix: ensure trigger node has type "trigger" not "action"
+  if (canvasNodes.length > 0) {
+    const TRIGGER_TYPES = new Set(["manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger","slack_trigger","discord_trigger","telegram_trigger","github_trigger","shopify_trigger","linear_trigger","notion_trigger","airtable_trigger","stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger","google_calendar_trigger","form_trigger","chat_trigger"]);
+    canvasNodes[0].data.type = TRIGGER_TYPES.has(canvasNodes[0].data.backendType) ? "trigger" : canvasNodes[0].data.type;
   }
 
   return { nodes: canvasNodes, edges: canvasEdges };

@@ -1,7 +1,7 @@
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { playConnect, playDelete } from "../lib/sounds";
 import dagre from "dagre";
-import { getSuggestion, shouldSuggest } from "../pages/Workspace/nodeSuggestions";
+import { getSuggestions, shouldSuggest } from "../pages/Workspace/nodeSuggestions";
 import {
   calculateAllAvailableVariables,
   calculateAvailableVariables,
@@ -129,7 +129,8 @@ export const createGraphSlice = (set, get) => ({
     // Suggest what should come after the target node
     if (targetNode && !targetNode.data?.isSuggestion) {
       const bt = targetNode.data?.backendType;
-      const sugg = getSuggestion(bt);
+      const suggestions = getSuggestions(bt);
+      const sugg = suggestions?.[0];
       const targetAlreadyHasOutput = newEdges.some(
         e => e.source === connection.target && (e.sourceHandle === 'output' || e.sourceHandle == null),
       );

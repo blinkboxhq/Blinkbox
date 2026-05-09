@@ -129,20 +129,61 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         )}
       </div>
 
+      {/* ── Built-in Tools ─────────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">Built-in Capabilities</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {[
+            { icon: '🔢', label: 'Calculator', desc: 'Math & formulas' },
+            { icon: '📖', label: 'Wikipedia', desc: 'Factual lookup' },
+            { icon: '🌐', label: 'HTTP Request', desc: 'Call any API' },
+            { icon: '⚡', label: 'Run JS Code', desc: 'Execute scripts' },
+          ].map(tool => (
+            <div key={tool.label} className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800/40">
+              <span className="text-[13px] shrink-0">{tool.icon}</span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-zinc-300 leading-none mb-0.5">{tool.label}</p>
+                <p className="text-[9px] text-zinc-600 leading-none">{tool.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Mission prompt ──────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Agent Goal</label>
-          <span className="text-[9px] text-zinc-700">{(config.prompt || "").length} chars</span>
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Instructions</label>
+          <div className="flex items-center gap-1.5">
+            {(config.prompt || "").length > 800 && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+            <span className="text-[9px] text-zinc-700">{(config.prompt || "").length} chars</span>
+          </div>
         </div>
         <SmartVariableInput
           value={config.prompt || ""}
           onChange={v => updateConfig("prompt", v)}
-          placeholder={'e.g. "Research the top AI tools this week and summarize them"'}
+          placeholder={"What should this agent accomplish? Be specific — include goals, constraints, and expected output format."}
           multiline
           nodeId={nodeId}
         />
         <p className="text-[9px] text-zinc-700 mt-1.5">Use {"{{ variables }}"} to inject data from previous nodes.</p>
+
+        {/* ── Preset templates ──────────────────────────────────────────────── */}
+        {!(config.prompt) && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {[
+              { label: 'Research agent', prompt: 'Research the following topic thoroughly using web search and Wikipedia. Summarize key findings with sources: {{$json.topic}}' },
+              { label: 'Data analyst', prompt: 'Analyze the provided data and extract insights. Calculate relevant statistics and return a structured summary: {{$json.data}}' },
+              { label: 'Email drafter', prompt: 'Draft a professional email based on the following context. Be concise and action-oriented: {{$json.context}}' },
+              { label: 'Code reviewer', prompt: 'Review the following code for bugs, security issues, and improvements. Return structured feedback: {{$json.code}}' },
+            ].map(t => (
+              <button key={t.label} onClick={() => updateConfig("prompt", t.prompt)}
+                className="px-2 py-1 rounded-md text-[9px] font-semibold text-zinc-500 border border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 bg-zinc-900/50 transition-all">
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Memory toggle ───────────────────────────────────────────────── */}
@@ -221,6 +262,22 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
                 className="w-full h-1.5 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-violet-500" />
               <div className="flex justify-between mt-1">
                 <span className="text-[9px] text-zinc-700">1 (fast)</span><span className="text-[9px] text-zinc-700">20 (thorough)</span>
+              </div>
+            </div>
+
+            {/* Max Tokens */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Tokens</label>
+                <span className="text-[11px] font-bold text-violet-400 font-mono">{config.maxTokens || 8192}</span>
+              </div>
+              <div className="flex gap-1.5">
+                {[4096, 8192, 16384, 32768].map(n => (
+                  <button key={n} onClick={() => updateConfig("maxTokens", n)}
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold border transition-all ${(config.maxTokens || 8192) === n ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-zinc-700"}`}>
+                    {n >= 1024 ? `${n/1024}k` : n}
+                  </button>
+                ))}
               </div>
             </div>
 
