@@ -9,6 +9,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 import { Client as SshClient } from "ssh2";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-ssh-poller";
 let sshQueue = null;
@@ -59,6 +60,7 @@ async function pollSsh(automationId, cfg) {
   try {
     const { host, command } = cfg;
     if (!host || !command) return;
+    assertSafeHost(host);
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");

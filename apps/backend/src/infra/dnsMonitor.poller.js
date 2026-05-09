@@ -9,6 +9,7 @@ import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 import dns from "dns/promises";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-dns-monitor";
 let dnsQueue = null;
@@ -36,6 +37,7 @@ async function pollDns(automationId, cfg) {
     const domain = cfg.domain || cfg.hostname;
     const { recordType = "A" } = cfg;
     if (!domain) return;
+    assertSafeHost(domain);
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");

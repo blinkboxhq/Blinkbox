@@ -9,15 +9,17 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeUrl } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-http-monitor";
 let monitorQueue = null;
 let monitorWorker = null;
 
 async function checkUrl(url, expectedKeyword, timeoutMs = 10000) {
+  assertSafeUrl(url);
   const start = Date.now();
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: "follow" });
+    const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: "manual" });
     const responseTime = Date.now() - start;
     const text = await res.text();
     const keywordFound = expectedKeyword ? text.includes(expectedKeyword) : true;

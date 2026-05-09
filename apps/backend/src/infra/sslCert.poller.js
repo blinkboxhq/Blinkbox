@@ -10,6 +10,7 @@ import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 import tls from "tls";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-ssl-poller";
 let sslQueue = null;
@@ -38,6 +39,7 @@ async function pollSslCert(automationId, cfg) {
     const host = cfg.host || cfg.hostname;
     const { port = 443, warnDays = cfg.warningDays ?? 14 } = cfg;
     if (!host) return;
+    assertSafeHost(host);
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");

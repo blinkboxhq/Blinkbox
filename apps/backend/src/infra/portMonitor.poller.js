@@ -9,6 +9,7 @@ import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 import net from "net";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-port-monitor";
 let portQueue = null;
@@ -33,6 +34,7 @@ async function pollPort(automationId, cfg) {
   try {
     const { host, port, alertOn = "closed" } = cfg;
     if (!host || !port) return;
+    assertSafeHost(host);
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
