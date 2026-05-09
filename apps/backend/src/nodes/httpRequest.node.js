@@ -125,20 +125,29 @@ export default {
     const forceJson = responseType === "json";
 
     try {
-      const response = await axios({
-        url,
-        method: method.toUpperCase(),
-        headers: finalHeaders,
-        data: ["POST", "PUT", "PATCH"].includes(method.toUpperCase()) ? body : undefined,
-        params: queryParams,
-        timeout: clampedTimeout,
-        maxContentLength: MAX_RESPONSE_BYTES,
-        maxRedirects: followRedirects ? 5 : 0,
-        validateStatus: () => true,
-        // Request as arraybuffer when binary is forced or auto-detected
-        // In auto mode, we request arraybuffer and check Content-Type after
-        responseType: forceJson ? "json" : "arraybuffer",
-      });
+      let currentUrl = url;
+      let response;
+      const maxFollows = followRedirects ? 5 : 0;
+      for (let redirects = 0; ; redirects++) {
+        response = await axios({
+          url: currentUrl,
+          method: method.toUpperCase(),
+          headers: finalHeaders,
+          data: ["POST", "PUT", "PATCH"].includes(method.toUpperCase()) ? body : undefined,
+          params: redirects === 0 ? queryParams : undefined,
+          timeout: clampedTimeout,
+          maxContentLength: MAX_RESPONSE_BYTES,
+          maxRedirects: 0,
+          validateStatus: () => true,
+          responseType: forceJson ? "json" : "arraybuffer",
+        });
+        const isRedirect = response.status >= 301 && response.status <= 308 && response.headers.location;
+        if (!isRedirect || redirects >= maxFollows) break;
+        const location = response.headers.location;
+        const nextUrl = new URL(location, currentUrl).toString();
+        assertSafeUrl(nextUrl);
+        currentUrl = nextUrl;
+      }
 
       const contentType = response.headers["content-type"] || "";
       const shouldStoreBinary =

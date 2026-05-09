@@ -96,7 +96,7 @@ export const youtube_upload = {
 
     const uploadUrl = initRes.headers.location;
     assertSafeUrl(videoUrl);
-    const videoRes = await axios.get(videoUrl, { responseType: "arraybuffer", timeout: 120000 });
+    const videoRes = await axios.get(videoUrl, { responseType: "arraybuffer", timeout: 120000, maxRedirects: 0 });
     const uploadRes = await axios.put(uploadUrl, videoRes.data, {
       headers: { "Content-Type": "video/*", "Content-Length": videoRes.data.byteLength },
       timeout: 300000,
@@ -250,7 +250,14 @@ export const file_download = {
       responseType: "arraybuffer",
       timeout: parseInt(config.timeout || 60000),
       maxContentLength: parseInt(config.maxSizeMb || 50) * 1024 * 1024,
+      maxRedirects: 0,
     });
+    if (res.status >= 301 && res.status <= 308 && res.headers.location) {
+      const next = new URL(res.headers.location, url).toString();
+      assertSafeUrl(next);
+      const res2 = await axios.get(next, { responseType: "arraybuffer", timeout: parseInt(config.timeout || 60000), maxContentLength: parseInt(config.maxSizeMb || 50) * 1024 * 1024, maxRedirects: 4 });
+      Object.assign(res, { data: res2.data, headers: res2.headers });
+    }
 
     const contentType = res.headers["content-type"] || "application/octet-stream";
     const base64 = Buffer.from(res.data).toString("base64");
