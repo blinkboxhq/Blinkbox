@@ -86,7 +86,7 @@ export default function NotificationBell() {
     try {
       const { data } = await api.get('/api/invites');
       setInvites(data.invites || []);
-    } catch {}
+    } catch { toast.error('Failed to load invites'); }
     setLoading(false);
   }, []);
 

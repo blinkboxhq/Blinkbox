@@ -46,12 +46,16 @@ function serializeContent(el) {
   return result;
 }
 
+function escapeAttr(s) {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 /** Build innerHTML from a string that may contain {{token}} placeholders. */
 function buildHTML(str) {
   if (!str) return "";
   return str.replace(/\{\{([^}]+)\}\}/g, (_, token) => {
-    const label = token.split(".").slice(-1)[0];
-    return `<span class="${PILL_CLASS}" data-token="${token}" contenteditable="false">&#123;&#123;&nbsp;${label}&nbsp;&#125;&#125;</span>`;
+    const label = escapeAttr(token.split(".").slice(-1)[0]);
+    return `<span class="${PILL_CLASS}" data-token="${escapeAttr(token)}" contenteditable="false">&#123;&#123;&nbsp;${label}&nbsp;&#125;&#125;</span>`;
   });
 }
 

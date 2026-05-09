@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MessageSquare, X, Send, Bug, Lightbulb, MessageCircle, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import api from "../lib/api";
 import { useLocation } from "react-router-dom";
 
@@ -29,7 +30,7 @@ export default function FeedbackWidget() {
       setMessage("");
       setTimeout(() => { setSent(false); setOpen(false); }, 2000);
     } catch {
-      // silently ignore — non-critical
+      toast.error('Failed to send feedback');
     } finally {
       setSending(false);
     }

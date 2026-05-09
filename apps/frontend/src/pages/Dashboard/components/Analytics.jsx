@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, CheckCircle2, XCircle, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -188,6 +189,7 @@ export default function Analytics() {
       setData(r.data);
     } catch {
       setData(null);
+      toast.error('Failed to load analytics');
     } finally {
       setLoading(false);
     }

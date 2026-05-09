@@ -295,6 +295,7 @@ export async function getExecutionLogs(req, res) {
       type: { $in: ["node_step", "execution_start", "execution_end"] },
     })
       .sort({ timestamp: 1 })
+      .limit(2000)
       .lean();
 
     res.json({ success: true, logs });

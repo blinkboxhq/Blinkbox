@@ -3,6 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { TrendingUp, Zap, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import api from "../../../lib/api";
 
 const SUCCESS_COLOR = "#10b981";
@@ -74,7 +75,7 @@ export default function AnalyticsDashboard() {
         }
         setDaily(Object.values(map).sort((a, b) => a.date.localeCompare(b.date)));
       })
-      .catch(() => {})
+      .catch(() => { toast.error('Failed to load analytics'); })
       .finally(() => setLoading(false));
   }, [days]);
 
