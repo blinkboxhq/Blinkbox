@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
 import mongoose from "mongoose";
 import authRoutes from "../modules/auth/auth.routes.js";
 import profileRoutes from "../modules/profile/profile.routes.js";
@@ -20,6 +22,11 @@ import { redis } from "../infra/redis.client.js";
 const app = express();
 
 // ── Security & parsing middleware ─────────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: false, // API-only; no HTML served here
+  crossOriginEmbedderPolicy: false,
+}));
+app.use(compression());
 
 // 1. Clean up the origins array to destroy hidden spaces, quotes, and slashes
 const rawOrigins =
