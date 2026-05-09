@@ -71,7 +71,7 @@ async function opSendTemplate(config, token) {
   if (!config.templateId) return { success: false, error: "SendGrid sendTemplate: 'templateId' is required — configure this field.", skipped: true };
 
   const toList = String(config.to).split(",").map((a) => parseAddress(a.trim()));
-  const dynamicData = typeof config.dynamicData === "string" ? JSON.parse(config.dynamicData) : (config.dynamicData || {});
+  const dynamicData = typeof config.dynamicData === "string" ? (() => { try { return JSON.parse(config.dynamicData); } catch { throw new Error("SendGrid sendTemplate: 'dynamicData' is not valid JSON."); } })() : (config.dynamicData || {});
   const payload = {
     personalizations: [{ to: toList, dynamic_template_data: dynamicData }],
     from: parseAddress(config.from),
@@ -86,7 +86,7 @@ async function opSendTemplate(config, token) {
 
 async function opSendBulk(config, token) {
   // config.recipients: array of { email, name?, data? } or JSON string
-  const recipients = typeof config.recipients === "string" ? JSON.parse(config.recipients) : config.recipients;
+  const recipients = typeof config.recipients === "string" ? (() => { try { return JSON.parse(config.recipients); } catch { throw new Error("SendGrid sendBulk: 'recipients' is not valid JSON."); } })() : config.recipients;
   if (!Array.isArray(recipients) || recipients.length === 0)
     return { success: false, error: "SendGrid sendBulk: 'recipients' must be a non-empty array of { email, name?, data? } — configure this field.", skipped: true };
   if (!config.from) return { success: false, error: "SendGrid sendBulk: 'from' is required — configure this field.", skipped: true };
