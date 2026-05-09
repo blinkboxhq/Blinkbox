@@ -15,10 +15,21 @@ import { verifyToken } from "../auth/auth.middleware.js";
 import versionRouter from "./version.routes.js";
 import { listCollaborators, addCollaborator, removeCollaborator } from "./collaborator.controller.js";
 import { testNode } from "./engine/testNode.controller.js";
+import { redis } from "../../infra/redis.client.js";
 
 const router = express.Router();
 
-router.post("/test-node", verifyToken, testNode);
+async function testNodeRateLimit(req, res, next) {
+  try {
+    const key = `bb:rl:testnode:${req.user.id}`;
+    const count = await redis.incr(key);
+    if (count === 1) await redis.expire(key, 60);
+    if (count > 30) return res.status(429).json({ error: "Too many test runs. Try again in a minute." });
+  } catch { /* Redis down — fail open */ }
+  next();
+}
+
+router.post("/test-node", verifyToken, testNodeRateLimit, testNode);
 router.get("/", verifyToken, getAutomations);
 router.get("/:id", verifyToken, getAutomation);
 router.post("/", verifyToken, parseWorkflowBody, saveAutomation);
