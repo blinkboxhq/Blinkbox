@@ -1,6 +1,7 @@
 import { applyNodeChanges, applyEdgeChanges, addEdge } from "@xyflow/react";
 import { playConnect, playDelete } from "../lib/sounds";
 import dagre from "dagre";
+import { getSuggestion, shouldSuggest } from "../pages/Workspace/nodeSuggestions";
 import {
   calculateAllAvailableVariables,
   calculateAvailableVariables,
@@ -124,6 +125,36 @@ export const createGraphSlice = (set, get) => ({
       mappingWarnings: validateAllNodeMappings(nodes, newVars),
       _schemaGeneration: get()._schemaGeneration + 1,
     });
+
+    // Suggest what should come after the target node
+    if (targetNode && !targetNode.data?.isSuggestion) {
+      const bt = targetNode.data?.backendType;
+      const sugg = getSuggestion(bt);
+      const targetAlreadyHasOutput = newEdges.some(
+        e => e.source === connection.target && (e.sourceHandle === 'output' || e.sourceHandle == null),
+      );
+      if (sugg && shouldSuggest(bt) && !targetAlreadyHasOutput) {
+        const sugPos = { x: targetNode.position.x, y: targetNode.position.y + 220 };
+        set({
+          suggestionNode: {
+            id: '__suggestion__',
+            type: 'custom',
+            position: sugPos,
+            selectable: false,
+            draggable: false,
+            data: {
+              label: sugg.label,
+              backendType: sugg.type,
+              type: 'action',
+              config: {},
+              isSuggestion: true,
+              suggestionSourceId: connection.target,
+              suggestionPosition: sugPos,
+            },
+          },
+        });
+      }
+    }
   },
 
   // isValidConnection — passed to ReactFlow for real-time handle feedback
@@ -311,7 +342,7 @@ export const createGraphSlice = (set, get) => ({
   },
 
   // ── Mutations ────────────────────────────────────────────────────────────
-  addNode: (node) => set({ ...pushHistory(get), nodes: [...get().nodes, node] }),
+  addNode: (node) => set({ ...pushHistory(get), nodes: [...get().nodes, node], suggestionNode: null }),
 
   duplicateNode: (nodeId) => {
     const { nodes, edges, nodeOutputSchemas } = get();

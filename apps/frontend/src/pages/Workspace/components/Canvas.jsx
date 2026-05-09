@@ -115,6 +115,8 @@ export default function Canvas() {
   const applyGraphSync      = useWorkspaceStore((s) => s.applyGraphSync);
   const watchAutomation     = useWorkspaceStore((s) => s.watchAutomation);
   const unwatchAutomation   = useWorkspaceStore((s) => s.unwatchAutomation);
+  const suggestionNode      = useWorkspaceStore((s) => s.suggestionNode);
+  const clearSuggestionNode = useWorkspaceStore((s) => s.clearSuggestionNode);
 
   // Auto-subscribe to live node:status events for scheduled/webhook-triggered runs
   useEffect(() => {
@@ -239,9 +241,10 @@ export default function Canvas() {
   const isMultiSelected = selectedNodeIds.length > 1;
 
   const nodes = useMemo(() => {
-    if (!isLoading && storeNodes.length === 0) return [PLACEHOLDER_NODE];
-    return storeNodes;
-  }, [storeNodes, isLoading]);
+    const base = (!isLoading && storeNodes.length === 0) ? [PLACEHOLDER_NODE] : storeNodes;
+    if (suggestionNode) return [...base, suggestionNode];
+    return base;
+  }, [storeNodes, isLoading, suggestionNode]);
 
   const liveEdges = useMemo(() => {
     return edges.map((edge) => {
@@ -316,7 +319,7 @@ export default function Canvas() {
           e.preventDefault();
           setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, nodeLabel: node.data?.config?.selectedAction || node.data?.label || node.id });
         }}
-        onPaneClick={() => { setSelectedNodeId(null); setCtxMenu(null); }}
+        onPaneClick={() => { setSelectedNodeId(null); setCtxMenu(null); clearSuggestionNode(); }}
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

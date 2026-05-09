@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
@@ -276,10 +276,80 @@ function SuccessFailedOutputHandles({ cardHeight }) {
   );
 }
 
+// ─── Ghost suggestion node (Copilot-style) ───────────────────────────────────
+function SuggestionGhostNode({ data }) {
+  const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
+  const Icon = nodeDef.icon;
+  const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
+  const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
+  const cardW = 120, cardH = 120;
+
+  return (
+    <motion.div
+      className="relative"
+      initial={{ opacity: 0, scale: 0.88, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+      style={{ width: cardW, height: cardH + 58 }}
+    >
+      {/* "AI Suggestion" chip above the card */}
+      <div className="absolute flex items-center gap-1 px-2 py-0.5 rounded-full border border-violet-500/30 bg-violet-500/10 pointer-events-none select-none"
+        style={{ top: -24, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>
+        <Sparkles className="w-2.5 h-2.5 text-violet-400" strokeWidth={2} />
+        <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">AI Suggestion</span>
+      </div>
+
+      {/* Input handle */}
+      <Handle type="target" position={Position.Left} id="input"
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-violet-700/60 touch-none"
+        style={{ top: cardH / 2 }} />
+
+      {/* Ghost card — semi-transparent, dashed violet border */}
+      <div className="flex flex-col items-center justify-center"
+        style={{
+          opacity: 0.45, width: cardW, height: cardH, borderRadius: 12,
+          background: 'linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)',
+          border: '1.5px dashed rgba(139,92,246,0.65)',
+          boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
+        }}>
+        {nodeDef.logoUrl ? (
+          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-12 h-12 object-contain"
+            style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
+        ) : (
+          <Icon className={`w-12 h-12 ${nodeDef.colorClass}`} strokeWidth={1} />
+        )}
+      </div>
+
+      {/* Label + accept/dismiss — full opacity, below the ghost card */}
+      <div className="absolute" style={{ top: cardH + 7, left: 0, width: cardW }}>
+        <p className="text-[11px] font-bold text-violet-300/80 text-center truncate px-1 mb-2 select-none">
+          {nodeDef.label || data.label}
+        </p>
+        <div className="flex items-center justify-center gap-1.5 nodrag">
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); acceptSuggestion(data.suggestionSourceId, data); }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-[10px] font-bold transition-all shadow-lg shadow-violet-900/50">
+            <Check className="w-3 h-3" strokeWidth={3} /> Accept
+          </button>
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); clearSuggestionNode(); }}
+            className="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 border border-zinc-700 text-zinc-500 hover:text-zinc-200 flex items-center justify-center transition-all">
+            <X className="w-3 h-3" strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
 export default function CustomNode({ id, data, selected }) {
+  if (data.isSuggestion) return <SuggestionGhostNode id={id} data={data} />;
+
   const [isHovered, setIsHovered] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const { id: automationId } = useParams();

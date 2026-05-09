@@ -1,6 +1,6 @@
 import api from "../lib/api";
 import { toast } from "sonner";
-import { playBottomPanel } from "../lib/sounds";
+import { playBottomPanel, playConnect } from "../lib/sounds";
 import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
 
 // Build a reverse map: backendType → first matching variantId
@@ -35,6 +35,7 @@ export const createUISlice = (set, get) => ({
   insertEdgeId: null,
   isAgentPickerOpen: false,
   agentPickerParentId: null,
+  suggestionNode: null,
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -55,6 +56,28 @@ export const createUISlice = (set, get) => ({
   clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null, isAddNodeOpen: false }),
   openAgentPicker: (parentId) => set({ isAgentPickerOpen: true, agentPickerParentId: parentId, isAddNodeOpen: false, isTriggerPickerOpen: false }),
   closeAgentPicker: () => set({ isAgentPickerOpen: false, agentPickerParentId: null }),
+  setSuggestionNode: (node) => set({ suggestionNode: node }),
+  clearSuggestionNode: () => set({ suggestionNode: null }),
+  acceptSuggestion: (sourceNodeId, suggData) => {
+    const { nodes } = get();
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) { set({ suggestionNode: null }); return; }
+    const newId = `${suggData.backendType}-${crypto.randomUUID()}`;
+    const position = suggData.suggestionPosition || { x: sourceNode.position.x, y: sourceNode.position.y + 220 };
+    set(state => ({
+      nodes: [...state.nodes, {
+        id: newId, type: 'custom', position,
+        data: { label: suggData.label, backendType: suggData.backendType, type: 'action', config: {} },
+      }],
+      edges: [...state.edges, {
+        id: `e-${sourceNodeId}-${newId}`,
+        source: sourceNodeId, target: newId,
+        type: 'configurable', data: { conditionPath: '' }, style: {},
+      }],
+      suggestionNode: null,
+    }));
+    playConnect();
+  },
 
   // ── API: Load Workflow ───────────────────────────────────────────────────
   loadEngine: async (automationId) => {
