@@ -31,11 +31,11 @@ export function startExecutionResumer() {
     try {
       const stale = new Date(Date.now() - STALE_MS);
 
-      // Find cursors stuck in "running" with a stale lock
+      // Find cursors stuck in "running" with a stale lock (batch of 100 per cycle)
       const crashedExecutions = await Execution.find({
         "cursors.status": "running",
         "cursors.lockedAt": { $lte: stale },
-      });
+      }).limit(100);
 
       for (const execution of crashedExecutions) {
         let modified = false;
@@ -70,7 +70,7 @@ export function startExecutionResumer() {
         "cursors.status": "waiting",
         "cursors.lockedAt": null,
         updatedAt: { $lte: staleWaiting },
-      });
+      }).limit(100);
 
       for (const execution of stuckWaitingExecutions) {
         let modified = false;

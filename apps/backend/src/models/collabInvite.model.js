@@ -22,5 +22,7 @@ const CollabInviteSchema = new mongoose.Schema(
 
 // Prevent duplicate pending invites for the same automation+recipient
 CollabInviteSchema.index({ automationId: 1, toUserId: 1, status: 1 });
+// Support listSentInvites and cancelInvite queries
+CollabInviteSchema.index({ fromUserId: 1, automationId: 1 });
 
 export default mongoose.model("CollabInvite", CollabInviteSchema);

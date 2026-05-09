@@ -104,5 +104,7 @@ ExecutionSchema.index({
 
 // Index for resumer crash recovery queries
 ExecutionSchema.index({ "cursors.status": 1, "cursors.lockedAt": 1 });
+// Index for stuck-waiting recovery (status + cursors.status + updatedAt)
+ExecutionSchema.index({ status: 1, "cursors.status": 1, updatedAt: 1 });
 
 export default mongoose.model("Execution", ExecutionSchema);
