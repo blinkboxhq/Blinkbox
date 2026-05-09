@@ -24,35 +24,31 @@ function PlaceholderNode() {
   const setBrianOpen = useWorkspaceStore((s) => s.setBrianOpen);
 
   return (
-    <div className="flex items-start gap-4 select-none">
-      {/* Manual build */}
-      <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-6 select-none">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setTriggerPickerOpen(true)}
-          className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-zinc-500 hover:bg-zinc-800/40 transition-all duration-200 cursor-pointer"
+          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl border border-dashed border-zinc-800 hover:border-zinc-600 bg-zinc-950 hover:bg-zinc-900/60 transition-all duration-200 cursor-pointer"
         >
-          <Plus className="w-7 h-7 text-zinc-600 group-hover:text-zinc-400 transition-colors" strokeWidth={1.5} />
+          <Plus className="w-6 h-6 text-zinc-700 group-hover:text-zinc-300 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
+          <span className="text-[10px] font-semibold text-zinc-700 group-hover:text-zinc-400 transition-colors tracking-wide">Manual</span>
         </button>
-        <span className="text-[12px] text-zinc-500 font-medium whitespace-nowrap">Add first step</span>
-      </div>
 
-      {/* Divider */}
-      <div className="flex flex-col items-center gap-1 pt-8">
-        <div className="w-px h-6 bg-zinc-800" />
-        <span className="text-[10px] text-zinc-700 font-medium uppercase tracking-widest">or</span>
-        <div className="w-px h-6 bg-zinc-800" />
-      </div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-px h-5 bg-zinc-800" />
+          <span className="text-[9px] text-zinc-800 font-bold uppercase tracking-widest">or</span>
+          <div className="w-px h-5 bg-zinc-800" />
+        </div>
 
-      {/* Build with AI */}
-      <div className="flex flex-col items-center gap-3">
         <button
           onClick={() => setBrianOpen(true)}
-          className="group flex items-center justify-center w-28 h-28 border-2 border-dashed border-zinc-700 rounded-2xl hover:border-violet-500/60 hover:bg-violet-500/5 transition-all duration-200 cursor-pointer"
+          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl border border-dashed border-zinc-800 hover:border-violet-500/40 bg-zinc-950 hover:bg-violet-950/20 transition-all duration-200 cursor-pointer"
         >
-          <Sparkles className="w-7 h-7 text-zinc-600 group-hover:text-violet-400 transition-colors" strokeWidth={1.5} />
+          <Sparkles className="w-6 h-6 text-zinc-700 group-hover:text-violet-400 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
+          <span className="text-[10px] font-semibold text-zinc-700 group-hover:text-violet-400 transition-colors tracking-wide">Use Brian</span>
         </button>
-        <span className="text-[12px] text-zinc-500 font-medium whitespace-nowrap">Build with AI</span>
       </div>
+      <p className="text-[11px] text-zinc-700 font-medium tracking-wide">Start by adding a trigger</p>
     </div>
   );
 }
@@ -339,7 +335,7 @@ export default function Canvas() {
         panOnScroll
         zoomOnPinch
       >
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#3a3a3d" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
         <Controls
           className="!bg-zinc-900/90 !backdrop-blur-sm !border-zinc-800/50 !rounded-xl !shadow-lg !shadow-black/20
             [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800/50 [&>button]:!text-zinc-500
@@ -353,7 +349,7 @@ export default function Canvas() {
           }}
           maskColor="rgba(0,0,0,0.6)"
           style={{
-            background: "#0d0d0f",
+            background: "#0a0a0b",
             border: "1px solid #27272a",
             borderRadius: 8,
           }}

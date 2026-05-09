@@ -178,7 +178,7 @@ function NodeIcon({ nodeDef, size = "md" }) {
 function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
   return (
     <button onClick={onClick} title={label}
-      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
+      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150 ${
         danger ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10" : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/60"
       }`}>
       <Icon className="w-3.5 h-3.5" strokeWidth={2} />
@@ -198,9 +198,9 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
         <div className="absolute z-10 nodrag"
           style={cardHeight ? { right: -16, top: cardHeight / 2, transform: "translateY(-50%)" } : { right: -16, top: "50%", transform: "translateY(-50%)" }}>
           <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
-            className="w-8 h-8 rounded-full bg-zinc-800 border-[2.5px] border-zinc-600 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+            className="w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
             title="Add next step">
-            <Plus className="w-4 h-4 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
+            <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
           </button>
         </div>
       )}
@@ -292,11 +292,10 @@ function SuggestionGhostNode({ data }) {
       transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
       style={{ width: cardW, height: cardH + 58 }}
     >
-      {/* "AI Suggestion" chip above the card */}
-      <div className="absolute flex items-center gap-1 px-2 py-0.5 rounded-full border border-violet-500/30 bg-violet-500/10 pointer-events-none select-none"
+      {/* "Suggest" chip above the card */}
+      <div className="absolute px-2 py-0.5 rounded border border-violet-500/20 bg-violet-500/8 pointer-events-none select-none"
         style={{ top: -24, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>
-        <Sparkles className="w-2.5 h-2.5 text-violet-400" strokeWidth={2} />
-        <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">AI Suggestion</span>
+        <span className="text-[9px] font-bold text-violet-400/90 uppercase tracking-widest">Suggest</span>
       </div>
 
       {/* Input handle */}
@@ -304,12 +303,12 @@ function SuggestionGhostNode({ data }) {
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-violet-700/60 touch-none"
         style={{ top: cardH / 2 }} />
 
-      {/* Ghost card — semi-transparent, dashed violet border */}
+      {/* Ghost card — semi-transparent, solid violet border */}
       <div className="flex flex-col items-center justify-center"
         style={{
-          opacity: 0.45, width: cardW, height: cardH, borderRadius: 12,
+          opacity: 0.5, width: cardW, height: cardH, borderRadius: 12,
           background: 'linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)',
-          border: '1.5px dashed rgba(139,92,246,0.65)',
+          border: '1px solid rgba(139,92,246,0.3)',
           boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
         }}>
         {nodeDef.logoUrl ? (
@@ -329,7 +328,7 @@ function SuggestionGhostNode({ data }) {
           <button
             onMouseDown={e => e.stopPropagation()}
             onClick={e => { e.stopPropagation(); acceptSuggestion(data.suggestionSourceId, data); }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-[10px] font-bold transition-all shadow-lg shadow-violet-900/50">
+            className="flex items-center gap-1 px-2 py-1 rounded-md bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-[10px] font-bold transition-all shadow-lg shadow-violet-900/50">
             <Check className="w-3 h-3" strokeWidth={3} /> Accept
           </button>
           <button
@@ -427,7 +426,7 @@ export default function CustomNode({ id, data, selected }) {
   // ── NodeToolbar ─────────────────────────────────────────────────────────
   const toolbar = (
     <NodeToolbar isVisible={selected || isHovered} position={Position.Top} offset={8}
-      className="!bg-[#1a1a1e] !border !border-zinc-700/50 !rounded-xl !shadow-xl !shadow-black/50 !p-1 !flex !items-center !gap-0.5">
+      className="!bg-zinc-950 !border !border-zinc-800 !rounded-xl !shadow-xl !shadow-black/50 !p-1 !flex !items-center !gap-0">
       <ToolbarButton icon={Play} label="Run workflow" onClick={handlePlay} />
       <ToolbarButton icon={Settings} label="Configure" onClick={handleOpenConfig} />
       {!isTrigger && <ToolbarButton icon={Copy} label="Duplicate" onClick={handleDuplicate} />}
@@ -451,19 +450,18 @@ export default function CustomNode({ id, data, selected }) {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={handlePlay} className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: 24, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}>
-          <div className="absolute inset-0 rounded-[23px] pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           {badge}
           {status === "running" && <div className="absolute top-3 right-3"><Loader2 className="w-4 h-4 text-blue-400 animate-spin" /></div>}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-14 h-14 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className={`w-14 h-14 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
+            <Icon className={`w-14 h-14 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
-        <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[13px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-zinc-600 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+        <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
+          <span className="text-[11px] font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
+          <span className="text-[10px] font-semibold text-zinc-500 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
@@ -496,20 +494,19 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}>
 
-          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: shapeRadius - 1, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
 
           {badge}
           {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
 
-          <Bot className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
+          <Bot className={`w-10 h-10 ${nodeDef.colorClass} opacity-75 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{nodeDef.label || data.label || "AI Agent"}</p>
 
           {/* Slot labels above bottom edge */}
           <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
             style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}>
             {AGENT_BOTTOM_SLOTS.map(slot => (
-              <span key={slot.id} className="text-center text-[8px] font-medium text-zinc-600 tracking-wide">
+              <span key={slot.id} className="text-center text-[9px] font-medium text-zinc-500 tracking-wide">
                 {slot.label}
               </span>
             ))}
@@ -531,7 +528,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
   if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
-    const d = 72;
+    const d = 68;
     const models = nodeDef.models || [];
     const selectedModel = data.config?.model || nodeDef.defaultModel || "";
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
@@ -582,8 +579,6 @@ export default function CustomNode({ id, data, selected }) {
           className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: d, height: d, borderRadius: 9999, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}
         >
-          <div className="absolute inset-0 rounded-full pointer-events-none"
-            style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
           {badge}
@@ -597,7 +592,7 @@ export default function CustomNode({ id, data, selected }) {
 
         {/* Model name below circle */}
         <div className="absolute text-center select-none pointer-events-none" style={{ top: d + 5, left: 0, width: d }}>
-          <span className="text-[9px] text-zinc-500 block truncate leading-tight">
+          <span className="text-[9px] text-zinc-400 font-medium block truncate leading-tight">
             {selectedLabel || nodeDef.label}
           </span>
         </div>
@@ -657,10 +652,15 @@ export default function CustomNode({ id, data, selected }) {
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
   const cardW = 120, cardH = 120;
 
-  const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
+  const cardBorderTop = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
     : selected ? `1.5px solid rgba(${accent},0.5)` : `1px solid rgba(${accent},0.2)`;
+  const cardBorder = cardBorderTop;
+  const cardBottomBorder = status === "running" ? "2px solid rgba(59,130,246,0.5)"
+    : status === "completed" ? "2px solid rgba(16,185,129,0.4)"
+    : status === "failed" ? "2px solid rgba(239,68,68,0.4)"
+    : `2px solid rgba(${accent},0.35)`;
   const cardShadow = status === "running" ? "0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "completed" ? "0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "failed" ? "0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)"
@@ -679,8 +679,7 @@ export default function CustomNode({ id, data, selected }) {
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
-        style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: shapeRadius - 1, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+        style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow }}>
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
         {badge}
         {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
@@ -695,7 +694,7 @@ export default function CustomNode({ id, data, selected }) {
         {nodeDef.logoUrl ? (
           <img src={nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1} />
+          <Icon className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
         )}
       </motion.div>
 
@@ -719,14 +718,14 @@ export default function CustomNode({ id, data, selected }) {
           style={{ right: 14, top: cardH * 0.72, transform: "translateY(-50%)" }}>ERR</span>
       )}
 
-      <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-        <span className="text-[12px] font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
+      <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
+        <span className="text-[11px] font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
           {data.config?.customLabel || data.config?.selectedAction || nodeDef.label || data.label}
         </span>
         {(data.config?.customLabel || data.config?.selectedAction) && (
-          <span className="text-[9px] font-semibold text-zinc-600 mt-0.5 block truncate px-1">{nodeDef.label}</span>
+          <span className="text-[9px] font-semibold text-zinc-500 mt-0.5 block truncate px-1">{nodeDef.label}</span>
         )}
-        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-zinc-600 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
+        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-zinc-500 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
         {nodeOutput && status === "completed" && (
           <NodeOutputChip output={nodeOutput} />
         )}
