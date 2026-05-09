@@ -41,6 +41,7 @@ export default function OAuthConnectButton({
   // Listen for postMessage from OAuth popup
   const handleMessage = useCallback(
     (event) => {
+      if (event.origin !== window.location.origin) return;
       const data = event.data;
       if (data?.type !== 'blinkbox:oauth') return;
 

@@ -54,6 +54,7 @@ function OAuthPrompt({ provider, label, onConnected }) {
       'blinkbox_oauth', 'width=600,height=700'
     );
     const handler = (e) => {
+      if (e.origin !== window.location.origin) return;
       if (e.data?.type !== 'blinkbox:oauth') return;
       window.removeEventListener('message', handler);
       setConnecting(false);
