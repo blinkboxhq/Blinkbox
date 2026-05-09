@@ -939,17 +939,27 @@ export const tool_webhook = {
 // DATA & FILE OPERATIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
+const SAFE_FILE_ROOT = "/tmp/blinkbox";
+
+function assertSafePath(rawPath) {
+  const resolved = path.resolve(rawPath);
+  if (!resolved.startsWith(SAFE_FILE_ROOT + "/") && resolved !== SAFE_FILE_ROOT) {
+    throw new Error(`File access denied: paths must be under ${SAFE_FILE_ROOT}/. Got: "${resolved}"`);
+  }
+}
+
 export const tool_file_read = {
   toolDefinition: td(
     "tool_file_read",
-    "Read a file from the filesystem",
+    `Read a file from the filesystem (restricted to ${SAFE_FILE_ROOT}/)`,
     {
-      path: { type: "string", description: "Absolute or relative file path" },
+      path: { type: "string", description: `File path under ${SAFE_FILE_ROOT}/` },
       encoding: { type: "string", description: "File encoding (utf8 default, base64, hex)" },
     },
     ["path"]
   ),
   async run(config, args) {
+    assertSafePath(args.path);
     const content = await fs.readFile(args.path, args.encoding || "utf8");
     const stats = await fs.stat(args.path);
     return {
@@ -964,15 +974,16 @@ export const tool_file_read = {
 export const tool_file_write = {
   toolDefinition: td(
     "tool_file_write",
-    "Write content to a file on the filesystem",
+    `Write content to a file on the filesystem (restricted to ${SAFE_FILE_ROOT}/)`,
     {
-      path: { type: "string", description: "File path to write to" },
+      path: { type: "string", description: `File path under ${SAFE_FILE_ROOT}/` },
       content: { type: "string", description: "Content to write" },
       append: { type: "boolean", description: "Append to file instead of overwriting" },
     },
     ["path", "content"]
   ),
   async run(config, args) {
+    assertSafePath(args.path);
     if (args.append) {
       await fs.appendFile(args.path, args.content, "utf8");
     } else {
@@ -1056,6 +1067,7 @@ export const tool_pdf = {
       const resp = await axios.get(args.source, { responseType: "arraybuffer", timeout: 30000 });
       buffer = Buffer.from(resp.data);
     } else {
+      assertSafePath(args.source);
       buffer = await fs.readFile(args.source);
     }
     const data = await pdfParse(buffer);
@@ -1074,6 +1086,7 @@ export const tool_excel = {
     ["path"]
   ),
   async run(config, args) {
+    assertSafePath(args.path);
     let xlsx;
     try {
       xlsx = await import("xlsx");
@@ -1258,6 +1271,7 @@ export const tool_stt = {
     ["audioPath"]
   ),
   async run(config, args) {
+    assertSafePath(args.audioPath);
     const key = config.apiKey || process.env.OPENAI_API_KEY;
     if (!key) throw new Error("[tool_stt] OpenAI API key required");
     const FormData = (await import("form-data")).default;
