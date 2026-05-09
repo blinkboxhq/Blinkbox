@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, googleLogin } from "./auth.controller.js";
+import { register, login, googleLogin, forgotPassword, resetPassword } from "./auth.controller.js";
 import { redis } from "../../infra/redis.client.js";
 
 const router = Router();
@@ -23,5 +23,7 @@ const registerRateLimit = makeRateLimiter({ key: 'bb:rl:register', max: 5,  wind
 router.post("/register", registerRateLimit, register);
 router.post("/login", loginRateLimit, login);
 router.post("/google", googleLogin);
+router.post("/forgot-password", makeRateLimiter({ key: 'bb:rl:forgot', max: 3, windowSecs: 3600, message: 'Too many reset attempts. Try again in 1 hour.' }), forgotPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;

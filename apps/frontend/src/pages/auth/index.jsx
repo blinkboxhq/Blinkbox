@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, User as UserIcon, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import api from '../../lib/api';
 import { GoogleLogin } from '@react-oauth/google';
 import logo from '../../assets/logo.svg';
@@ -149,7 +149,15 @@ export default function Auth() {
   const [lockoutTimer, setLockoutTimer] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const resetToken = location.pathname === '/reset-password' ? searchParams.get('token') : null;
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -187,6 +195,21 @@ export default function Auth() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (lockoutTimer > 0) return;
+    if (resetToken) {
+      // Reset password mode
+      setIsLoading(true);
+      setError(null);
+      try {
+        await api.post('/api/auth/reset-password', { token: resetToken, password });
+        setResetDone(true);
+        setTimeout(() => navigate('/login'), 2500);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Reset failed. The link may have expired.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     setIsLoading(true);
     setError(null);
     const endpoint = isLogin ? '/login' : '/register';
@@ -201,6 +224,20 @@ export default function Auth() {
       setError(err.response?.data?.message || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    try {
+      await api.post('/api/auth/forgot-password', { email: forgotEmail });
+      setForgotSent(true);
+    } catch {
+      setForgotSent(true); // Always show success to prevent enumeration
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -307,32 +344,34 @@ export default function Auth() {
             <span className="text-sm font-bold tracking-[0.15em]">BLINKBOX</span>
           </Link>
 
-          {/* Mode toggle — clean pill */}
-          <div className="flex p-0.5 rounded-lg mb-7 bg-neutral-950 border border-neutral-900/80">
-            {['Log In', 'Register'].map((label, i) => {
-              const active = i === 0 ? isLogin : !isLogin;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => switchMode(i === 0)}
-                  className={`flex-1 py-2 text-[13px] font-semibold rounded-md transition-all duration-300 ${
-                    active ? 'bg-white text-black' : 'text-neutral-600 hover:text-neutral-400'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Mode toggle — hidden on reset-password route */}
+          {!resetToken && (
+            <div className="flex p-0.5 rounded-lg mb-7 bg-neutral-950 border border-neutral-900/80">
+              {['Log In', 'Register'].map((label, i) => {
+                const active = i === 0 ? isLogin : !isLogin;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => switchMode(i === 0)}
+                    className={`flex-1 py-2 text-[13px] font-semibold rounded-md transition-all duration-300 ${
+                      active ? 'bg-white text-black' : 'text-neutral-600 hover:text-neutral-400'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Heading — switches with animation */}
           <div key={`heading-${formKey}`} style={{ animation: 'slideSwitch 0.3s ease-out' }}>
             <h2 className="text-[22px] font-bold mb-1">
-              {isLogin ? 'Welcome back' : 'Create your account'}
+              {resetToken ? 'Set a new password' : isLogin ? 'Welcome back' : 'Create your account'}
             </h2>
             <p className="text-neutral-600 text-sm mb-6">
-              {isLogin ? 'Sign in to your workspace.' : 'Start automating in under a minute.'}
+              {resetToken ? 'Choose a strong password (8+ characters).' : isLogin ? 'Sign in to your workspace.' : 'Start automating in under a minute.'}
             </p>
           </div>
 
@@ -365,6 +404,7 @@ export default function Auth() {
                 </div>
               )}
 
+              {!resetToken && (
               <div className="field-enter" style={{ animationDelay: isLogin ? '0s' : '0.06s' }}>
                 <label className="block text-[11px] font-medium text-neutral-500 mb-1.5 uppercase tracking-wider">Email</label>
                 <div className="relative group">
@@ -377,6 +417,7 @@ export default function Auth() {
                   />
                 </div>
               </div>
+              )}
 
               <div className="field-enter" style={{ animationDelay: isLogin ? '0.06s' : '0.12s' }}>
                 <label className="block text-[11px] font-medium text-neutral-500 mb-1.5 uppercase tracking-wider">Password</label>
@@ -401,9 +442,9 @@ export default function Auth() {
             </div>
 
             {/* Forgot password link — login only */}
-            {isLogin && (
+            {isLogin && !resetToken && (
               <div className="mt-2 text-right">
-                <button type="button" className="text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors">
+                <button type="button" onClick={() => { setForgotOpen(true); setForgotSent(false); setForgotEmail(''); }} className="text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors">
                   Forgot password?
                 </button>
               </div>
@@ -420,16 +461,18 @@ export default function Auth() {
               }`}
             >
               {isLoading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Authenticating...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {resetToken ? 'Updating…' : 'Authenticating...'}</>
               ) : lockoutTimer > 0 ? (
                 <>Wait {lockoutTimer}s</>
               ) : (
-                <>{isLogin ? 'Sign In' : 'Create Account'} <ArrowRight className="w-4 h-4" /></>
+                <>{resetToken ? 'Set new password' : isLogin ? 'Sign In' : 'Create Account'} <ArrowRight className="w-4 h-4" /></>
               )}
             </button>
           </form>
 
-          {/* Divider */}
+          {/* Divider + Google — hidden on reset-password route */}
+          {!resetToken && (
+            <>
           <div className="my-5 relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-neutral-900" />
@@ -439,7 +482,6 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Google */}
           <div className="google-btn-wrapper flex justify-center rounded-lg overflow-hidden">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
@@ -451,6 +493,8 @@ export default function Auth() {
               text={isLogin ? 'signin_with' : 'signup_with'}
             />
           </div>
+            </>
+          )}
 
           {/* Footer */}
           <p className="mt-7 text-center text-[11px] text-neutral-800">
@@ -458,6 +502,60 @@ export default function Auth() {
           </p>
         </div>
       </div>
+
+      {/* Forgot password modal */}
+      {forgotOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setForgotOpen(false)}>
+          <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}
+            style={{ animation: 'scaleIn 0.15s ease-out' }}>
+            {forgotSent ? (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                <p className="text-[14px] font-semibold text-white">Check your inbox</p>
+                <p className="text-[12px] text-neutral-500 text-center">If an account exists for that email, we sent a reset link. It expires in 15 minutes.</p>
+                <button onClick={() => setForgotOpen(false)} className="mt-2 text-[12px] text-neutral-500 hover:text-neutral-300 transition-colors">Close</button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotSubmit} className="flex flex-col gap-4">
+                <div>
+                  <p className="text-[15px] font-semibold text-white mb-1">Reset your password</p>
+                  <p className="text-[12px] text-neutral-500">Enter your email and we'll send a reset link.</p>
+                </div>
+                <div className="flex items-center gap-2.5 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5">
+                  <Mail className="w-4 h-4 text-neutral-600 shrink-0" />
+                  <input
+                    type="email" required autoFocus
+                    value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="flex-1 bg-transparent text-[13px] text-white placeholder:text-neutral-700 focus:outline-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setForgotOpen(false)}
+                    className="flex-1 py-2 rounded-lg border border-neutral-800 text-[13px] text-neutral-500 hover:text-neutral-300 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={forgotLoading}
+                    className="flex-1 py-2 rounded-lg bg-white text-black text-[13px] font-semibold hover:bg-neutral-100 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                    {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send link'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reset password success overlay */}
+      {resetDone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+          <div className="flex flex-col items-center gap-3">
+            <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+            <p className="text-white text-[16px] font-semibold">Password updated!</p>
+            <p className="text-neutral-500 text-[13px]">Redirecting to sign in…</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

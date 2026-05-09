@@ -63,6 +63,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<RequireGuest><Landing /></RequireGuest>} />
             <Route path="/login" element={<RequireGuest><Auth /></RequireGuest>} />
+            <Route path="/reset-password" element={<Auth />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/workspace/:id" element={<RequireAuth><Workspace /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />

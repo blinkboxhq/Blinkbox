@@ -1,10 +1,21 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import User from "../../models/user.model.js";
 import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
-import { JWT_SECRET } from "../../config/env.js";
+import { JWT_SECRET, BACKEND_URL } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
+
+const RESET_TTL = 60 * 15; // 15 minutes
+
+function makeMailer() {
+  const from = process.env.ALERT_EMAIL_FROM;
+  const pass = process.env.ALERT_EMAIL_PASS;
+  if (!from || !pass) return null;
+  return nodemailer.createTransport({ service: "gmail", auth: { user: from, pass } });
+}
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -152,6 +163,68 @@ export async function register(req, res) {
       .status(500)
       .json({ message: "Internal server error during registration." });
   }
+}
+
+// ==========================================
+// FORGOT PASSWORD — sends reset link
+// ==========================================
+export async function forgotPassword(req, res) {
+  // Always return 200 to prevent email enumeration
+  const { email } = req.body;
+  if (!email || typeof email !== "string") return res.json({ success: true });
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.password) return res.json({ success: true }); // Google-only or not found
+
+    const token = crypto.randomBytes(32).toString("hex");
+    await redis.set(`bb:reset:${token}`, String(user._id), "EX", RESET_TTL);
+
+    const mailer = makeMailer();
+    if (mailer) {
+      const resetUrl = `${process.env.VITE_APP_URL || "https://blinkbox.net"}/reset-password?token=${token}`;
+      await mailer.sendMail({
+        from: `"BlinkBox" <${process.env.ALERT_EMAIL_FROM}>`,
+        to: user.email,
+        subject: "Reset your BlinkBox password",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;padding:32px 24px;background:#0a0a0b;color:#e4e4e7;border-radius:12px">
+            <h2 style="color:#fff;margin:0 0 16px">Reset your password</h2>
+            <p style="color:#a1a1aa;margin:0 0 24px;line-height:1.6">Click the button below to set a new password. This link expires in 15 minutes.</p>
+            <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#7c3aed;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
+            <p style="color:#52525b;margin:24px 0 0;font-size:12px">If you didn't request this, ignore this email — your password hasn't changed.</p>
+          </div>
+        `,
+      }).catch(err => console.error("[Auth] Reset email failed:", err.message));
+    }
+  } catch (err) {
+    console.error("[Auth] forgotPassword error:", err.message);
+  }
+
+  res.json({ success: true });
+}
+
+// ==========================================
+// RESET PASSWORD — validates token, sets new password
+// ==========================================
+export async function resetPassword(req, res) {
+  const { token, password } = req.body;
+  if (!token || !password || typeof password !== "string" || password.length < 8) {
+    return res.status(400).json({ message: "Token and password (min 8 chars) are required." });
+  }
+
+  const key = `bb:reset:${token}`;
+  const userId = await redis.get(key);
+  if (!userId) return res.status(400).json({ message: "This reset link has expired or already been used." });
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(400).json({ message: "Account not found." });
+
+  user.password = await bcrypt.hash(password, 12);
+  await user.save();
+  await redis.del(key);
+
+  res.json({ success: true, message: "Password updated. You can now sign in." });
 }
 
 // ==========================================
