@@ -561,6 +561,8 @@ export default function Dashboard() {
                         const sc = { executed: 'bg-emerald-500', completed: 'bg-emerald-500', failed: 'bg-red-500', pending: 'bg-yellow-500', cancelled: 'bg-neutral-600' };
                         const durationMs = ex.completedAt && ex.createdAt ? new Date(ex.completedAt) - new Date(ex.createdAt) : null;
                         const durationStr = durationMs === null ? '—' : durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(1)}s`;
+                        const isFailed = ex.status === 'failed';
+                        const errPreview = isFailed && ex.errorMessage ? ex.errorMessage.split(' — ').pop()?.slice(0, 80) : null;
                         return (
                           <tr
                             key={ex._id}
@@ -569,9 +571,12 @@ export default function Dashboard() {
                             style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}
                           >
                             <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-1.5">
-                                <span className={`w-1.5 h-1.5 rounded-full ${sc[ex.status] || 'bg-neutral-700'}`} />
-                                <span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span>
+                              <div className="flex items-center gap-1.5" title={ex.errorMessage || ''}>
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sc[ex.status] || 'bg-neutral-700'}`} />
+                                <div>
+                                  <span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span>
+                                  {errPreview && <p className="text-[10px] text-red-400/70 truncate max-w-[160px] mt-0.5">{errPreview}</p>}
+                                </div>
                               </div>
                             </td>
                             <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.automationName || '—'}</td>
