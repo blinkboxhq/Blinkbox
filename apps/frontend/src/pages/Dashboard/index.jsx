@@ -213,21 +213,18 @@ export default function Dashboard() {
     f(); const iv = setInterval(f, 5000); return () => clearInterval(iv);
   }, [activeTab, user]);
 
-  // Fetch execution logs
+  // Fetch execution logs — single query across all workflows
   useEffect(() => {
-    if (activeTab !== 'logs' || !workflows.length) return;
+    if (activeTab !== 'logs') return;
     (async () => {
       setExecLoading(true);
       try {
-        const all = [];
-        const res = await Promise.allSettled(workflows.slice(0, 10).map((w) => api.get(`/api/execution/automation/${w._id || w.id}`)));
-        for (const r of res) if (r.status === 'fulfilled') all.push(...(r.value.data?.executions || []));
-        all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setExecutions(all.slice(0, 50));
+        const res = await api.get('/api/execution/recent', { params: { limit: 50 } });
+        setExecutions(res.data?.executions || []);
       } catch {}
       setExecLoading(false);
     })();
-  }, [activeTab, workflows]);
+  }, [activeTab]);
 
   const handleBrianSubmit = async (prompt, messageHistory) => {
     try {
@@ -522,7 +519,6 @@ export default function Dashboard() {
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Workflow</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Nodes</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Duration</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">When</th>
                     </tr></thead>
@@ -531,12 +527,11 @@ export default function Dashboard() {
                         const sc = { executed: 'bg-emerald-500', completed: 'bg-emerald-500', failed: 'bg-red-500', pending: 'bg-yellow-500', cancelled: 'bg-neutral-600' };
                         const durationMs = ex.completedAt && ex.createdAt ? new Date(ex.completedAt) - new Date(ex.createdAt) : null;
                         const durationStr = durationMs === null ? '—' : durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(1)}s`;
-                        const wf = workflows.find(w => String(w._id || w.id) === String(ex.automationId));
                         return (
                           <tr
                             key={ex._id}
-                            onClick={() => wf && navigate(`/workspace/${wf._id || wf.id}`)}
-                            className={`border-t border-zinc-800/50 transition-colors ${wf ? 'hover:bg-white/[0.02] cursor-pointer' : ''}`}
+                            onClick={() => ex.automationId && navigate(`/workspace/${ex.automationId}`)}
+                            className="border-t border-zinc-800/50 transition-colors hover:bg-white/[0.02] cursor-pointer"
                             style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}
                           >
                             <td className="px-4 py-2.5">
@@ -544,13 +539,9 @@ export default function Dashboard() {
                                 <span className={`w-1.5 h-1.5 rounded-full ${sc[ex.status] || 'bg-neutral-700'}`} />
                                 <span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span>
                               </div>
-                              {ex.status === 'failed' && ex.cursors?.find(c => c.errorMessage) && (
-                                <p className="text-[10px] text-red-500/70 mt-0.5 truncate max-w-[160px]">{ex.cursors.find(c => c.errorMessage)?.errorMessage}</p>
-                              )}
                             </td>
-                            <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.name || '—'}</td>
+                            <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.automationName || '—'}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{ex.trigger || 'manual'}</td>
-                            <td className="px-4 py-2.5 text-[11px] text-neutral-600">{ex.cursors?.length || 0}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600 font-mono">{durationStr}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(ex.createdAt)}</td>
                           </tr>

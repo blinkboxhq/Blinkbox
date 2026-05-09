@@ -149,6 +149,40 @@ export async function listExecutions(req, res) {
 }
 
 /**
+ * LIST RECENT EXECUTIONS — across all of the user's workflows, single query.
+ * Used by the dashboard Logs tab. Returns up to 50 most recent executions,
+ * with automationName joined so the client doesn't need N+1 fetches.
+ */
+export async function listRecentExecutions(req, res) {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const executions = await Execution.aggregate([
+      { $match: { workspaceId: req.user.id } },
+      { $sort: { createdAt: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "automations",
+          localField: "automationId",
+          foreignField: "_id",
+          pipeline: [{ $project: { name: 1 } }],
+          as: "_wf",
+        },
+      },
+      {
+        $addFields: {
+          automationName: { $ifNull: [{ $arrayElemAt: ["$_wf.name", 0] }, "Deleted workflow"] },
+        },
+      },
+      { $project: { _wf: 0, cursors: 0, events: 0 } },
+    ]);
+    res.json({ success: true, executions });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to load executions." });
+  }
+}
+
+/**
  * 🛑 CANCEL EXECUTION (HARD KILL)
  * Marks all pending/waiting cursors as cancelled so workers drop them.
  */
