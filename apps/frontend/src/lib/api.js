@@ -7,14 +7,23 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// Attach JWT token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("blinkbox_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("blinkbox_token");
+      localStorage.removeItem("blinkbox_user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(err);
+  },
+);
 
 export { API_URL };
 export default api;
