@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verifyToken } from "../auth/auth.middleware.js";
+import Automation from "../../models/automation.model.js";
 import {
   workspaceOverview,
   automationHistory,
@@ -36,6 +37,8 @@ router.get("/daily", verifyToken, async (req, res) => {
 router.get("/automation/:id/history", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const owns = await Automation.exists({ _id: id, workspaceId: req.user.id });
+    if (!owns) return res.status(404).json({ error: "Not found" });
     const limit = Math.min(Number(req.query.limit) || 30, 100);
     const data = await automationHistory(id, limit);
     res.json(data);
@@ -48,6 +51,8 @@ router.get("/automation/:id/history", verifyToken, async (req, res) => {
 router.get("/automation/:id/node-stats", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const owns = await Automation.exists({ _id: id, workspaceId: req.user.id });
+    if (!owns) return res.status(404).json({ error: "Not found" });
     const data = await nodeStats(id);
     res.json(data);
   } catch (err) {
