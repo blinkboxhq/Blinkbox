@@ -49,7 +49,7 @@ export default function BrianPanel({ width, onResizeStart }) {
 
   const WELCOME = {
     id: 'welcome', role: 'brian',
-    text: "Hey! Describe what you want to automate and I'll build the workflow.",
+    text: "Hey! I'm Brian — tell me what you want to automate and I'll build it. You can also ask me questions or describe your setup and I'll help you figure out the best approach.",
     flow: null,
   };
 
@@ -89,7 +89,7 @@ export default function BrianPanel({ width, onResizeStart }) {
     try {
       const allMsgs = [...messages, userMsg].filter(m => m.id !== 'welcome');
       const history = allMsgs.map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
+        role: m.role === 'user' ? 'user' : 'assistant',
         content: m.text,
       }));
       const result = await callBrian(history);
@@ -141,7 +141,7 @@ export default function BrianPanel({ width, onResizeStart }) {
             </div>
             <span className="text-[13px] font-semibold text-white">Brian</span>
             <span className="text-[9px] font-mono text-neutral-700 bg-neutral-900 px-1.5 py-0.5 rounded">
-              gemini-2.0-flash
+              claude-sonnet-4-6
             </span>
           </div>
           <div className="flex items-center gap-1">
