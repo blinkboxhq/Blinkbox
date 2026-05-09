@@ -291,7 +291,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch {} setIsTogglingPause(false); };
+  const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch { toast.error('Failed to toggle worker status'); } setIsTogglingPause(false); };
 
   const handleSaveProfile = async () => {
     if (!profileName.trim() || profileSaving) return;

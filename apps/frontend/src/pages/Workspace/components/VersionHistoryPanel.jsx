@@ -26,7 +26,7 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
     setLoading(true);
     api.get(`/api/automation/${automationId}/versions`)
       .then((res) => setVersions(res.data.versions ?? []))
-      .catch(() => setVersions([]))
+      .catch(() => { setVersions([]); toast.error('Failed to load version history'); })
       .finally(() => setLoading(false));
   }, [isOpen, automationId]);
 

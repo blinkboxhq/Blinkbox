@@ -208,23 +208,28 @@ export async function forgotPassword(req, res) {
 // RESET PASSWORD — validates token, sets new password
 // ==========================================
 export async function resetPassword(req, res) {
-  const { token, password } = req.body;
-  if (!token || !password || typeof password !== "string" || password.length < 8) {
-    return res.status(400).json({ message: "Token and password (min 8 chars) are required." });
+  try {
+    const { token, password } = req.body;
+    if (!token || !password || typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ message: "Token and password (min 8 chars) are required." });
+    }
+
+    const key = `bb:reset:${token}`;
+    const userId = await redis.get(key);
+    if (!userId) return res.status(400).json({ message: "This reset link has expired or already been used." });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ message: "Account not found." });
+
+    user.password = await bcrypt.hash(password, 12);
+    await user.save();
+    await redis.del(key);
+
+    res.json({ success: true, message: "Password updated. You can now sign in." });
+  } catch (err) {
+    console.error("[Auth] resetPassword error:", err.message);
+    res.status(500).json({ message: "Failed to reset password. Please try again." });
   }
-
-  const key = `bb:reset:${token}`;
-  const userId = await redis.get(key);
-  if (!userId) return res.status(400).json({ message: "This reset link has expired or already been used." });
-
-  const user = await User.findById(userId);
-  if (!user) return res.status(400).json({ message: "Account not found." });
-
-  user.password = await bcrypt.hash(password, 12);
-  await user.save();
-  await redis.del(key);
-
-  res.json({ success: true, message: "Password updated. You can now sign in." });
 }
 
 // ==========================================

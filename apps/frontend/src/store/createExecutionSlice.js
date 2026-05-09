@@ -316,7 +316,7 @@ function _subscribeToExecution(set, get, executionId, automationId) {
           }
           set({ lastRunOutputs: outputs });
         }
-      }).catch(() => {});
+      }).catch(() => { toast.error('Failed to load execution logs'); });
 
       if (data.status === "executed") {
         toast.success("Execution completed successfully.");

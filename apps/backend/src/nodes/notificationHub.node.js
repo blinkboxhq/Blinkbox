@@ -20,6 +20,19 @@ import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
 
+function assertSafeUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = u.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
+    /\.internal$/, /\.local$/,
+  ];
+  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
+}
+
 function hashDedup(message, channels) {
   return crypto.createHash("md5").update(`${message}:${JSON.stringify(channels)}`).digest("hex");
 }
@@ -56,6 +69,7 @@ async function sendTelegram(ch, message, workspaceId) {
 async function sendDiscord(ch, message) {
   const webhookUrl = ch.webhookUrl;
   if (!webhookUrl) return { success: false, error: "Discord: webhookUrl is required.", skipped: true };
+  assertSafeUrl(webhookUrl);
   await axios.post(webhookUrl, { content: message }, { timeout: 15000 });
   return { type: "discord", success: true };
 }
