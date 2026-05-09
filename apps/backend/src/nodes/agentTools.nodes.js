@@ -1543,6 +1543,7 @@ export const tool_ssh = {
     ["host", "username", "command"]
   ),
   async run(config, args, ctx) {
+    assertShellToolsEnabled();
     let ssh2;
     try {
       ssh2 = await import("ssh2");

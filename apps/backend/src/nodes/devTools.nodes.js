@@ -65,6 +65,7 @@ export const gitlab = {
     const token = config.token || (config.credentialId && await getKey(config.credentialId, context?.workspaceId, "GitLab"));
     if (!token) throw new Error("gitlab: GitLab token required.");
     if (!projectId) return { success: false, error: "gitlab: 'projectId' is required.", skipped: true };
+    assertSafeUrl(baseUrl);
 
     const headers = { "PRIVATE-TOKEN": token };
     const api = `${baseUrl}/api/v4/projects/${encodeURIComponent(projectId)}`;
