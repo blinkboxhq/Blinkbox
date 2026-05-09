@@ -132,14 +132,18 @@ export default function NotificationBell() {
   }, [open]);
 
   const handleAccept = useCallback(async (inviteId) => {
-    await api.post(`/api/invites/${inviteId}/accept`);
-    setInvites(prev => prev.filter(i => i._id !== inviteId));
-    toast.success('You joined the workflow!');
+    try {
+      await api.post(`/api/invites/${inviteId}/accept`);
+      setInvites(prev => prev.filter(i => i._id !== inviteId));
+      toast.success('You joined the workflow!');
+    } catch { toast.error('Failed to accept invite'); }
   }, []);
 
   const handleReject = useCallback(async (inviteId) => {
-    await api.post(`/api/invites/${inviteId}/reject`);
-    setInvites(prev => prev.filter(i => i._id !== inviteId));
+    try {
+      await api.post(`/api/invites/${inviteId}/reject`);
+      setInvites(prev => prev.filter(i => i._id !== inviteId));
+    } catch { toast.error('Failed to decline invite'); }
   }, []);
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Check, X, ChevronRight, AlertTriangle, Zap, Globe, Code2, Mail, GitBranch,
   Database, Cpu, Clock, Box, Link, Shield, KeyRound, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
 
 // ── Which nodes need OAuth vs API key ────────────────────────────────────────
@@ -93,7 +94,7 @@ function ApiKeyPrompt({ nodeLabel, onSaved }) {
       });
       setDone(true);
       onSaved?.(data.credential);
-    } catch {}
+    } catch { toast.error('Failed to save credential'); }
     setSaving(false);
   };
 

@@ -464,9 +464,10 @@ export async function renameAutomation(req, res) {
   try {
     const { name } = req.body;
     if (!name || typeof name !== "string" || name.trim().length < 1) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Name is required." });
+      return res.status(400).json({ success: false, message: "Name is required." });
+    }
+    if (name.trim().length > 200) {
+      return res.status(400).json({ success: false, message: "Name must be under 200 characters." });
     }
     const automation = await Automation.findOneAndUpdate(
       { _id: req.params.id, workspaceId: req.user.id },

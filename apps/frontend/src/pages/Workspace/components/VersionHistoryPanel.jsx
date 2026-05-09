@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, RotateCcw, Clock, ChevronRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import api from "../../../lib/api";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -36,10 +37,11 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
       if (res.data.automation) {
         const { nodes, edges } = res.data.automation;
         setGraph(nodes ?? [], edges ?? []);
+      toast.success('Version restored');
       }
       onClose();
     } catch {
-      /* silently fail */
+      toast.error('Failed to restore version');
     } finally {
       setRestoring(null);
       setConfirmId(null);
