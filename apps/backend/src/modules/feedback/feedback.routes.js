@@ -5,6 +5,10 @@ import { redis } from "../../infra/redis.client.js";
 
 const router = express.Router();
 
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 async function feedbackRateLimit(req, res, next) {
   try {
     const key = `bb:rl:feedback:${req.user.id}`;
@@ -28,11 +32,11 @@ router.post("/", verifyToken, feedbackRateLimit, async (req, res) => {
   const html = `
     <div style="font-family:sans-serif;max-width:600px">
       <h2 style="color:#7c3aed">Blinkbox Beta Feedback</h2>
-      <p><strong>Type:</strong> ${type}</p>
-      <p><strong>From:</strong> ${user.email || "unknown"} (${user.id})</p>
-      ${page ? `<p><strong>Page:</strong> ${page}</p>` : ""}
+      <p><strong>Type:</strong> ${esc(type)}</p>
+      <p><strong>From:</strong> ${esc(user.email || "unknown")} (${esc(user.id)})</p>
+      ${page ? `<p><strong>Page:</strong> ${esc(page)}</p>` : ""}
       <hr>
-      <p style="white-space:pre-wrap">${message.trim()}</p>
+      <p style="white-space:pre-wrap">${esc(message.trim())}</p>
     </div>
   `;
 
