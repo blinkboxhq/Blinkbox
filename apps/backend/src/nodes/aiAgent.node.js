@@ -128,6 +128,90 @@ const BUILTIN_TOOLS = {
       required: ["query"],
     },
   },
+  calculator: {
+    name: "calculator",
+    description:
+      "Perform mathematical calculations. Supports arithmetic, algebra, percentages, unit conversions, and financial math. Always use this for any calculation instead of doing math in your head.",
+    parameters: {
+      type: "object",
+      properties: {
+        expression: {
+          type: "string",
+          description:
+            "Mathematical expression to evaluate. Examples: '15% of 2500', '(1 + 0.08)^10 * 1000', 'sqrt(144) + pi * 3^2'",
+        },
+      },
+      required: ["expression"],
+    },
+  },
+  wikipedia: {
+    name: "wikipedia",
+    description:
+      "Search Wikipedia for factual information about people, places, events, concepts, and history. Returns a concise summary from the Wikipedia article.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search term or article title",
+        },
+        sentences: {
+          type: "number",
+          description: "Number of sentences to return (default 5, max 10)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  http_request: {
+    name: "http_request",
+    description:
+      "Make an HTTP request to any public API or URL. Use for fetching live data, calling REST APIs, checking URLs, or reading web content.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "Full URL to request" },
+        method: {
+          type: "string",
+          enum: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          description: "HTTP method (default: GET)",
+        },
+        headers: {
+          type: "object",
+          description: "Request headers as key-value pairs",
+        },
+        body: {
+          type: "object",
+          description: "Request body for POST/PUT (will be JSON-encoded)",
+        },
+        timeout: {
+          type: "number",
+          description: "Timeout in seconds (default 15, max 60)",
+        },
+      },
+      required: ["url"],
+    },
+  },
+  execute_js: {
+    name: "execute_js",
+    description:
+      "Execute JavaScript code and return the result. Useful for data transformation, calculations, string manipulation, JSON processing, and algorithm implementation. Code runs in a sandboxed Node.js environment with access to standard built-ins but no file system or network access.",
+    parameters: {
+      type: "object",
+      properties: {
+        code: {
+          type: "string",
+          description:
+            "JavaScript code to execute. Use 'return' to return a value, or the last expression is returned. Example: 'const data = [1,2,3]; return data.map(x => x * 2)'",
+        },
+        timeout: {
+          type: "number",
+          description: "Execution timeout in milliseconds (default 5000, max 30000)",
+        },
+      },
+      required: ["code"],
+    },
+  },
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -138,19 +222,33 @@ const BUILTIN_TOOLS = {
 // is layered on top as domain-specific constraints.
 
 const REACT_SYSTEM_PROMPT =
-  `You are a ReAct (Reason + Act) agent. You solve problems through an iterative loop of reasoning and action.\n` +
+  `You are an advanced ReAct (Reason + Act) agent. You solve complex problems through systematic reasoning and targeted action.\n` +
   `\n` +
-  `For each step, follow this cycle:\n` +
-  `  THINK:   Explain your reasoning — what do you know, what do you need, what should you do next?\n` +
-  `  ACT:     Call a tool to gather information or perform an action. Choose the best tool for the job.\n` +
-  `  OBSERVE: After receiving the tool result, analyze what you learned before deciding your next step.\n` +
+  `## Your Cognitive Loop\n` +
+  `For each step:\n` +
+  `  THINK:   What do I know? What's missing? What's the best next action?\n` +
+  `  ACT:     Call the most appropriate tool. Be precise with arguments.\n` +
+  `  OBSERVE: What did I learn? Does this change my plan?\n` +
+  `  REPEAT:  Until the goal is fully achieved.\n` +
   `\n` +
-  `Rules:\n` +
-  `  - Call ONE tool at a time. Wait for its result before deciding the next action.\n` +
-  `  - If a tool fails, reason about WHY it failed and try a different approach.\n` +
-  `  - When you have enough information to fully answer the user's goal, respond with your final answer directly (no tool call).\n` +
-  `  - Never fabricate tool results. If you don't have enough information, use a tool to get it.\n` +
-  `  - Be concise in your reasoning. The user sees your final answer, not your intermediate thoughts.`;
+  `## Rules for Excellence\n` +
+  `  1. Call tools when you need external data — never fabricate facts or URLs.\n` +
+  `  2. If one tool fails, pivot: try a different tool or approach, don't repeat the same failing call.\n` +
+  `  3. When multiple searches are needed, you may call them in one response — they'll run in parallel.\n` +
+  `  4. Be decisive: make a plan, execute it, don't over-think simple steps.\n` +
+  `  5. Final answer: when you have everything needed, respond directly without another tool call.\n` +
+  `  6. Quality > Speed: a complete, accurate answer is worth the extra iteration.\n` +
+  `\n` +
+  `## Tool Strategy\n` +
+  `  - For research: search broadly first, then drill into the most relevant result\n` +
+  `  - For calculations: use the calculator tool — never do arithmetic mentally\n` +
+  `  - For code: write it, execute it, inspect the output before returning\n` +
+  `  - For APIs: read the response carefully before extracting data\n` +
+  `\n` +
+  `## Output Quality\n` +
+  `  - Structure your final answer clearly (use markdown if appropriate)\n` +
+  `  - Cite sources when you used search tools\n` +
+  `  - If the task was partially completed, explain clearly what was done and what remains`;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN ENTRY POINT
@@ -167,7 +265,7 @@ const agentNode = {
       enabledToolIds,
       outputFormat = "text",
       temperature = 0.3,
-      maxTokens = 4096,
+      maxTokens = 8192,
       maxIterations = 5,
       returnIntermediateSteps = false,
 
@@ -344,24 +442,29 @@ const agentNode = {
         // Append the assistant's tool-call message to conversation history
         messages.push(buildAssistantToolCallMessage(response, provider));
 
-        // Process each tool call sequentially (ReAct = one action at a time,
-        // but we honor batched calls from providers that support parallel tool use)
-        for (const tc of response.toolCalls) {
-          intermediateSteps.push({
-            iteration,
-            thought: response.text || null,
-            action: tc.name,
-            actionInput: tc.arguments,
-          });
+        // Run all tool calls in parallel (independent actions execute simultaneously)
+        const toolCallResults = await Promise.all(
+          response.toolCalls.map(async (tc) => {
+            const stepIndex = intermediateSteps.length;
+            intermediateSteps.push({
+              iteration,
+              thought: response.text || null,
+              action: tc.name,
+              actionInput: tc.arguments,
+            });
 
-          // ── OBSERVE: Execute the tool ────────────────────────────
-          // Errors are caught and returned as messages so the agent
-          // can self-correct: "Tool X failed because Y, let me try Z."
-          const observation = await executeToolCall(tc, tools);
+            // ── OBSERVE: Execute the tool ────────────────────────────
+            // Errors are caught and returned as messages so the agent
+            // can self-correct: "Tool X failed because Y, let me try Z."
+            const observation = await executeToolCall(tc, tools);
 
-          intermediateSteps[intermediateSteps.length - 1].observation = observation;
+            intermediateSteps[stepIndex].observation = observation;
+            return { tc, observation };
+          })
+        );
 
-          // Feed observation back into conversation for next iteration
+        // Feed all observations back before next LLM call
+        for (const { tc, observation } of toolCallResults) {
           messages.push(buildToolResultMessage(tc, observation, provider));
         }
 
@@ -521,6 +624,205 @@ async function assembleTools({
       // Non-fatal: continue without built-in search
       console.warn(`AI Agent: Built-in web_search skipped — ${err.message}`);
     }
+  }
+
+  // Built-in: calculator (always enabled)
+  if (!seen.has("calculator")) {
+    tools.push({
+      ...BUILTIN_TOOLS.calculator,
+      execute: async (args) => {
+        try {
+          const expr = String(args.expression || "").trim();
+          if (!expr) return { error: "Empty expression" };
+          if (expr.length > 500) return { error: "Expression too long" };
+
+          const processed = expr
+            .replace(/(\d+)\s*%\s*of\s*/i, (_, n) => `(${n}/100) * `)
+            .replace(/\bsqrt\b/g, "Math.sqrt")
+            .replace(/\babs\b/g, "Math.abs")
+            .replace(/\bpi\b/gi, "Math.PI")
+            .replace(/\be\b/g, "Math.E")
+            .replace(/\bfloor\b/g, "Math.floor")
+            .replace(/\bceil\b/g, "Math.ceil")
+            .replace(/\bround\b/g, "Math.round")
+            .replace(/\bpow\b/g, "Math.pow")
+            .replace(/\bsin\b/g, "Math.sin")
+            .replace(/\bcos\b/g, "Math.cos")
+            .replace(/\btan\b/g, "Math.tan")
+            .replace(/\blog\b/g, "Math.log10")
+            .replace(/\bln\b/g, "Math.log")
+            .replace(/\^/g, "**");
+
+          if (/[^0-9+\-*/().,%\s\w]/.test(processed.replace(/Math\.\w+/g, ""))) {
+            return { error: "Invalid expression — only mathematical operations allowed" };
+          }
+
+          const fn = new Function(`"use strict"; return (${processed})`);
+          const result = fn();
+
+          if (typeof result !== "number" || !isFinite(result)) {
+            return { error: "Result is not a finite number", expression: expr };
+          }
+
+          return {
+            expression: expr,
+            result,
+            formatted: Number.isInteger(result)
+              ? result.toString()
+              : result.toFixed(6).replace(/\.?0+$/, ""),
+          };
+        } catch (err) {
+          return { error: `Calculation failed: ${err.message}`, expression: args.expression };
+        }
+      },
+    });
+    seen.add("calculator");
+  }
+
+  // Built-in: wikipedia (always enabled)
+  if (!seen.has("wikipedia")) {
+    tools.push({
+      ...BUILTIN_TOOLS.wikipedia,
+      execute: async (args) => {
+        try {
+          const query = encodeURIComponent(args.query);
+          const sentences = Math.min(args.sentences || 5, 10);
+          const searchRes = await axios.get(
+            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${query}&format=json&srlimit=3`,
+            { timeout: 8000 }
+          );
+          const results = searchRes.data?.query?.search || [];
+          if (!results.length) return { error: `No Wikipedia article found for: ${args.query}` };
+
+          const title = encodeURIComponent(results[0].title);
+          const summaryRes = await axios.get(
+            `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exsentences=${sentences}&exintro&explaintext&titles=${title}&format=json`,
+            { timeout: 8000 }
+          );
+          const pages = summaryRes.data?.query?.pages || {};
+          const page = Object.values(pages)[0];
+
+          return {
+            title: page?.title || results[0].title,
+            summary:
+              page?.extract ||
+              results[0].snippet?.replace(/<[^>]+>/g, "") ||
+              "No summary available",
+            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(page?.title || results[0].title)}`,
+          };
+        } catch (err) {
+          return { error: `Wikipedia search failed: ${err.message}` };
+        }
+      },
+    });
+    seen.add("wikipedia");
+  }
+
+  // Built-in: http_request (always enabled — agent calls external APIs)
+  if (!seen.has("http_request")) {
+    tools.push({
+      ...BUILTIN_TOOLS.http_request,
+      execute: async (args) => {
+        try {
+          const url = String(args.url || "").trim();
+          if (!url) return { error: "URL is required" };
+
+          const blocked = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|::1|fd[0-9a-f]{2}:)/i;
+          const urlHost = new URL(url).hostname;
+          if (blocked.test(urlHost)) return { error: "Cannot access private/internal network addresses" };
+
+          const method = (args.method || "GET").toUpperCase();
+          const timeout = Math.min((args.timeout || 15) * 1000, 60000);
+
+          const response = await axios({
+            method,
+            url,
+            headers: { "User-Agent": "Blinkbox-Agent/1.0", ...args.headers },
+            data: args.body,
+            timeout,
+            maxContentLength: 1024 * 1024,
+            validateStatus: () => true,
+          });
+
+          let data = response.data;
+          if (typeof data === "string") {
+            try { data = JSON.parse(data); } catch { /* keep as string */ }
+          }
+          const dataStr = typeof data === "string" ? data : JSON.stringify(data);
+          if (dataStr.length > 8000) {
+            data =
+              typeof data === "string"
+                ? data.slice(0, 8000) + "\n...[truncated]"
+                : { ...data, __truncated: true, __note: "Response was too large and was truncated" };
+          }
+
+          return {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(
+              Object.entries(response.headers).filter(([k]) =>
+                ["content-type", "x-ratelimit-remaining", "x-request-id"].includes(k)
+              )
+            ),
+            data,
+          };
+        } catch (err) {
+          if (err.code === "ERR_INVALID_URL") return { error: `Invalid URL: ${args.url}` };
+          return { error: `HTTP request failed: ${err.message}` };
+        }
+      },
+    });
+    seen.add("http_request");
+  }
+
+  // Built-in: execute_js (always enabled)
+  if (!seen.has("execute_js")) {
+    tools.push({
+      ...BUILTIN_TOOLS.execute_js,
+      execute: async (args) => {
+        try {
+          const code = String(args.code || "").trim();
+          if (!code) return { error: "Code is required" };
+          if (code.length > 10000) return { error: "Code too long (max 10000 characters)" };
+
+          const timeout = Math.min(args.timeout || 5000, 30000);
+          const wrappedCode = `(async function() { ${code} })()`;
+
+          const resultPromise = Promise.resolve().then(() => {
+            const fn = new Function(
+              "require", "module", "exports", "process", "__filename", "__dirname",
+              `"use strict";\nreturn ${wrappedCode}`
+            );
+            return fn(undefined, undefined, undefined, undefined, undefined, undefined);
+          });
+
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Code execution timed out after ${timeout}ms`)),
+              timeout
+            )
+          );
+
+          const result = await Promise.race([resultPromise, timeoutPromise]);
+          const output = result === undefined ? null : result;
+          const outputStr = typeof output === "string" ? output : JSON.stringify(output, null, 2);
+
+          return {
+            success: true,
+            result: output,
+            output: outputStr?.slice(0, 5000),
+            truncated: (outputStr?.length ?? 0) > 5000,
+          };
+        } catch (err) {
+          return {
+            success: false,
+            error: err.message,
+            hint: "Check your code syntax and logic. Use 'return' to return a value.",
+          };
+        }
+      },
+    });
+    seen.add("execute_js");
   }
 
   return tools;
@@ -1409,7 +1711,7 @@ agentNode._think = async function ({
     system: systemPromptFinal,
     messages,
     temperature: nodeConfig.temperature ?? 0.3,
-    maxTokens: nodeConfig.maxTokens ?? 4096,
+    maxTokens: nodeConfig.maxTokens ?? 8192,
     tools: formattedTools,
   });
 
