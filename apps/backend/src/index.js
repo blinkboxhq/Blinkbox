@@ -62,4 +62,13 @@ async function bootstrap() {
   }
 }
 
+process.on("unhandledRejection", (reason) => {
+  console.error("[UnhandledRejection]", reason instanceof Error ? reason.stack : reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[UncaughtException]", err.stack || err.message);
+  process.exit(1);
+});
+
 bootstrap();
