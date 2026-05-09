@@ -163,20 +163,20 @@ function CanvasPreview() {
 // ── Data ────────────────────────────────────────────────────────────────────
 const FEATURES = [
   {
+    icon: Sparkles, title: 'Brian AI Builder',
+    description: 'Describe an automation in plain English. Brian calls Claude Sonnet with a 70-node knowledge base and builds the full workflow — real configs, real variable chaining — in seconds.',
+  },
+  {
     icon: Bot, title: 'AI Agents',
-    description: 'Drop an LLM into any workflow. It reads incoming data, reasons about it, and outputs structured results.',
+    description: 'Drop an LLM into any workflow. It reads incoming data, reasons about it, classifies, extracts, and outputs structured results.',
   },
   {
     icon: Search, title: 'Headless Scraping',
-    description: 'Full Chromium browser pool. Defeats anti-bot, renders JavaScript, extracts what you need.',
+    description: 'Full Chromium browser pool. Defeats anti-bot, renders JavaScript, extracts exactly what you need.',
   },
   {
     icon: GitBranch, title: 'Logic Routing',
-    description: 'If/else, switch, loops — built visually. Drag an edge, set a condition, done.',
-  },
-  {
-    icon: Globe, title: 'API Connector',
-    description: 'Hit any REST endpoint. Credentials auto-injected from your encrypted vault.',
+    description: 'If/else, switch, loops, merge — built visually. Drag an edge, set a condition, done.',
   },
   {
     icon: Cpu, title: 'Code Sandbox',
@@ -184,7 +184,7 @@ const FEATURES = [
   },
   {
     icon: Shield, title: 'Encrypted Vault',
-    description: 'AES-256-GCM encryption for every secret. Keys never leave the server decrypted.',
+    description: 'AES-256-GCM encryption for every secret. Keys never leave the server decrypted. 250+ pre-built integrations.',
   },
 ];
 
@@ -366,6 +366,10 @@ export default function Landing() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live
               </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide uppercase bg-violet-500/[0.08] border border-violet-500/[0.15] text-violet-400">
+                <Bot className="w-3 h-3" />
+                AI-native
+              </span>
             </div>
 
             {/* Headline */}
@@ -376,8 +380,8 @@ export default function Landing() {
             {/* Sub */}
             <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-400">
               BlinkBox is a visual automation engine. Drag nodes, wire logic,
-              deploy AI agents — ship workflows that used to take a
-              sprint in an afternoon.
+              deploy AI agents — or just tell <span className="text-violet-400 font-medium">Brian AI</span> what you need and watch it build
+              the workflow for you.
             </p>
 
             {/* CTA */}
