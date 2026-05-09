@@ -28,6 +28,19 @@
 import axios from "axios";
 import { redis } from "../infra/redis.client.js";
 
+function assertSafeUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = u.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
+    /\.internal$/, /\.local$/,
+  ];
+  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // REGISTRY CORE
 // ═════════════════════════════════════════════════════════════════════════════
@@ -187,10 +200,8 @@ register({
       return { error: true, message: "http_request: 'url' is required" };
     }
 
-    // Block private/internal network access
-    const blocked = /^https?:\/\/(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.0\.0\.0|\[::1\])/i;
-    if (blocked.test(url)) {
-      return { error: true, message: "http_request: Requests to private/internal networks are blocked." };
+    try { assertSafeUrl(url); } catch (e) {
+      return { error: true, message: `http_request: ${e.message}` };
     }
 
     const config = {
@@ -813,6 +824,9 @@ register({
   },
   execute: async (args, ctx) => {
     if (!args.url) return { error: true, message: "summarize_url: url is required." };
+    try { assertSafeUrl(args.url); } catch (e) {
+      return { error: true, message: `summarize_url: ${e.message}` };
+    }
     try {
       // Fetch page content
       const fetchRes = await axios.get(args.url, {
