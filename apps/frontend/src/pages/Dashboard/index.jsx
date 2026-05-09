@@ -417,7 +417,10 @@ export default function Dashboard() {
                               {wf.status === 'active' ? 'Active' : 'Draft'}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-[11px] text-[#444] capitalize">{wf.trigger || 'manual'}</td>
+                          <td className="px-4 py-2.5 text-[11px] text-[#444] capitalize">
+                            {wf.trigger || 'manual'}
+                            {wf.nodeCount > 0 && <span className="ml-1.5 text-[#333]">· {wf.nodeCount}n</span>}
+                          </td>
                           <td className="px-4 py-2.5 text-[11px] text-[#444]">{timeAgo(wf.updatedAt)}</td>
                           <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
                           <td className="px-3 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
@@ -470,7 +473,12 @@ export default function Dashboard() {
                       </div>
                       <p className="text-[11px] text-[#555] mb-auto line-clamp-2 min-h-[2rem] leading-relaxed">{wf.description || 'No description'}</p>
                       <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
-                        <span className="text-[10px] text-[#444] capitalize">{wf.trigger || 'manual'}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-[#444] capitalize">{wf.trigger || 'manual'}</span>
+                          {(wf.nodeCount > 0) && (
+                            <span className="text-[10px] text-[#333]">· {wf.nodeCount} node{wf.nodeCount !== 1 ? 's' : ''}</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2">
                           <CollabAvatarStack collaborators={wf.collaborators || []} />
                           <span className="text-[10px] text-[#444]">{timeAgo(wf.updatedAt)}</span>

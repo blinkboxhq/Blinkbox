@@ -508,7 +508,14 @@ export async function getAutomations(req, res) {
     };
 
     const [automations, total] = await Promise.all([
-      Automation.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Automation.aggregate([
+        { $match: filter },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        { $addFields: { nodeCount: { $size: { $ifNull: ['$nodes', []] } } } },
+        { $project: { nodes: 0, edges: 0 } },
+      ]),
       Automation.countDocuments(filter),
     ]);
 
