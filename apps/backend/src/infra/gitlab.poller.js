@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-gitlab-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -15,6 +16,7 @@ let gitlabQueue = null;
 let gitlabWorker = null;
 
 async function fetchEvents(host = "gitlab.com", projectId, token, eventType) {
+  assertSafeHost(host.split("/")[0]);
   const scope = eventType === "merge_request" ? "merge_requests" : eventType === "pipeline" ? "pipelines" : "issues";
   const url = `https://${host}/api/v4/projects/${encodeURIComponent(projectId)}/${scope}?per_page=20&order_by=created_at&sort=desc`;
   const res = await fetch(url, {

@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-jira-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -15,6 +16,7 @@ let jiraQueue = null;
 let jiraWorker = null;
 
 async function fetchIssues(domain, email, token, jql) {
+  assertSafeHost(domain.split("/")[0]);
   const url = `https://${domain}/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=25&fields=summary,status,priority,assignee,reporter,created,updated,labels,issuetype,description`;
   const res = await fetch(url, {
     headers: {

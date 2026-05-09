@@ -9,6 +9,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-docker-poller";
 const SEEN_TTL = 24 * 60 * 60; // 1 day
@@ -18,6 +19,11 @@ let dockerWorker = null;
 async function fetchDockerEvents(cfg) {
   const { host = "unix:///var/run/docker.sock", since } = cfg;
   const sinceParam = since ? `&since=${since}` : `&since=${Math.floor(Date.now() / 1000) - 300}`;
+
+  if (!host.startsWith("unix://")) {
+    const tcpHost = host.replace("tcp://", "").split(":")[0];
+    assertSafeHost(tcpHost);
+  }
 
   const baseUrl = host.startsWith("unix://")
     ? "http://localhost/v1.43/events"

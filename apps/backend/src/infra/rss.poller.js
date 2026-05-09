@@ -15,6 +15,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeUrl } from "../utils/ssrf.js";
 
 const RSS_QUEUE_NAME = "bb-rss-poller";
 const SEEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -71,6 +72,7 @@ function parseItems(xml) {
 }
 
 async function fetchFeed(url) {
+  assertSafeUrl(url);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
   try {

@@ -24,6 +24,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { assertSafeHost } from "../utils/ssrf.js";
 
 const IMAP_QUEUE_NAME = "bb-imap-poller";
 
@@ -41,6 +42,7 @@ async function pollMailbox(automationId, cfg, password) {
     );
   }
 
+  assertSafeHost(cfg.imapHost);
   const client = new ImapFlow({
     host: cfg.imapHost,
     port: cfg.imapPort || 993,
