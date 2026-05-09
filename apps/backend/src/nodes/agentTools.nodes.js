@@ -745,7 +745,7 @@ export const tool_xml_parse = {
   async run(config, args) {
     const tag = args.path || "";
     const values = tag
-      ? [...args.xml.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g"))].map((m) =>
+      ? [...args.xml.matchAll(new RegExp(`<${tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^>]*>([\\s\\S]*?)<\\/${tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}>`, "g"))].map((m) =>
           m[1].replace(/<[^>]+>/g, "").trim()
         )
       : [];
@@ -2179,14 +2179,27 @@ export const tool_regex = {
     ["pattern", "text"]
   ),
   async run(config, args) {
-    const re = new RegExp(args.pattern, args.flags || "g");
-    switch (args.operation || "match") {
-      case "test": return { matches: re.test(args.text) };
-      case "match": return { matches: args.text.match(re) || [] };
-      case "replace": return { result: args.text.replace(re, args.replacement || "") };
-      case "split": return { parts: args.text.split(re) };
-      default: return { matches: args.text.match(re) || [] };
-    }
+    let re;
+    try { re = new RegExp(args.pattern, args.flags || "g"); } catch (e) { throw new Error(`Invalid regex: ${e.message}`); }
+
+    const safeFlags = (args.flags || "g").replace(/[^gimsuy]/g, "");
+    if (safeFlags !== (args.flags || "g")) throw new Error("Invalid regex flags");
+
+    const op = args.operation || "match";
+    return await Promise.race([
+      new Promise((resolve, reject) => {
+        try {
+          switch (op) {
+            case "test": resolve({ matches: re.test(args.text) }); break;
+            case "match": resolve({ matches: args.text.match(re) || [] }); break;
+            case "replace": resolve({ result: args.text.replace(re, args.replacement || "") }); break;
+            case "split": resolve({ parts: args.text.split(re) }); break;
+            default: resolve({ matches: args.text.match(re) || [] });
+          }
+        } catch (e) { reject(e); }
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Regex operation timed out (possible ReDoS)")), 5000)),
+    ]);
   },
 };
 
