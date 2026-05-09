@@ -69,7 +69,10 @@ export async function handlePublicWebhook(req, res) {
     // ── Telegram: X-Telegram-Bot-Api-Secret-Token header ─────────────────────
     if (triggerConfig.telegramSecretToken) {
       const provided = req.headers["x-telegram-bot-api-secret-token"] || "";
-      if (provided !== triggerConfig.telegramSecretToken) {
+      const expected = triggerConfig.telegramSecretToken;
+      const providedBuf = Buffer.from(provided.padEnd(expected.length));
+      const expectedBuf = Buffer.from(expected);
+      if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
         return res.status(401).json({ error: "Invalid Telegram secret token" });
       }
     }
@@ -124,7 +127,9 @@ export async function handlePublicWebhook(req, res) {
       const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
       const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.typeformWebhookSecret)
         .update(rawBody).digest("base64");
-      if (provided !== expected) {
+      const pBuf = Buffer.from(provided.padEnd(expected.length));
+      const eBuf = Buffer.from(expected);
+      if (pBuf.length !== eBuf.length || !crypto.timingSafeEqual(pBuf, eBuf)) {
         return res.status(401).json({ error: "Invalid Typeform webhook signature" });
       }
     }
@@ -134,7 +139,10 @@ export async function handlePublicWebhook(req, res) {
       const mode  = req.query["hub.mode"];
       const token = req.query["hub.verify_token"];
       const challenge = req.query["hub.challenge"];
-      if (mode === "subscribe" && token === triggerConfig.metaVerifyToken) {
+      const mv = triggerConfig.metaVerifyToken;
+      const tokenBuf = Buffer.from((token || "").padEnd(mv.length));
+      const mvBuf = Buffer.from(mv);
+      if (mode === "subscribe" && tokenBuf.length === mvBuf.length && crypto.timingSafeEqual(tokenBuf, mvBuf)) {
         return res.status(200).type("text/plain").send(String(challenge));
       }
       return res.status(403).json({ error: "Meta webhook verification failed" });
