@@ -10,7 +10,7 @@ export async function triggerAutomation(req, res) {
   const payload = req.body || {};
 
   const automation = await Automation.findById(id);
-  if (!automation) {
+  if (!automation || automation.workspaceId?.toString() !== req.user.workspaceId?.toString()) {
     return res.status(404).json({ error: "Automation not found" });
   }
 

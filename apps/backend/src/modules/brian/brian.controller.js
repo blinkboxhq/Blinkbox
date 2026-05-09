@@ -367,7 +367,7 @@ export async function brianChat(req, res) {
         return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
       }
       if (!groqKey && !googleKey) {
-        return res.status(500).json({ message: `Brian error: ${err.message}` });
+        return res.status(500).json({ message: "AI provider error. Please try again." });
       }
     }
   }
@@ -399,7 +399,7 @@ export async function brianChat(req, res) {
       return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
     } catch (err) {
       console.warn("[Brian] Groq failed:", err.response?.status, err.message);
-      if (!googleKey) return res.status(500).json({ message: `Brian error: ${err.message}` });
+      if (!googleKey) return res.status(500).json({ message: "AI provider error. Please try again." });
     }
   }
 
@@ -413,7 +413,7 @@ export async function brianChat(req, res) {
       return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
     } catch (err) {
       console.error("[Brian] all providers failed:", err.message);
-      return res.status(500).json({ message: `Brian error: ${err.message}` });
+      return res.status(500).json({ message: "AI provider error. Please try again." });
     }
   }
 }

@@ -71,6 +71,7 @@ export async function handleApprovalSignal(req, res) {
       const color = isApproved ? "#22c55e" : "#ef4444";
       const icon = isApproved ? "\u2705" : "\u274c";
       const label = isApproved ? "Approved" : "Rejected";
+      const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
       return res.status(200).send(`
         <!DOCTYPE html>
@@ -101,7 +102,7 @@ export async function handleApprovalSignal(req, res) {
             <div class="icon">${icon}</div>
             <h1>${label}</h1>
             <p>Your decision has been recorded. The workflow will continue.</p>
-            <p class="meta">Workflow: ${workflowId}<br>Node: ${nodeId}</p>
+            <p class="meta">Workflow: ${esc(workflowId)}<br>Node: ${esc(nodeId)}</p>
           </div>
         </body>
         </html>
@@ -129,7 +130,6 @@ export async function handleApprovalSignal(req, res) {
     console.error("[Signal Controller] Error:", message);
     return res.status(500).json({
       error: "Failed to deliver approval signal.",
-      detail: message,
     });
   }
 }
