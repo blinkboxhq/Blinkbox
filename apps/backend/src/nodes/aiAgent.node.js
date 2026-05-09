@@ -51,6 +51,21 @@ import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
 
+// Platform integration nodes — imported for autonomous tool use
+import _slackNode    from "./integrations/slack.node.js";
+import _gmailNode    from "./integrations/gmail.node.js";
+import _discordNode  from "./integrations/discord.node.js";
+import _telegramNode from "./integrations/telegram.node.js";
+import _notionNode   from "./integrations/notion.node.js";
+import _airtableNode from "./integrations/airtable.node.js";
+import _sheetsNode   from "./integrations/googleSheets.node.js";
+import _githubNode   from "./integrations/github.node.js";
+import _linearNode   from "./integrations/linear.node.js";
+import _hubspotNode  from "./integrations/hubspot.node.js";
+import _mongoNode    from "./integrations/mongodb.node.js";
+import _postgresNode from "./integrations/postgres.node.js";
+import _redisNode    from "./integrations/redis.node.js";
+
 // ═════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═════════════════════════════════════════════════════════════════════════════
@@ -244,6 +259,14 @@ const REACT_SYSTEM_PROMPT =
   `  - For calculations: use the calculator tool — never do arithmetic mentally\n` +
   `  - For code: write it, execute it, inspect the output before returning\n` +
   `  - For APIs: read the response carefully before extracting data\n` +
+  `  - To save information between steps: use remember(key, value) — retrieve later with recall(key)\n` +
+  `  - Platform integrations (Slack, Gmail, Notion, etc.): call these tools directly to take real-world action\n` +
+  `\n` +
+  `## Taking Real-World Action\n` +
+  `  When you have platform integration tools available (slack, gmail, notion, etc.):\n` +
+  `  - Send the Slack message / email / Discord post autonomously — don't just describe what you'd send\n` +
+  `  - Write to the database / spreadsheet / Notion page as part of your response\n` +
+  `  - Confirm the action in your final answer ("I sent a message to #alerts with the results...")\n` +
   `\n` +
   `## Output Quality\n` +
   `  - Structure your final answer clearly (use markdown if appropriate)\n` +
@@ -341,6 +364,7 @@ const agentNode = {
       webSearchCredentialId,
       workspaceId: context.workspaceId,
       toolRegistry: context.toolRegistry || null,
+      platformTools: config.platformTools,
     });
 
     const formattedTools =
@@ -548,6 +572,7 @@ async function assembleTools({
   webSearchCredentialId,
   workspaceId,
   toolRegistry,
+  platformTools,
 }) {
   const tools = [];
   const seen = new Set();
@@ -825,6 +850,82 @@ async function assembleTools({
     seen.add("execute_js");
   }
 
+  // Source 4: Platform integrations (user-authorized in the agent panel)
+  if (Array.isArray(platformTools) && platformTools.length > 0) {
+    for (const pt of platformTools) {
+      const { type, credentialId, alias } = pt || {};
+      if (!type || !credentialId) continue;
+      const spec = PLATFORM_TOOL_SPECS[type];
+      if (!spec) continue;
+      const toolName = alias
+        ? `${type}_${alias.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_")}`
+        : type;
+      if (seen.has(toolName)) continue;
+      tools.push({
+        name: toolName,
+        description: alias ? `${spec.description} (${alias})` : spec.description,
+        parameters: spec.parameters,
+        execute: (args) => spec.run(args, credentialId, workspaceId),
+      });
+      seen.add(toolName);
+    }
+  }
+
+  // Source 5: Always-on remember / recall — persist facts across agent turns
+  if (!seen.has("remember")) {
+    const memPrefix = `agent:facts:${workspaceId || "global"}`;
+    tools.push({
+      name: "remember",
+      description: "Store a fact or piece of information for later use in this session. Call this whenever you learn something important that you'll need to reference again.",
+      parameters: {
+        type: "object",
+        properties: {
+          key: { type: "string", description: "Short identifier for this fact (e.g. 'user_email', 'order_total')" },
+          value: { type: "string", description: "The value to store" },
+          ttl: { type: "number", description: "Seconds to keep (default 3600 = 1 hour)" },
+        },
+        required: ["key", "value"],
+      },
+      execute: async ({ key, value, ttl = 3600 }) => {
+        try {
+          if (!redis) return { stored: false, reason: "Redis not available" };
+          const k = `${memPrefix}:${String(key).slice(0, 100)}`;
+          await redis.set(k, String(value).slice(0, 10000), "EX", Math.min(ttl, 86400));
+          return { stored: true, key };
+        } catch {
+          return { stored: false };
+        }
+      },
+    });
+    seen.add("remember");
+  }
+
+  if (!seen.has("recall")) {
+    const memPrefix = `agent:facts:${workspaceId || "global"}`;
+    tools.push({
+      name: "recall",
+      description: "Retrieve a previously stored fact by its key. Use this to look up information you stored earlier with 'remember'.",
+      parameters: {
+        type: "object",
+        properties: {
+          key: { type: "string", description: "The key you used when calling remember()" },
+        },
+        required: ["key"],
+      },
+      execute: async ({ key }) => {
+        try {
+          if (!redis) return { found: false };
+          const k = `${memPrefix}:${String(key).slice(0, 100)}`;
+          const val = await redis.get(k);
+          return val !== null ? { found: true, key, value: val } : { found: false, key };
+        } catch {
+          return { found: false };
+        }
+      },
+    });
+    seen.add("recall");
+  }
+
   return tools;
 }
 
@@ -833,6 +934,209 @@ async function assembleTools({
  * Accepts: array of tool definitions or a single tool definition.
  * Each tool must have at minimum: { name }.
  */
+// ═════════════════════════════════════════════════════════════════════════════
+// PLATFORM TOOL SPECS — wires real Blinkbox integration nodes as agent tools
+// ═════════════════════════════════════════════════════════════════════════════
+
+const PLATFORM_TOOL_SPECS = {
+  slack: {
+    description: "Post messages to Slack channels or upload files to Slack.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["postMessage", "uploadFile"], description: "postMessage to send text, uploadFile to upload a file" },
+        channel: { type: "string", description: "Slack channel name (#general) or ID" },
+        text: { type: "string", description: "Message text — supports Slack mrkdwn (*bold*, _italic_, ```code```)" },
+        filename: { type: "string", description: "Filename for uploadFile operation" },
+        fileContent: { type: "string", description: "Text content to upload as file" },
+      },
+      required: ["operation", "channel"],
+    },
+    run: (args, credentialId, workspaceId) => _slackNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  gmail: {
+    description: "Send emails, reply to threads, or search Gmail.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["sendEmail", "replyToThread", "searchEmails"], description: "Operation to perform" },
+        to: { type: "string", description: "Recipient email address" },
+        subject: { type: "string", description: "Email subject line" },
+        body: { type: "string", description: "Email body (plain text or HTML)" },
+        threadId: { type: "string", description: "Thread ID for replyToThread" },
+        query: { type: "string", description: "Gmail search query for searchEmails (e.g. 'from:boss@company.com is:unread')" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _gmailNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  discord: {
+    description: "Send messages or embeds to Discord channels.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["sendMessage", "sendEmbed"], description: "Operation" },
+        channelId: { type: "string", description: "Discord channel ID (numeric)" },
+        content: { type: "string", description: "Message text content" },
+        embeds: { type: "array", description: "Array of Discord embed objects (for sendEmbed)" },
+      },
+      required: ["operation", "channelId", "content"],
+    },
+    run: (args, credentialId, workspaceId) => _discordNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  telegram: {
+    description: "Send Telegram messages, photos, or documents via bot.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["sendMessage", "sendPhoto", "sendDocument"], description: "Operation" },
+        chatId: { type: "string", description: "Chat ID or @username" },
+        text: { type: "string", description: "Message text" },
+        photoUrl: { type: "string", description: "Photo URL for sendPhoto" },
+      },
+      required: ["operation", "chatId", "text"],
+    },
+    run: (args, credentialId, workspaceId) => _telegramNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  notion: {
+    description: "Create Notion pages, query databases, or append content to pages.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createPage", "queryDatabase", "getPage", "appendBlocks", "updatePage"], description: "Operation" },
+        databaseId: { type: "string", description: "Notion database ID (for createPage/queryDatabase)" },
+        pageId: { type: "string", description: "Page ID (for getPage/appendBlocks/updatePage)" },
+        properties: { type: "object", description: "Page properties in Notion API format" },
+        filter: { type: "object", description: "Filter object for queryDatabase" },
+        blocks: { type: "array", description: "Content blocks for appendBlocks" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _notionNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  airtable: {
+    description: "Create, read, update, or delete Airtable records.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createRecord", "listRecords", "updateRecord", "deleteRecord", "getRecord"], description: "Operation" },
+        baseId: { type: "string", description: "Airtable base ID (starts with 'app')" },
+        tableId: { type: "string", description: "Table name or ID" },
+        fields: { type: "object", description: "Record fields for create/update" },
+        recordId: { type: "string", description: "Record ID for update/delete/get" },
+        filterByFormula: { type: "string", description: "Airtable formula for listRecords filtering" },
+      },
+      required: ["operation", "baseId", "tableId"],
+    },
+    run: (args, credentialId, workspaceId) => _airtableNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  google_sheets: {
+    description: "Read or write Google Sheets spreadsheets.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["appendRow", "readRows", "updateRow", "clearRange"], description: "Operation" },
+        spreadsheetId: { type: "string", description: "Google Sheets document ID (from URL)" },
+        range: { type: "string", description: "A1 notation range (e.g. 'Sheet1!A:Z')" },
+        values: { type: "array", description: "Array of row arrays to write — e.g. [['John', 'john@example.com']]" },
+      },
+      required: ["operation", "spreadsheetId", "range"],
+    },
+    run: (args, credentialId, workspaceId) => _sheetsNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  github: {
+    description: "Create GitHub issues, PRs, add comments, or merge PRs.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createIssue", "updateIssue", "createPR", "addComment", "mergePR", "getRepo"], description: "Operation" },
+        owner: { type: "string", description: "Repository owner or organization" },
+        repo: { type: "string", description: "Repository name" },
+        title: { type: "string", description: "Issue or PR title" },
+        body: { type: "string", description: "Issue or PR body (markdown supported)" },
+        issueNumber: { type: "number", description: "Issue/PR number for comment/update operations" },
+        labels: { type: "array", description: "Array of label names" },
+      },
+      required: ["operation", "owner", "repo"],
+    },
+    run: (args, credentialId, workspaceId) => _githubNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  linear: {
+    description: "Create or update Linear issues and add comments.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createIssue", "updateIssue", "addComment", "getIssue"], description: "Operation" },
+        teamId: { type: "string", description: "Linear team ID" },
+        title: { type: "string", description: "Issue title" },
+        description: { type: "string", description: "Issue description (markdown)" },
+        priority: { type: "number", description: "Priority: 0=none, 1=urgent, 2=high, 3=medium, 4=low" },
+        issueId: { type: "string", description: "Issue ID for update/comment/get" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _linearNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  hubspot: {
+    description: "Manage HubSpot contacts, deals, companies, and tickets.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createContact", "updateContact", "createDeal", "updateDeal", "getContact", "searchContacts"], description: "Operation" },
+        objectType: { type: "string", enum: ["contacts", "deals", "companies", "tickets"], description: "HubSpot object type" },
+        properties: { type: "object", description: "Properties to set (e.g. {email, firstname, lastname, phone})" },
+        objectId: { type: "string", description: "Object ID for update operations" },
+        searchQuery: { type: "string", description: "Search query for searchContacts" },
+      },
+      required: ["operation", "objectType"],
+    },
+    run: (args, credentialId, workspaceId) => _hubspotNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  mongodb: {
+    description: "Query or write MongoDB documents.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["insertOne", "findOne", "findMany", "updateOne", "deleteOne", "aggregate"], description: "Operation" },
+        collection: { type: "string", description: "MongoDB collection name" },
+        filter: { type: "object", description: "Query filter (e.g. {email: 'user@example.com'})" },
+        document: { type: "object", description: "Document to insert or update body" },
+        pipeline: { type: "array", description: "Aggregation pipeline stages" },
+        limit: { type: "number", description: "Max results for findMany (default 20)" },
+      },
+      required: ["operation", "collection"],
+    },
+    run: (args, credentialId, workspaceId) => _mongoNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  postgres: {
+    description: "Run SQL queries against a PostgreSQL database.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["query", "insert", "update", "delete"], description: "Operation" },
+        sql: { type: "string", description: "SQL query — use $1, $2 for parameters" },
+        params: { type: "array", description: "Query parameter values matching $1, $2, etc." },
+      },
+      required: ["operation", "sql"],
+    },
+    run: (args, credentialId, workspaceId) => _postgresNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  redis: {
+    description: "Get, set, or delete values in a Redis cache.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["get", "set", "del", "incr", "lpush", "lrange", "hset", "hget", "expire"], description: "Redis command" },
+        key: { type: "string", description: "Redis key" },
+        value: { type: "string", description: "Value to store (for set/lpush/hset)" },
+        ttl: { type: "number", description: "TTL in seconds (for set/expire)" },
+      },
+      required: ["operation", "key"],
+    },
+    run: (args, credentialId, workspaceId) => _redisNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+};
+
 function resolveHandleTools(raw) {
   if (!raw) return [];
   const arr = Array.isArray(raw) ? raw : [raw];
@@ -1647,7 +1951,8 @@ agentNode._think = async function ({
       builtinWebSearch: nodeConfig.builtinWebSearch || false,
       webSearchCredentialId: nodeConfig.webSearchCredentialId,
       workspaceId,
-      toolRegistry: null, // Registry tools resolved via enabledToolIds
+      toolRegistry: null,
+      platformTools: nodeConfig.platformTools,
     });
 
     toolDefsFinal = tools.map((t) => ({
@@ -1761,6 +2066,7 @@ agentNode._act = async function ({
     webSearchCredentialId: nodeConfig.webSearchCredentialId,
     workspaceId,
     toolRegistry: null,
+    platformTools: nodeConfig.platformTools,
   });
 
   const toolCall = {

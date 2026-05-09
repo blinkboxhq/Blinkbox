@@ -1,11 +1,28 @@
 import { useState } from "react";
 import {
-  Brain, Database, Zap, AlertTriangle, Sparkles,
+  Brain, Database, Zap, AlertTriangle,
   ChevronDown, ChevronUp, Settings2, Eye, MessageSquare,
-  RotateCcw, ArrowRight,
+  ArrowRight, Plus, X, Plug,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import useWorkspaceStore from "../../../../store/workspaceStore";
+
+// Platform integrations the agent can autonomously use
+const PLATFORM_INTEGRATIONS = [
+  { type: "slack",        label: "Slack",          emoji: "💬", desc: "Post messages & files" },
+  { type: "gmail",        label: "Gmail",           emoji: "📧", desc: "Send & search email" },
+  { type: "discord",      label: "Discord",         emoji: "🎮", desc: "Post to channels" },
+  { type: "telegram",     label: "Telegram",        emoji: "✈️",  desc: "Send messages via bot" },
+  { type: "notion",       label: "Notion",          emoji: "📝", desc: "Create & query pages" },
+  { type: "airtable",     label: "Airtable",        emoji: "📊", desc: "Create & read records" },
+  { type: "google_sheets",label: "Google Sheets",   emoji: "📈", desc: "Read & append rows" },
+  { type: "github",       label: "GitHub",          emoji: "🐙", desc: "Issues, PRs, comments" },
+  { type: "linear",       label: "Linear",          emoji: "📐", desc: "Create & update issues" },
+  { type: "hubspot",      label: "HubSpot",         emoji: "🔶", desc: "CRM contacts & deals" },
+  { type: "mongodb",      label: "MongoDB",         emoji: "🍃", desc: "Query & insert docs" },
+  { type: "postgres",     label: "PostgreSQL",      emoji: "🐘", desc: "Run SQL queries" },
+  { type: "redis",        label: "Redis",           emoji: "🔴", desc: "Get & set cache values" },
+];
 
 // ─── Connection helpers ───────────────────────────────────────────────────────
 function getSlotNode(edges, nodes, agentNodeId, slotId) {
@@ -59,6 +76,24 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const edges = useWorkspaceStore(s => s.edges);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const [advOpen, setAdvOpen] = useState(false);
+  const [showIntegrationPicker, setShowIntegrationPicker] = useState(false);
+
+  const platformTools = Array.isArray(config.platformTools) ? config.platformTools : [];
+  const addedTypes = new Set(platformTools.map(p => p.type));
+
+  function addIntegration(type) {
+    updateConfig("platformTools", [...platformTools, { type, credentialId: "", alias: "" }]);
+    setShowIntegrationPicker(false);
+  }
+
+  function removeIntegration(idx) {
+    updateConfig("platformTools", platformTools.filter((_, i) => i !== idx));
+  }
+
+  function updateIntegration(idx, field, val) {
+    const next = platformTools.map((p, i) => i === idx ? { ...p, [field]: val } : p);
+    updateConfig("platformTools", next);
+  }
 
   // Connections via bottom dock slots
   const llmNode    = getSlotNode(edges, nodes, nodeId, "llm");
@@ -132,12 +167,14 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
       {/* ── Built-in Tools ─────────────────────────────────────────────────────── */}
       <div>
         <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">Built-in Capabilities</p>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-3 gap-1.5">
           {[
             { icon: '🔢', label: 'Calculator', desc: 'Math & formulas' },
             { icon: '📖', label: 'Wikipedia', desc: 'Factual lookup' },
             { icon: '🌐', label: 'HTTP Request', desc: 'Call any API' },
             { icon: '⚡', label: 'Run JS Code', desc: 'Execute scripts' },
+            { icon: '🧠', label: 'Remember', desc: 'Store facts across steps' },
+            { icon: '🔍', label: 'Recall', desc: 'Retrieve stored facts' },
           ].map(tool => (
             <div key={tool.label} className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800/40">
               <span className="text-[13px] shrink-0">{tool.icon}</span>
@@ -148,6 +185,85 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* ── Platform Integrations ─────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Platform Integrations</p>
+            {platformTools.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/15 text-violet-400 border border-violet-500/20">{platformTools.length}</span>
+            )}
+          </div>
+          <button onClick={() => setShowIntegrationPicker(v => !v)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold border border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-all">
+            <Plus className="w-2.5 h-2.5" />
+            Add
+          </button>
+        </div>
+
+        {showIntegrationPicker && (
+          <div className="mb-2 p-2 rounded-xl border border-zinc-700/60 bg-zinc-900/80 grid grid-cols-2 gap-1">
+            {PLATFORM_INTEGRATIONS.filter(p => !addedTypes.has(p.type)).map(p => (
+              <button key={p.type} onClick={() => addIntegration(p.type)}
+                className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-zinc-800 transition-colors">
+                <span className="text-[13px] shrink-0">{p.emoji}</span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-zinc-200 leading-none">{p.label}</p>
+                  <p className="text-[9px] text-zinc-600 leading-none mt-0.5">{p.desc}</p>
+                </div>
+              </button>
+            ))}
+            {PLATFORM_INTEGRATIONS.filter(p => !addedTypes.has(p.type)).length === 0 && (
+              <p className="col-span-2 text-[10px] text-zinc-600 text-center py-2">All integrations added</p>
+            )}
+          </div>
+        )}
+
+        {platformTools.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {platformTools.map((pt, idx) => {
+              const def = PLATFORM_INTEGRATIONS.find(p => p.type === pt.type);
+              return (
+                <div key={idx} className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-3 py-2 border-b border-zinc-800/40">
+                    <span className="text-[13px] shrink-0">{def?.emoji || '🔌'}</span>
+                    <span className="text-[11px] font-semibold text-zinc-300 flex-1">{def?.label || pt.type}</span>
+                    <button onClick={() => removeIntegration(idx)} className="text-zinc-700 hover:text-red-400 transition-colors">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="px-3 py-2.5 flex flex-col gap-2">
+                    <div>
+                      <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">Credential ID</label>
+                      <input
+                        value={pt.credentialId || ""}
+                        onChange={e => updateIntegration(idx, "credentialId", e.target.value)}
+                        placeholder="Paste credential ID from Credentials page"
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">Alias (optional)</label>
+                      <input
+                        value={pt.alias || ""}
+                        onChange={e => updateIntegration(idx, "alias", e.target.value)}
+                        placeholder={`e.g. "Work ${def?.label || pt.type}"`}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-zinc-800/40 bg-zinc-900/20">
+            <Plug className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
+            <p className="text-[10px] text-zinc-700">Add integrations so the agent can autonomously send messages, write to databases, create tasks, and more — without needing extra nodes in the canvas.</p>
+          </div>
+        )}
       </div>
 
       {/* ── Mission prompt ──────────────────────────────────────────────── */}
@@ -329,7 +445,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/40">
         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${llmNode ? "bg-emerald-500" : "bg-zinc-700"}`} />
         <span className="text-[9px] text-zinc-700 flex-1">
-          {llmNode ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${toolNodes.length} tool${toolNodes.length !== 1 ? "s" : ""}` : "Connect an LLM node to activate"}
+          {llmNode ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${toolNodes.length + platformTools.length} tool${(toolNodes.length + platformTools.length) !== 1 ? "s" : ""}` : "Connect an LLM node to activate"}
         </span>
         {config.maxIterations && <span className="text-[9px] font-mono text-zinc-700">{config.maxIterations} iters</span>}
       </div>
