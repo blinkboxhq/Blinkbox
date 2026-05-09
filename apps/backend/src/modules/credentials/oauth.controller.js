@@ -278,7 +278,8 @@ const POPUP_ALLOWED_ORIGINS = (
  * Renders a small HTML page that sends the result to the opener window via postMessage.
  */
 function renderPopupResult(res, data) {
-  const payload = JSON.stringify(data);
+  // Replace </ to prevent script tag breakout when JSON is embedded in <script>
+  const payload = JSON.stringify(data).replace(/<\//g, "<\\/");
   // Encode the human-readable error message for safe HTML embedding
   const safeError = data.error ? htmlEncode(data.error) : "";
 

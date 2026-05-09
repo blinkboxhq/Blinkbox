@@ -117,12 +117,16 @@ app.use("/api/billing", billingRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 // ── Global error handler ──────────────────────────────────────────────────────
-// Catches anything thrown with next(err) or unhandled express errors
 app.use((err, req, res, _next) => {
+  if (err.name === "CastError" && err.kind === "ObjectId") {
+    return res.status(400).json({ error: "Invalid ID format." });
+  }
+  if (err.name === "ValidationError") {
+    const msg = Object.values(err.errors).map((e) => e.message).join(", ");
+    return res.status(400).json({ error: msg });
+  }
   console.error("[Unhandled Express Error]", err.message);
-  res.status(err.status || 500).json({
-    error: "Internal Server Error",
-  });
+  res.status(err.status || 500).json({ error: "Internal Server Error" });
 });
 
 export default app;
