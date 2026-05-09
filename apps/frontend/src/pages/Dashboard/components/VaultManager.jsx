@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
 
 const TYPE_LABELS = {
@@ -92,8 +93,9 @@ export default function VaultManager() {
     try {
       await api.delete(`/api/credentials/${id}`);
       setCredentials(credentials.filter((c) => c._id !== id));
+      toast.success('Credential deleted');
     } catch {
-      // Silently fail
+      toast.error('Failed to delete credential');
     }
   };
 

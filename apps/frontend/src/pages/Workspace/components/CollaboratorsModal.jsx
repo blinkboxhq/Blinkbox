@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, UserPlus, Trash2, Loader2, Users, Clock, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
 
 function Avatar({ c, size = 'sm' }) {
@@ -41,7 +42,7 @@ export default function CollaboratorsModal({ automationId, isOpen, onClose }) {
       ]);
       setCollaborators(collabRes.data.collaborators || []);
       setSentInvites(inviteRes.data.invites?.filter(i => i.status === 'pending') || []);
-    } catch {}
+    } catch { toast.error('Failed to load collaborators'); }
     setLoading(false);
   }, [automationId]);
 
@@ -68,7 +69,7 @@ export default function CollaboratorsModal({ automationId, isOpen, onClose }) {
     try {
       const { data } = await api.delete(`/api/automation/${automationId}/collaborators/${userId}`);
       setCollaborators(data.collaborators || []);
-    } catch {}
+    } catch { toast.error('Failed to remove collaborator'); }
     setRemovingId(null);
   }, [automationId]);
 
@@ -77,7 +78,7 @@ export default function CollaboratorsModal({ automationId, isOpen, onClose }) {
     try {
       await api.delete(`/api/invites/${inviteId}`);
       setSentInvites(prev => prev.filter(i => i._id !== inviteId));
-    } catch {}
+    } catch { toast.error('Failed to cancel invite'); }
     setCancellingId(null);
   }, []);
 

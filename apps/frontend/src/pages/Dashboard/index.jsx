@@ -6,6 +6,7 @@ import {
   Activity, Power,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { toast } from 'sonner';
 
 import GlobalHeader from '../../components/GlobalHeader';
 import { NodeCardSkeleton } from '../../components/ui/Skeleton';
@@ -229,7 +230,7 @@ export default function Dashboard() {
       try {
         const res = await api.get('/api/execution/recent', { params: { limit: 50 } });
         setExecutions(res.data?.executions || []);
-      } catch {}
+      } catch { toast.error('Failed to load execution history'); }
       setExecLoading(false);
     })();
   }, [activeTab]);
@@ -329,9 +330,9 @@ export default function Dashboard() {
   };
 
 
-  const handleDelete = async (id) => { try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); } catch {} };
-  const handleDuplicate = async (id) => { try { const r = await api.post(`/api/automation/${id}/duplicate`); if (r.data?.success) setWorkflows([r.data.automation, ...workflows]); } catch {} };
-  const handleRename = async (id, name) => { try { const r = await api.patch(`/api/automation/${id}/rename`, { name }); if (r.data?.success) setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, name } : w)); } catch {} };
+  const handleDelete = async (id) => { try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); } catch { toast.error('Failed to delete workflow'); } };
+  const handleDuplicate = async (id) => { try { const r = await api.post(`/api/automation/${id}/duplicate`); if (r.data?.success) { setWorkflows([r.data.automation, ...workflows]); toast.success('Workflow duplicated'); } } catch { toast.error('Failed to duplicate workflow'); } };
+  const handleRename = async (id, name) => { try { const r = await api.patch(`/api/automation/${id}/rename`, { name }); if (r.data?.success) setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, name } : w)); } catch { toast.error('Failed to rename workflow'); } };
 
   const handleToggleActive = async (wf) => {
     const id = wf._id || wf.id;
