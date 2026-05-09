@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env.js";
+import Execution from "../models/execution.model.js";
+import Automation from "../models/automation.model.js";
 
 let io = null;
 
@@ -58,16 +60,24 @@ export function initSocketServer(httpServer) {
     socket.join(`user:${socket.userId}`);
 
     // ── Execution subscriptions ───────────────────────────────────────────────
-    socket.on("subscribe:execution", (executionId) => {
-      socket.join(`execution:${executionId}`);
+    socket.on("subscribe:execution", async (executionId) => {
+      try {
+        const exec = await Execution.findOne({ _id: executionId, workspaceId: socket.userId }).lean();
+        if (!exec) return;
+        socket.join(`execution:${executionId}`);
+      } catch { /* ignore — deny silently */ }
     });
 
     socket.on("unsubscribe:execution", (executionId) => {
       socket.leave(`execution:${executionId}`);
     });
 
-    socket.on("subscribe:automation", (automationId) => {
-      socket.join(`automation:${automationId}`);
+    socket.on("subscribe:automation", async (automationId) => {
+      try {
+        const auto = await Automation.findOne({ _id: automationId, workspaceId: socket.userId }).lean();
+        if (!auto) return;
+        socket.join(`automation:${automationId}`);
+      } catch { /* ignore — deny silently */ }
     });
 
     socket.on("unsubscribe:automation", (automationId) => {
