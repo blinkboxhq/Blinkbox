@@ -523,17 +523,35 @@ export default function Dashboard() {
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Workflow</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
                       <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Nodes</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Time</th>
+                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Duration</th>
+                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">When</th>
                     </tr></thead>
                     <tbody>
                       {executions.map((ex, i) => {
                         const sc = { executed: 'bg-emerald-500', completed: 'bg-emerald-500', failed: 'bg-red-500', pending: 'bg-yellow-500', cancelled: 'bg-neutral-600' };
+                        const durationMs = ex.completedAt && ex.createdAt ? new Date(ex.completedAt) - new Date(ex.createdAt) : null;
+                        const durationStr = durationMs === null ? '—' : durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(1)}s`;
+                        const wf = workflows.find(w => String(w._id || w.id) === String(ex.automationId));
                         return (
-                          <tr key={ex._id} className="border-t border-zinc-800/50 hover:bg-white/[0.015] transition-colors" style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}>
-                            <td className="px-4 py-2.5"><div className="flex items-center gap-1.5"><span className={`w-1.5 h-1.5 rounded-full ${sc[ex.status] || 'bg-neutral-700'}`} /><span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span></div></td>
+                          <tr
+                            key={ex._id}
+                            onClick={() => wf && navigate(`/workspace/${wf._id || wf.id}`)}
+                            className={`border-t border-zinc-800/50 transition-colors ${wf ? 'hover:bg-white/[0.02] cursor-pointer' : ''}`}
+                            style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}
+                          >
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${sc[ex.status] || 'bg-neutral-700'}`} />
+                                <span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span>
+                              </div>
+                              {ex.status === 'failed' && ex.cursors?.find(c => c.errorMessage) && (
+                                <p className="text-[10px] text-red-500/70 mt-0.5 truncate max-w-[160px]">{ex.cursors.find(c => c.errorMessage)?.errorMessage}</p>
+                              )}
+                            </td>
                             <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.name || '—'}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600 capitalize">{ex.trigger || 'manual'}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-600">{ex.cursors?.length || 0}</td>
+                            <td className="px-4 py-2.5 text-[11px] text-neutral-600 font-mono">{durationStr}</td>
                             <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(ex.createdAt)}</td>
                           </tr>
                         );
