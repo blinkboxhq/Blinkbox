@@ -14,16 +14,18 @@ export async function resolveCredential(credentialId, workspaceId, nodeLabel) {
 
   const trimmed = String(credentialId).trim();
 
+  if (!workspaceId) {
+    throw new Error(`${nodeLabel}: Cannot resolve credential without a workspace context.`);
+  }
+
   // Try by _id if it looks like a valid ObjectId
   if (mongoose.Types.ObjectId.isValid(trimmed)) {
-    const query = { _id: trimmed };
-    if (workspaceId) query.workspaceId = workspaceId;
-    const cred = await Credential.findOne(query);
+    const cred = await Credential.findOne({ _id: trimmed, workspaceId });
     if (cred) return cred;
   }
 
   // Fallback: try by name (case-insensitive, exact match)
-  if (workspaceId) {
+  {
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const cred = await Credential.findOne({
       workspaceId,
