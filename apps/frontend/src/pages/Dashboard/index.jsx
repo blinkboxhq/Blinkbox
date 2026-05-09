@@ -161,6 +161,14 @@ export default function Dashboard() {
   const [executions, setExecutions] = useState([]);
   const [execLoading, setExecLoading] = useState(false);
 
+  const [profileName, setProfileName] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState(null);
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState(null);
+
   const handleLogout = useCallback(() => {
     localStorage.removeItem('blinkbox_token');
     localStorage.removeItem('blinkbox_user');
@@ -177,7 +185,7 @@ export default function Dashboard() {
     const t = localStorage.getItem('blinkbox_token');
     const u = localStorage.getItem('blinkbox_user');
     if (!t || !u || u === 'undefined') { handleLogout(); return; }
-    try { const p = JSON.parse(u); if (!p.id || !p.email) throw 0; setUser(p); } catch { handleLogout(); }
+    try { const p = JSON.parse(u); if (!p.id || !p.email) throw 0; setUser(p); setProfileName(p.name || ''); } catch { handleLogout(); }
   }, [handleLogout]);
 
   // Fetch workflows
@@ -283,6 +291,32 @@ export default function Dashboard() {
   };
 
   const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch {} setIsTogglingPause(false); };
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim() || profileSaving) return;
+    setProfileSaving(true); setProfileMsg(null);
+    try {
+      const r = await api.put('/api/profile', { name: profileName.trim() });
+      const updated = { ...user, name: r.data.name };
+      setUser(updated);
+      localStorage.setItem('blinkbox_user', JSON.stringify(updated));
+      setProfileMsg({ ok: true, text: 'Name updated.' });
+    } catch (e) {
+      setProfileMsg({ ok: false, text: e.response?.data?.message || 'Failed to save.' });
+    } finally { setProfileSaving(false); setTimeout(() => setProfileMsg(null), 3000); }
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwCurrent || !pwNew || pwSaving) return;
+    setPwSaving(true); setPwMsg(null);
+    try {
+      await api.post('/api/profile/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
+      setPwMsg({ ok: true, text: 'Password updated.' });
+      setPwCurrent(''); setPwNew('');
+    } catch (e) {
+      setPwMsg({ ok: false, text: e.response?.data?.message || 'Failed to update password.' });
+    } finally { setPwSaving(false); setTimeout(() => setPwMsg(null), 4000); }
+  };
 
   const handleCreate = async (data) => {
     if (isCreating) return;
@@ -574,15 +608,76 @@ export default function Dashboard() {
               {/* Profile */}
               <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
                 <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Profile</h3>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-semibold text-neutral-400 uppercase">{user?.name?.charAt(0) || '?'}</div>
-                  <div className="flex-1">
-                    <p className="text-[13px] font-medium text-white">{user?.name}</p>
-                    <p className="text-[11px] text-neutral-600">{user?.email}</p>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-semibold text-neutral-400 uppercase shrink-0">{user?.name?.charAt(0) || '?'}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-neutral-600 mb-0.5">{user?.email}</p>
+                    <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-zinc-700/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
                   </div>
-                  <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-zinc-700/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Display name</label>
+                    <input
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveProfile()}
+                      placeholder="Your name"
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={profileSaving || !profileName.trim()}
+                    className="mt-5 px-4 py-2 text-[12px] font-medium bg-white/[0.06] border border-zinc-700 rounded-lg text-white hover:bg-white/[0.09] disabled:opacity-40 transition-all shrink-0"
+                  >
+                    {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
+                  </button>
+                </div>
+                {profileMsg && (
+                  <p className={`text-[11px] mt-2 ${profileMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{profileMsg.text}</p>
+                )}
               </section>
+
+              {/* Password */}
+              {user?.authProvider !== 'google' && (
+                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
+                  <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Change Password</h3>
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Current password</label>
+                      <input
+                        type="password"
+                        value={pwCurrent}
+                        onChange={(e) => setPwCurrent(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">New password</label>
+                      <input
+                        type="password"
+                        value={pwNew}
+                        onChange={(e) => setPwNew(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
+                        placeholder="Min 8 characters"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={pwSaving || !pwCurrent || !pwNew}
+                      className="self-start px-4 py-2 text-[12px] font-medium bg-white/[0.06] border border-zinc-700 rounded-lg text-white hover:bg-white/[0.09] disabled:opacity-40 transition-all"
+                    >
+                      {pwSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'Update password'}
+                    </button>
+                    {pwMsg && (
+                      <p className={`text-[11px] ${pwMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{pwMsg.text}</p>
+                    )}
+                  </div>
+                </section>
+              )}
 
               {/* Usage */}
               {billingUsage && (

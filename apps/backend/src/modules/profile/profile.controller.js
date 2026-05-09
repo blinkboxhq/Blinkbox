@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import User from "../../models/user.model.js";
 
 const AVATAR_MAX_BYTES = 200_000; // 200 KB limit for base64 avatar
@@ -65,6 +66,32 @@ export async function updateProfile(req, res) {
     });
   } catch (err) {
     console.error("[profile] updateProfile error:", err.message);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+export async function changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
+      return res.status(400).json({ message: "Current password and a new password (min 8 characters) are required." });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user.password) {
+      return res.status(403).json({ message: "This account uses Google sign-in and has no password to change." });
+    }
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) return res.status(401).json({ message: "Current password is incorrect." });
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully." });
+  } catch (err) {
+    console.error("[profile] changePassword error:", err.message);
     res.status(500).json({ message: "Internal server error." });
   }
 }
