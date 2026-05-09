@@ -31,6 +31,19 @@ import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
+function assertSafeUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = u.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
+    /\.internal$/, /\.local$/,
+  ];
+  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
+}
+
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 async function getApiKey(credentialId, workspaceId) {
@@ -134,6 +147,7 @@ async function opAnalyzeImage(config, input, apiKey) {
     if (!/^https?:\/\//i.test(imageUrl)) {
       throw new Error("Gemini analyzeImage: imageUrl must be an http/https URL.");
     }
+    assertSafeUrl(imageUrl);
     const imgResponse = await axios.get(imageUrl, { responseType: "arraybuffer", timeout: 30000, maxContentLength: 10 * 1024 * 1024 });
     const mimeType = (imgResponse.headers["content-type"] || "image/jpeg").split(";")[0];
     const data = Buffer.from(imgResponse.data).toString("base64");

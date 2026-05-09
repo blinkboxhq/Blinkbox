@@ -44,6 +44,19 @@ import axios from "axios";
 import { resolveCredential } from "../../utils/resolveCredential.js";
 import { decrypt } from "../../utils/crypto.js";
 
+function assertSafeUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = u.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
+    /\.internal$/, /\.local$/,
+  ];
+  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
+}
+
 const BASE = "https://api.openai.com/v1";
 
 async function getApiKey(credentialId, workspaceId) {
@@ -176,7 +189,7 @@ async function opTranscribeAudio(config, input, apiKey) {
   if (!/^https?:\/\//i.test(url)) {
     throw new Error("OpenAI transcribeAudio: audioUrl must be an http/https URL.");
   }
-  // Download the audio file and send as multipart (25 MB = Whisper's hard limit)
+  assertSafeUrl(url);
   const audioResponse = await axios.get(url, { responseType: "arraybuffer", timeout: 60000, maxContentLength: 25 * 1024 * 1024 });
   const audioBuffer = Buffer.from(audioResponse.data);
 
