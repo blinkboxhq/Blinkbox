@@ -17,17 +17,13 @@ import Credential from "../../models/credential.model.js";
 import { encrypt } from "../../utils/crypto.js";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, BACKEND_URL } from "../../config/env.js";
+import { redis } from "../../infra/redis.client.js";
 
-// In-memory state store for CSRF protection (short-lived, <5 min)
-const pendingStates = new Map();
+const OAUTH_STATE_TTL = 5 * 60; // seconds — states expire after 5 minutes
 
-// Clean up expired states every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of pendingStates) {
-    if (now - val.createdAt > 5 * 60 * 1000) pendingStates.delete(key);
-  }
-}, 5 * 60 * 1000);
+function oauthStateKey(state) {
+  return `oauth:state:${state}`;
+}
 
 /**
  * GET /api/oauth/:provider/authorize
@@ -60,13 +56,9 @@ export async function oauthAuthorize(req, res) {
       return res.status(500).json({ message: `${providerName} OAuth not configured. Set ${provider.clientEnvKey} in .env` });
     }
 
-    // Generate CSRF state token
+    // Generate CSRF state token — stored in Redis with TTL, survives restarts
     const state = crypto.randomBytes(32).toString("hex");
-    pendingStates.set(state, {
-      userId: user.id,
-      provider: providerName,
-      createdAt: Date.now(),
-    });
+    const stateData = { userId: user.id, provider: providerName };
 
     const callbackUrl = `${BACKEND_URL}/api/oauth/${providerName}/callback`;
 
@@ -100,9 +92,10 @@ export async function oauthAuthorize(req, res) {
         .digest("base64url");
       params.set("code_challenge", codeChallenge);
       params.set("code_challenge_method", "S256");
-      // Store verifier for token exchange
-      pendingStates.get(state).codeVerifier = codeVerifier;
+      stateData.codeVerifier = codeVerifier;
     }
+
+    await redis.setex(oauthStateKey(state), OAUTH_STATE_TTL, JSON.stringify(stateData));
 
     const authorizeUrl = `${provider.authorizeUrl}?${params.toString()}`;
     res.redirect(authorizeUrl);
@@ -129,12 +122,12 @@ export async function oauthCallback(req, res) {
       return renderPopupResult(res, { error: "Missing code or state parameter." });
     }
 
-    // Validate CSRF state
-    const pending = pendingStates.get(state);
+    // Validate CSRF state — atomic getdel prevents replay attacks
+    const rawPending = await redis.getdel(oauthStateKey(state));
+    const pending = rawPending ? JSON.parse(rawPending) : null;
     if (!pending || pending.provider !== providerName) {
       return renderPopupResult(res, { error: "Invalid or expired state. Please try again." });
     }
-    pendingStates.delete(state);
 
     const provider = getProvider(providerName);
     if (!provider) {

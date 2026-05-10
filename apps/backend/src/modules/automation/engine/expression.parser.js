@@ -122,6 +122,10 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
   }
 }
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * Rewrites expressions that reference hyphenated node IDs into valid JS.
  * e.g. "anthropic-abc-123.result" → '$ctx["anthropic-abc-123"].result'
@@ -131,8 +135,10 @@ function rewriteHyphenatedRefs(expr, nodeIds) {
   let rewritten = expr;
   for (const id of sorted) {
     if (!id.includes("-")) continue;
-    const escaped = id.replace(/-/g, "\\-");
-    const pattern = new RegExp(`(?<!['"\\w])${escaped}(?=\\.|$|\\s|\\[)`, "g");
+    // Only process IDs that are safe alphanumeric+hyphen+underscore — reject anything else
+    // to prevent regex injection or template breakout
+    if (!/^[\w-]+$/.test(id)) continue;
+    const pattern = new RegExp(`(?<!['"\\w])${escapeRegex(id)}(?=\\.|$|\\s|\\[)`, "g");
     rewritten = rewritten.replace(pattern, `$ctx["${id}"]`);
   }
   return rewritten;

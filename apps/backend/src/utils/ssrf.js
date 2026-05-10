@@ -11,6 +11,13 @@ const BLOCKED_HOSTNAME = [
   /^fc00:/i,
   /^fe80:/i,
   /^fd[0-9a-f]{2}:/i,
+  // IPv6-mapped IPv4 private addresses (e.g. ::ffff:127.0.0.1 bypasses IPv4 checks above)
+  /^::ffff:127\./i,
+  /^::ffff:10\./i,
+  /^::ffff:172\.(1[6-9]|2\d|3[01])\./i,
+  /^::ffff:192\.168\./i,
+  /^::ffff:169\.254\./i,
+  /^::ffff:0\./i,
   /\.internal$/,
   /\.local$/,
 ];
