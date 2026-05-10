@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles, Zap } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -104,9 +104,13 @@ export default function Canvas() {
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
   const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
-  const storeNodesLen = useWorkspaceStore((s) => s.nodes.length);
-  const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
-  const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
+  const storeNodesLen    = useWorkspaceStore((s) => s.nodes.length);
+  const nodeStatuses     = useWorkspaceStore((s) => s.nodeStatuses);
+  const isExecutionLive  = useWorkspaceStore((s) => s.isExecutionLive);
+  const isRunning        = useWorkspaceStore((s) => s.isRunning);
+  const runEngine        = useWorkspaceStore((s) => s.runEngine);
+  const executionError   = useWorkspaceStore((s) => s.executionError);
+  const openTraceSidebar = useWorkspaceStore((s) => s.openTraceSidebar);
   const applyRemoteNodeMove = useWorkspaceStore((s) => s.applyRemoteNodeMove);
   const applyGraphSync      = useWorkspaceStore((s) => s.applyGraphSync);
   const watchAutomation     = useWorkspaceStore((s) => s.watchAutomation);
@@ -226,6 +230,23 @@ export default function Canvas() {
 
   // Multi-select
   const [ctxMenu, setCtxMenu] = useState(null); // { x, y, nodeId, nodeLabel }
+
+  // Track run result for floating button feedback
+  const [lastRunResult, setLastRunResult] = useState(null); // null | "success" | "error"
+  const [runDurationMs, setRunDurationMs] = useState(null);
+  const runStartRef = useRef(null);
+  useEffect(() => {
+    if (isRunning) {
+      runStartRef.current = Date.now();
+      setLastRunResult(null);
+    } else if (runStartRef.current) {
+      const dur = Date.now() - runStartRef.current;
+      setRunDurationMs(dur);
+      const statuses = Object.values(nodeStatuses);
+      setLastRunResult(statuses.includes("failed") || executionError ? "error" : "success");
+      runStartRef.current = null;
+    }
+  }, [isRunning, nodeStatuses, executionError]);
 
   const selectedNodeIds = useWorkspaceStore((s) => s.selectedNodeIds);
   const onSelectionChange = useWorkspaceStore((s) => s.onSelectionChange);
@@ -498,6 +519,59 @@ export default function Canvas() {
               strokeWidth={2}
             />
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Floating Run button — bottom-left ── */}
+      <AnimatePresence>
+        {storeNodesLen > 0 && (
+          <motion.div
+            key="run-btn"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-6 left-6 z-20 flex items-center gap-2"
+          >
+            <button
+              onClick={() => { runEngine(automationId); setLastRunResult(null); }}
+              disabled={isRunning || storeNodesLen === 0}
+              title="Run workflow (⌘↵)"
+              className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[12px] font-semibold shadow-lg shadow-black/40 transition-all duration-200 disabled:cursor-not-allowed
+                ${isRunning
+                  ? 'bg-blue-500/15 border border-blue-500/30 text-blue-400 cursor-not-allowed'
+                  : 'bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-emerald-500/15 hover:border-emerald-500/30 hover:text-emerald-400 active:scale-[0.97]'}`}
+            >
+              {isRunning
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Running…</>
+                : <><Play className="w-3.5 h-3.5" /> Run</>
+              }
+            </button>
+
+            {/* Last-run status pill */}
+            <AnimatePresence>
+              {!isRunning && lastRunResult && (
+                <motion.button
+                  key={lastRunResult}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -4 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={() => openTraceSidebar?.()}
+                  title="View last run trace"
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-[11px] font-semibold border shadow-lg shadow-black/40 transition-colors
+                    ${lastRunResult === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20'}`}
+                >
+                  {lastRunResult === 'success'
+                    ? <><CheckCircle2 className="w-3.5 h-3.5" />{runDurationMs ? `${(runDurationMs / 1000).toFixed(1)}s` : 'Done'}</>
+                    : <><XCircle className="w-3.5 h-3.5" />Failed</>
+                  }
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
       </AnimatePresence>
 
