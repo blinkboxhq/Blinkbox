@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, LayoutDashboard, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -6,7 +6,6 @@ import NodeContextMenu from "./NodeContextMenu";
 import { playNodeLand, playDelete } from "../../../lib/sounds";
 import {
   ReactFlow,
-  Controls,
   MiniMap,
   Background,
   BackgroundVariant,
@@ -253,7 +252,7 @@ export default function Canvas() {
   const deleteSelectedNodes = useWorkspaceStore((s) => s.deleteSelectedNodes);
   const duplicateSelectedNodes = useWorkspaceStore((s) => s.duplicateSelectedNodes);
   const alignSelectedNodes = useWorkspaceStore((s) => s.alignSelectedNodes);
-  const autoLayout = useWorkspaceStore((s) => s.autoLayout);
+
 
   const isMultiSelected = selectedNodeIds.length > 1;
 
@@ -357,12 +356,6 @@ export default function Canvas() {
         zoomOnPinch
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
-        <Controls
-          className="!bg-zinc-900/90 !backdrop-blur-sm !border-zinc-800/50 !rounded-xl !shadow-lg !shadow-black/20
-            [&>button]:!bg-zinc-900 [&>button]:!border-zinc-800/50 [&>button]:!text-zinc-500
-            [&>button:hover]:!bg-zinc-800 [&>button:hover]:!text-zinc-200
-            [&>button]:!rounded-lg [&>button]:!transition-all [&>button]:!duration-200"
-        />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";
@@ -421,167 +414,111 @@ export default function Canvas() {
         {isMultiSelected && (
           <motion.div
             key="multiselect-toolbar"
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/60 shadow-xl shadow-black/40"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2 py-1 rounded-xl bg-zinc-900/95 backdrop-blur-sm border border-zinc-800/70 shadow-xl shadow-black/40"
           >
             <span className="text-[10px] font-semibold text-zinc-500 px-1.5">
               {selectedNodeIds.length} selected
             </span>
-            <div className="w-px h-4 bg-zinc-700/60 mx-0.5" />
-            <ToolbarBtn
-              icon={AlignHorizontalJustifyStart}
-              label="Align top"
-              onClick={() => alignSelectedNodes("horizontal")}
-            />
-            <ToolbarBtn
-              icon={AlignVerticalJustifyStart}
-              label="Align left"
-              onClick={() => alignSelectedNodes("vertical")}
-            />
-            <div className="w-px h-4 bg-zinc-700/60 mx-0.5" />
-            <ToolbarBtn
-              icon={Copy}
-              label="Duplicate"
-              onClick={duplicateSelectedNodes}
-            />
-            <ToolbarBtn
-              icon={Trash2}
-              label="Delete"
-              onClick={deleteSelectedNodes}
-              danger
-            />
+            <div className="w-px h-4 bg-zinc-800/80 mx-0.5" />
+            <ToolbarBtn icon={AlignHorizontalJustifyStart} label="Align top"  onClick={() => alignSelectedNodes("horizontal")} />
+            <ToolbarBtn icon={AlignVerticalJustifyStart}   label="Align left" onClick={() => alignSelectedNodes("vertical")} />
+            <div className="w-px h-4 bg-zinc-800/80 mx-0.5" />
+            <ToolbarBtn icon={Copy}   label="Duplicate" onClick={duplicateSelectedNodes} />
+            <ToolbarBtn icon={Trash2} label="Delete"    onClick={deleteSelectedNodes} danger />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Auto-layout button ── */}
-      <AnimatePresence>
-        {storeNodesLen > 1 && !isMultiSelected && (
-          <motion.button
-            key="auto-layout-btn"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 0.15 }}
-            onClick={autoLayout}
-            title="Auto-layout (L)"
-            className="absolute bottom-6 right-20 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 bg-zinc-800 border border-zinc-700/60 text-zinc-400 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Add trigger button ── */}
-      <AnimatePresence>
-        {storeNodesLen > 0 && (
-          <motion.button
-            key="add-trigger-btn"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setTriggerPickerOpen(!isTriggerPickerOpen)}
-            title="Add a trigger"
-            className={`absolute bottom-6 right-[104px] z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200
-              ${isTriggerPickerOpen
-                ? "bg-zinc-100 text-zinc-900 shadow-zinc-900/50"
-                : "bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
-              }`}
-          >
-            <Zap className="w-4 h-4" strokeWidth={2} />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Add node button ── */}
-      <AnimatePresence>
-        {storeNodesLen > 0 && (
-          <motion.button
-            key="add-node-btn"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setAddNodeOpen(!isAddNodeOpen)}
-            title="Add a node"
-            className={`absolute bottom-6 right-6 z-20 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200
-              ${isAddNodeOpen
-                ? "bg-zinc-100 text-zinc-900 shadow-zinc-900/50"
-                : "bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-600 shadow-black/40"
-              }`}
-          >
-            <Plus
-              className={`w-5 h-5 transition-transform duration-200 ${isAddNodeOpen ? "rotate-45" : ""}`}
-              strokeWidth={2}
-            />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Floating Run button — bottom-left ── */}
+      {/* ── Unified bottom toolbar ── */}
       <AnimatePresence>
         {storeNodesLen > 0 && (
           <motion.div
-            key="run-btn"
-            initial={{ opacity: 0, y: 8 }}
+            key="bottom-toolbar"
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-6 left-6 z-20 flex items-center gap-2"
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-5 right-5 z-20 flex items-center gap-2"
           >
-            <button
-              onClick={() => { runEngine(automationId); setLastRunResult(null); }}
-              disabled={isRunning || storeNodesLen === 0}
-              title="Run workflow (⌘↵)"
-              className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[12px] font-semibold shadow-lg shadow-black/40 transition-all duration-200 disabled:cursor-not-allowed
-                ${isRunning
-                  ? 'bg-blue-500/15 border border-blue-500/30 text-blue-400 cursor-not-allowed'
-                  : 'bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:bg-emerald-500/15 hover:border-emerald-500/30 hover:text-emerald-400 active:scale-[0.97]'}`}
-            >
-              {isRunning
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Running…</>
-                : <><Play className="w-3.5 h-3.5" /> Run</>
-              }
-            </button>
-
-            {/* Last-run status pill */}
+            {/* Last-run result — appears to the left of main toolbar */}
             <AnimatePresence>
               {!isRunning && lastRunResult && (
                 <motion.button
                   key={lastRunResult}
-                  initial={{ opacity: 0, x: -6 }}
+                  initial={{ opacity: 0, x: 8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -4 }}
+                  exit={{ opacity: 0, x: 8 }}
                   transition={{ duration: 0.15 }}
                   onClick={() => openTraceSidebar?.()}
                   title="View last run trace"
-                  className={`flex items-center gap-1.5 h-9 px-3 rounded-xl text-[11px] font-semibold border shadow-lg shadow-black/40 transition-colors
+                  className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11px] font-semibold border shadow-lg shadow-black/30 transition-colors
                     ${lastRunResult === 'success'
-                      ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
-                      : 'bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20'}`}
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
                 >
                   {lastRunResult === 'success'
-                    ? <><CheckCircle2 className="w-3.5 h-3.5" />{runDurationMs ? `${(runDurationMs / 1000).toFixed(1)}s` : 'Done'}</>
-                    : <><XCircle className="w-3.5 h-3.5" />Failed</>
+                    ? <><CheckCircle2 className="w-3 h-3" />{runDurationMs ? `${(runDurationMs / 1000).toFixed(1)}s` : 'Done'}</>
+                    : <><XCircle className="w-3 h-3" />Failed</>
                   }
                 </motion.button>
               )}
             </AnimatePresence>
+
+            {/* Single unified pill: Run | divider | Trigger | Add */}
+            <div className="flex items-center h-8 bg-zinc-900 border border-zinc-800/80 rounded-xl shadow-lg shadow-black/30 overflow-hidden">
+
+              {/* Run */}
+              <button
+                onClick={() => { runEngine(automationId); setLastRunResult(null); }}
+                disabled={isRunning}
+                title="Run workflow (⌘↵)"
+                className={`flex items-center gap-1.5 h-full px-3.5 text-[11px] font-semibold transition-all duration-150 disabled:cursor-not-allowed
+                  ${isRunning
+                    ? 'text-blue-400 bg-blue-500/10'
+                    : 'text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
+              >
+                {isRunning
+                  ? <><Loader2 className="w-3 h-3 animate-spin" />Running</>
+                  : <><Play className="w-3 h-3" />Run</>
+                }
+              </button>
+
+              <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
+
+              {/* Add trigger */}
+              <button
+                onClick={() => setTriggerPickerOpen(!isTriggerPickerOpen)}
+                title="Add trigger"
+                className={`flex items-center justify-center w-8 h-full transition-all duration-150
+                  ${isTriggerPickerOpen
+                    ? 'text-white bg-white/10'
+                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]'}`}
+              >
+                <Zap className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
+
+              {/* Add node */}
+              <button
+                onClick={() => setAddNodeOpen(!isAddNodeOpen)}
+                title="Add node"
+                className={`flex items-center justify-center w-8 h-full transition-all duration-150
+                  ${isAddNodeOpen
+                    ? 'text-white bg-white/10'
+                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]'}`}
+              >
+                <Plus
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${isAddNodeOpen ? 'rotate-45' : ''}`}
+                  strokeWidth={2}
+                />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── Cmd+K hint ── */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/70 border border-zinc-800/60 backdrop-blur-sm">
-          <kbd className="text-[10px] text-zinc-600 font-mono">⌘K</kbd>
-          <span className="text-[10px] text-zinc-700">Quick add node</span>
-        </div>
-      </div>
 
     </div>
   );
