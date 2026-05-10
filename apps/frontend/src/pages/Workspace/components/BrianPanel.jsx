@@ -1,5 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, Send, RotateCcw } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import {
+  X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown,
+  Download, Zap, Globe, Mail, Clock, Code2, Database, GitBranch,
+  Layers, Sparkles, ArrowDown, AlertCircle,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
@@ -7,269 +11,595 @@ import api from '../../../lib/api';
 import BrianThinkingBlock from './BrianThinkingBlock';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
 
-// ── API call ──────────────────────────────────────────────────────────────────
+// ── API ───────────────────────────────────────────────────────────────────────
 async function callBrian(messages) {
   const { data } = await api.post('/api/brian/chat', { messages });
   return data;
 }
 
-// ── Suggestion chips ──────────────────────────────────────────────────────────
-const SUGGESTIONS = [
-  'Send a Telegram message when a webhook fires',
-  'Scrape a URL every hour and email the result',
-  'When a form is submitted, save to DB and notify Slack',
-  'Monitor Gmail and summarise new emails with AI',
+// ── Suggestion library ────────────────────────────────────────────────────────
+const SUGGESTION_GROUPS = [
+  {
+    label: 'Automations',
+    icon: Zap,
+    color: 'text-violet-400',
+    items: [
+      'When a webhook fires, parse the payload and post a formatted message to Slack',
+      'Send a Telegram message when any HTTP request node returns an error',
+    ],
+  },
+  {
+    label: 'Scheduling',
+    icon: Clock,
+    color: 'text-amber-400',
+    items: [
+      'Every day at 8 am, fetch top HackerNews posts and email me a digest',
+      'Scrape a URL every hour and save new content to a Google Sheet',
+    ],
+  },
+  {
+    label: 'Email & Comms',
+    icon: Mail,
+    color: 'text-sky-400',
+    items: [
+      'When I get a Gmail with "invoice" in the subject, extract amounts and save to Notion',
+      'Monitor Gmail for support emails, classify them with AI, then route to Slack channels',
+    ],
+  },
+  {
+    label: 'Data & AI',
+    icon: Database,
+    color: 'text-emerald-400',
+    items: [
+      'When a form is submitted, enrich the lead with AI and create a HubSpot contact',
+      'Extract text from a PDF, summarise with Claude, and store embeddings in Pinecone',
+    ],
+  },
 ];
 
-// ── User message bubble ───────────────────────────────────────────────────────
-function UserBubble({ text }) {
+// ── Markdown renderer ─────────────────────────────────────────────────────────
+function CopyBtn({ text, className = '' }) {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [text]);
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[85%] px-3 py-2 rounded-2xl rounded-tr-sm bg-violet-600/20 border border-violet-500/20 text-[12.5px] text-neutral-200 leading-relaxed">
-        {text}
+    <button onClick={copy}
+      className={`flex items-center gap-1 text-[10px] transition-colors ${copied ? 'text-emerald-400' : 'text-neutral-600 hover:text-neutral-300'} ${className}`}>
+      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
+function CodeBlock({ lang, code }) {
+  return (
+    <div className="rounded-lg overflow-hidden border border-[#252525] my-2">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-900 border-b border-[#252525]">
+        <span className="text-[10px] font-mono text-neutral-600">{lang || 'code'}</span>
+        <CopyBtn text={code} />
+      </div>
+      <pre className="px-3 py-3 bg-[#0a0a0c] overflow-x-auto scrollbar-thin">
+        <code className="text-[11px] font-mono text-neutral-300 leading-[1.7]">{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function parseInline(text, key = 0) {
+  const parts = [];
+  let rem = text;
+  let i = key * 1000;
+  while (rem.length > 0) {
+    const codeM = rem.match(/^`([^`]+)`/);
+    if (codeM) {
+      parts.push(
+        <code key={i++} className="px-1.5 py-0.5 bg-neutral-800 rounded text-[11px] font-mono text-violet-300">
+          {codeM[1]}
+        </code>
+      );
+      rem = rem.slice(codeM[0].length);
+      continue;
+    }
+    const boldM = rem.match(/^\*\*([^*]+)\*\*/);
+    if (boldM) {
+      parts.push(<strong key={i++} className="font-semibold text-neutral-100">{boldM[1]}</strong>);
+      rem = rem.slice(boldM[0].length);
+      continue;
+    }
+    const italM = rem.match(/^\*([^*]+)\*/);
+    if (italM) {
+      parts.push(<em key={i++} className="italic text-neutral-400">{italM[1]}</em>);
+      rem = rem.slice(italM[0].length);
+      continue;
+    }
+    const next = rem.search(/[`*]/);
+    if (next === -1) { parts.push(rem); break; }
+    if (next > 0) parts.push(rem.slice(0, next));
+    rem = rem.slice(Math.max(next, 1));
+  }
+  return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts;
+}
+
+function MarkdownRenderer({ text }) {
+  const segments = useMemo(() => text.split(/(```[\s\S]*?```)/g), [text]);
+
+  return (
+    <div className="space-y-2 text-[12.5px] text-neutral-300 leading-relaxed">
+      {segments.map((seg, si) => {
+        if (seg.startsWith('```')) {
+          const m = seg.match(/```(\w*)\n?([\s\S]*?)```/);
+          return <CodeBlock key={si} lang={m?.[1] || ''} code={m?.[2]?.trim() || seg} />;
+        }
+        const lines = seg.split('\n');
+        const out = [];
+        let listBuf = [];
+
+        const flushList = (idx) => {
+          if (!listBuf.length) return;
+          out.push(
+            <ul key={`list-${idx}`} className="pl-1 space-y-1">
+              {listBuf.map((item, ii) => (
+                <li key={ii} className="flex gap-2">
+                  <span className="text-violet-400 shrink-0 mt-px">{item.ordered ? `${item.n}.` : '·'}</span>
+                  <span>{parseInline(item.content, ii)}</span>
+                </li>
+              ))}
+            </ul>
+          );
+          listBuf = [];
+        };
+
+        lines.forEach((line, li) => {
+          const bulletM = line.match(/^[-*]\s+(.+)/);
+          const numM = line.match(/^(\d+)\.\s+(.+)/);
+          if (bulletM) { listBuf.push({ ordered: false, content: bulletM[1] }); return; }
+          if (numM) { listBuf.push({ ordered: true, n: numM[1], content: numM[2] }); return; }
+          flushList(li);
+          if (line.startsWith('### ')) {
+            out.push(<p key={li} className="font-semibold text-neutral-100 text-[13px] mt-1">{parseInline(line.slice(4), li)}</p>);
+          } else if (line.startsWith('## ')) {
+            out.push(<p key={li} className="font-bold text-neutral-100 text-[14px] mt-2">{parseInline(line.slice(3), li)}</p>);
+          } else if (line.startsWith('# ')) {
+            out.push(<p key={li} className="font-bold text-white text-[15px] mt-2">{parseInline(line.slice(2), li)}</p>);
+          } else if (line.trim()) {
+            out.push(<p key={li}>{parseInline(line, li)}</p>);
+          } else if (li > 0 && out.length > 0) {
+            out.push(<div key={`sp-${li}`} className="h-1" />);
+          }
+        });
+        flushList('end');
+        return <div key={si} className="space-y-1">{out}</div>;
+      })}
+    </div>
+  );
+}
+
+// ── Message components ────────────────────────────────────────────────────────
+function UserBubble({ text, time }) {
+  return (
+    <div className="flex justify-end group">
+      <div className="max-w-[88%] flex flex-col items-end gap-1">
+        <div className="px-3 py-2 rounded-2xl rounded-tr-sm bg-violet-600/20 border border-violet-500/20 text-[12.5px] text-neutral-200 leading-relaxed">
+          {text}
+        </div>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[9px] text-neutral-700">{time}</span>
+          <CopyBtn text={text} className="text-[9px]" />
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Brian text-only bubble ────────────────────────────────────────────────────
-function BrianTextBubble({ text }) {
+function BrianBubble({ msg, time, onFeedback }) {
+  const [feedback, setFeedback] = useState(null);
+  const handleFeedback = (val) => {
+    setFeedback(val);
+    onFeedback?.(val);
+  };
+
   return (
-    <div className="text-[12.5px] text-neutral-300 leading-relaxed whitespace-pre-wrap">
-      {text}
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col gap-2 group"
+    >
+      <div className="flex items-center gap-1.5">
+        <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
+          <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+        </div>
+        <span className="text-[10px] font-semibold text-violet-400">Brian</span>
+        <span className="text-[9px] text-neutral-700">{time}</span>
+      </div>
+
+      <div className="ml-6">
+        {msg.flow ? (
+          <BrianWorkflowPlan text={msg.text} flow={msg.flow} onAccept={msg.onAccept} />
+        ) : (
+          <MarkdownRenderer text={msg.text} />
+        )}
+
+        {/* Message actions */}
+        {!msg.flow && msg.text && (
+          <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <CopyBtn text={msg.text} className="text-[9px]" />
+            <div className="w-px h-3 bg-neutral-800" />
+            <button onClick={() => handleFeedback('up')}
+              className={`p-0.5 rounded transition-colors ${feedback === 'up' ? 'text-emerald-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
+              <ThumbsUp className="w-3 h-3" />
+            </button>
+            <button onClick={() => handleFeedback('down')}
+              className={`p-0.5 rounded transition-colors ${feedback === 'down' ? 'text-red-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
+              <ThumbsDown className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Empty / welcome state ─────────────────────────────────────────────────────
+function EmptyState({ onSend }) {
+  const [hovered, setHovered] = useState(null);
+  return (
+    <div className="flex flex-col h-full overflow-y-auto">
+      {/* Hero */}
+      <div className="flex flex-col items-center px-5 pt-8 pb-5 text-center shrink-0">
+        <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
+          <img src={brianLogo} alt="Brian" className="w-8 h-8 object-contain" />
+        </div>
+        <h2 className="text-[15px] font-bold text-white mb-1">Hi, I'm Brian</h2>
+        <p className="text-[12px] text-neutral-500 max-w-[200px] leading-relaxed">
+          Tell me what to automate and I'll build the workflow on your canvas.
+        </p>
+      </div>
+
+      {/* Suggestion groups */}
+      <div className="px-3 pb-4 space-y-4">
+        {SUGGESTION_GROUPS.map((group) => (
+          <div key={group.label}>
+            <div className="flex items-center gap-1.5 mb-2 px-1">
+              <group.icon className={`w-3 h-3 ${group.color}`} />
+              <span className="text-[10px] font-semibold text-neutral-600 uppercase tracking-widest">{group.label}</span>
+            </div>
+            <div className="space-y-1">
+              {group.items.map((item) => (
+                <button key={item} onClick={() => onSend(item)}
+                  onMouseEnter={() => setHovered(item)}
+                  onMouseLeave={() => setHovered(null)}
+                  className={`w-full text-left px-3 py-2 rounded-lg border transition-all text-[11px] leading-snug
+                    ${hovered === item
+                      ? 'border-neutral-700 bg-white/[0.04] text-neutral-200'
+                      : 'border-[#1e1e1e] bg-neutral-900/40 text-neutral-600'}`}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
+// ── Context strip ─────────────────────────────────────────────────────────────
+function ContextStrip({ nodeCount, workflowName }) {
+  if (!nodeCount) return null;
+  return (
+    <div className="flex items-center gap-2 px-4 py-1.5 bg-neutral-900/60 border-b border-[#1a1a1a] shrink-0">
+      <Layers className="w-3 h-3 text-neutral-700 shrink-0" />
+      <span className="text-[10px] text-neutral-600 truncate">
+        {nodeCount} node{nodeCount !== 1 ? 's' : ''} on canvas
+        {workflowName ? ` · ${workflowName}` : ''}
+      </span>
+    </div>
+  );
+}
+
+// ── Scroll-to-bottom button ───────────────────────────────────────────────────
+function ScrollToBottom({ onClick }) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
+      onClick={onClick}
+      className="absolute bottom-4 right-4 z-10 w-7 h-7 rounded-full bg-neutral-800 border border-[#333] flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-700 shadow-lg transition-colors"
+    >
+      <ArrowDown className="w-3.5 h-3.5" />
+    </motion.button>
+  );
+}
+
+// ── Timestamp helper ──────────────────────────────────────────────────────────
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Export conversation ───────────────────────────────────────────────────────
+function exportConversation(messages, workflowName) {
+  const lines = [`# Brian Conversation — ${workflowName || 'Untitled'}\n`];
+  messages.forEach(m => {
+    if (m.id === 'welcome') return;
+    const role = m.role === 'user' ? '**You**' : '**Brian**';
+    lines.push(`${role} · ${fmtTime(m.id)}\n\n${m.text}\n`);
+    if (m.flow) lines.push(`\`\`\`json\n${JSON.stringify(m.flow, null, 2)}\n\`\`\`\n`);
+  });
+  const blob = new Blob([lines.join('\n---\n\n')], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `brian-${Date.now()}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 export default function BrianPanel({ width, onResizeStart }) {
-  const isBrianOpen = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
-  const addNode = useWorkspaceStore(s => s.addNode);
+  const isBrianOpen   = useWorkspaceStore(s => s.isBrianOpen);
+  const setBrianOpen  = useWorkspaceStore(s => s.setBrianOpen);
+  const addNode       = useWorkspaceStore(s => s.addNode);
+  const nodes         = useWorkspaceStore(s => s.nodes);
+  const workflowName  = useWorkspaceStore(s => s.workflowName);
 
   const WELCOME = {
-    id: 'welcome', role: 'brian',
-    text: "Hey! I'm Brian — tell me what you want to automate and I'll build it. You can also ask me questions or describe your setup and I'll help you figure out the best approach.",
+    id: 'welcome', role: 'brian', ts: Date.now(),
+    text: "Hi! I'm Brian — describe what you want to automate and I'll build the workflow. You can also ask questions about your setup.",
     flow: null,
   };
 
-  const [messages,  setMessages]  = useState([WELCOME]);
-  const [input,     setInput]     = useState('');
-  const [thinking,  setThinking]  = useState(false);
+  const [messages,   setMessages]   = useState([WELCOME]);
+  const [input,      setInput]      = useState('');
+  const [thinking,   setThinking]   = useState(false);
   const [thinkStart, setThinkStart] = useState(null);
-  const [thinkMs,   setThinkMs]   = useState(null); // duration once done
-  const bottomRef = useRef(null);
-  const inputRef  = useRef(null);
+  const [thinkMs,    setThinkMs]    = useState(null);
+  const [atBottom,   setAtBottom]   = useState(true);
 
+  const bottomRef  = useRef(null);
+  const scrollRef  = useRef(null);
+  const inputRef   = useRef(null);
+  const textareaRef = useRef(null);
+
+  const isFresh = messages.length === 1 && messages[0].id === 'welcome';
+
+  // Focus input when panel opens
   useEffect(() => {
     if (isBrianOpen) setTimeout(() => inputRef.current?.focus(), 120);
   }, [isBrianOpen]);
 
+  // Auto-scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, thinking]);
+    if (atBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, thinking, atBottom]);
 
-  const applyFlow = (flow) => {
+  // Track whether user has scrolled up
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60);
+  }, []);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  }, [input]);
+
+  const applyFlow = useCallback((flow) => {
     if (!flow?.nodes) return;
     flow.nodes.forEach(n => addNode(n));
     useWorkspaceStore.setState(s => ({ edges: [...s.edges, ...(flow.edges || [])] }));
-  };
+  }, [addNode]);
 
-  const send = async (text) => {
+  const send = useCallback(async (text) => {
     const txt = (text || input).trim();
     if (!txt || thinking) return;
     setInput('');
 
-    const userMsg = { id: Date.now(), role: 'user', text: txt, flow: null };
+    const userMsg = { id: Date.now(), role: 'user', ts: Date.now(), text: txt, flow: null };
     setMessages(prev => [...prev, userMsg]);
     setThinking(true);
     setThinkStart(Date.now());
     setThinkMs(null);
+    setAtBottom(true);
 
     try {
-      const allMsgs = [...messages, userMsg].filter(m => m.id !== 'welcome');
-      const history = allMsgs.map(m => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.text,
-      }));
+      const history = [...messages, userMsg]
+        .filter(m => m.id !== 'welcome')
+        .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
       const result = await callBrian(history);
-      setThinkMs(Date.now() - (thinkStart || Date.now()));
+      const dur = Date.now() - (thinkStart || Date.now());
+      setThinkMs(dur);
       setMessages(prev => [...prev, {
-        id: Date.now() + 1, role: 'brian',
-        text: result.text, flow: result.flow,
+        id: Date.now() + 1, role: 'brian', ts: Date.now(),
+        text: result.text,
+        flow: result.flow,
+        onAccept: applyFlow,
       }]);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Unknown error';
       const isConfig = msg.includes('GOOGLE_AI_KEY') || msg.includes('not configured');
       setThinkMs(Date.now() - (thinkStart || Date.now()));
       setMessages(prev => [...prev, {
-        id: Date.now() + 1, role: 'brian', flow: null,
+        id: Date.now() + 1, role: 'brian', ts: Date.now(), flow: null,
         text: isConfig
-          ? '⚠️ Brian needs a key. Add GOOGLE_AI_KEY in Railway → Variables (free at aistudio.google.com).'
+          ? '⚠️ Brian needs a Google AI key. Add `GOOGLE_AI_KEY` in your environment variables (free at aistudio.google.com).'
           : `⚠️ ${msg}`,
       }]);
     } finally {
       setThinking(false);
     }
-  };
+  }, [input, thinking, messages, thinkStart, applyFlow]);
 
-  const reset = () => { setMessages([WELCOME]); setInput(''); };
+  const reset = useCallback(() => { setMessages([WELCOME]); setInput(''); setThinkMs(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isBrianOpen) return null;
 
-  const isFresh = messages.length === 1 && messages[0].id === 'welcome';
-
   return (
     <>
-    <div
-      className="shrink-0 h-full flex flex-row bg-[#0d0d10] border-l border-[#222]"
-      style={{ width: width ?? 360, animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
-    >
-      {/* Drag handle */}
-      <div onMouseDown={onResizeStart}
-        className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors group border-r border-[#1a1a1a]">
-        <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e1e1e] shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
-              <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
-            </div>
-            <span className="text-[13px] font-semibold text-white">Brian</span>
-            <span className="text-[9px] font-mono text-neutral-700 bg-neutral-900 px-1.5 py-0.5 rounded">
-              claude-sonnet-4-6
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={reset} title="New conversation"
-              className="p-1.5 text-neutral-700 hover:text-neutral-400 rounded-lg hover:bg-white/[0.04] transition-colors">
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => setBrianOpen(false)}
-              className="p-1.5 text-neutral-700 hover:text-neutral-400 rounded-lg hover:bg-white/[0.04] transition-colors">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
+      <div
+        className="shrink-0 h-full flex flex-row bg-[#0c0c0f] border-l border-[#1e1e1e]"
+        style={{ width: width ?? 360, animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
+      >
+        {/* ── Drag handle ── */}
+        <div onMouseDown={onResizeStart}
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#161616]">
+          <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
         </div>
 
-        {/* ── Messages ── */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-          {messages.map((msg, i) => {
-            const isUser = msg.role === 'user';
-            const isFirst = i === 0 && msg.id === 'welcome';
+          {/* ── Header ── */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a] shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
+                <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[12px] font-bold text-white leading-none">Brian</span>
+                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-6</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-0.5">
+              {messages.length > 1 && (
+                <button onClick={() => exportConversation(messages, workflowName)}
+                  title="Export conversation"
+                  className="p-1.5 text-neutral-700 hover:text-neutral-400 rounded-lg hover:bg-white/[0.04] transition-colors">
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button onClick={reset} title="New conversation"
+                className="p-1.5 text-neutral-700 hover:text-neutral-400 rounded-lg hover:bg-white/[0.04] transition-colors">
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setBrianOpen(false)}
+                className="p-1.5 text-neutral-700 hover:text-neutral-400 rounded-lg hover:bg-white/[0.04] transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
 
-            if (isUser) return <UserBubble key={msg.id} text={msg.text} />;
+          {/* ── Canvas context strip ── */}
+          <ContextStrip nodeCount={nodes.length} workflowName={workflowName} />
 
-            return (
-              <motion.div key={msg.id}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-2"
+          {/* ── Messages / empty state ── */}
+          {isFresh && !thinking ? (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <EmptyState onSend={send} />
+            </div>
+          ) : (
+            <div className="relative flex-1 min-h-0">
+              <div
+                ref={scrollRef}
+                onScroll={onScroll}
+                className="absolute inset-0 overflow-y-auto px-4 py-4 space-y-5"
               >
-                {/* Brian avatar row */}
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
-                    <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
-                  </div>
-                  <span className="text-[10px] font-semibold text-violet-400">Brian</span>
-                </div>
-
-                {/* Content */}
-                <div className="ml-6">
-                  {msg.flow ? (
-                    <BrianWorkflowPlan
-                      text={msg.text}
-                      flow={msg.flow}
-                      onAccept={applyFlow}
+                {messages.map((msg, i) => {
+                  if (msg.id === 'welcome') return null;
+                  if (msg.role === 'user') return <UserBubble key={msg.id} text={msg.text} time={fmtTime(msg.ts)} />;
+                  return (
+                    <BrianBubble
+                      key={msg.id}
+                      msg={msg}
+                      time={fmtTime(msg.ts)}
                     />
-                  ) : (
-                    <BrianTextBubble text={msg.text} />
+                  );
+                })}
+
+                {/* Thinking block */}
+                <AnimatePresence>
+                  {thinking && (
+                    <motion.div key="thinking"
+                      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                      className="flex flex-col gap-2"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
+                          <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                        </div>
+                        <span className="text-[10px] font-semibold text-violet-400">Brian</span>
+                      </div>
+                      <div className="ml-6">
+                        <BrianThinkingBlock thinking={thinking} durationMs={thinkMs} />
+                      </div>
+                    </motion.div>
                   )}
-                </div>
-              </motion.div>
-            );
-          })}
+                </AnimatePresence>
 
-          {/* ── Thinking block ── */}
-          <AnimatePresence>
-            {thinking && (
-              <motion.div key="thinking"
-                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                className="flex flex-col gap-2"
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
-                    <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                {!thinking && thinkMs != null && messages.length > 1 && (
+                  <div className="ml-[26px]">
+                    <BrianThinkingBlock thinking={false} durationMs={thinkMs} />
                   </div>
-                  <span className="text-[10px] font-semibold text-violet-400">Brian</span>
-                </div>
-                <div className="ml-6">
-                  <BrianThinkingBlock thinking={thinking} durationMs={thinkMs} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                )}
 
-          {/* Thinking block stays visible after done (shows collapsed "Thought for Xs") */}
-          {!thinking && thinkMs != null && messages.length > 1 && (
-            <div className="ml-[26px]">
-              <BrianThinkingBlock thinking={false} durationMs={thinkMs} />
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Scroll-to-bottom button */}
+              <AnimatePresence>
+                {!atBottom && (
+                  <ScrollToBottom onClick={() => {
+                    setAtBottom(true);
+                    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  }} />
+                )}
+              </AnimatePresence>
             </div>
           )}
 
-          <div ref={bottomRef} />
-        </div>
+          {/* ── Input area ── */}
+          <div className="px-3 pb-3 pt-2 border-t border-[#1a1a1a] shrink-0">
+            <div className="flex flex-col bg-neutral-900 border border-[#252525] rounded-xl overflow-hidden focus-within:border-neutral-700 transition-colors">
+              <textarea
+                ref={el => { inputRef.current = el; textareaRef.current = el; }}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+                }}
+                placeholder="Describe what you want to automate…"
+                rows={1}
+                className="w-full bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 resize-none focus:outline-none leading-relaxed px-3 pt-2.5 pb-1"
+                style={{ maxHeight: 120, overflowY: 'auto' }}
+                disabled={thinking}
+              />
 
-        {/* ── Suggestion chips (fresh chat only) ── */}
-        {isFresh && !thinking && (
-          <div className="px-4 pb-3 space-y-1.5 shrink-0">
-            <p className="text-[9px] text-neutral-700 uppercase tracking-widest font-medium mb-2">Try asking</p>
-            {SUGGESTIONS.map(s => (
-              <button key={s} onClick={() => send(s)}
-                className="w-full text-left px-3 py-2 rounded-lg border border-[#1e1e1e] bg-neutral-900/50 text-[11px] text-neutral-600 hover:text-neutral-300 hover:border-neutral-700 hover:bg-white/[0.03] transition-all">
-                {s}
-              </button>
-            ))}
+              <div className="flex items-center justify-between px-2.5 pb-2 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-neutral-800 select-none">⏎ send · ⇧⏎ newline</span>
+                  {input.length > 80 && (
+                    <span className={`text-[9px] ${input.length > 500 ? 'text-red-500' : 'text-neutral-700'}`}>
+                      {input.length}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => send()}
+                  disabled={!input.trim() || thinking}
+                  className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-3.5 h-3.5 text-white" />
+                </button>
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* ── Input ── */}
-        <div className="px-3 pb-3 pt-2 border-t border-[#1e1e1e] shrink-0">
-          <div className="flex items-end gap-2 bg-neutral-900 border border-[#2a2a2a] rounded-xl px-3 py-2.5 focus-within:border-neutral-700 transition-colors">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Describe what you want to automate…"
-              rows={1}
-              className="flex-1 bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 resize-none focus:outline-none leading-relaxed font-mono"
-              style={{ maxHeight: 100, overflowY: 'auto' }}
-              disabled={thinking}
-            />
-            <button onClick={() => send()} disabled={!input.trim() || thinking}
-              className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-              <Send className="w-3.5 h-3.5 text-white" />
-            </button>
-          </div>
         </div>
-
       </div>
-    </div>
 
-    <style>{`
-      @keyframes brianSlide {
-        from { opacity: 0; transform: translateX(16px); }
-        to   { opacity: 1; transform: translateX(0); }
-      }
-    `}</style>
+      <style>{`
+        @keyframes brianSlide {
+          from { opacity: 0; transform: translateX(16px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </>
   );
 }
