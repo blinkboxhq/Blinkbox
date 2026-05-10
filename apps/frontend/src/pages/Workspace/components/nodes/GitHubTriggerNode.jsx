@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Github, Info, ChevronDown, CheckCircle, Circle } from 'lucide-react';
+import { Github, Info, CheckCircle, Circle } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '../../../../lib/api';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const GITHUB_EVENTS = [
   { value: 'push',                label: 'Push',                  desc: 'Commits pushed to any branch' },
@@ -81,18 +82,15 @@ export default function GitHubTriggerNode({ config = {}, updateConfig, nodeId })
             </div>
 
             {/* GitHub Token credential */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">GitHub Token</label>
-              <input
-                value={config.tokenCredentialKey || ''}
-                onChange={(e) => updateConfig?.('tokenCredentialKey', e.target.value)}
-                placeholder="ghp_… or credential key"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-zinc-400/50 transition-colors"
-              />
-              <p className="text-[9px] text-zinc-600">
-                Needs <span className="font-mono text-zinc-500">repo</span> scope to register webhooks. Store in Credentials for security.
-              </p>
-            </div>
+            <CredentialPicker
+              label="GitHub Token"
+              value={config.tokenCredentialKey || ''}
+              onChange={(v) => updateConfig?.('tokenCredentialKey', v)}
+              oauthProvider="github"
+              accentColor="zinc"
+              placeholder="Select GitHub credential…"
+              hint="Needs repo scope to register webhooks — click Connect with GitHub to authorize."
+            />
 
             {/* Auto-register status */}
             <div className={`p-2.5 rounded-lg border ${isRegistered ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-[#0d0d0d] border-[#1a1a1a]'}`}>

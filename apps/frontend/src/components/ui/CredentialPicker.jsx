@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search } from 'lucide-react';
+import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
 
-// Map accentColor prop → Tailwind classes
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const ACCENT = {
   violet:  { btn: 'text-violet-400', dot: 'bg-violet-500', badge: 'bg-violet-500/10 border-violet-500/20 text-violet-400', save: 'bg-violet-500/15 border-violet-500/30 text-violet-300 hover:bg-violet-500/25' },
   blue:    { btn: 'text-blue-400',   dot: 'bg-blue-500',   badge: 'bg-blue-500/10 border-blue-500/20 text-blue-400',       save: 'bg-blue-500/15 border-blue-500/30 text-blue-300 hover:bg-blue-500/25' },
@@ -20,6 +21,16 @@ const ACCENT = {
 };
 
 const DEFAULT_ACCENT = ACCENT.violet;
+
+const OAUTH_META = {
+  google:    { label: 'Google',    color: '#4285F4' },
+  slack:     { label: 'Slack',     color: '#E01E5A' },
+  github:    { label: 'GitHub',    color: '#e8eaea' },
+  airtable:  { label: 'Airtable',  color: '#F82B60' },
+  notion:    { label: 'Notion',    color: '#e8eaea' },
+  microsoft: { label: 'Microsoft', color: '#0078D4' },
+  meta:      { label: 'Meta',      color: '#1877F2' },
+};
 
 function CredRow({ c, value, onChange, setOpen, setSearch, ac }) {
   const selected = c._id === value;
@@ -47,14 +58,16 @@ export default function CredentialPicker({
   label = 'Credential',
   placeholder = 'Select a credential…',
   accentColor = 'violet',
-  credentialType,   // optional — used as the default name prefix when creating
-  hint,             // optional helper text shown below the picker
+  credentialType,
+  oauthProvider,   // "google" | "slack" | "github" | "airtable" | "notion" | "microsoft" | "meta"
+  hint,
 }) {
   const [credentials, setCredentials] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const [newName, setNewName] = useState('');
   const [newSecret, setNewSecret] = useState('');
@@ -63,7 +76,10 @@ export default function CredentialPicker({
   const [createError, setCreateError] = useState(null);
 
   const dropdownRef = useRef(null);
+  const popupRef = useRef(null);
+  const messageHandlerRef = useRef(null);
   const ac = ACCENT[accentColor] || DEFAULT_ACCENT;
+  const oauthMeta = oauthProvider ? OAUTH_META[oauthProvider] : null;
 
   const fetchCredentials = useCallback(async () => {
     try {
@@ -76,13 +92,74 @@ export default function CredentialPicker({
 
   useEffect(() => { fetchCredentials(); }, [fetchCredentials]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  // Cleanup popup message listener on unmount
+  useEffect(() => {
+    return () => {
+      if (messageHandlerRef.current) {
+        window.removeEventListener('message', messageHandlerRef.current);
+      }
+    };
+  }, []);
+
+  const connectOAuth = () => {
+    const token = localStorage.getItem('blinkbox_token');
+    if (!token) return;
+
+    setIsConnecting(true);
+
+    // Close any existing popup
+    if (popupRef.current && !popupRef.current.closed) {
+      popupRef.current.close();
+    }
+    if (messageHandlerRef.current) {
+      window.removeEventListener('message', messageHandlerRef.current);
+    }
+
+    const popup = window.open(
+      `${API_URL}/api/oauth/${oauthProvider}/authorize?token=${encodeURIComponent(token)}`,
+      'blinkbox_oauth',
+      'width=600,height=700,scrollbars=yes,resizable=yes'
+    );
+    popupRef.current = popup;
+
+    const handler = (e) => {
+      if (e.data?.type !== 'blinkbox:oauth') return;
+      const { payload } = e.data;
+      window.removeEventListener('message', handler);
+      messageHandlerRef.current = null;
+      setIsConnecting(false);
+
+      if (payload?.success && payload?.credential) {
+        setCredentials((prev) => {
+          const already = prev.find((c) => c._id === payload.credential._id);
+          return already ? prev : [payload.credential, ...prev];
+        });
+        onChange(payload.credential._id);
+      }
+    };
+
+    messageHandlerRef.current = handler;
+    window.addEventListener('message', handler);
+
+    // Poll for popup closed without completing OAuth
+    const pollTimer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(pollTimer);
+        if (messageHandlerRef.current) {
+          window.removeEventListener('message', messageHandlerRef.current);
+          messageHandlerRef.current = null;
+        }
+        setIsConnecting(false);
+      }
+    }, 500);
+  };
 
   const selectedCred = credentials.find((c) => c._id === value);
 
@@ -141,6 +218,32 @@ export default function CredentialPicker({
       <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
         <KeyRound className="w-3 h-3" /> {label}
       </label>
+
+      {/* OAuth connect button — shown when oauthProvider is set and no credential selected */}
+      {oauthMeta && !selectedCred && (
+        <button
+          type="button"
+          onClick={connectOAuth}
+          disabled={isConnecting}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-[#333] hover:border-[#555] text-[13px] font-medium transition-all duration-150 disabled:opacity-60"
+          style={{ color: oauthMeta.color, borderColor: `${oauthMeta.color}30`, backgroundColor: `${oauthMeta.color}0d` }}
+        >
+          {isConnecting
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <Link2 className="w-3.5 h-3.5" />
+          }
+          {isConnecting ? `Connecting to ${oauthMeta.label}…` : `Connect with ${oauthMeta.label}`}
+        </button>
+      )}
+
+      {/* Divider between OAuth button and manual picker */}
+      {oauthMeta && !selectedCred && (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-px bg-[#222]" />
+          <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest">or select existing</span>
+          <div className="flex-1 h-px bg-[#222]" />
+        </div>
+      )}
 
       <div className="relative" ref={dropdownRef}>
         <button
@@ -209,6 +312,17 @@ export default function CredentialPicker({
 
             {/* Footer */}
             <div className="border-t border-[#1e1e20] shrink-0">
+              {oauthMeta && (
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); connectOAuth(); }}
+                  disabled={isConnecting}
+                  className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#1e1e20]"
+                  style={{ color: oauthMeta.color }}
+                >
+                  <Link2 className="w-3.5 h-3.5" /> Connect with {oauthMeta.label}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={openCreate}
@@ -226,7 +340,18 @@ export default function CredentialPicker({
         <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${ac.badge}`}>
           <Shield className="w-3 h-3 shrink-0" />
           <span className="text-[11px] font-medium truncate">{selectedCred.name}</span>
+          {oauthMeta && selectedCred.provider === oauthProvider && (
+            <span className="text-[9px] font-bold opacity-60 uppercase">OAuth</span>
+          )}
           <span className="ml-auto text-[9px] font-bold opacity-60 uppercase">{selectedCred.type || 'key'}</span>
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="ml-1 text-neutral-600 hover:text-red-400 transition-colors shrink-0"
+            title="Disconnect"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
       )}
 

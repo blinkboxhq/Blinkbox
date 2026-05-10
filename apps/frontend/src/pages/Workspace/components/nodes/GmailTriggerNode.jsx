@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import imgGmail from '../../../../assets/gmail.png';
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const POLL_INTERVALS = [
   { value: '*/1 * * * *',  label: 'Every minute' },
@@ -38,15 +39,15 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
       <div className="p-3 flex flex-col gap-3">
         {activeTab === 'setup' && (
           <>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">OAuth2 Credential</label>
-              <input value={config.credentialId || ''}
-                onChange={(e) => updateConfig?.('credentialId', e.target.value)}
-                placeholder="Select Gmail OAuth credential…"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#EA4335]/50 transition-colors"
-              />
-              <p className="text-[9px] text-zinc-600">Needs <span className="font-mono text-zinc-500">gmail.readonly</span> scope.</p>
-            </div>
+            <CredentialPicker
+              label="Google OAuth"
+              value={config.credentialId || ''}
+              onChange={(v) => updateConfig?.('credentialId', v)}
+              oauthProvider="google"
+              accentColor="red"
+              placeholder="Select Gmail credential…"
+              hint="Needs gmail.readonly scope — click Connect with Google to authorize."
+            />
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Poll Interval</label>

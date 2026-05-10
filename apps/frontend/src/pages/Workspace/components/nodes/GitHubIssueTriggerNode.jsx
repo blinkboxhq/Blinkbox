@@ -1,3 +1,5 @@
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+
 export default function GitHubIssueTriggerNode({ config = {}, updateConfig }) {
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -8,15 +10,15 @@ export default function GitHubIssueTriggerNode({ config = {}, updateConfig }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">GitHub Credential (PAT)</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="GitHub PAT credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500/40"
-        />
-      </div>
+      <CredentialPicker
+        label="GitHub Token"
+        value={config.credentialId || ''}
+        onChange={(v) => updateConfig('credentialId', v)}
+        oauthProvider="github"
+        accentColor="zinc"
+        placeholder="Select GitHub credential…"
+        hint="Needs repo scope to read issues and pull requests."
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">

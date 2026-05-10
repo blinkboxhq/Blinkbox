@@ -1,3 +1,5 @@
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+
 export default function YouTubeTriggerNode({ config = {}, updateConfig }) {
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -8,15 +10,15 @@ export default function YouTubeTriggerNode({ config = {}, updateConfig }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">YouTube API Credential</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="YouTube API key credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-red-500/40"
-        />
-      </div>
+      <CredentialPicker
+        label="Google OAuth"
+        value={config.credentialId || ''}
+        onChange={(v) => updateConfig('credentialId', v)}
+        oauthProvider="google"
+        accentColor="red"
+        placeholder="Select Google credential…"
+        hint="Needs YouTube Data API v3 — connect via Google OAuth."
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Channel ID</label>

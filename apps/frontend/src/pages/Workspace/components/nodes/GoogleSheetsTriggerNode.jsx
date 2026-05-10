@@ -23,9 +23,11 @@ export default function GoogleSheetsTriggerNode({ config = {}, updateConfig, nod
         </div>
         <div className="flex flex-col gap-1">
           <CredentialPicker
-            label="Google OAuth Access Token"
+            label="Google OAuth"
             value={config.accessToken || ''}
             onChange={(v) => updateConfig?.('accessToken', v)}
+            oauthProvider="google"
+            accentColor="green"
             placeholder="Select Google credential…"
           />
         </div>

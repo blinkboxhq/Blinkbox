@@ -1,3 +1,5 @@
+import CredentialPicker from '../../../../components/ui/CredentialPicker';
+
 export default function GoogleCalendarTriggerNode({ config = {}, updateConfig }) {
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -8,15 +10,15 @@ export default function GoogleCalendarTriggerNode({ config = {}, updateConfig })
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Google Credential</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="Google OAuth credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
-        />
-      </div>
+      <CredentialPicker
+        label="Google OAuth"
+        value={config.credentialId || ''}
+        onChange={(v) => updateConfig('credentialId', v)}
+        oauthProvider="google"
+        accentColor="blue"
+        placeholder="Select Google credential…"
+        hint="Needs calendar.readonly scope — click Connect with Google to authorize."
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Calendar ID</label>

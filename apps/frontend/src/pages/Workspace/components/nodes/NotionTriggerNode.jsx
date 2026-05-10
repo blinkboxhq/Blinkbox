@@ -44,8 +44,9 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
                 value={config.apiKey || ''}
                 onChange={(id) => updateConfig?.('apiKey', id)}
                 accentColor="zinc"
-                label="Notion Integration Token"
-                placeholder="Select credential..."
+                label="Notion OAuth"
+                oauthProvider="notion"
+                placeholder="Select Notion credential..."
               />
               <p className="text-[9px] text-zinc-600">From notion.so/profile/integrations. Share the database with your integration.</p>
             </div>

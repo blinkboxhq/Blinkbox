@@ -2,29 +2,57 @@ import { useState } from "react";
 import {
   Brain, Database, Zap, AlertTriangle,
   ChevronDown, ChevronUp, Settings2, Eye, MessageSquare,
-  ArrowRight, Plus, X, Plug,
+  ArrowRight, Plus, X, Plug, Globe,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// Platform integrations the agent can autonomously use
+// OAuth provider for each integration type (null = API key only)
+const INTEGRATION_OAUTH = {
+  slack:         "slack",
+  gmail:         "google",
+  discord:       null,
+  telegram:      null,
+  notion:        "notion",
+  airtable:      "airtable",
+  google_sheets: "google",
+  github:        "github",
+  linear:        null,
+  hubspot:       null,
+  mongodb:       null,
+  postgres:      null,
+  redis:         null,
+  jira:          null,
+  asana:         null,
+  stripe:        null,
+  shopify:       null,
+  clickup:       null,
+  twilio:        null,
+};
+
 const PLATFORM_INTEGRATIONS = [
-  { type: "slack",        label: "Slack",          emoji: "💬", desc: "Post messages & files" },
-  { type: "gmail",        label: "Gmail",           emoji: "📧", desc: "Send & search email" },
-  { type: "discord",      label: "Discord",         emoji: "🎮", desc: "Post to channels" },
-  { type: "telegram",     label: "Telegram",        emoji: "✈️",  desc: "Send messages via bot" },
-  { type: "notion",       label: "Notion",          emoji: "📝", desc: "Create & query pages" },
-  { type: "airtable",     label: "Airtable",        emoji: "📊", desc: "Create & read records" },
-  { type: "google_sheets",label: "Google Sheets",   emoji: "📈", desc: "Read & append rows" },
-  { type: "github",       label: "GitHub",          emoji: "🐙", desc: "Issues, PRs, comments" },
-  { type: "linear",       label: "Linear",          emoji: "📐", desc: "Create & update issues" },
-  { type: "hubspot",      label: "HubSpot",         emoji: "🔶", desc: "CRM contacts & deals" },
-  { type: "mongodb",      label: "MongoDB",         emoji: "🍃", desc: "Query & insert docs" },
-  { type: "postgres",     label: "PostgreSQL",      emoji: "🐘", desc: "Run SQL queries" },
-  { type: "redis",        label: "Redis",           emoji: "🔴", desc: "Get & set cache values" },
+  { type: "slack",         label: "Slack",          emoji: "💬", desc: "Post messages & files",       color: "#E01E5A" },
+  { type: "gmail",         label: "Gmail",           emoji: "📧", desc: "Send & search email",         color: "#EA4335" },
+  { type: "discord",       label: "Discord",         emoji: "🎮", desc: "Post to channels",            color: "#5865F2" },
+  { type: "telegram",      label: "Telegram",        emoji: "✈️",  desc: "Send messages via bot",       color: "#229ED9" },
+  { type: "notion",        label: "Notion",          emoji: "📝", desc: "Create & query pages",        color: "#e8eaea" },
+  { type: "airtable",      label: "Airtable",        emoji: "📊", desc: "Create & read records",       color: "#F82B60" },
+  { type: "google_sheets", label: "Google Sheets",   emoji: "📈", desc: "Read & append rows",          color: "#34A853" },
+  { type: "github",        label: "GitHub",          emoji: "🐙", desc: "Issues, PRs, comments",       color: "#e8eaea" },
+  { type: "linear",        label: "Linear",          emoji: "📐", desc: "Create & update issues",      color: "#5E6AD2" },
+  { type: "hubspot",       label: "HubSpot",         emoji: "🔶", desc: "CRM contacts & deals",        color: "#FF7A59" },
+  { type: "jira",          label: "Jira",            emoji: "🔵", desc: "Tickets, sprints, projects",  color: "#0052CC" },
+  { type: "asana",         label: "Asana",           emoji: "🎯", desc: "Tasks & project tracking",    color: "#F06A6A" },
+  { type: "stripe",        label: "Stripe",          emoji: "💳", desc: "Payments & subscriptions",    color: "#635BFF" },
+  { type: "shopify",       label: "Shopify",         emoji: "🛒", desc: "Orders, products, customers", color: "#95BF47" },
+  { type: "clickup",       label: "ClickUp",         emoji: "✅", desc: "Tasks & workspace management",color: "#7B68EE" },
+  { type: "twilio",        label: "Twilio",          emoji: "📱", desc: "SMS & voice messaging",       color: "#F22F46" },
+  { type: "mongodb",       label: "MongoDB",         emoji: "🍃", desc: "Query & insert docs",         color: "#4DB33D" },
+  { type: "postgres",      label: "PostgreSQL",      emoji: "🐘", desc: "Run SQL queries",             color: "#336791" },
+  { type: "redis",         label: "Redis",           emoji: "🔴", desc: "Get & set cache values",      color: "#DC382D" },
 ];
 
-// ─── Connection helpers ───────────────────────────────────────────────────────
 function getSlotNode(edges, nodes, agentNodeId, slotId) {
   const edge = edges.find(e => e.target === agentNodeId && e.targetHandle === slotId);
   if (!edge) return null;
@@ -38,7 +66,6 @@ function getToolNodes(edges, nodes, agentNodeId) {
     .filter(Boolean);
 }
 
-// ─── Small connection chip ────────────────────────────────────────────────────
 function ConnChip({ node, color, icon: Icon, onClick }) {
   const label = node.data?.config?.model || node.data?.config?.memoryType?.replace(/_/g, " ") || node.data?.label || node.data?.backendType;
   return (
@@ -52,7 +79,6 @@ function ConnChip({ node, color, icon: Icon, onClick }) {
   );
 }
 
-// ─── Slot status row ──────────────────────────────────────────────────────────
 function SlotRow({ label, icon: Icon, color, node, onGoTo }) {
   return (
     <div className="flex items-center gap-3">
@@ -70,7 +96,6 @@ function SlotRow({ label, icon: Icon, color, node, onGoTo }) {
   );
 }
 
-// ─── Main config panel ────────────────────────────────────────────────────────
 export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const nodes = useWorkspaceStore(s => s.nodes);
   const edges = useWorkspaceStore(s => s.edges);
@@ -95,12 +120,9 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
     updateConfig("platformTools", next);
   }
 
-  // Connections via bottom dock slots
   const llmNode    = getSlotNode(edges, nodes, nodeId, "llm");
   const memoryNode = getSlotNode(edges, nodes, nodeId, "memory");
   const toolNodes  = getToolNodes(edges, nodes, nodeId);
-
-  const allConnected = llmNode && memoryNode;
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -137,7 +159,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
                 style={{ background: toolNodes.length ? "#fb923c20" : "#27272a", border: `1px solid ${toolNodes.length ? "#fb923c40" : "#3f3f46"}` }}>
                 <Zap className="w-3 h-3" style={{ color: toolNodes.length ? "#fb923c" : "#52525b" }} />
               </div>
-              <span className="text-[11px] text-zinc-500 flex-1">Tools</span>
+              <span className="text-[11px] text-zinc-500 flex-1">Canvas Tools</span>
               {toolNodes.length > 0 ? (
                 <div className="flex flex-wrap gap-1 justify-end">
                   {toolNodes.map(t => (
@@ -166,15 +188,15 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
 
       {/* ── Built-in Tools ─────────────────────────────────────────────────────── */}
       <div>
-        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">Built-in Capabilities</p>
+        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">Built-in Capabilities (always on)</p>
         <div className="grid grid-cols-3 gap-1.5">
           {[
-            { icon: '🔢', label: 'Calculator', desc: 'Math & formulas' },
-            { icon: '📖', label: 'Wikipedia', desc: 'Factual lookup' },
+            { icon: '🔢', label: 'Calculator',   desc: 'Math & formulas' },
+            { icon: '📖', label: 'Wikipedia',    desc: 'Factual lookup' },
             { icon: '🌐', label: 'HTTP Request', desc: 'Call any API' },
-            { icon: '⚡', label: 'Run JS Code', desc: 'Execute scripts' },
-            { icon: '🧠', label: 'Remember', desc: 'Store facts across steps' },
-            { icon: '🔍', label: 'Recall', desc: 'Retrieve stored facts' },
+            { icon: '⚡', label: 'Run JS',       desc: 'Execute scripts' },
+            { icon: '🧠', label: 'Remember',     desc: 'Store facts' },
+            { icon: '🔍', label: 'Recall',       desc: 'Retrieve facts' },
           ].map(tool => (
             <div key={tool.label} className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800/40">
               <span className="text-[13px] shrink-0">{tool.icon}</span>
@@ -185,6 +207,36 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* ── Web Search ─────────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 overflow-hidden">
+        <div className="flex items-center justify-between px-3.5 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <Globe className="w-3.5 h-3.5 text-sky-500" />
+            <div>
+              <p className="text-[11px] font-semibold text-zinc-300">Web Search</p>
+              <p className="text-[9px] text-zinc-600">Real-time internet search via Tavily</p>
+            </div>
+          </div>
+          <button onClick={() => updateConfig("builtinWebSearch", !config.builtinWebSearch)}
+            className={`relative w-9 h-5 rounded-full transition-all duration-200 shrink-0 ${config.builtinWebSearch ? "bg-sky-500" : "bg-zinc-700"}`}>
+            <span className={`absolute top-[3px] left-[3px] w-3.5 h-3.5 rounded-full bg-white transition-transform duration-200 ${config.builtinWebSearch ? "translate-x-4" : "translate-x-0"}`} />
+          </button>
+        </div>
+        {config.builtinWebSearch && (
+          <div className="px-3.5 pb-3.5 pt-1 border-t border-zinc-800/40">
+            <CredentialPicker
+              label="Tavily API Key"
+              value={config.webSearchCredentialId || ""}
+              onChange={(v) => updateConfig("webSearchCredentialId", v)}
+              accentColor="sky"
+              credentialType="tavily"
+              placeholder="Select Tavily credential…"
+              hint="Get a free key at tavily.com — required for web search."
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Platform Integrations ─────────────────────────────────────────── */}
@@ -204,7 +256,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         </div>
 
         {showIntegrationPicker && (
-          <div className="mb-2 p-2 rounded-xl border border-zinc-700/60 bg-zinc-900/80 grid grid-cols-2 gap-1">
+          <div className="mb-2 p-2 rounded-xl border border-zinc-700/60 bg-zinc-900/80 grid grid-cols-2 gap-1 max-h-64 overflow-y-auto">
             {PLATFORM_INTEGRATIONS.filter(p => !addedTypes.has(p.type)).map(p => (
               <button key={p.type} onClick={() => addIntegration(p.type)}
                 className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-zinc-800 transition-colors">
@@ -225,25 +277,26 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
           <div className="flex flex-col gap-2">
             {platformTools.map((pt, idx) => {
               const def = PLATFORM_INTEGRATIONS.find(p => p.type === pt.type);
+              const oauthProvider = INTEGRATION_OAUTH[pt.type] || null;
               return (
                 <div key={idx} className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 overflow-hidden">
                   <div className="flex items-center gap-2.5 px-3 py-2 border-b border-zinc-800/40">
                     <span className="text-[13px] shrink-0">{def?.emoji || '🔌'}</span>
-                    <span className="text-[11px] font-semibold text-zinc-300 flex-1">{def?.label || pt.type}</span>
-                    <button onClick={() => removeIntegration(idx)} className="text-zinc-700 hover:text-red-400 transition-colors">
+                    <span className="text-[11px] font-semibold flex-1" style={{ color: def?.color || '#a1a1aa' }}>{def?.label || pt.type}</span>
+                    <span className="text-[9px] text-zinc-600 mr-1">{def?.desc}</span>
+                    <button onClick={() => removeIntegration(idx)} className="text-zinc-700 hover:text-red-400 transition-colors shrink-0">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                   <div className="px-3 py-2.5 flex flex-col gap-2">
-                    <div>
-                      <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">Credential ID</label>
-                      <input
-                        value={pt.credentialId || ""}
-                        onChange={e => updateIntegration(idx, "credentialId", e.target.value)}
-                        placeholder="Paste credential ID from Credentials page"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 font-mono"
-                      />
-                    </div>
+                    <CredentialPicker
+                      label="Credential"
+                      value={pt.credentialId || ""}
+                      onChange={(v) => updateIntegration(idx, "credentialId", v)}
+                      accentColor="violet"
+                      oauthProvider={oauthProvider}
+                      placeholder={`Select ${def?.label || pt.type} credential…`}
+                    />
                     <div>
                       <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">Alias (optional)</label>
                       <input
@@ -261,7 +314,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         ) : (
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-zinc-800/40 bg-zinc-900/20">
             <Plug className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
-            <p className="text-[10px] text-zinc-700">Add integrations so the agent can autonomously send messages, write to databases, create tasks, and more — without needing extra nodes in the canvas.</p>
+            <p className="text-[10px] text-zinc-700">Add integrations so the agent can autonomously send messages, write to databases, create tasks, and more — without extra nodes.</p>
           </div>
         )}
       </div>
@@ -284,7 +337,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         />
         <p className="text-[9px] text-zinc-700 mt-1.5">Use {"{{ variables }}"} to inject data from previous nodes.</p>
 
-        {/* ── Preset templates ──────────────────────────────────────────────── */}
         {!(config.prompt) && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {[
@@ -349,13 +401,11 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         {advOpen && (
           <div className="flex flex-col gap-4 pt-3">
 
-            {/* System prompt */}
             <div>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 block">System Prompt</label>
               <SmartVariableInput value={config.systemPrompt || ""} onChange={v => updateConfig("systemPrompt", v)} placeholder="You are a helpful assistant that…" multiline nodeId={nodeId} />
             </div>
 
-            {/* Output format */}
             <div>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 block">Output Format</label>
               <div className="flex gap-1.5">
@@ -368,7 +418,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               </div>
             </div>
 
-            {/* Max iterations slider */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Iterations</label>
@@ -381,7 +430,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               </div>
             </div>
 
-            {/* Max Tokens */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Tokens</label>
@@ -397,7 +445,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               </div>
             </div>
 
-            {/* Temperature slider */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Temperature</label>
@@ -410,7 +457,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               </div>
             </div>
 
-            {/* Show reasoning */}
             <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
               <div className="flex items-center gap-2">
                 <Eye className="w-3.5 h-3.5 text-zinc-600" />
@@ -425,7 +471,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               </button>
             </div>
 
-            {/* On error */}
             <div>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 block">On Error</label>
               <div className="flex gap-1.5">
@@ -445,7 +490,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/40">
         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${llmNode ? "bg-emerald-500" : "bg-zinc-700"}`} />
         <span className="text-[9px] text-zinc-700 flex-1">
-          {llmNode ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${toolNodes.length + platformTools.length} tool${(toolNodes.length + platformTools.length) !== 1 ? "s" : ""}` : "Connect an LLM node to activate"}
+          {llmNode ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${toolNodes.length + platformTools.length + (config.builtinWebSearch ? 1 : 0)} tool${(toolNodes.length + platformTools.length + (config.builtinWebSearch ? 1 : 0)) !== 1 ? "s" : ""}` : "Connect an LLM node to activate"}
         </span>
         {config.maxIterations && <span className="text-[9px] font-mono text-zinc-700">{config.maxIterations} iters</span>}
       </div>

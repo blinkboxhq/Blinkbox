@@ -65,6 +65,12 @@ import _hubspotNode  from "./integrations/hubspot.node.js";
 import _mongoNode    from "./integrations/mongodb.node.js";
 import _postgresNode from "./integrations/postgres.node.js";
 import _redisNode    from "./integrations/redis.node.js";
+import _jiraNode     from "./integrations/jira.node.js";
+import _asanaNode    from "./integrations/asana.node.js";
+import _stripeNode   from "./integrations/stripe.node.js";
+import _shopifyNode  from "./integrations/shopify.node.js";
+import _clickupNode  from "./integrations/clickup.node.js";
+import _twilioNode   from "./integrations/twilio.node.js";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -1134,6 +1140,116 @@ const PLATFORM_TOOL_SPECS = {
       required: ["operation", "key"],
     },
     run: (args, credentialId, workspaceId) => _redisNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  jira: {
+    description: "Create, update, or search Jira issues and projects.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createIssue", "getIssue", "updateIssue", "transitionIssue", "addComment", "searchIssues", "listProjects"], description: "Operation to perform" },
+        domain: { type: "string", description: "Your Jira domain, e.g. mycompany.atlassian.net" },
+        projectKey: { type: "string", description: "Jira project key (e.g. PROJ)" },
+        issueKey: { type: "string", description: "Issue key for get/update/transition/comment (e.g. PROJ-123)" },
+        summary: { type: "string", description: "Issue summary/title for createIssue" },
+        description: { type: "string", description: "Issue description" },
+        issueType: { type: "string", description: "Issue type: Bug, Task, Story, Epic" },
+        status: { type: "string", description: "Transition status name for transitionIssue" },
+        comment: { type: "string", description: "Comment text for addComment" },
+        jql: { type: "string", description: "JQL query string for searchIssues" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _jiraNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  asana: {
+    description: "Create tasks, update projects, and manage work in Asana.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["listTasks", "createTask", "updateTask", "completeTask", "getTask", "addComment", "createProject", "listProjects"], description: "Operation to perform" },
+        projectId: { type: "string", description: "Asana project GID" },
+        taskId: { type: "string", description: "Task GID for get/update/complete/comment" },
+        name: { type: "string", description: "Task or project name" },
+        notes: { type: "string", description: "Task description/notes" },
+        dueOn: { type: "string", description: "Due date in YYYY-MM-DD format" },
+        assignee: { type: "string", description: "Assignee GID or 'me'" },
+        text: { type: "string", description: "Comment text for addComment" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _asanaNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  stripe: {
+    description: "Manage Stripe customers, payments, charges, and subscriptions.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["createCustomer", "getCustomer", "listCustomers", "createPaymentIntent", "getPaymentIntent", "listCharges", "createRefund", "listInvoices", "createProduct", "createPrice"], description: "Operation to perform" },
+        customerId: { type: "string", description: "Stripe customer ID (cus_xxx)" },
+        email: { type: "string", description: "Customer email for createCustomer" },
+        name: { type: "string", description: "Customer name or product name" },
+        amount: { type: "number", description: "Amount in smallest currency unit (e.g. cents)" },
+        currency: { type: "string", description: "ISO currency code (usd, eur, etc.)" },
+        paymentIntentId: { type: "string", description: "PaymentIntent ID for get/refund" },
+        chargeId: { type: "string", description: "Charge ID for refund" },
+        limit: { type: "number", description: "Max results (default 10)" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _stripeNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  shopify: {
+    description: "Read and manage Shopify products, orders, and customers.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["listProducts", "getProduct", "createProduct", "updateProduct", "listOrders", "getOrder", "updateOrder", "createCustomer"], description: "Operation to perform" },
+        shop: { type: "string", description: "Your Shopify store domain (mystore.myshopify.com)" },
+        productId: { type: "string", description: "Product ID for get/update operations" },
+        orderId: { type: "string", description: "Order ID for get/update operations" },
+        title: { type: "string", description: "Product title" },
+        price: { type: "string", description: "Product variant price (e.g. '29.99')" },
+        status: { type: "string", description: "Order status filter or new fulfillment status" },
+        limit: { type: "number", description: "Max results (default 10)" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _shopifyNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  clickup: {
+    description: "Create tasks, update projects, and manage work in ClickUp.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["listTasks", "createTask", "updateTask", "deleteTask", "getTask", "addComment", "createFolder", "listSpaces"], description: "Operation to perform" },
+        listId: { type: "string", description: "ClickUp list ID for task operations" },
+        taskId: { type: "string", description: "Task ID for get/update/delete/comment" },
+        name: { type: "string", description: "Task name" },
+        description: { type: "string", description: "Task description" },
+        priority: { type: "number", description: "Priority (1=urgent, 2=high, 3=normal, 4=low)" },
+        dueDate: { type: "number", description: "Due date as Unix timestamp in milliseconds" },
+        comment: { type: "string", description: "Comment text for addComment" },
+        status: { type: "string", description: "Task status name for updateTask" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _clickupNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  twilio: {
+    description: "Send SMS messages, make phone calls, or look up phone numbers via Twilio.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["sendSms", "makeCall", "lookupNumber"], description: "Operation to perform" },
+        to: { type: "string", description: "Recipient phone number in E.164 format (+15551234567)" },
+        from: { type: "string", description: "Your Twilio phone number in E.164 format" },
+        body: { type: "string", description: "SMS message text (for sendSms)" },
+        url: { type: "string", description: "TwiML URL for call instructions (for makeCall)" },
+        phoneNumber: { type: "string", description: "Phone number to look up (for lookupNumber)" },
+      },
+      required: ["operation", "to"],
+    },
+    run: (args, credentialId, workspaceId) => _twilioNode.run({ ...args, credentialId }, {}, { workspaceId }),
   },
 };
 

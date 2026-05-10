@@ -44,7 +44,8 @@ export default function AirtableTriggerNode({ config = {}, updateConfig, nodeId 
                 value={config.apiKey || ''}
                 onChange={(id) => updateConfig?.('apiKey', id)}
                 accentColor="red"
-                label="Personal Access Token"
+                label="Airtable OAuth"
+                oauthProvider="airtable"
                 placeholder="Select Airtable credential..."
               />
               <p className="text-[9px] text-zinc-600">From airtable.com/create/tokens — needs <span className="font-mono text-zinc-500">data.records:read</span> scope.</p>
