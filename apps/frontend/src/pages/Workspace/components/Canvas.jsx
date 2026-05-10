@@ -1,4 +1,4 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle, ZoomIn, ZoomOut, Maximize2, Minimize2, Maximize } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -88,7 +88,7 @@ function debounce(fn, wait) {
 
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
   const { id: automationId } = useParams();
 
   const storeNodes = useWorkspaceStore((s) => s.nodes);
@@ -229,6 +229,21 @@ export default function Canvas() {
 
   // Multi-select
   const [ctxMenu, setCtxMenu] = useState(null); // { x, y, nodeId, nodeLabel }
+
+  // Fullscreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const h = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', h);
+    return () => document.removeEventListener('fullscreenchange', h);
+  }, []);
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      reactFlowWrapper.current?.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }, []);
 
   // Track run result for floating button feedback
   const [lastRunResult, setLastRunResult] = useState(null); // null | "success" | "error"
@@ -432,6 +447,29 @@ export default function Canvas() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Zoom + fullscreen controls — bottom-left ── */}
+      <div className="absolute bottom-5 left-5 z-20 flex items-center h-8 bg-zinc-900 border border-zinc-800/80 rounded-xl shadow-lg shadow-black/30 overflow-hidden">
+        <button onClick={() => zoomOut({ duration: 200 })} title="Zoom out (−)"
+          className="flex items-center justify-center w-8 h-full text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-all duration-150">
+          <ZoomOut className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
+        <button onClick={() => fitView({ duration: 300, padding: 0.4 })} title="Fit to screen"
+          className="flex items-center justify-center w-8 h-full text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-all duration-150">
+          <Maximize className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
+        <button onClick={() => zoomIn({ duration: 200 })} title="Zoom in (+)"
+          className="flex items-center justify-center w-8 h-full text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-all duration-150">
+          <ZoomIn className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
+        <button onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          className="flex items-center justify-center w-8 h-full text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-all duration-150">
+          {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+        </button>
+      </div>
 
       {/* ── Unified bottom toolbar ── */}
       <AnimatePresence>
