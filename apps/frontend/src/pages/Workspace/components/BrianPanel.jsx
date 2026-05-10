@@ -1,14 +1,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
-  X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown,
-  Download, Zap, Globe, Mail, Clock, Code2, Database, GitBranch,
-  Layers, Sparkles, ArrowDown, AlertCircle,
+  X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown, ChevronRight,
+  Download, Zap, Globe, Mail, Clock, Code2, Database,
+  Layers, ArrowDown,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import api from '../../../lib/api';
-import BrianThinkingBlock from './BrianThinkingBlock';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -56,6 +55,53 @@ const SUGGESTION_GROUPS = [
     ],
   },
 ];
+
+// ── Real thinking collapsible ─────────────────────────────────────────────────
+function ThinkingBlock({ text, durationMs }) {
+  const [open, setOpen] = useState(false);
+  const secs = durationMs ? (durationMs / 1000).toFixed(1) : null;
+  return (
+    <div className="mb-2 font-mono text-[11px]">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 text-neutral-600 hover:text-neutral-400 transition-colors"
+      >
+        {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        <span className="italic">{secs ? `Thought for ${secs}s` : 'Thinking'}</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden mt-1.5"
+          >
+            <div className="border-l-2 border-neutral-800 pl-3 ml-1.5 max-h-[260px] overflow-y-auto">
+              <p className="text-neutral-600 leading-relaxed whitespace-pre-wrap text-[10.5px]">{text}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Loading dots while waiting for API ────────────────────────────────────────
+function ThinkingDots() {
+  return (
+    <div className="flex items-center gap-1.5 py-1">
+      {[0, 1, 2].map(i => (
+        <motion.span key={i}
+          className="w-1.5 h-1.5 rounded-full bg-violet-500/60"
+          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
+          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18 }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
 function CopyBtn({ text, className = '' }) {
@@ -196,10 +242,7 @@ function UserBubble({ text, time }) {
 
 function BrianBubble({ msg, time, onFeedback }) {
   const [feedback, setFeedback] = useState(null);
-  const handleFeedback = (val) => {
-    setFeedback(val);
-    onFeedback?.(val);
-  };
+  const handleFeedback = (val) => { setFeedback(val); onFeedback?.(val); };
 
   return (
     <motion.div
@@ -217,6 +260,11 @@ function BrianBubble({ msg, time, onFeedback }) {
       </div>
 
       <div className="ml-6">
+        {/* Real thinking — collapsible */}
+        {msg.thinking && (
+          <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} />
+        )}
+
         {msg.flow ? (
           <BrianWorkflowPlan text={msg.text} flow={msg.flow} onAccept={msg.onAccept} />
         ) : (
@@ -354,9 +402,7 @@ export default function BrianPanel({ width, onResizeStart }) {
 
   const [messages,   setMessages]   = useState([WELCOME]);
   const [input,      setInput]      = useState('');
-  const [thinking,   setThinking]   = useState(false);
-  const [thinkStart, setThinkStart] = useState(null);
-  const [thinkMs,    setThinkMs]    = useState(null);
+  const [loading,    setLoading]    = useState(false);
   const [atBottom,   setAtBottom]   = useState(true);
 
   const bottomRef  = useRef(null);
@@ -374,7 +420,7 @@ export default function BrianPanel({ width, onResizeStart }) {
   // Auto-scroll
   useEffect(() => {
     if (atBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, thinking, atBottom]);
+  }, [messages, loading, atBottom]);
 
   // Track whether user has scrolled up
   const onScroll = useCallback(() => {
@@ -399,14 +445,13 @@ export default function BrianPanel({ width, onResizeStart }) {
 
   const send = useCallback(async (text) => {
     const txt = (text || input).trim();
-    if (!txt || thinking) return;
+    if (!txt || loading) return;
     setInput('');
 
+    const start = Date.now();
     const userMsg = { id: Date.now(), role: 'user', ts: Date.now(), text: txt, flow: null };
     setMessages(prev => [...prev, userMsg]);
-    setThinking(true);
-    setThinkStart(Date.now());
-    setThinkMs(null);
+    setLoading(true);
     setAtBottom(true);
 
     try {
@@ -414,28 +459,28 @@ export default function BrianPanel({ width, onResizeStart }) {
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
       const result = await callBrian(history);
-      const dur = Date.now() - (thinkStart || Date.now());
-      setThinkMs(dur);
+      const thinkMs = Date.now() - start;
       setMessages(prev => [...prev, {
         id: Date.now() + 1, role: 'brian', ts: Date.now(),
-        text: result.text,
-        flow: result.flow,
+        text:     result.text,
+        thinking: result.thinking || null,
+        thinkMs,
+        flow:     result.flow,
         onAccept: applyFlow,
       }]);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Unknown error';
       const isConfig = msg.includes('GOOGLE_AI_KEY') || msg.includes('not configured');
-      setThinkMs(Date.now() - (thinkStart || Date.now()));
       setMessages(prev => [...prev, {
         id: Date.now() + 1, role: 'brian', ts: Date.now(), flow: null,
         text: isConfig
-          ? '⚠️ Brian needs a Google AI key. Add `GOOGLE_AI_KEY` in your environment variables (free at aistudio.google.com).'
+          ? '⚠️ Brian needs a Google AI key. Add `GOOGLE_AI_KEY` in your environment variables.'
           : `⚠️ ${msg}`,
       }]);
     } finally {
-      setThinking(false);
+      setLoading(false);
     }
-  }, [input, thinking, messages, thinkStart, applyFlow]);
+  }, [input, loading, messages, applyFlow]);
 
   const reset = useCallback(() => { setMessages([WELCOME]); setInput(''); setThinkMs(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -489,7 +534,7 @@ export default function BrianPanel({ width, onResizeStart }) {
           <ContextStrip nodeCount={nodes.length} workflowName={workflowName} />
 
           {/* ── Messages / empty state ── */}
-          {isFresh && !thinking ? (
+          {isFresh && !loading ? (
             <div className="flex-1 min-h-0 overflow-hidden">
               <EmptyState onSend={send} />
             </div>
@@ -512,10 +557,10 @@ export default function BrianPanel({ width, onResizeStart }) {
                   );
                 })}
 
-                {/* Thinking block */}
+                {/* Loading dots while API is in flight */}
                 <AnimatePresence>
-                  {thinking && (
-                    <motion.div key="thinking"
+                  {loading && (
+                    <motion.div key="loading"
                       initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                       className="flex flex-col gap-2"
@@ -527,17 +572,11 @@ export default function BrianPanel({ width, onResizeStart }) {
                         <span className="text-[10px] font-semibold text-violet-400">Brian</span>
                       </div>
                       <div className="ml-6">
-                        <BrianThinkingBlock thinking={thinking} durationMs={thinkMs} />
+                        <ThinkingDots />
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                {!thinking && thinkMs != null && messages.length > 1 && (
-                  <div className="ml-[26px]">
-                    <BrianThinkingBlock thinking={false} durationMs={thinkMs} />
-                  </div>
-                )}
 
                 <div ref={bottomRef} />
               </div>
@@ -568,7 +607,7 @@ export default function BrianPanel({ width, onResizeStart }) {
                 rows={1}
                 className="w-full bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 resize-none focus:outline-none leading-relaxed px-3 pt-2.5 pb-1"
                 style={{ maxHeight: 120, overflowY: 'auto' }}
-                disabled={thinking}
+                disabled={loading}
               />
 
               <div className="flex items-center justify-between px-2.5 pb-2 pt-1">
@@ -582,7 +621,7 @@ export default function BrianPanel({ width, onResizeStart }) {
                 </div>
                 <button
                   onClick={() => send()}
-                  disabled={!input.trim() || thinking}
+                  disabled={!input.trim() || loading}
                   className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Send className="w-3.5 h-3.5 text-white" />

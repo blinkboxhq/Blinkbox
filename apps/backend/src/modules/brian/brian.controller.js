@@ -328,17 +328,21 @@ async function callAnthropic(apiKey, messages) {
     tool_choice: { type: "auto" },
   });
 
+  const thinkingBlock = response.content.find(b => b.type === "thinking");
+  const thinking      = thinkingBlock?.thinking || null;
+
   const toolUse = response.content.find(b => b.type === "tool_use");
   if (toolUse?.input) {
     const { text, nodes, edges } = toolUse.input;
     return {
-      text: text || "",
-      flow: nodes?.length ? toolToCanvas({ nodes, edges }) : null,
+      text:     text || "",
+      thinking,
+      flow:     nodes?.length ? toolToCanvas({ nodes, edges }) : null,
     };
   }
 
   const textBlock = response.content.find(b => b.type === "text");
-  return { text: textBlock?.text || "", flow: null };
+  return { text: textBlock?.text || "", thinking, flow: null };
 }
 
 // ── Provider 3: Groq ──────────────────────────────────────────────────────────
