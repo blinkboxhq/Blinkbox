@@ -18,6 +18,22 @@ import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
 
+function assertSafeUrl(rawUrl) {
+  let parsed;
+  try { parsed = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
+  const h = parsed.hostname.toLowerCase();
+  const blocked = [
+    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/,
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+    /^169\.254\./,
+    /^fc00:/i, /^fe80:/i, /^fd[0-9a-f]{2}:/i, /^0\b/,
+  ];
+  if (blocked.some((re) => re.test(h)))
+    throw new Error(`Requests to internal addresses are not allowed (${h})`);
+  if (!["http:", "https:"].includes(parsed.protocol))
+    throw new Error(`Only http/https protocols are allowed`);
+}
+
 const execAsync = promisify(exec);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -597,6 +613,7 @@ export const tool_screenshot = {
     } catch {
       throw new Error("[tool_screenshot] Puppeteer not available");
     }
+    assertSafeUrl(args.url);
     const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     try {
       const page = await browser.newPage();
@@ -771,6 +788,7 @@ export const tool_form_fill = {
     } catch {
       throw new Error("[tool_form_fill] Puppeteer not available");
     }
+    assertSafeUrl(args.url);
     const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
     try {
       const page = await browser.newPage();
@@ -1583,11 +1601,10 @@ export const tool_virtual_computer = {
     "tool_virtual_computer",
     "Control a headless virtual computer session using Puppeteer automation",
     {
-      action: { type: "string", description: "Action: open_url, click, type, screenshot, evaluate" },
+      action: { type: "string", description: "Action: open_url, click, type, screenshot" },
       url: { type: "string", description: "URL to navigate to (for open_url)" },
       selector: { type: "string", description: "CSS selector for click/type actions" },
       text: { type: "string", description: "Text to type (for type action)" },
-      script: { type: "string", description: "JavaScript to evaluate in browser (for evaluate)" },
     },
     ["action"]
   ),
@@ -1598,6 +1615,7 @@ export const tool_virtual_computer = {
     } catch {
       throw new Error("[tool_virtual_computer] Puppeteer not available");
     }
+    if (args.url) assertSafeUrl(args.url);
     const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     try {
       const page = await browser.newPage();
@@ -1613,10 +1631,6 @@ export const tool_virtual_computer = {
         case "screenshot": {
           const img = await page.screenshot({ encoding: "base64" });
           return { screenshot: `data:image/png;base64,${img}`, url: page.url() };
-        }
-        case "evaluate": {
-          const result = await page.evaluate(args.script || "document.title");
-          return { result };
         }
         default: {
           const img = await page.screenshot({ encoding: "base64" });
