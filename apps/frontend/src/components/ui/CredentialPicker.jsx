@@ -131,6 +131,8 @@ export default function CredentialPicker({
 
     const handler = (e) => {
       if (e.data?.type !== 'blinkbox:oauth') return;
+      const apiOrigin = new URL(API_URL).origin;
+      if (e.origin !== apiOrigin) return;
       const { payload } = e.data;
       window.removeEventListener('message', handler);
       messageHandlerRef.current = null;
