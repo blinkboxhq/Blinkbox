@@ -286,11 +286,12 @@ const REACT_SYSTEM_PROMPT =
 const agentNode = {
   async run(config, input, context = {}) {
     const {
-      provider = "openai",
-      model,
+      provider: _configProvider = "openai",
+      model: _configModel,
       prompt,
       systemPrompt,
-      credentialId,
+      credentialId: _configCredentialId,
+      _chatModel,
       enabledToolIds,
       outputFormat = "text",
       temperature = 0.3,
@@ -314,6 +315,11 @@ const agentNode = {
       // Legacy compat — old configs may still send agentType
       agentType: _legacyAgentType,
     } = config;
+
+    // Connected Language Model node overrides inline provider/model/credential
+    const provider = _chatModel?.provider || _configProvider;
+    const model = _chatModel?.model || _configModel;
+    const credentialId = _chatModel?.credentialId || _configCredentialId;
 
     // ── Validation ─────────────────────────────────────────────────────
     if (!prompt) {

@@ -279,7 +279,8 @@ export async function processCursor({ executionId, cursorId }) {
               }
             }
           } else if (handle === "chat_model") {
-            handleDeps._chatModel = firstOutput;
+            const sourceNode = automation.nodes.find((n) => n.id === edge.source);
+            handleDeps._chatModel = sourceNode?.data || firstOutput;
           }
         }
       }
