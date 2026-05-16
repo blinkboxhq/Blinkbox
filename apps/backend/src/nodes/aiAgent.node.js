@@ -85,6 +85,7 @@ const ENDPOINTS = {
   together: "https://api.together.xyz/v1/chat/completions",
   perplexity: "https://api.perplexity.ai/chat/completions",
   xai: "https://api.x.ai/v1/chat/completions",
+  groq: "https://api.groq.com/openai/v1/chat/completions",
   fireworks: "https://api.fireworks.ai/inference/v1/chat/completions",
   cerebras: "https://api.cerebras.ai/v1/chat/completions",
   ollama: "http://localhost:11434/v1/chat/completions",
@@ -105,6 +106,7 @@ const DEFAULT_MODELS = {
   fireworks: "accounts/fireworks/models/firefunction-v2",
   cerebras: "llama3.1-70b",
   ollama: "llama3",
+  groq: "llama-3.3-70b-versatile",
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
@@ -316,10 +318,17 @@ const agentNode = {
       agentType: _legacyAgentType,
     } = config;
 
-    // Connected Language Model node overrides inline provider/model/credential
-    // node.data.config holds the user-configured values; node.data is the raw canvas node data
+    // Connected Language Model node overrides inline provider/model/credential.
+    // Dedicated provider nodes (agent_anthropic, agent_openai, etc.) don't store
+    // `provider` in config — derive it from the node's backendType instead.
+    const BACKENDTYPE_TO_PROVIDER = {
+      agent_openai: "openai", agent_anthropic: "anthropic", agent_gemini: "gemini",
+      agent_xai: "xai", agent_deepseek: "deepseek", agent_groq: "groq",
+      agent_perplexity: "perplexity", agent_ollama: "ollama",
+    };
     const _llm = _chatModel?.config || _chatModel;
-    const provider = _llm?.provider || _configProvider;
+    const _derivedProvider = _chatModel?.backendType ? BACKENDTYPE_TO_PROVIDER[_chatModel.backendType] : null;
+    const provider = _llm?.provider || _derivedProvider || _configProvider;
     const model = _llm?.model || _configModel;
     const credentialId = _llm?.credentialId || _configCredentialId;
 
@@ -349,6 +358,7 @@ const agentNode = {
       xai:         "XAI_API_KEY",
       fireworks:   "FIREWORKS_API_KEY",
       cerebras:    "CEREBRAS_API_KEY",
+      groq:        "GROQ_API_KEY",
       novita:      "NOVITA_API_KEY",
       deepinfra:   "DEEPINFRA_API_KEY",
       hyperbolic:  "HYPERBOLIC_API_KEY",
