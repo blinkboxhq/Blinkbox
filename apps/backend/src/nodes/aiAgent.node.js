@@ -317,9 +317,11 @@ const agentNode = {
     } = config;
 
     // Connected Language Model node overrides inline provider/model/credential
-    const provider = _chatModel?.provider || _configProvider;
-    const model = _chatModel?.model || _configModel;
-    const credentialId = _chatModel?.credentialId || _configCredentialId;
+    // node.data.config holds the user-configured values; node.data is the raw canvas node data
+    const _llm = _chatModel?.config || _chatModel;
+    const provider = _llm?.provider || _configProvider;
+    const model = _llm?.model || _configModel;
+    const credentialId = _llm?.credentialId || _configCredentialId;
 
     // ── Validation ─────────────────────────────────────────────────────
     if (!prompt) {
