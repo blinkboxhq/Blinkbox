@@ -330,12 +330,35 @@ const agentNode = {
     const resolvedModel = model || DEFAULT_MODELS[provider];
 
     // ── Resolve LLM Credential ─────────────────────────────────────────
-    const cred = await resolveCredential(
-      credentialId,
-      context.workspaceId,
-      "AI Agent"
-    );
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const PROVIDER_ENV_KEYS = {
+      openai:      "OPENAI_API_KEY",
+      anthropic:   "ANTHROPIC_API_KEY",
+      gemini:      "GEMINI_API_KEY",
+      deepseek:    "DEEPSEEK_API_KEY",
+      openrouter:  "OPENROUTER_API_KEY",
+      together:    "TOGETHER_API_KEY",
+      perplexity:  "PERPLEXITY_API_KEY",
+      xai:         "XAI_API_KEY",
+      fireworks:   "FIREWORKS_API_KEY",
+      cerebras:    "CEREBRAS_API_KEY",
+      novita:      "NOVITA_API_KEY",
+      deepinfra:   "DEEPINFRA_API_KEY",
+      hyperbolic:  "HYPERBOLIC_API_KEY",
+    };
+
+    let apiKey;
+    if (credentialId) {
+      const cred = await resolveCredential(credentialId, context.workspaceId, "AI Agent");
+      apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    } else {
+      const envKey = PROVIDER_ENV_KEYS[provider];
+      apiKey = envKey ? process.env[envKey] : null;
+      if (!apiKey) {
+        throw new Error(
+          `AI Agent: No API key configured for "${provider}". Add a credential in the node settings or set ${envKey || "the provider API key"} on the server.`
+        );
+      }
+    }
 
     // ── Conversation Memory — load from Redis ─────────────────────
     const memKey = conversationMemoryEnabled && memorySessionId
