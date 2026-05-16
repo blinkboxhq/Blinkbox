@@ -245,7 +245,7 @@ export async function processCursor({ executionId, cursorId }) {
     // edge data into dedicated dependency fields (_memory, _tools, _chatModel).
     // Edges targeting named handles feed into config, not the standard input array.
     let handleDeps = null;
-    if (node.data?.backendType === "ai_agent" && incomingEdges.length > 0) {
+    if (node.type === "ai_agent" && incomingEdges.length > 0) {
       handleDeps = {};
       for (const edge of incomingEdges) {
         const handle = edge.targetHandle;
@@ -280,7 +280,9 @@ export async function processCursor({ executionId, cursorId }) {
             }
           } else if (handle === "chat_model") {
             const sourceNode = automation.nodes.find((n) => n.id === edge.source);
-            handleDeps._chatModel = sourceNode?.data || firstOutput;
+            handleDeps._chatModel = sourceNode
+              ? { ...(sourceNode.data || {}), backendType: sourceNode.type }
+              : firstOutput;
           }
         }
       }
