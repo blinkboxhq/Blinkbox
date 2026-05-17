@@ -253,9 +253,31 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
     try { parsed = JSON.parse(testInput); } catch { parsed = {}; }
     try {
       const t0 = Date.now();
+      const config = { ...(node.data.config || {}) };
+
+      // For AI Agent: inject connected canvas-slot nodes so the test endpoint
+      // has the same context as real execution through cursor.executor.js.
+      if (node.data.backendType === "ai_agent") {
+        const { nodes: allNodes, edges: allEdges } = useWorkspaceStore.getState();
+        const inEdges = allEdges.filter(e => e.target === node.id);
+        for (const edge of inEdges) {
+          const src = allNodes.find(n => n.id === edge.source);
+          if (!src) continue;
+          const h = edge.targetHandle;
+          if (h === "llm" || h === "chat_model") {
+            config._chatModel = { ...(src.data.config || {}), backendType: src.data.backendType };
+          } else if (h === "memory") {
+            config._memory = src.data.config || {};
+          } else if (h === "tools") {
+            if (!config._tools) config._tools = [];
+            config._tools.push({ ...(src.data.config || {}), backendType: src.data.backendType });
+          }
+        }
+      }
+
       const res = await api.post("/api/automation/test-node", {
         nodeType: node.data.backendType,
-        config: node.data.config || {},
+        config,
         input: parsed,
       });
       setResult({ ...res.data, clientMs: Date.now() - t0 });
