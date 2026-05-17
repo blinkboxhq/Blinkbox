@@ -1018,15 +1018,15 @@ const PLATFORM_TOOL_SPECS = {
     run: (args, credentialId, workspaceId) => _slackNode.run({ ...args, credentialId }, {}, { workspaceId }),
   },
   gmail: {
-    description: "Read, send, reply to, or search Gmail emails. Use readEmail to get full content of a specific email by messageId. Use searchEmails to find emails — it returns full content for each match (from, to, subject, body, date). Use sendEmail to send a new email. Use replyToThread to reply in a thread.",
+    description: "Read, send, reply to, or search Gmail emails. Use readEmail to get full content of a specific email by messageId. Use searchEmails to find emails — it returns full content for each match (from, to, subject, body, date). Use sendEmail to send a new email. Use replyToEmail to reply in a thread (requires threadId).",
     parameters: {
       type: "object",
       properties: {
-        operation: { type: "string", enum: ["sendEmail", "replyToThread", "searchEmails", "readEmail"], description: "Operation to perform" },
+        operation: { type: "string", enum: ["sendEmail", "replyToEmail", "searchEmails", "readEmail"], description: "Operation to perform" },
         to: { type: "string", description: "Recipient email address (for sendEmail)" },
         subject: { type: "string", description: "Email subject line (for sendEmail)" },
         body: { type: "string", description: "Email body (plain text or HTML) (for sendEmail/replyToThread)" },
-        threadId: { type: "string", description: "Thread ID for replyToThread" },
+        threadId: { type: "string", description: "Thread ID for replyToEmail" },
         messageId: { type: "string", description: "Message ID for readEmail" },
         query: { type: "string", description: "Gmail search query for searchEmails (e.g. 'from:boss@company.com is:unread')" },
         maxResults: { type: "number", description: "Max emails to return for searchEmails (default 5, max 20)" },
