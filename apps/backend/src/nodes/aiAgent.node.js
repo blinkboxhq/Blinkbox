@@ -451,6 +451,16 @@ const agentNode = {
         ? input.substring(0, MAX_INPUT_BYTES)
         : JSON.stringify(input, null, 2)?.substring(0, MAX_INPUT_BYTES) ?? "";
 
+    // ── Extract image attachments from input ───────────────────────────
+    // Accepted shapes: input.attachments[], input.body.attachments[], input.imageUrl
+    const rawAttachments =
+      (Array.isArray(input?.attachments) && input.attachments) ||
+      (Array.isArray(input?.body?.attachments) && input.body.attachments) ||
+      [];
+    const imageAttachments = rawAttachments.filter(
+      (a) => a?.mimeType?.startsWith("image/") && a?.dataUrl
+    );
+
     // ── Build Initial Message Array ────────────────────────────────────
     const messages = [];
 
@@ -462,9 +472,15 @@ const agentNode = {
       messages.push(msg);
     }
 
-    const userContent = inputSummary
+    const userTextContent = inputSummary
       ? `${prompt}\n\n---\nInput Data:\n${inputSummary}`
       : prompt;
+
+    // Build multimodal content when images are present
+    const userContent = imageAttachments.length > 0
+      ? buildMultimodalContent(userTextContent, imageAttachments, provider)
+      : userTextContent;
+
     messages.push({ role: "user", content: userContent });
 
     // ══════════════════════════════════════════════════════════════════
@@ -1347,8 +1363,7 @@ function isValidMessage(m) {
     m &&
     typeof m === "object" &&
     m.role &&
-    m.content &&
-    typeof m.content === "string"
+    m.content != null
   );
 }
 
@@ -1578,17 +1593,25 @@ async function callGemini(
 ) {
   const endpoint = `${ENDPOINTS.gemini}/${model}:generateContent?key=${apiKey}`;
 
-  const contents = messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [
-      {
-        text:
-          typeof m.content === "string"
-            ? m.content
-            : JSON.stringify(m.content),
-      },
-    ],
-  }));
+  const contents = messages.map((m) => {
+    const role = m.role === "assistant" ? "model" : "user";
+    const content = m.content;
+
+    // Gemini multimodal marker — expand into text + inline_data parts
+    if (content && typeof content === "object" && !Array.isArray(content) && content.__geminiMultimodal) {
+      const parts = [{ text: content.text || "" }];
+      for (const img of content.images || []) {
+        const base64 = img.dataUrl.includes(",") ? img.dataUrl.split(",")[1] : img.dataUrl;
+        parts.push({ inline_data: { mime_type: img.mimeType, data: base64 } });
+      }
+      return { role, parts };
+    }
+
+    return {
+      role,
+      parts: [{ text: typeof content === "string" ? content : JSON.stringify(content) }],
+    };
+  });
 
   const body = {
     contents,
@@ -1892,6 +1915,46 @@ function handleProviderError(err, providerName, model) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// MULTIMODAL CONTENT BUILDER
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Build a multimodal content array for the user message when image attachments
+ * are present. Each provider expects a different wire format.
+ *
+ * @param {string} text - The text portion of the message
+ * @param {Array<{dataUrl: string, mimeType: string}>} images
+ * @param {string} provider
+ * @returns {string | Array} - string for Gemini (handled separately), array for others
+ */
+function buildMultimodalContent(text, images, provider) {
+  if (provider === "anthropic") {
+    const parts = [{ type: "text", text }];
+    for (const img of images) {
+      const base64 = img.dataUrl.includes(",") ? img.dataUrl.split(",")[1] : img.dataUrl;
+      parts.push({
+        type: "image",
+        source: { type: "base64", media_type: img.mimeType, data: base64 },
+      });
+    }
+    return parts;
+  }
+
+  if (provider === "gemini") {
+    // Gemini content is handled differently — return a marker object;
+    // callGemini maps it into parts[]
+    return { __geminiMultimodal: true, text, images };
+  }
+
+  // OpenAI-compatible (openai, groq, xai, deepseek, openrouter, etc.)
+  const parts = [{ type: "text", text }];
+  for (const img of images) {
+    parts.push({ type: "image_url", image_url: { url: img.dataUrl } });
+  }
+  return parts;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // CHARACTER COUNT ESTIMATOR
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -1906,6 +1969,8 @@ function estimateCharCount(messages) {
     const content = msg.content;
     if (typeof content === "string") {
       total += content.length;
+    } else if (content && typeof content === "object" && !Array.isArray(content) && content.__geminiMultimodal) {
+      total += (content.text || "").length + (content.images?.length || 0) * 5000;
     } else if (Array.isArray(content)) {
       for (const block of content) {
         if (block && typeof block === "object") {
