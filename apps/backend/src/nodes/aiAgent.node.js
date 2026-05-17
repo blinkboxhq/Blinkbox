@@ -1039,7 +1039,10 @@ const PLATFORM_TOOL_SPECS = {
         const messages = searchResult.messages || [];
         if (!messages.length) return { messages: [], total: 0 };
         const fullMessages = await Promise.all(
-          messages.map(m => _gmailNode.run({ operation: "readEmail", messageId: m.id, credentialId }, {}, { workspaceId }).catch(() => ({ messageId: m.id, error: "Failed to fetch content" }))
+          messages.map((m) =>
+            _gmailNode.run({ operation: "readEmail", messageId: m.id, credentialId }, {}, { workspaceId })
+              .catch(() => ({ messageId: m.id, error: "Failed to fetch content" }))
+          )
         );
         return { messages: fullMessages, total: searchResult.total };
       }
