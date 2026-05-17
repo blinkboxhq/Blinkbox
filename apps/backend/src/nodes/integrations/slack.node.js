@@ -116,10 +116,49 @@ async function opPostRichMessage(config, token) {
 
 async function opUploadFile(config, token) {
   const channel = config.channel;
-  const content = config.content || config.text;
   if (!channel) return { success: false, error: "Slack uploadFile: 'channel' is required — configure this field.", skipped: true };
-  if (!content) return { success: false, error: "Slack uploadFile: 'content' is required — configure this field.", skipped: true };
 
+  // Binary attachment upload (from AI Agent forwarded files)
+  const attachment = Array.isArray(config.attachments) && config.attachments.length > 0
+    ? config.attachments[0]
+    : null;
+
+  if (attachment?.dataUrl) {
+    const base64Data = attachment.dataUrl.includes(",") ? attachment.dataUrl.split(",")[1] : attachment.dataUrl;
+    const binaryBuffer = Buffer.from(base64Data, "base64");
+    const filename = attachment.name || config.filename || "file";
+    const mimeType = attachment.mimeType || "application/octet-stream";
+
+    // Slack Files API v2: get upload URL → upload binary → complete
+    const urlRes = await axios.get(`${API}/files.getUploadURLExternal`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { filename, length: binaryBuffer.length },
+      timeout: 15000,
+    });
+    if (!urlRes.data.ok) throw new Error(`Slack: Failed to get upload URL — ${urlRes.data.error}`);
+    const { upload_url: uploadUrl, file_id: fileId } = urlRes.data;
+
+    await axios.post(uploadUrl, binaryBuffer, {
+      headers: { "Content-Type": mimeType },
+      timeout: 60000,
+      maxBodyLength: Infinity,
+    });
+
+    const completeRes = await axios.post(`${API}/files.completeUploadExternal`, {
+      files: [{ id: fileId, title: config.title || filename }],
+      channel_id: channel,
+      initial_comment: config.text || undefined,
+    }, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      timeout: 15000,
+    });
+    if (!completeRes.data.ok) throw new Error(`Slack: Upload completion failed — ${completeRes.data.error}`);
+    return { ok: true, fileId, fileName: filename };
+  }
+
+  // Text/code snippet upload (legacy path)
+  const content = config.content || config.text;
+  if (!content) return { success: false, error: "Slack uploadFile: 'content' or 'attachmentIndices' is required.", skipped: true };
   const payload = {
     channels: channel,
     content,

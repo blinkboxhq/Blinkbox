@@ -38,10 +38,18 @@ function auth(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
-// Build a RFC 2822 email, base64url-encoded
-function buildRawEmail({ to, from, subject, body, html, replyTo, threadId, inReplyTo, references }) {
-  const contentType = html ? "text/html" : "text/plain";
-  const lines = [
+function toBase64url(buf) {
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// Build a RFC 2822 email, base64url-encoded.
+// Supports file attachments via config.attachments: [{dataUrl, mimeType, name}]
+function buildRawEmail({ to, from, subject, body, html, replyTo, inReplyTo, references, attachments }) {
+  const boundary = `bb_boundary_${Date.now().toString(36)}`;
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+  const bodyContentType = html ? "text/html" : "text/plain";
+
+  const headers = [
     `From: ${from || "me"}`,
     `To: ${to}`,
     replyTo ? `Reply-To: ${replyTo}` : null,
@@ -49,13 +57,38 @@ function buildRawEmail({ to, from, subject, body, html, replyTo, threadId, inRep
     references ? `References: ${references}` : null,
     `Subject: ${subject || ""}`,
     `MIME-Version: 1.0`,
-    `Content-Type: ${contentType}; charset=UTF-8`,
+    hasAttachments
+      ? `Content-Type: multipart/mixed; boundary="${boundary}"`
+      : `Content-Type: ${bodyContentType}; charset=UTF-8`,
+    "",
+  ].filter((l) => l !== null).join("\r\n");
+
+  if (!hasAttachments) {
+    return toBase64url(Buffer.from(headers + (body || "")));
+  }
+
+  const bodyPart = [
+    `--${boundary}`,
+    `Content-Type: ${bodyContentType}; charset=UTF-8`,
     "",
     body || "",
-  ].filter((l) => l !== null);
+  ].join("\r\n");
 
-  const raw = lines.join("\r\n");
-  return Buffer.from(raw).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const attachParts = attachments.map((a) => {
+    const base64Data = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
+    const filename = a.name || "attachment";
+    return [
+      `--${boundary}`,
+      `Content-Type: ${a.mimeType || "application/octet-stream"}; name="${filename}"`,
+      `Content-Transfer-Encoding: base64`,
+      `Content-Disposition: attachment; filename="${filename}"`,
+      "",
+      base64Data,
+    ].join("\r\n");
+  });
+
+  const raw = [headers, bodyPart, ...attachParts, `--${boundary}--`].join("\r\n");
+  return toBase64url(Buffer.from(raw));
 }
 
 async function opSendEmail(config, token) {
@@ -65,7 +98,7 @@ async function opSendEmail(config, token) {
   if (config.threadId) body.threadId = config.threadId;
   const response = await axios.post(`${BASE}/messages/send`, body, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 30000,
   });
   return { messageId: response.data.id, threadId: response.data.threadId, labelIds: response.data.labelIds };
 }

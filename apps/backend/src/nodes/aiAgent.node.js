@@ -404,6 +404,13 @@ const agentNode = {
     //   1. Handle-routed tools (_tools from connected nodes)
     //   2. Registry-resolved tools (enabledToolIds from config panel)
     //   3. Built-in tools (web_search if toggled on)
+
+    // ── Extract all attachments before tool assembly so tools can forward them ─
+    const inputAttachments =
+      (Array.isArray(input?.attachments) && input.attachments) ||
+      (Array.isArray(input?.body?.attachments) && input.body.attachments) ||
+      [];
+
     const tools = await assembleTools({
       handleTools: _tools,
       enabledToolIds,
@@ -412,6 +419,7 @@ const agentNode = {
       workspaceId: context.workspaceId,
       toolRegistry: context.toolRegistry || null,
       platformTools: config.platformTools,
+      inputAttachments,
     });
 
     const formattedTools =
@@ -451,14 +459,12 @@ const agentNode = {
         ? input.substring(0, MAX_INPUT_BYTES)
         : JSON.stringify(input, null, 2)?.substring(0, MAX_INPUT_BYTES) ?? "";
 
-    // ── Extract image attachments from input ───────────────────────────
-    // Accepted shapes: input.attachments[], input.body.attachments[], input.imageUrl
-    const rawAttachments =
-      (Array.isArray(input?.attachments) && input.attachments) ||
-      (Array.isArray(input?.body?.attachments) && input.body.attachments) ||
-      [];
-    const imageAttachments = rawAttachments.filter(
+    // ── Categorise attachments ─────────────────────────────────────────
+    const imageAttachments = inputAttachments.filter(
       (a) => a?.mimeType?.startsWith("image/") && a?.dataUrl
+    );
+    const nonImageAttachments = inputAttachments.filter(
+      (a) => a?.dataUrl && !a?.mimeType?.startsWith("image/")
     );
 
     // ── Build Initial Message Array ────────────────────────────────────
@@ -472,9 +478,37 @@ const agentNode = {
       messages.push(msg);
     }
 
+    // Non-image attachments: decode text content and append inline so the LLM can read them.
+    // PDFs are described by name only (binary, can't extract text without a parser).
+    let attachmentContext = "";
+    if (nonImageAttachments.length > 0) {
+      const parts = nonImageAttachments.map((a, i) => {
+        if (a.mimeType === "application/pdf") {
+          return `[Attachment ${i}: ${a.name || "document.pdf"} — PDF binary, content not extractable as text]`;
+        }
+        try {
+          const base64Data = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
+          const text = Buffer.from(base64Data, "base64").toString("utf-8").substring(0, 4000);
+          return `[Attachment ${i}: ${a.name || "file"} (${a.mimeType})]\n${text}`;
+        } catch {
+          return `[Attachment ${i}: ${a.name || "file"} (${a.mimeType}) — could not decode]`;
+        }
+      });
+      attachmentContext = "\n\n---\nUser Attachments:\n" + parts.join("\n\n");
+    }
+
+    // Tell the LLM which attachments exist so it can forward them via tools.
+    let attachmentIndex = "";
+    if (inputAttachments.length > 0) {
+      const summary = inputAttachments.map((a, i) =>
+        `[${i}] ${a.name || "file"} (${a.mimeType || "unknown"})`
+      ).join(", ");
+      attachmentIndex = `\n\nThe user sent ${inputAttachments.length} attachment(s): ${summary}. To forward them via Gmail/Slack/Telegram, pass attachmentIndices=[0,1,...] in the tool call.`;
+    }
+
     const userTextContent = inputSummary
-      ? `${prompt}\n\n---\nInput Data:\n${inputSummary}`
-      : prompt;
+      ? `${prompt}\n\n---\nInput Data:\n${inputSummary}${attachmentContext}${attachmentIndex}`
+      : `${prompt}${attachmentContext}${attachmentIndex}`;
 
     // Build multimodal content when images are present
     const userContent = imageAttachments.length > 0
@@ -636,6 +670,7 @@ async function assembleTools({
   workspaceId,
   toolRegistry,
   platformTools,
+  inputAttachments = [],
 }) {
   const tools = [];
   const seen = new Set();
@@ -928,7 +963,7 @@ async function assembleTools({
         name: toolName,
         description: alias ? `${spec.description} (${alias})` : spec.description,
         parameters: spec.parameters,
-        execute: (args) => spec.run(args, credentialId, workspaceId),
+        execute: (args) => spec.run(args, credentialId, workspaceId, inputAttachments),
       });
       seen.add(toolName);
     }
@@ -1003,22 +1038,28 @@ async function assembleTools({
 
 const PLATFORM_TOOL_SPECS = {
   slack: {
-    description: "Post messages to Slack channels or upload files to Slack.",
+    description: "Post messages to Slack channels or upload files to Slack. Use attachmentIndices to forward user-uploaded files/images directly to Slack.",
     parameters: {
       type: "object",
       properties: {
-        operation: { type: "string", enum: ["postMessage", "uploadFile"], description: "postMessage to send text, uploadFile to upload a file" },
+        operation: { type: "string", enum: ["postMessage", "uploadFile"], description: "postMessage to send text, uploadFile to upload a file or user attachment" },
         channel: { type: "string", description: "Slack channel name (#general) or ID" },
         text: { type: "string", description: "Message text — supports Slack mrkdwn (*bold*, _italic_, ```code```)" },
         filename: { type: "string", description: "Filename for uploadFile operation" },
-        fileContent: { type: "string", description: "Text content to upload as file" },
+        fileContent: { type: "string", description: "Text content to upload as file (use attachmentIndices for binary files)" },
+        attachmentIndices: { type: "array", items: { type: "integer" }, description: "Indices of user-provided input attachments to upload to Slack (e.g. [0] to upload the first file)" },
       },
       required: ["operation", "channel"],
     },
-    run: (args, credentialId, workspaceId) => _slackNode.run({ ...args, credentialId }, {}, { workspaceId }),
+    run: async (args, credentialId, workspaceId, inputAttachments = []) => {
+      const resolvedAttachments = (args.attachmentIndices || [])
+        .map((i) => inputAttachments[i])
+        .filter(Boolean);
+      return _slackNode.run({ ...args, credentialId, attachments: resolvedAttachments }, {}, { workspaceId });
+    },
   },
   gmail: {
-    description: "Read, send, reply to, or search Gmail emails. Use readEmail to get full content of a specific email by messageId. Use searchEmails to find emails — it returns full content for each match (from, to, subject, body, date). Use sendEmail to send a new email. Use replyToEmail to reply in a thread (requires threadId).",
+    description: "Read, send, reply to, or search Gmail emails. Use readEmail to get full content of a specific email by messageId. Use searchEmails to find emails — it returns full content for each match (from, to, subject, body, date). Use sendEmail to send a new email. Use replyToEmail to reply in a thread (requires threadId). Pass attachmentIndices to forward user-uploaded files as email attachments.",
     parameters: {
       type: "object",
       properties: {
@@ -1031,10 +1072,11 @@ const PLATFORM_TOOL_SPECS = {
         messageId: { type: "string", description: "Message ID for readEmail" },
         query: { type: "string", description: "Gmail search query for searchEmails (e.g. 'from:boss@company.com is:unread')" },
         maxResults: { type: "number", description: "Max emails to return for searchEmails (default 5, max 20)" },
+        attachmentIndices: { type: "array", items: { type: "integer" }, description: "Indices of user-provided input attachments to include in the email (e.g. [0] to attach the first file the user uploaded)" },
       },
       required: ["operation"],
     },
-    run: async (args, credentialId, workspaceId) => {
+    run: async (args, credentialId, workspaceId, inputAttachments = []) => {
       if (args.operation === "searchEmails") {
         const searchResult = await _gmailNode.run({ ...args, credentialId, maxResults: Math.min(args.maxResults || 5, 20) }, {}, { workspaceId });
         const messages = searchResult.messages || [];
@@ -1047,7 +1089,10 @@ const PLATFORM_TOOL_SPECS = {
         );
         return { messages: fullMessages, total: searchResult.total };
       }
-      return _gmailNode.run({ ...args, credentialId }, {}, { workspaceId });
+      const resolvedAttachments = (args.attachmentIndices || [])
+        .map((i) => inputAttachments[i])
+        .filter(Boolean);
+      return _gmailNode.run({ ...args, credentialId, attachments: resolvedAttachments }, {}, { workspaceId });
     },
   },
   discord: {
@@ -1065,18 +1110,23 @@ const PLATFORM_TOOL_SPECS = {
     run: (args, credentialId, workspaceId) => _discordNode.run({ ...args, credentialId }, {}, { workspaceId }),
   },
   telegram: {
-    description: "Send Telegram messages, photos, or documents via bot.",
+    description: "Send Telegram messages, photos, or documents via bot. Use attachmentIndex to forward a user-uploaded file/image directly to Telegram.",
     parameters: {
       type: "object",
       properties: {
-        operation: { type: "string", enum: ["sendMessage", "sendPhoto", "sendDocument"], description: "Operation" },
+        operation: { type: "string", enum: ["sendMessage", "sendPhoto", "sendDocument"], description: "Operation — use sendPhoto for images, sendDocument for other files" },
         chatId: { type: "string", description: "Chat ID or @username" },
         text: { type: "string", description: "Message text" },
-        photoUrl: { type: "string", description: "Photo URL for sendPhoto" },
+        photoUrl: { type: "string", description: "Photo URL for sendPhoto (use attachmentIndex instead if forwarding a user upload)" },
+        caption: { type: "string", description: "Caption for sendPhoto/sendDocument" },
+        attachmentIndex: { type: "integer", description: "Index of a user-provided input attachment to send (e.g. 0 for the first file). Use with sendPhoto or sendDocument." },
       },
-      required: ["operation", "chatId", "text"],
+      required: ["operation", "chatId"],
     },
-    run: (args, credentialId, workspaceId) => _telegramNode.run({ ...args, credentialId }, {}, { workspaceId }),
+    run: async (args, credentialId, workspaceId, inputAttachments = []) => {
+      const attachment = typeof args.attachmentIndex === "number" ? inputAttachments[args.attachmentIndex] : null;
+      return _telegramNode.run({ ...args, credentialId, _inlineAttachment: attachment || undefined }, {}, { workspaceId });
+    },
   },
   notion: {
     description: "Create Notion pages, query databases, or append content to pages.",

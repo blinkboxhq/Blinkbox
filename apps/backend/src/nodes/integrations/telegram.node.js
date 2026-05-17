@@ -82,9 +82,22 @@ async function opSendMessage(config, token) {
 
 async function opSendPhoto(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  const photoUrl = config.photoUrl || config.imageUrl;
   if (!chatId) return { success: false, error: "Telegram sendPhoto: 'chatId' is required.", skipped: true };
-  if (!photoUrl) return { success: false, error: "Telegram sendPhoto: 'photoUrl' is required.", skipped: true };
+
+  // Inline binary upload (from AI Agent forwarded attachments)
+  if (config._inlineAttachment?.dataUrl) {
+    const { dataUrl, mimeType, name } = config._inlineAttachment;
+    const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("photo", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "image/jpeg" }), name || "photo.jpg");
+    if (config.caption) form.append("caption", config.caption);
+    const res = await axios.post(`${BASE_URL}${token}/sendPhoto`, form, { timeout: 30000 });
+    return msgResult(res.data);
+  }
+
+  const photoUrl = config.photoUrl || config.imageUrl;
+  if (!photoUrl) return { success: false, error: "Telegram sendPhoto: 'photoUrl' or attachmentIndex is required.", skipped: true };
   if (!/^https?:\/\//i.test(photoUrl)) throw new Error("Telegram sendPhoto: 'photoUrl' must be an http/https URL.");
 
   const payload = { chat_id: chatId, photo: photoUrl };
@@ -97,9 +110,22 @@ async function opSendPhoto(config, token) {
 
 async function opSendDocument(config, token) {
   const chatId = typeof config.chatId === "string" ? config.chatId.trim() : config.chatId;
-  const documentUrl = config.documentUrl || config.fileUrl;
   if (!chatId) return { success: false, error: "Telegram sendDocument: 'chatId' is required.", skipped: true };
-  if (!documentUrl) return { success: false, error: "Telegram sendDocument: 'documentUrl' is required.", skipped: true };
+
+  // Inline binary upload (from AI Agent forwarded attachments)
+  if (config._inlineAttachment?.dataUrl) {
+    const { dataUrl, mimeType, name } = config._inlineAttachment;
+    const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("document", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "application/octet-stream" }), name || "file");
+    if (config.caption) form.append("caption", config.caption);
+    const res = await axios.post(`${BASE_URL}${token}/sendDocument`, form, { timeout: 30000 });
+    return msgResult(res.data);
+  }
+
+  const documentUrl = config.documentUrl || config.fileUrl;
+  if (!documentUrl) return { success: false, error: "Telegram sendDocument: 'documentUrl' or attachmentIndex is required.", skipped: true };
   if (!/^https?:\/\//i.test(documentUrl)) throw new Error("Telegram sendDocument: 'documentUrl' must be an http/https URL.");
 
   const payload = { chat_id: chatId, document: documentUrl };
