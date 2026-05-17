@@ -278,7 +278,7 @@ export async function processCursor({ executionId, cursorId }) {
                 handleDeps._tools.push(firstOutput);
               }
             }
-          } else if (handle === "chat_model") {
+          } else if (handle === "chat_model" || handle === "llm") {
             const sourceNode = automation.nodes.find((n) => n.id === edge.source);
             handleDeps._chatModel = sourceNode
               ? { ...(sourceNode.data || {}), backendType: sourceNode.type }
