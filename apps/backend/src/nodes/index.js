@@ -260,7 +260,9 @@ export const nodeRegistry = {
       let mediaType     = null;
 
       if (Array.isArray(msg.photo) && msg.photo.length > 0) {
-        const best = msg.photo[msg.photo.length - 1];
+        // Pick second-to-last (medium quality) to avoid huge images exceeding LLM vision limits
+        const photoIndex = msg.photo.length >= 3 ? msg.photo.length - 2 : msg.photo.length >= 2 ? 1 : 0;
+        const best = msg.photo[photoIndex];
         mediaFileId = best.file_id; mediaMimeType = "image/jpeg"; mediaName = "photo.jpg"; mediaType = "photo";
       } else if (msg.document) {
         mediaFileId = msg.document.file_id; mediaMimeType = msg.document.mime_type || "application/octet-stream"; mediaName = msg.document.file_name || "document"; mediaType = "document";

@@ -467,12 +467,21 @@ const agentNode = {
         : JSON.stringify(input, null, 2)?.substring(0, MAX_INPUT_BYTES) ?? "";
 
     // ── Categorise attachments ─────────────────────────────────────────
-    const imageAttachments = inputAttachments.filter(
-      (a) => a?.mimeType?.startsWith("image/") && a?.dataUrl
-    );
-    const nonImageAttachments = inputAttachments.filter(
-      (a) => a?.dataUrl && !a?.mimeType?.startsWith("image/")
-    );
+    const MAX_IMAGE_BASE64_BYTES = 4 * 1024 * 1024; // 4 MB
+    const imageAttachments = inputAttachments.filter((a) => {
+      if (!a?.mimeType?.startsWith("image/") || !a?.dataUrl) return false;
+      const b64 = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
+      return b64.length <= MAX_IMAGE_BASE64_BYTES;
+    });
+    const oversizedImages = inputAttachments.filter((a) => {
+      if (!a?.mimeType?.startsWith("image/") || !a?.dataUrl) return false;
+      const b64 = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
+      return b64.length > MAX_IMAGE_BASE64_BYTES;
+    });
+    const nonImageAttachments = [
+      ...inputAttachments.filter((a) => a?.dataUrl && !a?.mimeType?.startsWith("image/")),
+      ...oversizedImages,
+    ];
 
     // ── Build Initial Message Array ────────────────────────────────────
     const messages = [];
@@ -485,20 +494,23 @@ const agentNode = {
       messages.push(msg);
     }
 
-    // Non-image attachments: decode text content and append inline so the LLM can read them.
-    // PDFs are described by name only (binary, can't extract text without a parser).
+    const TEXT_MIMES = ["text/", "application/json", "application/xml", "application/yaml", "application/csv", "application/javascript"];
     let attachmentContext = "";
     if (nonImageAttachments.length > 0) {
       const parts = nonImageAttachments.map((a, i) => {
-        if (a.mimeType === "application/pdf") {
-          return `[Attachment ${i}: ${a.name || "document.pdf"} — PDF binary, content not extractable as text]`;
-        }
+        const mime = a.mimeType || "unknown";
+        if (mime.startsWith("video/")) return `[Attachment ${i}: ${a.name || "file"} (${mime}) — video, cannot be read as text]`;
+        if (mime.startsWith("audio/")) return `[Attachment ${i}: ${a.name || "file"} (${mime}) — audio, cannot be read as text]`;
+        if (mime === "application/pdf") return `[Attachment ${i}: ${a.name || "document.pdf"} — PDF binary, content not extractable as text]`;
+        if (mime.startsWith("image/")) return `[Attachment ${i}: ${a.name || "file"} (${mime}) — image too large to send to vision API]`;
+        const isText = TEXT_MIMES.some((p) => mime.startsWith(p));
+        if (!isText) return `[Attachment ${i}: ${a.name || "file"} (${mime}) — binary file, cannot be read as text]`;
         try {
           const base64Data = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
           const text = Buffer.from(base64Data, "base64").toString("utf-8").substring(0, 4000);
-          return `[Attachment ${i}: ${a.name || "file"} (${a.mimeType})]\n${text}`;
+          return `[Attachment ${i}: ${a.name || "file"} (${mime})]\n${text}`;
         } catch {
-          return `[Attachment ${i}: ${a.name || "file"} (${a.mimeType}) — could not decode]`;
+          return `[Attachment ${i}: ${a.name || "file"} (${mime}) — could not decode]`;
         }
       });
       attachmentContext = "\n\n---\nUser Attachments:\n" + parts.join("\n\n");
