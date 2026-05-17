@@ -191,6 +191,7 @@ import mailchimp from "./integrations/mailchimp.node.js";
 import tiktok from "./integrations/tiktok.node.js";
 import instagram from "./integrations/instagram.node.js";
 import ocr from "./ocr.node.js";
+import axios from "axios";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
@@ -251,13 +252,72 @@ export const nodeRegistry = {
     async run(config, input) {
       const body = input?.body ?? input;
       const msg  = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
+
+      // Resolve which media object is attached (if any)
+      let mediaFileId   = null;
+      let mediaMimeType = "application/octet-stream";
+      let mediaName     = "file";
+
+      if (Array.isArray(msg.photo) && msg.photo.length > 0) {
+        // Telegram sends multiple sizes — last entry is highest resolution
+        const best = msg.photo[msg.photo.length - 1];
+        mediaFileId   = best.file_id;
+        mediaMimeType = "image/jpeg";
+        mediaName     = "photo.jpg";
+      } else if (msg.document) {
+        mediaFileId   = msg.document.file_id;
+        mediaMimeType = msg.document.mime_type || "application/octet-stream";
+        mediaName     = msg.document.file_name || "document";
+      } else if (msg.video) {
+        mediaFileId   = msg.video.file_id;
+        mediaMimeType = msg.video.mime_type || "video/mp4";
+        mediaName     = msg.video.file_name || "video.mp4";
+      } else if (msg.audio) {
+        mediaFileId   = msg.audio.file_id;
+        mediaMimeType = msg.audio.mime_type || "audio/mpeg";
+        mediaName     = msg.audio.file_name || "audio.mp3";
+      } else if (msg.voice) {
+        mediaFileId   = msg.voice.file_id;
+        mediaMimeType = "audio/ogg";
+        mediaName     = "voice.ogg";
+      } else if (msg.sticker) {
+        mediaFileId   = msg.sticker.file_id;
+        mediaMimeType = msg.sticker.is_animated ? "application/x-tgsticker" : "image/webp";
+        mediaName     = "sticker.webp";
+      }
+
+      let attachments = [];
+      const botToken = config?.botToken;
+      if (mediaFileId && botToken) {
+        try {
+          const { data: fileInfo } = await axios.get(
+            `https://api.telegram.org/bot${botToken}/getFile`,
+            { params: { file_id: mediaFileId }, timeout: 10000 }
+          );
+          const filePath = fileInfo?.result?.file_path;
+          if (filePath) {
+            const { data: fileBuffer } = await axios.get(
+              `https://api.telegram.org/file/bot${botToken}/${filePath}`,
+              { responseType: "arraybuffer", timeout: 30000 }
+            );
+            const dataUrl = `data:${mediaMimeType};base64,${Buffer.from(fileBuffer).toString("base64")}`;
+            attachments = [{ dataUrl, mimeType: mediaMimeType, name: mediaName }];
+          }
+        } catch (err) {
+          console.warn("[telegram_trigger] Failed to download media:", err.message);
+        }
+      }
+
       return {
-        text:      msg.text      ?? "",
-        from:      msg.from      ?? {},
-        chat:      msg.chat      ?? {},
-        date:      msg.date      ?? null,
-        messageId: msg.message_id ?? null,
-        updateId:  body?.update_id ?? null,
+        text:        msg.text ?? msg.caption ?? "",
+        from:        msg.from      ?? {},
+        chat:        msg.chat      ?? {},
+        date:        msg.date      ?? null,
+        messageId:   msg.message_id ?? null,
+        updateId:    body?.update_id ?? null,
+        hasMedia:    attachments.length > 0,
+        mediaType:   mediaFileId ? (msg.photo ? "photo" : msg.document ? "document" : msg.video ? "video" : msg.audio ? "audio" : msg.voice ? "voice" : "sticker") : null,
+        attachments,
       };
     },
   },
