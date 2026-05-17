@@ -223,17 +223,20 @@ export async function processCursor({ executionId, cursorId }) {
       dynamicContext[doc.nodeId] = doc.output;
     });
 
-    // Identify inputs (auto-grab from parents or self-trigger)
+    // Identify inputs (auto-grab from parents or self-trigger).
+    // Agent slot edges (llm, memory, tools) are excluded — they feed handleDeps,
+    // not the data-flow input array.
     const incomingEdges = automation.edges.filter((e) => e.target === node.id);
+    const dataFlowEdges = incomingEdges.filter((e) => !e.targetHandle || e.targetHandle === "input");
     let inputItems = [];
 
     // LOOP FAN-OUT: cursor carries a specific item snapshot — use it exclusively
     if (cursor._loopItemOverride != null) {
       inputItems = [{ json: cursor._loopItemOverride }];
-    } else if (incomingEdges.length === 0) {
+    } else if (dataFlowEdges.length === 0) {
       inputItems = dynamicContext[node.id] || [{ json: {} }];
     } else {
-      for (const edge of incomingEdges) {
+      for (const edge of dataFlowEdges) {
         const sourceData = dynamicContext[edge.source];
         if (Array.isArray(sourceData)) inputItems.push(...sourceData);
       }
@@ -604,8 +607,13 @@ async function routeEdges(
     if (evaluateCondition(edge.condition, evaluationContext)) {
       const targetNodeId = edge.target;
 
-      // MERGE CHECK: Re-query ExecutionData for fresh state
-      const allIncoming = automation.edges.filter((e) => e.target === targetNodeId);
+      // MERGE CHECK: Re-query ExecutionData for fresh state.
+      // Only count data-flow edges (targetHandle null or "input") — agent slot
+      // edges (llm, memory, tools) connect sub-nodes that never execute, so
+      // they must never block the merge-readiness check.
+      const allIncoming = automation.edges.filter(
+        (e) => e.target === targetNodeId && (!e.targetHandle || e.targetHandle === "input"),
+      );
 
       if (allIncoming.length > 1) {
         const completedData = await ExecutionData.find({ executionId: execution._id });
