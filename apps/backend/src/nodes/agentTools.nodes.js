@@ -12,6 +12,7 @@
 
 import axios from "axios";
 import crypto from "crypto";
+import { execute as containerExecute } from "../infra/container.pool.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import fs from "fs/promises";
@@ -1455,13 +1456,13 @@ export const tool_js = {
   },
 };
 
-// Shell execution tools are disabled by default — they execute arbitrary commands on
-// the server. Set ENABLE_SHELL_TOOLS=true in .env to opt in (local dev only).
+// Network-privileged tools (git, ssh, kubectl, etc.) run directly on the server and
+// require ENABLE_SHELL_TOOLS=true. bash/python/npm use the Docker container pool instead.
 function assertShellToolsEnabled() {
   if (process.env.ENABLE_SHELL_TOOLS !== "true") {
     throw new Error(
-      "Shell execution tools (bash, python, npm, git) are disabled on this server. " +
-      "Set ENABLE_SHELL_TOOLS=true in .env to enable them (local development only)."
+      "This tool runs directly on the server and is disabled for security. " +
+      "Set ENABLE_SHELL_TOOLS=true in .env to enable it."
     );
   }
 }
@@ -1469,63 +1470,53 @@ function assertShellToolsEnabled() {
 export const tool_python = {
   toolDefinition: td(
     "tool_python",
-    "Execute Python code using the system Python interpreter",
+    "Execute Python 3 code in an isolated sandbox (no network, no filesystem access outside /tmp)",
     {
       code: { type: "string", description: "Python code to execute" },
-      timeout: { type: "number", description: "Execution timeout in seconds (default 10)" },
+      timeout: { type: "number", description: "Execution timeout in seconds (default 10, max 300)" },
     },
     ["code"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    const tmpFile = `/tmp/blinkbox_py_${Date.now()}_${Math.random().toString(36).slice(2)}.py`;
-    await fs.writeFile(tmpFile, args.code, "utf8");
-    try {
-      const result = await safeExec(`python3 ${JSON.stringify(tmpFile)}`, (args.timeout || 10) * 1000);
-      return result;
-    } finally {
-      await fs.unlink(tmpFile).catch(() => {});
-    }
+  async run(config, args, context = {}) {
+    return containerExecute(
+      { language: "python", command: args.code, timeoutSeconds: args.timeout || 10 },
+      context.workspaceId || "default"
+    );
   },
 };
 
 export const tool_bash = {
   toolDefinition: td(
     "tool_bash",
-    "Run a bash shell command on the server",
+    "Run a bash/shell command in an isolated sandbox (no network, no host filesystem access)",
     {
       command: { type: "string", description: "Shell command to execute" },
-      workingDir: { type: "string", description: "Working directory (optional)" },
-      timeout: { type: "number", description: "Timeout in seconds (default 15)" },
+      timeout: { type: "number", description: "Timeout in seconds (default 15, max 300)" },
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    // Use JSON.stringify for workingDir to safely quote the path
-    const cmd = args.workingDir
-      ? `cd ${JSON.stringify(args.workingDir)} && ${args.command}`
-      : args.command;
-    return safeExec(cmd, (args.timeout || 15) * 1000);
+  async run(config, args, context = {}) {
+    return containerExecute(
+      { language: "bash", command: args.command, timeoutSeconds: args.timeout || 15 },
+      context.workspaceId || "default"
+    );
   },
 };
 
 export const tool_npm = {
   toolDefinition: td(
     "tool_npm",
-    "Run npm commands (install, list, audit, etc.)",
+    "Run npm commands in an isolated Node.js sandbox (no network — use for bundled operations only)",
     {
-      command: { type: "string", description: "npm sub-command (e.g. install lodash, list, audit)" },
-      directory: { type: "string", description: "Working directory (optional)" },
+      command: { type: "string", description: "npm sub-command (e.g. list, audit, pack)" },
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    const cmd = args.directory
-      ? `cd ${JSON.stringify(args.directory)} && npm ${args.command}`
-      : `npm ${args.command}`;
-    return safeExec(cmd, 60000);
+  async run(config, args, context = {}) {
+    return containerExecute(
+      { language: "node", command: `npm ${args.command}`, timeoutSeconds: 60 },
+      context.workspaceId || "default"
+    );
   },
 };
 
