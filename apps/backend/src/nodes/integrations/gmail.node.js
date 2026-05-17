@@ -64,7 +64,7 @@ function buildRawEmail({ to, from, subject, body, html, replyTo, inReplyTo, refe
   ].filter((l) => l !== null).join("\r\n");
 
   if (!hasAttachments) {
-    return toBase64url(Buffer.from(headers + (body || "")));
+    return toBase64url(Buffer.from(headers + "\r\n" + (body || "")));
   }
 
   const bodyPart = [
