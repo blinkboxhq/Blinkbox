@@ -302,6 +302,7 @@ export async function triggerAutomation(req, res) {
         source: e.source ?? e.from,
         target: e.target ?? e.to,
         id: e.id,
+        targetHandle: e.targetHandle ?? null,
       })),
       entryNodeId: automation.entryNodeId,
     });

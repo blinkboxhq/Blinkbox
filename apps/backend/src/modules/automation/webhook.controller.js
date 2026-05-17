@@ -164,6 +164,7 @@ export async function handlePublicWebhook(req, res) {
         edges: automation.edges.map((e) => ({
           source: e.source ?? e.from,
           target: e.target ?? e.to,
+          targetHandle: e.targetHandle ?? null,
         })),
         entryNodeId: automation.entryNodeId,
       });
