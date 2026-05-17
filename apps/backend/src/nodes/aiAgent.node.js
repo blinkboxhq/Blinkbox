@@ -1018,20 +1018,33 @@ const PLATFORM_TOOL_SPECS = {
     run: (args, credentialId, workspaceId) => _slackNode.run({ ...args, credentialId }, {}, { workspaceId }),
   },
   gmail: {
-    description: "Send emails, reply to threads, or search Gmail.",
+    description: "Read, send, reply to, or search Gmail emails. Use readEmail to get full content of a specific email by messageId. Use searchEmails to find emails — it returns full content for each match (from, to, subject, body, date). Use sendEmail to send a new email. Use replyToThread to reply in a thread.",
     parameters: {
       type: "object",
       properties: {
-        operation: { type: "string", enum: ["sendEmail", "replyToThread", "searchEmails"], description: "Operation to perform" },
-        to: { type: "string", description: "Recipient email address" },
-        subject: { type: "string", description: "Email subject line" },
-        body: { type: "string", description: "Email body (plain text or HTML)" },
+        operation: { type: "string", enum: ["sendEmail", "replyToThread", "searchEmails", "readEmail"], description: "Operation to perform" },
+        to: { type: "string", description: "Recipient email address (for sendEmail)" },
+        subject: { type: "string", description: "Email subject line (for sendEmail)" },
+        body: { type: "string", description: "Email body (plain text or HTML) (for sendEmail/replyToThread)" },
         threadId: { type: "string", description: "Thread ID for replyToThread" },
+        messageId: { type: "string", description: "Message ID for readEmail" },
         query: { type: "string", description: "Gmail search query for searchEmails (e.g. 'from:boss@company.com is:unread')" },
+        maxResults: { type: "number", description: "Max emails to return for searchEmails (default 5, max 20)" },
       },
       required: ["operation"],
     },
-    run: (args, credentialId, workspaceId) => _gmailNode.run({ ...args, credentialId }, {}, { workspaceId }),
+    run: async (args, credentialId, workspaceId) => {
+      if (args.operation === "searchEmails") {
+        const searchResult = await _gmailNode.run({ ...args, credentialId, maxResults: Math.min(args.maxResults || 5, 20) }, {}, { workspaceId });
+        const messages = searchResult.messages || [];
+        if (!messages.length) return { messages: [], total: 0 };
+        const fullMessages = await Promise.all(
+          messages.map(m => _gmailNode.run({ operation: "readEmail", messageId: m.id, credentialId }, {}, { workspaceId }).catch(() => ({ messageId: m.id, error: "Failed to fetch content" }))
+        );
+        return { messages: fullMessages, total: searchResult.total };
+      }
+      return _gmailNode.run({ ...args, credentialId }, {}, { workspaceId });
+    },
   },
   discord: {
     description: "Send messages or embeds to Discord channels.",
