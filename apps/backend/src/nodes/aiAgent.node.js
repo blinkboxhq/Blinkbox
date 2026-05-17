@@ -435,7 +435,10 @@ const agentNode = {
     }
 
     // ── Build System Prompt ────────────────────────────────────────────
-    let system = REACT_SYSTEM_PROMPT;
+    const _now = new Date();
+    const _dateStr = _now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const _timeStr = _now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    let system = REACT_SYSTEM_PROMPT + `\n\n## Current Date & Time\nToday is ${_dateStr}. Current time: ${_timeStr}. Always use this as the reference when creating calendar events, scheduling, or anything date-related.`;
 
     if (systemPrompt) {
       system += `\n\n--- User Instructions ---\n${systemPrompt}`;
@@ -2322,7 +2325,10 @@ agentNode._think = async function ({
     }));
 
     // ── Build system prompt ─────────────────────────────────────────
-    let system = REACT_SYSTEM_PROMPT;
+    const _now2 = new Date();
+    const _dateStr2 = _now2.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const _timeStr2 = _now2.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    let system = REACT_SYSTEM_PROMPT + `\n\n## Current Date & Time\nToday is ${_dateStr2}. Current time: ${_timeStr2}. Always use this as the reference when creating calendar events, scheduling, or anything date-related.`;
     if (nodeConfig.systemPrompt) {
       system += `\n\n--- User Instructions ---\n${nodeConfig.systemPrompt}`;
     }
