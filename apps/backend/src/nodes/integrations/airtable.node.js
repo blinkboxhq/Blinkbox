@@ -19,16 +19,14 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE_URL = "https://api.airtable.com/v0";
 const MAX_RECORDS_LIMIT = 1000;
 const BULK_LIMIT = 10;
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Airtable");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "Airtable");
 }
 
 function handleError(err) {

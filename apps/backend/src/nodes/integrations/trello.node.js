@@ -1,6 +1,5 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.trello.com/1";
 
@@ -19,8 +18,7 @@ export default {
     const { operation = "createCard" } = config;
 
     if (!config.credentialId) return { success: false, error: "Trello: credential required.", skipped: true };
-    const cred = await resolveCredential(config.credentialId, context.workspaceId, "Trello");
-    const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const raw = await getOAuthToken(config.credentialId, context.workspaceId, "Trello");
 
     let apiKey, token;
     if (raw.includes(":")) {

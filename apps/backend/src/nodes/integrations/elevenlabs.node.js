@@ -3,14 +3,13 @@
  * Operations: textToSpeech, listVoices
  */
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.elevenlabs.io/v1";
 
 async function getApiKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "ElevenLabs");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "ElevenLabs");
+  return __accessToken;
 }
 
 function handleError(err) {

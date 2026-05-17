@@ -1,6 +1,5 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 export default {
   async run(config, input, context = {}) {
@@ -10,8 +9,7 @@ export default {
 
     let token, email;
     if (config.credentialId) {
-      const cred = await resolveCredential(config.credentialId, context.workspaceId, "Zendesk");
-      const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+      const raw = await getOAuthToken(config.credentialId, context.workspaceId, "Zendesk");
       try { const j = JSON.parse(raw); token = j.token; email = j.email; } catch { token = raw; }
     }
     email = email || config.email;

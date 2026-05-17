@@ -15,14 +15,12 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Teams");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "Teams");
 }
 
 function authHeaders(token) {

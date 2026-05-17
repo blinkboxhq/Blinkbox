@@ -16,14 +16,12 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API = "https://api.vercel.com";
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Vercel");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "Vercel");
 }
 
 function authHeaders(token) {

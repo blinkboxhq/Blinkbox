@@ -19,14 +19,11 @@
  *   rowLimit      — Max rows returned (default: 1000)
  */
 
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
 
 async function getClient(credentialId, workspaceId) {
   const { default: pg } = await import("pg");
   const { Client } = pg;
-  const cred = await resolveCredential(credentialId, workspaceId, "PostgreSQL");
-  const connString = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const connString = await getOAuthToken(credentialId, workspaceId, "PostgreSQL");
   const client = new Client({ connectionString: connString, connectionTimeoutMillis: 10000, statement_timeout: 30000 });
   await client.connect();
   return client;

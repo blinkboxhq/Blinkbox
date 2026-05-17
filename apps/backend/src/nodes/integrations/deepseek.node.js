@@ -7,8 +7,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API_URL = "https://api.deepseek.com/chat/completions";
 
@@ -24,8 +23,7 @@ export default {
     } = config;
 
     if (!prompt) return { success: false, error: "DeepSeek: 'prompt' is required.", skipped: true };
-    const cred = await resolveCredential(credentialId, context.workspaceId, "DeepSeek");
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "DeepSeek");
 
     const inputSummary =
       typeof input === "string"

@@ -14,14 +14,13 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.linear.app/graphql";
 
 async function getKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Linear");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "Linear");
+  return __accessToken;
 }
 
 async function gql(query, variables, apiKey) {

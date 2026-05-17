@@ -1,12 +1,11 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 async function getKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "YouTube");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "YouTube");
+  return __accessToken;
 }
 
 export default {

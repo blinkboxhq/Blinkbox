@@ -19,8 +19,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API_URL = "https://api.tavily.com/search";
 const MAX_RESULTS_LIMIT = 20;
@@ -55,8 +54,7 @@ export default {
 
     if (!searchQuery) return { success: false, error: "Web Search: 'query' is required.", skipped: true };
     // Vault: resolve + decrypt API key
-    const cred = await resolveCredential(credentialId, context.workspaceId, "Web Search");
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "Web Search");
 
     const payload = {
       api_key: apiKey,

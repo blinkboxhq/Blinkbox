@@ -1,6 +1,5 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.typeform.com";
 
@@ -19,8 +18,7 @@ export default {
     const { operation = "listResponses" } = config;
 
     if (!config.credentialId) return { success: false, error: "Typeform: credential required.", skipped: true };
-    const cred = await resolveCredential(config.credentialId, context.workspaceId, "Typeform");
-    const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const token = await getOAuthToken(config.credentialId, context.workspaceId, "Typeform");
     if (!token) return { success: false, error: "Typeform: personal access token is required.", skipped: true };
 
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };

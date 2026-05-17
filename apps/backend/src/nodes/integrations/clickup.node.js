@@ -1,6 +1,5 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.clickup.com/api/v2";
 
@@ -28,8 +27,7 @@ export default {
     const { operation = "createTask" } = config;
 
     if (!config.credentialId) return { success: false, error: "ClickUp: credential required.", skipped: true };
-    const cred = await resolveCredential(config.credentialId, context.workspaceId, "ClickUp");
-    const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const token = await getOAuthToken(config.credentialId, context.workspaceId, "ClickUp");
     if (!token) return { success: false, error: "ClickUp: API token is required.", skipped: true };
 
     const headers = { Authorization: token, "Content-Type": "application/json" };

@@ -14,14 +14,12 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Gmail");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "Gmail");
 }
 
 function handleError(err) {

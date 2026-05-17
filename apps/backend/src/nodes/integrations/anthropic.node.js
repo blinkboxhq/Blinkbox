@@ -29,8 +29,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 function assertSafeUrl(rawUrl) {
   let u;
@@ -49,8 +48,8 @@ const API_URL = "https://api.anthropic.com/v1/messages";
 const HEADERS_BASE = { "anthropic-version": "2023-06-01", "Content-Type": "application/json" };
 
 async function getApiKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Anthropic");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "Anthropic");
+  return __accessToken;
 }
 
 function handleError(err) {

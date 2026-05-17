@@ -5,13 +5,10 @@
  * Credential format (JSON): { "url": "https://xxx.supabase.co", "key": "eyJ..." }
  */
 
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
 
 async function getClient(credentialId, workspaceId) {
   const { createClient } = await import("@supabase/supabase-js");
-  const cred = await resolveCredential(credentialId, workspaceId, "Supabase");
-  const raw  = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const raw = await getOAuthToken(credentialId, workspaceId, "Supabase");
   let url, key;
   try {
     const parsed = JSON.parse(raw);

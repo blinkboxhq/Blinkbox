@@ -18,14 +18,13 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.stripe.com/v1";
 
 async function getKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Stripe");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "Stripe");
+  return __accessToken;
 }
 
 function handleError(err) {

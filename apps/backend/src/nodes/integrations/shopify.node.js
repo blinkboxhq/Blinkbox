@@ -19,12 +19,10 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Shopify");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "Shopify");
 }
 
 function handleError(err) {

@@ -5,15 +5,13 @@
  * Auth: Redis URL in vault (redis://...) or inline host/port/password
  */
 
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
 import IORedis from "ioredis";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const clients = new Map();
 
 async function getClient(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Redis");
-  const url  = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const url = await getOAuthToken(credentialId, workspaceId, "Redis");
 
   if (clients.has(url)) return clients.get(url);
 

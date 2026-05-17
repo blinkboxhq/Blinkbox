@@ -6,16 +6,13 @@
  * Auth: Firebase service account JSON stored in vault
  */
 
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
 
 const apps = new Map();
 
 async function getFirebase(credentialId, workspaceId) {
   const admin = (await import("firebase-admin")).default;
 
-  const cred = await resolveCredential(credentialId, workspaceId, "Firebase");
-  const raw  = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const raw = await getOAuthToken(credentialId, workspaceId, "Firebase");
 
   let serviceAccount;
   try { serviceAccount = JSON.parse(raw); }

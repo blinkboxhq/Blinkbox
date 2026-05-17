@@ -1,10 +1,8 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getCreds(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "WooCommerce");
-  const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const raw = await getOAuthToken(credentialId, workspaceId, "WooCommerce");
   try {
     return JSON.parse(raw);
   } catch {

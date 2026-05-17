@@ -28,8 +28,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 function assertSafeUrl(rawUrl) {
   let u;
@@ -47,8 +46,8 @@ function assertSafeUrl(rawUrl) {
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 async function getApiKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Gemini");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "Gemini");
+  return __accessToken;
 }
 
 function handleError(err) {

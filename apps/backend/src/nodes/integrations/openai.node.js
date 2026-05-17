@@ -41,8 +41,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 function assertSafeUrl(rawUrl) {
   let u;
@@ -60,8 +59,8 @@ function assertSafeUrl(rawUrl) {
 const BASE = "https://api.openai.com/v1";
 
 async function getApiKey(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "OpenAI");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const __accessToken = await getOAuthToken(credentialId, workspaceId, "OpenAI");
+  return __accessToken;
 }
 
 function handleError(err, provider = "OpenAI") {

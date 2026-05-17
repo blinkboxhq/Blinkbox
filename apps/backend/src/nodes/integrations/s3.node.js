@@ -1,7 +1,6 @@
 import axios from "axios";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import crypto from "crypto";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
 
 // AWS Signature V4 signing for S3 requests
 function sign(method, url, headers, body, accessKey, secretKey, region, service) {
@@ -41,8 +40,7 @@ export default {
     let accessKey = config.accessKeyId;
     let secretKey = config.secretAccessKey;
     if (config.credentialId) {
-      const cred = await resolveCredential(config.credentialId, context.workspaceId, "S3");
-      const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+      const raw = await getOAuthToken(config.credentialId, context.workspaceId, "S3");
       try { const j = JSON.parse(raw); accessKey = j.accessKeyId; secretKey = j.secretAccessKey; } catch { accessKey = raw; }
     }
     if (!accessKey || !secretKey) return { success: false, error: "S3: AWS credentials required (accessKeyId + secretAccessKey).", skipped: true };

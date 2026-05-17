@@ -11,14 +11,12 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const BASE = "https://api.twilio.com/2010-04-01";
 
 async function getCreds(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Twilio");
-  const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const raw = await getOAuthToken(credentialId, workspaceId, "Twilio");
   const [accountSid, authToken] = raw.split(":");
   if (!accountSid || !authToken) throw new Error("Twilio: Credential must be formatted as 'AccountSID:AuthToken'.");
   return { accountSid, authToken };

@@ -7,8 +7,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API_URL = "https://api.x.ai/v1/chat/completions";
 
@@ -24,8 +23,7 @@ export default {
     } = config;
 
     if (!prompt) return { success: false, error: "xAI: 'prompt' is required.", skipped: true };
-    const cred = await resolveCredential(credentialId, context.workspaceId, "xAI");
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "xAI");
 
     const inputSummary =
       typeof input === "string"

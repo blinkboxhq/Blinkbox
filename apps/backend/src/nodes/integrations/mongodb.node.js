@@ -6,14 +6,12 @@
  */
 
 import mongoose from "mongoose";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const clients = new Map();
 
 async function getDb(credentialId, workspaceId, dbName) {
-  const cred = await resolveCredential(credentialId, workspaceId, "MongoDB");
-  const uri  = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const uri = await getOAuthToken(credentialId, workspaceId, "MongoDB");
 
   const key = `${credentialId}:${dbName ?? ""}`;
   if (clients.has(key)) return clients.get(key);

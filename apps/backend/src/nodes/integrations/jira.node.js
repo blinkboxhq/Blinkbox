@@ -16,12 +16,10 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getAuth(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "Jira");
-  const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  const raw = await getOAuthToken(credentialId, workspaceId, "Jira");
   // Accept pre-encoded base64 or "email:token" format
   if (raw.includes(":")) return Buffer.from(raw).toString("base64");
   return raw;

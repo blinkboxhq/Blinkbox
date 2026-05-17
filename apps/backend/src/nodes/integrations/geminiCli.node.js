@@ -1,6 +1,5 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
 const MODELS = ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"];
@@ -12,8 +11,7 @@ export default {
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 
-    const cred   = await resolveCredential(config.credentialId, context.workspaceId, "Gemini");
-    const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const apiKey = await getOAuthToken(config.credentialId, context.workspaceId, "Gemini");
 
     const userMsg = buildUserMessage(operation, config);
 

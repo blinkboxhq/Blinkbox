@@ -16,8 +16,7 @@
  */
 
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 function assertSafeUrl(rawUrl) {
   let u;
@@ -35,8 +34,7 @@ function assertSafeUrl(rawUrl) {
 const GRAPH = "https://graph.microsoft.com/v1.0";
 
 async function getToken(credentialId, workspaceId) {
-  const cred = await resolveCredential(credentialId, workspaceId, "OneDrive");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+  return getOAuthToken(credentialId, workspaceId, "OneDrive");
 }
 
 function authHeaders(token, contentType = "application/json") {

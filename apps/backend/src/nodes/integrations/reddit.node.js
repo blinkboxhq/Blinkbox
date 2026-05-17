@@ -1,12 +1,10 @@
 import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getToken(config, workspaceId) {
   let clientId = config.clientId, secret = config.clientSecret;
   if (config.credentialId) {
-    const cred = await resolveCredential(config.credentialId, workspaceId, "Reddit");
-    const raw = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+    const raw = await getOAuthToken(config.credentialId, workspaceId, "Reddit");
     try { const j = JSON.parse(raw); clientId = j.clientId; secret = j.clientSecret; } catch { clientId = raw; }
   }
   if (!clientId || !secret) return null;
