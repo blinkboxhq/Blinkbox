@@ -30,9 +30,13 @@ export function parseWorkflowBody(
  * Graph-level validation: reachability from entryNodeId + cycle detection.
  * Called after Zod structural validation (e.g. on activation).
  */
+// Agent slot handles — edges with these targetHandles connect sub-nodes that
+// never execute themselves. They must be excluded from reachability/cycle checks.
+const AGENT_SLOT_HANDLES = new Set(["llm", "chat_model", "memory", "tools"]);
+
 export function validateAutomation(automation: {
   nodes: ReadonlyArray<{ id: string }>;
-  edges: ReadonlyArray<{ source: string; target: string }>;
+  edges: ReadonlyArray<{ source: string; target: string; targetHandle?: string | null }>;
   entryNodeId: string;
 }): true {
   const { nodes, edges, entryNodeId } = automation;
@@ -51,9 +55,16 @@ export function validateAutomation(automation: {
     throw new Error("entryNodeId does not exist in nodes");
   }
 
+  // Agent slot edges (llm/memory/tools) connect sub-nodes that never execute
+  // in the normal data-flow graph. Exclude them from all graph checks so that
+  // agent_anthropic, agent_memory_* etc. don't appear "unreachable".
+  const dataFlowEdges = edges.filter(
+    (e) => !e.targetHandle || !AGENT_SLOT_HANDLES.has(e.targetHandle),
+  );
+
   // ── Build Adjacency List ──────────────────────────────────────────────────
   const adjacency = new Map<string, string[]>();
-  for (const edge of edges) {
+  for (const edge of dataFlowEdges) {
     if (!nodeMap.has(edge.source)) {
       throw new Error(`Edge from unknown node: ${edge.source}`);
     }
@@ -75,8 +86,18 @@ export function validateAutomation(automation: {
 
   dfs(entryNodeId);
 
+  // Build the set of nodes that are slot-only (source of a slot edge but not
+  // a source of any data-flow edge). These sub-nodes are intentionally "floating"
+  // and must not trigger the reachability error.
+  const slotOnlyNodes = new Set<string>();
+  for (const e of edges) {
+    if (e.targetHandle && AGENT_SLOT_HANDLES.has(e.targetHandle)) {
+      slotOnlyNodes.add(e.source);
+    }
+  }
+
   for (const nodeId of nodeMap) {
-    if (!visited.has(nodeId)) {
+    if (!visited.has(nodeId) && !slotOnlyNodes.has(nodeId)) {
       throw new Error(`Unreachable node detected: ${nodeId}`);
     }
   }
