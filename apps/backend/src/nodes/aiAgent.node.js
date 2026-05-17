@@ -70,7 +70,10 @@ import _asanaNode    from "./integrations/asana.node.js";
 import _stripeNode   from "./integrations/stripe.node.js";
 import _shopifyNode  from "./integrations/shopify.node.js";
 import _clickupNode  from "./integrations/clickup.node.js";
-import _twilioNode   from "./integrations/twilio.node.js";
+import _twilioNode        from "./integrations/twilio.node.js";
+import _gCalendarNode    from "./integrations/googleCalendar.node.js";
+import _gDriveNode       from "./integrations/googleDrive.node.js";
+import _outlookNode      from "./integrations/outlook.node.js";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -1374,6 +1377,71 @@ const PLATFORM_TOOL_SPECS = {
       required: ["operation", "to"],
     },
     run: (args, credentialId, workspaceId) => _twilioNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  google_calendar: {
+    description: "Create, read, update, or delete Google Calendar events. Use listEvents to fetch upcoming events, createEvent to schedule something, updateEvent to change an existing event, deleteEvent to remove one.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["listEvents", "createEvent", "getEvent", "updateEvent", "deleteEvent", "listCalendars"], description: "Operation to perform" },
+        calendarId: { type: "string", description: "Calendar ID — use 'primary' for the user's main calendar (default)" },
+        summary: { type: "string", description: "Event title (for createEvent/updateEvent)" },
+        description: { type: "string", description: "Event description (for createEvent/updateEvent)" },
+        location: { type: "string", description: "Event location (for createEvent/updateEvent)" },
+        startTime: { type: "string", description: "Event start in ISO 8601 format (e.g. 2025-06-01T10:00:00) (for createEvent/updateEvent)" },
+        endTime: { type: "string", description: "Event end in ISO 8601 format (for createEvent/updateEvent)" },
+        timeZone: { type: "string", description: "IANA timezone (e.g. 'America/New_York') — defaults to UTC" },
+        attendees: { type: "string", description: "Comma-separated email addresses to invite" },
+        eventId: { type: "string", description: "Event ID (for getEvent/updateEvent/deleteEvent)" },
+        timeMin: { type: "string", description: "Lower bound for listEvents (ISO 8601) — defaults to now" },
+        timeMax: { type: "string", description: "Upper bound for listEvents (ISO 8601)" },
+        limit: { type: "number", description: "Max events to return for listEvents (default 20)" },
+        query: { type: "string", description: "Text search for listEvents" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _gCalendarNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  google_drive: {
+    description: "List, upload, download, move, or share files on Google Drive.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["listFiles", "getFile", "uploadText", "downloadText", "createFolder", "deleteFile", "moveFile", "shareFile"], description: "Operation to perform" },
+        folderId: { type: "string", description: "Folder ID to list or upload into (omit for root)" },
+        fileId: { type: "string", description: "File ID (for getFile/downloadText/deleteFile/moveFile/shareFile)" },
+        fileName: { type: "string", description: "File name (for uploadText/createFolder)" },
+        content: { type: "string", description: "Text content to upload (for uploadText)" },
+        mimeType: { type: "string", description: "MIME type for uploadText (e.g. 'text/plain', 'text/csv')" },
+        targetFolderId: { type: "string", description: "Destination folder ID for moveFile" },
+        email: { type: "string", description: "Email to share with (for shareFile)" },
+        role: { type: "string", description: "Share role: 'reader', 'writer', or 'owner' (for shareFile)" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _gDriveNode.run({ ...args, credentialId }, {}, { workspaceId }),
+  },
+  outlook: {
+    description: "Send, read, search Outlook emails, or create Outlook Calendar events.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: { type: "string", enum: ["sendEmail", "replyEmail", "getEmail", "listEmails", "createEvent", "getCalendar", "createContact", "moveEmail", "flagEmail"], description: "Operation to perform" },
+        to: { type: "string", description: "Recipient email (for sendEmail/replyEmail)" },
+        subject: { type: "string", description: "Email subject (for sendEmail)" },
+        body: { type: "string", description: "Email body (for sendEmail/replyEmail)" },
+        messageId: { type: "string", description: "Message ID (for replyEmail/getEmail/moveEmail/flagEmail)" },
+        folderId: { type: "string", description: "Folder to list from (for listEmails — default: inbox)" },
+        limit: { type: "number", description: "Max emails for listEmails (default 10)" },
+        subject_event: { type: "string", description: "Event title for createEvent" },
+        start: { type: "string", description: "Event start ISO 8601 (for createEvent)" },
+        end: { type: "string", description: "Event end ISO 8601 (for createEvent)" },
+        attendees: { type: "string", description: "Comma-separated attendee emails (for createEvent)" },
+        targetFolder: { type: "string", description: "Destination folder name for moveEmail" },
+      },
+      required: ["operation"],
+    },
+    run: (args, credentialId, workspaceId) => _outlookNode.run({ ...args, credentialId }, {}, { workspaceId }),
   },
 };
 
