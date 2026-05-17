@@ -35,6 +35,8 @@ const LANGUAGE_CONFIG = {
   python:     { image: "python:3.12-alpine",                                cmd: (c) => ["python3",  "-c",       c] },
   node:       { image: "node:20-alpine",                                    cmd: (c) => ["node",     "-e",       c] },
   powershell: { image: "mcr.microsoft.com/powershell:lts-alpine-3.14",     cmd: (c) => ["pwsh",     "-Command", c] },
+  // git gets network access so clone/push/pull work; everything else stays locked down
+  git:        { image: "alpine/git:latest",                                 cmd: (c) => ["sh",       "-c",       c], network: true },
 };
 
 // ── Redis Keys ────────────────────────────────────────────────────────────────
@@ -46,11 +48,11 @@ const KEY_OPEN_UNTIL = "bb:containers:circuit:open_until";
 
 // ── Container HostConfig (security hardening) ─────────────────────────────────
 
-function buildHostConfig() {
+function buildHostConfig(withNetwork = false) {
   return {
     Memory:         256 * 1024 * 1024, // 256 MB
     NanoCpus:       5e8,               // 0.5 CPU
-    NetworkMode:    "none",
+    NetworkMode:    withNetwork ? "bridge" : "none",
     PidsLimit:      50,                // fork bomb protection
     Tmpfs:          { "/tmp": "rw,noexec,nosuid,size=64m" },
     AutoRemove:     false,             // we manage cleanup explicitly in finally
@@ -165,7 +167,7 @@ export async function execute(config, workspaceId = "default") {
   await checkCircuit();
   await acquireSemaphore(workspaceId);
 
-  const { image, cmd } = LANGUAGE_CONFIG[language];
+  const { image, cmd, network: withNetwork = false } = LANGUAGE_CONFIG[language];
   const startedAt = Date.now();
   let container;
   let timedOut = false;
@@ -190,7 +192,7 @@ export async function execute(config, workspaceId = "default") {
         "blinkbox.workspace":  String(workspaceId),
         "blinkbox.created_at": String(Date.now()),
       },
-      HostConfig: buildHostConfig(),
+      HostConfig: buildHostConfig(withNetwork),
       AttachStdout: true,
       AttachStderr: true,
     });

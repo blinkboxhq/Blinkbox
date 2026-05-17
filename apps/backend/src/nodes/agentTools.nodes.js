@@ -1530,11 +1530,14 @@ export const tool_git = {
     },
     ["command"]
   ),
-  async run(config, args) {
+  async run(config, args, context = {}) {
     const cmd = args.repoPath
       ? `git -C ${JSON.stringify(args.repoPath)} ${args.command}`
       : `git ${args.command}`;
-    return safeExec(cmd, 30000);
+    return containerExecute(
+      { language: "git", command: cmd, timeoutSeconds: 30 },
+      context.workspaceId || "default"
+    );
   },
 };
 
