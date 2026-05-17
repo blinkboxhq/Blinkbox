@@ -72,14 +72,14 @@ async function opSendImage(config, token) {
   const { phoneNumberId, to, imageUrl } = config;
   if (!phoneNumberId) return { success: false, error: "WhatsApp sendImage: 'phoneNumberId' is required.", skipped: true };
   if (!to) return { success: false, error: "WhatsApp sendImage: 'to' is required.", skipped: true };
-  if (!imageUrl) return { success: false, error: "WhatsApp sendImage: 'imageUrl' is required.", skipped: true };
-  if (!/^https?:\/\//i.test(imageUrl)) throw new Error("WhatsApp sendImage: 'imageUrl' must be an http/https URL.");
+  if (!imageUrl && !config._mediaId) return { success: false, error: "WhatsApp sendImage: 'imageUrl' or an attachmentIndex is required.", skipped: true };
+  if (imageUrl && !/^https?:\/\//i.test(imageUrl)) throw new Error("WhatsApp sendImage: 'imageUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
-    messaging_product: "whatsapp",
-    to,
-    type: "image",
-    image: { link: imageUrl, caption: config.caption || undefined },
+    messaging_product: "whatsapp", to, type: "image",
+    image: config._mediaId
+      ? { id: config._mediaId, caption: config.caption || undefined }
+      : { link: imageUrl, caption: config.caption || undefined },
   });
 }
 
@@ -87,18 +87,14 @@ async function opSendDocument(config, token) {
   const { phoneNumberId, to, documentUrl } = config;
   if (!phoneNumberId) return { success: false, error: "WhatsApp sendDocument: 'phoneNumberId' is required.", skipped: true };
   if (!to) return { success: false, error: "WhatsApp sendDocument: 'to' is required.", skipped: true };
-  if (!documentUrl) return { success: false, error: "WhatsApp sendDocument: 'documentUrl' is required.", skipped: true };
-  if (!/^https?:\/\//i.test(documentUrl)) throw new Error("WhatsApp sendDocument: 'documentUrl' must be an http/https URL.");
+  if (!documentUrl && !config._mediaId) return { success: false, error: "WhatsApp sendDocument: 'documentUrl' or an attachmentIndex is required.", skipped: true };
+  if (documentUrl && !/^https?:\/\//i.test(documentUrl)) throw new Error("WhatsApp sendDocument: 'documentUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
-    messaging_product: "whatsapp",
-    to,
-    type: "document",
-    document: {
-      link: documentUrl,
-      caption: config.caption || undefined,
-      filename: config.filename || undefined,
-    },
+    messaging_product: "whatsapp", to, type: "document",
+    document: config._mediaId
+      ? { id: config._mediaId, caption: config.caption || undefined, filename: config.filename || undefined }
+      : { link: documentUrl, caption: config.caption || undefined, filename: config.filename || undefined },
   });
 }
 
@@ -183,6 +179,22 @@ const OPERATIONS = {
   markRead: opMarkRead,
 };
 
+async function uploadMedia(phoneNumberId, token, attachment) {
+  const base64Data = attachment.dataUrl.includes(",") ? attachment.dataUrl.split(",")[1] : attachment.dataUrl;
+  const mimeType = attachment.mimeType || "application/octet-stream";
+  const filename = attachment.name || `file.${mimeType.split("/")[1] || "bin"}`;
+  const form = new FormData();
+  form.append("file", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType }), filename);
+  form.append("type", mimeType);
+  form.append("messaging_product", "whatsapp");
+  const { data } = await axios.post(
+    `https://graph.facebook.com/v21.0/${phoneNumberId}/media`,
+    form,
+    { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 }
+  );
+  return data.id;
+}
+
 export default {
   async run(config, input, context = {}) {
     const operation = config.operation || "sendMessage";
@@ -192,8 +204,23 @@ export default {
 
     const token = await getToken(config.credentialId, context.workspaceId);
 
+    // Allow forwarding attachments from previous node output (standalone canvas use)
+    let resolvedConfig = config;
+    if (["sendImage", "sendDocument", "sendAudio"].includes(operation) && typeof config.attachmentIndex === "number") {
+      const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
+      if (att) {
+        try {
+          const mediaId = await uploadMedia(config.phoneNumberId, token, att);
+          const urlKey = operation === "sendImage" ? "imageUrl" : operation === "sendDocument" ? "documentUrl" : "audioUrl";
+          resolvedConfig = { ...config, [urlKey]: undefined, _mediaId: mediaId };
+        } catch (err) {
+          console.warn("[whatsapp] Binary upload failed, falling back to URL mode:", err.message);
+        }
+      }
+    }
+
     try {
-      return await handler(config, token);
+      return await handler(resolvedConfig, token);
     } catch (err) {
       handleError(err);
     }

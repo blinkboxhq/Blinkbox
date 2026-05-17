@@ -1103,18 +1103,23 @@ const PLATFORM_TOOL_SPECS = {
     },
   },
   discord: {
-    description: "Send messages or embeds to Discord channels.",
+    description: "Send messages, embeds, or files to Discord channels. Use sendFile with attachmentIndex to forward a user-uploaded file.",
     parameters: {
       type: "object",
       properties: {
-        operation: { type: "string", enum: ["sendMessage", "sendEmbed"], description: "Operation" },
+        operation: { type: "string", enum: ["sendMessage", "sendEmbed", "sendFile"], description: "Operation — use sendFile to upload a binary attachment" },
         channelId: { type: "string", description: "Discord channel ID (numeric)" },
         content: { type: "string", description: "Message text content" },
         embeds: { type: "array", description: "Array of Discord embed objects (for sendEmbed)" },
+        message: { type: "string", description: "Optional text shown alongside the file (for sendFile)" },
+        attachmentIndex: { type: "integer", description: "Index of a user-provided input attachment to send as a file (e.g. 0 for the first)" },
       },
-      required: ["operation", "channelId", "content"],
+      required: ["operation"],
     },
-    run: (args, credentialId, workspaceId) => _discordNode.run({ ...args, credentialId }, {}, { workspaceId }),
+    run: (args, credentialId, workspaceId, inputAttachments = []) => {
+      const attachment = typeof args.attachmentIndex === "number" ? inputAttachments[args.attachmentIndex] : null;
+      return _discordNode.run({ ...args, credentialId, _inlineAttachment: attachment || undefined }, {}, { workspaceId });
+    },
   },
   telegram: {
     description: "Send Telegram messages, photos, or documents via bot. Use attachmentIndex to forward a user-uploaded file/image directly to Telegram.",

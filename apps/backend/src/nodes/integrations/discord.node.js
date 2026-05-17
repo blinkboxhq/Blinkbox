@@ -117,24 +117,24 @@ async function opSendFile(config) {
   const { webhookUrl, username, avatarUrl } = config;
   validateWebhook(webhookUrl);
 
-  const content = config.content || config.fileContent || config.text;
-  if (!content) return { success: false, error: "Discord sendFile: 'content' (file text) is required.", skipped: true };
-
-  const filename = config.filename || "output.txt";
-  const { FormData, Blob } = await import("buffer"); // Node 18+ has Blob
   const form = new FormData();
-  form.append("file", new Blob([content], { type: "text/plain" }), filename);
   if (config.message) form.append("content", config.message);
   if (username) form.append("username", username);
 
-  const response = await axios.post(webhookUrl, form, {
-    headers: form.headers?.() || {},
-    timeout: 30000,
-    validateStatus: null,
-  });
+  // Binary attachment (from AI Agent or previous node)
+  if (config._inlineAttachment?.dataUrl) {
+    const { dataUrl, mimeType, name } = config._inlineAttachment;
+    const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    form.append("file", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "application/octet-stream" }), name || "file");
+  } else {
+    const content = config.content || config.fileContent || config.text;
+    if (!content) return { success: false, error: "Discord sendFile: 'content' or an attachment is required.", skipped: true };
+    form.append("file", new Blob([content], { type: "text/plain" }), config.filename || "output.txt");
+  }
 
+  const response = await axios.post(webhookUrl, form, { timeout: 30000, validateStatus: null });
   if (response.status >= 200 && response.status < 300) {
-    return { ok: true, webhookId: webhookId(webhookUrl), filename };
+    return { ok: true, webhookId: webhookId(webhookUrl) };
   }
   throw new Error(`Discord sendFile failed: ${response.status} — ${response.data?.message || "unknown"}`);
 }
@@ -154,8 +154,15 @@ export default {
     if (!handler)
       throw new Error(`Discord: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
+    // Allow forwarding attachments from previous node output (standalone canvas use)
+    let resolvedConfig = config;
+    if (operation === "sendFile" && typeof config.attachmentIndex === "number" && !config._inlineAttachment) {
+      const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
+      if (att) resolvedConfig = { ...config, _inlineAttachment: att };
+    }
+
     try {
-      return await handler(config);
+      return await handler(resolvedConfig);
     } catch (err) {
       if (err.message.startsWith("Discord")) throw err;
       throw new Error(`Discord failed: ${err.code || "UNKNOWN"} — ${err.message}`);

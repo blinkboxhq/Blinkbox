@@ -192,6 +192,7 @@ import tiktok from "./integrations/tiktok.node.js";
 import instagram from "./integrations/instagram.node.js";
 import ocr from "./ocr.node.js";
 import axios from "axios";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
@@ -249,59 +250,39 @@ export const nodeRegistry = {
   // Integration Triggers (webhook-push) — extract service-specific fields so
   // downstream nodes can use {{ nodeId.text }} instead of {{ nodeId.body.message.text }}
   telegram_trigger: {
-    async run(config, input) {
+    async run(config, input, context = {}) {
       const body = input?.body ?? input;
       const msg  = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
 
-      // Resolve which media object is attached (if any)
       let mediaFileId   = null;
       let mediaMimeType = "application/octet-stream";
       let mediaName     = "file";
+      let mediaType     = null;
 
       if (Array.isArray(msg.photo) && msg.photo.length > 0) {
-        // Telegram sends multiple sizes — last entry is highest resolution
         const best = msg.photo[msg.photo.length - 1];
-        mediaFileId   = best.file_id;
-        mediaMimeType = "image/jpeg";
-        mediaName     = "photo.jpg";
+        mediaFileId = best.file_id; mediaMimeType = "image/jpeg"; mediaName = "photo.jpg"; mediaType = "photo";
       } else if (msg.document) {
-        mediaFileId   = msg.document.file_id;
-        mediaMimeType = msg.document.mime_type || "application/octet-stream";
-        mediaName     = msg.document.file_name || "document";
+        mediaFileId = msg.document.file_id; mediaMimeType = msg.document.mime_type || "application/octet-stream"; mediaName = msg.document.file_name || "document"; mediaType = "document";
       } else if (msg.video) {
-        mediaFileId   = msg.video.file_id;
-        mediaMimeType = msg.video.mime_type || "video/mp4";
-        mediaName     = msg.video.file_name || "video.mp4";
+        mediaFileId = msg.video.file_id; mediaMimeType = msg.video.mime_type || "video/mp4"; mediaName = msg.video.file_name || "video.mp4"; mediaType = "video";
       } else if (msg.audio) {
-        mediaFileId   = msg.audio.file_id;
-        mediaMimeType = msg.audio.mime_type || "audio/mpeg";
-        mediaName     = msg.audio.file_name || "audio.mp3";
+        mediaFileId = msg.audio.file_id; mediaMimeType = msg.audio.mime_type || "audio/mpeg"; mediaName = msg.audio.file_name || "audio.mp3"; mediaType = "audio";
       } else if (msg.voice) {
-        mediaFileId   = msg.voice.file_id;
-        mediaMimeType = "audio/ogg";
-        mediaName     = "voice.ogg";
+        mediaFileId = msg.voice.file_id; mediaMimeType = "audio/ogg"; mediaName = "voice.ogg"; mediaType = "voice";
       } else if (msg.sticker) {
-        mediaFileId   = msg.sticker.file_id;
-        mediaMimeType = msg.sticker.is_animated ? "application/x-tgsticker" : "image/webp";
-        mediaName     = "sticker.webp";
+        mediaFileId = msg.sticker.file_id; mediaMimeType = msg.sticker.is_animated ? "application/x-tgsticker" : "image/webp"; mediaName = "sticker.webp"; mediaType = "sticker";
       }
 
       let attachments = [];
-      const botToken = config?.botToken;
-      if (mediaFileId && botToken) {
+      if (mediaFileId && config?.botToken) {
         try {
-          const { data: fileInfo } = await axios.get(
-            `https://api.telegram.org/bot${botToken}/getFile`,
-            { params: { file_id: mediaFileId }, timeout: 10000 }
-          );
+          const token = await getOAuthToken(config.botToken, context.workspaceId, "Telegram").catch(() => config.botToken);
+          const { data: fileInfo } = await axios.get(`https://api.telegram.org/bot${token}/getFile`, { params: { file_id: mediaFileId }, timeout: 10000 });
           const filePath = fileInfo?.result?.file_path;
           if (filePath) {
-            const { data: fileBuffer } = await axios.get(
-              `https://api.telegram.org/file/bot${botToken}/${filePath}`,
-              { responseType: "arraybuffer", timeout: 30000 }
-            );
-            const dataUrl = `data:${mediaMimeType};base64,${Buffer.from(fileBuffer).toString("base64")}`;
-            attachments = [{ dataUrl, mimeType: mediaMimeType, name: mediaName }];
+            const { data: buf } = await axios.get(`https://api.telegram.org/file/bot${token}/${filePath}`, { responseType: "arraybuffer", timeout: 30000 });
+            attachments = [{ dataUrl: `data:${mediaMimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType: mediaMimeType, name: mediaName }];
           }
         } catch (err) {
           console.warn("[telegram_trigger] Failed to download media:", err.message);
@@ -309,46 +290,63 @@ export const nodeRegistry = {
       }
 
       return {
-        text:        msg.text ?? msg.caption ?? "",
-        from:        msg.from      ?? {},
-        chat:        msg.chat      ?? {},
-        date:        msg.date      ?? null,
-        messageId:   msg.message_id ?? null,
-        updateId:    body?.update_id ?? null,
-        hasMedia:    attachments.length > 0,
-        mediaType:   mediaFileId ? (msg.photo ? "photo" : msg.document ? "document" : msg.video ? "video" : msg.audio ? "audio" : msg.voice ? "voice" : "sticker") : null,
-        attachments,
+        text: msg.text ?? msg.caption ?? "",
+        from: msg.from ?? {}, chat: msg.chat ?? {}, date: msg.date ?? null,
+        messageId: msg.message_id ?? null, updateId: body?.update_id ?? null,
+        hasMedia: attachments.length > 0, mediaType, attachments,
       };
     },
   },
   slack_trigger: {
-    async run(config, input) {
+    async run(config, input, context = {}) {
       const body  = input?.body ?? input;
       const event = body?.event ?? body;
+
+      let attachments = [];
+      const files = Array.isArray(event?.files) ? event.files : [];
+      if (files.length > 0 && config?.botToken) {
+        try {
+          const token = await getOAuthToken(config.botToken, context.workspaceId, "Slack").catch(() => config.botToken);
+          const file = files[0];
+          const { data: buf } = await axios.get(file.url_private, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: "arraybuffer", timeout: 30000,
+          });
+          const mimeType = file.mimetype || "application/octet-stream";
+          attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: file.name || "file" }];
+        } catch (err) {
+          console.warn("[slack_trigger] Failed to download file:", err.message);
+        }
+      }
+
       return {
-        text:    event.text    ?? "",
-        user:    event.user    ?? "",
-        channel: event.channel ?? "",
-        ts:      event.ts      ?? "",
-        event,
-        teamId:  body?.team_id ?? "",
+        text: event.text ?? "", user: event.user ?? "", channel: event.channel ?? "",
+        ts: event.ts ?? "", event, teamId: body?.team_id ?? "",
+        hasMedia: attachments.length > 0, attachments,
       };
     },
   },
   discord_trigger: {
-    async run(config, input) {
+    async run(config, input, context = {}) {
       const body = input?.body ?? input;
+
+      let attachments = [];
+      const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
+      if (rawAttachments.length > 0) {
+        const results = await Promise.allSettled(
+          rawAttachments.slice(0, 5).map(async (a) => {
+            const { data: buf } = await axios.get(a.url, { responseType: "arraybuffer", timeout: 20000 });
+            const mimeType = a.content_type || "application/octet-stream";
+            return { dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: a.filename || "file" };
+          })
+        );
+        attachments = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+      }
+
       return {
-        content:   body.content   ?? "",
-        author:    body.author    ?? {},
-        username:  body.author?.username ?? "",
-        userId:    body.author?.id ?? "",
-        channelId: body.channel_id ?? "",
-        guildId:   body.guild_id   ?? "",
-        messageId: body.id         ?? "",
-        attachments: body.attachments ?? [],
-        embeds:    body.embeds     ?? [],
-        message:   body,
+        content: body.content ?? "", author: body.author ?? {}, username: body.author?.username ?? "",
+        userId: body.author?.id ?? "", channelId: body.channel_id ?? "", guildId: body.guild_id ?? "",
+        messageId: body.id ?? "", hasMedia: attachments.length > 0, attachments, embeds: body.embeds ?? [], message: body,
       };
     },
   },
@@ -368,17 +366,69 @@ export const nodeRegistry = {
   linear_trigger:   { async run(config, input) { const b = input?.body ?? input; return { id: b?.data?.id, title: b?.data?.title, state: b?.data?.state, assignee: b?.data?.assignee, team: b?.data?.team, issue: b?.data, type: b?.type }; } },
   typeform_trigger: { async run(config, input) { const b = input?.body ?? input; const r = b?.form_response ?? b; return { form_id: b?.form_id, token: r.token, answers: r.answers ?? [], submitted_at: r.submitted_at, form_response: r }; } },
   whatsapp_trigger: {
-    async run(config, input) {
-      const body    = input?.body ?? input;
-      const entry   = body?.entry?.[0] ?? {};
-      const change  = entry?.changes?.[0]?.value ?? {};
-      const msg     = change?.messages?.[0]  ?? {};
+    async run(config, input, context = {}) {
+      const body   = input?.body ?? input;
+      const provider = config?.provider || "twilio";
+
+      // ── Twilio provider ───────────────────────────────────────────────
+      if (provider === "twilio") {
+        const text = body?.Body ?? "";
+        const from = body?.From ?? "";
+        const numMedia = parseInt(body?.NumMedia ?? "0", 10);
+        let attachments = [];
+        if (numMedia > 0 && body?.MediaUrl0) {
+          try {
+            // Twilio media URLs require Basic auth with AccountSid:AuthToken
+            let auth = undefined;
+            if (config?.twilioAuthToken) {
+              try {
+                const token = await getOAuthToken(config.twilioAuthToken, context.workspaceId, "WhatsApp").catch(() => config.twilioAuthToken);
+                const accountSid = body.AccountSid;
+                if (accountSid) auth = { username: accountSid, password: token };
+              } catch (_) {}
+            }
+            const { data: buf } = await axios.get(body.MediaUrl0, { auth, responseType: "arraybuffer", timeout: 30000 });
+            const mimeType = body.MediaContentType0 || "application/octet-stream";
+            attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: `media.${mimeType.split("/")[1] || "bin"}` }];
+          } catch (err) {
+            console.warn("[whatsapp_trigger] Twilio media download failed:", err.message);
+          }
+        }
+        return { text, from, to: body?.To ?? "", messageId: body?.MessageSid ?? "", accountSid: body?.AccountSid ?? "", numMedia, hasMedia: attachments.length > 0, attachments, body };
+      }
+
+      // ── Meta (Cloud API) provider ─────────────────────────────────────
+      const entry  = body?.entry?.[0] ?? {};
+      const change = entry?.changes?.[0]?.value ?? {};
+      const msg    = change?.messages?.[0] ?? {};
+
+      let mediaInfo = null; let mediaType = null;
+      if (msg.image)    { mediaInfo = msg.image;    mediaType = "image"; }
+      else if (msg.document) { mediaInfo = msg.document; mediaType = "document"; }
+      else if (msg.audio)    { mediaInfo = msg.audio;    mediaType = "audio"; }
+      else if (msg.video)    { mediaInfo = msg.video;    mediaType = "video"; }
+      else if (msg.sticker)  { mediaInfo = msg.sticker;  mediaType = "sticker"; }
+
+      let attachments = [];
+      // Meta media download requires a permanent access token — stored in metaAppSecret credential
+      // We skip download if the token isn't available; the media_id is still passed through
+      if (mediaInfo?.id && config?.metaAppSecret) {
+        try {
+          const token = await getOAuthToken(config.metaAppSecret, context.workspaceId, "WhatsApp").catch(() => config.metaAppSecret);
+          const { data: mediaData } = await axios.get(`https://graph.facebook.com/v18.0/${mediaInfo.id}`, { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 });
+          const { data: buf } = await axios.get(mediaData.url, { headers: { Authorization: `Bearer ${token}` }, responseType: "arraybuffer", timeout: 30000 });
+          const mimeType = mediaInfo.mime_type || mediaData.mime_type || "application/octet-stream";
+          const name = mediaInfo.filename || `${mediaType}.${mimeType.split("/")[1] || "bin"}`;
+          attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name }];
+        } catch (err) {
+          console.warn("[whatsapp_trigger] Meta media download failed:", err.message);
+        }
+      }
+
       return {
-        text:          msg.text?.body ?? "",
-        from:          msg.from       ?? "",
-        phoneNumberId: change.metadata?.phone_number_id ?? "",
-        message:       msg,
-        contacts:      change.contacts ?? [],
+        text: msg.text?.body ?? msg.caption ?? "", from: msg.from ?? "",
+        phoneNumberId: change.metadata?.phone_number_id ?? "", message: msg,
+        contacts: change.contacts ?? [], hasMedia: attachments.length > 0, mediaType, attachments,
       };
     },
   },

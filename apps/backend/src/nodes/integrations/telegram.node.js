@@ -239,11 +239,18 @@ export default {
 
     const token = await getToken(config.credentialId, context.workspaceId);
 
-    // If chatId is blank, reply to whoever triggered the workflow
     const resolvedConfig = { ...config };
+
+    // If chatId is blank, reply to whoever triggered the workflow
     if (!resolvedConfig.chatId) {
       const triggerChat = context.triggerOutput?.chat?.id;
       if (triggerChat) resolvedConfig.chatId = String(triggerChat);
+    }
+
+    // Allow forwarding attachments from previous node output (standalone canvas use)
+    if (typeof config.attachmentIndex === "number" && !resolvedConfig._inlineAttachment) {
+      const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
+      if (att) resolvedConfig._inlineAttachment = att;
     }
 
     try {

@@ -273,8 +273,15 @@ export default {
 
     const token = await getToken(config.credentialId, context.workspaceId);
 
+    // Allow forwarding attachments from previous node output (standalone canvas use)
+    let resolvedConfig = config;
+    if (operation === "uploadFile" && typeof config.attachmentIndex === "number" && !config.attachments) {
+      const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
+      if (att) resolvedConfig = { ...config, attachments: [att] };
+    }
+
     try {
-      return await handler(config, token);
+      return await handler(resolvedConfig, token);
     } catch (err) {
       if (err.message.startsWith("Slack")) throw err;
       if (err.response?.status === 429) throw new Error("Slack: Rate limit exceeded. Retry later.");
