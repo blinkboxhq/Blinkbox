@@ -1531,7 +1531,6 @@ export const tool_git = {
     ["command"]
   ),
   async run(config, args) {
-    assertShellToolsEnabled();
     const cmd = args.repoPath
       ? `git -C ${JSON.stringify(args.repoPath)} ${args.command}`
       : `git ${args.command}`;
