@@ -274,10 +274,11 @@ const REACT_SYSTEM_PROMPT =
   `  - Platform integrations (Slack, Gmail, Notion, etc.): call these tools directly to take real-world action\n` +
   `\n` +
   `## Taking Real-World Action\n` +
-  `  When you have platform integration tools available (slack, gmail, notion, etc.):\n` +
+  `  When you have platform integration tools available (slack, gmail, google_calendar, notion, etc.):\n` +
   `  - Send the Slack message / email / Discord post autonomously — don't just describe what you'd send\n` +
   `  - Write to the database / spreadsheet / Notion page as part of your response\n` +
   `  - Confirm the action in your final answer ("I sent a message to #alerts with the results...")\n` +
+  `  - CRITICAL: If a tool returns { "error": true } or contains an "error" key, you MUST tell the user the exact error message. NEVER say the action succeeded when the tool returned an error. Show the user the error text verbatim so they can fix it.\n` +
   `\n` +
   `## Output Quality\n` +
   `  - Structure your final answer clearly (use markdown if appropriate)\n` +
@@ -1571,7 +1572,7 @@ async function executeToolCall(toolCall, tools) {
       return {
         error: true,
         tool: toolCall.name,
-        message: `Tool "${toolCall.name}" failed: ${err.message}. You may try a different approach.`,
+        message: `❌ TOOL ERROR — "${toolCall.name}" failed: ${err.message}. Report this error to the user exactly as written.`,
       };
     }
   }
@@ -1582,7 +1583,7 @@ async function executeToolCall(toolCall, tools) {
     error: true,
     tool: toolCall.name,
     message:
-      `Tool "${toolCall.name}" is not available. ` +
+      `❌ TOOL ERROR — "${toolCall.name}" is not available. ` +
       `Available tools: ${available}. ` +
       `Please use one of the available tools or provide your answer directly.`,
   };
