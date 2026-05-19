@@ -43,6 +43,10 @@ const LANGUAGE_CONFIG = {
   aws:        { image: "amazon/aws-cli:latest",                             cmd: (c) => ["sh", "-c", `aws ${c}`], network: true },
   gcloud:     { image: "google/cloud-sdk:slim",                             cmd: (c) => ["sh", "-c", `gcloud ${c}`], network: true },
   az:         { image: "mcr.microsoft.com/azure-cli:latest",               cmd: (c) => ["sh", "-c", `az ${c}`], network: true },
+  // nmap runs isolated but needs network to reach target hosts
+  nmap:       { image: "instrumentisto/nmap:latest",                        cmd: (c) => ["sh", "-c", `nmap ${c}`], network: true },
+  // docker_cli mounts the host Docker socket so it can run docker/compose commands safely
+  docker_cli: { image: "docker:cli",                                        cmd: (c) => ["sh", "-c", c], network: true, socketMount: true },
 };
 
 // ── Redis Keys ────────────────────────────────────────────────────────────────
@@ -54,15 +58,20 @@ const KEY_OPEN_UNTIL = "bb:containers:circuit:open_until";
 
 // ── Container HostConfig (security hardening) ─────────────────────────────────
 
-function buildHostConfig(withNetwork = false) {
-  return {
-    Memory:         256 * 1024 * 1024, // 256 MB
-    NanoCpus:       5e8,               // 0.5 CPU
-    NetworkMode:    withNetwork ? "bridge" : "none",
-    PidsLimit:      50,                // fork bomb protection
-    Tmpfs:          { "/tmp": "rw,noexec,nosuid,size=64m" },
-    AutoRemove:     false,             // we manage cleanup explicitly in finally
+function buildHostConfig(withNetwork = false, withDockerSocket = false) {
+  const cfg = {
+    Memory:      256 * 1024 * 1024,
+    NanoCpus:    5e8,
+    NetworkMode: withNetwork ? "bridge" : "none",
+    PidsLimit:   50,
+    Tmpfs:       { "/tmp": "rw,noexec,nosuid,size=64m" },
+    AutoRemove:  false,
   };
+  if (withDockerSocket) {
+    const socketPath = process.env.DOCKER_SOCKET || "/var/run/docker.sock";
+    cfg.Binds = [`${socketPath}:/var/run/docker.sock`];
+  }
+  return cfg;
 }
 
 // ── Circuit Breaker ───────────────────────────────────────────────────────────
@@ -173,7 +182,7 @@ export async function execute(config, workspaceId = "default") {
   await checkCircuit();
   await acquireSemaphore(workspaceId);
 
-  const { image, cmd, network: withNetwork = false } = LANGUAGE_CONFIG[language];
+  const { image, cmd, network: withNetwork = false, socketMount: withDockerSocket = false } = LANGUAGE_CONFIG[language];
   const startedAt = Date.now();
   let container;
   let timedOut = false;
@@ -198,7 +207,7 @@ export async function execute(config, workspaceId = "default") {
         "blinkbox.workspace":  String(workspaceId),
         "blinkbox.created_at": String(Date.now()),
       },
-      HostConfig: buildHostConfig(withNetwork),
+      HostConfig: buildHostConfig(withNetwork, withDockerSocket),
       AttachStdout: true,
       AttachStderr: true,
     });
@@ -251,6 +260,79 @@ export async function execute(config, workspaceId = "default") {
     if (container) {
       try { await container.remove({ force: true }); } catch (_) {}
     }
+    await releaseSemaphore(workspaceId);
+  }
+}
+
+// ── Custom Image Execute (for docker_run node) ────────────────────────────────
+// Same semaphore/circuit-breaker/resource-limit protection as execute(), but accepts
+// an arbitrary image instead of a LANGUAGE_CONFIG entry.
+
+export async function executeCustom({ image, command, env = {}, timeoutSeconds = 60 }, workspaceId = "default") {
+  if (!image) throw new Error("executeCustom: image is required");
+  const command_ = (command || "").trim();
+  const timeoutMs = Math.min(Math.max(timeoutSeconds * 1000, 1000), 300_000);
+  const envVars = Object.entries(env).map(([k, v]) => `${k}=${v}`);
+  const cmdArr = command_ ? ["sh", "-c", command_] : undefined;
+  const startedAt = Date.now();
+
+  await checkCircuit();
+  await acquireSemaphore(workspaceId);
+
+  let container;
+  try {
+    try { await docker.ping(); } catch {
+      await releaseSemaphore(workspaceId);
+      throw new Error("Virtual Computer: Docker daemon is not available on this server.");
+    }
+
+    container = await docker.createContainer({
+      Image: image,
+      ...(cmdArr ? { Cmd: cmdArr } : {}),
+      Env: envVars,
+      Labels: { "blinkbox.managed": "true", "blinkbox.workspace": String(workspaceId), "blinkbox.created_at": String(Date.now()) },
+      HostConfig: buildHostConfig(false),
+      AttachStdout: true,
+      AttachStderr: true,
+    });
+
+    await container.start();
+
+    const logsStream = await container.logs({ stdout: true, stderr: true, follow: true });
+    const logsBufferPromise = new Promise((resolve, reject) => {
+      const chunks = [];
+      logsStream.on("data", (c) => chunks.push(c));
+      logsStream.on("end",  () => resolve(Buffer.concat(chunks)));
+      logsStream.on("error", reject);
+    });
+
+    const [exitData, logsBuffer] = await Promise.all([
+      Promise.race([
+        container.wait(),
+        new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error("timeout"), { isTimeout: true })), timeoutMs)),
+      ]),
+      logsBufferPromise,
+    ]).catch(async (err) => {
+      if (err.isTimeout) {
+        try { await container.stop({ t: 0 }); } catch (_) {}
+        const buf = await logsBufferPromise.catch(() => Buffer.alloc(0));
+        await recordSuccess();
+        const { stdout, stderr } = demuxLogs(buf);
+        return [{ timedOut: true }, buf, stdout, stderr];
+      }
+      throw err;
+    });
+
+    await recordSuccess();
+    const { stdout, stderr } = demuxLogs(logsBuffer);
+    return { stdout, stderr, exitCode: exitData?.StatusCode ?? 0, image, executionTimeMs: Date.now() - startedAt };
+  } catch (err) {
+    if (err.code !== "RATE_LIMITED_GLOBAL" && err.code !== "RATE_LIMITED_WORKSPACE" && err.code !== "CIRCUIT_OPEN") {
+      await recordFailure();
+    }
+    throw err.code ? err : new Error(`docker_run: ${err.message}`);
+  } finally {
+    if (container) { try { await container.remove({ force: true }); } catch (_) {} }
     await releaseSemaphore(workspaceId);
   }
 }

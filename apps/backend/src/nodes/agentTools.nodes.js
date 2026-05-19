@@ -12,7 +12,7 @@
 
 import axios from "axios";
 import crypto from "crypto";
-import { execute as containerExecute } from "../infra/container.pool.js";
+import { execute as containerExecute, executeCustom as containerExecuteCustom } from "../infra/container.pool.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import fs from "fs/promises";
@@ -1456,16 +1456,6 @@ export const tool_js = {
   },
 };
 
-// Docker socket tools (docker exec, docker compose, nmap, etc.) run on the host and
-// require ENABLE_SHELL_TOOLS=true. All other tools (bash/python/kubectl/aws/etc.) use the container pool.
-function assertShellToolsEnabled() {
-  if (process.env.ENABLE_SHELL_TOOLS !== "true") {
-    throw new Error(
-      "This tool requires Docker socket access and is disabled for security. " +
-      "Set ENABLE_SHELL_TOOLS=true in .env to enable it."
-    );
-  }
-}
 
 export const tool_python = {
   toolDefinition: td(
@@ -1840,9 +1830,12 @@ export const tool_docker_exec = {
     },
     ["containerId", "command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    return safeExec(`docker exec ${args.containerId} sh -c ${JSON.stringify(args.command)}`, 30000);
+  async run(config, args, ctx = {}) {
+    return containerExecute({
+      language: "docker_cli",
+      command: `docker exec ${args.containerId} sh -c ${JSON.stringify(args.command)}`,
+      timeoutSeconds: 30,
+    }, ctx.workspaceId || "default");
   },
 };
 
@@ -1856,12 +1849,11 @@ export const tool_docker_compose = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
+  async run(config, args, ctx = {}) {
     const cmd = args.directory
       ? `docker compose -f ${JSON.stringify(`${args.directory}/docker-compose.yml`)} ${args.command}`
       : `docker compose ${args.command}`;
-    return safeExec(cmd, 60000);
+    return containerExecute({ language: "docker_cli", command: cmd, timeoutSeconds: 60 }, ctx.workspaceId || "default");
   },
 };
 
@@ -1996,9 +1988,12 @@ export const tool_nmap = {
     },
     ["target"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    return safeExec(`nmap ${args.flags || "-sV --open"} ${args.target}`, 60000);
+  async run(config, args, ctx = {}) {
+    return containerExecute({
+      language: "nmap",
+      command: `${args.flags || "-sV --open"} ${args.target}`,
+      timeoutSeconds: 60,
+    }, ctx.workspaceId || "default");
   },
 };
 

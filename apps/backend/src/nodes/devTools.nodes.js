@@ -1,6 +1,7 @@
 import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
+import { executeCustom as containerExecuteCustom } from "../infra/container.pool.js";
 function assertSafeUrl(rawUrl) {
   let u;
   try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
@@ -195,28 +196,16 @@ export const docker = {
 
 // ── docker_run ────────────────────────────────────────────────────────────────
 export const docker_run = {
-  async run(config, input) {
-    if (!process.env.ENABLE_DOCKER_RUN) {
-      return { success: false, error: "docker_run: set ENABLE_DOCKER_RUN=true to allow container execution.", skipped: true };
-    }
+  async run(config, input, context = {}) {
     const image = config.image || input?.image;
     const cmd = config.command || input?.command;
     if (!image) return { success: false, error: "docker_run: 'image' is required.", skipped: true };
 
-    const socketPath = process.env.DOCKER_SOCKET || "/var/run/docker.sock";
-    const createRes = await axios.post(`http://localhost/containers/create`, {
-      Image: image,
-      Cmd: cmd ? (Array.isArray(cmd) ? cmd : cmd.split(" ")) : undefined,
-      Env: config.env ? Object.entries(config.env).map(([k, v]) => `${k}=${v}`) : [],
-      HostConfig: { AutoRemove: true, Memory: 256 * 1024 * 1024 },
-    }, { socketPath, timeout: 30000 }).catch((err) => { throw new Error(`docker_run: ${err.response?.data?.message || err.message}`); });
-
-    const id = createRes.data.Id;
-    await axios({ method: "post", socketPath, url: `http://localhost/containers/${id}/start`, timeout: 10000 });
-    await axios({ method: "post", socketPath, url: `http://localhost/containers/${id}/wait`, timeout: parseInt(config.timeout || 60000) });
-    const logsRes = await axios({ socketPath, url: `http://localhost/containers/${id}/logs?stdout=true&stderr=true`, timeout: 10000 });
-
-    return { output: String(logsRes.data), image, command: cmd, containerId: id.slice(0, 12) };
+    const result = await containerExecuteCustom(
+      { image, command: Array.isArray(cmd) ? cmd.join(" ") : (cmd || ""), env: config.env || {}, timeoutSeconds: Math.ceil((config.timeout || 60000) / 1000) },
+      context.workspaceId || "default"
+    );
+    return { output: result.stdout, stderr: result.stderr, exitCode: result.exitCode, image, command: cmd };
   },
 };
 
