@@ -31,12 +31,18 @@ const WORKSPACE_KEY_TTL_S       = 300;              // 5 min
 // ── Language → Image Map ──────────────────────────────────────────────────────
 
 const LANGUAGE_CONFIG = {
-  bash:       { image: "alpine:3.20",                                       cmd: (c) => ["sh",       "-c",       c] },
-  python:     { image: "python:3.12-alpine",                                cmd: (c) => ["python3",  "-c",       c] },
-  node:       { image: "node:20-alpine",                                    cmd: (c) => ["node",     "-e",       c] },
-  powershell: { image: "mcr.microsoft.com/powershell:lts-alpine-3.14",     cmd: (c) => ["pwsh",     "-Command", c] },
-  // git gets network access so clone/push/pull work; everything else stays locked down
-  git:        { image: "alpine/git:latest",                                 cmd: (c) => ["sh",       "-c",       c], network: true },
+  bash:       { image: "alpine:3.20",                                       cmd: (c) => ["sh",       "-c", c] },
+  python:     { image: "python:3.12-alpine",                                cmd: (c) => ["python3",  "-c", c] },
+  node:       { image: "node:20-alpine",                                    cmd: (c) => ["node",     "-e", c] },
+  powershell: { image: "mcr.microsoft.com/powershell:lts-alpine-3.14",     cmd: (c) => ["pwsh", "-Command", c] },
+  // git/CLI tools get network access; everything else stays locked down
+  git:        { image: "alpine/git:latest",                                 cmd: (c) => ["sh", "-c", c], network: true },
+  kubectl:    { image: "bitnami/kubectl:latest",                            cmd: (c) => ["sh", "-c", `kubectl ${c}`], network: true },
+  terraform:  { image: "hashicorp/terraform:latest",                        cmd: (c) => ["sh", "-c", `terraform ${c}`], network: true },
+  ansible:    { image: "cytopia/ansible:latest",                            cmd: (c) => ["sh", "-c", `ansible ${c}`], network: true },
+  aws:        { image: "amazon/aws-cli:latest",                             cmd: (c) => ["sh", "-c", `aws ${c}`], network: true },
+  gcloud:     { image: "google/cloud-sdk:slim",                             cmd: (c) => ["sh", "-c", `gcloud ${c}`], network: true },
+  az:         { image: "mcr.microsoft.com/azure-cli:latest",               cmd: (c) => ["sh", "-c", `az ${c}`], network: true },
 };
 
 // ── Redis Keys ────────────────────────────────────────────────────────────────

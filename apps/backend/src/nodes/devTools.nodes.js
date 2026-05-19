@@ -223,9 +223,6 @@ export const docker_run = {
 // ── ssh ───────────────────────────────────────────────────────────────────────
 export const ssh = {
   async run(config, input, context) {
-    if (!process.env.ENABLE_SHELL_TOOLS) {
-      return { success: false, error: "ssh: set ENABLE_SHELL_TOOLS=true to allow SSH execution.", skipped: true };
-    }
     const { NodeSSH } = await import("node-ssh").catch(() => { throw new Error("ssh: node-ssh package not installed."); });
     const host = config.host || input?.host;
     const command = config.command || input?.command;

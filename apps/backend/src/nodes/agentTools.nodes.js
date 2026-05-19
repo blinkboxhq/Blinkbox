@@ -1456,12 +1456,12 @@ export const tool_js = {
   },
 };
 
-// Network-privileged tools (git, ssh, kubectl, etc.) run directly on the server and
-// require ENABLE_SHELL_TOOLS=true. bash/python/npm use the Docker container pool instead.
+// Docker socket tools (docker exec, docker compose, nmap, etc.) run on the host and
+// require ENABLE_SHELL_TOOLS=true. All other tools (bash/python/kubectl/aws/etc.) use the container pool.
 function assertShellToolsEnabled() {
   if (process.env.ENABLE_SHELL_TOOLS !== "true") {
     throw new Error(
-      "This tool runs directly on the server and is disabled for security. " +
+      "This tool requires Docker socket access and is disabled for security. " +
       "Set ENABLE_SHELL_TOOLS=true in .env to enable it."
     );
   }
@@ -1554,7 +1554,6 @@ export const tool_ssh = {
     ["host", "username", "command"]
   ),
   async run(config, args, ctx) {
-    assertShellToolsEnabled();
     let ssh2;
     try {
       ssh2 = await import("ssh2");
@@ -1876,10 +1875,11 @@ export const tool_kubernetes = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
+  async run(config, args, ctx = {}) {
     const ns = args.namespace ? `-n ${args.namespace}` : "";
-    return safeExec(`kubectl ${args.command} ${ns}`, 30000);
+    const envVars = [];
+    if (config.kubeconfig) envVars.push({ key: "KUBECONFIG_DATA", value: config.kubeconfig });
+    return containerExecute({ language: "kubectl", command: `${args.command} ${ns}`, envVars, timeoutSeconds: 30 }, ctx.workspaceId || "default");
   },
 };
 
@@ -1893,12 +1893,9 @@ export const tool_terraform = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    const cmd = args.directory
-      ? `cd ${JSON.stringify(args.directory)} && terraform ${args.command}`
-      : `terraform ${args.command}`;
-    return safeExec(cmd, 120000);
+  async run(config, args, ctx = {}) {
+    const cmd = args.directory ? `cd ${JSON.stringify(args.directory)} && terraform ${args.command}` : args.command;
+    return containerExecute({ language: "terraform", command: cmd, timeoutSeconds: 120 }, ctx.workspaceId || "default");
   },
 };
 
@@ -1912,10 +1909,9 @@ export const tool_ansible = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
+  async run(config, args, ctx = {}) {
     const bin = args.type === "playbook" ? "ansible-playbook" : "ansible";
-    return safeExec(`${bin} ${args.command}`, 120000);
+    return containerExecute({ language: "ansible", command: `${bin} ${args.command}`, timeoutSeconds: 120 }, ctx.workspaceId || "default");
   },
 };
 
@@ -1928,21 +1924,14 @@ export const tool_aws = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    const env = {};
-    if (config.accessKeyId) env.AWS_ACCESS_KEY_ID = config.accessKeyId;
-    if (config.secretAccessKey) env.AWS_SECRET_ACCESS_KEY = config.secretAccessKey;
-    if (config.region) env.AWS_DEFAULT_REGION = config.region;
-    const { stdout, stderr } = await execAsync(`aws ${args.command} --output json`, {
-      timeout: 60000,
-      env: { ...process.env, ...env },
-    }).catch((e) => ({ stdout: "", stderr: e.message }));
-    try {
-      return { result: JSON.parse(stdout), stderr };
-    } catch {
-      return { stdout: stdout.trim(), stderr };
-    }
+  async run(config, args, ctx = {}) {
+    const envVars = [];
+    if (config.accessKeyId) envVars.push({ key: "AWS_ACCESS_KEY_ID", value: config.accessKeyId });
+    if (config.secretAccessKey) envVars.push({ key: "AWS_SECRET_ACCESS_KEY", value: config.secretAccessKey });
+    if (config.region) envVars.push({ key: "AWS_DEFAULT_REGION", value: config.region });
+    const result = await containerExecute({ language: "aws", command: `${args.command} --output json`, envVars, timeoutSeconds: 60 }, ctx.workspaceId || "default");
+    try { return { result: JSON.parse(result.stdout), stderr: result.stderr }; }
+    catch { return { stdout: result.stdout.trim(), stderr: result.stderr }; }
   },
 };
 
@@ -1955,9 +1944,8 @@ export const tool_gcp = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    return safeExec(`gcloud ${args.command} --format=json`, 60000);
+  async run(config, args, ctx = {}) {
+    return containerExecute({ language: "gcloud", command: `${args.command} --format=json`, timeoutSeconds: 60 }, ctx.workspaceId || "default");
   },
 };
 
@@ -1970,9 +1958,8 @@ export const tool_azure = {
     },
     ["command"]
   ),
-  async run(config, args) {
-    assertShellToolsEnabled();
-    return safeExec(`az ${args.command} -o json`, 60000);
+  async run(config, args, ctx = {}) {
+    return containerExecute({ language: "az", command: `${args.command} -o json`, timeoutSeconds: 60 }, ctx.workspaceId || "default");
   },
 };
 
