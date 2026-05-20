@@ -50,11 +50,6 @@ import csvParser from "./csvParser.node.js";
 import dateTime from "./dateTime.node.js";
 import cryptoUtils from "./cryptoUtils.node.js";
 
-// AI Specialty Nodes
-import aiClassify from "./aiClassify.node.js";
-import aiExtract from "./aiExtract.node.js";
-import aiTransform from "./aiTransform.node.js";
-
 // Integrations: AI Hub
 import openai from "./integrations/openai.node.js";
 import anthropic from "./integrations/anthropic.node.js";
@@ -122,7 +117,6 @@ import dataDiff from "./dataDiff.node.js";
 // AI Innovated Nodes
 import emailParser from "./emailParser.node.js";
 import vectorMemory from "./vectorMemory.node.js";
-import aiDecision from "./aiDecision.node.js";
 import notificationHub from "./notificationHub.node.js";
 import browserAgent from "./browserAgent.node.js";
 
@@ -475,11 +469,6 @@ export const nodeRegistry = {
   date_time: dateTime,
   crypto_utils: cryptoUtils,
 
-  // AI Specialty
-  ai_classify: aiClassify,
-  ai_extract: aiExtract,
-  ai_transform: aiTransform,
-
   // AI Hub
   openai: openai,
   anthropic: anthropic,
@@ -549,7 +538,6 @@ export const nodeRegistry = {
   // AI Innovated Nodes
   email_parser: emailParser,
   vector_memory: vectorMemory,
-  ai_decision: aiDecision,
   notification_hub: notificationHub,
   browser_agent: browserAgent,
 
@@ -658,13 +646,11 @@ export const nodeRegistry = {
   env_variable:        utilityNodes.env_variable,
   error:               utilityNodes.error,
   zip_files:           utilityNodes.zip_files,
-  color_palette:       utilityNodes.color_palette,
   compound_interest:   utilityNodes.compound_interest,
   gst_calculator:      utilityNodes.gst_calculator,
   payroll_calculator:  utilityNodes.payroll_calculator,
   tax_rate_lookup:     utilityNodes.tax_rate_lookup,
   price_alert:         utilityNodes.price_alert,
-  leaderboard_update:  utilityNodes.leaderboard_update,
   ledger_entry:        utilityNodes.ledger_entry,
 
   // ── Network / infra nodes ──────────────────────────────────────────────────
@@ -685,28 +671,15 @@ export const nodeRegistry = {
   npm_package_info:    publicApiNodes.npm_package_info,
   news_search:         publicApiNodes.news_search,
   producthunt:         publicApiNodes.producthunt,
-  steam_game_lookup:   publicApiNodes.steam_game_lookup,
   stock_price:         publicApiNodes.stock_price,
   currency_exchange:   publicApiNodes.currency_exchange,
   twitch_stream_status: publicApiNodes.twitch_stream_status,
 
   // ── AI content nodes ───────────────────────────────────────────────────────
-  image_caption:       aiContentNodes.image_caption,
-  image_generate:      aiContentNodes.image_generate,
-  grammar_check:       aiContentNodes.grammar_check,
-  blog_post:           aiContentNodes.blog_post,
-  caption_writer:      aiContentNodes.caption_writer,
-  flashcard_generator: aiContentNodes.flashcard_generator,
-  quiz_generator:      aiContentNodes.quiz_generator,
-  hashtag_suggester:   aiContentNodes.hashtag_suggester,
-  citation_formatter:  aiContentNodes.citation_formatter,
-  summarize:           aiContentNodes.summarize,
   remove_background:   aiContentNodes.remove_background,
   invoice_parser:      aiContentNodes.invoice_parser,
   bank_statement_parser: aiContentNodes.bank_statement_parser,
-  audience_insights:   aiContentNodes.audience_insights,
   chat:                aiContentNodes.chat,
-  thumbnail_generator: aiContentNodes.thumbnail_generator,
 
   // ── Dev tools nodes ────────────────────────────────────────────────────────
   graphql_request:     devToolNodes.graphql_request,
