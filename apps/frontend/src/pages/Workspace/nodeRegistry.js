@@ -1095,19 +1095,6 @@ export const NodeRegistry = {
   },
 
   // ── Agent Tools — Search (12) ────────────────────────────────────────────────
-  tool_wikipedia: {
-    label: "Wikipedia",
-    icon: BookOpen,
-    colorClass: "text-blue-300",
-    accentColor: "147,197,253",
-    category: "ai",
-    agentOnly: true,
-    description: "Search and read Wikipedia articles",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Wikipedia",
-      description: "Search Wikipedia for any topic",
-    }),
-  },
   tool_google_search: {
     label: "Google Search",
     icon: Search,
@@ -1445,19 +1432,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_npm: {
-    label: "npm / pip",
-    icon: Package,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    category: "ai",
-    agentOnly: true,
-    description: "Install packages and run npm/pip scripts",
-    ConfigPanel: makeAgentToolPanel({
-      label: "npm / pip",
-      description: "Install and run package scripts",
-    }),
-  },
   tool_virtual_computer: {
     label: "Virtual Computer",
     icon: Monitor,
@@ -1518,32 +1492,6 @@ export const NodeRegistry = {
     ConfigPanel: makeAgentToolPanel({
       label: "Form Fill",
       description: "Automate form filling on web pages",
-    }),
-  },
-  tool_link_checker: {
-    label: "Link Checker",
-    icon: Link2,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Verify URLs are alive and report broken links",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Link Checker",
-      description: "Check whether URLs return valid responses",
-    }),
-  },
-  tool_sitemap: {
-    label: "Sitemap Reader",
-    icon: LayoutGrid,
-    colorClass: "text-blue-300",
-    accentColor: "147,197,253",
-    category: "ai",
-    agentOnly: true,
-    description: "Read and parse XML sitemaps",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Sitemap Reader",
-      description: "Parse a sitemap to discover all pages",
     }),
   },
   tool_http_request: {
@@ -1647,20 +1595,6 @@ export const NodeRegistry = {
       description: "Parse Excel spreadsheets into data",
     }),
   },
-  tool_image_analyze: {
-    label: "Image Analyzer",
-    icon: Image,
-    colorClass: "text-violet-300",
-    accentColor: "196,181,253",
-    category: "ai",
-    agentOnly: true,
-    description: "Describe, caption, and extract text from images",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Image Analyzer",
-      description: "Analyze and describe image content",
-    }),
-  },
-
   // ── Agent Tools — Databases (5) ─────────────────────────────────────────────
   tool_sql: {
     label: "SQL Query",
@@ -1902,20 +1836,7 @@ export const NodeRegistry = {
     }),
   },
 
-  // ── Agent Tools — AI Specialized (9) ────────────────────────────────────────
-  tool_summarize: {
-    label: "Summarize",
-    icon: AlignLeft,
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    category: "ai",
-    agentOnly: true,
-    description: "Summarize long text into key points",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Summarize",
-      description: "Condense documents and text into summaries",
-    }),
-  },
+  // ── Agent Tools — AI Specialized ────────────────────────────────────────────
   tool_translate: {
     label: "Translate",
     icon: Languages,
@@ -1935,114 +1856,6 @@ export const NodeRegistry = {
           placeholder: "Spanish",
         },
       ],
-    }),
-  },
-  tool_sentiment: {
-    label: "Sentiment",
-    icon: HeartPulse,
-    colorClass: "text-pink-400",
-    accentColor: "244,114,182",
-    category: "ai",
-    agentOnly: true,
-    description: "Classify sentiment: positive, neutral, or negative",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Sentiment",
-      description: "Analyze emotional tone of text",
-    }),
-  },
-  tool_entity_extract: {
-    label: "Entity Extract",
-    icon: Tags,
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    category: "ai",
-    agentOnly: true,
-    description: "Extract people, places, and organizations from text",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Entity Extract",
-      description: "Named entity recognition (NER)",
-    }),
-  },
-  tool_classify: {
-    label: "Classify",
-    icon: Filter,
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    category: "ai",
-    agentOnly: true,
-    description: "Classify text into custom categories",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Classify",
-      description: "Sort text into defined categories",
-      fields: [
-        {
-          key: "categories",
-          label: "Categories (comma-separated)",
-          type: "text",
-          placeholder: "spam, not-spam, urgent",
-        },
-      ],
-    }),
-  },
-  tool_image_generate: {
-    label: "Image Generate",
-    icon: Image,
-    colorClass: "text-fuchsia-400",
-    accentColor: "232,121,249",
-    category: "ai",
-    agentOnly: true,
-    description: "Generate images from text prompts",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Image Generate",
-      description: "Create images with AI",
-      fields: [
-        {
-          key: "provider",
-          label: "Provider",
-          type: "text",
-          placeholder: "openai or stability",
-        },
-        {
-          key: "apiKey",
-          label: "API Key",
-          type: "text",
-          placeholder: "your-api-key",
-        },
-      ],
-    }),
-  },
-  tool_stt: {
-    label: "Speech to Text",
-    icon: Mic2,
-    colorClass: "text-rose-400",
-    accentColor: "251,113,133",
-    category: "ai",
-    agentOnly: true,
-    description: "Transcribe audio files to text via Whisper",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Speech to Text",
-      description: "Transcribe audio using Whisper",
-      fields: [
-        {
-          key: "apiKey",
-          label: "OpenAI API Key",
-          type: "text",
-          placeholder: "sk-...",
-        },
-      ],
-    }),
-  },
-  tool_tts: {
-    label: "Text to Speech",
-    icon: Headphones,
-    colorClass: "text-violet-300",
-    accentColor: "196,181,253",
-    category: "ai",
-    agentOnly: true,
-    description: "Convert text to natural-sounding audio",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Text to Speech",
-      description: "Generate spoken audio from text",
     }),
   },
   tool_ocr: {
@@ -2169,45 +1982,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_task: {
-    label: "Create Task",
-    icon: CheckSquare,
-    colorClass: "text-green-400",
-    accentColor: "74,222,128",
-    category: "ai",
-    agentOnly: true,
-    description: "Create tasks in any connected task manager",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Create Task",
-      description: "Add tasks to your task manager",
-    }),
-  },
-  tool_note: {
-    label: "Create Note",
-    icon: StickyNote,
-    colorClass: "text-yellow-300",
-    accentColor: "253,224,71",
-    category: "ai",
-    agentOnly: true,
-    description: "Save a note or memo",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Create Note",
-      description: "Save a note to a connected app",
-    }),
-  },
-  tool_reminder: {
-    label: "Reminder",
-    icon: AlarmClock,
-    colorClass: "text-rose-400",
-    accentColor: "251,113,133",
-    category: "ai",
-    agentOnly: true,
-    description: "Schedule a reminder or alert",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Reminder",
-      description: "Set time-based reminders",
-    }),
-  },
   tool_approval: {
     label: "Approval Gate",
     icon: CheckCircle2,
@@ -2219,19 +1993,6 @@ export const NodeRegistry = {
     ConfigPanel: makeAgentToolPanel({
       label: "Approval Gate",
       description: "Request human confirmation before proceeding",
-    }),
-  },
-  tool_timer: {
-    label: "Timer / Sleep",
-    icon: Timer,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
-    category: "ai",
-    agentOnly: true,
-    description: "Wait for a specified duration",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Timer / Sleep",
-      description: "Pause execution for N seconds",
     }),
   },
 
@@ -2434,19 +2195,6 @@ export const NodeRegistry = {
       description: "Look up location info for any IP address",
     }),
   },
-  tool_whois: {
-    label: "WHOIS Lookup",
-    icon: Search,
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    category: "ai",
-    agentOnly: true,
-    description: "Fetch domain registration and ownership data",
-    ConfigPanel: makeAgentToolPanel({
-      label: "WHOIS Lookup",
-      description: "Query WHOIS for domain/IP info",
-    }),
-  },
   tool_nmap: {
     label: "Port Scanner",
     icon: Activity,
@@ -2570,20 +2318,7 @@ export const NodeRegistry = {
     }),
   },
 
-  // ── Agent Tools — Utilities (7) ─────────────────────────────────────────────
-  tool_url_shortener: {
-    label: "URL Shortener",
-    icon: Link2,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Shorten long URLs to compact links",
-    ConfigPanel: makeAgentToolPanel({
-      label: "URL Shortener",
-      description: "Create short links from long URLs",
-    }),
-  },
+  // ── Agent Tools — Utilities (6) ─────────────────────────────────────────────
   tool_qr: {
     label: "QR Code",
     icon: QrCode,
@@ -2676,19 +2411,6 @@ export const NodeRegistry = {
     ConfigPanel: makeAgentToolPanel({
       label: "Think",
       description: "Let the agent reason step-by-step before acting",
-    }),
-  },
-  tool_sub_agent: {
-    label: "Sub-Agent",
-    icon: Bot,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Delegate a subtask to a specialized child AI agent",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Sub-Agent",
-      description: "Call another AI agent as a tool",
     }),
   },
   tool_call_workflow: {

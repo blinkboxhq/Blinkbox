@@ -65,33 +65,6 @@ async function safeExec(cmd, timeoutMs = 10000) {
 // SEARCH & INFORMATION
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const tool_wikipedia = {
-  toolDefinition: td(
-    "tool_wikipedia",
-    "Search Wikipedia and retrieve article summaries",
-    { query: { type: "string", description: "Search term or article title" } },
-    ["query"]
-  ),
-  async run(config, args) {
-    const q = encodeURIComponent(args.query);
-    const search = await axios.get(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q}&format=json&origin=*`,
-      { timeout: 10000 }
-    );
-    const title = search.data?.query?.search?.[0]?.title;
-    if (!title) return { error: "No results found", query: args.query };
-    const summary = await axios.get(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
-      { timeout: 10000 }
-    );
-    return {
-      title: summary.data.title,
-      extract: summary.data.extract,
-      url: summary.data.content_urls?.desktop?.page,
-    };
-  },
-};
-
 export const tool_tavily = {
   toolDefinition: td(
     "tool_tavily",
@@ -627,54 +600,6 @@ export const tool_screenshot = {
   },
 };
 
-export const tool_link_checker = {
-  toolDefinition: td(
-    "tool_link_checker",
-    "Check if a URL is reachable and get its HTTP status",
-    { url: { type: "string", description: "URL to check" } },
-    ["url"]
-  ),
-  async run(config, args) {
-    try {
-      const start = Date.now();
-      const resp = await axios.head(args.url, { timeout: 10000, maxRedirects: 5 });
-      return { url: args.url, status: resp.status, reachable: true, latencyMs: Date.now() - start };
-    } catch (err) {
-      return { url: args.url, reachable: false, error: err.message, status: err.response?.status };
-    }
-  },
-};
-
-export const tool_sitemap = {
-  toolDefinition: td(
-    "tool_sitemap",
-    "Fetch and parse a website's sitemap.xml",
-    { url: { type: "string", description: "Base URL or direct sitemap URL" } },
-    ["url"]
-  ),
-  async run(config, args) {
-    const sitemapUrl = args.url.endsWith("sitemap.xml") ? args.url : `${args.url.replace(/\/$/, "")}/sitemap.xml`;
-    const resp = await axios.get(sitemapUrl, { timeout: 15000 });
-    const urls = [...resp.data.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
-    return { sitemapUrl, count: urls.length, urls: urls.slice(0, 100) };
-  },
-};
-
-export const tool_whois = {
-  toolDefinition: td(
-    "tool_whois",
-    "Look up WHOIS registration info for a domain or IP",
-    { domain: { type: "string", description: "Domain name or IP address" } },
-    ["domain"]
-  ),
-  async run(config, args) {
-    const resp = await axios.get(`https://api.domainsdb.info/v1/domains/search?domain=${encodeURIComponent(args.domain)}`, {
-      timeout: 10000,
-    });
-    return resp.data;
-  },
-};
-
 export const tool_ssl_check = {
   toolDefinition: td(
     "tool_ssl_check",
@@ -700,21 +625,6 @@ export const tool_ssl_check = {
       });
       socket.on("error", (err) => resolve({ hostname: args.hostname, error: err.message }));
     });
-  },
-};
-
-export const tool_url_shortener = {
-  toolDefinition: td(
-    "tool_url_shortener",
-    "Shorten a URL using TinyURL API",
-    { url: { type: "string", description: "URL to shorten" } },
-    ["url"]
-  ),
-  async run(config, args) {
-    const resp = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(args.url)}`, {
-      timeout: 8000,
-    });
-    return { original: args.url, shortened: resp.data };
   },
 };
 
@@ -1195,233 +1105,6 @@ export const tool_statistics = {
 // AI & ML TOOLS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const tool_image_generate = {
-  toolDefinition: td(
-    "tool_image_generate",
-    "Generate an image using OpenAI DALL-E or Stable Diffusion API",
-    {
-      prompt: { type: "string", description: "Image description / prompt" },
-      size: { type: "string", description: "Image size: 256x256, 512x512, 1024x1024" },
-      model: { type: "string", description: "dall-e-3 or dall-e-2" },
-    },
-    ["prompt"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_image_generate] OpenAI API key required");
-    const resp = await axios.post(
-      "https://api.openai.com/v1/images/generations",
-      {
-        model: args.model || "dall-e-3",
-        prompt: args.prompt,
-        n: 1,
-        size: args.size || "1024x1024",
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 60000 }
-    );
-    return { url: resp.data.data?.[0]?.url, revised_prompt: resp.data.data?.[0]?.revised_prompt };
-  },
-};
-
-export const tool_image_analyze = {
-  toolDefinition: td(
-    "tool_image_analyze",
-    "Analyze an image and describe its contents using GPT-4 Vision",
-    {
-      imageUrl: { type: "string", description: "URL or base64 data URI of the image" },
-      question: { type: "string", description: "What to look for or ask about the image" },
-    },
-    ["imageUrl"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_image_analyze] OpenAI API key required");
-    const resp = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o",
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image_url", image_url: { url: args.imageUrl } },
-            { type: "text", text: args.question || "Describe this image in detail." },
-          ],
-        }],
-        max_tokens: 1000,
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 30000 }
-    );
-    return { description: resp.data.choices?.[0]?.message?.content };
-  },
-};
-
-export const tool_tts = {
-  toolDefinition: td(
-    "tool_tts",
-    "Convert text to speech using OpenAI TTS API",
-    {
-      text: { type: "string", description: "Text to convert to speech" },
-      voice: { type: "string", description: "Voice: alloy, echo, fable, onyx, nova, shimmer" },
-      speed: { type: "number", description: "Speed multiplier (0.25 to 4.0)" },
-    },
-    ["text"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_tts] OpenAI API key required");
-    const resp = await axios.post(
-      "https://api.openai.com/v1/audio/speech",
-      { model: "tts-1", input: args.text, voice: args.voice || "nova", speed: args.speed || 1.0 },
-      { headers: { Authorization: `Bearer ${key}` }, responseType: "arraybuffer", timeout: 60000 }
-    );
-    const base64 = Buffer.from(resp.data).toString("base64");
-    return { audio: `data:audio/mp3;base64,${base64}`, format: "mp3" };
-  },
-};
-
-export const tool_stt = {
-  toolDefinition: td(
-    "tool_stt",
-    "Transcribe audio to text using OpenAI Whisper",
-    {
-      audioPath: { type: "string", description: "Path to audio file (mp3, wav, m4a)" },
-      language: { type: "string", description: "Language hint (e.g. en, es, fr)" },
-    },
-    ["audioPath"]
-  ),
-  async run(config, args) {
-    assertSafePath(args.audioPath);
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_stt] OpenAI API key required");
-    const FormData = (await import("form-data")).default;
-    const form = new FormData();
-    form.append("file", await fs.readFile(args.audioPath), { filename: path.basename(args.audioPath) });
-    form.append("model", "whisper-1");
-    if (args.language) form.append("language", args.language);
-    const resp = await axios.post("https://api.openai.com/v1/audio/transcriptions", form, {
-      headers: { Authorization: `Bearer ${key}`, ...form.getHeaders() },
-      timeout: 120000,
-    });
-    return { text: resp.data.text };
-  },
-};
-
-export const tool_summarize = {
-  toolDefinition: td(
-    "tool_summarize",
-    "Summarize a long text into key points",
-    {
-      text: { type: "string", description: "Text to summarize" },
-      style: { type: "string", description: "Summary style: brief, detailed, bullets" },
-      maxWords: { type: "number", description: "Approximate max words in summary" },
-    },
-    ["text"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_summarize] OpenAI API key required");
-    const styleMap = { brief: "in 2-3 sentences", bullets: "as 5 bullet points", detailed: "in a structured detailed way" };
-    const instruction = `Summarize the following text ${styleMap[args.style || "brief"]}${args.maxWords ? `, in approximately ${args.maxWords} words` : ""}:`;
-    const resp = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: `${instruction}\n\n${args.text.slice(0, 30000)}` }],
-        max_tokens: 1000,
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 30000 }
-    );
-    return { summary: resp.data.choices?.[0]?.message?.content };
-  },
-};
-
-export const tool_classify = {
-  toolDefinition: td(
-    "tool_classify",
-    "Classify text into predefined categories using AI",
-    {
-      text: { type: "string", description: "Text to classify" },
-      categories: { type: "array", items: { type: "string" }, description: "List of possible categories" },
-    },
-    ["text", "categories"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_classify] OpenAI API key required");
-    const resp = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [{
-          role: "user",
-          content: `Classify the following text into one of these categories: ${args.categories.join(", ")}. Respond with ONLY the category name.\n\nText: ${args.text}`,
-        }],
-        max_tokens: 50,
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 15000 }
-    );
-    return { category: resp.data.choices?.[0]?.message?.content?.trim(), options: args.categories };
-  },
-};
-
-export const tool_sentiment = {
-  toolDefinition: td(
-    "tool_sentiment",
-    "Analyze the sentiment of text (positive, negative, neutral)",
-    { text: { type: "string", description: "Text to analyze" } },
-    ["text"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_sentiment] OpenAI API key required");
-    const resp = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [{
-          role: "user",
-          content: `Analyze the sentiment of this text. Respond with JSON: {"sentiment": "positive|negative|neutral", "score": 0.0-1.0, "explanation": "brief reason"}.\n\nText: ${args.text}`,
-        }],
-        max_tokens: 100,
-        response_format: { type: "json_object" },
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 15000 }
-    );
-    return JSON.parse(resp.data.choices?.[0]?.message?.content || "{}");
-  },
-};
-
-export const tool_entity_extract = {
-  toolDefinition: td(
-    "tool_entity_extract",
-    "Extract named entities (people, places, organizations, dates) from text",
-    {
-      text: { type: "string", description: "Text to extract entities from" },
-      types: { type: "array", items: { type: "string" }, description: "Entity types to extract (person, place, org, date, etc.)" },
-    },
-    ["text"]
-  ),
-  async run(config, args) {
-    const key = config.apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("[tool_entity_extract] OpenAI API key required");
-    const types = args.types?.join(", ") || "person, place, organization, date, product, event";
-    const resp = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [{
-          role: "user",
-          content: `Extract entities of type [${types}] from the text. Respond with JSON: {"entities": [{"text": "...", "type": "..."}]}.\n\nText: ${args.text.slice(0, 10000)}`,
-        }],
-        max_tokens: 500,
-        response_format: { type: "json_object" },
-      },
-      { headers: { Authorization: `Bearer ${key}` }, timeout: 20000 }
-    );
-    return JSON.parse(resp.data.choices?.[0]?.message?.content || "{}");
-  },
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // CODING & EXECUTION
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1488,23 +1171,6 @@ export const tool_bash = {
   async run(config, args, context = {}) {
     return containerExecute(
       { language: "bash", command: args.command, timeoutSeconds: args.timeout || 15 },
-      context.workspaceId || "default"
-    );
-  },
-};
-
-export const tool_npm = {
-  toolDefinition: td(
-    "tool_npm",
-    "Run npm commands in an isolated Node.js sandbox (no network — use for bundled operations only)",
-    {
-      command: { type: "string", description: "npm sub-command (e.g. list, audit, pack)" },
-    },
-    ["command"]
-  ),
-  async run(config, args, context = {}) {
-    return containerExecute(
-      { language: "node", command: `npm ${args.command}`, timeoutSeconds: 60 },
       context.workspaceId || "default"
     );
   },
@@ -2225,23 +1891,6 @@ export const tool_memory_store = {
   },
 };
 
-export const tool_note = {
-  toolDefinition: td(
-    "tool_note",
-    "Add a note or log message during agent execution (for reasoning transparency)",
-    {
-      content: { type: "string", description: "Note content to log" },
-      tag: { type: "string", description: "Optional tag (observation, plan, decision)" },
-    },
-    ["content"]
-  ),
-  async run(config, args, ctx) {
-    const note = { content: args.content, tag: args.tag || "note", timestamp: new Date().toISOString() };
-    if (ctx?.log) ctx.log(note);
-    return note;
-  },
-};
-
 export const tool_think = {
   toolDefinition: td(
     "tool_think",
@@ -2315,77 +1964,6 @@ export const tool_datetime = {
   },
 };
 
-export const tool_timer = {
-  toolDefinition: td(
-    "tool_timer",
-    "Wait for a specified number of seconds before continuing",
-    { seconds: { type: "number", description: "Seconds to wait (max 300)" } },
-    ["seconds"]
-  ),
-  async run(config, args) {
-    const ms = Math.min((args.seconds || 1) * 1000, 300000);
-    await new Promise((r) => setTimeout(r, ms));
-    return { waited: args.seconds, done: true };
-  },
-};
-
-export const tool_reminder = {
-  toolDefinition: td(
-    "tool_reminder",
-    "Schedule a reminder message to be sent at a future time via webhook",
-    {
-      message: { type: "string", description: "Reminder message" },
-      delayMinutes: { type: "number", description: "Minutes from now to trigger reminder" },
-      webhookUrl: { type: "string", description: "URL to POST reminder to" },
-    },
-    ["message", "delayMinutes"]
-  ),
-  async run(config, args) {
-    const triggerAt = new Date(Date.now() + args.delayMinutes * 60000);
-    const url = args.webhookUrl || config.webhookUrl;
-    if (url) {
-      setTimeout(async () => {
-        await axios.post(url, { message: args.message, triggeredAt: new Date().toISOString() }).catch(() => {});
-      }, args.delayMinutes * 60000);
-    }
-    return { scheduled: true, triggerAt: triggerAt.toISOString(), message: args.message };
-  },
-};
-
-export const tool_task = {
-  toolDefinition: td(
-    "tool_task",
-    "Create, update, or list tasks tracked during this agent session",
-    {
-      operation: { type: "string", description: "create, complete, list" },
-      title: { type: "string", description: "Task title" },
-      id: { type: "string", description: "Task ID to complete" },
-    },
-    ["operation"]
-  ),
-  async run(config, args, ctx) {
-    const { redis } = await import("../infra/redis.client.js");
-    const key = `agent_tasks:${ctx?.executionId || "local"}`;
-    if (args.operation === "create") {
-      const id = crypto.randomUUID();
-      await redis.rpush(key, JSON.stringify({ id, title: args.title, status: "pending", created: Date.now() }));
-      await redis.expire(key, 86400);
-      return { id, title: args.title, status: "pending" };
-    }
-    if (args.operation === "complete") {
-      const items = await redis.lrange(key, 0, -1);
-      const tasks = items.map((i) => JSON.parse(i));
-      const task = tasks.find((t) => t.id === args.id);
-      if (task) task.status = "done";
-      await redis.del(key);
-      if (tasks.length) await redis.rpush(key, ...tasks.map((t) => JSON.stringify(t)));
-      return { updated: true };
-    }
-    const items = await redis.lrange(key, 0, -1);
-    return { tasks: items.map((i) => JSON.parse(i)) };
-  },
-};
-
 export const tool_calendar = {
   toolDefinition: td(
     "tool_calendar",
@@ -2439,27 +2017,6 @@ export const tool_call_workflow = {
       { headers: { Authorization: `Bearer ${ctx?.token || ""}` }, timeout: 10000 }
     );
     return { triggered: true, executionId: resp.data?.executionId };
-  },
-};
-
-export const tool_sub_agent = {
-  toolDefinition: td(
-    "tool_sub_agent",
-    "Spawn a sub-agent with its own goal and tools to complete a delegated task",
-    {
-      goal: { type: "string", description: "Goal for the sub-agent to accomplish" },
-      tools: { type: "array", items: { type: "string" }, description: "Tool names the sub-agent can use" },
-      maxSteps: { type: "number", description: "Max ReAct steps for sub-agent (default 10)" },
-    },
-    ["goal"]
-  ),
-  async run(config, args, ctx) {
-    return {
-      status: "delegated",
-      goal: args.goal,
-      note: "Sub-agent spawning requires a running AI agent node to orchestrate. This tool records the delegation intent.",
-      tools: args.tools || [],
-    };
   },
 };
 
