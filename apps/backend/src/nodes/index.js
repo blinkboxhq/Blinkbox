@@ -703,6 +703,7 @@ export const nodeRegistry = {
   mastodon:            socialNodes.mastodon,
   imap:                socialNodes.imap,
   email:               socialNodes.email,
+  file_upload:         socialNodes.file_upload,
   file_download:       socialNodes.file_download,
   webhook_response:    socialNodes.webhook_response,
   game_event_webhook:  socialNodes.game_event_webhook,

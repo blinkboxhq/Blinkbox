@@ -2062,6 +2062,45 @@ export const tool_mcp_client = {
   },
 };
 
+export const tool_data_diff = {
+  toolDefinition: td(
+    "tool_data_diff",
+    "Compare two JSON objects or arrays and return added, removed, and changed keys",
+    {
+      before: { type: "string", description: "JSON string of the original value" },
+      after: { type: "string", description: "JSON string of the new value" },
+    },
+    ["before", "after"]
+  ),
+  async run(config, args) {
+    let before, after;
+    try { before = typeof args.before === "string" ? JSON.parse(args.before) : args.before; }
+    catch { throw new Error("[tool_data_diff] 'before' is not valid JSON"); }
+    try { after = typeof args.after === "string" ? JSON.parse(args.after) : args.after; }
+    catch { throw new Error("[tool_data_diff] 'after' is not valid JSON"); }
+
+    function diff(a, b, path = "") {
+      const added = [], removed = [], changed = [];
+      const allKeys = new Set([...Object.keys(a ?? {}), ...Object.keys(b ?? {})]);
+      for (const k of allKeys) {
+        const p = path ? `${path}.${k}` : k;
+        if (!(k in (a ?? {}))) { added.push({ path: p, value: b[k] }); }
+        else if (!(k in (b ?? {}))) { removed.push({ path: p, value: a[k] }); }
+        else if (typeof a[k] === "object" && typeof b[k] === "object" && a[k] !== null && b[k] !== null) {
+          const sub = diff(a[k], b[k], p);
+          added.push(...sub.added); removed.push(...sub.removed); changed.push(...sub.changed);
+        } else if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) {
+          changed.push({ path: p, before: a[k], after: b[k] });
+        }
+      }
+      return { added, removed, changed };
+    }
+
+    const result = diff(before, after);
+    return { ...result, totalChanges: result.added.length + result.removed.length + result.changed.length };
+  },
+};
+
 export const tool_youtube_search = {
   toolDefinition: td(
     "tool_youtube_search",
