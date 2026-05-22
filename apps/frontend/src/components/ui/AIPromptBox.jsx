@@ -2,8 +2,8 @@ import React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
-  ArrowUp, Paperclip, Square, X, StopCircle, Mic,
-  Globe, BrainCog, FolderCode,
+  ArrowUp, Paperclip, Square, X, XCircle, Mic,
+  Globe, BrainCog, FolderOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -359,7 +359,7 @@ export const AIPromptBox = React.forwardRef(function AIPromptBox({
               className={cn('rounded-full flex items-center gap-1 px-2 py-1 border h-8 transition-all',
                 showCanvas ? 'bg-orange-500/10 border-orange-500/40 text-orange-400' : 'bg-transparent border-transparent text-[#666] hover:text-[#aaa]')}>
               <motion.div animate={{ rotate: showCanvas ? 360 : 0, scale: showCanvas ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 260, damping: 25 }}>
-                <FolderCode className="w-4 h-4" />
+                <FolderOpen className="w-4 h-4" />
               </motion.div>
               <AnimatePresence>
                 {showCanvas && (
@@ -384,7 +384,7 @@ export const AIPromptBox = React.forwardRef(function AIPromptBox({
               }}
               disabled={isLoading && !hasContent}>
               {isLoading    ? <Square className="h-3.5 w-3.5 fill-black animate-pulse" /> :
-               isRecording  ? <StopCircle className="h-4 w-4 text-red-500" /> :
+               isRecording  ? <XCircle className="h-4 w-4 text-red-500" /> :
                hasContent   ? <ArrowUp className="h-3.5 w-3.5 text-black" /> :
                               <Mic className="h-4 w-4" />}
             </Button>

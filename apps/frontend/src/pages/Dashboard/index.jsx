@@ -789,7 +789,6 @@ export default function Dashboard() {
           )}
 
         </div>
-          </div>
         </BeamsBackground>
       </main>
       </div>
