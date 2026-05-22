@@ -153,7 +153,7 @@ function getConfigHint(data, edges, nodeId) {
   if (data.backendType === "slack" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "discord" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "stripe" && c.action) return c.action.replace("_", " ");
-  if (["openai","anthropic","gemini","deepseek","openrouter","together","perplexity","xai","fireworks","cerebras","ollama","novita","deepinfra","hyperbolic"].includes(data.backendType) && c.model) return c.model;
+  if (["openai","anthropic","gemini","deepseek","moonshot","openrouter","together","perplexity","xai","fireworks","cerebras","ollama","novita","deepinfra","hyperbolic"].includes(data.backendType) && c.model) return c.model;
   if (data.backendType === "telegram" && c.text) return c.text.slice(0, 40);
   if (data.backendType === "whatsapp" && c.to) return `→ ${c.to}`;
   if (data.backendType === "airtable" && c.tableName) return `${c.action || "create"} · ${c.tableName}`;
@@ -163,7 +163,7 @@ function getConfigHint(data, edges, nodeId) {
 
 // ─── Node Shape Helpers ───────────────────────────────────────────────────────
 const MEMORY_TYPES = ["window_buffer_memory","redis_memory","postgres_memory","vector_memory","mem0"];
-const AI_TYPES = ["openai","anthropic","gemini","deepseek","openrouter","together","perplexity","xai","fireworks","cerebras","ollama","novita","deepinfra","hyperbolic","ai_agent"];
+const AI_TYPES = ["openai","anthropic","gemini","deepseek","moonshot","openrouter","together","perplexity","xai","fireworks","cerebras","ollama","novita","deepinfra","hyperbolic","ai_agent"];
 
 // ─── Node Icon ────────────────────────────────────────────────────────────────
 function NodeIcon({ nodeDef, size = "md" }) {
@@ -440,7 +440,9 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
+      : selected ? "2px solid rgba(255,255,255,0.45)"
+      : isHovered ? "6px solid rgba(255,255,255,0.14)"
+      : "1px solid rgba(255,255,255,0.08)";
     const cardShadow = selected ? `0 0 20px rgba(${accent},0.08), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)` : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -476,7 +478,9 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
+      : selected ? "2px solid rgba(255,255,255,0.45)"
+      : isHovered ? "6px solid rgba(255,255,255,0.14)"
+      : "1px solid rgba(255,255,255,0.08)";
     const cardShadow = selected
       ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -535,7 +539,8 @@ export default function CustomNode({ id, data, selected }) {
 
     const cardBorder = selected
       ? "2px solid rgba(255,255,255,0.45)"
-      : "2px solid rgba(255,255,255,0.18)";
+      : isHovered ? "6px solid rgba(255,255,255,0.14)"
+      : "1px solid rgba(255,255,255,0.08)";
     const cardShadow = selected
       ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -618,7 +623,7 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-            border: selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)",
+            border: selected ? "2px solid rgba(255,255,255,0.45)" : isHovered ? "6px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.08)",
             boxShadow: selected ? "0 0 24px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6)" : "0 12px 40px rgba(0,0,0,0.6)" }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -655,7 +660,9 @@ export default function CustomNode({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-    : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
+    : selected ? "2px solid rgba(255,255,255,0.45)"
+    : isHovered ? "6px solid rgba(255,255,255,0.14)"
+    : "1px solid rgba(255,255,255,0.08)";
   const cardBorder = cardBorderTop;
   const cardBottomBorder = status === "running" ? "2px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "2px solid rgba(16,185,129,0.4)"

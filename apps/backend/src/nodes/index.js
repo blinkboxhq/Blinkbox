@@ -57,6 +57,7 @@ import gemini from "./integrations/gemini.node.js";
 import perplexity from "./integrations/perplexity.node.js";
 import xai from "./integrations/xai.node.js";
 import deepseek from "./integrations/deepseek.node.js";
+import moonshot from "./integrations/moonshot.node.js";
 
 // Integrations: Comms Hub
 import telegram from "./integrations/telegram.node.js";
@@ -476,6 +477,7 @@ export const nodeRegistry = {
   perplexity: perplexity,
   xai: xai,
   deepseek: deepseek,
+  moonshot: moonshot,
 
   // Comms Hub
   telegram: telegram,
@@ -713,6 +715,7 @@ export const nodeRegistry = {
   agent_anthropic:     anthropic,
   agent_gemini:        gemini,
   agent_deepseek:      deepseek,
+  agent_moonshot:      moonshot,
   agent_perplexity:    perplexity,
   agent_xai:           xai,
   agent_groq:          groq,

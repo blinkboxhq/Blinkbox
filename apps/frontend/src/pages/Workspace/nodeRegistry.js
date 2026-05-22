@@ -275,6 +275,7 @@ import AirtableNode from "./components/nodes/AirtableNode";
 import WebSearchNode from "./components/nodes/WebSearchNode";
 import makeOpenAICompatNode from "./components/nodes/OpenAICompatNode";
 import DeepSeekNode from "./components/nodes/DeepSeekNode";
+import MoonshotNode from "./components/nodes/MoonshotNode";
 import GoogleSheetsNode from "./components/nodes/GoogleSheetsNode";
 import GmailNode from "./components/nodes/GmailNode";
 import NotionNode from "./components/nodes/NotionNode";
@@ -750,6 +751,15 @@ export const NodeRegistry = {
     ConfigPanel: DeepSeekNode,
     category: "ai",
   },
+  moonshot: {
+    label: "Moonshot AI",
+    icon: Brain,
+    colorClass: "text-[#1B64F4]",
+    accentColor: "27,100,244",
+    description: "Kimi long-context models — 8K, 32K, 128K & vision",
+    ConfigPanel: MoonshotNode,
+    category: "ai",
+  },
   ai_agent: {
     label: "AI Agent",
     icon: Bot,
@@ -907,6 +917,28 @@ export const NodeRegistry = {
       credentialType: "DeepSeek",
       models: ["deepseek-chat", "deepseek-reasoner"],
       color: "#4D9BF8",
+    }),
+  },
+  agent_moonshot: {
+    label: "Moonshot AI",
+    icon: Brain,
+    colorClass: "text-[#1B64F4]",
+    accentColor: "27,100,244",
+    category: "ai",
+    agentOnly: true,
+    description: "Kimi long-context models powering the AI Agent",
+    defaultModel: "moonshot-v1-8k",
+    models: [
+      { value: "moonshot-v1-8k",                label: "Kimi V1 · 8K" },
+      { value: "moonshot-v1-32k",               label: "Kimi V1 · 32K" },
+      { value: "moonshot-v1-128k",              label: "Kimi V1 · 128K" },
+      { value: "moonshot-v1-8k-vision-preview", label: "Kimi V1 · Vision" },
+    ],
+    ConfigPanel: makeAgentModelPanel({
+      label: "Moonshot AI",
+      credentialType: "Moonshot",
+      models: ["moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k", "moonshot-v1-8k-vision-preview"],
+      color: "#1B64F4",
     }),
   },
   agent_groq: {
