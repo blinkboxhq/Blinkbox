@@ -36,7 +36,6 @@ export const createUISlice = (set, get) => ({
   isAgentPickerOpen: false,
   agentPickerParentId: null,
   suggestionNode: null,
-  thumbnailVersion: 0,
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -183,6 +182,36 @@ export const createUISlice = (set, get) => ({
     }
   },
 
+  // ── Thumbnail generation ─────────────────────────────────────────────────
+  generateThumbnail: (nodes, edges) => {
+    if (!nodes?.length) return '';
+    const W = 345, H = 215, PAD = 24, SIZE = 28;
+    const COLORS = ['#3b82f6','#8b5cf6','#f59e0b','#ef4444','#22c55e','#06b6d4','#ec4899','#f97316','#a855f7','#14b8a6'];
+    const typeColor = t => { let h = 0; for (const c of (t||'')) h = (h * 31 + c.charCodeAt(0)) & 0xffff; return COLORS[h % COLORS.length]; };
+    const xs = nodes.map(n => n.position?.x ?? 0);
+    const ys = nodes.map(n => n.position?.y ?? 0);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+    const scale = Math.min((W - PAD * 2 - SIZE) / rangeX, (H - PAD * 2 - SIZE) / rangeY, 1.6);
+    const scaledW = rangeX * scale + SIZE, scaledH = rangeY * scale + SIZE;
+    const ox = (W - scaledW) / 2, oy = (H - scaledH) / 2;
+    const mapped = nodes.map(n => ({ ...n, px: ox + ((n.position?.x??0) - minX) * scale, py: oy + ((n.position?.y??0) - minY) * scale }));
+    const byId = Object.fromEntries(mapped.map(n => [n.id, n]));
+    const edgePaths = (edges||[]).map(e => {
+      const s = byId[e.source], t = byId[e.target];
+      if (!s || !t) return '';
+      const x1 = s.px + SIZE, y1 = s.py + SIZE / 2, x2 = t.px, y2 = t.py + SIZE / 2, cx = (x1 + x2) / 2;
+      return `<path d="M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"/>`;
+    }).join('');
+    const nodeShapes = mapped.map(n => {
+      const c = typeColor(n.data?.backendType || n.type || '');
+      return `<rect x="${n.px}" y="${n.py}" width="${SIZE}" height="${SIZE}" rx="6" fill="url(#ng)" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/><rect x="${n.px}" y="${n.py}" width="${SIZE}" height="4" rx="2" fill="${c}" opacity="0.55"/>`;
+    }).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs><pattern id="dp" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.8" fill="#1d1d1d"/></pattern><linearGradient id="ng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#232328"/><stop offset="100%" stop-color="#19191d"/></linearGradient></defs><rect width="${W}" height="${H}" fill="#0d0d0f"/><rect width="${W}" height="${H}" fill="url(#dp)"/>${edgePaths}${nodeShapes}</svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  },
+
   // ── API: Save Workflow ───────────────────────────────────────────────────
   saveEngine: async (automationId, silent = false) => {
     const state = get();
@@ -239,7 +268,8 @@ export const createUISlice = (set, get) => ({
 
       await api.put(`/api/automation/${automationId}`, payload);
       if (!silent) toast.success("Workflow saved");
-      set(s => ({ thumbnailVersion: s.thumbnailVersion + 1 }));
+      const thumbnail = get().generateThumbnail(state.nodes, state.edges);
+      if (thumbnail) api.patch(`/api/automation/${automationId}/thumbnail`, { thumbnail }).catch(() => {});
     } catch (error) {
       // Suppress access-denied errors on silent auto-saves (viewer collaborators, etc.)
       if (silent && (error.response?.status === 403 || error.response?.status === 401)) return;
