@@ -752,7 +752,7 @@ export const NodeRegistry = {
     category: "ai",
   },
   moonshot: {
-    label: "Moonshot AI",
+    label: "Kimi",
     icon: Brain,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
@@ -920,7 +920,7 @@ export const NodeRegistry = {
     }),
   },
   agent_moonshot: {
-    label: "Moonshot AI",
+    label: "Kimi",
     icon: Brain,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
@@ -935,7 +935,7 @@ export const NodeRegistry = {
       { value: "moonshot-v1-8k-vision-preview", label: "Kimi V1 · Vision" },
     ],
     ConfigPanel: makeAgentModelPanel({
-      label: "Moonshot AI",
+      label: "Kimi",
       credentialType: "Moonshot",
       models: ["moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k", "moonshot-v1-8k-vision-preview"],
       color: "#1B64F4",

@@ -43,8 +43,8 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
           <MoonshotIcon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-bold" style={{ color: ACCENT }}>Moonshot AI · Kimi</span>
-          <span className="text-[10px] text-zinc-500 mt-0.5">Long-context models up to 128K tokens</span>
+          <span className="text-sm font-bold" style={{ color: ACCENT }}>Kimi</span>
+          <span className="text-[10px] text-zinc-500 mt-0.5">by Moonshot AI · up to 128K context</span>
         </div>
       </div>
 
@@ -213,8 +213,8 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
         value={config.credentialId || ''}
         onChange={id => updateConfig('credentialId', id)}
         accentColor="blue"
-        label="Moonshot API Key"
-        placeholder="Select Moonshot credential..."
+        label="Kimi API Key"
+        placeholder="Select Kimi credential..."
       />
     </div>
   );
