@@ -407,14 +407,14 @@ export default function Dashboard() {
         <main className="flex-1 overflow-y-auto">
         <BeamsBackground className="min-h-full" intensity="subtle">
 
-          {/* ══ TOP PANEL — Brian hero ══════════════════════════════════════ */}
+          {/* ══ HERO — Brian chatbot ════════════════════════════════════════ */}
           {activeTab === 'workflows' && (
-            <div className="border-b border-[#161616]">
-              <DashboardHero onSubmit={handleBrianSubmit} />
+            <div className="border-b border-[#111]">
+              <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} />
             </div>
           )}
 
-          <div className="p-6 max-w-[1100px] mx-auto">
+          <div className="px-8 py-6 max-w-[1100px] mx-auto">
 
           {systemError && (
             <div className="mb-5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
@@ -425,13 +425,18 @@ export default function Dashboard() {
           {/* ═══ WORKFLOWS ═══ */}
           {activeTab === 'workflows' && (
             <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              <DashboardHeader
-                onInitialize={() => setIsModalOpen(true)}
-                search={search} setSearch={setSearch}
-                statusFilter={statusFilter} setStatusFilter={setStatusFilter}
-                viewMode={viewMode} setViewMode={setViewMode}
-                total={workflows.length}
-              />
+              {/* Section header */}
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-[15px] font-semibold text-neutral-200">Your recent workflows</h2>
+                <DashboardHeader
+                  onInitialize={() => setIsModalOpen(true)}
+                  search={search} setSearch={setSearch}
+                  statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+                  viewMode={viewMode} setViewMode={setViewMode}
+                  total={workflows.length}
+                  compact
+                />
+              </div>
 
               {workflowsLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
