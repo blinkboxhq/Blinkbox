@@ -69,6 +69,7 @@ const AutomationSchema = new mongoose.Schema(
       default: { maxParallel: 10 },
     },
     description: { type: String, default: "" },
+    thumbnail: { type: String, default: "" },
     collaborators: {
       type: [
         {

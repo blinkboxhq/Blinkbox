@@ -488,6 +488,32 @@ export async function renameAutomation(req, res) {
 
 /**
  * ===============================
+ * SAVE THUMBNAIL
+ * ===============================
+ */
+export async function saveThumbnail(req, res) {
+  try {
+    const { thumbnail } = req.body;
+    if (!thumbnail || typeof thumbnail !== 'string') {
+      return res.status(400).json({ success: false, message: 'thumbnail required' });
+    }
+    if (thumbnail.length > 500_000) {
+      return res.status(413).json({ success: false, message: 'Thumbnail too large' });
+    }
+    const automation = await Automation.findOneAndUpdate(
+      { _id: req.params.id, workspaceId: req.user.id },
+      { thumbnail },
+      { returnDocument: 'after', select: '_id thumbnail' },
+    );
+    if (!automation) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to save thumbnail' });
+  }
+}
+
+/**
+ * ===============================
  * GET SINGLE AUTOMATION (WORKSPACE)
  * ===============================
  */

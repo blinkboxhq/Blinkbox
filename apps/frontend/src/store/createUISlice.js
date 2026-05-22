@@ -36,6 +36,7 @@ export const createUISlice = (set, get) => ({
   isAgentPickerOpen: false,
   agentPickerParentId: null,
   suggestionNode: null,
+  thumbnailVersion: 0,
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -238,6 +239,7 @@ export const createUISlice = (set, get) => ({
 
       await api.put(`/api/automation/${automationId}`, payload);
       if (!silent) toast.success("Workflow saved");
+      set(s => ({ thumbnailVersion: s.thumbnailVersion + 1 }));
     } catch (error) {
       // Suppress access-denied errors on silent auto-saves (viewer collaborators, etc.)
       if (silent && (error.response?.status === 403 || error.response?.status === 401)) return;

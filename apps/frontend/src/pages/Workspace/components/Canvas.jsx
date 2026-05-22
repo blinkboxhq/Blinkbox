@@ -2,6 +2,8 @@ import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, C
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toPng } from "html-to-image";
+import api from "../../../lib/api";
 import NodeContextMenu from "./NodeContextMenu";
 import { playNodeLand, playDelete } from "../../../lib/sounds";
 import {
@@ -116,6 +118,26 @@ export default function Canvas() {
   const unwatchAutomation   = useWorkspaceStore((s) => s.unwatchAutomation);
   const suggestionNode      = useWorkspaceStore((s) => s.suggestionNode);
   const clearSuggestionNode = useWorkspaceStore((s) => s.clearSuggestionNode);
+  const thumbnailVersion    = useWorkspaceStore((s) => s.thumbnailVersion);
+
+  const lastCapturedVersion = useRef(0);
+  const captureTimeout = useRef(null);
+
+  useEffect(() => {
+    if (!automationId || thumbnailVersion === 0) return;
+    if (thumbnailVersion === lastCapturedVersion.current) return;
+    clearTimeout(captureTimeout.current);
+    captureTimeout.current = setTimeout(async () => {
+      const el = document.querySelector('.react-flow__renderer');
+      if (!el) return;
+      try {
+        const dataUrl = await toPng(el, { backgroundColor: '#0d0d0f', pixelRatio: 0.6, cacheBust: true });
+        await api.patch(`/api/automation/${automationId}/thumbnail`, { thumbnail: dataUrl });
+        lastCapturedVersion.current = thumbnailVersion;
+      } catch {}
+    }, 1500);
+    return () => clearTimeout(captureTimeout.current);
+  }, [automationId, thumbnailVersion]);
 
   // Auto-subscribe to live node:status events for scheduled/webhook-triggered runs
   useEffect(() => {
