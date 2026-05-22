@@ -539,7 +539,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 /* ── GRID VIEW ── */
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {filtered.map((wf, i) => {
                     const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
                     const isActive = wf.status === 'active';
@@ -572,7 +572,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Mini workflow canvas */}
-                        <div className="px-3">
+                        <div className="px-4">
                           <WorkflowPreview
                             preview={wf.preview}
                             nodeCount={wf.nodeCount}
