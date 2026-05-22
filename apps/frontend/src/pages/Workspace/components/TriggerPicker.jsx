@@ -292,13 +292,13 @@ export default function TriggerPicker() {
       draggable
       onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
-      <Icon className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />
+      <Icon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{trigger.label}</div>
+        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{trigger.label}</div>
         {trigger.description && (
-          <div className="text-[12px] text-neutral-500 mt-0.5 group-hover:text-neutral-400 truncate">{trigger.description}</div>
+          <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{trigger.description}</div>
         )}
       </div>
     </button>
@@ -309,7 +309,7 @@ export default function TriggerPicker() {
       draggable
       onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <img
         src={trigger.logoUrl}
@@ -318,8 +318,8 @@ export default function TriggerPicker() {
         style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
       />
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{trigger.label}</div>
-        <div className="text-[12px] text-neutral-500 mt-0.5 group-hover:text-neutral-400 truncate">{trigger.description}</div>
+        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{trigger.label}</div>
+        <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{trigger.description}</div>
       </div>
     </button>
   );
@@ -338,18 +338,18 @@ export default function TriggerPicker() {
         <div className="flex items-center gap-3 px-5 pt-6 pb-5">
           <button
             onClick={() => setPage("home")}
-            className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <CatIcon className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />
+          <CatIcon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
           <div>
-            <div className="text-[15px] font-bold text-neutral-100 leading-tight">{currentCat.label}</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">{currentCat.description}</div>
+            <div className="text-[15px] font-bold text-white leading-tight">{currentCat.label}</div>
+            <div className="text-[11px] text-white/50 mt-0.5">{currentCat.description}</div>
           </div>
           <button
             onClick={() => setTriggerPickerOpen(false)}
-            className="ml-auto p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="ml-auto p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -377,12 +377,12 @@ export default function TriggerPicker() {
       {/* Header */}
       <div className="flex items-start justify-between px-6 pt-6 pb-4">
         <div>
-          <h2 className="text-[16px] font-bold text-neutral-100 tracking-tight">What triggers this workflow?</h2>
-          <p className="text-[13px] text-neutral-500 mt-1">Choose how this workflow starts</p>
+          <h2 className="text-[16px] font-bold text-white tracking-tight">What triggers this workflow?</h2>
+          <p className="text-[13px] text-white/50 mt-1">Choose how this workflow starts</p>
         </div>
         <button
           onClick={() => setTriggerPickerOpen(false)}
-          className="p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+          className="p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
         >
           <X className="w-4 h-4" />
         </button>
@@ -390,14 +390,14 @@ export default function TriggerPicker() {
 
       {/* Search */}
       <div className="px-5 pb-4">
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-[#111] border border-[#333] rounded-xl focus-within:border-zinc-600 transition-colors">
-          <Search className="w-4 h-4 text-neutral-500 shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-white/[0.04] border border-white/15 rounded-xl focus-within:border-white/30 transition-colors">
+          <Search className="w-4 h-4 text-white/50 shrink-0" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search triggers..."
-            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-neutral-600"
+            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/40"
             autoFocus
           />
         </div>
@@ -411,7 +411,7 @@ export default function TriggerPicker() {
           filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Search className="w-8 h-8 text-neutral-700 mb-3" />
-              <p className="text-[13px] text-neutral-600">No triggers found</p>
+              <p className="text-[13px] text-white/40">No triggers found</p>
             </div>
           ) : (
             filtered.map((t) => {
@@ -434,15 +434,15 @@ export default function TriggerPicker() {
               <button
                 key={cat.id}
                 onClick={() => handleCategoryClick(cat)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group"
+                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group"
               >
-                <CatIcon className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />
+                <CatIcon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{cat.label}</div>
-                  <div className="text-[12px] text-neutral-500 mt-0.5 group-hover:text-neutral-400">{cat.description}</div>
+                  <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{cat.label}</div>
+                  <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70">{cat.description}</div>
                 </div>
                 {isNav && (
-                  <ArrowLeft className="w-3.5 h-3.5 text-neutral-600 shrink-0 rotate-180 group-hover:text-neutral-400 transition-colors" />
+                  <ArrowLeft className="w-3.5 h-3.5 text-white/40 shrink-0 rotate-180 group-hover:text-white/70 transition-colors" />
                 )}
               </button>
             );
@@ -464,21 +464,21 @@ export default function TriggerPicker() {
         <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
           <button
             onClick={() => { setPendingTrigger(null); setPage("home"); }}
-            className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           {logoUrl
             ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
-            : <Zap className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />
+            : <Zap className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
           }
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-neutral-100 leading-tight">{pendingTrigger.label}</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">Choose what triggers this node</div>
+            <div className="text-[15px] font-bold text-white leading-tight">{pendingTrigger.label}</div>
+            <div className="text-[11px] text-white/50 mt-0.5">Choose what triggers this node</div>
           </div>
           <button
             onClick={() => setTriggerPickerOpen(false)}
-            className="p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -490,17 +490,17 @@ export default function TriggerPicker() {
             <button
               key={action.name}
               onClick={() => commitNode(pendingTrigger, action.name)}
-              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group"
+              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group"
             >
               {logoUrl
                 ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
-                : <Zap className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />
+                : <Zap className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
               }
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{action.name}</div>
-                <div className="text-[11px] text-neutral-500 mt-0.5 group-hover:text-neutral-400 leading-relaxed">{action.description}</div>
+                <div className="text-[13px] font-semibold text-white group-hover:text-white leading-tight">{action.name}</div>
+                <div className="text-[11px] text-white/50 mt-0.5 group-hover:text-white/70 leading-relaxed">{action.description}</div>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-colors" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70 shrink-0 transition-colors" />
             </button>
           ))}
         </div>

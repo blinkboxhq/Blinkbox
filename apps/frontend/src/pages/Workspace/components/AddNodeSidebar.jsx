@@ -97,7 +97,7 @@ export default function AddNodeSidebar() {
         <div className="flex items-center gap-3 px-5 pt-6 pb-4 shrink-0">
           <button
             onClick={() => { setPending(null); setPage(prevPage); }}
-            className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -111,14 +111,14 @@ export default function AddNodeSidebar() {
                 style={pendingNode.imgFilter ? { filter: pendingNode.imgFilter } : undefined}
               />
             ) : (
-              <Icon className={`w-7 h-7 ${pendingNode.colorClass}`} strokeWidth={1.6} />
+              <Icon className="w-7 h-7 text-white" strokeWidth={1.6} />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-neutral-100 leading-tight">{pendingNode.label}</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">{actions.length} actions available</div>
+            <div className="text-[15px] font-bold text-white leading-tight">{pendingNode.label}</div>
+            <div className="text-[11px] text-white/50 mt-0.5">{actions.length} actions available</div>
           </div>
-          <button onClick={handleClose} className="ml-auto p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
+          <button onClick={handleClose} className="ml-auto p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -129,17 +129,17 @@ export default function AddNodeSidebar() {
             <button
               key={i}
               onClick={() => commitNode(pendingNode, action.name)}
-              className="flex items-start gap-3 w-full py-3 px-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group mb-0.5"
+              className="flex items-start gap-3 w-full py-3 px-3 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group mb-0.5"
             >
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold text-neutral-200 group-hover:text-white leading-snug">
                   {action.name}
                 </div>
-                <div className="text-[11px] text-neutral-500 mt-0.5 group-hover:text-neutral-400 leading-relaxed">
+                <div className="text-[11px] text-white/50 mt-0.5 group-hover:text-white/70 leading-relaxed">
                   {action.description}
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 shrink-0 mt-1 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white/70 shrink-0 mt-1 transition-colors" />
             </button>
           ))}
         </div>
@@ -157,16 +157,16 @@ export default function AddNodeSidebar() {
         <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
           <button
             onClick={() => setPage("home")}
-            className="p-1.5 text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
+            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          {CatIcon && <CatIcon className="w-5 h-5 text-neutral-400 shrink-0" strokeWidth={1.6} />}
+          {CatIcon && <CatIcon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />}
           <div>
-            <div className="text-[15px] font-bold text-neutral-100 leading-tight">{cat?.label}</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">{catNodes.length} nodes available</div>
+            <div className="text-[15px] font-bold text-white leading-tight">{cat?.label}</div>
+            <div className="text-[11px] text-white/50 mt-0.5">{catNodes.length} nodes available</div>
           </div>
-          <button onClick={handleClose} className="ml-auto p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
+          <button onClick={handleClose} className="ml-auto p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -182,23 +182,23 @@ export default function AddNodeSidebar() {
     <div className="flex flex-col h-full">
       <div className="flex items-start justify-between px-6 pt-6 pb-4 shrink-0">
         <div>
-          <h2 className="text-[16px] font-bold text-neutral-100 tracking-tight">Add next step</h2>
-          <p className="text-[13px] text-neutral-500 mt-1">Choose what happens after this node</p>
+          <h2 className="text-[16px] font-bold text-white tracking-tight">Add next step</h2>
+          <p className="text-[13px] text-white/50 mt-1">Choose what happens after this node</p>
         </div>
-        <button onClick={handleClose} className="p-1.5 text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
+        <button onClick={handleClose} className="p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>
 
       <div className="px-5 pb-4 shrink-0">
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-[#111] border border-[#333] rounded-xl focus-within:border-zinc-600 transition-colors">
-          <Search className="w-4 h-4 text-neutral-500 shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-white/[0.04] border border-white/15 rounded-xl focus-within:border-white/30 transition-colors">
+          <Search className="w-4 h-4 text-white/50 shrink-0" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search nodes..."
-            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-neutral-600"
+            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/40"
             autoFocus
           />
         </div>
@@ -209,7 +209,7 @@ export default function AddNodeSidebar() {
           filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Search className="w-8 h-8 text-neutral-700 mb-3" />
-              <p className="text-[13px] text-neutral-600">No nodes found</p>
+              <p className="text-[13px] text-white/40">No nodes found</p>
             </div>
           ) : (
             filtered.map((n) => <NodeRow key={n.key} nodeDef={n} onSelect={handleNodeClick} />)
@@ -238,7 +238,7 @@ function NodeRow({ nodeDef, onSelect }) {
       draggable
       onDragStart={onDragStart}
       onClick={() => onSelect(nodeDef)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <div className="w-8 h-8 shrink-0 flex items-center justify-center" style={{ minWidth: 32 }}>
         {nodeDef.logoUrl ? (
@@ -249,17 +249,17 @@ function NodeRow({ nodeDef, onSelect }) {
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
           />
         ) : (
-          <Icon className={`w-7 h-7 ${nodeDef.colorClass}`} strokeWidth={1.6} />
+          <Icon className="w-7 h-7 text-white" strokeWidth={1.6} />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{nodeDef.label}</div>
+        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{nodeDef.label}</div>
         {nodeDef.description && (
-          <div className="text-[12px] text-neutral-500 mt-0.5 group-hover:text-neutral-400 truncate">{nodeDef.description}</div>
+          <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{nodeDef.description}</div>
         )}
       </div>
       {hasActions && (
-        <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white/70 shrink-0 transition-colors" />
       )}
     </button>
   );
@@ -272,16 +272,16 @@ function CategoryCard({ cat, setPage }) {
   return (
     <button
       onClick={() => setPage(cat.id)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-[#2a2a2d] transition-all duration-150 text-left group"
+      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group"
     >
       <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ minWidth: 32 }}>
-        <CatIcon className="w-7 h-7 text-neutral-400 group-hover:text-neutral-200 transition-colors" strokeWidth={1.6} />
+        <CatIcon className="w-7 h-7 text-white/70 group-hover:text-white transition-colors" strokeWidth={1.6} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-neutral-100 group-hover:text-white leading-tight">{cat.label}</div>
-        <div className="text-[12px] text-neutral-500 mt-0.5">{catNodes.length} node{catNodes.length !== 1 ? "s" : ""}</div>
+        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{cat.label}</div>
+        <div className="text-[12px] text-white/50 mt-0.5">{catNodes.length} node{catNodes.length !== 1 ? "s" : ""}</div>
       </div>
-      <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-colors" />
+      <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white/70 shrink-0 transition-colors" />
     </button>
   );
 }

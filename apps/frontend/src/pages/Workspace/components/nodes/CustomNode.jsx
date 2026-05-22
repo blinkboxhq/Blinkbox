@@ -440,7 +440,7 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
+      : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
     const cardShadow = selected ? `0 0 20px rgba(${accent},0.08), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)` : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -476,7 +476,7 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
+      : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
     const cardShadow = selected
       ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -534,8 +534,8 @@ export default function CustomNode({ id, data, selected }) {
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
 
     const cardBorder = selected
-      ? "1.5px solid rgba(255,255,255,0.4)"
-      : "1px solid rgba(255,255,255,0.12)";
+      ? "2px solid rgba(255,255,255,0.45)"
+      : "2px solid rgba(255,255,255,0.18)";
     const cardShadow = selected
       ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -618,7 +618,7 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-            border: selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)",
+            border: selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)",
             boxShadow: selected ? "0 0 24px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6)" : "0 12px 40px rgba(0,0,0,0.6)" }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -655,12 +655,12 @@ export default function CustomNode({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-    : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
+    : selected ? "2px solid rgba(255,255,255,0.45)" : "2px solid rgba(255,255,255,0.18)";
   const cardBorder = cardBorderTop;
   const cardBottomBorder = status === "running" ? "2px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "2px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "2px solid rgba(239,68,68,0.4)"
-    : "2px solid rgba(255,255,255,0.18)";
+    : "3px solid rgba(255,255,255,0.22)";
   const cardShadow = status === "running" ? "0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "completed" ? "0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "failed" ? "0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)"
