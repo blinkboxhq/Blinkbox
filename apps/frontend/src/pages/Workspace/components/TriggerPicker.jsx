@@ -493,7 +493,7 @@ export default function TriggerPicker() {
   const isListPhase = filtered !== null || phase === "apps" || phase === "email" || phase === "actions";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 pointer-events-none">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 pointer-events-none backdrop-blur-md">
 
       {/* Floating search bar */}
       <motion.div
@@ -544,8 +544,8 @@ export default function TriggerPicker() {
           >
             <CircleMenu
               items={circleItems}
-              openIcon={<Zap size={20} className="text-white/80" strokeWidth={1.8} />}
-              closeIcon={<X size={20} className="text-white/80" />}
+              openIcon={<Zap size={20} className="text-black" strokeWidth={2} />}
+              closeIcon={<X size={20} className="text-black" strokeWidth={2} />}
               centerLabel="open menu"
             />
           </motion.div>

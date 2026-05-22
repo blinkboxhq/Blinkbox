@@ -24,13 +24,7 @@ const MenuItem = ({ icon, label, onClick, index, totalItems, isOpen, color }) =>
   return (
     <button
       onClick={isOpen ? onClick : undefined}
-      className={cn(
-        'rounded-full flex items-center justify-center absolute cursor-pointer',
-        'border transition-all duration-150',
-        hovering
-          ? 'bg-white/[0.12] border-white/30 scale-110'
-          : 'bg-zinc-900/80 border-zinc-700/60'
-      )}
+      className="rounded-full flex items-center justify-center absolute cursor-pointer"
       style={{ height: CONSTANTS.itemSize - 2, width: CONSTANTS.itemSize - 2 }}
     >
       <motion.div
@@ -47,10 +41,8 @@ const MenuItem = ({ icon, label, onClick, index, totalItems, isOpen, color }) =>
         style={{ height: CONSTANTS.itemSize - 2, width: CONSTANTS.itemSize - 2 }}
         className={cn(
           'rounded-full flex flex-col items-center justify-center absolute cursor-pointer shrink-0',
-          'border transition-all duration-150',
-          hovering
-            ? 'bg-white/[0.10] border-white/30'
-            : 'bg-zinc-900 border-zinc-700/50'
+          'transition-all duration-150',
+          hovering ? 'bg-white shadow-lg' : 'bg-white/90'
         )}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
@@ -58,7 +50,7 @@ const MenuItem = ({ icon, label, onClick, index, totalItems, isOpen, color }) =>
         whileHover={{ scale: 1.12 }}
         whileTap={{ scale: 0.95 }}
       >
-        <span style={{ color: color || '#a1a1aa' }}>{icon}</span>
+        <span className="text-black">{icon}</span>
         <AnimatePresence>
           {hovering && isOpen && (
             <motion.span
@@ -125,7 +117,7 @@ const MenuTrigger = ({
       <motion.button
         animate={animate}
         style={{ height: CONSTANTS.itemSize, width: CONSTANTS.itemSize }}
-        className="rounded-full flex items-center justify-center cursor-pointer z-50 bg-white/[0.08] border border-white/20 hover:bg-white/[0.12] hover:border-white/35 transition-all duration-150 shadow-lg"
+        className="rounded-full flex items-center justify-center cursor-pointer z-50 bg-white hover:bg-white/90 transition-all duration-150 shadow-xl"
         onClick={() => {
           if (isOpen) {
             setIsOpen(false);
