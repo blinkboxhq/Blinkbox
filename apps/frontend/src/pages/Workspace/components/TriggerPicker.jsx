@@ -510,24 +510,15 @@ export default function TriggerPicker() {
   // ── Root render ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={close}
-      />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       {/* Modal */}
       <motion.div
+        onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.95, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
         transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.8 }}
-        className="relative z-10 w-full max-w-[440px] mx-4 bg-neutral-950 border border-[#2a2a2d] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="relative z-10 w-full max-w-[440px] mx-4 bg-neutral-950 border border-[#2a2a2d] rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
         style={{ maxHeight: "82vh" }}
       >
         {/* Search bar — always visible */}
