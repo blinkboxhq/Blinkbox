@@ -84,7 +84,7 @@ export default function GlobalHeader({ user: userProp }) {
 
   return (
     <>
-    <header className="w-full h-14 bg-neutral-950 border-b border-[#333] flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-14 bg-neutral-950 border-b-2 border-white/15 flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
