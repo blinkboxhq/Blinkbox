@@ -5,15 +5,13 @@ import {
   Copy, Trash2, Pencil, Check, X, Loader2,
   Activity, Power, Globe, Clock, Mail, Zap, Hash,
   Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
+  Search, LayoutGrid, List, Box,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
 
-import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
-import { NodeCardSkeleton } from '../../components/ui/Skeleton';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
-import DashboardHeader from './components/DashboardHeader';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
@@ -384,126 +382,135 @@ export default function Dashboard() {
 
   if (!user) return <div className="h-screen w-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>;
 
+  const TRIGGER_COLOR = {
+    webhook: '#3b82f6', cron_trigger: '#f59e0b', gmail_trigger: '#ef4444',
+    imap_trigger: '#3b82f6', slack_trigger: '#8b5cf6', discord_trigger: '#6366f1',
+    github_trigger: '#a3a3a3', gitlab_trigger: '#f97316', rss_trigger: '#f97316',
+    shopify_trigger: '#10b981', stripe_trigger: '#8b5cf6', database_trigger: '#06b6d4',
+    telegram_trigger: '#0ea5e9', manual: '#525252',
+  };
+
   return (
-    <div className="flex h-screen bg-neutral-950 text-white overflow-hidden">
+    <div className="flex h-screen bg-[#080808] text-white overflow-hidden">
       <style>{`
         @keyframes dbFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes dbScaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        @keyframes dbSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes dbSlide  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
       <OnboardingModal />
-
-      <CreateAutomationBox
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreate={handleCreate}
-        isLoading={isCreating}
-      />
+      <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <WorkspaceHeader forceDashboard />
         <main className="flex-1 overflow-y-auto">
         <BeamsBackground className="min-h-full" intensity="subtle">
 
-          {/* ══ HERO — Brian chatbot ════════════════════════════════════════ */}
+          {/* ══ HERO ══════════════════════════════════════════════════════════ */}
           {activeTab === 'workflows' && (
             <div className="border-b border-[#111]">
               <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} />
             </div>
           )}
 
-          <div className="px-8 py-6 max-w-[1100px] mx-auto">
+          <div className="px-8 py-7 max-w-[1080px] mx-auto">
 
           {systemError && (
-            <div className="mb-5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
-              <AlertTriangle className="w-4 h-4 shrink-0" /> {systemError}
+            <div className="mb-5 px-3 py-2 rounded-xl border border-red-500/15 bg-red-500/5 flex items-center gap-2 text-[12px] text-red-400">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {systemError}
             </div>
           )}
 
           {/* ═══ WORKFLOWS ═══ */}
           {activeTab === 'workflows' && (
-            <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              {/* Section header */}
+            <div style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
+
+              {/* Header row */}
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[15px] font-semibold text-neutral-200">Your recent workflows</h2>
-                <DashboardHeader
-                  onInitialize={() => setIsModalOpen(true)}
-                  search={search} setSearch={setSearch}
-                  statusFilter={statusFilter} setStatusFilter={setStatusFilter}
-                  viewMode={viewMode} setViewMode={setViewMode}
-                  total={workflows.length}
-                  compact
-                />
+                <div className="flex items-center gap-3">
+                  <h2 className="text-[15px] font-semibold text-white">Workflows</h2>
+                  {workflows.length > 0 && (
+                    <span className="text-[11px] text-neutral-700 font-mono bg-[#111] border border-[#1e1e1e] px-2 py-0.5 rounded-full">{workflows.length}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Status filter */}
+                  <div className="flex items-center bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-0.5">
+                    {['all','active','draft'].map(f => (
+                      <button key={f} onClick={() => setStatusFilter(f)}
+                        className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${statusFilter === f ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300'}`}>
+                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-700" />
+                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+                      className="pl-7 pr-3 py-[5px] bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-[#2a2a2a] w-[140px] transition-colors" />
+                  </div>
+                  {/* View */}
+                  <div className="flex items-center bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-0.5">
+                    <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}><List className="w-3.5 h-3.5" /></button>
+                  </div>
+                  {/* New */}
+                  <button onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-[6px] bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all active:scale-[0.97] shrink-0">
+                    <Plus className="w-3.5 h-3.5" /> New workflow
+                  </button>
+                </div>
               </div>
 
               {workflowsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                  {Array.from({ length: 6 }).map((_, i) => <NodeCardSkeleton key={i} />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-[140px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
+                  ))}
                 </div>
               ) : filtered.length === 0 ? (
                 <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
               ) : viewMode === 'list' ? (
                 /* ── LIST VIEW ── */
-                <div className="border border-[#1e1e20] rounded-xl overflow-hidden">
+                <div className="rounded-2xl border border-[#161616] overflow-hidden">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-[#0d0d0f]">
+                      <tr className="bg-[#0a0a0a] border-b border-[#161616]">
                         <th className="w-10" />
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Name</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Status</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Trigger</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Updated</th>
-                        <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#444] uppercase tracking-wider">Team</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Name</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Trigger</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Updated</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Team</th>
                         <th className="w-10" />
                       </tr>
                     </thead>
                     <tbody>
                       {filtered.map((wf, i) => (
-                        <tr
-                          key={wf._id || wf.id}
-                          onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                          className="group border-t border-[#1a1a1c] hover:bg-white/[0.02] cursor-pointer transition-colors"
-                          style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}
-                        >
-                          {/* Toggle */}
-                          <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => handleToggleActive(wf)}
-                              className={`w-7 h-4 rounded-full relative transition-colors duration-200 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
-                            >
-                              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
-                            </button>
+                        <tr key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
+                          className="group border-t border-[#111] hover:bg-white/[0.015] cursor-pointer transition-colors"
+                          style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}>
+                          <td className="pl-4 py-3" onClick={e => e.stopPropagation()}>
+                            <div className="w-2 h-2 rounded-full" style={{ background: TRIGGER_COLOR[wf.trigger] || '#525252' }} />
                           </td>
-                          <td className="px-4 py-2.5">
-                            <p className="text-[13px] font-medium text-[#ccc] group-hover:text-white truncate max-w-[280px]">{wf.name}</p>
-                            {wf.description && <p className="text-[11px] text-[#444] truncate max-w-[280px] mt-0.5">{wf.description}</p>}
+                          <td className="px-4 py-3">
+                            <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
+                            {wf.description && <p className="text-[11px] text-[#3a3a3a] truncate max-w-[260px] mt-0.5">{wf.description}</p>}
                           </td>
-                          <td className="px-4 py-2.5">
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-600'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-700'}`} />
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-700'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-[#2a2a2a]'}`} />
                               {wf.status === 'active' ? 'Active' : 'Draft'}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5">
-                            <div className="flex items-center gap-2">
-                              <TriggerBadge trigger={wf.trigger || 'manual'} />
-                              {wf.nodeCount > 0 && <span className="text-[10px] text-[#333]">{wf.nodeCount}n</span>}
-                            </div>
-                          </td>
-                          <td className="px-4 py-2.5 text-[11px] text-[#444]">{timeAgo(wf.updatedAt)}</td>
-                          <td className="px-4 py-2.5"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
-                          <td className="px-3 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
-                              className="p-1 text-neutral-700 hover:text-neutral-400 rounded opacity-0 group-hover:opacity-100 transition-all"
-                            >
+                          <td className="px-4 py-3"><TriggerBadge trigger={wf.trigger || 'manual'} /></td>
+                          <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(wf.updatedAt)}</td>
+                          <td className="px-4 py-3"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
+                          <td className="px-3 py-3 relative" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
+                              className="p-1 text-neutral-800 hover:text-neutral-500 rounded opacity-0 group-hover:opacity-100 transition-all">
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
-                            {openMenuId === (wf._id || wf.id) && (
-                              <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
-                            )}
+                            {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />}
                           </td>
                         </tr>
                       ))}
@@ -513,50 +520,61 @@ export default function Dashboard() {
               ) : (
                 /* ── GRID VIEW ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {filtered.map((wf, i) => (
-                    <div
-                      key={wf._id || wf.id}
-                      onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                      className="group relative flex flex-col p-4 rounded-xl border border-[#1e1e20] bg-[#0d0d0f] hover:bg-[#111113] hover:border-[#2a2a2d] cursor-pointer transition-all duration-150 overflow-visible"
-                      style={{ animation: `dbSlide 0.15s ease-out ${i * 0.025}s both` }}
-                    >
-                      <div className="flex items-start justify-between mb-2.5">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleToggleActive(wf); }}
-                            className={`w-7 h-4 rounded-full relative transition-colors duration-200 shrink-0 ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-neutral-800'}`}
-                          >
-                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${wf.status === 'active' ? 'left-3.5' : 'left-0.5'}`} />
-                          </button>
-                          <h3 className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate">{wf.name}</h3>
-                        </div>
-                        <div className="relative shrink-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id)); }}
-                            className={`p-1 text-neutral-700 hover:text-neutral-400 rounded transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                          {openMenuId === (wf._id || wf.id) && (
-                            <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />
-                          )}
+                  {filtered.map((wf, i) => {
+                    const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
+                    const isActive = wf.status === 'active';
+                    return (
+                      <div key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
+                        className="group relative flex flex-col rounded-2xl border border-[#161616] bg-[#0c0c0c] hover:border-[#222] hover:bg-[#0f0f0f] cursor-pointer transition-all duration-200 overflow-hidden"
+                        style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
+
+                        {/* Colored top accent */}
+                        <div className="h-[2px] w-full shrink-0" style={{ background: accentColor, opacity: isActive ? 1 : 0.3 }} />
+
+                        <div className="flex flex-col flex-1 p-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <h3 className="text-[13.5px] font-semibold text-neutral-200 group-hover:text-white truncate leading-tight">{wf.name}</h3>
+                              <p className="text-[11px] text-[#3a3a3a] mt-1 line-clamp-2 leading-relaxed min-h-[2em]">
+                                {wf.description || <span className="italic">No description</span>}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {/* Status pill */}
+                              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${
+                                isActive
+                                  ? 'text-emerald-400 border-emerald-500/25 bg-emerald-500/10'
+                                  : 'text-[#333] border-[#1e1e1e] bg-transparent'
+                              }`}>
+                                {isActive ? '● Active' : 'Draft'}
+                              </span>
+                              {/* Menu */}
+                              <div className="relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
+                                  className={`p-1 rounded-md text-neutral-800 hover:text-neutral-500 hover:bg-white/[0.04] transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                  <MoreHorizontal className="w-3.5 h-3.5" />
+                                </button>
+                                {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Footer */}
+                          <div className="flex items-center justify-between pt-3 mt-auto border-t border-[#141414]">
+                            <div className="flex items-center gap-2">
+                              <TriggerBadge trigger={wf.trigger || 'manual'} />
+                              {wf.nodeCount > 0 && <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CollabAvatarStack collaborators={wf.collaborators || []} />
+                              <span className="text-[10px] text-[#333]">{timeAgo(wf.updatedAt)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-[11px] leading-relaxed mb-auto line-clamp-2 min-h-[2rem] text-[#555]">{wf.description || <span className="italic text-[#333]">No description</span>}</p>
-                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#1a1a1c]">
-                        <div className="flex items-center gap-2">
-                          <TriggerBadge trigger={wf.trigger || 'manual'} />
-                          {(wf.nodeCount > 0) && (
-                            <span className="text-[10px] text-[#333]">{wf.nodeCount}n</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CollabAvatarStack collaborators={wf.collaborators || []} />
-                          <span className="text-[10px] text-[#444]">{timeAgo(wf.updatedAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

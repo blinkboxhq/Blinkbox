@@ -9,21 +9,21 @@ function createBeam(width, height) {
     width: 30 + Math.random() * 60,
     length: height * 2.5,
     angle,
-    speed: 0.6 + Math.random() * 1.2,
-    opacity: 0.12 + Math.random() * 0.16,
-    hue: 190 + Math.random() * 70,
+    speed: 0.3 + Math.random() * 0.5,
+    opacity: 0.06 + Math.random() * 0.08,
+    hue: 220 + Math.random() * 60,
     pulse: Math.random() * Math.PI * 2,
-    pulseSpeed: 0.02 + Math.random() * 0.03,
+    pulseSpeed: 0.01 + Math.random() * 0.02,
   };
 }
 
-const OPACITY_MAP = { subtle: 0.28, medium: 0.55, strong: 0.85 };
+const OPACITY_MAP = { subtle: 0.35, medium: 0.6, strong: 0.85 };
 
-export default function BeamsBackground({ className = '', intensity = 'strong', children }) {
+export default function BeamsBackground({ className = '', intensity = 'subtle', children }) {
   const canvasRef = useRef(null);
-  const beamsRef = useRef([]);
-  const rafRef   = useRef(0);
-  const BEAMS    = 14;
+  const beamsRef  = useRef([]);
+  const rafRef    = useRef(0);
+  const BEAMS     = 8;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -52,10 +52,10 @@ export default function BeamsBackground({ className = '', intensity = 'strong', 
       const spacing = w / 3;
       beam.y      = h + 100;
       beam.x      = col * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
-      beam.width  = 100 + Math.random() * 100;
-      beam.speed  = 0.5 + Math.random() * 0.4;
-      beam.hue    = 190 + (index * 70) / BEAMS;
-      beam.opacity = 0.2 + Math.random() * 0.1;
+      beam.width  = 80 + Math.random() * 80;
+      beam.speed  = 0.3 + Math.random() * 0.4;
+      beam.hue    = 220 + (index * 60) / BEAMS;
+      beam.opacity = 0.05 + Math.random() * 0.07;
       return beam;
     }
 
@@ -63,14 +63,14 @@ export default function BeamsBackground({ className = '', intensity = 'strong', 
       ctx.save();
       ctx.translate(beam.x, beam.y);
       ctx.rotate((beam.angle * Math.PI) / 180);
-      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * OPACITY_MAP[intensity];
+      const po = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * OPACITY_MAP[intensity];
       const grad = ctx.createLinearGradient(0, 0, 0, beam.length);
-      grad.addColorStop(0,   `hsla(${beam.hue},85%,65%,0)`);
-      grad.addColorStop(0.1, `hsla(${beam.hue},85%,65%,${pulsingOpacity * 0.5})`);
-      grad.addColorStop(0.4, `hsla(${beam.hue},85%,65%,${pulsingOpacity})`);
-      grad.addColorStop(0.6, `hsla(${beam.hue},85%,65%,${pulsingOpacity})`);
-      grad.addColorStop(0.9, `hsla(${beam.hue},85%,65%,${pulsingOpacity * 0.5})`);
-      grad.addColorStop(1,   `hsla(${beam.hue},85%,65%,0)`);
+      grad.addColorStop(0,   `hsla(${beam.hue},70%,60%,0)`);
+      grad.addColorStop(0.1, `hsla(${beam.hue},70%,60%,${po * 0.5})`);
+      grad.addColorStop(0.4, `hsla(${beam.hue},70%,60%,${po})`);
+      grad.addColorStop(0.6, `hsla(${beam.hue},70%,60%,${po})`);
+      grad.addColorStop(0.9, `hsla(${beam.hue},70%,60%,${po * 0.5})`);
+      grad.addColorStop(1,   `hsla(${beam.hue},70%,60%,0)`);
       ctx.fillStyle = grad;
       ctx.fillRect(-beam.width / 2, 0, beam.width, beam.length);
       ctx.restore();
@@ -80,7 +80,7 @@ export default function BeamsBackground({ className = '', intensity = 'strong', 
       const w = canvas.parentElement?.clientWidth || window.innerWidth;
       const h = canvas.parentElement?.clientHeight || window.innerHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.filter = 'blur(35px)';
+      ctx.filter = 'blur(40px)';
       beamsRef.current.forEach((beam, i) => {
         beam.y -= beam.speed;
         beam.pulse += beam.pulseSpeed;
@@ -98,21 +98,14 @@ export default function BeamsBackground({ className = '', intensity = 'strong', 
   }, [intensity]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden bg-[#060606] ${className}`}>
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none"
-        style={{ filter: 'blur(28px)' }}
-      />
+    <div className={`relative w-full h-full overflow-hidden bg-[#080808] ${className}`}>
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ filter: 'blur(30px)', opacity: 0.6 }} />
       <motion.div
         className="absolute inset-0 pointer-events-none"
-        animate={{ opacity: [0.05, 0.15, 0.05] }}
-        transition={{ duration: 10, ease: 'easeInOut', repeat: Infinity }}
-        style={{ backdropFilter: 'blur(50px)' }}
+        animate={{ opacity: [0.02, 0.06, 0.02] }}
+        transition={{ duration: 12, ease: 'easeInOut', repeat: Infinity }}
       />
-      <div className="relative z-10 w-full h-full">
-        {children}
-      </div>
+      <div className="relative z-10 w-full h-full">{children}</div>
     </div>
   );
 }
