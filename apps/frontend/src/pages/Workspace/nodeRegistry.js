@@ -238,6 +238,14 @@ import imgPython from "../../assets/python.svg";
 import imgJS from "../../assets/javascript.svg";
 import imgArxiv from "../../assets/arxiv.svg";
 import imgFirebase from "../../assets/firebase.svg";
+import imgAWS from "../../assets/aws.svg";
+import imgLinkedIn from "../../assets/linkedin.svg";
+import imgBing from "../../assets/bing.svg";
+import imgTavily from "../../assets/tavily.svg";
+import imgExa from "../../assets/exa.svg";
+import imgWolfram from "../../assets/wolfram.svg";
+import imgWeather from "../../assets/weather.svg";
+import imgMoonshot from "../../assets/moonshot.svg";
 
 // Config Panels — existing
 import TriggerNode from "./components/nodes/TriggerNode";
@@ -934,6 +942,7 @@ export const NodeRegistry = {
   agent_moonshot: {
     label: "Kimi",
     icon: Brain,
+    logoUrl: imgMoonshot,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
     category: "ai",
@@ -1165,6 +1174,7 @@ export const NodeRegistry = {
   tool_bing_search: {
     label: "Bing Search",
     icon: Search,
+    logoUrl: imgBing,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     category: "ai",
@@ -1209,6 +1219,7 @@ export const NodeRegistry = {
   tool_tavily: {
     label: "Tavily Search",
     icon: Search,
+    logoUrl: imgTavily,
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     category: "ai",
@@ -1230,6 +1241,7 @@ export const NodeRegistry = {
   tool_exa: {
     label: "Exa Search",
     icon: Search,
+    logoUrl: imgExa,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
     category: "ai",
@@ -1345,6 +1357,7 @@ export const NodeRegistry = {
   tool_wolfram: {
     label: "Wolfram Alpha",
     icon: Atom,
+    logoUrl: imgWolfram,
     colorClass: "text-red-400",
     accentColor: "239,68,68",
     category: "ai",
@@ -2073,6 +2086,7 @@ export const NodeRegistry = {
   tool_aws: {
     label: "AWS CLI",
     icon: Server,
+    logoUrl: imgAWS,
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     category: "ai",
@@ -2323,6 +2337,7 @@ export const NodeRegistry = {
   tool_weather: {
     label: "Weather",
     icon: Thermometer,
+    logoUrl: imgWeather,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     category: "ai",
@@ -4016,6 +4031,7 @@ export const NodeRegistry = {
   linkedin_post: {
     label: "LinkedIn Post",
     icon: Users,
+    logoUrl: imgLinkedIn,
     colorClass: "text-[#0A66C2]",
     accentColor: "10,102,194",
     ConfigPanel: LinkedInPostNode,
