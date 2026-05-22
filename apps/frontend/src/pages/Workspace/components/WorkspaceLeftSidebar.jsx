@@ -154,7 +154,7 @@ export default function WorkspaceLeftSidebar() {
           </div>
 
           {/* Categorized Node Palette */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 px-2 pt-2">
             {grouped.map(({ category, nodes }) => (
               <CategoryFolder key={category.id} category={category} nodes={nodes} />
             ))}
