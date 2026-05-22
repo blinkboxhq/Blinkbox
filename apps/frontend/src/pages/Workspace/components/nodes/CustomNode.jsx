@@ -171,7 +171,7 @@ function NodeIcon({ nodeDef, size = "md" }) {
   const sizeMap = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" };
   const s = sizeMap[size];
   if (nodeDef.logoUrl) return <img src={nodeDef.logoUrl} alt={nodeDef.label} className={`${s} object-contain shrink-0`} style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />;
-  return <Icon className={`${s} shrink-0 ${nodeDef.colorClass}`} strokeWidth={1.75} />;
+  return <Icon className={`${s} shrink-0 text-white`} strokeWidth={1.75} />;
 }
 
 // ─── Toolbar button ───────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ function SuggestionGhostNode({ data }) {
           <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-12 h-12 object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className={`w-12 h-12 ${nodeDef.colorClass}`} strokeWidth={1} />
+          <Icon className="w-12 h-12 text-white" strokeWidth={1} />
         )}
       </div>
 
@@ -440,7 +440,7 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? `1.5px solid rgba(${accent},0.45)` : "1px solid rgba(55,55,60,0.6)";
+      : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
     const cardShadow = selected ? `0 0 20px rgba(${accent},0.08), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)` : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -455,13 +455,13 @@ export default function CustomNode({ id, data, selected }) {
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-14 h-14 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className={`w-14 h-14 ${(variantDef || nodeDef).colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+            <Icon className="w-14 h-14 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
-          <span className="text-[11px] font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-zinc-500 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
+          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
@@ -476,9 +476,9 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
       : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-      : selected ? `1.5px solid rgba(${accent},0.5)` : `1px solid rgba(${accent},0.2)`;
+      : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
     const cardShadow = selected
-      ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
+      ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -499,8 +499,8 @@ export default function CustomNode({ id, data, selected }) {
           {badge}
           {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
 
-          <Bot className={`w-10 h-10 ${nodeDef.colorClass} opacity-75 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
-          <p className="text-[11px] font-bold text-zinc-300 mt-1.5 group-hover:text-zinc-100 transition-colors">{nodeDef.label || data.label || "AI Agent"}</p>
+          <Bot className="w-10 h-10 text-white opacity-75 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+          <p className="text-[11px] font-bold text-white mt-1.5">{nodeDef.label || data.label || "AI Agent"}</p>
 
           {/* Slot labels above bottom edge */}
           <div className="absolute bottom-3 left-0 right-0 grid pointer-events-none select-none"
@@ -534,10 +534,10 @@ export default function CustomNode({ id, data, selected }) {
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
 
     const cardBorder = selected
-      ? `1.5px solid rgba(${accent},0.5)`
-      : `1px solid rgba(${accent},0.2)`;
+      ? "1.5px solid rgba(255,255,255,0.4)"
+      : "1px solid rgba(255,255,255,0.12)";
     const cardShadow = selected
-      ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
+      ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -586,7 +586,7 @@ export default function CustomNode({ id, data, selected }) {
             <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className={`w-8 h-8 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+            <Icon className="w-8 h-8 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
 
@@ -618,8 +618,8 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-            border: selected ? `1.5px solid rgba(${accent},0.5)` : `1px solid rgba(${accent},0.25)`,
-            boxShadow: selected ? `0 0 24px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6)` : "0 12px 40px rgba(0,0,0,0.6)" }}>
+            border: selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)",
+            boxShadow: selected ? "0 0 24px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6)" : "0 12px 40px rgba(0,0,0,0.6)" }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
             <div className="flex items-center gap-2">
@@ -655,16 +655,16 @@ export default function CustomNode({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "1.5px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
-    : selected ? `1.5px solid rgba(${accent},0.5)` : `1px solid rgba(${accent},0.2)`;
+    : selected ? "1.5px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.12)";
   const cardBorder = cardBorderTop;
   const cardBottomBorder = status === "running" ? "2px solid rgba(59,130,246,0.5)"
     : status === "completed" ? "2px solid rgba(16,185,129,0.4)"
     : status === "failed" ? "2px solid rgba(239,68,68,0.4)"
-    : `2px solid rgba(${accent},0.35)`;
+    : "2px solid rgba(255,255,255,0.18)";
   const cardShadow = status === "running" ? "0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "completed" ? "0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)"
     : status === "failed" ? "0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)"
-    : selected ? `0 0 20px rgba(${accent},0.12), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`
+    : selected ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
     : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   return (
@@ -694,7 +694,7 @@ export default function CustomNode({ id, data, selected }) {
         {nodeDef.logoUrl ? (
           <img src={nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className={`w-12 h-12 ${nodeDef.colorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+          <Icon className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
         )}
       </motion.div>
 
@@ -719,13 +719,13 @@ export default function CustomNode({ id, data, selected }) {
       )}
 
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
-        <span className="text-[11px] font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors duration-200 leading-snug block truncate px-1">
+        <span className="text-[11px] font-semibold text-white leading-snug block truncate px-1">
           {data.config?.customLabel || data.config?.selectedAction || nodeDef.label || data.label}
         </span>
         {(data.config?.customLabel || data.config?.selectedAction) && (
-          <span className="text-[9px] font-semibold text-zinc-500 mt-0.5 block truncate px-1">{nodeDef.label}</span>
+          <span className="text-[9px] font-semibold text-white/50 mt-0.5 block truncate px-1">{nodeDef.label}</span>
         )}
-        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-zinc-500 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
+        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
         {nodeOutput && status === "completed" && (
           <NodeOutputChip output={nodeOutput} />
         )}
