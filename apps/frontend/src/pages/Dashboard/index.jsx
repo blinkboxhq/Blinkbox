@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
@@ -96,7 +97,7 @@ function timeAgo(d) {
 }
 
 // ─── Dropdown menu ─────────────────────────────────────────────────────────
-function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClose }) {
+function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClose, anchorRect }) {
   const [mode, setMode] = useState('menu');
   const [val, setVal] = useState(wf.name);
   const [busy, setBusy] = useState(false);
@@ -110,51 +111,66 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
 
   const exec = async (fn, ...args) => { setBusy(true); await fn(...args); setBusy(false); onClose(); };
 
-  if (mode === 'rename') {
-    return (
-      <div ref={ref} className="absolute right-0 bottom-full mb-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
-        <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider px-1 mb-1.5">Rename</p>
-        <div className="flex items-center gap-1.5">
-          <input autoFocus value={val} onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())} className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[12px] text-white focus:outline-none focus:border-neutral-600" />
-          <button onClick={() => val.trim() && exec(onRename, wf._id || wf.id, val.trim())} disabled={busy} className="p-1 text-neutral-400 hover:text-white disabled:opacity-50"><Check className="w-3.5 h-3.5" /></button>
-          <button onClick={() => setMode('menu')} className="p-1 text-neutral-600 hover:text-white"><X className="w-3.5 h-3.5" /></button>
-        </div>
-      </div>
-    );
-  }
+  const menuW = mode === 'rename' || mode === 'confirmDelete' ? 224 : 160;
+  const pos = anchorRect
+    ? { top: anchorRect.bottom + 6, left: Math.min(anchorRect.right - menuW, window.innerWidth - menuW - 8) }
+    : { top: 80, right: 16 };
 
-  if (mode === 'confirmDelete') {
-    return (
-      <div ref={ref} className="absolute right-0 bottom-full mb-1 z-40 w-56 bg-[#111] border border-zinc-700 rounded-lg shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
-        <p className="text-[12px] text-neutral-300 mb-3">Delete <strong>{wf.name}</strong>? This cannot be undone.</p>
-        <div className="flex items-center gap-2 justify-end">
-          <button onClick={() => setMode('menu')} className="text-[12px] text-neutral-500 hover:text-white px-2 py-1">Cancel</button>
-          <button onClick={() => exec(onDelete, wf._id || wf.id)} disabled={busy} className="text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded hover:bg-red-500/20 disabled:opacity-50">
-            {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Delete'}
-          </button>
-        </div>
+  const shell = (children) => createPortal(
+    <div ref={ref} style={{ position: 'fixed', zIndex: 9999, width: menuW, ...pos, fontFamily: 'system-ui, sans-serif', fontSize: 12 }}
+      className="bg-[#111] border border-zinc-800 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+      onClick={e => e.stopPropagation()}>
+      {children}
+    </div>,
+    document.body
+  );
+
+  if (mode === 'rename') return shell(
+    <div className="p-2.5">
+      <p className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider px-1 mb-2">Rename</p>
+      <div className="flex items-center gap-1.5">
+        <input autoFocus value={val} onChange={e => setVal(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())}
+          className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[12px] text-white focus:outline-none focus:border-neutral-500" />
+        <button onClick={() => val.trim() && exec(onRename, wf._id || wf.id, val.trim())} disabled={busy}
+          className="p-1.5 text-neutral-400 hover:text-white disabled:opacity-50"><Check className="w-3.5 h-3.5" /></button>
+        <button onClick={() => setMode('menu')} className="p-1.5 text-neutral-600 hover:text-white"><X className="w-3.5 h-3.5" /></button>
       </div>
-    );
-  }
+    </div>
+  );
+
+  if (mode === 'confirmDelete') return shell(
+    <div className="p-3">
+      <p className="text-[12px] text-neutral-300 mb-3 leading-relaxed">Delete <strong className="text-white">{wf.name}</strong>? This cannot be undone.</p>
+      <div className="flex items-center gap-2 justify-end">
+        <button onClick={() => setMode('menu')} className="text-[11px] text-neutral-500 hover:text-white px-2.5 py-1.5 rounded-lg transition-colors">Cancel</button>
+        <button onClick={() => exec(onDelete, wf._id || wf.id)} disabled={busy}
+          className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/20 disabled:opacity-50 transition-all">
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Delete'}
+        </button>
+      </div>
+    </div>
+  );
 
   const isActive = wf.status === 'active';
-  const btnCls = 'w-full flex items-center gap-2 px-3 py-[5px] text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors';
+  const btnCls = 'w-full flex items-center gap-2.5 px-3 py-2 text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors text-left';
   const iconSz = { width: 13, height: 13, flexShrink: 0 };
 
-  return (
-    <div ref={ref} style={{ fontSize: 12 }} className="absolute right-0 bottom-full mb-1 z-40 w-40 bg-[#111] border border-zinc-800 rounded-lg shadow-2xl py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+  return shell(
+    <div className="py-1">
       <button onClick={() => exec(onToggleActive, wf)} className={btnCls}>
         <Power style={iconSz} /> {isActive ? 'Deactivate' : 'Set Active'}
       </button>
-      <div className="border-t border-zinc-800 my-1" />
+      <div className="border-t border-zinc-800/60 my-1" />
       <button onClick={() => setMode('rename')} className={btnCls}>
         <Pencil style={iconSz} /> Rename
       </button>
       <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className={`${btnCls} disabled:opacity-40`}>
         {busy ? <Loader2 style={iconSz} className="animate-spin" /> : <Copy style={iconSz} />} Duplicate
       </button>
-      <div className="border-t border-zinc-800 my-1" />
-      <button onClick={() => setMode('confirmDelete')} style={{ fontSize: 12 }} className="w-full flex items-center gap-2 px-3 py-[5px] text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors">
+      <div className="border-t border-zinc-800/60 my-1" />
+      <button onClick={() => setMode('confirmDelete')}
+        className="w-full flex items-center gap-2.5 px-3 py-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors text-left">
         <Trash2 style={iconSz} /> Delete
       </button>
     </div>
@@ -179,6 +195,9 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const openMenu = (e, id) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuAnchor(r); setOpenMenuId(openMenuId === id ? null : id); };
+  const closeMenu = () => { setOpenMenuId(null); setMenuAnchor(null); };
 
   const [systemStats, setSystemStats] = useState(null);
   const [isTogglingPause, setIsTogglingPause] = useState(false);
@@ -505,12 +524,12 @@ export default function Dashboard() {
                           <td className="px-4 py-3"><TriggerBadge trigger={wf.trigger || 'manual'} /></td>
                           <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(wf.updatedAt)}</td>
                           <td className="px-4 py-3"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
-                          <td className="px-3 py-3 relative" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
+                          <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                            <button onClick={e => openMenu(e, wf._id || wf.id)}
                               className="p-1 text-neutral-800 hover:text-neutral-500 rounded opacity-0 group-hover:opacity-100 transition-all">
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
-                            {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />}
+                            {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />}
                           </td>
                         </tr>
                       ))}
@@ -523,54 +542,56 @@ export default function Dashboard() {
                   {filtered.map((wf, i) => {
                     const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
                     const isActive = wf.status === 'active';
+                    const wfId = wf._id || wf.id;
                     return (
-                      <div key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                        className="group relative flex flex-col rounded-2xl border border-[#161616] bg-[#0c0c0c] hover:border-[#222] hover:bg-[#0f0f0f] cursor-pointer transition-all duration-200 overflow-hidden"
+                      <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
+                        className="group relative flex flex-col rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] hover:border-[#262626] cursor-pointer transition-all duration-200 overflow-hidden"
                         style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
 
-                        {/* Colored top accent */}
-                        <div className="h-[2px] w-full shrink-0" style={{ background: accentColor, opacity: isActive ? 1 : 0.3 }} />
-
-                        <div className="flex flex-col flex-1 p-4">
-                          {/* Header */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1 min-w-0 pr-2">
-                              <h3 className="text-[13.5px] font-semibold text-neutral-200 group-hover:text-white truncate leading-tight">{wf.name}</h3>
-                              <p className="text-[11px] text-[#3a3a3a] mt-1 line-clamp-2 leading-relaxed min-h-[2em]">
-                                {wf.description || <span className="italic">No description</span>}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {/* Status pill */}
-                              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${
-                                isActive
-                                  ? 'text-emerald-400 border-emerald-500/25 bg-emerald-500/10'
-                                  : 'text-[#333] border-[#1e1e1e] bg-transparent'
-                              }`}>
-                                {isActive ? '● Active' : 'Draft'}
-                              </span>
-                              {/* Menu */}
-                              <div className="relative" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setOpenMenuId(openMenuId === (wf._id || wf.id) ? null : (wf._id || wf.id))}
-                                  className={`p-1 rounded-md text-neutral-800 hover:text-neutral-500 hover:bg-white/[0.04] transition-all ${openMenuId === (wf._id || wf.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                  <MoreHorizontal className="w-3.5 h-3.5" />
-                                </button>
-                                {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={() => setOpenMenuId(null)} />}
-                              </div>
-                            </div>
+                        {/* Top row: name + status + menu */}
+                        <div className="flex items-start justify-between px-4 pt-4 pb-3">
+                          <div className="flex-1 min-w-0 pr-2">
+                            <h3 className="text-[13px] font-semibold text-neutral-200 group-hover:text-white truncate">{wf.name}</h3>
+                            <p className="text-[11px] text-[#383838] mt-0.5 truncate">
+                              {wf.description || 'No description'}
+                            </p>
                           </div>
-
-                          {/* Footer */}
-                          <div className="flex items-center justify-between pt-3 mt-auto border-t border-[#141414]">
-                            <div className="flex items-center gap-2">
-                              <TriggerBadge trigger={wf.trigger || 'manual'} />
-                              {wf.nodeCount > 0 && <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <CollabAvatarStack collaborators={wf.collaborators || []} />
-                              <span className="text-[10px] text-[#333]">{timeAgo(wf.updatedAt)}</span>
-                            </div>
+                          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                              isActive ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/8' : 'text-[#3a3a3a] border-[#1e1e1e]'
+                            }`}>
+                              {isActive ? 'Active' : 'Draft'}
+                            </span>
+                            <button onClick={e => openMenu(e, wfId)}
+                              className={`p-1 rounded-md text-[#333] hover:text-neutral-400 hover:bg-white/[0.04] transition-all ${openMenuId === wfId ? 'opacity-100 text-neutral-400' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                            {openMenuId === wfId && <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />}
                           </div>
+                        </div>
+
+                        {/* Canvas area — dot grid */}
+                        <div className="mx-3 rounded-lg overflow-hidden border border-[#181818] bg-[#0a0a0a]" style={{ height: 100,
+                          backgroundImage: 'radial-gradient(circle, #1e1e1e 1px, transparent 1px)',
+                          backgroundSize: '18px 18px' }}>
+                          {/* Active accent glow */}
+                          {isActive && (
+                            <div className="w-full h-full" style={{ background: `radial-gradient(ellipse at 50% 120%, ${accentColor}18 0%, transparent 70%)` }} />
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {isActive
+                              ? <span className="flex items-center gap-1.5 text-[10px] text-emerald-500"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />online</span>
+                              : <span className="flex items-center gap-1.5 text-[10px] text-[#333]"><span className="w-1.5 h-1.5 rounded-full bg-[#282828]" />draft</span>
+                            }
+                            <span className="text-[#222]">·</span>
+                            <TriggerBadge trigger={wf.trigger || 'manual'} />
+                            {wf.nodeCount > 0 && <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>}
+                          </div>
+                          <span className="text-[10px] text-[#2e2e2e]">{timeAgo(wf.updatedAt)}</span>
                         </div>
                       </div>
                     );
