@@ -53,7 +53,8 @@ export default function BrianBar({ onSubmit }) {
   const canSend = value.trim().length > 0 && !loading;
 
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-8 flex flex-col items-center">
+    <div className="w-full max-w-[680px]">
       <style>{`
         @keyframes gradientMove { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
         @keyframes gradientSpin { 0% { background-position:0% 50%; } 100% { background-position:300% 50%; } }
@@ -160,6 +161,7 @@ export default function BrianBar({ onSubmit }) {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
