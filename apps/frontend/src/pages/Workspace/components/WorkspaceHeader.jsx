@@ -40,9 +40,11 @@ function UserBubble({ user, title, onClick, color, pulse = false }) {
   );
 }
 
-export default function WorkspaceHeader() {
+export default function WorkspaceHeader({ forceDashboard = false }) {
   const navigate    = useNavigate();
-  const { id }     = useParams();
+  const { id: routeId } = useParams();
+  const id = forceDashboard ? undefined : routeId;
+  const isDashboard = !id;
 
   const [versionOpen,  setVersionOpen]  = useState(false);
   const [shortcutsOpen,setShortcutsOpen]= useState(false);
@@ -132,49 +134,54 @@ export default function WorkspaceHeader() {
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => navigate('/dashboard')} title="Back to dashboard" className={ICON}>
-            <ArrowLeft className="w-3.5 h-3.5" />
-          </button>
-
-          <div className={DIV} />
-
-          <nav className="flex items-center gap-1 text-[11px] min-w-0">
-            <button onClick={() => navigate('/dashboard')}
-              className="text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">
-              Workflows
-            </button>
-            <ChevronDown className="w-3 h-3 text-neutral-700 rotate-[-90deg] shrink-0" />
-            <span className="text-neutral-300 font-medium truncate max-w-[160px]" title={workflowName}>
-              {workflowName || 'Untitled'}
-            </span>
-          </nav>
-
-          {isSaving && (
-            <div className="flex items-center gap-1 text-[10px] text-neutral-700 shrink-0 ml-1">
-              <Loader2 className="w-2.5 h-2.5 animate-spin" />
-              <span>Saving</span>
-            </div>
+          {isDashboard ? (
+            <span className="text-[13px] font-semibold text-neutral-200">Dashboard</span>
+          ) : (
+            <>
+              <button onClick={() => navigate('/dashboard')} title="Back to dashboard" className={ICON}>
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </button>
+              <div className={DIV} />
+              <nav className="flex items-center gap-1 text-[11px] min-w-0">
+                <button onClick={() => navigate('/dashboard')}
+                  className="text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">
+                  Workflows
+                </button>
+                <ChevronDown className="w-3 h-3 text-neutral-700 rotate-[-90deg] shrink-0" />
+                <span className="text-neutral-300 font-medium truncate max-w-[160px]" title={workflowName}>
+                  {workflowName || 'Untitled'}
+                </span>
+              </nav>
+              {isSaving && (
+                <div className="flex items-center gap-1 text-[10px] text-neutral-700 shrink-0 ml-1">
+                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  <span>Saving</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* ── CENTER — panel toggles ────────────────────────────── */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-0.5">
-            {panelToggles.map(({ key, title, active, onClick, icon }) => (
-              <button key={key} onClick={onClick} title={title}
-                className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
-                  ${active ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'}`}>
-                {icon}
-              </button>
-            ))}
+        {/* ── CENTER — panel toggles (workspace only) ───────────── */}
+        {!isDashboard && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-0.5">
+              {panelToggles.map(({ key, title, active, onClick, icon }) => (
+                <button key={key} onClick={onClick} title={title}
+                  className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
+                    ${active ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'}`}>
+                  {icon}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── RIGHT ────────────────────────────────────────────── */}
         <div className="flex items-center gap-1.5">
 
-          {/* Live collaborators */}
-          {presence.length > 0 && (
+          {/* Live collaborators (workspace only) */}
+          {!isDashboard && presence.length > 0 && (
             <>
               <div className="flex items-center -space-x-1.5 mr-0.5">
                 {presence.slice(0, 4).map(p => (
@@ -200,47 +207,47 @@ export default function WorkspaceHeader() {
 
           <NotificationBell />
 
-          <button onClick={() => setCollabOpen(true)} title="Share & collaborators"
-            className={`${TEXT} bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]`}>
-            <Users className="w-3.5 h-3.5" />
-            Share
-            {presence.length > 0 && (
-              <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold flex items-center justify-center">
-                {presence.length}
-              </span>
-            )}
-          </button>
+          {!isDashboard && (
+            <>
+              <button onClick={() => setCollabOpen(true)} title="Share & collaborators"
+                className={`${TEXT} bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]`}>
+                <Users className="w-3.5 h-3.5" />
+                Share
+                {presence.length > 0 && (
+                  <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold flex items-center justify-center">
+                    {presence.length}
+                  </span>
+                )}
+              </button>
 
-          <div className={DIV} />
+              <div className={DIV} />
 
-          <button onClick={() => setVersionOpen(true)} title="Version history" className={ICON}>
-            <Clock className="w-3.5 h-3.5" />
-          </button>
+              <button onClick={() => setVersionOpen(true)} title="Version history" className={ICON}>
+                <Clock className="w-3.5 h-3.5" />
+              </button>
 
-          <button onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" className={ICON}>
-            <Keyboard className="w-3.5 h-3.5" />
-          </button>
+              <button onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" className={ICON}>
+                <Keyboard className="w-3.5 h-3.5" />
+              </button>
 
-          <div className={DIV} />
+              <div className={DIV} />
 
-          {/* Activate toggle */}
-          <button
-            onClick={() => activateEngine(id)}
-            disabled={isActivating || nodeCount === 0}
-            title={isActive ? 'Click to deactivate' : 'Activate — go live'}
-            className={`${TEXT} disabled:opacity-40 disabled:cursor-not-allowed
-              ${isActive
-                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]'}`}
-          >
-            {isActivating
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <Power className="w-3.5 h-3.5" />
-            }
-            {isActive ? 'Active' : 'Activate'}
-          </button>
+              <button
+                onClick={() => activateEngine(id)}
+                disabled={isActivating || nodeCount === 0}
+                title={isActive ? 'Click to deactivate' : 'Activate — go live'}
+                className={`${TEXT} disabled:opacity-40 disabled:cursor-not-allowed
+                  ${isActive
+                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]'}`}
+              >
+                {isActivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
+                {isActive ? 'Active' : 'Activate'}
+              </button>
 
-          <div className={DIV} />
+              <div className={DIV} />
+            </>
+          )}
 
           <UserBubble user={user} title={`${user?.name || 'Profile'} — click to edit`} onClick={() => setProfileOpen(true)} />
         </div>

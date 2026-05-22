@@ -9,7 +9,7 @@ import {
 import api from '../../lib/api';
 import { toast } from 'sonner';
 
-import GlobalHeader from '../../components/GlobalHeader';
+import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
 import { NodeCardSkeleton } from '../../components/ui/Skeleton';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
@@ -402,7 +402,7 @@ export default function Dashboard() {
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <GlobalHeader user={user} />
+        <WorkspaceHeader forceDashboard />
         <main className="flex-1 overflow-y-auto bg-[#060606]">
         <div className="p-8 max-w-[1100px] mx-auto">
 
