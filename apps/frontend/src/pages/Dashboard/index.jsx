@@ -21,6 +21,7 @@ import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
 import BeamsBackground from '../../components/ui/BeamsBackground';
 import DashboardHero from './components/DashboardHero';
+import WorkflowPreview from './components/WorkflowPreview';
 const TRIGGER_META = {
   manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
   webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
@@ -570,14 +571,9 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Canvas area — dot grid */}
-                        <div className="mx-3 rounded-lg overflow-hidden border border-[#181818] bg-[#0a0a0a]" style={{ height: 100,
-                          backgroundImage: 'radial-gradient(circle, #1e1e1e 1px, transparent 1px)',
-                          backgroundSize: '18px 18px' }}>
-                          {/* Active accent glow */}
-                          {isActive && (
-                            <div className="w-full h-full" style={{ background: `radial-gradient(ellipse at 50% 120%, ${accentColor}18 0%, transparent 70%)` }} />
-                          )}
+                        {/* Mini workflow canvas */}
+                        <div className="px-3">
+                          <WorkflowPreview preview={wf.preview} accentColor={accentColor} />
                         </div>
 
                         {/* Footer */}

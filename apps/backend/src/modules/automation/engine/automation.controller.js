@@ -537,7 +537,13 @@ export async function getAutomations(req, res) {
         { $sort: { createdAt: -1 } },
         { $skip: skip },
         { $limit: limit },
-        { $addFields: { nodeCount: { $size: { $ifNull: ['$nodes', []] } } } },
+        { $addFields: {
+          nodeCount: { $size: { $ifNull: ['$nodes', []] } },
+          preview: {
+            nodes: { $map: { input: { $ifNull: ['$nodes', []] }, as: 'n', in: { id: '$$n.id', type: '$$n.type', x: '$$n.position.x', y: '$$n.position.y' } } },
+            edges: { $map: { input: { $ifNull: ['$edges', []] }, as: 'e', in: { s: '$$e.source', t: '$$e.target' } } },
+          },
+        }},
         { $project: { nodes: 0, edges: 0 } },
       ]),
       Automation.countDocuments(filter),
