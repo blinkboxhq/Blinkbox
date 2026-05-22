@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   MousePointerClick,
@@ -13,6 +14,7 @@ import {
   ArrowLeft,
   ChevronRight,
 } from "lucide-react";
+import { CircleMenu } from "../../../components/ui/circle-menu";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_ACTIONS } from "../triggerActions";
 import { playNodeLand } from "../../../lib/sounds";
@@ -95,79 +97,64 @@ const APP_TRIGGERS = [
   { id: "reddit",          backendType: "reddit_trigger",          logoUrl: imgReddit,         label: "Reddit",              description: "New post in a subreddit. Optional keyword filter." },
   { id: "rss",             backendType: "rss_trigger",             logoUrl: imgRss,            label: "RSS / Atom",          description: "New article or item in any feed." },
   { id: "database",        backendType: "db_trigger",              logoUrl: imgPostgres,       label: "Database",            description: "New or updated row in PostgreSQL or MySQL." },
-  { id: "price_alert",     backendType: "price_alert_trigger",     logoUrl: imgBitcoin,        label: "Crypto Price Alert",  description: "Coin price crosses your threshold. Powered by CoinGecko." },
+  { id: "price_alert",     backendType: "price_alert_trigger",     logoUrl: imgBitcoin,        label: "Crypto Price Alert",  description: "Coin price crosses your threshold." },
   { id: "ssh",             backendType: "ssh_trigger",             logoUrl: imgSsh,            label: "SSH Command",         description: "Run a command on a remote server and trigger on output." },
-  { id: "docker",          backendType: "docker_trigger",          logoUrl: imgDocker,         label: "Docker Event",        description: "Container started, stopped, image pulled — any Docker event." },
+  { id: "docker",          backendType: "docker_trigger",          logoUrl: imgDocker,         label: "Docker Event",        description: "Container started, stopped, image pulled." },
   { id: "jira",            backendType: "jira_trigger",            logoUrl: imgJira,           label: "Jira",                description: "New issue matching a JQL filter in your Jira project." },
   { id: "trello",          backendType: "trello_trigger",          logoUrl: imgTrello,         label: "Trello",              description: "Card created or moved to a list on your board." },
-
-  // Google
-  { id: "google_sheets",  backendType: "google_sheets_trigger",   logoUrl: imgGoogleSheets,   label: "Google Sheets",       description: "New row added to a spreadsheet." },
-  { id: "google_drive",   backendType: "webhook",                  logoUrl: imgGoogleDrive,    label: "Google Drive",        description: "File uploaded, shared, or modified." },
-  { id: "google_docs",    backendType: "webhook",                  logoUrl: imgGoogleDocs,     label: "Google Docs",         description: "Document edited or commented on." },
-  { id: "google_forms",   backendType: "webhook",                  logoUrl: imgGoogleForms,    label: "Google Forms",        description: "Form response submitted." },
-
-  // Microsoft
-  { id: "outlook",        backendType: "outlook_trigger",          logoUrl: imgOutlook,        label: "Outlook",             description: "New email in your Microsoft 365 inbox." },
-  { id: "teams",          backendType: "teams_trigger",            logoUrl: imgTeams,          label: "Microsoft Teams",     description: "Message posted in a channel." },
-  { id: "onedrive",       backendType: "webhook",                  logoUrl: imgOneDrive,       label: "OneDrive",            description: "File created or modified in OneDrive." },
-  { id: "sharepoint",     backendType: "webhook",                  logoUrl: imgSharePoint,     label: "SharePoint",          description: "List item created or updated." },
-  { id: "azure_devops",   backendType: "webhook",                  logoUrl: imgAzureDevOps,    label: "Azure DevOps",        description: "Work item created, PR opened, pipeline triggered." },
-
-  // DevOps / Security
-  { id: "gitlab",         backendType: "gitlab_trigger",           logoUrl: imgGitLab,         label: "GitLab",              description: "Merge request, issue, or pipeline event." },
-  { id: "sentry",         backendType: "webhook",                  logoUrl: imgSentry,         label: "Sentry",              description: "New error or issue created in your project." },
-  { id: "vercel",         backendType: "webhook",                  logoUrl: imgVercel,         label: "Vercel",              description: "Deployment succeeded, failed, or cancelled." },
-  { id: "netlify",        backendType: "webhook",                  logoUrl: imgNetlify,        label: "Netlify",             description: "Build or deploy event on your site." },
-  { id: "pagerduty",      backendType: "webhook",                  logoUrl: imgPagerDuty,      label: "PagerDuty",           description: "Alert triggered or resolved." },
-  { id: "datadog",        backendType: "webhook",                  logoUrl: imgDatadog,        label: "Datadog",             description: "Monitor alert fired." },
-  { id: "http_monitor",   backendType: "http_monitor_trigger",     logoUrl: imgVercel,         label: "HTTP Monitor",        description: "URL goes down, comes back up, or responds slowly." },
-
-  // Business / PM
-  { id: "zendesk",        backendType: "webhook",                  logoUrl: imgZendesk,        label: "Zendesk",             description: "New ticket or ticket status changed." },
-  { id: "calendly",       backendType: "webhook",                  logoUrl: imgCalendly,       label: "Calendly",            description: "Meeting booked or cancelled." },
-  { id: "mailchimp",      backendType: "webhook",                  logoUrl: imgMailchimp,      label: "Mailchimp",           description: "Subscriber added, unsubscribed, or campaign sent." },
-  { id: "asana",          backendType: "asana_trigger",            logoUrl: imgAsana,          label: "Asana",               description: "Task created or completed in a project." },
-  { id: "clickup",        backendType: "webhook",                  logoUrl: imgClickUp,        label: "ClickUp",             description: "Task event in a space or list." },
-  { id: "monday",         backendType: "webhook",                  logoUrl: imgMonday,         label: "Monday.com",          description: "Item status changed on a board." },
-
-  // Design
-  { id: "figma",          backendType: "webhook",                  logoUrl: imgFigma,          label: "Figma",               description: "Comment added or file version published." },
-
-  // Social
-  { id: "instagram",      backendType: "webhook",                  logoUrl: imgInstagram,      label: "Instagram",           description: "New post, story, or mention via webhook." },
-  { id: "tiktok",         backendType: "webhook",                  logoUrl: imgTikTok,         label: "TikTok",              description: "New video published on your account." },
-  { id: "mastodon",       backendType: "webhook",                  logoUrl: imgMastodon,       label: "Mastodon",            description: "New toot or mention on your Mastodon account." },
-  { id: "producthunt",    backendType: "hackernews_trigger",       logoUrl: imgProductHunt,    label: "Product Hunt",        description: "New product launch or comment." },
-  { id: "hackernews",     backendType: "hackernews_trigger",       logoUrl: imgHackerNews,     label: "Hacker News",         description: "New post matching a keyword or reaching min score." },
-
-  // CRM / Sales
-  { id: "pipedrive",      backendType: "pipedrive_trigger",        logoUrl: imgPipedrive,      label: "Pipedrive",           description: "New or updated deal, person, or organization." },
-  { id: "intercom",       backendType: "webhook",                  logoUrl: imgIntercom,       label: "Intercom",            description: "New conversation or user event." },
-  { id: "woocommerce",    backendType: "webhook",                  logoUrl: imgWooCommerce,    label: "WooCommerce",         description: "Order placed, status changed, or product updated." },
-
-  // Infra / Security
-  { id: "ssl",            backendType: "ssl_trigger",              logoUrl: imgLetsEncrypt,    label: "SSL Cert Expiry",     description: "Certificate expiring within your chosen window." },
-  { id: "dns",            backendType: "dns_trigger",              logoUrl: imgDns,            label: "DNS Record Change",   description: "DNS A, MX, TXT or other record changes." },
-  { id: "port_monitor",   backendType: "port_monitor_trigger",     logoUrl: imgPortMonitor,    label: "Port Monitor",        description: "TCP port opens or closes on your server." },
-  { id: "virustotal",     backendType: "webhook",                  logoUrl: imgVirusTotal,     label: "VirusTotal",          description: "Scan result returned for a file or URL." },
+  { id: "google_sheets",   backendType: "google_sheets_trigger",   logoUrl: imgGoogleSheets,   label: "Google Sheets",       description: "New row added to a spreadsheet." },
+  { id: "google_drive",    backendType: "webhook",                  logoUrl: imgGoogleDrive,    label: "Google Drive",        description: "File uploaded, shared, or modified." },
+  { id: "google_docs",     backendType: "webhook",                  logoUrl: imgGoogleDocs,     label: "Google Docs",         description: "Document edited or commented on." },
+  { id: "google_forms",    backendType: "webhook",                  logoUrl: imgGoogleForms,    label: "Google Forms",        description: "Form response submitted." },
+  { id: "outlook",         backendType: "outlook_trigger",          logoUrl: imgOutlook,        label: "Outlook",             description: "New email in your Microsoft 365 inbox." },
+  { id: "teams",           backendType: "teams_trigger",            logoUrl: imgTeams,          label: "Microsoft Teams",     description: "Message posted in a channel." },
+  { id: "onedrive",        backendType: "webhook",                  logoUrl: imgOneDrive,       label: "OneDrive",            description: "File created or modified in OneDrive." },
+  { id: "sharepoint",      backendType: "webhook",                  logoUrl: imgSharePoint,     label: "SharePoint",          description: "List item created or updated." },
+  { id: "azure_devops",    backendType: "webhook",                  logoUrl: imgAzureDevOps,    label: "Azure DevOps",        description: "Work item created, PR opened, pipeline triggered." },
+  { id: "gitlab",          backendType: "gitlab_trigger",           logoUrl: imgGitLab,         label: "GitLab",              description: "Merge request, issue, or pipeline event." },
+  { id: "sentry",          backendType: "webhook",                  logoUrl: imgSentry,         label: "Sentry",              description: "New error or issue created in your project." },
+  { id: "vercel",          backendType: "webhook",                  logoUrl: imgVercel,         label: "Vercel",              description: "Deployment succeeded, failed, or cancelled." },
+  { id: "netlify",         backendType: "webhook",                  logoUrl: imgNetlify,        label: "Netlify",             description: "Build or deploy event on your site." },
+  { id: "pagerduty",       backendType: "webhook",                  logoUrl: imgPagerDuty,      label: "PagerDuty",           description: "Alert triggered or resolved." },
+  { id: "datadog",         backendType: "webhook",                  logoUrl: imgDatadog,        label: "Datadog",             description: "Monitor alert fired." },
+  { id: "http_monitor",    backendType: "http_monitor_trigger",     logoUrl: imgVercel,         label: "HTTP Monitor",        description: "URL goes down, comes back up, or responds slowly." },
+  { id: "zendesk",         backendType: "webhook",                  logoUrl: imgZendesk,        label: "Zendesk",             description: "New ticket or ticket status changed." },
+  { id: "calendly",        backendType: "webhook",                  logoUrl: imgCalendly,       label: "Calendly",            description: "Meeting booked or cancelled." },
+  { id: "mailchimp",       backendType: "webhook",                  logoUrl: imgMailchimp,      label: "Mailchimp",           description: "Subscriber added, unsubscribed, or campaign sent." },
+  { id: "asana",           backendType: "asana_trigger",            logoUrl: imgAsana,          label: "Asana",               description: "Task created or completed in a project." },
+  { id: "clickup",         backendType: "webhook",                  logoUrl: imgClickUp,        label: "ClickUp",             description: "Task event in a space or list." },
+  { id: "monday",          backendType: "webhook",                  logoUrl: imgMonday,         label: "Monday.com",          description: "Item status changed on a board." },
+  { id: "figma",           backendType: "webhook",                  logoUrl: imgFigma,          label: "Figma",               description: "Comment added or file version published." },
+  { id: "instagram",       backendType: "webhook",                  logoUrl: imgInstagram,      label: "Instagram",           description: "New post, story, or mention via webhook." },
+  { id: "tiktok",          backendType: "webhook",                  logoUrl: imgTikTok,         label: "TikTok",              description: "New video published on your account." },
+  { id: "mastodon",        backendType: "webhook",                  logoUrl: imgMastodon,       label: "Mastodon",            description: "New toot or mention on your Mastodon account." },
+  { id: "producthunt",     backendType: "hackernews_trigger",       logoUrl: imgProductHunt,    label: "Product Hunt",        description: "New product launch or comment." },
+  { id: "hackernews",      backendType: "hackernews_trigger",       logoUrl: imgHackerNews,     label: "Hacker News",         description: "New post matching a keyword or reaching min score." },
+  { id: "pipedrive",       backendType: "pipedrive_trigger",        logoUrl: imgPipedrive,      label: "Pipedrive",           description: "New or updated deal, person, or organization." },
+  { id: "intercom",        backendType: "webhook",                  logoUrl: imgIntercom,       label: "Intercom",            description: "New conversation or user event." },
+  { id: "woocommerce",     backendType: "webhook",                  logoUrl: imgWooCommerce,    label: "WooCommerce",         description: "Order placed, status changed, or product updated." },
+  { id: "ssl",             backendType: "ssl_trigger",              logoUrl: imgLetsEncrypt,    label: "SSL Cert Expiry",     description: "Certificate expiring within your chosen window." },
+  { id: "dns",             backendType: "dns_trigger",              logoUrl: imgDns,            label: "DNS Record Change",   description: "DNS A, MX, TXT or other record changes." },
+  { id: "port_monitor",    backendType: "port_monitor_trigger",     logoUrl: imgPortMonitor,    label: "Port Monitor",        description: "TCP port opens or closes on your server." },
+  { id: "virustotal",      backendType: "webhook",                  logoUrl: imgVirusTotal,     label: "VirusTotal",          description: "Scan result returned for a file or URL." },
 ];
 
-// Category rows on the home screen
 const CATEGORIES = [
   {
     id: "manual",
     icon: MousePointerClick,
     label: "Run manually",
     description: "Start yourself, on demand",
+    color: "#a78bfa",
     trigger: { id: "manual", backendType: "manual", label: "Run manually" },
-    direct: true, // clicking selects the trigger directly, no sub-page
+    direct: true,
   },
   {
     id: "schedule",
     icon: Clock,
     label: "On a schedule",
     description: "Time-based or recurring runs",
+    color: "#34d399",
     trigger: { id: "cron", backendType: "cron_trigger", label: "On a schedule" },
     direct: true,
   },
@@ -176,6 +163,7 @@ const CATEGORIES = [
     icon: Webhook,
     label: "On webhook call",
     description: "HTTP request hits your URL",
+    color: "#60a5fa",
     trigger: { id: "webhook", backendType: "webhook", label: "On webhook call" },
     direct: true,
   },
@@ -184,6 +172,7 @@ const CATEGORIES = [
     icon: MessageSquare,
     label: "On chat message",
     description: "User sends a message to your endpoint",
+    color: "#fb923c",
     trigger: { id: "chat", backendType: "webhook", label: "On chat message" },
     direct: true,
   },
@@ -192,6 +181,7 @@ const CATEGORIES = [
     icon: Mail,
     label: "On email received",
     description: "Via webhook or IMAP inbox",
+    color: "#f472b6",
     subTriggers: [
       { id: "email", backendType: "webhook",      label: "Email via webhook", description: "Mailgun, SendGrid, Postmark, Forward Email." },
       { id: "imap",  backendType: "imap_trigger", label: "Email via IMAP",    description: "Poll Gmail, Outlook, or any IMAP inbox directly." },
@@ -202,6 +192,7 @@ const CATEGORIES = [
     icon: Zap,
     label: "App Events",
     description: "Connected integrations",
+    color: "#fbbf24",
     isApps: true,
   },
   {
@@ -209,34 +200,52 @@ const CATEGORIES = [
     icon: AlertTriangle,
     label: "On workflow error",
     description: "Any workflow in your workspace fails",
+    color: "#f87171",
     trigger: { id: "error", backendType: "error_trigger", label: "On workflow error" },
     direct: true,
   },
 ];
 
+const ALL_SEARCHABLE = [
+  ...CATEGORIES.filter((c) => c.direct).map((c) => ({ ...c.trigger, label: c.label, description: c.description })),
+  { id: "email", backendType: "webhook",      label: "Email via webhook", description: "Mailgun, SendGrid, Postmark." },
+  { id: "imap",  backendType: "imap_trigger", label: "Email via IMAP",    description: "Poll any IMAP inbox." },
+  ...APP_TRIGGERS,
+];
+
 export default function TriggerPicker() {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState("home"); // "home" | category.id | "actions"
+  const [phase, setPhase] = useState("radial"); // "radial" | "apps" | "email" | "actions"
   const [pendingTrigger, setPendingTrigger] = useState(null);
+  const [focusIdx, setFocusIdx] = useState(0);
+  const searchRef = useRef(null);
+
   const addNode = useWorkspaceStore((s) => s.addNode);
   const nodes = useWorkspaceStore((s) => s.nodes);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
 
-  const allSearchable = [
-    ...CATEGORIES.filter((c) => c.direct).map((c) => ({ ...c.trigger, label: c.label, description: c.description })),
-    { id: "email", backendType: "webhook",      label: "Email via webhook", description: "Mailgun, SendGrid, Postmark." },
-    { id: "imap",  backendType: "imap_trigger", label: "Email via IMAP",    description: "Poll any IMAP inbox." },
-    ...APP_TRIGGERS,
-  ];
+  useEffect(() => {
+    searchRef.current?.focus();
+  }, []);
 
-  const filtered = search
-    ? allSearchable.filter(
-        (t) =>
-          t.label.toLowerCase().includes(search.toLowerCase()) ||
-          (t.description || "").toLowerCase().includes(search.toLowerCase()),
-      )
-    : null;
+  const close = useCallback(() => setTriggerPickerOpen(false), [setTriggerPickerOpen]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        if (phase !== "radial" || search) {
+          setPhase("radial");
+          setSearch("");
+          setPendingTrigger(null);
+        } else {
+          close();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, search, close]);
 
   const commitNode = (trigger, selectedAction) => {
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
@@ -267,15 +276,32 @@ export default function TriggerPicker() {
     const actions = TRIGGER_ACTIONS[trigger.id] || TRIGGER_ACTIONS[trigger.backendType] || [];
     if (actions.length === 0) { commitNode(trigger, null); return; }
     setPendingTrigger(trigger);
-    setPage("actions");
+    setPhase("actions");
   };
 
   const handleCategoryClick = (cat) => {
     if (cat.direct) { handleSelect(cat.trigger); return; }
-    setPage(cat.id);
+    if (cat.isApps) { setPhase("apps"); return; }
+    if (cat.subTriggers) { setPhase("email"); return; }
   };
 
-  // ── Row renderers ────────────────────────────────────────────────────────────
+  const filtered = search.trim()
+    ? ALL_SEARCHABLE.filter(
+        (t) =>
+          t.label.toLowerCase().includes(search.toLowerCase()) ||
+          (t.description || "").toLowerCase().includes(search.toLowerCase())
+      )
+    : null;
+
+  const circleItems = CATEGORIES.map((cat) => {
+    const Icon = cat.icon;
+    return {
+      label: cat.label,
+      color: cat.color,
+      icon: <Icon size={18} strokeWidth={1.8} />,
+      onClick: () => handleCategoryClick(cat),
+    };
+  });
 
   const dragStart = (e, trigger) => {
     e.dataTransfer.effectAllowed = "copy";
@@ -287,230 +313,261 @@ export default function TriggerPicker() {
     }));
   };
 
-  const CoreRow = ({ trigger, icon: Icon }) => (
-    <button
-      draggable
-      onDragStart={(e) => dragStart(e, trigger)}
-      onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
-    >
-      <Icon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
-      <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{trigger.label}</div>
-        {trigger.description && (
-          <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{trigger.description}</div>
-        )}
-      </div>
-    </button>
-  );
+  // ── Row renderers ───────────────────────────────────────────────────────────
 
   const AppRow = ({ trigger }) => (
     <button
       draggable
       onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
     >
-      <img
-        src={trigger.logoUrl}
-        alt={trigger.label}
-        className="w-5 h-5 object-contain shrink-0"
-        style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined}
-      />
+      <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain shrink-0"
+        style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{trigger.label}</div>
-        <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{trigger.description}</div>
+        <div className="text-[13px] font-semibold text-white leading-tight truncate">{trigger.label}</div>
+        <div className="text-[11px] text-white/45 mt-0.5 truncate group-hover:text-white/60">{trigger.description}</div>
       </div>
     </button>
   );
 
-  // ── Sub-page content ─────────────────────────────────────────────────────────
-  const currentCat = CATEGORIES.find((c) => c.id === page);
+  const CoreRow = ({ trigger, icon: Icon, color }) => (
+    <button
+      onClick={() => handleSelect(trigger)}
+      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
+    >
+      <Icon size={18} strokeWidth={1.7} style={{ color: color || '#a1a1aa' }} className="shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-white leading-tight">{trigger.label}</div>
+        {trigger.description && (
+          <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 truncate">{trigger.description}</div>
+        )}
+      </div>
+    </button>
+  );
 
-  const renderSubPage = () => {
-    if (!currentCat) return null;
+  // ── Sub-phases ──────────────────────────────────────────────────────────────
 
-    const CatIcon = currentCat.icon;
-
-    return (
-      <div className="flex flex-col h-full">
-        {/* Sub-page header */}
-        <div className="flex items-center gap-3 px-5 pt-6 pb-5">
-          <button
-            onClick={() => setPage("home")}
-            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <CatIcon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
-          <div>
-            <div className="text-[15px] font-bold text-white leading-tight">{currentCat.label}</div>
-            <div className="text-[11px] text-white/50 mt-0.5">{currentCat.description}</div>
-          </div>
-          <button
-            onClick={() => setTriggerPickerOpen(false)}
-            className="ml-auto p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
-          {currentCat.isApps &&
-            APP_TRIGGERS.map((t) => <AppRow key={t.id} trigger={t} />)
-          }
-          {currentCat.subTriggers &&
-            currentCat.subTriggers.map((t) => {
-              const icon = t.id === "email" ? Mail : Inbox;
-              return <CoreRow key={t.id} trigger={t} icon={icon} />;
-            })
-          }
+  const renderAppsGrid = () => (
+    <motion.div
+      key="apps"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.16 }}
+      className="flex flex-col h-full"
+    >
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
+        <button onClick={() => setPhase("radial")}
+          className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
+          <ArrowLeft size={15} />
+        </button>
+        <Zap size={16} className="text-amber-400 shrink-0" strokeWidth={2} />
+        <div>
+          <div className="text-[14px] font-bold text-white leading-tight">App Events</div>
+          <div className="text-[11px] text-white/45">Connected integrations</div>
         </div>
       </div>
+      <div className="flex-1 overflow-y-auto px-3 pb-5 flex flex-col gap-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
+        {APP_TRIGGERS.map((t) => <AppRow key={t.id} trigger={t} />)}
+      </div>
+    </motion.div>
+  );
+
+  const renderEmailPage = () => {
+    const emailCat = CATEGORIES.find((c) => c.id === "email");
+    return (
+      <motion.div
+        key="email"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.16 }}
+        className="flex flex-col h-full"
+      >
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
+          <button onClick={() => setPhase("radial")}
+            className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
+            <ArrowLeft size={15} />
+          </button>
+          <Mail size={16} className="text-pink-400 shrink-0" strokeWidth={2} />
+          <div>
+            <div className="text-[14px] font-bold text-white leading-tight">On email received</div>
+            <div className="text-[11px] text-white/45">Via webhook or IMAP inbox</div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 pb-5 flex flex-col gap-0.5">
+          <CoreRow trigger={{ id: "email", backendType: "webhook", label: "Email via webhook", description: "Mailgun, SendGrid, Postmark, Forward Email." }} icon={Mail} color="#f472b6" />
+          <CoreRow trigger={{ id: "imap", backendType: "imap_trigger", label: "Email via IMAP", description: "Poll Gmail, Outlook, or any IMAP inbox directly." }} icon={Inbox} color="#f472b6" />
+        </div>
+      </motion.div>
     );
   };
 
-  // ── Home page ────────────────────────────────────────────────────────────────
-
-  const renderHome = () => (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-start justify-between px-6 pt-6 pb-4">
-        <div>
-          <h2 className="text-[16px] font-bold text-white tracking-tight">What triggers this workflow?</h2>
-          <p className="text-[13px] text-white/50 mt-1">Choose how this workflow starts</p>
-        </div>
-        <button
-          onClick={() => setTriggerPickerOpen(false)}
-          className="p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="px-5 pb-4">
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-white/[0.04] border border-white/15 rounded-xl focus-within:border-white/30 transition-colors">
-          <Search className="w-4 h-4 text-white/50 shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search triggers..."
-            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/40"
-            autoFocus
-          />
-        </div>
-      </div>
-
-      {/* List */}
-      <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
-
-        {/* Search results */}
-        {filtered !== null ? (
-          filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <Search className="w-8 h-8 text-neutral-700 mb-3" />
-              <p className="text-[13px] text-white/40">No triggers found</p>
-            </div>
-          ) : (
-            filtered.map((t) => {
-              const isApp = APP_TRIGGERS.some((a) => a.id === t.id);
-              const coreDef = [...CATEGORIES.filter(c => c.direct).map(c => ({ ...c.trigger, icon: c.icon, description: c.description })),
-                { id: "email", icon: Mail, backendType: "webhook", label: "Email via webhook", description: "Mailgun, SendGrid, Postmark." },
-                { id: "imap",  icon: Inbox, backendType: "imap_trigger", label: "Email via IMAP", description: "Poll any IMAP inbox." },
-              ].find(c => c.id === t.id);
-              return isApp
-                ? <AppRow key={t.id} trigger={t} />
-                : <CoreRow key={t.id} trigger={t} icon={coreDef?.icon || MousePointerClick} />;
-            })
-          )
-        ) : (
-          /* Category rows */
-          CATEGORIES.map((cat) => {
-            const CatIcon = cat.icon;
-            const isNav = !cat.direct; // has sub-page
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group"
-              >
-                <CatIcon className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-semibold text-white group-hover:text-white leading-tight">{cat.label}</div>
-                  <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70">{cat.description}</div>
-                </div>
-                {isNav && (
-                  <ArrowLeft className="w-3.5 h-3.5 text-white/40 shrink-0 rotate-180 group-hover:text-white/70 transition-colors" />
-                )}
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-
-  const renderActionPage = () => {
+  const renderActionsPage = () => {
     if (!pendingTrigger) return null;
     const actions = TRIGGER_ACTIONS[pendingTrigger.id] || TRIGGER_ACTIONS[pendingTrigger.backendType] || [];
-    const logoUrl = pendingTrigger.logoUrl;
-    const imgFilter = pendingTrigger.imgFilter;
-
     return (
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
-          <button
-            onClick={() => { setPendingTrigger(null); setPage("home"); }}
-            className="p-1.5 text-white/50 hover:text-neutral-200 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
+      <motion.div
+        key="actions"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.16 }}
+        className="flex flex-col h-full"
+      >
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
+          <button onClick={() => { setPendingTrigger(null); setPhase("radial"); }}
+            className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
+            <ArrowLeft size={15} />
           </button>
-          {logoUrl
-            ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
-            : <Zap className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
+          {pendingTrigger.logoUrl
+            ? <img src={pendingTrigger.logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0"
+                style={pendingTrigger.imgFilter ? { filter: pendingTrigger.imgFilter } : undefined} />
+            : <Zap size={16} className="text-white/70 shrink-0" />
           }
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-white leading-tight">{pendingTrigger.label}</div>
-            <div className="text-[11px] text-white/50 mt-0.5">Choose what triggers this node</div>
+            <div className="text-[14px] font-bold text-white leading-tight truncate">{pendingTrigger.label}</div>
+            <div className="text-[11px] text-white/45">Choose what triggers this node</div>
           </div>
-          <button
-            onClick={() => setTriggerPickerOpen(false)}
-            className="p-1.5 text-white/40 hover:text-neutral-300 hover:bg-white/[0.07] rounded-lg transition-colors shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
-
-        {/* Action list */}
-        <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
+        <div className="flex-1 overflow-y-auto px-3 pb-5 flex flex-col gap-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
           {actions.map((action) => (
             <button
               key={action.name}
               onClick={() => commitNode(pendingTrigger, action.name)}
-              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
             >
-              {logoUrl
-                ? <img src={logoUrl} alt={pendingTrigger.label} className="w-5 h-5 object-contain shrink-0" style={imgFilter ? { filter: imgFilter } : undefined} />
-                : <Zap className="w-5 h-5 text-white/70 shrink-0" strokeWidth={1.6} />
+              {pendingTrigger.logoUrl
+                ? <img src={pendingTrigger.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0"
+                    style={pendingTrigger.imgFilter ? { filter: pendingTrigger.imgFilter } : undefined} />
+                : <Zap size={16} className="text-white/60 shrink-0" />
               }
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-white group-hover:text-white leading-tight">{action.name}</div>
-                <div className="text-[11px] text-white/50 mt-0.5 group-hover:text-white/70 leading-relaxed">{action.description}</div>
+                <div className="text-[13px] font-semibold text-white leading-tight">{action.name}</div>
+                <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 leading-relaxed">{action.description}</div>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70 shrink-0 transition-colors" />
+              <ChevronRight size={13} className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
+  // ── Search results list ─────────────────────────────────────────────────────
+
+  const renderSearchResults = () => (
+    <motion.div
+      key="search-results"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.12 }}
+      className="flex-1 overflow-y-auto px-3 pb-5 flex flex-col gap-0.5 mt-1"
+      style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}
+    >
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-14 gap-3">
+          <Search size={28} className="text-zinc-700" />
+          <p className="text-[12px] text-white/35">No triggers found for "{search}"</p>
+        </div>
+      ) : (
+        filtered.map((t) => {
+          const isApp = APP_TRIGGERS.some((a) => a.id === t.id);
+          if (isApp) return <AppRow key={t.id} trigger={t} />;
+          const catDef = CATEGORIES.find((c) => c.direct && c.trigger?.id === t.id);
+          const Icon = catDef?.icon || Search;
+          return <CoreRow key={t.id} trigger={t} icon={Icon} color={catDef?.color} />;
+        })
+      )}
+    </motion.div>
+  );
+
+  // ── Radial home ─────────────────────────────────────────────────────────────
+
+  const renderRadial = () => (
+    <motion.div
+      key="radial"
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.16 }}
+      className="flex flex-col items-center gap-2 pt-2 pb-6"
+    >
+      <p className="text-[11px] text-white/35 tracking-wider uppercase font-semibold">
+        Choose a trigger type
+      </p>
+      <CircleMenu
+        items={circleItems}
+        openIcon={<Zap size={20} className="text-white/80" strokeWidth={1.8} />}
+        closeIcon={<X size={20} className="text-white/80" />}
+        centerLabel="open menu"
+      />
+    </motion.div>
+  );
+
+  // ── Root render ─────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex flex-col h-full">
-      {page === "actions" ? renderActionPage() : page === "home" ? renderHome() : renderSubPage()}
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={close}
+      />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.8 }}
+        className="relative z-10 w-full max-w-[440px] mx-4 bg-neutral-950 border border-[#2a2a2d] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        style={{ maxHeight: "82vh" }}
+      >
+        {/* Search bar — always visible */}
+        <div className="px-4 pt-4 pb-3 shrink-0 border-b border-[#222]">
+          <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-white/[0.04] border border-white/10 rounded-xl focus-within:border-white/25 transition-colors">
+            <Search size={15} className="text-white/40 shrink-0" />
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                if (e.target.value && phase === "radial") setPhase("radial");
+              }}
+              placeholder="Search triggers..."
+              className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/35"
+            />
+            <kbd className="text-[10px] text-white/25 border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">
+              ESC
+            </kbd>
+          </div>
+        </div>
+
+        {/* Content area */}
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <AnimatePresence mode="wait">
+            {filtered !== null ? (
+              renderSearchResults()
+            ) : phase === "apps" ? (
+              renderAppsGrid()
+            ) : phase === "email" ? (
+              renderEmailPage()
+            ) : phase === "actions" ? (
+              renderActionsPage()
+            ) : (
+              renderRadial()
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
     </div>
   );
 }
