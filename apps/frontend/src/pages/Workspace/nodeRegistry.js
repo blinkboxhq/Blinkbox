@@ -527,7 +527,6 @@ const XAINode = makeOpenAICompatNode({
 export const CATEGORIES = [
   { id: "trigger", label: "Triggers", icon: Zap, shape: "square" },
   { id: "ai", label: "AI", icon: Sparkles, shape: "glass" },
-  { id: "ai_tools", label: "AI Utilities", icon: Brain, shape: "glass" },
   { id: "data", label: "Data & APIs", icon: Database, shape: "sharp" },
   { id: "transform", label: "Data Processing", icon: Layers, shape: "sharp" },
   { id: "research", label: "Research", icon: Search, shape: "sharp" },
@@ -2630,7 +2629,6 @@ export const NodeRegistry = {
     label: "Firebase",
     icon: Database,
     logoUrl: imgFirebase,
-    imgFilter: "invert(1)",
     colorClass: "text-[#FFCA28]",
     accentColor: "255,202,40",
     ConfigPanel: FirebaseNode,
@@ -3268,23 +3266,6 @@ export const NodeRegistry = {
     category: "transform",
   },
 
-  // ── AI Innovated Nodes ───────────────────────────────────────────────────
-  email_parser: {
-    label: "Email Parser",
-    icon: Mail,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    ConfigPanel: EmailParserNode,
-    category: "ai_tools",
-  },
-  vector_memory: {
-    label: "Vector Memory",
-    icon: Database,
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    ConfigPanel: VectorMemoryNode,
-    category: "ai_tools",
-  },
   notification_hub: {
     label: "Notification Hub",
     icon: Zap,
@@ -3293,15 +3274,6 @@ export const NodeRegistry = {
     ConfigPanel: NotificationHubNode,
     category: "integration",
   },
-  browser_agent: {
-    label: "Browser Agent",
-    icon: Globe,
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    ConfigPanel: BrowserAgentNode,
-    category: "ai",
-  },
-
   // ── Coding Agents ─────────────────────────────────────────────────────────
   claude_code: {
     label: "Claude Code",
@@ -3448,17 +3420,6 @@ export const NodeRegistry = {
     ConfigPanel: ResendNode,
     category: "integration",
   },
-  openai_assistant: {
-    label: "OpenAI Assistants",
-    icon: Brain,
-    logoUrl: imgOpenAI,
-    imgFilter: "invert(1)",
-    colorClass: "text-[#10A37F]",
-    accentColor: "16,163,127",
-    ConfigPanel: OpenAIAssistantNode,
-    category: "ai",
-  },
-
   // ── Missing Integration Action Nodes ──────────────────────────────────────
   // GitHub
   github_issue: {
