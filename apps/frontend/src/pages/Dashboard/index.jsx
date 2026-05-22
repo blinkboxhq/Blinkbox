@@ -573,7 +573,12 @@ export default function Dashboard() {
 
                         {/* Mini workflow canvas */}
                         <div className="px-3">
-                          <WorkflowPreview preview={wf.preview} accentColor={accentColor} />
+                          <WorkflowPreview
+                            preview={wf.preview}
+                            nodeCount={wf.nodeCount}
+                            workflowId={wfId}
+                            accentColor={accentColor}
+                          />
                         </div>
 
                         {/* Footer */}
