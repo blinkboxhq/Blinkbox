@@ -226,6 +226,18 @@ import imgElevenLabs from "../../assets/elevenlabs.svg";
 import imgZoom from "../../assets/zoom.svg";
 import imgResend from "../../assets/resend.svg";
 import imgCron from "../../assets/cron.svg";
+import imgGoogle from "../../assets/google-search.svg";
+import imgBrave from "../../assets/brave-search.svg";
+import imgDuckDuckGo from "../../assets/duckduckgo.svg";
+import imgElastic from "../../assets/elasticsearch.svg";
+import imgGCP from "../../assets/googlecloud.svg";
+import imgKubernetes from "../../assets/kubernetes.svg";
+import imgTerraform from "../../assets/terraform.svg";
+import imgAnsible from "../../assets/ansible.svg";
+import imgPython from "../../assets/python.svg";
+import imgJS from "../../assets/javascript.svg";
+import imgArxiv from "../../assets/arxiv.svg";
+import imgFirebase from "../../assets/firebase.svg";
 
 // Config Panels — existing
 import TriggerNode from "./components/nodes/TriggerNode";
@@ -1130,6 +1142,8 @@ export const NodeRegistry = {
   tool_google_search: {
     label: "Google Search",
     icon: Search,
+    logoUrl: imgGoogle,
+    imgFilter: "invert(1)",
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -1172,6 +1186,8 @@ export const NodeRegistry = {
   tool_brave_search: {
     label: "Brave Search",
     icon: Search,
+    logoUrl: imgBrave,
+    imgFilter: "invert(1)",
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     category: "ai",
@@ -1235,6 +1251,8 @@ export const NodeRegistry = {
   tool_duckduckgo: {
     label: "DuckDuckGo",
     icon: Search,
+    logoUrl: imgDuckDuckGo,
+    imgFilter: "invert(1)",
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
     category: "ai",
@@ -1269,6 +1287,7 @@ export const NodeRegistry = {
   tool_youtube_search: {
     label: "YouTube Search",
     icon: Youtube,
+    logoUrl: imgYouTube,
     colorClass: "text-red-400",
     accentColor: "239,68,68",
     category: "ai",
@@ -1311,6 +1330,8 @@ export const NodeRegistry = {
   tool_arxiv: {
     label: "arXiv Search",
     icon: Microscope,
+    logoUrl: imgArxiv,
+    imgFilter: "invert(1)",
     colorClass: "text-red-300",
     accentColor: "252,165,165",
     category: "ai",
@@ -1347,6 +1368,8 @@ export const NodeRegistry = {
   tool_js: {
     label: "JavaScript",
     icon: Code2,
+    logoUrl: imgJS,
+    imgFilter: "invert(1)",
     colorClass: "text-yellow-400",
     accentColor: "250,204,21",
     category: "ai",
@@ -1360,6 +1383,8 @@ export const NodeRegistry = {
   tool_python: {
     label: "Python",
     icon: Code2,
+    logoUrl: imgPython,
+    imgFilter: "invert(1)",
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -1386,6 +1411,7 @@ export const NodeRegistry = {
   tool_ssh: {
     label: "SSH",
     icon: Server,
+    logoUrl: imgSsh,
     colorClass: "text-emerald-500",
     accentColor: "16,185,129",
     category: "ai",
@@ -1419,6 +1445,7 @@ export const NodeRegistry = {
   tool_docker_exec: {
     label: "Docker Exec",
     icon: Box,
+    logoUrl: imgDocker,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -1440,6 +1467,7 @@ export const NodeRegistry = {
   tool_git: {
     label: "Git Operations",
     icon: GitBranch,
+    logoUrl: imgGitHub,
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     category: "ai",
@@ -1467,6 +1495,8 @@ export const NodeRegistry = {
   tool_virtual_computer: {
     label: "Virtual Computer",
     icon: Monitor,
+    logoUrl: imgComputer,
+    imgFilter: "brightness(0) invert(1)",
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
     category: "ai",
@@ -1652,6 +1682,7 @@ export const NodeRegistry = {
   tool_mongodb: {
     label: "MongoDB Query",
     icon: Database,
+    logoUrl: imgMongoDB,
     colorClass: "text-green-400",
     accentColor: "74,222,128",
     category: "ai",
@@ -1673,6 +1704,7 @@ export const NodeRegistry = {
   tool_redis: {
     label: "Redis Tool",
     icon: Database,
+    logoUrl: imgRedis,
     colorClass: "text-red-400",
     accentColor: "239,68,68",
     category: "ai",
@@ -1694,6 +1726,8 @@ export const NodeRegistry = {
   tool_elasticsearch: {
     label: "Elasticsearch",
     icon: Search,
+    logoUrl: imgElastic,
+    imgFilter: "invert(1)",
     colorClass: "text-yellow-400",
     accentColor: "250,204,21",
     category: "ai",
@@ -1721,6 +1755,7 @@ export const NodeRegistry = {
   tool_supabase: {
     label: "Supabase Query",
     icon: Database,
+    logoUrl: imgSupabase,
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     category: "ai",
@@ -1744,6 +1779,7 @@ export const NodeRegistry = {
   tool_email: {
     label: "Send Email",
     icon: Mail,
+    logoUrl: imgSendGrid,
     colorClass: "text-rose-400",
     accentColor: "251,113,133",
     category: "ai",
@@ -1765,6 +1801,7 @@ export const NodeRegistry = {
   tool_slack: {
     label: "Slack Message",
     icon: MessageCircle,
+    logoUrl: imgSlack,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
     category: "ai",
@@ -1786,6 +1823,7 @@ export const NodeRegistry = {
   tool_discord: {
     label: "Discord Message",
     icon: MessageCircle,
+    logoUrl: imgDiscord,
     colorClass: "text-indigo-400",
     accentColor: "129,140,248",
     category: "ai",
@@ -1807,6 +1845,7 @@ export const NodeRegistry = {
   tool_telegram: {
     label: "Telegram",
     icon: Send,
+    logoUrl: imgTelegram,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     category: "ai",
@@ -1828,6 +1867,7 @@ export const NodeRegistry = {
   tool_sms: {
     label: "SMS",
     icon: PhoneCall,
+    logoUrl: imgTwilio,
     colorClass: "text-rose-300",
     accentColor: "253,164,175",
     category: "ai",
@@ -1996,6 +2036,7 @@ export const NodeRegistry = {
   tool_calendar: {
     label: "Google Calendar",
     icon: Calendar,
+    logoUrl: imgGoogleCalendar,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -2053,6 +2094,8 @@ export const NodeRegistry = {
   tool_gcp: {
     label: "GCP CLI",
     icon: Server,
+    logoUrl: imgGCP,
+    imgFilter: "invert(1)",
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -2074,6 +2117,7 @@ export const NodeRegistry = {
   tool_azure: {
     label: "Azure CLI",
     icon: Server,
+    logoUrl: imgAzureDevOps,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     category: "ai",
@@ -2095,6 +2139,8 @@ export const NodeRegistry = {
   tool_kubernetes: {
     label: "Kubernetes",
     icon: Cpu,
+    logoUrl: imgKubernetes,
+    imgFilter: "invert(1)",
     colorClass: "text-blue-500",
     accentColor: "59,130,246",
     category: "ai",
@@ -2116,6 +2162,8 @@ export const NodeRegistry = {
   tool_terraform: {
     label: "Terraform",
     icon: HardDrive,
+    logoUrl: imgTerraform,
+    imgFilter: "invert(1)",
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
     category: "ai",
@@ -2129,6 +2177,7 @@ export const NodeRegistry = {
   tool_docker_compose: {
     label: "Docker Compose",
     icon: Box,
+    logoUrl: imgDocker,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     category: "ai",
@@ -2142,6 +2191,8 @@ export const NodeRegistry = {
   tool_ansible: {
     label: "Ansible",
     icon: Server,
+    logoUrl: imgAnsible,
+    imgFilter: "invert(1)",
     colorClass: "text-red-400",
     accentColor: "239,68,68",
     category: "ai",
@@ -2155,6 +2206,7 @@ export const NodeRegistry = {
   tool_vercel_deploy: {
     label: "Vercel Deploy",
     icon: UploadCloud,
+    logoUrl: imgVercel,
     colorClass: "text-zinc-100",
     accentColor: "244,244,245",
     category: "ai",
@@ -2529,6 +2581,7 @@ export const NodeRegistry = {
   supabase: {
     label: "Supabase",
     icon: Database,
+    logoUrl: imgSupabase,
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: SupabaseNode,
@@ -2537,6 +2590,7 @@ export const NodeRegistry = {
   mongodb: {
     label: "MongoDB",
     icon: Database,
+    logoUrl: imgMongoDB,
     colorClass: "text-[#47A248]",
     accentColor: "71,162,72",
     ConfigPanel: MongoDBNode,
@@ -2545,6 +2599,7 @@ export const NodeRegistry = {
   redis_node: {
     label: "Redis",
     icon: Server,
+    logoUrl: imgRedis,
     colorClass: "text-[#FF4438]",
     accentColor: "255,68,56",
     ConfigPanel: RedisNode,
@@ -2553,6 +2608,8 @@ export const NodeRegistry = {
   firebase: {
     label: "Firebase",
     icon: Database,
+    logoUrl: imgFirebase,
+    imgFilter: "invert(1)",
     colorClass: "text-[#FFCA28]",
     accentColor: "255,202,40",
     ConfigPanel: FirebaseNode,
