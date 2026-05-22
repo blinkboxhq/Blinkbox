@@ -20,6 +20,7 @@ import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
+import BeamsBackground from '../../components/ui/BeamsBackground';
 const TRIGGER_META = {
   manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
   webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
@@ -402,7 +403,8 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <WorkspaceHeader forceDashboard />
-        <main className="flex-1 overflow-y-auto bg-[#060606]">
+        <main className="flex-1 overflow-y-auto">
+        <BeamsBackground className="min-h-full">
         <div className="p-8 max-w-[1100px] mx-auto">
 
           <BrianBar onSubmit={handleBrianSubmit} />
@@ -757,6 +759,7 @@ export default function Dashboard() {
           )}
 
         </div>
+        </BeamsBackground>
       </main>
       </div>
     </div>
