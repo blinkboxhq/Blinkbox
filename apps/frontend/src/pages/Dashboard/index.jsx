@@ -328,7 +328,7 @@ export default function Dashboard() {
       setProfileMsg({ ok: true, text: 'Name updated.' });
     } catch (e) {
       setProfileMsg({ ok: false, text: e.response?.data?.message || 'Failed to save.' });
-    } finally { setProfileSaving(false); setTimeout(() => setProfileMsg(null), 3000); }
+    } finally { setProfileSaving(false); }
   };
 
   const handleChangePassword = async () => {
@@ -340,7 +340,7 @@ export default function Dashboard() {
       setPwCurrent(''); setPwNew('');
     } catch (e) {
       setPwMsg({ ok: false, text: e.response?.data?.message || 'Failed to update password.' });
-    } finally { setPwSaving(false); setTimeout(() => setPwMsg(null), 4000); }
+    } finally { setPwSaving(false); }
   };
 
   const handleCreate = async (data) => {
@@ -372,7 +372,6 @@ export default function Dashboard() {
     } catch (e) {
       const msg = e.response?.data?.message || e.message || 'Failed to update status.';
       setSystemError(msg);
-      setTimeout(() => setSystemError(null), 4000);
     }
   };
 
