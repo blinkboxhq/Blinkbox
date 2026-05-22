@@ -246,6 +246,11 @@ import imgExa from "../../assets/exa.svg";
 import imgWolfram from "../../assets/wolfram.svg";
 import imgWeather from "../../assets/weather.svg";
 import imgMoonshot from "../../assets/moonshot.svg";
+import imgMCP from "../../assets/mcp.svg";
+import imgPubMed from "../../assets/pubmed.svg";
+import imgWikipedia from "../../assets/wikipedia.svg";
+import imgNews from "../../assets/news.svg";
+import imgWebSearch from "../../assets/web-scraper.svg";
 
 // Config Panels — existing
 import TriggerNode from "./components/nodes/TriggerNode";
@@ -2536,6 +2541,7 @@ export const NodeRegistry = {
   tool_mcp_client: {
     label: "MCP Client",
     icon: Network,
+    logoUrl: imgMCP,
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     category: "ai",
@@ -2719,6 +2725,7 @@ export const NodeRegistry = {
   web_search: {
     label: "Web Search",
     icon: Globe,
+    logoUrl: imgGoogle,
     colorClass: "text-white",
     accentColor: "129,140,248",
     ConfigPanel: WebSearchNode,
@@ -2727,6 +2734,7 @@ export const NodeRegistry = {
   pubmed_search: {
     label: "PubMed Search",
     icon: Microscope,
+    logoUrl: imgPubMed,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     ConfigPanel: PubMedSearchNode,
@@ -2736,6 +2744,7 @@ export const NodeRegistry = {
   arxiv_search: {
     label: "ArXiv Search",
     icon: Atom,
+    logoUrl: imgArxiv,
     colorClass: "text-rose-400",
     accentColor: "251,113,133",
     ConfigPanel: ArxivSearchNode,
@@ -2745,6 +2754,7 @@ export const NodeRegistry = {
   wikipedia_lookup: {
     label: "Wikipedia Lookup",
     icon: BookOpen,
+    logoUrl: imgWikipedia,
     colorClass: "text-white",
     accentColor: "161,161,170",
     ConfigPanel: WikipediaLookupNode,
@@ -2772,6 +2782,7 @@ export const NodeRegistry = {
   weather: {
     label: "Weather",
     icon: Thermometer,
+    logoUrl: imgWeather,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: WeatherNode,
@@ -2781,6 +2792,7 @@ export const NodeRegistry = {
   news_search: {
     label: "News Search",
     icon: Newspaper,
+    logoUrl: imgNews,
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     ConfigPanel: NewsSearchNode,
@@ -3384,6 +3396,8 @@ export const NodeRegistry = {
   github_copilot: {
     label: "GitHub Copilot",
     icon: Github,
+    logoUrl: imgGitHub,
+    imgFilter: "invert(1)",
     colorClass: "text-zinc-200",
     accentColor: "244,244,245",
     ConfigPanel: makeCodingAgentNode({
@@ -3419,6 +3433,7 @@ export const NodeRegistry = {
   pinecone: {
     label: "Pinecone",
     icon: Box,
+    logoUrl: imgPinecone,
     colorClass: "text-green-400",
     accentColor: "74,222,128",
     ConfigPanel: PineconeNode,
@@ -3436,6 +3451,8 @@ export const NodeRegistry = {
   openai_assistant: {
     label: "OpenAI Assistants",
     icon: Brain,
+    logoUrl: imgOpenAI,
+    imgFilter: "invert(1)",
     colorClass: "text-[#10A37F]",
     accentColor: "16,163,127",
     ConfigPanel: OpenAIAssistantNode,
