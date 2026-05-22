@@ -40,7 +40,7 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
       title={`${node.label} — double-click or drag to add`}
       className="flex items-center justify-start gap-3 py-2 px-2 group/sidebar rounded-lg hover:bg-zinc-800/40 cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
     >
-      <div className={`shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-zinc-800/80 ${node.colorClass}`}>
+      <div className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-zinc-800/80 text-white">
         <Icon className="w-3.5 h-3.5" />
       </div>
 

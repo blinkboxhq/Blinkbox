@@ -30,7 +30,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         className={`w-full flex items-center gap-2.5 rounded-md transition-all duration-150 ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
           active
             ? 'bg-white/[0.07] text-white'
-            : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
+            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
         }`}
       >
         <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2 : 1.5} />
@@ -54,9 +54,9 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bg-neutral-950 border-r border-[#333] flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+      <aside className={`${w} bg-neutral-950 border-r-2 border-white/15 flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
         {/* Header — logo links to dashboard */}
-        <div className={`h-12 flex items-center border-b border-[#222] shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+        <div className={`h-12 flex items-center border-b-2 border-white/15 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (
             <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
@@ -69,7 +69,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           )}
           <button
             onClick={() => setExpanded(!expanded)}
-            className={`text-neutral-600 hover:text-neutral-400 transition-colors ${expanded ? '' : 'hidden'}`}
+            className={`text-white/50 hover:text-white transition-colors ${expanded ? '' : 'hidden'}`}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -79,7 +79,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {!expanded && (
           <button
             onClick={() => setExpanded(true)}
-            className="mx-auto mt-2 text-neutral-700 hover:text-neutral-400 transition-colors"
+            className="mx-auto mt-2 text-white/50 hover:text-white transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -87,10 +87,10 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
         {/* Primary nav */}
         <nav className={`flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
-          {expanded && <p className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider px-3 mb-2">Platform</p>}
+          {expanded && <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          <div className={`border-t border-[#333] my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
+          <div className={`border-t-2 border-white/15 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
@@ -98,10 +98,10 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {/* Usage meter */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="p-3 rounded-lg bg-neutral-900 border border-[#333]">
+            <div className="p-3 rounded-lg bg-neutral-900 border border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Usage</span>
-                <span className="text-[10px] text-neutral-600">{usedPct}%</span>
+                <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Usage</span>
+                <span className="text-[10px] text-white/40">{usedPct}%</span>
               </div>
               <div className="w-full bg-neutral-800 rounded-full h-1">
                 <div
@@ -109,13 +109,13 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
-              <p className="text-[10px] text-neutral-700 mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
+              <p className="text-[10px] text-white/30 mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
             </div>
           </div>
         )}
 
         {/* User */}
-        <div className={`border-t border-[#333] ${expanded ? 'p-3' : 'p-2'}`}>
+        <div className={`border-t-2 border-white/15 ${expanded ? 'p-3' : 'p-2'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-1">
               <UserAvatar />
@@ -123,7 +123,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
                 <p className="text-[12px] font-medium text-neutral-300 truncate">{user?.name}</p>
                 <p className="text-[10px] text-neutral-700 truncate">{user?.email}</p>
               </div>
-              <button onClick={() => setShowLogout(true)} className="p-1 text-neutral-700 hover:text-red-400 rounded transition-colors shrink-0" title="Log out">
+              <button onClick={() => setShowLogout(true)} className="p-1 text-white/40 hover:text-red-400 rounded transition-colors shrink-0" title="Log out">
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
