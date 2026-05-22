@@ -486,79 +486,71 @@ export default function TriggerPicker() {
 
   // ── Radial home ─────────────────────────────────────────────────────────────
 
-  const renderRadial = () => (
-    <motion.div
-      key="radial"
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.16 }}
-      className="flex flex-col items-center gap-2 pt-2 pb-6"
-    >
-      <p className="text-[11px] text-white/35 tracking-wider uppercase font-semibold">
-        Choose a trigger type
-      </p>
-      <CircleMenu
-        items={circleItems}
-        openIcon={<Zap size={20} className="text-white/80" strokeWidth={1.8} />}
-        closeIcon={<X size={20} className="text-white/80" />}
-        centerLabel="open menu"
-      />
-    </motion.div>
-  );
+  const renderRadial = () => null;
 
   // ── Root render ─────────────────────────────────────────────────────────────
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      {/* Modal */}
-      <motion.div
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 12 }}
-        transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.8 }}
-        className="relative z-10 w-full max-w-[440px] mx-4 bg-neutral-950 border border-[#2a2a2d] rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
-        style={{ maxHeight: "82vh" }}
-      >
-        {/* Search bar — always visible */}
-        <div className="px-4 pt-4 pb-3 shrink-0 border-b border-[#222]">
-          <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-white/[0.04] border border-white/10 rounded-xl focus-within:border-white/25 transition-colors">
-            <Search size={15} className="text-white/40 shrink-0" />
-            <input
-              ref={searchRef}
-              type="text"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                if (e.target.value && phase === "radial") setPhase("radial");
-              }}
-              placeholder="Search triggers..."
-              className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/35"
-            />
-            <kbd className="text-[10px] text-white/25 border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">
-              ESC
-            </kbd>
-          </div>
-        </div>
+  const isListPhase = filtered !== null || phase === "apps" || phase === "email" || phase === "actions";
 
-        {/* Content area */}
-        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-          <AnimatePresence mode="wait">
-            {filtered !== null ? (
-              renderSearchResults()
-            ) : phase === "apps" ? (
-              renderAppsGrid()
-            ) : phase === "email" ? (
-              renderEmailPage()
-            ) : phase === "actions" ? (
-              renderActionsPage()
-            ) : (
-              renderRadial()
-            )}
-          </AnimatePresence>
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 pointer-events-none">
+
+      {/* Floating search bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ type: "spring", stiffness: 400, damping: 32 }}
+        className="w-full max-w-[420px] mx-4 pointer-events-auto"
+      >
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl focus-within:border-white/25 transition-colors">
+          <Search size={15} className="text-white/40 shrink-0" />
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search triggers..."
+            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/35"
+          />
+          <kbd className="text-[10px] text-white/25 border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">
+            ESC
+          </kbd>
         </div>
       </motion.div>
+
+      {/* Content — list phases get a floating panel, radial floats bare */}
+      <AnimatePresence mode="wait">
+        {isListPhase ? (
+          <motion.div
+            key="list-panel"
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            className="w-full max-w-[420px] mx-4 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col pointer-events-auto"
+            style={{ maxHeight: "55vh" }}
+          >
+            {filtered !== null ? renderSearchResults() : phase === "apps" ? renderAppsGrid() : phase === "email" ? renderEmailPage() : renderActionsPage()}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="radial"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.16 }}
+            className="flex flex-col items-center gap-2 pointer-events-auto"
+          >
+            <CircleMenu
+              items={circleItems}
+              openIcon={<Zap size={20} className="text-white/80" strokeWidth={1.8} />}
+              closeIcon={<X size={20} className="text-white/80" />}
+              centerLabel="open menu"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
