@@ -2676,22 +2676,6 @@ export const NodeRegistry = {
     ConfigPanel: CSVParserNode,
     category: "transform",
   },
-  date_time: {
-    label: "Date / Time",
-    icon: Calendar,
-    colorClass: "text-white",
-    accentColor: "251,191,36",
-    ConfigPanel: DateTimeNode,
-    category: "transform",
-  },
-  crypto_utils: {
-    label: "Crypto Utils",
-    icon: Shield,
-    colorClass: "text-white",
-    accentColor: "248,113,113",
-    ConfigPanel: CryptoUtilsNode,
-    category: "transform",
-  },
   data_mapper: {
     label: "Data Mapper",
     icon: Database,
@@ -3193,14 +3177,6 @@ export const NodeRegistry = {
   },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────
-  qr_code: {
-    label: "QR Code",
-    icon: QrCode,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    ConfigPanel: QRCodeNode,
-    category: "transform",
-  },
   text_splitter: {
     label: "Text Splitter",
     icon: SplitSquareHorizontal,
@@ -3217,14 +3193,6 @@ export const NodeRegistry = {
     ConfigPanel: TemplateRendererNode,
     category: "transform",
   },
-  json_validator: {
-    label: "JSON Validator",
-    icon: CheckCircle2,
-    colorClass: "text-red-400",
-    accentColor: "248,113,113",
-    ConfigPanel: JSONValidatorNode,
-    category: "transform",
-  },
   switch: {
     label: "Switch",
     icon: GitFork,
@@ -3232,14 +3200,6 @@ export const NodeRegistry = {
     accentColor: "244,114,182",
     ConfigPanel: SwitchNode,
     category: "flow",
-  },
-  image_resize: {
-    label: "Image Resize",
-    icon: Image,
-    colorClass: "text-fuchsia-400",
-    accentColor: "232,121,249",
-    ConfigPanel: ImageResizeNode,
-    category: "transform",
   },
   aggregate: {
     label: "Aggregate",
@@ -3249,23 +3209,6 @@ export const NodeRegistry = {
     ConfigPanel: AggregateNode,
     category: "flow",
   },
-  pdf_generator: {
-    label: "PDF Generator",
-    icon: FileOutput,
-    colorClass: "text-rose-400",
-    accentColor: "251,113,133",
-    ConfigPanel: PDFGeneratorNode,
-    category: "transform",
-  },
-  data_diff: {
-    label: "Data Diff",
-    icon: Layers,
-    colorClass: "text-indigo-400",
-    accentColor: "129,140,248",
-    ConfigPanel: DataDiffNode,
-    category: "transform",
-  },
-
   notification_hub: {
     label: "Notification Hub",
     icon: Zap,
@@ -4069,33 +4012,6 @@ export const NodeRegistry = {
   },
 
   // ── Data Processing Nodes ────────────────────────────────────────────────
-  text_format: {
-    label: "Text Format",
-    icon: CaseSensitive,
-    colorClass: "text-white",
-    accentColor: "167,139,250",
-    ConfigPanel: TextFormatNode,
-    category: "transform",
-    description: "Uppercase, lowercase, trim, slug, truncate text",
-  },
-  regex_match: {
-    label: "Regex Match",
-    icon: Regex,
-    colorClass: "text-pink-400",
-    accentColor: "244,114,182",
-    ConfigPanel: RegexMatchNode,
-    category: "transform",
-    description: "Test or extract patterns with regular expressions",
-  },
-  find_replace: {
-    label: "Find & Replace",
-    icon: Replace,
-    colorClass: "text-white",
-    accentColor: "251,146,60",
-    ConfigPanel: FindReplaceNode,
-    category: "transform",
-    description: "Search and substitute text, supports regex",
-  },
   html_to_text: {
     label: "HTML to Text",
     icon: FileText,
@@ -4123,25 +4039,6 @@ export const NodeRegistry = {
     category: "transform",
     description: "Parse XML to JSON or build XML from JSON",
   },
-  unit_converter: {
-    label: "Unit Converter",
-    icon: ArrowRightLeft,
-    colorClass: "text-white",
-    accentColor: "45,212,191",
-    ConfigPanel: UnitConverterNode,
-    category: "transform",
-    description: "Convert weight, length, temperature, volume and more",
-  },
-  math_expression: {
-    label: "Math Expression",
-    icon: Sigma,
-    colorClass: "text-white",
-    accentColor: "250,204,21",
-    ConfigPanel: MathExpressionNode,
-    category: "transform",
-    description: "Evaluate a safe mathematical formula",
-  },
-
   // ── Flow Control Nodes ────────────────────────────────────────────────────
   condition: {
     label: "Condition",
