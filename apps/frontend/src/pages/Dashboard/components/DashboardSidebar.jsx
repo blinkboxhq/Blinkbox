@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, BarChart2, Layers, ChevronRight } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
-const NAV = [
-  { key: 'workflows', icon: Network,   label: 'Workflows' },
-  { key: 'nodes',     icon: Layers,    label: 'Node Library' },
+const NAV_TOP = [
+  { key: 'workflows', icon: Network,  label: 'Workflows' },
+  { key: 'nodes',     icon: Layers,   label: 'Nodes' },
   { key: 'analytics', icon: BarChart2, label: 'Analytics' },
-  { key: 'logs',      icon: Activity,  label: 'Executions' },
-  { key: 'vault',     icon: Key,       label: 'Credentials' },
+  { key: 'logs',      icon: Activity, label: 'History' },
+  { key: 'vault',     icon: Key,      label: 'Credentials' },
 ];
 
 const NAV_BOTTOM = [
@@ -16,108 +16,147 @@ const NAV_BOTTOM = [
 ];
 
 export default function DashboardSidebar({ user, onLogout, activeTab, setActiveTab, usage }) {
+  const [expanded, setExpanded] = useState(true);
   const [showLogout, setShowLogout] = useState(false);
+
+  const w = expanded ? 'w-[220px]' : 'w-[56px]';
+
+  const NavBtn = ({ item }) => {
+    const active = activeTab === item.key;
+    return (
+      <button
+        onClick={() => setActiveTab(item.key)}
+        title={!expanded ? item.label : undefined}
+        className={`w-full flex items-center gap-2.5 rounded-md transition-all duration-150 ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
+          active
+            ? 'bg-white/[0.07] text-white'
+            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+        }`}
+      >
+        <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2 : 1.5} />
+        {expanded && <span className="text-[13px] font-medium truncate">{item.label}</span>}
+      </button>
+    );
+  };
+
   const usedPct = usage ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)) : 0;
 
-  const src = user?.picture || user?.avatar;
+  const UserAvatar = ({ size = 'w-7 h-7', textSize = 'text-[11px]', className = '' }) => {
+    if (user?.picture) {
+      return <img src={user.picture} alt="" className={`${size} rounded-full object-cover shrink-0 ${className}`} referrerPolicy="no-referrer" />;
+    }
+    return (
+      <div className={`${size} rounded-full bg-neutral-800 flex items-center justify-center ${textSize} font-semibold text-neutral-400 uppercase shrink-0 ${className}`}>
+        {user?.name?.charAt(0) || '?'}
+      </div>
+    );
+  };
 
   return (
     <>
-      <aside className="w-[220px] bg-[#080808] border-r border-[#161616] flex flex-col shrink-0 z-20 h-screen">
+      <aside className={`${w} bg-neutral-950 border-r-2 border-white/15 flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+        {/* Header — logo links to dashboard */}
+        <div className={`h-14 flex items-center border-b-2 border-white/15 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+          {expanded ? (
+            <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+              <img src={logo} alt="B" className="w-5 h-5 object-contain" />
+              <span className="text-[13px] font-semibold tracking-[0.05em] text-white">Blinkbox</span>
+            </Link>
+          ) : (
+            <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
+              <img src={logo} alt="B" className="w-5 h-5 object-contain" />
+            </Link>
+          )}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`text-white/50 hover:text-white transition-colors ${expanded ? '' : 'hidden'}`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Logo */}
-        <Link to="/dashboard" className="h-14 flex items-center gap-3 px-5 border-b border-[#161616] shrink-0 hover:bg-white/[0.02] transition-colors">
-          <img src={logo} alt="Blinkbox" className="w-5 h-5 object-contain shrink-0" />
-          <span className="text-[13px] font-semibold tracking-wide text-white">Blinkbox</span>
-        </Link>
+        {/* Expand button when collapsed */}
+        {!expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="mx-auto mt-2 text-white/50 hover:text-white transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
 
-        {/* Nav */}
-        <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4 overflow-y-auto">
-          <p className="text-[9px] font-bold text-neutral-700 uppercase tracking-[0.12em] px-2 mb-2">Platform</p>
+        {/* Primary nav */}
+        <nav className={`flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
+          {expanded && <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider px-3 mb-2">Platform</p>}
+          {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          {NAV.map(item => {
-            const active = activeTab === item.key;
-            return (
-              <button key={item.key} onClick={() => setActiveTab(item.key)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-100 ${
-                  active
-                    ? 'bg-white/[0.07] text-white'
-                    : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'
-                }`}>
-                <item.icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2 : 1.5} />
-                {item.label}
-                {active && <ChevronRight className="w-3 h-3 ml-auto text-neutral-700" />}
-              </button>
-            );
-          })}
+          <div className={`border-t-2 border-white/15 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
-          <div className="border-t border-[#161616] my-3 mx-1" />
-
-          {NAV_BOTTOM.map(item => {
-            const active = activeTab === item.key;
-            return (
-              <button key={item.key} onClick={() => setActiveTab(item.key)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-100 ${
-                  active
-                    ? 'bg-white/[0.07] text-white'
-                    : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'
-                }`}>
-                <item.icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2 : 1.5} />
-                {item.label}
-              </button>
-            );
-          })}
+          {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
 
-        {/* Usage */}
-        {usage && (
-          <div className="mx-3 mb-3 p-3 rounded-xl bg-[#0f0f0f] border border-[#1a1a1a]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider">Usage</span>
-              <span className="text-[10px] text-neutral-700 font-mono">{usedPct}%</span>
+        {/* Usage meter */}
+        {usage && expanded && (
+          <div className="px-4 pb-2">
+            <div className="p-3 rounded-lg bg-neutral-900 border border-white/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Usage</span>
+                <span className="text-[10px] text-white/40">{usedPct}%</span>
+              </div>
+              <div className="w-full bg-neutral-800 rounded-full h-1">
+                <div
+                  className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-yellow-400' : 'bg-white'}`}
+                  style={{ width: `${usedPct}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-white/30 mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
             </div>
-            <div className="w-full bg-[#1a1a1a] rounded-full h-[3px] mb-2">
-              <div className={`h-[3px] rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-amber-400' : 'bg-violet-400'}`}
-                style={{ width: `${usedPct}%` }} />
-            </div>
-            <p className="text-[10px] text-neutral-700">{usage.creditsUsed.toLocaleString()} / {usage.monthlyLimit.toLocaleString()} credits</p>
           </div>
         )}
 
         {/* User */}
-        <div className="border-t border-[#161616] p-3">
-          <div className="flex items-center gap-2.5 px-1">
-            {src
-              ? <img src={src} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-white/10" />
-              : <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-[11px] font-bold text-neutral-400 uppercase shrink-0">
-                  {user?.name?.charAt(0) || '?'}
-                </div>
-            }
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-medium text-neutral-300 truncate">{user?.name || 'User'}</p>
-              <p className="text-[10px] text-neutral-700 truncate">{user?.email}</p>
+        <div className={`border-t-2 border-white/15 ${expanded ? 'p-3' : 'p-2'}`}>
+          {expanded ? (
+            <div className="flex items-center gap-2.5 px-1">
+              <UserAvatar />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium text-neutral-300 truncate">{user?.name}</p>
+                <p className="text-[10px] text-neutral-700 truncate">{user?.email}</p>
+              </div>
+              <button onClick={() => setShowLogout(true)} className="p-1 text-white/40 hover:text-red-400 rounded transition-colors shrink-0" title="Log out">
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button onClick={() => setShowLogout(true)} title="Log out"
-              className="p-1.5 rounded-md text-neutral-700 hover:text-red-400 hover:bg-red-500/[0.06] transition-all shrink-0">
-              <LogOut className="w-3.5 h-3.5" />
+          ) : (
+            <button
+              onClick={() => setShowLogout(true)}
+              className="w-full flex justify-center"
+              title="Log out"
+            >
+              <UserAvatar className="hover:ring-2 hover:ring-neutral-700 transition-all" />
             </button>
-          </div>
+          )}
         </div>
       </aside>
 
-      {/* Logout confirm */}
+      {/* Logout modal */}
       {showLogout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0f0f0f] border border-[#222] rounded-2xl w-full max-w-[320px] p-6 mx-4 shadow-2xl">
-            <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out?</h3>
-            <p className="text-[12px] text-neutral-500 mb-5 leading-relaxed">You'll need to sign in again to access your workspace.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]" style={{ animation: 'dbFadeIn 0.12s ease-out' }}>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
+            <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out of Blinkbox?</h3>
+            <p className="text-[13px] text-neutral-500 mb-5">You'll need to sign in again to access your workspace.</p>
             <div className="flex items-center gap-2.5 justify-end">
-              <button onClick={() => setShowLogout(false)} className="px-3.5 py-1.5 text-[12px] font-medium text-neutral-500 hover:text-white rounded-lg transition-colors">Cancel</button>
-              <button onClick={onLogout} className="px-3.5 py-1.5 text-[12px] font-medium bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all">Log Out</button>
+              <button onClick={() => setShowLogout(false)} className="px-3.5 py-1.5 text-[13px] font-medium text-neutral-400 hover:text-white rounded-md transition-colors">Cancel</button>
+              <button onClick={onLogout} className="px-3.5 py-1.5 text-[13px] font-medium bg-red-500/10 text-red-400 border border-red-500/20 rounded-md hover:bg-red-500/20 transition-all">Log Out</button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes dbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes dbScaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+      `}</style>
     </>
   );
 }
