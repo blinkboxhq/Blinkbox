@@ -21,6 +21,7 @@ import Analytics from './components/Analytics';
 import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
 import BeamsBackground from '../../components/ui/BeamsBackground';
+import DashboardHero from './components/DashboardHero';
 const TRIGGER_META = {
   manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
   webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
@@ -404,10 +405,16 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <WorkspaceHeader forceDashboard />
         <main className="flex-1 overflow-y-auto">
-        <BeamsBackground className="min-h-full">
-        <div className="p-8 max-w-[1100px] mx-auto">
+        <BeamsBackground className="min-h-full" intensity="subtle">
 
-          <BrianBar onSubmit={handleBrianSubmit} />
+          {/* ══ TOP PANEL — Brian hero ══════════════════════════════════════ */}
+          {activeTab === 'workflows' && (
+            <div className="border-b border-[#161616]">
+              <DashboardHero onSubmit={handleBrianSubmit} />
+            </div>
+          )}
+
+          <div className="p-6 max-w-[1100px] mx-auto">
 
           {systemError && (
             <div className="mb-5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900 flex items-center gap-2 text-[13px] text-red-400" style={{ animation: 'dbSlide 0.15s ease-out' }}>
@@ -759,6 +766,7 @@ export default function Dashboard() {
           )}
 
         </div>
+          </div>
         </BeamsBackground>
       </main>
       </div>

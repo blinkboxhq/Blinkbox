@@ -17,13 +17,13 @@ function createBeam(width, height) {
   };
 }
 
-const OPACITY_MAP = { subtle: 0.7, medium: 0.85, strong: 1 };
+const OPACITY_MAP = { subtle: 0.28, medium: 0.55, strong: 0.85 };
 
 export default function BeamsBackground({ className = '', intensity = 'strong', children }) {
   const canvasRef = useRef(null);
   const beamsRef = useRef([]);
   const rafRef   = useRef(0);
-  const BEAMS    = 30;
+  const BEAMS    = 14;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -102,7 +102,7 @@ export default function BeamsBackground({ className = '', intensity = 'strong', 
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none"
-        style={{ filter: 'blur(15px)' }}
+        style={{ filter: 'blur(28px)' }}
       />
       <motion.div
         className="absolute inset-0 pointer-events-none"
