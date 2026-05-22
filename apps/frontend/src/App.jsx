@@ -18,20 +18,24 @@ const PageLoader = () => (
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ background: '#0a0a0c', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', padding: '40px', position: 'fixed', inset: 0, zIndex: 9999 }}>
-          <div style={{ color: '#ef4444', fontSize: '14px', fontFamily: 'monospace', maxWidth: '600px', textAlign: 'center', border: '1px solid #ef444440', borderRadius: '12px', padding: '32px', background: '#1a0a0a' }}>
-            <div style={{ color: '#ef4444', fontSize: '22px', marginBottom: '12px', fontWeight: 700 }}>Something went wrong</div>
-            <div style={{ color: '#a1a1aa', fontSize: '13px', wordBreak: 'break-all', marginBottom: '8px' }}>{this.state.error?.message}</div>
-            <button onClick={() => window.location.reload()} style={{ marginTop: '24px', padding: '10px 24px', background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', color: '#e5e5e5', cursor: 'pointer', fontSize: '13px' }}>
-              Reload
+        <div style={{ background: '#080808', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '0', padding: '40px', position: 'fixed', inset: 0, zIndex: 9999 }}>
+          <div style={{ textAlign: 'center', maxWidth: '360px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#111', border: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '22px' }}>⚡</div>
+            <div style={{ color: '#fff', fontSize: '17px', fontWeight: 700, marginBottom: '10px', fontFamily: 'system-ui, sans-serif' }}>Something went wrong</div>
+            <div style={{ color: '#555', fontSize: '13px', lineHeight: '1.6', fontFamily: 'system-ui, sans-serif', marginBottom: '28px' }}>An unexpected error occurred. Our team has been notified. Try reloading — it usually fixes it.</div>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ padding: '9px 22px', background: '#fff', border: 'none', borderRadius: '8px', color: '#000', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'system-ui, sans-serif' }}
+            >
+              Reload page
             </button>
           </div>
         </div>

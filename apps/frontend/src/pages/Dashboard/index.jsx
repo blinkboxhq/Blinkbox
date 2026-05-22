@@ -5,7 +5,7 @@ import {
   Copy, Trash2, Pencil, Check, X, Loader2,
   Activity, Power, Globe, Clock, Mail, Zap, Hash,
   Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
-  Search, LayoutGrid, List, Box,
+  Search, LayoutGrid, List, Box, Plus,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
