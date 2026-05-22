@@ -128,7 +128,7 @@ export default function WorkspaceHeader() {
 
   return (
     <>
-      <div className="relative w-full h-12 bg-neutral-950 border-b border-[#222] z-50 flex items-center justify-between px-3 shrink-0">
+      <div className="relative w-full h-14 bg-neutral-950 border-b-2 border-white/15 z-50 flex items-center justify-between px-3 shrink-0">
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">

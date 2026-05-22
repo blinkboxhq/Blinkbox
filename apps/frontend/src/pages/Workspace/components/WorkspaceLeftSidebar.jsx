@@ -136,7 +136,7 @@ export default function WorkspaceLeftSidebar() {
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll">
 
           {/* Logo */}
-          <div className="px-2 py-4 mb-4 flex items-center gap-3">
+          <div className="px-3 h-14 flex items-center gap-3 border-b-2 border-white/15 shrink-0 mb-2">
             <img
               src={logo}
               alt="BlinkBox"
