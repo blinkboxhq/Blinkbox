@@ -364,6 +364,7 @@ export default function Canvas() {
         fitViewOptions={{ padding: 0.5 }}
         snapToGrid
         snapGrid={[20, 20]}
+        minZoom={0.01}
         panOnDrag={false}
         selectionOnDrag
         selectionMode="partial"
