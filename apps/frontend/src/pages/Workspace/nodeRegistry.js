@@ -246,6 +246,7 @@ import imgExa from "../../assets/exa.svg";
 import imgWolfram from "../../assets/wolfram.svg";
 import imgWeather from "../../assets/weather.svg";
 import imgMoonshot from "../../assets/moonshot.svg";
+import imgKimi from "../../assets/kimi-color.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgPubMed from "../../assets/pubmed.svg";
 import imgWikipedia from "../../assets/wikipedia.svg";
@@ -947,7 +948,7 @@ export const NodeRegistry = {
   agent_moonshot: {
     label: "Kimi",
     icon: Brain,
-    logoUrl: imgMoonshot,
+    logoUrl: imgKimi,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
     category: "ai",
@@ -2566,6 +2567,7 @@ export const NodeRegistry = {
     label: "MCP Client",
     icon: Network,
     logoUrl: imgMCP,
+    imgFilter: "invert(1)",
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     category: "ai",
