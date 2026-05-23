@@ -272,6 +272,16 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
           } else if (h === "tools") {
             if (!config._tools) config._tools = [];
             config._tools.push({ ...(src.data.config || {}), backendType: src.data.backendType });
+          } else if (h === "integration") {
+            if (!config._platformTools) config._platformTools = [];
+            const intType = src.data.backendType?.replace(/^agent_integration_/, "") || "";
+            if (intType && src.data.config?.credentialId) {
+              config._platformTools.push({
+                type: intType,
+                credentialId: src.data.config.credentialId,
+                alias: src.data.config.alias || "",
+              });
+            }
           }
         }
       }

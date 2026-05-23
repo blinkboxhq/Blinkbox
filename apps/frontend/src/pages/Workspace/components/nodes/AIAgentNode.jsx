@@ -2,12 +2,11 @@ import { useState } from "react";
 import {
   Brain, Database, Zap, AlertTriangle,
   ChevronDown, ChevronUp, Settings2, Eye, MessageSquare,
-  ArrowRight, Globe,
+  ArrowRight, Globe, Plug,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import useWorkspaceStore from "../../../../store/workspaceStore";
-
 
 function getSlotNode(edges, nodes, agentNodeId, slotId) {
   const edge = edges.find(e => e.target === agentNodeId && e.targetHandle === slotId);
@@ -15,15 +14,20 @@ function getSlotNode(edges, nodes, agentNodeId, slotId) {
   return nodes.find(n => n.id === edge.source) || null;
 }
 
-function getToolNodes(edges, nodes, agentNodeId) {
+function getNodesForSlot(edges, nodes, agentNodeId, slotId) {
   return edges
-    .filter(e => e.target === agentNodeId && e.targetHandle === "tools")
+    .filter(e => e.target === agentNodeId && e.targetHandle === slotId)
     .map(e => nodes.find(n => n.id === e.source))
     .filter(Boolean);
 }
 
 function ConnChip({ node, color, icon: Icon, onClick }) {
-  const label = node.data?.config?.model || node.data?.config?.memoryType?.replace(/_/g, " ") || node.data?.label || node.data?.backendType;
+  const label =
+    node.data?.config?.alias ||
+    node.data?.config?.model ||
+    node.data?.config?.memoryType?.replace(/_/g, " ") ||
+    node.data?.label ||
+    node.data?.backendType;
   return (
     <button onClick={onClick}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all hover:opacity-80"
@@ -58,9 +62,12 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const [advOpen, setAdvOpen] = useState(false);
 
-  const llmNode    = getSlotNode(edges, nodes, nodeId, "llm");
-  const memoryNode = getSlotNode(edges, nodes, nodeId, "memory");
-  const toolNodes  = getToolNodes(edges, nodes, nodeId);
+  const llmNode          = getSlotNode(edges, nodes, nodeId, "llm");
+  const memoryNode       = getSlotNode(edges, nodes, nodeId, "memory");
+  const toolNodes        = getNodesForSlot(edges, nodes, nodeId, "tools");
+  const integrationNodes = getNodesForSlot(edges, nodes, nodeId, "integration");
+
+  const totalToolCount = toolNodes.length + integrationNodes.length + (config.builtinWebSearch ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -85,12 +92,41 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex flex-col gap-2">
         <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Connected via canvas slots</p>
         <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 divide-y divide-zinc-800/40">
+
+          {/* LLM slot */}
           <div className="px-3.5 py-2.5">
-            <SlotRow label="Language Model" icon={Brain} color="#a78bfa" node={llmNode} onGoTo={() => setSelectedNodeId?.(llmNode?.id)} />
+            <SlotRow label="Language Model" icon={Brain} color="#a78bfa" node={llmNode} onGoTo={() => setSelectedNodeId(llmNode?.id)} />
           </div>
+
+          {/* Memory slot */}
           <div className="px-3.5 py-2.5">
-            <SlotRow label="Memory" icon={Database} color="#c084fc" node={memoryNode} onGoTo={() => setSelectedNodeId?.(memoryNode?.id)} />
+            <SlotRow label="Memory" icon={Database} color="#c084fc" node={memoryNode} onGoTo={() => setSelectedNodeId(memoryNode?.id)} />
           </div>
+
+          {/* Integration slot */}
+          <div className="px-3.5 py-2.5">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                style={{ background: integrationNodes.length ? "#34d39920" : "#27272a", border: `1px solid ${integrationNodes.length ? "#34d39940" : "#3f3f46"}` }}>
+                <Plug className="w-3 h-3" style={{ color: integrationNodes.length ? "#34d399" : "#52525b" }} />
+              </div>
+              <span className="text-[11px] text-zinc-500 flex-1">Integrations</span>
+              {integrationNodes.length > 0 ? (
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {integrationNodes.map(n => (
+                    <button key={n.id} onClick={() => setSelectedNodeId(n.id)}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:opacity-80 transition-opacity">
+                      {n.data?.config?.alias || n.data?.label || n.data?.backendType?.replace("agent_integration_", "") || "integration"}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-[9px] text-zinc-700 border border-zinc-800 rounded px-1.5 py-0.5">none</span>
+              )}
+            </div>
+          </div>
+
+          {/* Tools slot */}
           <div className="px-3.5 py-2.5">
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
@@ -101,9 +137,9 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               {toolNodes.length > 0 ? (
                 <div className="flex flex-wrap gap-1 justify-end">
                   {toolNodes.map(t => (
-                    <button key={t.id} onClick={() => setSelectedNodeId?.(t.id)}
+                    <button key={t.id} onClick={() => setSelectedNodeId(t.id)}
                       className="px-1.5 py-0.5 rounded text-[9px] font-bold border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:opacity-80 transition-opacity">
-                      {t.data?.config?.toolName || t.data?.config?.toolId?.replace(/_/g," ") || "tool"}
+                      {t.data?.config?.toolName || t.data?.config?.toolId?.replace(/_/g, " ") || t.data?.label || "tool"}
                     </button>
                   ))}
                 </div>
@@ -176,7 +212,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
           </div>
         )}
       </div>
-
 
       {/* ── Mission prompt ──────────────────────────────────────────────── */}
       <div>
@@ -349,7 +384,9 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/40">
         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${llmNode ? "bg-emerald-500" : "bg-zinc-700"}`} />
         <span className="text-[9px] text-zinc-700 flex-1">
-          {llmNode ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${toolNodes.length + platformTools.length + (config.builtinWebSearch ? 1 : 0)} tool${(toolNodes.length + platformTools.length + (config.builtinWebSearch ? 1 : 0)) !== 1 ? "s" : ""}` : "Connect an LLM node to activate"}
+          {llmNode
+            ? `${llmNode.data?.config?.model || llmNode.data?.label || "LLM"} · ${totalToolCount} tool${totalToolCount !== 1 ? "s" : ""}`
+            : "Connect an LLM node to activate"}
         </span>
         {config.maxIterations && <span className="text-[9px] font-mono text-zinc-700">{config.maxIterations} iters</span>}
       </div>
