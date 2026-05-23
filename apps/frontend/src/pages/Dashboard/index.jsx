@@ -22,6 +22,7 @@ import NodeLibrary from './components/NodeLibrary';
 import BeamsBackground from '../../components/ui/BeamsBackground';
 import DashboardHero from './components/DashboardHero';
 import WorkflowPreview from './components/WorkflowPreview';
+import NotificationBell from '../../components/NotificationBell';
 const TRIGGER_META = {
   manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
   webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
@@ -422,6 +423,10 @@ export default function Dashboard() {
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <div className="h-11 shrink-0 flex items-center justify-end px-6 border-b border-[#111]">
+          <NotificationBell />
+        </div>
         <main className="flex-1 overflow-y-auto">
         <BeamsBackground className="min-h-full" intensity="subtle">
 

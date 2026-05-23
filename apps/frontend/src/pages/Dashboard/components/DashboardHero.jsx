@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Mail, Clock, Database, GitBranch, Webhook, RefreshCw, Sparkles } from 'lucide-react';
+import { Globe, Mail, Clock, Database, GitBranch, Webhook, RefreshCw } from 'lucide-react';
 import { AIPromptBox } from '../../../components/ui/AIPromptBox';
+import brianLogo from '../../../assets/brian.webp';
 
 const CATS = [
   { icon: Webhook,   label: 'Webhook',   color: '#3b82f6' },
@@ -38,7 +39,7 @@ export default function DashboardHero({ onSubmit, isLoading, userName }) {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
         className="flex flex-col items-center gap-2 text-center">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-violet-400" />
+          <img src={brianLogo} alt="Brian" className="w-5 h-5 object-contain" />
           <span className="text-[11px] font-semibold text-violet-400 uppercase tracking-widest">Brian AI</span>
         </div>
         <h1 className="text-[32px] font-bold text-white tracking-tight leading-none">
