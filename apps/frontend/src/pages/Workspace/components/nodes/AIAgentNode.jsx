@@ -2,62 +2,12 @@ import { useState } from "react";
 import {
   Brain, Database, Zap, AlertTriangle,
   ChevronDown, ChevronUp, Settings2, Eye, MessageSquare,
-  ArrowRight, X, Plug, Globe,
+  ArrowRight, Globe,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
-// OAuth provider for each integration type (null = API key only)
-const INTEGRATION_OAUTH = {
-  slack:            "slack",
-  gmail:            "google",
-  discord:          null,
-  telegram:         null,
-  notion:           "notion",
-  airtable:         "airtable",
-  google_sheets:    "google",
-  google_calendar:  "google",
-  google_drive:     "google",
-  outlook:          "microsoft",
-  github:           "github",
-  linear:           null,
-  hubspot:          null,
-  mongodb:          null,
-  postgres:         null,
-  redis:            null,
-  jira:             null,
-  asana:            null,
-  stripe:           null,
-  shopify:          null,
-  clickup:          null,
-  twilio:           null,
-};
-
-const PLATFORM_INTEGRATIONS = [
-  { type: "slack",            label: "Slack",            emoji: "💬", desc: "Post messages & files",        color: "#E01E5A" },
-  { type: "gmail",            label: "Gmail",            emoji: "📧", desc: "Send & search email",          color: "#EA4335" },
-  { type: "discord",          label: "Discord",          emoji: "🎮", desc: "Post to channels",             color: "#5865F2" },
-  { type: "telegram",         label: "Telegram",         emoji: "✈️",  desc: "Send messages via bot",        color: "#229ED9" },
-  { type: "notion",           label: "Notion",           emoji: "📝", desc: "Create & query pages",         color: "#e8eaea" },
-  { type: "airtable",         label: "Airtable",         emoji: "📊", desc: "Create & read records",        color: "#F82B60" },
-  { type: "google_sheets",    label: "Google Sheets",    emoji: "📈", desc: "Read & append rows",           color: "#34A853" },
-  { type: "google_calendar",  label: "Google Calendar",  emoji: "📅", desc: "Create & manage events",       color: "#4285F4" },
-  { type: "google_drive",     label: "Google Drive",     emoji: "📁", desc: "Upload, list & share files",   color: "#FBBC05" },
-  { type: "outlook",          label: "Outlook",          emoji: "📨", desc: "Email & calendar via Microsoft",color: "#0078D4" },
-  { type: "github",           label: "GitHub",           emoji: "🐙", desc: "Issues, PRs, comments",        color: "#e8eaea" },
-  { type: "linear",           label: "Linear",           emoji: "📐", desc: "Create & update issues",       color: "#5E6AD2" },
-  { type: "hubspot",          label: "HubSpot",          emoji: "🔶", desc: "CRM contacts & deals",         color: "#FF7A59" },
-  { type: "jira",             label: "Jira",             emoji: "🔵", desc: "Tickets, sprints, projects",   color: "#0052CC" },
-  { type: "asana",            label: "Asana",            emoji: "🎯", desc: "Tasks & project tracking",     color: "#F06A6A" },
-  { type: "stripe",           label: "Stripe",           emoji: "💳", desc: "Payments & subscriptions",     color: "#635BFF" },
-  { type: "shopify",          label: "Shopify",          emoji: "🛒", desc: "Orders, products, customers",  color: "#95BF47" },
-  { type: "clickup",          label: "ClickUp",          emoji: "✅", desc: "Tasks & workspace management", color: "#7B68EE" },
-  { type: "twilio",           label: "Twilio",           emoji: "📱", desc: "SMS & voice messaging",        color: "#F22F46" },
-  { type: "mongodb",          label: "MongoDB",          emoji: "🍃", desc: "Query & insert docs",          color: "#4DB33D" },
-  { type: "postgres",         label: "PostgreSQL",       emoji: "🐘", desc: "Run SQL queries",              color: "#336791" },
-  { type: "redis",            label: "Redis",            emoji: "🔴", desc: "Get & set cache values",       color: "#DC382D" },
-];
 
 function getSlotNode(edges, nodes, agentNodeId, slotId) {
   const edge = edges.find(e => e.target === agentNodeId && e.targetHandle === slotId);
@@ -107,23 +57,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const edges = useWorkspaceStore(s => s.edges);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const [advOpen, setAdvOpen] = useState(false);
-
-  const platformTools = Array.isArray(config.platformTools) ? config.platformTools : [];
-  const addedTypes = new Set(platformTools.map(p => p.type));
-
-  function addIntegration(type) {
-    updateConfig("platformTools", [...platformTools, { type, credentialId: "", alias: "" }]);
-    setShowIntegrationPicker(false);
-  }
-
-  function removeIntegration(idx) {
-    updateConfig("platformTools", platformTools.filter((_, i) => i !== idx));
-  }
-
-  function updateIntegration(idx, field, val) {
-    const next = platformTools.map((p, i) => i === idx ? { ...p, [field]: val } : p);
-    updateConfig("platformTools", next);
-  }
 
   const llmNode    = getSlotNode(edges, nodes, nodeId, "llm");
   const memoryNode = getSlotNode(edges, nodes, nodeId, "memory");
@@ -244,59 +177,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         )}
       </div>
 
-      {/* ── Platform Integrations ─────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Plug className="w-3.5 h-3.5 text-violet-400" />
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Integrations</p>
-            {platformTools.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/15 text-violet-400 border border-violet-500/20">{platformTools.length} active</span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-1.5">
-          {PLATFORM_INTEGRATIONS.map(p => {
-            const idx = platformTools.findIndex(pt => pt.type === p.type);
-            const isEnabled = idx !== -1;
-            const pt = isEnabled ? platformTools[idx] : null;
-            const oauthProvider = INTEGRATION_OAUTH[p.type] || null;
-
-            return (
-              <div key={p.type}
-                className="rounded-xl border overflow-hidden transition-all duration-150"
-                style={{ borderColor: isEnabled ? p.color + '30' : '#27272a', background: isEnabled ? p.color + '08' : '#18181b' }}>
-                <button
-                  onClick={() => isEnabled ? removeIntegration(idx) : addIntegration(p.type)}
-                  className="flex items-center gap-2 w-full px-2.5 py-2 text-left">
-                  <span className="text-[15px] shrink-0">{p.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold leading-none truncate" style={{ color: isEnabled ? p.color : '#71717a' }}>{p.label}</p>
-                    <p className="text-[9px] text-zinc-700 leading-none mt-0.5 truncate">{p.desc}</p>
-                  </div>
-                  <div className={`w-7 h-4 rounded-full shrink-0 transition-all duration-200 ${isEnabled ? 'bg-violet-500' : 'bg-zinc-800'}`}>
-                    <span className={`block w-3 h-3 rounded-full bg-white mt-0.5 transition-transform duration-200 ${isEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
-                  </div>
-                </button>
-
-                {isEnabled && (
-                  <div className="px-2.5 pb-2.5 border-t flex flex-col gap-2" style={{ borderColor: p.color + '20' }}>
-                    <CredentialPicker
-                      label="Credential"
-                      value={pt.credentialId || ""}
-                      onChange={(v) => updateIntegration(idx, "credentialId", v)}
-                      accentColor="violet"
-                      oauthProvider={oauthProvider}
-                      placeholder={`Select ${p.label} credential…`}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* ── Mission prompt ──────────────────────────────────────────────── */}
       <div>
