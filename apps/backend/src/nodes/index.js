@@ -20,6 +20,7 @@ import cronTrigger from "./cronTrigger.node.js";
 import httpRequest from "./httpRequest.node.js";
 import webScraper from "./webScraper.node.js";
 import aiAgent from "./aiAgent.node.js";
+import toolThink from "./toolThink.node.js";
 import dataMapper from "./dataMapper.node.js";
 import logicRouter from "./logicRouter.node.js";
 
@@ -730,6 +731,7 @@ export const nodeRegistry = {
   agent_memory_window:    vectorMemory,
   agent_memory_zep:       vectorMemory,
   agent_tool:          aiAgent,
+  tool_think:          toolThink,
 
   // ── Misc aliases ───────────────────────────────────────────────────────────
   cron:                cronTrigger,
