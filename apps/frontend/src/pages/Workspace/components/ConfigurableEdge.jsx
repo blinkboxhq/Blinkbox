@@ -7,6 +7,7 @@ import useWorkspaceStore from "../../../store/workspaceStore";
 export const EDGE_ARROW_ID = "blinkbox-arrow";
 
 const AGENT_TYPES = new Set(["agent_llm", "agent_memory", "agent_tool", "ai_agent"]);
+const AGENT_SUB_TYPES = new Set(["agent_llm", "agent_memory", "agent_tool"]);
 const AGENT_HANDLE = "agent_out";
 
 export default function ConfigurableEdge({
@@ -33,12 +34,16 @@ export default function ConfigurableEdge({
   const nodes = useWorkspaceStore((s) => s.nodes);
   const srcType = nodes.find(n => n.id === source)?.data?.backendType;
   const tgtType = nodes.find(n => n.id === target)?.data?.backendType;
-  const isAgentEdge = sourceHandleId === AGENT_HANDLE
+  // Slot edges: sub-node → ai_agent only (agent_out handle or sub-node source type)
+  const isSlotEdge = sourceHandleId === AGENT_HANDLE
+    || AGENT_SUB_TYPES.has(srcType)
+    || srcType?.startsWith("agent_memory_")
+    || srcType?.startsWith("agent_integration_");
+  // Agent edge (broader): any edge touching an agent node — suppresses insert button
+  const isAgentEdge = isSlotEdge
     || AGENT_TYPES.has(srcType)
     || AGENT_TYPES.has(tgtType)
-    || srcType?.startsWith("agent_memory_")
     || tgtType?.startsWith("agent_memory_")
-    || srcType?.startsWith("agent_integration_")
     || tgtType?.startsWith("agent_integration_");
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
@@ -75,11 +80,11 @@ export default function ConfigurableEdge({
   const isReady = status === "ready";
 
   // Dark grey, brightens on hover
-  let stroke = isAgentEdge
-    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#52525b" : "#2e2e32")
+  let stroke = isSlotEdge
+    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#484848" : "#303033")
     : (hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46");
-  let strokeWidth = isAgentEdge ? 1.5 : 2.5;
-  let strokeDasharray = isAgentEdge ? "4 5" : "none";
+  let strokeWidth = isSlotEdge ? 1.5 : 2.5;
+  let strokeDasharray = isSlotEdge ? "4 5" : "none";
   let animation = "none";
   let filter = "none";
 
@@ -149,7 +154,7 @@ export default function ConfigurableEdge({
         stroke={stroke}
         strokeLinecap="round"
         fill="none"
-        markerEnd={isAgentEdge && !isRunning && !isCompleted ? undefined : markerEnd}
+        markerEnd={isSlotEdge && !isRunning && !isCompleted ? undefined : markerEnd}
         style={{
           ...style,
           strokeDasharray,
