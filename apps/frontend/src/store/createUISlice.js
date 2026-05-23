@@ -139,13 +139,22 @@ export const createUISlice = (set, get) => ({
         style: {},
       }));
 
-      // Cross-slice write: update graph + UI in one atomic set
+      // Cross-slice write: update graph + UI in one atomic set.
+      // Reset ALL execution state so a freshly loaded workflow never inherits
+      // live/running indicators from a previous workflow's run.
       set({
         nodes: loadedNodes,
         edges: loadedEdges,
         workflowName: workflow.name,
         isActive: workflow.active === true || workflow.status === "active",
         isLoading: false,
+        isRunning: false,
+        isExecutionLive: false,
+        liveExecutionState: null,
+        executionError: null,
+        nodeStatuses: {},
+        executionLogs: [],
+        lastRunOutputs: {},
       });
     } catch (error) {
       console.error("Load error:", error);
