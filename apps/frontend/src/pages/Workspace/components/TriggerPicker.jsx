@@ -13,6 +13,8 @@ import {
   Zap,
   ArrowLeft,
   ChevronRight,
+  CheckCircle2,
+  Plus,
 } from "lucide-react";
 import { CircleMenu } from "../../../components/ui/circle-menu";
 import useWorkspaceStore from "../../../store/workspaceStore";
@@ -218,6 +220,7 @@ export default function TriggerPicker() {
   const [phase, setPhase] = useState("radial"); // "radial" | "apps" | "email" | "actions"
   const [pendingTrigger, setPendingTrigger] = useState(null);
   const [focusIdx, setFocusIdx] = useState(0);
+  const [selected, setSelected] = useState([]);
   const searchRef = useRef(null);
 
   const addNode = useWorkspaceStore((s) => s.addNode);
@@ -229,7 +232,7 @@ export default function TriggerPicker() {
     searchRef.current?.focus();
   }, []);
 
-  const close = useCallback(() => setTriggerPickerOpen(false), [setTriggerPickerOpen]);
+  const close = useCallback(() => { setTriggerPickerOpen(false); setSelected([]); }, [setTriggerPickerOpen]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -271,10 +274,46 @@ export default function TriggerPicker() {
 
   const NO_ACTION_PICKER = ["manual", "chat"];
 
+  const toggleTrigger = (trigger, selectedAction = null) => {
+    setSelected(prev => {
+      const key = trigger.id + ":" + (selectedAction || "");
+      const idx = prev.findIndex(s => s.trigger.id + ":" + (s.selectedAction || "") === key);
+      if (idx >= 0) return prev.filter((_, i) => i !== idx);
+      return [...prev, { trigger, selectedAction }];
+    });
+  };
+
+  const commitAll = () => {
+    if (selected.length === 0) return;
+    const existingTriggers = nodes.filter(n => n.data?.type === "trigger");
+    const baseY = existingTriggers.length > 0
+      ? Math.max(...existingTriggers.map(n => n.position.y)) + 220
+      : 300;
+    let lastId = null;
+    selected.forEach(({ trigger, selectedAction }, i) => {
+      const newId = `${trigger.id}-${crypto.randomUUID()}`;
+      addNode({
+        id: newId,
+        type: "custom",
+        position: { x: 400, y: baseY + i * 220 },
+        data: {
+          backendType: trigger.backendType,
+          label: trigger.label,
+          type: "trigger",
+          config: { triggerVariant: trigger.id, selectedAction },
+        },
+      });
+      lastId = newId;
+    });
+    playNodeLand();
+    setTriggerPickerOpen(false);
+    if (lastId) setSelectedNodeId(lastId);
+  };
+
   const handleSelect = (trigger) => {
-    if (NO_ACTION_PICKER.includes(trigger.id)) { commitNode(trigger, null); return; }
+    if (NO_ACTION_PICKER.includes(trigger.id)) { toggleTrigger(trigger); return; }
     const actions = TRIGGER_ACTIONS[trigger.id] || TRIGGER_ACTIONS[trigger.backendType] || [];
-    if (actions.length === 0) { commitNode(trigger, null); return; }
+    if (actions.length === 0) { toggleTrigger(trigger); return; }
     setPendingTrigger(trigger);
     setPhase("actions");
   };
@@ -317,38 +356,46 @@ export default function TriggerPicker() {
 
   // ── Row renderers ───────────────────────────────────────────────────────────
 
-  const AppRow = ({ trigger }) => (
-    <button
-      draggable
-      onDragStart={(e) => dragStart(e, trigger)}
-      onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
-    >
-      <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain shrink-0"
-        style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
-      <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-white leading-tight truncate">{trigger.label}</div>
-        <div className="text-[11px] text-white/45 mt-0.5 truncate group-hover:text-white/60">{trigger.description}</div>
-      </div>
-    </button>
-  );
+  const AppRow = ({ trigger }) => {
+    const isSel = selected.some(s => s.trigger.id === trigger.id);
+    return (
+      <button
+        draggable
+        onDragStart={(e) => dragStart(e, trigger)}
+        onClick={() => handleSelect(trigger)}
+        className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all duration-150 text-left group cursor-grab active:cursor-grabbing ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-white/[0.05] border-transparent hover:border-white/15"}`}
+      >
+        <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain shrink-0"
+          style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-white leading-tight truncate">{trigger.label}</div>
+          <div className="text-[11px] text-white/45 mt-0.5 truncate group-hover:text-white/60">{trigger.description}</div>
+        </div>
+        {isSel && <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />}
+      </button>
+    );
+  };
 
-  const CoreRow = ({ trigger, icon: Icon, color }) => (
-    <button
-      draggable
-      onDragStart={(e) => dragStart(e, trigger)}
-      onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
-    >
-      <Icon size={18} strokeWidth={1.7} style={{ color: color || '#a1a1aa' }} className="shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-white leading-tight">{trigger.label}</div>
-        {trigger.description && (
-          <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 truncate">{trigger.description}</div>
-        )}
-      </div>
-    </button>
-  );
+  const CoreRow = ({ trigger, icon: Icon, color }) => {
+    const isSel = selected.some(s => s.trigger.id === trigger.id);
+    return (
+      <button
+        draggable
+        onDragStart={(e) => dragStart(e, trigger)}
+        onClick={() => handleSelect(trigger)}
+        className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all duration-150 text-left group cursor-grab active:cursor-grabbing ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-white/[0.05] border-transparent hover:border-white/15"}`}
+      >
+        <Icon size={18} strokeWidth={1.7} style={{ color: color || '#a1a1aa' }} className="shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-white leading-tight">{trigger.label}</div>
+          {trigger.description && (
+            <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 truncate">{trigger.description}</div>
+          )}
+        </div>
+        {isSel && <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />}
+      </button>
+    );
+  };
 
   // ── Sub-phases ──────────────────────────────────────────────────────────────
 
@@ -436,24 +483,31 @@ export default function TriggerPicker() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-3 pb-5 flex flex-col gap-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
-          {actions.map((action) => (
-            <button
-              key={action.name}
-              onClick={() => commitNode(pendingTrigger, action.name)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
-            >
-              {pendingTrigger.logoUrl
-                ? <img src={pendingTrigger.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0"
-                    style={pendingTrigger.imgFilter ? { filter: pendingTrigger.imgFilter } : undefined} />
-                : <Zap size={16} className="text-white/60 shrink-0" />
-              }
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-white leading-tight">{action.name}</div>
-                <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 leading-relaxed">{action.description}</div>
-              </div>
-              <ChevronRight size={13} className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
-            </button>
-          ))}
+          {actions.map((action) => {
+            const isSel = selected.some(s => s.trigger.id === pendingTrigger.id && s.selectedAction === action.name);
+            return (
+              <button
+                key={action.name}
+                onClick={() => { toggleTrigger(pendingTrigger, action.name); setPendingTrigger(null); setPhase("radial"); }}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all duration-150 text-left group ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-white/[0.05] border-transparent hover:border-white/15"}`}
+              >
+                {pendingTrigger.logoUrl
+                  ? <img src={pendingTrigger.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0"
+                      style={pendingTrigger.imgFilter ? { filter: pendingTrigger.imgFilter } : undefined} />
+                  : <Zap size={16} className="text-white/60 shrink-0" />
+                }
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold text-white leading-tight">{action.name}</div>
+                  <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60 leading-relaxed">{action.description}</div>
+                </div>
+                {isSel ? (
+                  <CheckCircle2 size={13} className="text-violet-400 shrink-0" />
+                ) : (
+                  <ChevronRight size={13} className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </motion.div>
     );
@@ -522,6 +576,22 @@ export default function TriggerPicker() {
           </kbd>
         </div>
       </motion.div>
+
+      {/* Selection footer */}
+      {selected.length > 0 && (
+        <div className="w-full max-w-[420px] mx-4 pointer-events-auto order-last">
+          <div className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-2">
+            <button onClick={() => setSelected([])} className="p-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded-lg transition-colors shrink-0" title="Clear selection">
+              <X className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-[12px] text-white/50 flex-1">{selected.length} trigger{selected.length !== 1 ? "s" : ""} selected</span>
+            <button onClick={commitAll} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-bold transition-colors">
+              <Plus className="w-3.5 h-3.5" />
+              Add {selected.length}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Content — list phases get a floating panel, radial floats bare */}
       <AnimatePresence mode="wait">

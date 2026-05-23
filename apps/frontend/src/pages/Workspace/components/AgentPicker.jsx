@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Brain, Database, Wrench, ArrowLeft, X, Search, Code2, Globe, FileText,
-  Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch, Zap, Bot, Network, Plug } from "lucide-react";
+  Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch, Zap, Bot, Network, Plug, CheckCircle2, Plus } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -75,6 +75,7 @@ const SLOT_OFFSETS = {
 
 export default function AgentPicker() {
   const [page, setPage] = useState("home");
+  const [selected, setSelected] = useState([]);
 
   const agentPickerParentId = useWorkspaceStore(s => s.agentPickerParentId);
   const closeAgentPicker    = useWorkspaceStore(s => s.closeAgentPicker);
@@ -82,7 +83,52 @@ export default function AgentPicker() {
   const onConnect           = useWorkspaceStore(s => s.onConnect);
   const { getNode }         = useReactFlow();
 
-  const handleClose = () => { closeAgentPicker(); setPage("home"); };
+  const handleClose = () => { closeAgentPicker(); setPage("home"); setSelected([]); };
+
+  const toggleSelect = useCallback((nodeKey, slotId) => {
+    setSelected(prev => {
+      const idx = prev.findIndex(s => s.nodeKey === nodeKey);
+      if (idx >= 0) return prev.filter((_, i) => i !== idx);
+      return [...prev, { nodeKey, slotId }];
+    });
+  }, []);
+
+  const commitAll = useCallback(() => {
+    if (selected.length === 0) return;
+    const parentNode = getNode(agentPickerParentId);
+    selected.forEach(({ nodeKey, slotId }, i) => {
+      const off = SLOT_OFFSETS[slotId] || { x: 60, y: 220 };
+      const newId = `${nodeKey}-${crypto.randomUUID()}`;
+      const nodeDef = NodeRegistry[nodeKey];
+      addNode({
+        id: newId,
+        type: "custom",
+        position: parentNode
+          ? { x: parentNode.position.x + off.x + i * 30, y: parentNode.position.y + off.y + i * 30 }
+          : { x: 400 + i * 200, y: 300 },
+        data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {}, isAgentComponent: true },
+      });
+      setTimeout(() => {
+        onConnect({ source: newId, sourceHandle: "agent_out", target: agentPickerParentId, targetHandle: slotId });
+      }, 50 + i * 10);
+    });
+    closeAgentPicker();
+    setPage("home");
+    setSelected([]);
+  }, [selected, agentPickerParentId, addNode, onConnect, getNode, closeAgentPicker]);
+
+  const SelectionFooter = () => selected.length === 0 ? null : (
+    <div className="shrink-0 px-4 py-3 border-t border-white/10 bg-[#0d0d10] flex items-center gap-2">
+      <button onClick={() => setSelected([])} className="p-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded-lg transition-colors shrink-0" title="Clear">
+        <X className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-[12px] text-white/50 flex-1">{selected.length} selected</span>
+      <button onClick={commitAll} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-bold transition-colors">
+        <Plus className="w-3.5 h-3.5" />
+        Add {selected.length}
+      </button>
+    </div>
+  );
 
   const dragStart = useCallback((e, nodeKey) => {
     const def = NodeRegistry[nodeKey];
@@ -145,12 +191,13 @@ export default function AgentPicker() {
             const def = NodeRegistry[key];
             if (!def) return null;
             const Icon = def.icon;
+            const isSel = selected.some(s => s.nodeKey === key);
             return (
               <button key={key}
                 draggable
                 onDragStart={(e) => dragStart(e, key)}
-                onClick={() => handleSelect(key, "tools")}
-                className="flex items-center gap-4 w-full px-5 py-3.5 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing">
+                onClick={() => toggleSelect(key, "tools")}
+                className={`flex items-center gap-4 w-full px-5 py-3.5 rounded-2xl border transition-all duration-150 text-left group cursor-grab active:cursor-grabbing ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-zinc-800/60 border-transparent hover:border-zinc-700/30"}`}>
                 <div className="w-7 h-7 shrink-0 flex items-center justify-center">
                   {def.logoUrl ? (
                     <img src={def.logoUrl} alt={def.label} className="w-6 h-6 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
@@ -162,10 +209,12 @@ export default function AgentPicker() {
                   <div className="text-[13px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{def.label}</div>
                   {def.description && <div className="text-[11px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 truncate">{def.description}</div>}
                 </div>
+                {isSel && <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />}
               </button>
             );
           })}
         </div>
+        <SelectionFooter />
       </div>
     );
   }
@@ -236,12 +285,13 @@ export default function AgentPicker() {
             const def = NodeRegistry[key];
             if (!def) return null;
             const Icon = def.icon;
+            const isSel = selected.some(s => s.nodeKey === key);
             return (
               <button key={key}
                 draggable
                 onDragStart={(e) => dragStart(e, key)}
-                onClick={() => handleSelect(key, currentCat.slotId)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing">
+                onClick={() => toggleSelect(key, currentCat.slotId)}
+                className={`flex items-center gap-4 w-full px-5 py-4 rounded-2xl border transition-all duration-150 text-left group cursor-grab active:cursor-grabbing ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-zinc-800/60 border-transparent hover:border-zinc-700/30"}`}>
                 <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                   {def.logoUrl ? (
                     <img src={def.logoUrl} alt={def.label} className="w-7 h-7 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
@@ -253,10 +303,12 @@ export default function AgentPicker() {
                   <div className="text-[14px] font-semibold text-zinc-100 group-hover:text-white leading-tight">{def.label}</div>
                   {def.description && <div className="text-[12px] text-zinc-500 mt-0.5 group-hover:text-zinc-400 truncate">{def.description}</div>}
                 </div>
+                {isSel && <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />}
               </button>
             );
           })}
         </div>
+        <SelectionFooter />
       </div>
     );
   }

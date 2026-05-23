@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, ArrowLeft, ChevronRight } from "lucide-react";
+import { Search, X, ArrowLeft, ChevronRight, CheckCircle2, Plus } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import { NODE_ACTIONS } from "../nodeActions";
@@ -15,8 +15,9 @@ const ALL_SEARCHABLE = ALL_NODES.filter((v, i, a) => a.findIndex((n) => n.key ==
 
 export default function AddNodeSidebar() {
   const [search, setSearch]       = useState("");
-  const [page, setPage]           = useState("home"); // "home" | category id | "actions"
-  const [pendingNode, setPending] = useState(null);   // nodeDef waiting for action selection
+  const [page, setPage]           = useState("home");
+  const [pendingNode, setPending] = useState(null);
+  const [selected, setSelected]   = useState(new Set()); // Set of node keys
 
   const addNode           = useWorkspaceStore((s) => s.addNode);
   const addNodeSource     = useWorkspaceStore((s) => s.addNodeSource);
@@ -33,21 +34,25 @@ export default function AddNodeSidebar() {
     setPage("home");
     setSearch("");
     setPending(null);
+    setSelected(new Set());
   };
 
-  const commitNode = (nodeDef, selectedAction = null) => {
+  const basePosition = () => {
     const sourceNode = nodes.find((n) => n.id === addNodeSource);
-    const position = sourceNode
+    return sourceNode
       ? { x: sourceNode.position.x + 300, y: sourceNode.position.y }
       : nodes.length > 0
       ? { x: nodes[nodes.length - 1].position.x + 300, y: nodes[nodes.length - 1].position.y }
       : { x: 400, y: 300 };
+  };
 
+  const commitNode = (nodeDef, selectedAction = null) => {
+    const pos = basePosition();
     const newId = `${nodeDef.key}-${crypto.randomUUID()}`;
     addNode({
       id: newId,
       type: "custom",
-      position,
+      position: pos,
       data: {
         backendType: nodeDef.key,
         label: selectedAction || nodeDef.label,
@@ -55,27 +60,52 @@ export default function AddNodeSidebar() {
         config: selectedAction ? { selectedAction } : {},
       },
     });
-
     if (addNodeSource && addNodeSource !== "__edge__") {
       const alreadyConnected = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
       if (!alreadyConnected) {
         onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
       }
     }
-
     playNodeLand();
     handleClose();
     setSelectedNodeId(newId);
   };
 
-  const handleNodeClick = (nodeDef) => {
+  const commitAll = () => {
+    if (selected.size === 0) return;
+    const base = basePosition();
+    let lastId = null;
+    let i = 0;
+    for (const key of selected) {
+      const def = NodeRegistry[key];
+      if (!def) continue;
+      const pos = { x: base.x + i * 320, y: base.y };
+      const newId = `${key}-${crypto.randomUUID()}`;
+      addNode({ id: newId, type: "custom", position: pos, data: { backendType: key, label: def.label, type: "action", config: {} } });
+      if (i === 0 && addNodeSource && addNodeSource !== "__edge__") {
+        const alreadyConnected = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
+        if (!alreadyConnected) onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
+      }
+      lastId = newId;
+      i++;
+    }
+    playNodeLand();
+    handleClose();
+    if (lastId) setSelectedNodeId(lastId);
+  };
+
+  const toggleNode = (nodeDef) => {
     const actions = NODE_ACTIONS[nodeDef.key];
-    if (actions && actions.length > 0) {
+    if (actions && actions.length > 0 && !selected.has(nodeDef.key)) {
       setPending(nodeDef);
       setPage("actions");
-    } else {
-      commitNode(nodeDef);
+      return;
     }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(nodeDef.key) ? next.delete(nodeDef.key) : next.add(nodeDef.key);
+      return next;
+    });
   };
 
   const query = search.toLowerCase();
@@ -147,6 +177,26 @@ export default function AddNodeSidebar() {
     );
   }
 
+  const SelectionFooter = () => selected.size === 0 ? null : (
+    <div className="shrink-0 px-4 py-3 border-t border-white/10 bg-[#0d0d10] flex items-center gap-2">
+      <button
+        onClick={() => setSelected(new Set())}
+        className="p-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded-lg transition-colors shrink-0"
+        title="Clear selection"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-[12px] text-white/50 flex-1">{selected.size} node{selected.size !== 1 ? "s" : ""} selected</span>
+      <button
+        onClick={commitAll}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-bold transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Add {selected.size}
+      </button>
+    </div>
+  );
+
   // ── Category drill-down page ───────────────────────────────────────────────
   if (page !== "home") {
     const cat = ACTION_CATEGORIES.find((c) => c.id === page);
@@ -171,8 +221,9 @@ export default function AddNodeSidebar() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
-          {catNodes.map((n) => <NodeRow key={n.key} nodeDef={n} onSelect={handleNodeClick} />)}
+          {catNodes.map((n) => <NodeRow key={n.key} nodeDef={n} onSelect={toggleNode} selected={selected.has(n.key)} />)}
         </div>
+        <SelectionFooter />
       </div>
     );
   }
@@ -204,7 +255,7 @@ export default function AddNodeSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-6 flex flex-col gap-0.5">
+      <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5">
         {filtered !== null ? (
           filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -212,17 +263,18 @@ export default function AddNodeSidebar() {
               <p className="text-[13px] text-white/40">No nodes found</p>
             </div>
           ) : (
-            filtered.map((n) => <NodeRow key={n.key} nodeDef={n} onSelect={handleNodeClick} />)
+            filtered.map((n) => <NodeRow key={n.key} nodeDef={n} onSelect={toggleNode} selected={selected.has(n.key)} />)
           )
         ) : (
           ACTION_CATEGORIES.map((cat) => <CategoryCard key={cat.id} cat={cat} setPage={setPage} />)
         )}
       </div>
+      <SelectionFooter />
     </div>
   );
 }
 
-function NodeRow({ nodeDef, onSelect }) {
+function NodeRow({ nodeDef, onSelect, selected }) {
   const Icon = nodeDef.icon;
   const hasActions = NODE_ACTIONS[nodeDef.key]?.length > 0;
   const onDragStart = (e) => {
@@ -238,7 +290,7 @@ function NodeRow({ nodeDef, onSelect }) {
       draggable
       onDragStart={onDragStart}
       onClick={() => onSelect(nodeDef)}
-      className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/20 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
+      className={`flex items-center gap-4 w-full px-5 py-4 rounded-2xl border transition-all duration-150 text-left group cursor-grab active:cursor-grabbing ${selected ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-white/[0.04] border-transparent hover:border-white/20"}`}
     >
       <div className="w-8 h-8 shrink-0 flex items-center justify-center" style={{ minWidth: 32 }}>
         {nodeDef.logoUrl ? (
@@ -258,9 +310,11 @@ function NodeRow({ nodeDef, onSelect }) {
           <div className="text-[12px] text-white/50 mt-0.5 group-hover:text-white/70 truncate">{nodeDef.description}</div>
         )}
       </div>
-      {hasActions && (
+      {selected ? (
+        <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />
+      ) : hasActions ? (
         <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white/70 shrink-0 transition-colors" />
-      )}
+      ) : null}
     </button>
   );
 }
