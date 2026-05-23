@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, Activity, CheckCircle2, AlertCircle, RefreshCw, Square, Loader2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import TraceTimeline from "./TraceTimeline";
+import { useDraggablePanel } from "../../../hooks/useDraggablePanel";
 
 /**
  * ExecutionTraceSidebar — Framer Motion slide-over panel that renders the
@@ -21,6 +22,11 @@ export default function ExecutionTraceSidebar() {
 
   const overallStatus = liveExecutionState?.status || (isRunning ? "running" : "idle");
 
+  const [pos, startDrag] = useDraggablePanel(() => ({
+    x: window.innerWidth - 420,
+    y: 52,
+  }));
+
   const handleClose = () => {
     closeTraceSidebar();
     if (!isRunning) closeLiveExecution();
@@ -35,14 +41,18 @@ export default function ExecutionTraceSidebar() {
     <AnimatePresence>
       {isOpen && (
         <motion.aside
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.97 }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="fixed top-0 right-0 h-full w-[420px] z-30 flex flex-col bg-zinc-950 border-l border-zinc-800 shadow-[-20px_0_60px_rgba(0,0,0,0.8)]"
+          className="fixed w-[420px] z-30 flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/80"
+          style={{ left: pos.x, top: pos.y, height: 'calc(100vh - 64px)' }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80 bg-zinc-950">
+          {/* Header — drag handle */}
+          <div
+            className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80 bg-zinc-950 cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={startDrag}
+          >
             <div className="flex items-center gap-3">
               <div className={`p-1.5 rounded-md ${
                 overallStatus === "failed" ? "bg-red-500/10" :

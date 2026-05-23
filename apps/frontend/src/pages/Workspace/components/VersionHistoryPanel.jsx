@@ -4,6 +4,7 @@ import { X, RotateCcw, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../../lib/api";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import { useDraggablePanel } from "../../../hooks/useDraggablePanel";
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -20,6 +21,11 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
   const [restoring, setRestoring] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const setGraph = useWorkspaceStore((s) => s.setGraph);
+
+  const [pos, startDrag] = useDraggablePanel(() => ({
+    x: window.innerWidth - 340,
+    y: 52,
+  }));
 
   useEffect(() => {
     if (!isOpen || !automationId) return;
@@ -62,14 +68,18 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
           />
           <motion.aside
             key="version-panel"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-[340px] z-50 flex flex-col bg-zinc-950 border-l border-zinc-800 shadow-[-20px_0_60px_rgba(0,0,0,0.7)]"
+            className="fixed w-[340px] z-50 flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/80"
+            style={{ left: pos.x, top: pos.y, height: 'calc(100vh - 64px)' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80">
+            {/* Header — drag handle */}
+            <div
+              className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80 cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={startDrag}
+            >
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-zinc-500" />
                 <h2 className="text-sm font-bold text-zinc-100">Version History</h2>
@@ -77,6 +87,7 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
               <button
                 onClick={onClose}
                 className="p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                onMouseDown={e => e.stopPropagation()}
               >
                 <X className="w-4 h-4" />
               </button>

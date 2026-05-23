@@ -7,6 +7,7 @@ import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
+import { useDraggablePanel } from "../../../hooks/useDraggablePanel";
 
 const PANEL_HEADER_H = 52; // px — all three panels share this header height
 
@@ -399,6 +400,11 @@ export default function NodeConfigModal() {
   const nodeStatus = nodeStatuses?.[selectedNodeId];
   const lastOutput = lastRunOutputs?.[selectedNodeId];
 
+  const [panelPos, startPanelDrag] = useDraggablePanel(() => ({
+    x: Math.round(window.innerWidth * 0.05),
+    y: Math.round(window.innerHeight * 0.03),
+  }));
+
   // Resizable panels — percentages [p0, p1, p2]
   const containerRef = useRef(null);
   const [pw, setPw]  = useState([33.33, 33.33, 33.34]);
@@ -446,15 +452,26 @@ export default function NodeConfigModal() {
       {isOpen && (
         <motion.div
           key="ncm"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 6 }}
-          transition={{ duration: 0.16, ease: "easeOut" }}
-          className="fixed inset-0 flex flex-col"
-          style={{ zIndex: 60, background: "#0a0a0a" }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.14, ease: "easeOut" }}
+          className="fixed flex flex-col rounded-xl overflow-hidden shadow-2xl shadow-black/80 border border-[#2a2a2a]"
+          style={{
+            zIndex: 60,
+            background: "#0a0a0a",
+            left: panelPos.x,
+            top: panelPos.y,
+            width: `${window.innerWidth * 0.9}px`,
+            height: `${window.innerHeight * 0.92}px`,
+          }}
         >
-          {/* Top bar */}
-          <div className="flex items-center gap-3 px-5 shrink-0 border-b border-[#333]" style={{ height: 52, background: "#0a0a0a" }}>
+          {/* Top bar — drag handle */}
+          <div
+            className="flex items-center gap-3 px-5 shrink-0 border-b border-[#333] cursor-grab active:cursor-grabbing select-none"
+            style={{ height: 52, background: "#0a0a0a" }}
+            onMouseDown={startPanelDrag}
+          >
             <div className="w-7 h-7 shrink-0 flex items-center justify-center">
               {logoUrl
                 ? <img src={logoUrl} alt="" className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />

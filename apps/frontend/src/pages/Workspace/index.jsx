@@ -113,8 +113,6 @@ export default function Workspace() {
   }, [id, isMobile]);
 
   // ── Per-panel resize state ───────────────────────────────────────────────
-  const [chatH,     onChatResizeStart] = useResize({ initial: 220, min: 140, max: 480, direction: 'vertical' });
-  const [brianW,    onBrianResize]     = useResize({ initial: 340, min: 260, max: 600, direction: 'horizontal' });
   const [rightW,    onRightResize]     = useResize({ initial: 320, min: 220, max: 520, direction: 'horizontal' });
 
   if (isMobile) return <MobileGate />;
@@ -144,21 +142,17 @@ export default function Workspace() {
               <Canvas />
 
               {/* Right sidebar with drag handle */}
-              <WorkspaceRightSidebar width={rightW} onResizeStart={onRightResize} />
+              <WorkspaceRightSidebar width={rightW} />
               <NodeConfigModal />
               <CommandPalette />
             </ReactFlowProvider>
 
-            {/* Brian panel with drag handle on its left edge */}
-            {panels.brian !== false && (
-              <BrianPanel width={brianW} onResizeStart={onBrianResize} />
-            )}
-          </div>
+            {/* Brian panel — freely draggable floating overlay */}
+            {panels.brian !== false && <BrianPanel />}
 
-          {/* Bottom chat panel (already has its own resize) */}
-          {panels.bottomChat && (
-            <BottomChatPanel height={chatH} onResizeStart={onChatResizeStart} />
-          )}
+            {/* Bottom chat panel — freely draggable floating overlay */}
+            {panels.bottomChat && <BottomChatPanel />}
+          </div>
         </div>
       </div>
     </div>

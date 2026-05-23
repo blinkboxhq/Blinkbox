@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useDraggablePanel } from "../../../hooks/useDraggablePanel";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -492,65 +493,88 @@ export default function TriggerPicker() {
 
   const isListPhase = filtered !== null || phase === "apps" || phase === "email" || phase === "actions";
 
+  const [pickerPos, startPickerDrag] = useDraggablePanel(() => ({
+    x: Math.round((window.innerWidth - 420) / 2),
+    y: Math.round(window.innerHeight * 0.25),
+  }));
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 pointer-events-none backdrop-blur-md">
+    <>
+      {/* Backdrop — click to close */}
+      <div className="fixed inset-0 z-50 backdrop-blur-md" onClick={close} />
 
-      {/* Floating search bar */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ type: "spring", stiffness: 400, damping: 32 }}
-        className="w-full max-w-[420px] mx-4 pointer-events-auto"
+      {/* Floating draggable picker */}
+      <div
+        className="fixed z-[51] flex flex-col items-center gap-3 pointer-events-none"
+        style={{ left: pickerPos.x, top: pickerPos.y, width: 420 }}
       >
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl focus-within:border-white/25 transition-colors">
-          <Search size={15} className="text-white/40 shrink-0" />
-          <input
-            ref={searchRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search triggers..."
-            className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/35"
-          />
-          <kbd className="text-[10px] text-white/25 border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">
-            ESC
-          </kbd>
-        </div>
-      </motion.div>
+        {/* Drag gripper */}
+        <div
+          className="w-8 h-1 rounded-full bg-white/20 cursor-grab active:cursor-grabbing pointer-events-auto shrink-0 mb-0.5"
+          onMouseDown={startPickerDrag}
+        />
 
-      {/* Content — list phases get a floating panel, radial floats bare */}
-      <AnimatePresence mode="wait">
-        {isListPhase ? (
-          <motion.div
-            key="list-panel"
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="w-full max-w-[420px] mx-4 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col pointer-events-auto"
-            style={{ maxHeight: "55vh" }}
+        {/* Search bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+          className="w-full pointer-events-auto"
+        >
+          <div
+            className="flex items-center gap-2.5 px-4 py-3 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl focus-within:border-white/25 transition-colors cursor-grab active:cursor-grabbing"
+            onMouseDown={startPickerDrag}
           >
-            {filtered !== null ? renderSearchResults() : phase === "apps" ? renderAppsGrid() : phase === "email" ? renderEmailPage() : renderActionsPage()}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="radial"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.16 }}
-            className="flex flex-col items-center gap-2 pointer-events-auto"
-          >
-            <CircleMenu
-              items={circleItems}
-              openIcon={<Zap size={20} className="text-black" strokeWidth={2} />}
-              closeIcon={<X size={20} className="text-black" strokeWidth={2} />}
-              centerLabel="open menu"
+            <Search size={15} className="text-white/40 shrink-0 cursor-default" onMouseDown={e => e.stopPropagation()} />
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search triggers..."
+              className="flex-1 bg-transparent text-[13px] text-neutral-200 outline-none placeholder:text-white/35 cursor-text"
+              onMouseDown={e => e.stopPropagation()}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <kbd className="text-[10px] text-white/25 border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">
+              ESC
+            </kbd>
+          </div>
+        </motion.div>
+
+        {/* Content — list phases get a floating panel, radial floats bare */}
+        <AnimatePresence mode="wait">
+          {isListPhase ? (
+            <motion.div
+              key="list-panel"
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="w-full bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col pointer-events-auto"
+              style={{ maxHeight: "55vh" }}
+            >
+              {filtered !== null ? renderSearchResults() : phase === "apps" ? renderAppsGrid() : phase === "email" ? renderEmailPage() : renderActionsPage()}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="radial"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.16 }}
+              className="flex flex-col items-center gap-2 pointer-events-auto"
+            >
+              <CircleMenu
+                items={circleItems}
+                openIcon={<Zap size={20} className="text-black" strokeWidth={2} />}
+                closeIcon={<X size={20} className="text-black" strokeWidth={2} />}
+                centerLabel="open menu"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }

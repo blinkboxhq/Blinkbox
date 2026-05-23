@@ -5,6 +5,7 @@ import TriggerPicker from './TriggerPicker';
 import AddNodeSidebar from './AddNodeSidebar';
 import AgentPicker from './AgentPicker';
 import { playPanelOpen } from '../../../lib/sounds';
+import { useDraggablePanel } from '../../../hooks/useDraggablePanel';
 
 const springIn = {
   type: "spring",
@@ -13,13 +14,18 @@ const springIn = {
   mass: 0.8,
 };
 
-export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
+export default function WorkspaceRightSidebar({ width = 320 }) {
   const isTriggerPickerOpen = useWorkspaceStore(s => s.isTriggerPickerOpen);
   const isAddNodeOpen       = useWorkspaceStore(s => s.isAddNodeOpen);
   const isAgentPickerOpen   = useWorkspaceStore(s => s.isAgentPickerOpen);
 
   const isSidebarOpen = isAddNodeOpen || isAgentPickerOpen;
   const prevOpen = useRef(false);
+
+  const [pos, startDrag] = useDraggablePanel(() => ({
+    x: window.innerWidth - width,
+    y: 52,
+  }));
 
   useEffect(() => {
     if (isSidebarOpen && !prevOpen.current) playPanelOpen();
@@ -38,30 +44,25 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
         {isSidebarOpen && (
           <motion.aside
             key="right-sidebar"
-            initial={{ x: width, opacity: 0.4 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: width, opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
             transition={springIn}
-            className="absolute top-0 right-0 h-full flex flex-row bg-neutral-950 border-l border-[#333] z-20 will-change-transform"
-            style={{ width }}
+            className="fixed flex flex-col bg-neutral-950 border border-[#333] z-20 rounded-xl overflow-hidden shadow-2xl shadow-black/70 will-change-transform"
+            style={{ left: pos.x, top: pos.y, width, height: 'calc(100vh - 64px)' }}
           >
-            {/* Drag handle */}
+            {/* Drag handle bar */}
             <div
-              onMouseDown={onResizeStart}
-              className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#2a2a2d] group"
+              onMouseDown={startDrag}
+              className="h-7 shrink-0 flex items-center justify-center border-b border-[#2a2a2d] cursor-grab active:cursor-grabbing bg-neutral-950 select-none"
             >
-              <div className="w-0.5 h-8 bg-[#444] group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+              <div className="w-8 h-0.5 bg-[#444] rounded-full" />
             </div>
 
-            <motion.div
-              className="flex-1 flex flex-col overflow-hidden"
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.04, duration: 0.18, ease: "easeOut" }}
-            >
+            <div className="flex-1 flex flex-col overflow-hidden">
               {isAddNodeOpen && <AddNodeSidebar />}
               {isAgentPickerOpen && <AgentPicker />}
-            </motion.div>
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
