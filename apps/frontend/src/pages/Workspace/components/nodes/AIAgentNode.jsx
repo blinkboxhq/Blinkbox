@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Brain, Database, Zap, AlertTriangle,
   ChevronDown, ChevronUp, Settings2, Eye, MessageSquare,
-  ArrowRight, Plus, X, Plug, Globe,
+  ArrowRight, X, Plug, Globe,
 } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
@@ -107,7 +107,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const edges = useWorkspaceStore(s => s.edges);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const [advOpen, setAdvOpen] = useState(false);
-  const [showIntegrationPicker, setShowIntegrationPicker] = useState(false);
 
   const platformTools = Array.isArray(config.platformTools) ? config.platformTools : [];
   const addedTypes = new Set(platformTools.map(p => p.type));
@@ -247,82 +246,56 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
 
       {/* ── Platform Integrations ─────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Platform Integrations</p>
+            <Plug className="w-3.5 h-3.5 text-violet-400" />
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Integrations</p>
             {platformTools.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/15 text-violet-400 border border-violet-500/20">{platformTools.length}</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/15 text-violet-400 border border-violet-500/20">{platformTools.length} active</span>
             )}
           </div>
-          <button onClick={() => setShowIntegrationPicker(v => !v)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold border border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-all">
-            <Plus className="w-2.5 h-2.5" />
-            Add
-          </button>
         </div>
 
-        {showIntegrationPicker && (
-          <div className="mb-2 p-2 rounded-xl border border-zinc-700/60 bg-zinc-900/80 grid grid-cols-2 gap-1 max-h-64 overflow-y-auto">
-            {PLATFORM_INTEGRATIONS.filter(p => !addedTypes.has(p.type)).map(p => (
-              <button key={p.type} onClick={() => addIntegration(p.type)}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-zinc-800 transition-colors">
-                <span className="text-[13px] shrink-0">{p.emoji}</span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold text-zinc-200 leading-none">{p.label}</p>
-                  <p className="text-[9px] text-zinc-600 leading-none mt-0.5">{p.desc}</p>
-                </div>
-              </button>
-            ))}
-            {PLATFORM_INTEGRATIONS.filter(p => !addedTypes.has(p.type)).length === 0 && (
-              <p className="col-span-2 text-[10px] text-zinc-600 text-center py-2">All integrations added</p>
-            )}
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-1.5">
+          {PLATFORM_INTEGRATIONS.map(p => {
+            const idx = platformTools.findIndex(pt => pt.type === p.type);
+            const isEnabled = idx !== -1;
+            const pt = isEnabled ? platformTools[idx] : null;
+            const oauthProvider = INTEGRATION_OAUTH[p.type] || null;
 
-        {platformTools.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {platformTools.map((pt, idx) => {
-              const def = PLATFORM_INTEGRATIONS.find(p => p.type === pt.type);
-              const oauthProvider = INTEGRATION_OAUTH[pt.type] || null;
-              return (
-                <div key={idx} className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 overflow-hidden">
-                  <div className="flex items-center gap-2.5 px-3 py-2 border-b border-zinc-800/40">
-                    <span className="text-[13px] shrink-0">{def?.emoji || '🔌'}</span>
-                    <span className="text-[11px] font-semibold flex-1" style={{ color: def?.color || '#a1a1aa' }}>{def?.label || pt.type}</span>
-                    <span className="text-[9px] text-zinc-600 mr-1">{def?.desc}</span>
-                    <button onClick={() => removeIntegration(idx)} className="text-zinc-700 hover:text-red-400 transition-colors shrink-0">
-                      <X className="w-3 h-3" />
-                    </button>
+            return (
+              <div key={p.type}
+                className="rounded-xl border overflow-hidden transition-all duration-150"
+                style={{ borderColor: isEnabled ? p.color + '30' : '#27272a', background: isEnabled ? p.color + '08' : '#18181b' }}>
+                <button
+                  onClick={() => isEnabled ? removeIntegration(idx) : addIntegration(p.type)}
+                  className="flex items-center gap-2 w-full px-2.5 py-2 text-left">
+                  <span className="text-[15px] shrink-0">{p.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold leading-none truncate" style={{ color: isEnabled ? p.color : '#71717a' }}>{p.label}</p>
+                    <p className="text-[9px] text-zinc-700 leading-none mt-0.5 truncate">{p.desc}</p>
                   </div>
-                  <div className="px-3 py-2.5 flex flex-col gap-2">
+                  <div className={`w-7 h-4 rounded-full shrink-0 transition-all duration-200 ${isEnabled ? 'bg-violet-500' : 'bg-zinc-800'}`}>
+                    <span className={`block w-3 h-3 rounded-full bg-white mt-0.5 transition-transform duration-200 ${isEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                  </div>
+                </button>
+
+                {isEnabled && (
+                  <div className="px-2.5 pb-2.5 border-t flex flex-col gap-2" style={{ borderColor: p.color + '20' }}>
                     <CredentialPicker
                       label="Credential"
                       value={pt.credentialId || ""}
                       onChange={(v) => updateIntegration(idx, "credentialId", v)}
                       accentColor="violet"
                       oauthProvider={oauthProvider}
-                      placeholder={`Select ${def?.label || pt.type} credential…`}
+                      placeholder={`Select ${p.label} credential…`}
                     />
-                    <div>
-                      <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">Alias (optional)</label>
-                      <input
-                        value={pt.alias || ""}
-                        onChange={e => updateIntegration(idx, "alias", e.target.value)}
-                        placeholder={`e.g. "Work ${def?.label || pt.type}"`}
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-zinc-600"
-                      />
-                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-zinc-800/40 bg-zinc-900/20">
-            <Plug className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
-            <p className="text-[10px] text-zinc-700">Add integrations so the agent can autonomously send messages, write to databases, create tasks, and more — without extra nodes.</p>
-          </div>
-        )}
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Mission prompt ──────────────────────────────────────────────── */}
