@@ -308,6 +308,7 @@ const agentNode = {
       // Handle-routed dependencies (injected by cursor executor)
       _memory,
       _tools,
+      _platformTools,
 
       // Built-in tools (toggled from config panel)
       builtinWebSearch = false,
@@ -422,7 +423,7 @@ const agentNode = {
       webSearchCredentialId,
       workspaceId: context.workspaceId,
       toolRegistry: context.toolRegistry || null,
-      platformTools: config.platformTools,
+      platformTools: [...(config.platformTools || []), ...(_platformTools || [])],
       inputAttachments,
     });
 

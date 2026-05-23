@@ -286,6 +286,17 @@ export async function processCursor({ executionId, cursorId }) {
             handleDeps._chatModel = sourceNode
               ? { ...(sourceNode.data || {}), backendType: sourceNode.type }
               : firstOutput;
+          } else if (handle === "integration") {
+            const sourceNode = automation.nodes.find((n) => n.id === edge.source);
+            if (sourceNode?.data?.credentialId) {
+              if (!handleDeps._platformTools) handleDeps._platformTools = [];
+              const intType = sourceNode.type.replace(/^agent_integration_/, "");
+              handleDeps._platformTools.push({
+                type: intType,
+                credentialId: sourceNode.data.credentialId,
+                alias: sourceNode.data.alias || "",
+              });
+            }
           }
         }
       }

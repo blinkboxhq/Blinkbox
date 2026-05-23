@@ -108,7 +108,7 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
   const showPlus = !hasConnection || (slot.showPlus && hovered);
 
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 10, transform: "translateX(-50%)" }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH, transform: "translateX(-50%)" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
