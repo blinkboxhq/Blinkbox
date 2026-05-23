@@ -81,7 +81,7 @@ export default function ConfigurableEdge({
 
   // Dark grey, brightens on hover
   let stroke = isSlotEdge
-    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#484848" : "#303033")
+    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#6b6b75" : "#4a4a54")
     : (hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46");
   let strokeWidth = isSlotEdge ? 1.5 : 2.5;
   let strokeDasharray = isSlotEdge ? "4 5" : "none";
