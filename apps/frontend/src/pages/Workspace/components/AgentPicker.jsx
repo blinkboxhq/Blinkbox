@@ -69,8 +69,8 @@ const AGENT_CATEGORIES = [
 const SLOT_OFFSETS = {
   llm:         { x: -30, y: 160 },
   memory:      { x: 30,  y: 160 },
-  tools:       { x: 90,  y: 160 },
-  integration: { x: 150, y: 160 },
+  integration: { x: 90,  y: 160 },
+  tools:       { x: 150, y: 160 },
 };
 
 export default function AgentPicker() {
