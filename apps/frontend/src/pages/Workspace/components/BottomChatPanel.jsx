@@ -4,7 +4,6 @@ import api from '../../../lib/api';
 import { useParams } from 'react-router-dom';
 import NodeTreePanel from './NodeTreePanel';
 import useWorkspaceStore from '../../../store/workspaceStore';
-import { useDraggablePanel } from '../../../hooks/useDraggablePanel';
 
 function Msg({ m }) {
   const isUser = m.role === 'user';
@@ -91,7 +90,7 @@ function fileToAttachment(file) {
   });
 }
 
-export default function BottomChatPanel({ height = 220 }) {
+export default function BottomChatPanel({ height, onResizeStart }) {
   const { id: automationId } = useParams();
   const nodeCount = useWorkspaceStore(s => s.nodes.length);
   const hasChatTrigger = useWorkspaceStore(s =>
@@ -108,11 +107,6 @@ export default function BottomChatPanel({ height = 220 }) {
   const inputRef = useRef(null);
   const bodyRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  const [panelPos, startPanelDrag] = useDraggablePanel(() => ({
-    x: 56,
-    y: window.innerHeight - height,
-  }));
 
   const [leftPct, onSplitResize] = useSplitResize({ containerRef: bodyRef });
 
@@ -183,8 +177,8 @@ export default function BottomChatPanel({ height = 220 }) {
 
   return (
     <div
-      className="fixed flex flex-col bg-[#0d0d10] border border-[#222] rounded-xl overflow-hidden shadow-2xl shadow-black/70"
-      style={{ left: panelPos.x, top: panelPos.y, width: 'calc(100vw - 56px)', height, zIndex: 20 }}
+      className="flex flex-col bg-[#0d0d10] border-t border-[#222]"
+      style={{ height }}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -198,12 +192,16 @@ export default function BottomChatPanel({ height = 220 }) {
         </div>
       )}
 
-      {/* Panel header — drag handle */}
+      {/* Top resize handle */}
       <div
-        className="flex items-center border-b border-[#222] shrink-0 cursor-grab active:cursor-grabbing select-none"
-        style={{ height: 33 }}
-        onMouseDown={startPanelDrag}
+        className="h-1 w-full cursor-row-resize hover:bg-violet-500/30 transition-colors shrink-0 group"
+        onMouseDown={onResizeStart}
       >
+        <div className="w-8 h-0.5 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-0.5 transition-colors" />
+      </div>
+
+      {/* Panel header */}
+      <div className="flex items-center border-b border-[#222] shrink-0" style={{ height: 33 }}>
         <div className="flex items-center justify-between px-4 shrink-0" style={{ width: `${leftPct}%`, height: '100%' }}>
           <div className="flex items-center gap-2">
             <Bot className="w-3.5 h-3.5 text-violet-400" />

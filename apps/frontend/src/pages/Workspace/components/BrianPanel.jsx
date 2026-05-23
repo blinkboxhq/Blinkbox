@@ -9,7 +9,6 @@ import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import api from '../../../lib/api';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
-import { useDraggablePanel } from '../../../hooks/useDraggablePanel';
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function callBrian(messages) {
@@ -388,7 +387,7 @@ function exportConversation(messages, workflowName) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-export default function BrianPanel({ width = 360 }) {
+export default function BrianPanel({ width, onResizeStart }) {
   const isBrianOpen   = useWorkspaceStore(s => s.isBrianOpen);
   const setBrianOpen  = useWorkspaceStore(s => s.setBrianOpen);
   const addNode       = useWorkspaceStore(s => s.addNode);
@@ -410,11 +409,6 @@ export default function BrianPanel({ width = 360 }) {
   const scrollRef  = useRef(null);
   const inputRef   = useRef(null);
   const textareaRef = useRef(null);
-
-  const [panelPos, startPanelDrag] = useDraggablePanel(() => ({
-    x: window.innerWidth - width,
-    y: 52,
-  }));
 
   const isFresh = messages.length === 1 && messages[0].id === 'welcome';
 
@@ -495,23 +489,19 @@ export default function BrianPanel({ width = 360 }) {
   return (
     <>
       <div
-        className="fixed flex flex-col bg-[#0c0c0f] border border-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl shadow-black/80"
-        style={{
-          left: panelPos.x,
-          top: panelPos.y,
-          width: width ?? 360,
-          height: 'calc(100vh - 64px)',
-          animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)',
-          zIndex: 25,
-        }}
+        className="shrink-0 h-full flex flex-row bg-[#0c0c0f] border-l border-[#1e1e1e]"
+        style={{ width: width ?? 360, animation: 'brianSlide 0.18s cubic-bezier(0.16,1,0.3,1)' }}
       >
+        {/* ── Drag handle ── */}
+        <div onMouseDown={onResizeStart}
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#161616]">
+          <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+        </div>
+
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-          {/* ── Header — drag handle ── */}
-          <div
-            className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a] shrink-0 cursor-grab active:cursor-grabbing select-none"
-            onMouseDown={startPanelDrag}
-          >
+          {/* ── Header ── */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a] shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-6 h-6 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
                 <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
