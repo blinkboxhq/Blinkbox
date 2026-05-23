@@ -311,6 +311,8 @@ export default function TriggerPicker() {
       type: "trigger",
       config: { triggerVariant: trigger.id },
     }));
+    // Close overlay so canvas is visible while dragging
+    setTimeout(() => setTriggerPickerOpen(false), 30);
   };
 
   // ── Row renderers ───────────────────────────────────────────────────────────
@@ -320,7 +322,7 @@ export default function TriggerPicker() {
       draggable
       onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
+      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain shrink-0"
         style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
@@ -333,8 +335,10 @@ export default function TriggerPicker() {
 
   const CoreRow = ({ trigger, icon: Icon, color }) => (
     <button
+      draggable
+      onDragStart={(e) => dragStart(e, trigger)}
       onClick={() => handleSelect(trigger)}
-      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group"
+      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/15 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing"
     >
       <Icon size={18} strokeWidth={1.7} style={{ color: color || '#a1a1aa' }} className="shrink-0" />
       <div className="flex-1 min-w-0">

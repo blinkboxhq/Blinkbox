@@ -84,6 +84,20 @@ export default function AgentPicker() {
 
   const handleClose = () => { closeAgentPicker(); setPage("home"); };
 
+  const dragStart = useCallback((e, nodeKey) => {
+    const def = NodeRegistry[nodeKey];
+    if (!def) return;
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: nodeKey,
+      label: def.label,
+      type: "action",
+      config: {},
+      isAgentComponent: true,
+    }));
+    setTimeout(() => closeAgentPicker(), 30);
+  }, [closeAgentPicker]);
+
   const handleSelect = useCallback((nodeKey, slotId) => {
     const parentNode = getNode(agentPickerParentId);
     if (!parentNode) return;
@@ -132,8 +146,11 @@ export default function AgentPicker() {
             if (!def) return null;
             const Icon = def.icon;
             return (
-              <button key={key} onClick={() => handleSelect(key, "tools")}
-                className="flex items-center gap-4 w-full px-5 py-3.5 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-pointer">
+              <button key={key}
+                draggable
+                onDragStart={(e) => dragStart(e, key)}
+                onClick={() => handleSelect(key, "tools")}
+                className="flex items-center gap-4 w-full px-5 py-3.5 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing">
                 <div className="w-7 h-7 shrink-0 flex items-center justify-center">
                   {def.logoUrl ? (
                     <img src={def.logoUrl} alt={def.label} className="w-6 h-6 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
@@ -220,8 +237,11 @@ export default function AgentPicker() {
             if (!def) return null;
             const Icon = def.icon;
             return (
-              <button key={key} onClick={() => handleSelect(key, currentCat.slotId)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-pointer">
+              <button key={key}
+                draggable
+                onDragStart={(e) => dragStart(e, key)}
+                onClick={() => handleSelect(key, currentCat.slotId)}
+                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700/30 transition-all duration-150 text-left group cursor-grab active:cursor-grabbing">
                 <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                   {def.logoUrl ? (
                     <img src={def.logoUrl} alt={def.label} className="w-7 h-7 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
