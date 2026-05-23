@@ -108,9 +108,7 @@ export default function AgentPicker() {
           : { x: 400 + i * 200, y: 300 },
         data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {}, isAgentComponent: true },
       });
-      setTimeout(() => {
-        onConnect({ source: newId, sourceHandle: "agent_out", target: agentPickerParentId, targetHandle: slotId });
-      }, 50 + i * 10);
+      onConnect({ source: newId, sourceHandle: "agent_out", target: agentPickerParentId, targetHandle: slotId });
     });
     closeAgentPicker();
     setPage("home");
@@ -141,7 +139,7 @@ export default function AgentPicker() {
       config: {},
       isAgentComponent: true,
     }));
-    setTimeout(() => closeAgentPicker(), 30);
+    closeAgentPicker();
   }, [closeAgentPicker]);
 
   const handleSelect = useCallback((nodeKey, slotId) => {
@@ -156,9 +154,7 @@ export default function AgentPicker() {
       position: { x: parentNode.position.x + off.x, y: parentNode.position.y + off.y },
       data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {}, isAgentComponent: true },
     });
-    setTimeout(() => {
-      onConnect({ source: newId, sourceHandle: "agent_out", target: agentPickerParentId, targetHandle: slotId });
-    }, 50);
+    onConnect({ source: newId, sourceHandle: "agent_out", target: agentPickerParentId, targetHandle: slotId });
     handleClose();
   }, [agentPickerParentId, addNode, onConnect, getNode]);
 

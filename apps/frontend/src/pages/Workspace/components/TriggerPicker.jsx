@@ -350,8 +350,7 @@ export default function TriggerPicker() {
       type: "trigger",
       config: { triggerVariant: trigger.id },
     }));
-    // Close overlay so canvas is visible while dragging
-    setTimeout(() => setTriggerPickerOpen(false), 30);
+    setTriggerPickerOpen(false);
   };
 
   // ── Row renderers ───────────────────────────────────────────────────────────

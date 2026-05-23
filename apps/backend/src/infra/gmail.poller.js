@@ -15,20 +15,13 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
-import { decrypt } from "../utils/crypto.js";
-import Credential from "../models/credential.model.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const GMAIL_QUEUE = "bb-gmail-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
 
 let gmailQueue = null;
 let gmailWorker = null;
-
-async function resolveToken(credentialId, workspaceId) {
-  const cred = await Credential.findOne({ _id: credentialId, workspaceId });
-  if (!cred) throw new Error("Gmail credential not found");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
 
 async function gmailGet(token, path, params = {}) {
   const url = new URL(`https://gmail.googleapis.com/gmail/v1/${path}`);
@@ -100,7 +93,7 @@ async function pollGmail(automationId, credentialId, query, maxResults, onlyNew,
   if (!locked) return;
 
   try {
-    const token = await resolveToken(credentialId, workspaceId);
+    const token = await getOAuthToken(credentialId, workspaceId, "Gmail Trigger");
 
     const params = {
       maxResults: String(maxResults || 10),
