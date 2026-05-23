@@ -7,6 +7,8 @@ const Landing   = lazy(() => import('./pages/Landing'));
 const Auth      = lazy(() => import('./pages/auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Workspace = lazy(() => import('./pages/Workspace'));
+const Privacy   = lazy(() => import('./pages/Privacy'));
+const Terms     = lazy(() => import('./pages/Terms'));
 
 const PageLoader = () => (
   <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -70,6 +72,8 @@ export default function App() {
             <Route path="/reset-password" element={<Auth />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/workspace/:id" element={<RequireAuth><Workspace /></RequireAuth>} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
