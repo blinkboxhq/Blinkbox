@@ -266,19 +266,35 @@ export async function processCursor({ executionId, cursorId }) {
             const sourceNode = automation.nodes.find((n) => n.id === edge.source);
             if (sourceNode) {
               const toolType = sourceNode.type;
-              const toolHandler = nodeRegistry[toolType];
-              if (toolHandler?.toolDefinition) {
-                const toolDef = { ...toolHandler.toolDefinition };
-                const savedConfig = sourceNode.data || {};
-                toolDef.execute = async (agentArgs) => {
-                  const mergedConfig = { ...savedConfig, ...agentArgs };
-                  return toolHandler.run(mergedConfig, agentArgs, {
-                    workspaceId: execution.workspaceId,
+              if (toolType === "agent_tool" && sourceNode.data?.toolId) {
+                const savedData = sourceNode.data || {};
+                const resolved = toolRegistry.resolve(savedData.toolId, { workspaceId: execution.workspaceId });
+                if (resolved) {
+                  const credId = savedData.credentialId;
+                  handleDeps._tools.push({
+                    name: savedData.toolName
+                      ? savedData.toolName.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "")
+                      : resolved.name,
+                    description: savedData.toolDesc || resolved.description,
+                    parameters: resolved.parameters,
+                    execute: (args) => resolved.execute(credId ? { credentialId: credId, ...args } : args),
                   });
-                };
-                handleDeps._tools.push(toolDef);
-              } else if (firstOutput) {
-                handleDeps._tools.push(firstOutput);
+                }
+              } else {
+                const toolHandler = nodeRegistry[toolType];
+                if (toolHandler?.toolDefinition) {
+                  const toolDef = { ...toolHandler.toolDefinition };
+                  const savedConfig = sourceNode.data || {};
+                  toolDef.execute = async (agentArgs) => {
+                    const mergedConfig = { ...savedConfig, ...agentArgs };
+                    return toolHandler.run(mergedConfig, agentArgs, {
+                      workspaceId: execution.workspaceId,
+                    });
+                  };
+                  handleDeps._tools.push(toolDef);
+                } else if (firstOutput) {
+                  handleDeps._tools.push(firstOutput);
+                }
               }
             }
           } else if (handle === "chat_model" || handle === "llm") {

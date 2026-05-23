@@ -32,7 +32,7 @@ export function parseWorkflowBody(
  */
 // Agent slot handles — edges with these targetHandles connect sub-nodes that
 // never execute themselves. They must be excluded from reachability/cycle checks.
-const AGENT_SLOT_HANDLES = new Set(["llm", "chat_model", "memory", "tools"]);
+const AGENT_SLOT_HANDLES = new Set(["llm", "chat_model", "memory", "tools", "integration"]);
 
 export function validateAutomation(automation: {
   nodes: ReadonlyArray<{ id: string }>;
