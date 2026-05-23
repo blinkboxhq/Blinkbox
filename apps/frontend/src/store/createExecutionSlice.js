@@ -238,8 +238,10 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
 
     const displayStatus = STATUS_MAP[data.status] || data.status;
 
-    // Auto-activate live UI for passive (scheduled/webhook) runs
+    // Only activate live UI when a node is actually STARTING — never on
+    // completed/failed events which may be stale replays from a previous run.
     if (!get().isExecutionLive) {
+      if (data.status !== 'started') return;
       set({ isExecutionLive: true, nodeStatuses: {}, lastRunOutputs: {} });
     }
 
