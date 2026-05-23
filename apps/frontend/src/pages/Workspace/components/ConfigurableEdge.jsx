@@ -31,11 +31,15 @@ export default function ConfigurableEdge({
   const hide = useCallback(() => { hideTimer.current = setTimeout(() => setHovered(false), 80); }, []);
   const setInsertOnEdge = useWorkspaceStore((s) => s.setInsertOnEdge);
   const nodes = useWorkspaceStore((s) => s.nodes);
+  const srcType = nodes.find(n => n.id === source)?.data?.backendType;
+  const tgtType = nodes.find(n => n.id === target)?.data?.backendType;
   const isAgentEdge = sourceHandleId === AGENT_HANDLE
-    || AGENT_TYPES.has(nodes.find(n => n.id === source)?.data?.backendType)
-    || AGENT_TYPES.has(nodes.find(n => n.id === target)?.data?.backendType)
-    || nodes.find(n => n.id === source)?.data?.backendType?.startsWith("agent_memory_")
-    || nodes.find(n => n.id === target)?.data?.backendType?.startsWith("agent_memory_");
+    || AGENT_TYPES.has(srcType)
+    || AGENT_TYPES.has(tgtType)
+    || srcType?.startsWith("agent_memory_")
+    || tgtType?.startsWith("agent_memory_")
+    || srcType?.startsWith("agent_integration_")
+    || tgtType?.startsWith("agent_integration_");
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const { deleteElements } = useReactFlow();
@@ -71,9 +75,11 @@ export default function ConfigurableEdge({
   const isReady = status === "ready";
 
   // Dark grey, brightens on hover
-  let stroke = hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46";
-  let strokeWidth = 2.5;
-  let strokeDasharray = "none";
+  let stroke = isAgentEdge
+    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#52525b" : "#2e2e32")
+    : (hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46");
+  let strokeWidth = isAgentEdge ? 1.5 : 2.5;
+  let strokeDasharray = isAgentEdge ? "4 5" : "none";
   let animation = "none";
   let filter = "none";
 
@@ -143,7 +149,7 @@ export default function ConfigurableEdge({
         stroke={stroke}
         strokeLinecap="round"
         fill="none"
-        markerEnd={markerEnd}
+        markerEnd={isAgentEdge && !isRunning && !isCompleted ? undefined : markerEnd}
         style={{
           ...style,
           strokeDasharray,
