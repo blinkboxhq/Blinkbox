@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Brain, Database, Wrench, ArrowLeft, X, Search, Code2, Globe, FileText,
-  Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch, Zap, Bot, Network } from "lucide-react";
+  Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch, Zap, Bot, Network, Plug } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -47,12 +47,30 @@ const AGENT_CATEGORIES = [
     slotId: "tools",
     subCategories: TOOL_SUBCATEGORIES,
   },
+  {
+    id: "integration",
+    label: "Integration",
+    icon: Plug,
+    color: "#34d399",
+    slotId: "integration",
+    nodes: [
+      "agent_integration_slack","agent_integration_gmail","agent_integration_discord",
+      "agent_integration_telegram","agent_integration_notion","agent_integration_airtable",
+      "agent_integration_google_sheets","agent_integration_google_calendar","agent_integration_google_drive",
+      "agent_integration_outlook","agent_integration_github","agent_integration_linear",
+      "agent_integration_hubspot","agent_integration_jira","agent_integration_asana",
+      "agent_integration_stripe","agent_integration_shopify","agent_integration_clickup",
+      "agent_integration_twilio","agent_integration_mongodb","agent_integration_postgres",
+      "agent_integration_redis",
+    ],
+  },
 ];
 
 const SLOT_OFFSETS = {
-  llm:    { x: -6,  y: 160 },
-  memory: { x: 54,  y: 160 },
-  tools:  { x: 114, y: 160 },
+  llm:         { x: -30, y: 160 },
+  memory:      { x: 30,  y: 160 },
+  tools:       { x: 90,  y: 160 },
+  integration: { x: 150, y: 160 },
 };
 
 export default function AgentPicker() {

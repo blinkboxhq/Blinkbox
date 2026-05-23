@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles, Plug } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
@@ -82,11 +82,21 @@ const AGENT_BOTTOM_SLOTS = [
     single: false,
     showPlus: true,
   },
+  {
+    id: "integration",
+    label: "Integration",
+    icon: Plug,
+    color: "#34d399",
+    accentColor: "52,211,153",
+    allowedTypes: ["agent_integration"],
+    single: false,
+    showPlus: true,
+  },
 ];
 
 // ─── Agent sub-node — top input and bottom output handles ───────────────────
 // These are the compact mini-cards: agent_llm, agent_memory, agent_tool.
-const AGENT_SUB_TYPES = ["agent_llm", "agent_memory", "agent_tool"];
+const AGENT_SUB_TYPES = ["agent_llm", "agent_memory", "agent_tool", "agent_integration"];
 
 // ─── Dock Popover: spawns the correct agent sub-node ───────────────────────
 
@@ -471,7 +481,7 @@ export default function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 180;
+    const cardW = 230;
     const cardH = 120;
     const n = AGENT_BOTTOM_SLOTS.length;
 
