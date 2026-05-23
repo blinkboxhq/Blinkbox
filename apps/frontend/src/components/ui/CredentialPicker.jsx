@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
 
@@ -76,6 +77,8 @@ export default function CredentialPicker({
   const [createError, setCreateError] = useState(null);
 
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const [dropdownRect, setDropdownRect] = useState(null);
   const popupRef = useRef(null);
   const messageHandlerRef = useRef(null);
   const ac = ACCENT[accentColor] || DEFAULT_ACCENT;
@@ -94,9 +97,23 @@ export default function CredentialPicker({
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) setOpen(false);
+    };
+    const updateRect = () => {
+      if (triggerRef.current) setDropdownRect(triggerRef.current.getBoundingClientRect());
+    };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
+    };
   }, [open]);
 
   // Cleanup popup message listener on unmount
@@ -247,10 +264,16 @@ export default function CredentialPicker({
         </div>
       )}
 
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative">
         <button
+          ref={triggerRef}
           type="button"
-          onClick={() => { setOpen((p) => !p); setSearch(''); }}
+          onClick={() => {
+            const next = !open;
+            setOpen(next);
+            setSearch('');
+            if (next && triggerRef.current) setDropdownRect(triggerRef.current.getBoundingClientRect());
+          }}
           className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-[#0d0d0f] border rounded-lg text-[13px] transition-colors ${
             selectedCred ? 'border-[#444] text-neutral-200' : 'border-[#333] text-neutral-600 hover:border-neutral-600'
           }`}
@@ -269,8 +292,12 @@ export default function CredentialPicker({
           </div>
         </button>
 
-        {open && (
-          <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-[#111] border border-[#333] rounded-lg shadow-2xl overflow-hidden max-h-64 flex flex-col">
+        {open && dropdownRect && createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] bg-[#111] border border-[#333] rounded-lg shadow-2xl overflow-hidden flex flex-col"
+            style={{ top: dropdownRect.bottom + 4, left: dropdownRect.left, width: dropdownRect.width, maxHeight: 256 }}
+          >
             {/* Search */}
             {credentials.length > 3 && (
               <div className="px-2 py-1.5 border-b border-[#1e1e20]">
@@ -333,7 +360,8 @@ export default function CredentialPicker({
                 <Plus className="w-3.5 h-3.5" /> Add new credential
               </button>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 
