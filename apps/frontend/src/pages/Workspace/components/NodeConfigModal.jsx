@@ -225,6 +225,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
               config={config}
               updateConfig={(key, val) => updateConfig(node.id, key, val)}
               nodeId={node.id}
+              backendType={backendType}
             />
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">
