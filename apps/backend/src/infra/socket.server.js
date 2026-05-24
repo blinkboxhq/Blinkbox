@@ -211,8 +211,3 @@ export function emitToCollabRoom(automationId, event, data) {
   if (!io) return;
   io.to(`collab:${automationId}`).emit(event, data);
 }
-
-export function emitAgentStep(automationId, data) {
-  if (!io) return;
-  io.to(`automation:${automationId}`).emit("agent:step", data);
-}

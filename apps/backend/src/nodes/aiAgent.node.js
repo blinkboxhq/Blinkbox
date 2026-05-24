@@ -545,12 +545,8 @@ const agentNode = {
     let totalTokens = 0;
     let iteration = 0;
 
-    const emitStep = config._emitStep || context.emitStep || (() => {});
-
     while (iteration < maxIter) {
       iteration++;
-
-      emitStep({ type: "thinking", iteration, maxIterations: maxIter, model: resolvedModel, provider });
 
       // ── TOKEN GUARD: Summarize scratchpad if context is too large ─
       if (estimateCharCount(messages) > SUMMARIZE_CHAR_THRESHOLD) {
@@ -598,18 +594,12 @@ const agentNode = {
               actionInput: tc.arguments,
             });
 
-            emitStep({ type: "tool_call", iteration, tool: tc.name, args: tc.arguments, thought: response.text || null });
-
             // ── OBSERVE: Execute the tool ────────────────────────────
             // Errors are caught and returned as messages so the agent
             // can self-correct: "Tool X failed because Y, let me try Z."
             const observation = await executeToolCall(tc, tools);
 
             intermediateSteps[stepIndex].observation = observation;
-
-            const obsStr = typeof observation === "string" ? observation : JSON.stringify(observation);
-            emitStep({ type: "tool_result", iteration, tool: tc.name, result: obsStr.slice(0, 500), ok: !obsStr.toLowerCase().includes('"error"') });
-
             return { tc, observation };
           })
         );
@@ -646,8 +636,6 @@ const agentNode = {
         }
       }
 
-      emitStep({ type: "final_answer", iteration, answer: typeof result === "string" ? result.slice(0, 300) : JSON.stringify(result).slice(0, 300) });
-
       return buildOutput({
         result,
         model: response.model || resolvedModel,
@@ -672,8 +660,6 @@ const agentNode = {
 
     const fallbackResult =
       outputFormat === "json" ? parseJsonResponse(fallbackText) : fallbackText;
-
-    emitStep({ type: "max_iterations", iteration, maxIterations: maxIter });
 
     return buildOutput({
       result: fallbackResult,

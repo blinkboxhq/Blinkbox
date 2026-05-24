@@ -1,6 +1,6 @@
 import TraceTimelineStep from "./TraceTimelineStep";
 
-export default function TraceTimeline({ nodes, liveExecutionState, isLive, executionLogs = [], agentSteps = {} }) {
+export default function TraceTimeline({ nodes, liveExecutionState, isLive, executionLogs = [] }) {
   if (!nodes || nodes.length === 0) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -31,7 +31,6 @@ export default function TraceTimeline({ nodes, liveExecutionState, isLive, execu
             isLast={index === nodes.length - 1}
             isLive={isLive}
             nodeLogs={logsByNode[node.id] || []}
-            agentSteps={agentSteps[node.id] || []}
           />
         );
       })}
