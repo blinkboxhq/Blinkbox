@@ -177,6 +177,9 @@ WRONG topology:
 
   ai_agent workflow using manual trigger
   (use chat_trigger for AI agents, not manual)
+
+  { source: "manual", target: "ai_agent", targetHandle: "memory" }
+  (trigger nodes CANNOT connect to any hub handle: chat_model, integration, tools, or memory)
 \`\`\`
 
 ## ❌ FORBIDDEN Anti-Patterns
@@ -362,11 +365,12 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     .filter(e => {
       if (!e.source || !e.target) return false;
       if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
-      // Remove any edge that points INTO a trigger node (unless it's a hub handle)
-      if (!e.targetHandle) {
-        const targetNode = canvasNodes.find(n => n.id === e.target);
-        if (targetNode?.data?.type === "trigger") return false;
-      }
+      const sourceNode = canvasNodes.find(n => n.id === e.source);
+      const targetNode = canvasNodes.find(n => n.id === e.target);
+      // Strip edges where target is a trigger node (triggers are always sources, never targets)
+      if (targetNode?.data?.type === "trigger") return false;
+      // Strip hub-handle edges where the source is a trigger — triggers cannot plug into ai_agent hub slots
+      if (e.targetHandle && AI_AGENT_HANDLES.has(e.targetHandle) && sourceNode?.data?.type === "trigger") return false;
       return true;
     });
 

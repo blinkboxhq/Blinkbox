@@ -97,6 +97,8 @@ const AGENT_BOTTOM_SLOTS = [
 // ─── Agent sub-node — top input and bottom output handles ───────────────────
 // These are the compact mini-cards: agent_llm, agent_memory, agent_tool.
 const AGENT_SUB_TYPES = ["agent_llm", "agent_memory", "agent_tool", "agent_integration"];
+// Any node whose backendType starts with "agent_" (except "ai_agent" itself) is a hub node rendered as a circle
+const isAgentHubType = (bt) => bt && bt !== "ai_agent" && (bt.startsWith("agent_") || AGENT_SUB_TYPES.includes(bt));
 
 // ─── Dock Popover: spawns the correct agent sub-node ───────────────────────
 
@@ -422,11 +424,15 @@ export default function CustomNode({ id, data, selected }) {
 
   const isTrigger = data.type === "trigger";
   const isAgent = data.backendType === "ai_agent";
-  const isAgentSub = AGENT_SUB_TYPES.includes(data.backendType)
+  const isAgentSub = isAgentHubType(data.backendType)
     || data.backendType?.startsWith("tool_")
     || data.backendType?.startsWith("agent_memory_");
-  // Infer from edge state so the circle survives page refresh even if flag is lost
-  const hasAgentOutConnection = edges.some(e => e.source === id && e.sourceHandle === "agent_out");
+  // Detect hub-wired nodes: has an outgoing edge with a known hub targetHandle pointing to an ai_agent
+  const HUB_HANDLES = new Set(["chat_model", "integration", "tools", "memory"]);
+  const hasAgentOutConnection = edges.some(e =>
+    (e.source === id && e.sourceHandle === "agent_out") ||
+    (e.source === id && e.targetHandle && HUB_HANDLES.has(e.targetHandle))
+  );
 
   // Shape per category
   const catShape = CATEGORIES.find(c => c.id === nodeDef.category)?.shape ?? "rounded";
