@@ -341,10 +341,11 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
 
   try {
     const stream = client.messages.stream({
-      model:       ANTHROPIC_MODEL,
-      max_tokens:  20000,
-      thinking:    { type: "enabled", budget_tokens: 10000 },
-      system:      buildSystemPrompt(canvasNodes),
+      model:         ANTHROPIC_MODEL,
+      max_tokens:    16000,
+      thinking:      { type: "adaptive" },
+      output_config: { effort: "high" },
+      system:        buildSystemPrompt(canvasNodes),
       messages:    [...history, { role: "user", content: userText }],
       tools:       [WORKFLOW_TOOL],
       tool_choice: { type: "auto" },
@@ -417,10 +418,11 @@ async function callAnthropic(apiKey, messages, canvasNodes = []) {
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const response = await client.messages.create({
-    model:       ANTHROPIC_MODEL,
-    max_tokens:  20000,
-    thinking:    { type: "enabled", budget_tokens: 10000 },
-    system:      buildSystemPrompt(canvasNodes),
+    model:         ANTHROPIC_MODEL,
+    max_tokens:    16000,
+    thinking:      { type: "adaptive" },
+    output_config: { effort: "high" },
+    system:        buildSystemPrompt(canvasNodes),
     messages:    [...history, { role: "user", content: userText }],
     tools:       [WORKFLOW_TOOL],
     tool_choice: { type: "auto" },
