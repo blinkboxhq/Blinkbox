@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Bot } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
@@ -89,6 +89,15 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         <nav className={`flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
           {expanded && <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
+
+          <Link
+            to="/chat"
+            title={!expanded ? 'AI Chat' : undefined}
+            className={`w-full flex items-center gap-2.5 rounded-md transition-all duration-150 text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03] ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'}`}
+          >
+            <Bot className="w-[18px] h-[18px] shrink-0" strokeWidth={1.5} />
+            {expanded && <span className="text-[13px] font-medium leading-none">AI Chat</span>}
+          </Link>
 
           <div className={`border-t-2 border-white/15 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
