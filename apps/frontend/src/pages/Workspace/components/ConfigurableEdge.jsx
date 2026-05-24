@@ -126,7 +126,7 @@ export default function ConfigurableEdge({
         stroke={stroke}
         strokeLinecap="round"
         fill="none"
-        markerEnd={isSlotEdge && !isRunning && !isCompleted ? undefined : markerEnd}
+        markerEnd={isSlotEdge && !isRunning ? undefined : markerEnd}
         style={{
           ...style,
           strokeDasharray,
