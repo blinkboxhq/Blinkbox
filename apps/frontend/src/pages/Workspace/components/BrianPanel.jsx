@@ -587,7 +587,7 @@ export default function BrianPanel({ width, onResizeStart }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-[12px] font-bold text-white leading-none">Brian</span>
-                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-opus-4-7</span>
+                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-5</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">

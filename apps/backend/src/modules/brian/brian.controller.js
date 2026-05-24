@@ -3,7 +3,7 @@ import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
 
-const ANTHROPIC_MODEL = "claude-opus-4-7";
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
 const GROQ_URL        = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL      = "llama-3.3-70b-versatile";
 const GROQ_FAST       = "llama-3.1-8b-instant";
@@ -24,79 +24,92 @@ const NODE_REF = buildNodeRef();
 
 const SYSTEM_PROMPT_BASE = `You are Brian — the senior AI workflow architect inside Blinkbox, an automation platform.
 
-You are a real conversational agent with deep expertise in automation. Before generating any workflow, think through:
-1. What is the user's actual end goal (not just what they said)?
-2. What could go wrong mid-workflow that needs handling?
-3. What intermediate steps (classify, filter, extract, format) would a senior engineer add that the user didn't mention?
-4. Are all node configs complete enough to run without manual edits?
+You are a thoughtful conversational agent. Before generating any workflow, reason through:
+1. What is the user's actual end goal (not just what they literally typed)?
+2. Which trigger makes the most sense — never use "manual" unless the user explicitly said "test" or "manually".
+3. What intermediate steps would a senior engineer add (classify, filter, enrich, format) that the user didn't mention?
+4. Are ALL node configs filled with real, production-ready values?
 
 ## Node Config Reference
 Each line: backendType: requiredField(ex:"value") | opt:optionalFields → outputFields
 ${NODE_REF}
 
+## ⛔ ABSOLUTE HARD RULES — Violating ANY of these is a critical failure
+These rules are non-negotiable. Breaking them produces broken, unusable workflows.
+
+**Rule 1 — Trigger is ALWAYS node n1, never a target:**
+- The trigger node (gmail_trigger, webhook, cron_trigger, manual, etc.) is ALWAYS the first node.
+- NO edge may have a trigger node as its \`target\`. Triggers only appear as edge \`source\`.
+- NEVER place a trigger node in the middle of a workflow.
+
+**Rule 2 — Every node must be reachable from the trigger:**
+- Every single node in the \`nodes\` array must have at least one edge connecting it to the main graph.
+- NO orphaned / isolated / floating nodes. If you add a node, you must connect it.
+
+**Rule 3 — ONE connected workflow, not multiple disconnected graphs:**
+- The entire output is ONE workflow. You cannot produce multiple separate chains.
+- DO NOT create two separate trigger→action chains in one response.
+
+**Rule 4 — Triggers are START nodes only:**
+- \`manual\`, \`webhook\`, \`cron_trigger\`, \`gmail_trigger\`, \`slack_trigger\`, etc. are ONLY valid as the FIRST node.
+- NEVER use them as intermediate action steps. To send a Gmail, use the \`gmail\` node (not \`gmail_trigger\`).
+
+**Rule 5 — No duplicate triggers:**
+- One workflow = one trigger. Never include two trigger nodes.
+
+**BAD EXAMPLE (never produce this):**
+\`\`\`
+nodes: gmail_trigger → manual_trigger → logic_router   ← WRONG: manual_trigger in the middle
+nodes: gmail_trigger + manual_trigger (separate)        ← WRONG: two disconnected graphs
+nodes: Google Sheets (floating, no edges)               ← WRONG: orphaned node
+\`\`\`
+
+**CORRECT EXAMPLE for "Gmail → route → Discord/Slack":**
+\`\`\`
+n1: gmail_trigger (trigger) → n2: ai_classify (action) → n3: condition (action)
+  condition true →  n4: slack (action)
+  condition false → n5: discord (action)
+All 5 nodes connected. No orphans. One trigger.
+\`\`\`
+
 ## Variable Syntax
 - Reference previous node output: \`{{$json.fieldName}}\`
 - Reference trigger data: \`{{trigger.data.fieldName}}\`
-- Reference specific node by slug: \`{{node_label.fieldName}}\` (slug = label lowercased, spaces→underscores)
-- JS expressions: \`{{$json.price * 1.1}}\`, \`{{new Date().toISOString()}}\`
-- String interpolation: \`"Hello {{$json.firstName}} {{$json.lastName}}"\`
-
-## Smart Chaining Rules
-- After gmail_trigger: \`to\` = \`"{{trigger.data.from}}"\`, \`threadId\` = \`"{{trigger.data.threadId}}"\`
-- After slack_trigger: \`channel\` = \`"{{trigger.data.channel}}"\`
-- After webhook: \`"{{trigger.data.body.fieldName}}"\` or \`"{{$json.fieldName}}"\`
-- After ai_classify: \`"{{$json.category}}"\` in downstream conditions
-- After ai_extract: \`"{{$json.extracted.fieldName}}"\` for each field
-- After ai_transform: \`"{{$json.result}}"\` for the transformed text
-- After http_request: \`"{{$json.data.fieldName}}"\` for JSON response body
-- After loop: \`"{{$json.item.fieldName}}"\` refers to current item
+- After gmail_trigger: \`{{trigger.data.from}}\`, \`{{trigger.data.subject}}\`, \`{{trigger.data.body}}\`
+- After slack_trigger: \`{{trigger.data.text}}\`, \`{{trigger.data.channel}}\`
+- After webhook: \`{{trigger.data.body.fieldName}}\` or \`{{$json.fieldName}}\`
+- After ai_classify: \`{{$json.category}}\`
+- After ai_extract: \`{{$json.extracted.fieldName}}\`
+- After ai_transform: \`{{$json.result}}\`
+- After http_request: \`{{$json.data.fieldName}}\`
 - credentialId: always \`""\` — user fills this in. Never invent credential IDs.
 
-## 2D Canvas Layout — CRITICAL
-Nodes in 2D space, never a single column.
+## 2D Canvas Layout
+**Main trunk:** Trigger x:400 y:80 → each step adds y+220 (so: y:80, 300, 520, 740…)
+**Condition branch split:**
+- True path (right):  x:680, same y-level increments as main trunk
+- False path (left):  x:120, same y-level increments
+- Merge after branch: x:400, deepest_branch_y + 220
+**Parallel fan-out (two actions same level):**
+- 2 parallel: x:180 and x:620, same y
+- 3 parallel: x:80, x:400, x:720, same y
 
-**Main trunk:** Trigger x:400 y:80 → each step y+220
-**Branch split at condition node:**
-- True path (right):  x:680, condition_y+220 increments
-- False path (left):  x:120, condition_y+220 increments
-- Merge node after:   x:400, deepest_y+220
-**Parallel fan-out:**
-- 2 services: x:200 and x:600, same y
-- 3 services: x:100, x:400, x:700, same y
+NEVER place two nodes at the exact same (x, y).
 
-Never place two nodes at the same (x,y). Build 4–8 nodes for typical requests.
-**Always include a trigger node as the first node.** Triggers: manual (for testing), webhook, cron_trigger, gmail_trigger, slack_trigger, etc.
+## ✅ Config Quality Bar — REQUIRED
+Every node config must have REAL values. No workflow should need manual editing before running.
 
-## ✅ REQUIRED: Config Quality Bar
-Every node config MUST have real, meaningful values. A workflow that would require manual editing before it can run is a failure.
+**GOOD (ai_transform):**
+\`"prompt": "You are a customer support specialist. The user's message: {{$json.body}}. Write an empathetic professional reply under 150 words."\`
+**BAD:** \`"prompt": "Summarize the content"\` or \`"prompt": ""\`
 
-**GOOD config (ai_transform):**
-\`\`\`json
-{
-  "prompt": "You are a customer support specialist. The user sent this message: {{$json.body}}. Write a professional, empathetic reply that acknowledges their issue and promises follow-up within 24 hours. Keep it under 150 words.",
-  "model": "gpt-4o-mini",
-  "credentialId": ""
-}
-\`\`\`
+**GOOD (slack):**
+\`"channel": "#alerts", "text": "🚨 {{$json.email}} submitted: {{$json.subject}} — priority: {{$json.priority}}"\`
+**BAD:** \`"channel": "", "text": "New notification"\`
 
-**BAD config (never do this):**
-\`\`\`json
-{ "prompt": "Summarize the content", "model": "" }
-\`\`\`
-
-**GOOD config (slack):**
-\`\`\`json
-{
-  "channel": "#alerts",
-  "text": "🚨 New support ticket from {{$json.email}}: {{$json.subject}}\nPriority: {{$json.priority}}\nView: https://app.example.com/tickets/{{$json.id}}",
-  "credentialId": ""
-}
-\`\`\`
-
-**BAD config (never do this):**
-\`\`\`json
-{ "channel": "", "text": "New notification" }
-\`\`\`
+**GOOD (cron_trigger):**
+\`"schedule": "0 9 * * 1-5"\` (weekdays 9am)
+**BAD:** \`"schedule": ""\` or \`"schedule": "daily"\`
 
 ## ❌ FORBIDDEN Anti-Patterns
 These are failure modes — never do any of them:
@@ -210,18 +223,34 @@ const WORKFLOW_TOOL = {
 function toolToCanvas({ nodes = [], edges = [] }) {
   if (!nodes.length) return null;
 
-  const canvasNodes = nodes.map((n, i) => ({
-    id:       String(n.id || `n${i + 1}`),
-    type:     "custom",
-    position: { x: Number(n.x) || 300, y: Number(n.y) || (100 + i * 220) },
-    data: {
-      label:       n.label || n.backendType,
-      backendType: n.backendType || "manual",
-      type:        n.nodeType === "trigger" ? "trigger" : "action",
-      config:      n.config || {},
-    },
-  }));
+  const TRIGGER_TYPES = new Set([
+    "manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger",
+    "slack_trigger","discord_trigger","telegram_trigger","github_trigger",
+    "shopify_trigger","linear_trigger","notion_trigger","airtable_trigger",
+    "stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger",
+    "google_calendar_trigger","form_trigger","chat_trigger","db_trigger","error_trigger",
+  ]);
 
+  // ── Step 1: Build canvas nodes ────────────────────────────────────────────
+  const canvasNodes = nodes.map((n, i) => {
+    const bt      = n.backendType || "manual";
+    const isTrig  = TRIGGER_TYPES.has(bt) || n.nodeType === "trigger";
+    return {
+      id:       String(n.id || `n${i + 1}`),
+      type:     "custom",
+      position: { x: Number(n.x) || 400, y: Number(n.y) || (80 + i * 220) },
+      data: {
+        label:       n.label || bt,
+        backendType: bt,
+        type:        isTrig ? "trigger" : "action",
+        config:      n.config || {},
+      },
+    };
+  });
+
+  const nodeIds = new Set(canvasNodes.map(n => n.id));
+
+  // ── Step 2: Build and validate edges ─────────────────────────────────────
   let canvasEdges = edges
     .map((e, i) => ({
       id:           String(e.id || `e${i + 1}`),
@@ -232,8 +261,16 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       data:         { conditionPath: "" },
       style:        {},
     }))
-    .filter(e => e.source && e.target);
+    .filter(e => {
+      if (!e.source || !e.target) return false;
+      if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
+      // Remove any edge that points INTO a trigger node
+      const targetNode = canvasNodes.find(n => n.id === e.target);
+      if (targetNode?.data?.type === "trigger") return false;
+      return true;
+    });
 
+  // ── Step 3: Auto-chain if no valid edges produced ─────────────────────────
   if (!canvasEdges.length && canvasNodes.length > 1) {
     canvasEdges = canvasNodes.slice(0, -1).map((n, i) => ({
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
@@ -241,17 +278,52 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     }));
   }
 
+  // ── Step 4: Remove orphaned nodes (unreachable from trigger) ─────────────
+  const triggerNode = canvasNodes.find(n => n.data.type === "trigger") || canvasNodes[0];
+  if (triggerNode && canvasNodes.length > 1) {
+    const reachable = new Set([triggerNode.id]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const e of canvasEdges) {
+        if (reachable.has(e.source) && !reachable.has(e.target)) {
+          reachable.add(e.target);
+          changed = true;
+        }
+      }
+    }
+    // Only keep reachable nodes; remove edges to removed nodes
+    const removed = canvasNodes.filter(n => !reachable.has(n.id));
+    if (removed.length) {
+      const keepIds = reachable;
+      canvasEdges = canvasEdges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
+      // Re-chain removed nodes linearly to the last reachable node if any are real action nodes
+      const lastReachable = [...reachable].pop();
+      removed.forEach((orphan, oi) => {
+        const prevId = oi === 0 ? lastReachable : removed[oi - 1].id;
+        canvasEdges.push({
+          id: `e_fix_${oi}`, source: prevId, target: orphan.id,
+          sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
+        });
+        reachable.add(orphan.id);
+      });
+    }
+  }
+
+  // ── Step 5: Ensure trigger is first node, promote if needed ──────────────
+  const trigIdx = canvasNodes.findIndex(n => n.data.type === "trigger");
+  if (trigIdx > 0) {
+    const [trig] = canvasNodes.splice(trigIdx, 1);
+    canvasNodes.unshift(trig);
+  }
+
+  // ── Step 6: Dedup positions ───────────────────────────────────────────────
   const positionsSeen = new Set();
   canvasNodes.forEach(n => {
     const key = `${n.position.x},${n.position.y}`;
     if (positionsSeen.has(key)) n.position.x += 220;
     positionsSeen.add(`${n.position.x},${n.position.y}`);
   });
-
-  if (canvasNodes.length > 0) {
-    const TRIGGER_TYPES = new Set(["manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger","slack_trigger","discord_trigger","telegram_trigger","github_trigger","shopify_trigger","linear_trigger","notion_trigger","airtable_trigger","stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger","google_calendar_trigger","form_trigger","chat_trigger"]);
-    canvasNodes[0].data.type = TRIGGER_TYPES.has(canvasNodes[0].data.backendType) ? "trigger" : canvasNodes[0].data.type;
-  }
 
   return { nodes: canvasNodes, edges: canvasEdges };
 }
@@ -341,11 +413,9 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
 
   try {
     const stream = client.messages.stream({
-      model:         ANTHROPIC_MODEL,
-      max_tokens:    16000,
-      thinking:      { type: "adaptive" },
-      output_config: { effort: "high" },
-      system:        buildSystemPrompt(canvasNodes),
+      model:      ANTHROPIC_MODEL,
+      max_tokens: 32000,
+      system:     buildSystemPrompt(canvasNodes),
       messages:    [...history, { role: "user", content: userText }],
       tools:       [WORKFLOW_TOOL],
       tool_choice: { type: "auto" },
@@ -418,11 +488,9 @@ async function callAnthropic(apiKey, messages, canvasNodes = []) {
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const response = await client.messages.create({
-    model:         ANTHROPIC_MODEL,
-    max_tokens:    16000,
-    thinking:      { type: "adaptive" },
-    output_config: { effort: "high" },
-    system:        buildSystemPrompt(canvasNodes),
+    model:      ANTHROPIC_MODEL,
+    max_tokens: 32000,
+    system:     buildSystemPrompt(canvasNodes),
     messages:    [...history, { role: "user", content: userText }],
     tools:       [WORKFLOW_TOOL],
     tool_choice: { type: "auto" },
