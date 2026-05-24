@@ -48,7 +48,12 @@ export async function chatRun(req, res) {
     const context = {};
 
     // Seed the trigger node output with the incoming chat message
-    context[entryId] = [{ json: { message, attachments, sessionId, triggeredAt: new Date().toISOString(), triggerType: "chat" } }];
+    const triggerNode = nodes.find(n => n.id === entryId);
+    const triggerPayload = [{ json: { message, attachments, sessionId, triggeredAt: new Date().toISOString(), triggerType: "chat" } }];
+    context[entryId] = triggerPayload;
+    const triggerSlug = (triggerNode?.data?.config?.customLabel || triggerNode?.data?.label || triggerNode?.type || "chat_trigger")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    if (triggerSlug) context[triggerSlug] = triggerPayload;
 
     // BFS walk: run each node once, follow edges
     const queue = [entryId];
@@ -124,6 +129,10 @@ export async function chatRun(req, res) {
         }
 
         context[nodeId] = nodeOutput;
+        // Also index by slug so {{chat_trigger.output}} style refs resolve
+        const slug = (node.data?.config?.customLabel || node.data?.label || node.type || "node")
+          .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+        if (slug && slug !== nodeId) context[slug] = nodeOutput;
         lastOutput = nodeOutput[0];
       }
 

@@ -221,6 +221,13 @@ export async function processCursor({ executionId, cursorId }) {
     const allPastData = await ExecutionData.find({ executionId: execution._id });
     allPastData.forEach((doc) => {
       dynamicContext[doc.nodeId] = doc.output;
+      // Also index by human-readable slug so {{chat_trigger.output}} expressions work
+      const srcNode = automation.nodes.find(n => n.id === doc.nodeId);
+      if (srcNode) {
+        const slug = (srcNode.data?.config?.customLabel || srcNode.data?.label || srcNode.type || "node")
+          .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+        if (slug && slug !== doc.nodeId) dynamicContext[slug] = doc.output;
+      }
     });
 
     // Identify inputs (auto-grab from parents or self-trigger).

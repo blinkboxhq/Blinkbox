@@ -84,12 +84,14 @@ function InputPanel({ canvasNodes, currentNodeId }) {
           const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
           const isOpen = expanded === n.id;
 
+          const slug = (n.data.config?.customLabel || def?.label || n.data.backendType || "node")
+            .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
           const schema = DEFAULT_SCHEMAS[n.data.backendType];
           const vars = schema
-            ? Object.entries(schema).filter(([k]) => !k.startsWith("_")).map(([k]) => ({ key: k, ref: `{{${n.id}.${k}}}` }))
+            ? Object.entries(schema).filter(([k]) => !k.startsWith("_")).map(([k]) => ({ key: k, ref: `{{${slug}.${k}}}` }))
             : [
-                { key: "output",  ref: `{{${n.id}.output}}`  },
-                { key: "success", ref: `{{${n.id}.success}}` },
+                { key: "output",  ref: `{{${slug}.output}}`  },
+                { key: "success", ref: `{{${slug}.success}}` },
               ];
 
           return (
