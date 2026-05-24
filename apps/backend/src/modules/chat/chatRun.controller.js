@@ -1,4 +1,4 @@
-import "../../../config/env.js";
+import "../../config/env.js";
 import Automation from "../../models/automation.model.js";
 import { nodeRegistry } from "../../nodes/index.js";
 import { resolveConfig } from "../automation/engine/expression.parser.js";
