@@ -289,11 +289,11 @@ function SuccessFailedOutputHandles({ cardHeight }) {
 // ─── Spinning border overlay (n8n-style live execution ring) ─────────────────
 // Renders behind the card. The inner mask div recreates the card background so
 // only a 2px rim of the rotating conic-gradient is visible.
-function SpinBorder({ radius, slow = false, color1 = "rgba(59,130,246,0.95)", color2 = "rgba(96,165,250,0.8)" }) {
+function SpinBorder({ radius, w, h, slow = false, color1 = "rgba(59,130,246,0.95)", color2 = "rgba(96,165,250,0.8)" }) {
   return (
     <div
       className="absolute pointer-events-none"
-      style={{ inset: -2, borderRadius: radius + 2, overflow: "hidden", zIndex: 0 }}
+      style={{ top: -2, left: -2, width: w + 4, height: h + 4, borderRadius: radius + 2, overflow: "hidden", zIndex: 0 }}
     >
       <div
         className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
@@ -309,7 +309,7 @@ function SpinBorder({ radius, slow = false, color1 = "rgba(59,130,246,0.95)", co
       {/* Inner mask — same bg as card — makes only the rim visible */}
       <div style={{
         position: "absolute",
-        inset: 2,
+        top: 2, left: 2, width: w, height: h,
         borderRadius: radius,
         background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
       }} />
@@ -479,7 +479,7 @@ export default function CustomNode({ id, data, selected }) {
       <div className="relative group" style={{ width: cardW, height: cardH + 54 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
-        {status === "running" && <SpinBorder radius={shapeRadius} />}
+        {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={handlePlay} className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
@@ -516,7 +516,7 @@ export default function CustomNode({ id, data, selected }) {
       <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
-        {status === "running" && <SpinBorder radius={shapeRadius} />}
+        {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
         <Handle type="target" position={Position.Left} id="input"
           className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none"
@@ -578,7 +578,7 @@ export default function CustomNode({ id, data, selected }) {
       <div className="relative group" style={{ width: d, height: d + 22 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
-        {parentAgentRunning && <SpinBorder radius={9999} slow color1="rgba(167,139,250,0.8)" color2="rgba(99,102,241,0.8)" />}
+        {parentAgentRunning && <SpinBorder radius={9999} w={d} h={d} slow color1="rgba(167,139,250,0.8)" color2="rgba(99,102,241,0.8)" />}
 
         {/* Model picker popup — floats above the circle */}
         {pickerOpen && models.length > 0 && (
@@ -700,7 +700,7 @@ export default function CustomNode({ id, data, selected }) {
     <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
       onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       {toolbar}
-      {status === "running" && <SpinBorder radius={shapeRadius} />}
+      {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
       {/* Input handle */}
       <Handle type="target" position={Position.Left} id="input"
