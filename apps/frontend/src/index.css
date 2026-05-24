@@ -228,3 +228,15 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* ── Node spinning border (live execution) ────────────────────────────────── */
+@keyframes bb-spin-conic {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.bb-spin-border {
+  animation: bb-spin-conic 1.2s linear infinite;
+}
+.bb-spin-border-slow {
+  animation: bb-spin-conic 2s linear infinite;
+}
