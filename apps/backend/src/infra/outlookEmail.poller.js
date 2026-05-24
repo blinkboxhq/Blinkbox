@@ -9,6 +9,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-outlook-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -32,8 +33,9 @@ async function pollOutlook(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { accessToken, folder = "inbox", subjectFilter, onlyUnread = true } = cfg;
-    if (!accessToken) return;
+    const { credentialId, workspaceId, folder = "inbox", subjectFilter, onlyUnread = true } = cfg;
+    if (!credentialId) return;
+    const accessToken = await getOAuthToken(credentialId, workspaceId, "Outlook Trigger");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
@@ -89,11 +91,11 @@ export async function syncOutlookJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.accessToken) continue;
+    if (!cfg.credentialId) continue;
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await outlookQueue.add("outlook-poll", {
       automationId: automation._id.toString(),
-      cfg: { accessToken: cfg.accessToken, folder: cfg.folder, subjectFilter: cfg.subjectFilter, onlyUnread: cfg.onlyUnread },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), folder: cfg.folder, subjectFilter: cfg.subjectFilter, onlyUnread: cfg.onlyUnread },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `outlook-${automation._id}` });
   }
   console.log(`[OutlookPoller] Synced ${automations.length} automations`);

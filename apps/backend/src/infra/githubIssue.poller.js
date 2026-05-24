@@ -8,20 +8,13 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
-import Credential from "../models/credential.model.js";
-import { decrypt } from "../utils/crypto.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-ghissue-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
 
 let ghQueue = null;
 let ghWorker = null;
-
-async function resolveToken(credentialId, workspaceId) {
-  const cred = await Credential.findOne({ _id: credentialId, workspaceId });
-  if (!cred) throw new Error("GitHub credential not found");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
 
 async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
   const headers = {
@@ -70,7 +63,7 @@ async function pollRepo(automationId, credentialId, workspaceId, owner, repo, ty
   if (!locked) return;
 
   try {
-    const token = await resolveToken(credentialId, workspaceId);
+    const token = await getOAuthToken(credentialId, workspaceId, "GitHub Issue Trigger");
     const items = await fetchIssues(owner, repo, token, type, labelFilter);
     if (!items.length) return;
 

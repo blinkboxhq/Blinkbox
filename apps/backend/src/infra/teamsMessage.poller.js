@@ -9,6 +9,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-teams-poller";
 const SEEN_TTL = 7 * 24 * 60 * 60;
@@ -31,8 +32,9 @@ async function pollTeams(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { accessToken, teamId, channelId, keywordFilter } = cfg;
-    if (!accessToken || !teamId || !channelId) return;
+    const { credentialId, workspaceId, teamId, channelId, keywordFilter } = cfg;
+    if (!credentialId || !teamId || !channelId) return;
+    const accessToken = await getOAuthToken(credentialId, workspaceId, "Teams Trigger");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
@@ -89,11 +91,11 @@ export async function syncTeamsJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.teamId || !cfg.channelId) continue;
+    if (!cfg.credentialId || !cfg.teamId || !cfg.channelId) continue;
     const interval = parseInt(cfg.pollIntervalMinutes) || 2;
     await teamsQueue.add("teams-poll", {
       automationId: automation._id.toString(),
-      cfg: { accessToken: cfg.accessToken, teamId: cfg.teamId, channelId: cfg.channelId, keywordFilter: cfg.keywordFilter },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), teamId: cfg.teamId, channelId: cfg.channelId, keywordFilter: cfg.keywordFilter },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `teams-${automation._id}` });
   }
   console.log(`[TeamsPoller] Synced ${automations.length} automations`);

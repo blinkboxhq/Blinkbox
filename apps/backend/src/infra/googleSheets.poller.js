@@ -9,6 +9,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-gsheets-poller";
 let gsheetsQueue = null;
@@ -30,8 +31,9 @@ async function pollGoogleSheets(automationId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { spreadsheetId, range = "Sheet1", accessToken, hasHeader = true } = cfg;
-    if (!spreadsheetId || !accessToken) return;
+    const { credentialId, workspaceId, spreadsheetId, range = "Sheet1", hasHeader = true } = cfg;
+    if (!spreadsheetId || !credentialId) return;
+    const accessToken = await getOAuthToken(credentialId, workspaceId, "Google Sheets Trigger");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
@@ -87,11 +89,11 @@ export async function syncGoogleSheetsJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || {};
-    if (!cfg.spreadsheetId) continue;
+    if (!cfg.spreadsheetId || !cfg.credentialId) continue;
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await gsheetsQueue.add("gsheets-poll", {
       automationId: automation._id.toString(),
-      cfg: { spreadsheetId: cfg.spreadsheetId, range: cfg.range, accessToken: cfg.accessToken, hasHeader: cfg.hasHeader },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), spreadsheetId: cfg.spreadsheetId, range: cfg.range, hasHeader: cfg.hasHeader },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `gsheets-${automation._id}` });
   }
   console.log(`[GoogleSheetsPoller] Synced ${automations.length} automations`);

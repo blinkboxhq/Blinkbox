@@ -9,20 +9,13 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
-import Credential from "../models/credential.model.js";
-import { decrypt } from "../utils/crypto.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-gcal-poller";
 const SEEN_TTL = 24 * 60 * 60;
 
 let gcalQueue = null;
 let gcalWorker = null;
-
-async function resolveToken(credentialId, workspaceId) {
-  const cred = await Credential.findOne({ _id: credentialId, workspaceId });
-  if (!cred) throw new Error("Google Calendar credential not found");
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
 
 async function fetchUpcomingEvents(token, calendarId, minutesBefore, filterQuery) {
   const now = new Date();
@@ -68,7 +61,7 @@ async function pollCalendar(automationId, credentialId, workspaceId, calendarId,
   if (!locked) return;
 
   try {
-    const token = await resolveToken(credentialId, workspaceId);
+    const token = await getOAuthToken(credentialId, workspaceId, "Google Calendar Trigger");
     const events = await fetchUpcomingEvents(token, calendarId, minutesBefore, filterQuery);
     if (!events.length) return;
 
