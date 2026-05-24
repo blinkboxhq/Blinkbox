@@ -3,6 +3,7 @@ import Automation from "../../models/automation.model.js";
 import { nodeRegistry } from "../../nodes/index.js";
 import { resolveConfig } from "../automation/engine/expression.parser.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
+import { emitNodeStatus } from "../../infra/socket.server.js";
 
 const MAX_STEPS = 30;
 const STEP_TIMEOUT_MS = 90_000;
@@ -70,6 +71,9 @@ export async function chatRun(req, res) {
 
       const handler = nodeRegistry[node.type];
 
+      // Emit started for every node (including trigger)
+      emitNodeStatus(automationId, { automationId, nodeId, status: "started" });
+
       if (handler && node.id !== entryId) {
         // Build input from parent nodes
         const incoming = edges.filter(e => e.target === nodeId && (!e.targetHandle || e.targetHandle === "input"));
@@ -127,11 +131,17 @@ export async function chatRun(req, res) {
             resolvedConfig.prompt = item.json?.message || triggerJson?.message || "";
           }
 
-          const raw = await withTimeout(
-            handler.run(resolvedConfig, item.json, { workspaceId, toolRegistry, triggerOutput: context[entryId]?.[0]?.json }),
-            STEP_TIMEOUT_MS,
-          );
-          nodeOutput = toItems(raw);
+          try {
+            const raw = await withTimeout(
+              handler.run(resolvedConfig, item.json, { workspaceId, toolRegistry, triggerOutput: context[entryId]?.[0]?.json }),
+              STEP_TIMEOUT_MS,
+            );
+            nodeOutput = toItems(raw);
+            emitNodeStatus(automationId, { automationId, nodeId, status: "completed" });
+          } catch (nodeErr) {
+            emitNodeStatus(automationId, { automationId, nodeId, status: "failed" });
+            throw nodeErr;
+          }
         }
 
         context[nodeId] = nodeOutput;
@@ -140,6 +150,8 @@ export async function chatRun(req, res) {
           .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
         if (slug && slug !== nodeId) context[slug] = nodeOutput;
         lastOutput = nodeOutput[0];
+      } else if (node.id === entryId) {
+        emitNodeStatus(automationId, { automationId, nodeId, status: "completed" });
       }
 
       // Queue successors (follow normal data edges)
