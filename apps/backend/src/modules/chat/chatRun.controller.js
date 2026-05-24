@@ -121,6 +121,12 @@ export async function chatRun(req, res) {
           }
           if (handleDeps) Object.assign(resolvedConfig, handleDeps);
 
+          // For AI agent nodes: if no prompt configured, fall back to the chat message
+          if (node.type === "ai_agent" && !resolvedConfig.prompt) {
+            const triggerJson = context[entryId]?.[0]?.json;
+            resolvedConfig.prompt = item.json?.message || triggerJson?.message || "";
+          }
+
           const raw = await withTimeout(
             handler.run(resolvedConfig, item.json, { workspaceId, toolRegistry, triggerOutput: context[entryId]?.[0]?.json }),
             STEP_TIMEOUT_MS,
