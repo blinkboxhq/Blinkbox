@@ -57,6 +57,11 @@ These rules are non-negotiable. Breaking them produces broken, unusable workflow
 **Rule 5 — No duplicate triggers:**
 - One workflow = one trigger. Never include two trigger nodes.
 
+**Rule 6 — NEVER use \`manual\` as a trigger unless explicitly asked:**
+- If the user didn't say "manual trigger", "test manually", or "run manually" — do NOT use \`manual\`.
+- For AI chat agents: use \`chat_trigger\`. For scheduled tasks: use \`cron_trigger\`. For webhooks: use \`webhook\`.
+- A workflow with \`manual\` as its trigger is broken unless the user asked for it.
+
 **BAD EXAMPLE (never produce this):**
 \`\`\`
 nodes: gmail_trigger → manual_trigger → logic_router   ← WRONG: manual_trigger in the middle
@@ -134,33 +139,44 @@ NEVER chain integrations as downstream action nodes after the agent. They are IN
 \`{ credentialId: "", alias: "gmail" }\` — alias is a short name the agent uses to refer to the service.
 
 ### CORRECT AI Agent layout (chat trigger + Claude + Gmail + Sheets + GitHub):
-\`\`\`
+\`\`\`json
 Nodes:
   n1: chat_trigger      x:80,  y:300  (trigger)
   n2: ai_agent          x:400, y:300  (action)
-  n3: agent_anthropic   x:400, y:80   (action) — "Claude (claude-sonnet-4-5)"
+  n3: agent_anthropic   x:400, y:80   (action) — powered by Claude
   n4: agent_integration_gmail          x:80,  y:540  (action)
   n5: agent_integration_google_sheets  x:280, y:540  (action)
   n6: agent_integration_github         x:480, y:540  (action)
 
-Edges:
-  n1 → n2  (no targetHandle — main input)
-  n3 → n2  targetHandle: "chat_model"
-  n4 → n2  targetHandle: "integration"
-  n5 → n2  targetHandle: "integration"
-  n6 → n2  targetHandle: "integration"
+Edges (in JSON — pay attention to which is source vs target):
+  { source: "n1", target: "n2" }                           ← chat flows INTO agent
+  { source: "n3", target: "n2", targetHandle: "chat_model" }  ← model plugs INTO agent
+  { source: "n4", target: "n2", targetHandle: "integration" } ← gmail plugs INTO agent
+  { source: "n5", target: "n2", targetHandle: "integration" } ← sheets plugs INTO agent
+  { source: "n6", target: "n2", targetHandle: "integration" } ← github plugs INTO agent
+
+RULE: "source" = the node FEEDING INTO the hub. "target" is ALWAYS "n2" (ai_agent).
+The integration/model nodes are SOURCES. The ai_agent is the TARGET.
 \`\`\`
 
 ### ❌ WRONG AI Agent patterns (never do these):
 \`\`\`
-WRONG: chat_trigger → ai_agent → gmail → google_sheets → github
-  (integrations are NOT downstream action nodes)
+WRONG edges (source/target reversed):
+  { source: "n2", target: "n4", targetHandle: "integration" }  ← BACKWARDS! ai_agent cannot be source for integration
+  { source: "n2", target: "n3", targetHandle: "chat_model" }   ← BACKWARDS! ai_agent cannot be source for model
 
-WRONG: chat_trigger → ai_agent, google_calendar_trigger → ai_agent
+WRONG topology:
+  chat_trigger → ai_agent → gmail → google_sheets → github
+  (integrations are NOT downstream action nodes — they feed INTO ai_agent)
+
+  chat_trigger → ai_agent, google_calendar_trigger (separate, floating)
   (use agent_integration_google_calendar, NOT google_calendar_trigger)
 
-WRONG: ai_agent with no model node connected
-  (always connect exactly one agent_anthropic / agent_openai / agent_groq)
+  ai_agent with no model node connected
+  (always connect exactly one agent_anthropic / agent_openai / agent_groq via targetHandle: "chat_model")
+
+  ai_agent workflow using manual trigger
+  (use chat_trigger for AI agents, not manual)
 \`\`\`
 
 ## ❌ FORBIDDEN Anti-Patterns
@@ -197,22 +213,35 @@ WRONG: ai_agent with no model node connected
 - **Need clarification** → plain text question
 - **Pure answer** → create_workflow with nodes:[] edges:[]`;
 
-function buildSystemPrompt(canvasNodes = []) {
+function buildSystemPrompt(canvasNodes = [], canvasEdges = []) {
   if (!canvasNodes?.length) return SYSTEM_PROMPT_BASE;
 
   const nodeList = canvasNodes
-    .map((n, i) => `  ${i + 1}. [${n.backendType}] "${n.label}"`)
+    .map(n => `  [${n.id}] backendType:${n.backendType} label:"${n.label}" type:${n.type} pos:(${n.x},${n.y})`)
     .join("\n");
 
+  const edgeList = canvasEdges.length
+    ? canvasEdges.map(e => {
+        const th = e.targetHandle ? ` targetHandle:"${e.targetHandle}"` : "";
+        const sh = e.sourceHandle ? ` sourceHandle:"${e.sourceHandle}"` : "";
+        return `  ${e.source} → ${e.target}${sh}${th}`;
+      }).join("\n")
+    : "  (none yet)";
+
   const canvasSection = `\n\n## Current Canvas — ${canvasNodes.length} existing node${canvasNodes.length !== 1 ? "s" : ""}
+### Nodes:
 ${nodeList}
 
+### Existing edges:
+${edgeList}
+
 ### Modify vs Create rules:
-- User says "add", "extend", "also", "and then", "now", "next" → ADD new nodes to the existing workflow. Reuse existing node IDs in edges.
+- User says "add", "extend", "also", "and then", "now", "next" → ADD new nodes to the existing workflow. Reuse exact existing node IDs in your output edges.
 - User says "new workflow", "start over", "replace", "completely different" → Replace everything with a fresh workflow.
 - Default when canvas has nodes: EXTEND, not replace.
-- When extending: include ALL existing nodes in your output (same IDs, same positions) PLUS the new ones.
-- Never duplicate existing nodes. Never change IDs of existing nodes.`;
+- When extending: include ALL existing nodes in your output (same IDs, same positions, same configs) PLUS the new ones.
+- Never duplicate existing nodes. Never change IDs or positions of existing nodes.
+- Preserve all existing edges AND add new ones for the new nodes.`;
 
   return SYSTEM_PROMPT_BASE + canvasSection;
 }
@@ -298,18 +327,38 @@ function toolToCanvas({ nodes = [], edges = [] }) {
 
   const nodeIds = new Set(canvasNodes.map(n => n.id));
 
+  const AI_AGENT_HANDLES = new Set(["chat_model", "integration", "tools", "memory"]);
+  const HUB_TYPES = new Set(["agent_anthropic","agent_openai","agent_gemini","agent_groq",
+    "agent_integration_gmail","agent_integration_google_sheets","agent_integration_google_calendar",
+    "agent_integration_google_drive","agent_integration_github","agent_integration_slack",
+    "agent_integration_notion","agent_integration_discord","agent_integration_stripe",
+    "agent_integration_hubspot","agent_integration_jira","agent_integration_linear",
+    "agent_integration_airtable","agent_tool"]);
+
   // ── Step 2: Build and validate edges ─────────────────────────────────────
   let canvasEdges = edges
-    .map((e, i) => ({
-      id:           String(e.id || `e${i + 1}`),
-      source:       String(e.source || ""),
-      target:       String(e.target || ""),
-      sourceHandle: e.sourceHandle || null,
-      targetHandle: e.targetHandle || null,
-      type:         "configurable",
-      data:         { conditionPath: "" },
-      style:        {},
-    }))
+    .map((e, i) => {
+      const raw = {
+        id:           String(e.id || `e${i + 1}`),
+        source:       String(e.source || ""),
+        target:       String(e.target || ""),
+        sourceHandle: e.sourceHandle || null,
+        targetHandle: e.targetHandle || null,
+        type:         "configurable",
+        data:         { conditionPath: "" },
+        style:        {},
+      };
+      // Auto-fix reversed ai_agent hub edges: if source is ai_agent and targetHandle is a hub handle,
+      // swap source/target so the hub node feeds INTO the ai_agent
+      if (raw.targetHandle && AI_AGENT_HANDLES.has(raw.targetHandle)) {
+        const srcNode = canvasNodes.find(n => n.id === raw.source);
+        const tgtNode = canvasNodes.find(n => n.id === raw.target);
+        if (srcNode?.data?.backendType === "ai_agent" && tgtNode && HUB_TYPES.has(tgtNode.data?.backendType)) {
+          [raw.source, raw.target] = [raw.target, raw.source];
+        }
+      }
+      return raw;
+    })
     .filter(e => {
       if (!e.source || !e.target) return false;
       if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
@@ -443,7 +492,7 @@ async function callBlinkBoxWebhook(webhookUrl, userText, history) {
 }
 
 // ── Provider 2: Anthropic Claude streaming ────────────────────────────────────
-async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
+async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, res) {
   const client = new Anthropic({ apiKey });
 
   const rawHistory = messages.slice(0, -1);
@@ -471,7 +520,7 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
     const stream = client.messages.stream({
       model:      ANTHROPIC_MODEL,
       max_tokens: 32000,
-      system:     buildSystemPrompt(canvasNodes),
+      system:     buildSystemPrompt(canvasNodes, canvasEdges),
       messages:    [...history, { role: "user", content: userText }],
       tools:       [WORKFLOW_TOOL],
       tool_choice: { type: "auto" },
@@ -526,7 +575,7 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
 }
 
 // ── Provider 2b: Anthropic non-streaming (kept for internal fallback logic) ───
-async function callAnthropic(apiKey, messages, canvasNodes = []) {
+async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = []) {
   const client = new Anthropic({ apiKey });
 
   const rawHistory = messages.slice(0, -1);
@@ -546,7 +595,7 @@ async function callAnthropic(apiKey, messages, canvasNodes = []) {
   const response = await client.messages.create({
     model:      ANTHROPIC_MODEL,
     max_tokens: 32000,
-    system:     buildSystemPrompt(canvasNodes),
+    system:     buildSystemPrompt(canvasNodes, canvasEdges),
     messages:    [...history, { role: "user", content: userText }],
     tools:       [WORKFLOW_TOOL],
     tool_choice: { type: "auto" },
@@ -592,14 +641,14 @@ async function callGroq(apiKey, model, payload) {
 }
 
 // ── Provider 4: Google Gemini ─────────────────────────────────────────────────
-async function callGemini(apiKey, messages, canvasNodes = []) {
+async function callGemini(apiKey, messages, canvasNodes = [], canvasEdges = []) {
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: buildSystemPrompt(canvasNodes),
+    systemInstruction: buildSystemPrompt(canvasNodes, canvasEdges),
     generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
   });
 
@@ -620,7 +669,7 @@ async function callGemini(apiKey, messages, canvasNodes = []) {
 
 // ── Streaming route handler ───────────────────────────────────────────────────
 export async function brianChatStream(req, res) {
-  const { messages = [], canvasContext = [] } = req.body;
+  const { messages = [], canvasContext = {} } = req.body;
   if (!Array.isArray(messages) || !messages.length) {
     return res.status(400).json({ message: "Empty messages." });
   }
@@ -635,7 +684,9 @@ export async function brianChatStream(req, res) {
   const groqKey      = process.env.GROQ_API_KEY;
   const googleKey    = process.env.GOOGLE_AI_KEY;
 
-  const canvasNodes = Array.isArray(canvasContext) ? canvasContext : [];
+  // Support both legacy array format and new {nodes, edges} object
+  const canvasNodes = Array.isArray(canvasContext) ? canvasContext : (canvasContext?.nodes || []);
+  const canvasEdges = Array.isArray(canvasContext) ? [] : (canvasContext?.edges || []);
 
   if (BRIAN_WEBHOOK_URL) {
     try {
@@ -661,9 +712,8 @@ export async function brianChatStream(req, res) {
   }
 
   if (anthropicKey) {
-    const status = null;
     try {
-      return await callAnthropicStream(anthropicKey, messages, canvasNodes, res);
+      return await callAnthropicStream(anthropicKey, messages, canvasNodes, canvasEdges, res);
     } catch (err) {
       const s = err.status || err.response?.status;
       console.warn("[Brian/stream] Anthropic failed:", s, err.message);
@@ -695,7 +745,7 @@ export async function brianChatStream(req, res) {
 
   if (groqKey) {
     const payload = [
-      { role: "system", content: buildSystemPrompt(canvasNodes) },
+      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges) },
       ...history,
       { role: "user", content: userText },
     ];
@@ -799,7 +849,7 @@ export async function brianChat(req, res) {
 
   if (groqKey) {
     const payload = [
-      { role: "system", content: buildSystemPrompt(canvasNodes) },
+      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges) },
       ...history,
       { role: "user", content: userText },
     ];

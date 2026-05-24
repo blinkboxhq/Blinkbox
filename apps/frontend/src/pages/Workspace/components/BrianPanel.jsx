@@ -440,6 +440,7 @@ export default function BrianPanel({ width, onResizeStart }) {
   const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
   const addNode      = useWorkspaceStore(s => s.addNode);
   const nodes        = useWorkspaceStore(s => s.nodes);
+  const edges        = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
 
   const [messages, setMessages] = useState([WELCOME_MSG]);
@@ -510,12 +511,23 @@ export default function BrianPanel({ width, onResizeStart }) {
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text || '' }));
 
-      const canvasContext = nodes.map(n => ({
-        id:          n.id,
-        label:       n.data?.label || n.data?.backendType || '',
-        backendType: n.data?.backendType || '',
-        type:        n.data?.type || 'action',
-      }));
+      const canvasContext = {
+        nodes: nodes.map(n => ({
+          id:          n.id,
+          label:       n.data?.label || n.data?.backendType || '',
+          backendType: n.data?.backendType || '',
+          type:        n.data?.type || 'action',
+          x:           Math.round(n.position?.x || 0),
+          y:           Math.round(n.position?.y || 0),
+        })),
+        edges: edges.map(e => ({
+          id:           e.id,
+          source:       e.source,
+          target:       e.target,
+          sourceHandle: e.sourceHandle || null,
+          targetHandle: e.targetHandle || null,
+        })),
+      };
 
       for await (const event of streamBrian(history, canvasContext, controller.signal)) {
         if (event.type === 'text_delta') {
@@ -554,7 +566,7 @@ export default function BrianPanel({ width, onResizeStart }) {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, nodes, applyFlow]);
+  }, [input, loading, messages, nodes, edges, applyFlow]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
