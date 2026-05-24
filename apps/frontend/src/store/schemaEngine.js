@@ -24,6 +24,7 @@ export const DEFAULT_SCHEMAS = {
     headers: "object",
     method: "string",
   },
+  chat_trigger: { message: "string", sessionId: "string", attachments: "array", triggeredAt: "string" },
   cron_trigger: { scheduledAt: "string", cronExpression: "string" },
   imap_trigger: { subject: "string", from: "string", to: "string", body: "string", date: "string", messageId: "string", attachments: "array" },
   rss_trigger: { title: "string", link: "string", pubDate: "string", content: "string", guid: "string", author: "string", feedUrl: "string" },

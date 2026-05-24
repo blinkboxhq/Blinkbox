@@ -149,8 +149,12 @@ export default function BottomChatPanel({ height, onResizeStart }) {
     const txt = input.trim();
     if ((!txt && !attachments.length) || sending) return;
 
-    if (!hasChatTrigger || !automationId) {
-      setMessages(p => [...p, { id: Date.now(), role: 'bot', text: 'Add a Chat Trigger node to your workflow first, then save it.' }]);
+    if (!hasChatTrigger) {
+      setMessages(p => [...p, { id: Date.now(), role: 'bot', text: 'Add a Chat Trigger node to your workflow first.' }]);
+      return;
+    }
+    if (!automationId) {
+      setMessages(p => [...p, { id: Date.now(), role: 'bot', text: 'Save your workflow first (⌘S), then send a message.' }]);
       return;
     }
 
