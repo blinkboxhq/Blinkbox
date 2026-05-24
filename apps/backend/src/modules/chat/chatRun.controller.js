@@ -99,17 +99,47 @@ export async function chatRun(req, res) {
               if (!handleDeps._tools) handleDeps._tools = [];
               const srcNode = nodes.find(n => n.id === edge.source);
               if (srcNode) {
-                const toolHandler = nodeRegistry[srcNode.type];
-                if (toolHandler?.toolDefinition) {
-                  const toolDef = { ...toolHandler.toolDefinition };
-                  const savedConfig = srcNode.data || {};
-                  toolDef.execute = (agentArgs) => toolHandler.run({ ...savedConfig, ...agentArgs }, agentArgs, { workspaceId });
-                  handleDeps._tools.push(toolDef);
+                const toolType = srcNode.type;
+                if (toolType === "agent_tool" && srcNode.data?.toolId) {
+                  const savedData = srcNode.data || {};
+                  const resolved = toolRegistry.resolve(savedData.toolId, { workspaceId });
+                  if (resolved) {
+                    const credId = savedData.credentialId;
+                    handleDeps._tools.push({
+                      name: savedData.toolName
+                        ? savedData.toolName.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "")
+                        : resolved.name,
+                      description: savedData.toolDesc || resolved.description,
+                      parameters: resolved.parameters,
+                      execute: (args) => resolved.execute(credId ? { credentialId: credId, ...args } : args),
+                    });
+                  }
+                } else {
+                  const toolHandler = nodeRegistry[toolType];
+                  if (toolHandler?.toolDefinition) {
+                    const toolDef = { ...toolHandler.toolDefinition };
+                    const savedConfig = srcNode.data || {};
+                    toolDef.execute = async (agentArgs) => toolHandler.run({ ...savedConfig, ...agentArgs }, agentArgs, { workspaceId });
+                    handleDeps._tools.push(toolDef);
+                  } else if (firstJson) {
+                    handleDeps._tools.push(firstJson);
+                  }
                 }
               }
             } else if (handle === "chat_model" || handle === "llm") {
               const srcNode = nodes.find(n => n.id === edge.source);
               handleDeps._chatModel = srcNode ? { ...(srcNode.data || {}), backendType: srcNode.type } : firstJson;
+            } else if (handle === "integration") {
+              const srcNode = nodes.find(n => n.id === edge.source);
+              if (srcNode?.data?.credentialId) {
+                if (!handleDeps._platformTools) handleDeps._platformTools = [];
+                const intType = srcNode.type.replace(/^agent_integration_/, "");
+                handleDeps._platformTools.push({
+                  type: intType,
+                  credentialId: srcNode.data.credentialId,
+                  alias: srcNode.data.alias || "",
+                });
+              }
             }
           }
         }
