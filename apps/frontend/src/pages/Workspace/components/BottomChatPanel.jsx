@@ -94,7 +94,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
   const { id: automationId } = useParams();
   const nodeCount = useWorkspaceStore(s => s.nodes.length);
   const hasChatTrigger = useWorkspaceStore(s =>
-    s.nodes.some(n => n.data?.backendType === 'chat_trigger')
+    s.nodes.some(n => n.data?.backendType === 'chat_trigger' || n.data?.label === 'On Chat Message')
   );
   const [messages, setMessages] = useState([
     { id: 'sys', role: 'system', text: "Messages you send here fire your workflow's Chat Trigger node. Add a Chat Trigger node to the canvas to enable testing." }

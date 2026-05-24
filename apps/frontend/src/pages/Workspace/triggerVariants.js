@@ -149,7 +149,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: WebhookTriggerNode,
   },
   chat: {
-    backendType: "webhook",
+    backendType: "chat_trigger",
     icon: MessageSquare,
     label: "On Chat Message",
     colorClass: "text-pink-400",
