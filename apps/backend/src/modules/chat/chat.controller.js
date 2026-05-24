@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { nanoid } from "nanoid";
+import { randomBytes } from "crypto";
+const nanoid = (n = 12) => randomBytes(n).toString("base64url").slice(0, n);
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 

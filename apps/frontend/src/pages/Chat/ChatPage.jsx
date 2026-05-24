@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import api from "../../lib/api";
-import { nanoid } from "nanoid";
+const nanoid = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const SESSION_KEY = "bb_chat_session";
