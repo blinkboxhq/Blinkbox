@@ -63,49 +63,28 @@ export default function ConfigurableEdge({
     curvature,
   });
 
-  // ── Status-driven styling — derived live from source node's execution status ──
+  // ── Status-driven styling ────────────────────────────────────────────────────
   const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
   const targetStatus = isExecutionLive ? nodeStatuses[target] : null;
-  // Edge is "running" while the target node is executing (data flowing into it)
-  // Edge is "completed" once the target node finishes successfully
-  // Edge is "failed" if the target node failed
-  const status = targetStatus === "running" ? "running"
-    : targetStatus === "completed" ? "completed"
-    : targetStatus === "failed" ? "failed"
-    : sourceStatus === "completed" && !targetStatus ? "ready"
-    : data?.status;
-  const isRunning = status === "running";
-  const isCompleted = status === "completed";
-  const isFailed = status === "failed";
-  const isReady = status === "ready";
+  const isRunning = targetStatus === "running";
+  const isFailed = targetStatus === "failed";
 
-  // Dark grey, brightens on hover
   let stroke = isSlotEdge
-    ? (hovered && !isRunning && !isCompleted && !isFailed ? "#7a7a7a" : "#636363")
-    : (hovered && !isRunning && !isCompleted && !isFailed && !isReady ? "#71717a" : "#3f3f46");
+    ? (hovered ? "#7a7a7a" : "#636363")
+    : (hovered ? "#71717a" : "#3f3f46");
   let strokeWidth = isSlotEdge ? 1.5 : 2.5;
   let strokeDasharray = isSlotEdge ? "4 5" : "none";
   let animation = "none";
   let filter = "none";
 
   if (isRunning) {
-    stroke = "#22d3ee";
+    stroke = "#3b82f6";
     strokeDasharray = "8 5";
     animation = "edgeFlow 0.4s linear infinite";
-    filter = "drop-shadow(0 0 6px rgba(34,211,238,0.6))";
-  } else if (isCompleted) {
-    stroke = "#10b981";
-    animation = "edgeFadeToIdle 2s ease-out forwards";
-    filter = "drop-shadow(0 0 4px rgba(16,185,129,0.5))";
+    filter = "drop-shadow(0 0 5px rgba(59,130,246,0.55))";
   } else if (isFailed) {
     stroke = "#ef4444";
-    filter = "drop-shadow(0 0 3px rgba(239,68,68,0.4))";
-  } else if (isReady) {
-    stroke = "#10b981";
-    strokeWidth = 2.5;
-    strokeDasharray = "3 6";
-    animation = "edgeFlow 1.2s linear infinite";
-    filter = "drop-shadow(0 0 3px rgba(16,185,129,0.3))";
+    filter = "drop-shadow(0 0 3px rgba(239,68,68,0.35))";
   } else if (selected) {
     stroke = "#52525b";
   }
@@ -122,16 +101,9 @@ export default function ConfigurableEdge({
 
   return (
     <>
-      {/* Glow underlay for active edges */}
-      {(isRunning || isCompleted) && (
-        <path
-          d={edgePath}
-          strokeWidth={isRunning ? 12 : 8}
-          stroke={isRunning ? "#22d3ee" : "#10b981"}
-          fill="none"
-          opacity={isRunning ? 0.12 : 0.08}
-          style={{ filter: "blur(6px)" }}
-        />
+      {/* Glow underlay for running edges */}
+      {isRunning && (
+        <path d={edgePath} strokeWidth={12} stroke="#3b82f6" fill="none" opacity={0.1} style={{ filter: "blur(6px)" }} />
       )}
 
       {/* Wide invisible hit area for hover detection */}
@@ -167,19 +139,13 @@ export default function ConfigurableEdge({
       {/* Traveling dot for running edges */}
       {isRunning && (
         <>
-          <circle r="4" fill="#22d3ee" filter="drop-shadow(0 0 6px rgba(34,211,238,1))">
-            <animateMotion dur="0.8s" repeatCount="indefinite" path={edgePath} />
+          <circle r="3.5" fill="#3b82f6" filter="drop-shadow(0 0 6px rgba(59,130,246,1))">
+            <animateMotion dur="0.7s" repeatCount="indefinite" path={edgePath} />
           </circle>
-          <circle r="2.5" fill="white" opacity="0.8">
-            <animateMotion dur="0.8s" repeatCount="indefinite" path={edgePath} />
+          <circle r="2" fill="white" opacity="0.9">
+            <animateMotion dur="0.7s" repeatCount="indefinite" path={edgePath} />
           </circle>
         </>
-      )}
-      {/* Completion pulse dot */}
-      {isCompleted && (
-        <circle r="3" fill="#10b981" filter="drop-shadow(0 0 5px rgba(16,185,129,0.9))">
-          <animateMotion dur="1.2s" repeatCount="1" path={edgePath} fill="freeze" />
-        </circle>
       )}
 
       {/* ── Midpoint buttons (+ and trash, shown on hover) ─────────────────── */}

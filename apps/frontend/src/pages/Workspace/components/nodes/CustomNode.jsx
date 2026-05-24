@@ -289,7 +289,7 @@ function SuccessFailedOutputHandles({ cardHeight }) {
 // ─── Spinning border overlay (n8n-style live execution ring) ─────────────────
 // Renders behind the card. The inner mask div recreates the card background so
 // only a 2px rim of the rotating conic-gradient is visible.
-function SpinBorder({ radius, slow = false, color1 = "rgba(139,92,246,0.95)", color2 = "rgba(59,130,246,0.95)" }) {
+function SpinBorder({ radius, slow = false, color1 = "rgba(59,130,246,0.95)", color2 = "rgba(96,165,250,0.8)" }) {
   return (
     <div
       className="absolute pointer-events-none"
@@ -443,31 +443,16 @@ export default function CustomNode({ id, data, selected }) {
   const handleDuplicate = e => { e.stopPropagation(); if (duplicateNode) duplicateNode(id); };
   const handleDelete = e => { e.stopPropagation(); deleteElements({ nodes: [{ id }] }); };
 
-  // ── Status badge ────────────────────────────────────────────────────────
-  let badge = null;
-  if (status === "completed") badge = (
+  // ── Status badge — only on failure ─────────────────────────────────────
+  const badge = status === "failed" ? (
     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }}
-      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center z-20 shadow-lg shadow-emerald-500/30">
-      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500/90 flex items-center justify-center z-20">
+      <AlertTriangle className="w-2.5 h-2.5 text-white" strokeWidth={3} />
     </motion.div>
-  );
-  else if (status === "failed") badge = (
-    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }}
-      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center z-20 shadow-lg shadow-red-500/30">
-      <AlertTriangle className="w-3 h-3 text-white" strokeWidth={3} />
-    </motion.div>
-  );
+  ) : null;
 
-  const dotColor = status === "completed" ? "#10b981" : status === "running" ? "#3b82f6" : status === "failed" ? "#ef4444" : "#52525b";
-  const statusGlow = status === "running" ? "0 0 8px rgba(59,130,246,0.5)" : status === "completed" ? "0 0 8px rgba(16,185,129,0.4)" : "none";
-
-  let borderStyle = {};
-  let glowClass = "";
-  if (status === "running") { borderStyle = { borderColor: "rgba(59,130,246,0.4)" }; glowClass = "shadow-[0_0_20px_rgba(59,130,246,0.15)]"; }
-  else if (status === "completed") { borderStyle = { borderColor: "rgba(16,185,129,0.3)" }; glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.1)]"; }
-  else if (status === "failed") { borderStyle = { borderColor: "rgba(239,68,68,0.3)" }; glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.1)]"; }
-  else if (hasMappingWarning) { borderStyle = { borderColor: "rgba(245,158,11,0.25)" }; }
-  else if (selected) { borderStyle = { borderColor: `rgba(${accent},0.5)` }; glowClass = `shadow-[0_0_24px_rgba(${accent},0.1)]`; }
+  const dotColor = status === "running" ? "#3b82f6" : status === "failed" ? "#ef4444" : "#52525b";
+  const statusGlow = status === "running" ? "0 0 8px rgba(59,130,246,0.5)" : "none";
 
   // ── NodeToolbar ─────────────────────────────────────────────────────────
   const toolbar = (
@@ -484,12 +469,11 @@ export default function CustomNode({ id, data, selected }) {
   if (isTrigger) {
     const cardW = 120, cardH = 120;
     const cardBorder = status === "running" ? "1.5px solid transparent"
-      : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
-      : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
+      : status === "failed" ? "1.5px solid rgba(239,68,68,0.35)"
       : selected ? "2px solid rgba(255,255,255,0.45)"
       : isHovered ? "6px solid rgba(255,255,255,0.14)"
       : "1px solid rgba(255,255,255,0.08)";
-    const cardShadow = selected ? `0 0 20px rgba(${accent},0.08), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)` : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+    const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 54 }}
@@ -500,7 +484,6 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handlePlay} className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
-          {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
@@ -523,20 +506,17 @@ export default function CustomNode({ id, data, selected }) {
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "1.5px solid transparent"
-      : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
-      : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
+      : status === "failed" ? "1.5px solid rgba(239,68,68,0.35)"
       : selected ? "2px solid rgba(255,255,255,0.45)"
       : isHovered ? "6px solid rgba(255,255,255,0.14)"
       : "1px solid rgba(255,255,255,0.08)";
-    const cardShadow = selected
-      ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
-      : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+    const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
-        {status === "running" && <SpinBorder radius={shapeRadius} color1="rgba(167,139,250,0.95)" color2="rgba(99,102,241,0.95)" />}
+        {status === "running" && <SpinBorder radius={shapeRadius} />}
 
         <Handle type="target" position={Position.Left} id="input"
           className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none"
@@ -549,7 +529,6 @@ export default function CustomNode({ id, data, selected }) {
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
 
           {badge}
-          {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" /></div>}
 
           <Bot className="w-10 h-10 text-white opacity-75 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           <p className="text-[11px] font-bold text-white mt-1.5">{nodeDef.label || data.label || "AI Agent"}</p>
@@ -709,21 +688,13 @@ export default function CustomNode({ id, data, selected }) {
   const cardW = 120, cardH = 120;
 
   const cardBorderTop = status === "running" ? "1.5px solid transparent"
-    : status === "completed" ? "1.5px solid rgba(16,185,129,0.4)"
-    : status === "failed" ? "1.5px solid rgba(239,68,68,0.4)"
+    : status === "failed" ? "1.5px solid rgba(239,68,68,0.35)"
     : selected ? "2px solid rgba(255,255,255,0.45)"
     : isHovered ? "6px solid rgba(255,255,255,0.14)"
     : "1px solid rgba(255,255,255,0.08)";
   const cardBorder = cardBorderTop;
-  const cardBottomBorder = status === "running" ? "2px solid rgba(59,130,246,0.5)"
-    : status === "completed" ? "2px solid rgba(16,185,129,0.4)"
-    : status === "failed" ? "2px solid rgba(239,68,68,0.4)"
-    : "3px solid rgba(255,255,255,0.22)";
-  const cardShadow = status === "running" ? "0 0 30px rgba(59,130,246,0.12), 0 12px 40px rgba(0,0,0,0.6)"
-    : status === "completed" ? "0 0 24px rgba(16,185,129,0.1), 0 12px 40px rgba(0,0,0,0.6)"
-    : status === "failed" ? "0 0 24px rgba(239,68,68,0.1), 0 12px 40px rgba(0,0,0,0.6)"
-    : selected ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
-    : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+  const cardBottomBorder = status === "failed" ? "2px solid rgba(239,68,68,0.35)" : "3px solid rgba(255,255,255,0.22)";
+  const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   return (
     <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
@@ -741,7 +712,6 @@ export default function CustomNode({ id, data, selected }) {
         style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
         {badge}
-        {status === "running" && <div className="absolute top-2 right-2"><Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" /></div>}
         {hasMappingWarning && (
           <div className="absolute top-2 left-2 group/warn">
             <AlertTriangle className="w-3 h-3 text-amber-500/70 cursor-help" />
@@ -785,9 +755,6 @@ export default function CustomNode({ id, data, selected }) {
           <span className="text-[9px] font-semibold text-white/50 mt-0.5 block truncate px-1">{nodeDef.label}</span>
         )}
         {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
-        {nodeOutput && status === "completed" && (
-          <NodeOutputChip output={nodeOutput} />
-        )}
       </div>
     </div>
   );

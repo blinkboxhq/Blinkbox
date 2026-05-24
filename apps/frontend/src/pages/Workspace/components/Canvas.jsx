@@ -282,8 +282,6 @@ export default function Canvas() {
 
       const arrowColor = sourceStatus === "running"
         ? "#3b82f6"
-        : sourceStatus === "completed"
-        ? "#10b981"
         : sourceStatus === "failed"
         ? "#ef4444"
         : EDGE_COLOR;
