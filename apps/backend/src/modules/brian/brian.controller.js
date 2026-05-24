@@ -111,44 +111,91 @@ Every node config must have REAL values. No workflow should need manual editing 
 \`"schedule": "0 9 * * 1-5"\` (weekdays 9am)
 **BAD:** \`"schedule": ""\` or \`"schedule": "daily"\`
 
-## ❌ FORBIDDEN Anti-Patterns
-These are failure modes — never do any of them:
+## 🤖 AI Agent — Hub Architecture (MOST IMPORTANT PATTERN)
 
-1. **Empty configs**: \`config: {}\` or \`config: { credentialId: "" }\` — every node needs real field values
-2. **Placeholder text**: "Enter your message here", "Configure this node", "Your subject line", "Notification"
-3. **Generic labels**: "Node 1", "Action", "Step 3" — labels must describe what the node does ("Filter Spam Emails", "Post to #alerts")
-4. **Missing AI prompts**: ai_transform/ai_extract/ai_classify nodes without a real, specific prompt written out
-5. **Bare cron schedules**: never leave schedule empty — "daily" → \`"0 9 * * *"\`, "hourly" → \`"0 * * * *"\`, "weekdays" → \`"0 9 * * 1-5"\`
-6. **Broken variable chains**: using \`{{$json.field}}\` without confirming the upstream node actually outputs that field
-7. **Single-column layouts**: all nodes stacked vertically at x:400 — use 2D placement
+The \`ai_agent\` node is a HUB. Other nodes plug INTO it via special \`targetHandle\` values on edges.
+NEVER chain integrations as downstream action nodes after the agent. They are INPUTS to the agent.
+
+### Handle types (set on the EDGE as \`targetHandle\`):
+| targetHandle | What connects here | Node backendTypes |
+|---|---|---|
+| \`"chat_model"\` | The LLM powering the agent | \`agent_anthropic\`, \`agent_openai\`, \`agent_gemini\`, \`agent_groq\` |
+| \`"integration"\` | Services the agent can use | \`agent_integration_gmail\`, \`agent_integration_google_sheets\`, \`agent_integration_google_calendar\`, \`agent_integration_google_drive\`, \`agent_integration_github\`, \`agent_integration_slack\`, \`agent_integration_notion\`, \`agent_integration_discord\`, \`agent_integration_stripe\`, \`agent_integration_hubspot\`, \`agent_integration_jira\`, \`agent_integration_linear\`, \`agent_integration_airtable\`, etc. |
+| \`"tools"\` | Custom tool nodes | \`agent_tool\` |
+| \`"memory"\` | Memory/vector store | memory nodes |
+| (none / \`"input"\`) | The main data flow | trigger and upstream action nodes |
+
+### Agent model configs:
+- \`agent_anthropic\`: \`{ model: "claude-sonnet-4-5", credentialId: "" }\` ← use this when user says "Claude" or "Anthropic"
+- \`agent_openai\`: \`{ model: "gpt-4o", credentialId: "" }\`
+- \`agent_groq\`: \`{ model: "llama-3.3-70b-versatile", credentialId: "" }\`
+
+### Integration node config (all the same shape):
+\`{ credentialId: "", alias: "gmail" }\` — alias is a short name the agent uses to refer to the service.
+
+### CORRECT AI Agent layout (chat trigger + Claude + Gmail + Sheets + GitHub):
+\`\`\`
+Nodes:
+  n1: chat_trigger      x:80,  y:300  (trigger)
+  n2: ai_agent          x:400, y:300  (action)
+  n3: agent_anthropic   x:400, y:80   (action) — "Claude (claude-sonnet-4-5)"
+  n4: agent_integration_gmail          x:80,  y:540  (action)
+  n5: agent_integration_google_sheets  x:280, y:540  (action)
+  n6: agent_integration_github         x:480, y:540  (action)
+
+Edges:
+  n1 → n2  (no targetHandle — main input)
+  n3 → n2  targetHandle: "chat_model"
+  n4 → n2  targetHandle: "integration"
+  n5 → n2  targetHandle: "integration"
+  n6 → n2  targetHandle: "integration"
+\`\`\`
+
+### ❌ WRONG AI Agent patterns (never do these):
+\`\`\`
+WRONG: chat_trigger → ai_agent → gmail → google_sheets → github
+  (integrations are NOT downstream action nodes)
+
+WRONG: chat_trigger → ai_agent, google_calendar_trigger → ai_agent
+  (use agent_integration_google_calendar, NOT google_calendar_trigger)
+
+WRONG: ai_agent with no model node connected
+  (always connect exactly one agent_anthropic / agent_openai / agent_groq)
+\`\`\`
+
+## ❌ FORBIDDEN Anti-Patterns
+1. **Empty configs** — every node needs real field values
+2. **Placeholder text** — "Enter your message", "Configure this node"
+3. **Generic labels** — "Node 1", "Step 3" — use "Draft Support Reply", "Post to #sales"
+4. **Missing AI prompts** — ai_transform/ai_classify without a real written prompt
+5. **Bare cron schedules** — "daily" → \`"0 9 * * *"\`, "hourly" → \`"0 * * * *"\`
+6. **Linear integration chains** — Gmail → Sheets → GitHub chained AFTER ai_agent (wrong)
+7. **Trigger nodes as tools** — \`google_calendar_trigger\` is NOT a calendar tool; use \`agent_integration_google_calendar\`
+8. **Single-column layouts** — use 2D placement
 
 ## Design Heuristics
-1. **Classify before routing** — if content varies (email could be spam/support/sales), add ai_classify before condition
-2. **Extract before templating** — add ai_extract to pull structured fields before formatting messages
-3. **Filter early** — add filter node after trigger if only some events should proceed
-4. **Real subject lines** — write the actual message text matching the workflow intent
-5. **Scraping** → always set \`waitFor: "networkidle"\` for JS-heavy pages
-6. **AI prompts** — write the exact system prompt, as if you're deploying it to production today
-7. **Error handling** — for critical paths (payment, CRM), add a success_failed node before notifications
+1. **Classify before routing** — add ai_classify before condition nodes
+2. **Extract before templating** — ai_extract to pull structured fields first
+3. **Filter early** — filter node after trigger if only some events should proceed
+4. **AI prompts** — write the exact production system prompt
+5. **Error handling** — for critical paths (payment, CRM), add success_failed before notifications
 
-## Workflow Patterns (apply when request matches)
+## Workflow Patterns
 - **Email auto-reply**: gmail_trigger → ai_classify → condition → ai_transform(draft reply) → gmail(send)
-- **Slack digest**: cron_trigger → http_request → ai_extract → slack(post to #channel with full formatted message)
-- **Lead enrichment**: webhook → http_request(enrich API) → hubspot(create contact) → slack(notify #sales)
-- **Price monitoring**: cron_trigger → web_scraper → condition(price threshold) → sendgrid(alert email with price)
-- **Stripe revenue alert**: stripe_trigger → set_fields(format amount/currency) → slack(#revenue with amount)
-- **GitHub PR summary**: github_trigger(pull_request) → ai_transform(summarize diff) → slack(post to #engineering)
-- **RSS to Notion**: rss_trigger → ai_extract(title,summary,tags,url) → notion(create page with all fields)
-- **Form → CRM**: form_trigger → ai_classify(lead quality: hot/warm/cold) → hubspot(create deal) → sendgrid(personalized confirm)
-- **Support ticket routing**: webhook → ai_classify(department) → condition → route to slack channels or email
-- **AI Chat agent**: chat_trigger → ai_agent(with model + tools) → (reply sent automatically)
-- **Daily briefing**: cron_trigger(0 8 * * *) → http_request(news/data API) → ai_transform(format digest) → sendgrid(email digest)
+- **Slack digest**: cron_trigger → http_request → ai_extract → slack(#channel with formatted msg)
+- **Lead enrichment**: webhook → http_request(enrich) → hubspot(create contact) → slack(#sales)
+- **Price alert**: cron_trigger → web_scraper → condition(price < threshold) → sendgrid(alert email)
+- **GitHub PR summary**: github_trigger → ai_transform(summarize diff) → slack(#engineering)
+- **RSS to Notion**: rss_trigger → ai_extract(title,summary,tags) → notion(create page)
+- **Form → CRM**: form_trigger → ai_classify(lead quality) → hubspot(create deal) → sendgrid(confirm)
+- **AI Chat agent (basic)**: chat_trigger → ai_agent ← agent_anthropic[chat_model]
+- **AI Chat agent (with integrations)**: chat_trigger → ai_agent ← agent_anthropic[chat_model], ← agent_integration_gmail[integration], ← agent_integration_google_sheets[integration]
 
 ## When to use create_workflow vs plain text
-- **User asks to build/create/automate something** → call create_workflow with full nodes and edges
-- **User asks a question** ("what does X do?", "how does Stripe work?") → respond in plain text, no tool call
-- **You need clarification** ("what app do you use for email?") → respond in plain text with your question
-- **Empty workflow** (pure question answer) → call create_workflow with nodes:[] edges:[] and answer in text field`;
+- **User asks to build/create/automate** → call create_workflow with full nodes and edges
+- **User asks a question** → plain text, no tool call
+- **Need clarification** → plain text question
+- **Pure answer** → create_workflow with nodes:[] edges:[]`;
 
 function buildSystemPrompt(canvasNodes = []) {
   if (!canvasNodes?.length) return SYSTEM_PROMPT_BASE;
@@ -207,7 +254,8 @@ const WORKFLOW_TOOL = {
             id:           { type: "string" },
             source:       { type: "string" },
             target:       { type: "string" },
-            sourceHandle: { type: "string", description: "Only set for condition nodes: 'true' or 'false'" },
+            sourceHandle: { type: "string", description: "Only for condition nodes: 'true' or 'false'" },
+            targetHandle: { type: "string", description: "For ai_agent inputs only: 'chat_model', 'integration', 'tools', or 'memory'. Omit for all other nodes." },
           },
           required: ["id", "source", "target"],
           additionalProperties: false,
@@ -257,6 +305,7 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       source:       String(e.source || ""),
       target:       String(e.target || ""),
       sourceHandle: e.sourceHandle || null,
+      targetHandle: e.targetHandle || null,
       type:         "configurable",
       data:         { conditionPath: "" },
       style:        {},
@@ -264,9 +313,11 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     .filter(e => {
       if (!e.source || !e.target) return false;
       if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
-      // Remove any edge that points INTO a trigger node
-      const targetNode = canvasNodes.find(n => n.id === e.target);
-      if (targetNode?.data?.type === "trigger") return false;
+      // Remove any edge that points INTO a trigger node (unless it's a hub handle)
+      if (!e.targetHandle) {
+        const targetNode = canvasNodes.find(n => n.id === e.target);
+        if (targetNode?.data?.type === "trigger") return false;
+      }
       return true;
     });
 
@@ -279,9 +330,13 @@ function toolToCanvas({ nodes = [], edges = [] }) {
   }
 
   // ── Step 4: Remove orphaned nodes (unreachable from trigger) ─────────────
+  // Hub-connected nodes (targetHandle set) are already properly connected — don't re-chain them.
+  const hubConnectedTargets = new Set(canvasEdges.filter(e => e.targetHandle).map(e => e.source));
   const triggerNode = canvasNodes.find(n => n.data.type === "trigger") || canvasNodes[0];
   if (triggerNode && canvasNodes.length > 1) {
     const reachable = new Set([triggerNode.id]);
+    // Pre-seed hub-connected nodes as reachable (they plug into a hub, not the main chain)
+    for (const id of hubConnectedTargets) reachable.add(id);
     let changed = true;
     while (changed) {
       changed = false;
@@ -297,13 +352,13 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     if (removed.length) {
       const keepIds = reachable;
       canvasEdges = canvasEdges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
-      // Re-chain removed nodes linearly to the last reachable node if any are real action nodes
-      const lastReachable = [...reachable].pop();
+      // Re-chain truly orphaned (non-hub) action nodes linearly
+      const lastReachable = [...reachable].filter(id => !hubConnectedTargets.has(id)).pop() || [...reachable].pop();
       removed.forEach((orphan, oi) => {
         const prevId = oi === 0 ? lastReachable : removed[oi - 1].id;
         canvasEdges.push({
           id: `e_fix_${oi}`, source: prevId, target: orphan.id,
-          sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
+          sourceHandle: null, targetHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
         });
         reachable.add(orphan.id);
       });
@@ -358,6 +413,7 @@ function normalizeFlow(parsed) {
     source:       String(e.source || e.from || ""),
     target:       String(e.target || e.to   || ""),
     sourceHandle: e.sourceHandle || null,
+    targetHandle: e.targetHandle || null,
     type:         "configurable",
     data:         { conditionPath: "" },
     style:        {},
