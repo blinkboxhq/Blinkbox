@@ -9,7 +9,7 @@ import { emitExecutionEvent } from "../execution/execution.events.js";
 import { resolveConfig } from "../../modules/automation/engine/expression.parser.js";
 
 import { acquireLock, releaseLock } from "../../infra/redis.lock.js";
-import { emitExecutionUpdate, emitNodeStatus } from "../../infra/socket.server.js";
+import { emitExecutionUpdate, emitNodeStatus, emitAgentStep } from "../../infra/socket.server.js";
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
@@ -337,9 +337,16 @@ export async function processCursor({ executionId, cursorId }) {
         Object.assign(resolvedConfig, handleDeps);
       }
 
+      const emitStep = (stepData) => {
+        const autoId = execution.automationId?.toString();
+        if (autoId) emitAgentStep(autoId, { nodeId: node.id, executionId: executionId.toString(), ...stepData });
+      };
+
+      const nodeTimeoutMs = node.type === "ai_agent" ? 5 * 60 * 1000 : NODE_TIMEOUT_MS;
+
       let rawOutput = await withTimeout(
-        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
-        NODE_TIMEOUT_MS,
+        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json, emitStep }),
+        nodeTimeoutMs,
       );
 
       // Handle custom Delay/Sleep requests from nodes

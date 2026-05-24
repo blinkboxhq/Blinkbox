@@ -43,6 +43,10 @@ export const createExecutionSlice = (set, get) => ({
   // Shape: ExecutionLog[] (node_step + execution_start + execution_end entries)
   executionLogs: [],
 
+  // Live AI Agent step stream — cleared on each new run
+  // Shape: { [nodeId]: Array<{ type, iteration, tool, args, result, answer, ... }> }
+  agentSteps: {},
+
   // ── Derived helper: per-node status for O(1) lookups ───────────────────
   // Prefers the granular live map (instant), falls back to cursor array.
   getNodeStatus: (nodeId) => {
@@ -130,6 +134,7 @@ export const createExecutionSlice = (set, get) => ({
       liveExecutionState: null,
       executionError: null,
       nodeStatuses: {},
+      agentSteps: {},
     });
 
     try {
@@ -279,6 +284,21 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
 
   socket.on("node:status", handler);
   set({ _nodeStatusHandler: handler });
+
+  // ── agent:step live stream ───────────────────────────────────────────────
+  const existingAgentHandler = get()._agentStepHandler;
+  if (existingAgentHandler) socket.off("agent:step", existingAgentHandler);
+
+  const agentHandler = (data) => {
+    if (!data.nodeId) return;
+    set((prev) => {
+      const existing = prev.agentSteps[data.nodeId] || [];
+      return { agentSteps: { ...prev.agentSteps, [data.nodeId]: [...existing, data] } };
+    });
+  };
+
+  socket.on("agent:step", agentHandler);
+  set({ _agentStepHandler: agentHandler });
 }
 
 // ── Coarse execution:update subscription + fallback polling ─────────────────
@@ -296,10 +316,12 @@ function _subscribeToExecution(set, get, executionId, automationId) {
       socket.off("execution:update", handler);
       socket.emit("unsubscribe:execution", executionId);
 
-      // Clean up node:status listener after a brief delay so final animations land
+      // Clean up node:status and agent:step listeners after final animations land
       setTimeout(() => {
         const nodeHandler = get()._nodeStatusHandler;
         if (nodeHandler) socket.off("node:status", nodeHandler);
+        const agentHandler = get()._agentStepHandler;
+        if (agentHandler) socket.off("agent:step", agentHandler);
         if (automationId) socket.emit("unsubscribe:automation", automationId);
       }, 2000);
 

@@ -14,6 +14,7 @@ export default function ExecutionTraceSidebar() {
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const liveExecutionState = useWorkspaceStore((s) => s.liveExecutionState);
   const executionLogs = useWorkspaceStore((s) => s.executionLogs);
+  const agentSteps = useWorkspaceStore((s) => s.agentSteps);
   const closeTraceSidebar = useWorkspaceStore((s) => s.closeTraceSidebar);
   const closeLiveExecution = useWorkspaceStore((s) => s.closeLiveExecution);
   const retryExecution = useWorkspaceStore((s) => s.retryExecution);
@@ -107,6 +108,7 @@ export default function ExecutionTraceSidebar() {
               liveExecutionState={liveExecutionState}
               isLive={isExecutionLive}
               executionLogs={executionLogs}
+              agentSteps={agentSteps}
             />
           </div>
 

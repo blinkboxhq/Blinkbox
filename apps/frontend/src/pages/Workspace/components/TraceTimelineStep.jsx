@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, Loader2, ChevronDown, ChevronRight, RefreshCw, Clock } from "lucide-react";
+import { Check, X, Loader2, ChevronDown, ChevronRight, RefreshCw, Clock, Brain, Wrench, Sparkles, AlertTriangle } from "lucide-react";
 import TraceDiffBlock from "./TraceDiffBlock";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 
@@ -22,7 +22,83 @@ function JsonBlock({ label, data, labelColor = "text-zinc-500" }) {
   );
 }
 
-export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLogs = [] }) {
+function AgentStepFeed({ steps, isRunning }) {
+  if (steps.length === 0 && !isRunning) return null;
+
+  return (
+    <div className="mt-2 ml-[18px] flex flex-col gap-1.5">
+      {steps.map((step, i) => {
+        if (step.type === "thinking") {
+          return (
+            <div key={i} className="flex items-start gap-2 text-[10px]">
+              <Brain className="w-3 h-3 text-violet-400 shrink-0 mt-0.5" />
+              <span className="text-violet-300/80 font-mono">
+                Thinking… <span className="text-zinc-600">iteration {step.iteration}/{step.maxIterations}</span>
+              </span>
+            </div>
+          );
+        }
+        if (step.type === "tool_call") {
+          return (
+            <div key={i} className="flex flex-col gap-0.5 bg-zinc-900/60 border border-zinc-800 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <Wrench className="w-3 h-3 text-amber-400 shrink-0" />
+                <span className="text-[10px] font-semibold text-amber-300">{step.tool}</span>
+                <span className="text-[9px] text-zinc-600 ml-auto">iter {step.iteration}</span>
+              </div>
+              {step.thought && (
+                <p className="text-[9px] text-zinc-400 italic leading-relaxed line-clamp-2">{step.thought}</p>
+              )}
+              {step.args && Object.keys(step.args).length > 0 && (
+                <pre className="text-[9px] text-zinc-500 font-mono whitespace-pre-wrap break-all">
+                  {JSON.stringify(step.args, null, 2).slice(0, 200)}
+                </pre>
+              )}
+            </div>
+          );
+        }
+        if (step.type === "tool_result") {
+          return (
+            <div key={i} className="flex items-start gap-2 text-[10px] pl-1">
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1 ${step.ok ? "bg-emerald-500" : "bg-red-500"}`} />
+              <span className={`font-mono leading-relaxed break-all ${step.ok ? "text-zinc-400" : "text-red-400"}`}>
+                {step.result?.slice(0, 200) || (step.ok ? "OK" : "Error")}
+              </span>
+            </div>
+          );
+        }
+        if (step.type === "final_answer") {
+          return (
+            <div key={i} className="flex flex-col gap-1 bg-emerald-950/40 border border-emerald-800/30 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="text-[10px] font-semibold text-emerald-300">Final Answer</span>
+              </div>
+              <p className="text-[9px] text-emerald-200/70 leading-relaxed break-all">{step.answer}</p>
+            </div>
+          );
+        }
+        if (step.type === "max_iterations") {
+          return (
+            <div key={i} className="flex items-center gap-1.5 text-[10px] bg-amber-950/30 border border-amber-800/30 rounded-lg px-2.5 py-1.5">
+              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+              <span className="text-amber-300">Max iterations reached ({step.iteration}/{step.maxIterations})</span>
+            </div>
+          );
+        }
+        return null;
+      })}
+      {isRunning && steps.length > 0 && steps[steps.length - 1]?.type !== "final_answer" && (
+        <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Agent working…</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLogs = [], agentSteps = [] }) {
   const [expanded, setExpanded] = useState(false);
 
   const status = cursor ? cursor.status : (isLive ? "pending" : "idle");
@@ -123,6 +199,11 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLo
             <span className="text-zinc-600">Waiting</span>
           )}
         </p>
+
+        {/* AI Agent live step feed — always visible (not gated behind expand) */}
+        {(node.data?.backendType === "ai_agent" || node.data?.type === "ai_agent") && (agentSteps.length > 0 || isRunning) && (
+          <AgentStepFeed steps={agentSteps} isRunning={isRunning} />
+        )}
 
         {/* Expanded: Input → Output from logs (preferred) or cursor.output fallback */}
         {expanded && (
