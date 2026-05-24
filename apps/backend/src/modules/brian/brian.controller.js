@@ -3,7 +3,7 @@ import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
 
-const ANTHROPIC_MODEL = "claude-sonnet-4-6";
+const ANTHROPIC_MODEL = "claude-opus-4-7";
 const GROQ_URL        = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL      = "llama-3.3-70b-versatile";
 const GROQ_FAST       = "llama-3.1-8b-instant";
@@ -20,10 +20,9 @@ const TRIGGERS = new Set([
   "db_trigger","error_trigger",
 ]);
 
-// Build the node reference once at startup — injected into every system prompt
 const NODE_REF = buildNodeRef();
 
-const SYSTEM_PROMPT = `You are Brian — the senior AI workflow architect inside Blinkbox, an automation platform.
+const SYSTEM_PROMPT_BASE = `You are Brian — the senior AI workflow architect inside Blinkbox, an automation platform.
 
 You are a real conversational agent with deep expertise in automation. Before generating any workflow, think through:
 1. What is the user's actual end goal (not just what they said)?
@@ -38,7 +37,7 @@ ${NODE_REF}
 ## Variable Syntax
 - Reference previous node output: \`{{$json.fieldName}}\`
 - Reference trigger data: \`{{trigger.data.fieldName}}\`
-- Reference specific node: \`{{nodes.n2.output.fieldName}}\`
+- Reference specific node by slug: \`{{node_label.fieldName}}\` (slug = label lowercased, spaces→underscores)
 - JS expressions: \`{{$json.price * 1.1}}\`, \`{{new Date().toISOString()}}\`
 - String interpolation: \`"Hello {{$json.firstName}} {{$json.lastName}}"\`
 
@@ -129,12 +128,34 @@ These are failure modes — never do any of them:
 - **RSS to Notion**: rss_trigger → ai_extract(title,summary,tags,url) → notion(create page with all fields)
 - **Form → CRM**: form_trigger → ai_classify(lead quality: hot/warm/cold) → hubspot(create deal) → sendgrid(personalized confirm)
 - **Support ticket routing**: webhook → ai_classify(department) → condition → route to slack channels or email
+- **AI Chat agent**: chat_trigger → ai_agent(with model + tools) → (reply sent automatically)
+- **Daily briefing**: cron_trigger(0 8 * * *) → http_request(news/data API) → ai_transform(format digest) → sendgrid(email digest)
 
 ## When to use create_workflow vs plain text
 - **User asks to build/create/automate something** → call create_workflow with full nodes and edges
 - **User asks a question** ("what does X do?", "how does Stripe work?") → respond in plain text, no tool call
 - **You need clarification** ("what app do you use for email?") → respond in plain text with your question
 - **Empty workflow** (pure question answer) → call create_workflow with nodes:[] edges:[] and answer in text field`;
+
+function buildSystemPrompt(canvasNodes = []) {
+  if (!canvasNodes?.length) return SYSTEM_PROMPT_BASE;
+
+  const nodeList = canvasNodes
+    .map((n, i) => `  ${i + 1}. [${n.backendType}] "${n.label}"`)
+    .join("\n");
+
+  const canvasSection = `\n\n## Current Canvas — ${canvasNodes.length} existing node${canvasNodes.length !== 1 ? "s" : ""}
+${nodeList}
+
+### Modify vs Create rules:
+- User says "add", "extend", "also", "and then", "now", "next" → ADD new nodes to the existing workflow. Reuse existing node IDs in edges.
+- User says "new workflow", "start over", "replace", "completely different" → Replace everything with a fresh workflow.
+- Default when canvas has nodes: EXTEND, not replace.
+- When extending: include ALL existing nodes in your output (same IDs, same positions) PLUS the new ones.
+- Never duplicate existing nodes. Never change IDs of existing nodes.`;
+
+  return SYSTEM_PROMPT_BASE + canvasSection;
+}
 
 // ── Anthropic tool definition ─────────────────────────────────────────────────
 const WORKFLOW_TOOL = {
@@ -220,17 +241,13 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     }));
   }
 
-  // Auto-fix: ensure no two nodes share the same position
   const positionsSeen = new Set();
   canvasNodes.forEach(n => {
     const key = `${n.position.x},${n.position.y}`;
-    if (positionsSeen.has(key)) {
-      n.position.x += 220;
-    }
+    if (positionsSeen.has(key)) n.position.x += 220;
     positionsSeen.add(`${n.position.x},${n.position.y}`);
   });
 
-  // Auto-fix: ensure trigger node has type "trigger" not "action"
   if (canvasNodes.length > 0) {
     const TRIGGER_TYPES = new Set(["manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger","slack_trigger","discord_trigger","telegram_trigger","github_trigger","shopify_trigger","linear_trigger","notion_trigger","airtable_trigger","stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger","google_calendar_trigger","form_trigger","chat_trigger"]);
     canvasNodes[0].data.type = TRIGGER_TYPES.has(canvasNodes[0].data.backendType) ? "trigger" : canvasNodes[0].data.type;
@@ -297,11 +314,10 @@ async function callBlinkBoxWebhook(webhookUrl, userText, history) {
   return data;
 }
 
-// ── Provider 2: Anthropic Claude (primary) ────────────────────────────────────
-async function callAnthropic(apiKey, messages) {
+// ── Provider 2: Anthropic Claude streaming ────────────────────────────────────
+async function callAnthropicStream(apiKey, messages, canvasNodes, res) {
   const client = new Anthropic({ apiKey });
 
-  // Build clean alternating history — Anthropic requires user/assistant alternation
   const rawHistory = messages.slice(0, -1);
   let history = rawHistory
     .filter(m => m.content || m.text)
@@ -309,8 +325,90 @@ async function callAnthropic(apiKey, messages) {
       role:    m.role === "user" ? "user" : "assistant",
       content: String(m.content || m.text || "").trim(),
     }));
+  const firstUser = history.findIndex(m => m.role === "user");
+  if (firstUser > 0)    history = history.slice(firstUser);
+  if (firstUser === -1) history = [];
 
-  // Ensure it starts with a user message
+  const lastMsg  = messages[messages.length - 1];
+  const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const sendEvent = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+
+  try {
+    const stream = client.messages.stream({
+      model:       ANTHROPIC_MODEL,
+      max_tokens:  20000,
+      thinking:    { type: "enabled", budget_tokens: 10000 },
+      system:      buildSystemPrompt(canvasNodes),
+      messages:    [...history, { role: "user", content: userText }],
+      tools:       [WORKFLOW_TOOL],
+      tool_choice: { type: "auto" },
+    });
+
+    const blockTypes  = {};
+    const toolBuffers = {};
+
+    for await (const event of stream) {
+      if (event.type === "content_block_start") {
+        const idx = event.index;
+        const bt  = event.content_block.type;
+        blockTypes[idx] = bt;
+        if (bt === "tool_use") toolBuffers[idx] = "";
+      }
+
+      if (event.type === "content_block_delta") {
+        const idx   = event.index;
+        const delta = event.delta;
+        if (delta.type === "thinking_delta") {
+          sendEvent({ type: "thinking_delta", delta: delta.thinking });
+        } else if (delta.type === "text_delta") {
+          sendEvent({ type: "text_delta", delta: delta.text });
+        } else if (delta.type === "input_json_delta") {
+          if (toolBuffers[idx] !== undefined) toolBuffers[idx] += delta.partial_json;
+        }
+      }
+
+      if (event.type === "content_block_stop") {
+        const idx = event.index;
+        if (blockTypes[idx] === "tool_use") {
+          try {
+            const input        = JSON.parse(toolBuffers[idx] || "{}");
+            const { text, nodes, edges } = input;
+            const flow         = nodes?.length ? toolToCanvas({ nodes, edges }) : null;
+            sendEvent({ type: "flow", text: text || "", flow });
+          } catch {
+            // Malformed JSON — tool call failed silently
+          }
+          delete blockTypes[idx];
+          delete toolBuffers[idx];
+        }
+      }
+    }
+
+    sendEvent({ type: "done" });
+  } catch (err) {
+    sendEvent({ type: "error", message: err.message || "Stream error" });
+  } finally {
+    res.end();
+  }
+}
+
+// ── Provider 2b: Anthropic non-streaming (kept for internal fallback logic) ───
+async function callAnthropic(apiKey, messages, canvasNodes = []) {
+  const client = new Anthropic({ apiKey });
+
+  const rawHistory = messages.slice(0, -1);
+  let history = rawHistory
+    .filter(m => m.content || m.text)
+    .map(m => ({
+      role:    m.role === "user" ? "user" : "assistant",
+      content: String(m.content || m.text || "").trim(),
+    }));
   const firstUser = history.findIndex(m => m.role === "user");
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
@@ -320,9 +418,9 @@ async function callAnthropic(apiKey, messages) {
 
   const response = await client.messages.create({
     model:       ANTHROPIC_MODEL,
-    max_tokens:  16000,
-    thinking:    { type: "enabled", budget_tokens: 8000 },
-    system:      SYSTEM_PROMPT,
+    max_tokens:  20000,
+    thinking:    { type: "enabled", budget_tokens: 10000 },
+    system:      buildSystemPrompt(canvasNodes),
     messages:    [...history, { role: "user", content: userText }],
     tools:       [WORKFLOW_TOOL],
     tool_choice: { type: "auto" },
@@ -368,14 +466,14 @@ async function callGroq(apiKey, model, payload) {
 }
 
 // ── Provider 4: Google Gemini ─────────────────────────────────────────────────
-async function callGemini(apiKey, messages) {
+async function callGemini(apiKey, messages, canvasNodes = []) {
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: buildSystemPrompt(canvasNodes),
     generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
   });
 
@@ -394,10 +492,12 @@ async function callGemini(apiKey, messages) {
   return result.response.text();
 }
 
-// ── Route handler ─────────────────────────────────────────────────────────────
-export async function brianChat(req, res) {
-  const { messages = [] } = req.body;
-  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ message: "Empty messages." });
+// ── Streaming route handler ───────────────────────────────────────────────────
+export async function brianChatStream(req, res) {
+  const { messages = [], canvasContext = [] } = req.body;
+  if (!Array.isArray(messages) || !messages.length) {
+    return res.status(400).json({ message: "Empty messages." });
+  }
   if (messages.length > 100) return res.status(400).json({ message: "Too many messages in history." });
 
   const lastMsg  = messages[messages.length - 1];
@@ -409,7 +509,129 @@ export async function brianChat(req, res) {
   const groqKey      = process.env.GROQ_API_KEY;
   const googleKey    = process.env.GOOGLE_AI_KEY;
 
-  // ── Path 1: BlinkBox webhook ───────────────────────────────────────────────
+  const canvasNodes = Array.isArray(canvasContext) ? canvasContext : [];
+
+  if (BRIAN_WEBHOOK_URL) {
+    try {
+      const history = messages.slice(0, -1).map(m => ({
+        role:    m.role === "user" ? "user" : "assistant",
+        content: m.content || m.text || "",
+      }));
+      const result = await callBlinkBoxWebhook(BRIAN_WEBHOOK_URL, userText, history);
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.flushHeaders();
+      const flow = result?.flow ? normalizeFlow(result) : null;
+      res.write(`data: ${JSON.stringify({ type: "flow", text: result?.text || "", flow })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
+      return res.end();
+    } catch (err) {
+      console.warn("[Brian/stream] webhook failed:", err.message, "— falling back");
+    }
+  }
+
+  if (!anthropicKey && !groqKey && !googleKey) {
+    return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
+  }
+
+  if (anthropicKey) {
+    const status = null;
+    try {
+      return await callAnthropicStream(anthropicKey, messages, canvasNodes, res);
+    } catch (err) {
+      const s = err.status || err.response?.status;
+      console.warn("[Brian/stream] Anthropic failed:", s, err.message);
+      if (s === 401 || s === 403) {
+        return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
+      }
+      if (!groqKey && !googleKey) {
+        return res.status(500).json({ message: "AI provider error. Please try again." });
+      }
+    }
+  }
+
+  // Groq / Gemini fallback — run non-streaming, emit single flow event via SSE
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.flushHeaders();
+
+  const sendEvent = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+
+  let history = messages.slice(0, -1)
+    .filter(m => m.content || m.text)
+    .map(m => ({
+      role:    m.role === "user" ? "user" : "assistant",
+      content: String(m.content || m.text || " ").trim(),
+    }));
+  const firstUser = history.findIndex(m => m.role === "user");
+  if (firstUser > 0)    history = history.slice(firstUser);
+  if (firstUser === -1) history = [];
+
+  if (groqKey) {
+    const payload = [
+      { role: "system", content: buildSystemPrompt(canvasNodes) },
+      ...history,
+      { role: "user", content: userText },
+    ];
+    try {
+      const raw     = await callGroq(groqKey, GROQ_MODEL, payload)
+                        .catch(() => callGroq(groqKey, GROQ_FAST, payload));
+      const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      let parsed;
+      try { parsed = JSON.parse(cleaned); } catch {
+        sendEvent({ type: "text_delta", delta: raw });
+        sendEvent({ type: "done" });
+        return res.end();
+      }
+      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed) });
+      sendEvent({ type: "done" });
+      return res.end();
+    } catch (err) {
+      console.warn("[Brian/stream] Groq failed:", err.response?.status, err.message);
+      if (!googleKey) {
+        sendEvent({ type: "error", message: "AI provider error. Please try again." });
+        return res.end();
+      }
+    }
+  }
+
+  if (googleKey) {
+    try {
+      const raw     = await callGemini(googleKey, messages, canvasNodes);
+      const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      let parsed;
+      try { parsed = JSON.parse(cleaned); } catch {
+        sendEvent({ type: "text_delta", delta: raw });
+        sendEvent({ type: "done" });
+        return res.end();
+      }
+      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed) });
+      sendEvent({ type: "done" });
+      return res.end();
+    } catch (err) {
+      console.error("[Brian/stream] all providers failed:", err.message);
+      sendEvent({ type: "error", message: "AI provider error. Please try again." });
+      return res.end();
+    }
+  }
+}
+
+// ── Non-streaming route handler (kept for compatibility) ──────────────────────
+export async function brianChat(req, res) {
+  const { messages = [], canvasContext = [] } = req.body;
+  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ message: "Empty messages." });
+  if (messages.length > 100) return res.status(400).json({ message: "Too many messages in history." });
+
+  const lastMsg  = messages[messages.length - 1];
+  const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
+  if (!userText) return res.status(400).json({ message: "Empty message." });
+  if (userText.length > 8000) return res.status(400).json({ message: "Message too long (max 8000 characters)." });
+
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const groqKey      = process.env.GROQ_API_KEY;
+  const googleKey    = process.env.GOOGLE_AI_KEY;
+  const canvasNodes  = Array.isArray(canvasContext) ? canvasContext : [];
+
   if (BRIAN_WEBHOOK_URL) {
     try {
       const history = messages.slice(0, -1).map(m => ({
@@ -425,28 +647,20 @@ export async function brianChat(req, res) {
   }
 
   if (!anthropicKey && !groqKey && !googleKey) {
-    return res.status(503).json({
-      message: "Set ANTHROPIC_API_KEY in Railway to activate Brian.",
-    });
+    return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
   }
 
-  // ── Path 2: Anthropic (primary — best quality) ────────────────────────────
   if (anthropicKey) {
     try {
-      return res.json(await callAnthropic(anthropicKey, messages));
+      return res.json(await callAnthropic(anthropicKey, messages, canvasNodes));
     } catch (err) {
       const status = err.status || err.response?.status;
       console.warn("[Brian] Anthropic failed:", status, err.message);
-      if (status === 401 || status === 403) {
-        return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
-      }
-      if (!groqKey && !googleKey) {
-        return res.status(500).json({ message: "AI provider error. Please try again." });
-      }
+      if (status === 401 || status === 403) return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
+      if (!groqKey && !googleKey) return res.status(500).json({ message: "AI provider error. Please try again." });
     }
   }
 
-  // Build shared history format for Groq / Gemini
   let history = messages.slice(0, -1)
     .filter(m => m.content || m.text)
     .map(m => ({
@@ -457,10 +671,9 @@ export async function brianChat(req, res) {
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
 
-  // ── Path 3: Groq ───────────────────────────────────────────────────────────
   if (groqKey) {
     const payload = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: buildSystemPrompt(canvasNodes) },
       ...history,
       { role: "user", content: userText },
     ];
@@ -477,10 +690,9 @@ export async function brianChat(req, res) {
     }
   }
 
-  // ── Path 4: Gemini ─────────────────────────────────────────────────────────
   if (googleKey) {
     try {
-      const raw     = await callGemini(googleKey, messages);
+      const raw     = await callGemini(googleKey, messages, canvasNodes);
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }

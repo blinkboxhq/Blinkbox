@@ -7,13 +7,46 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
-import api from '../../../lib/api';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
 
-// ── API ───────────────────────────────────────────────────────────────────────
-async function callBrian(messages) {
-  const { data } = await api.post('/api/brian/chat', { messages });
-  return data;
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+// ── Streaming SSE client ──────────────────────────────────────────────────────
+async function* streamBrian(messages, canvasContext, signal) {
+  const token = localStorage.getItem('blinkbox_token');
+  const response = await fetch(`${API_URL}/api/brian/chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ messages, canvasContext }),
+    signal,
+  });
+
+  if (!response.ok) {
+    let errMsg = `HTTP ${response.status}`;
+    try { const j = await response.json(); errMsg = j.message || errMsg; } catch {}
+    throw new Error(errMsg);
+  }
+
+  const reader  = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer    = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop();
+    for (const part of parts) {
+      const line = part.trim();
+      if (line.startsWith('data: ')) {
+        try { yield JSON.parse(line.slice(6)); } catch {}
+      }
+    }
+  }
 }
 
 // ── Suggestion library ────────────────────────────────────────────────────────
@@ -51,13 +84,13 @@ const SUGGESTION_GROUPS = [
     color: 'text-emerald-400',
     items: [
       'When a form is submitted, enrich the lead with AI and create a HubSpot contact',
-      'Extract text from a PDF, summarise with Claude, and store embeddings in Pinecone',
+      'Build an AI chat agent that answers questions using my knowledge base',
     ],
   },
 ];
 
 // ── Real thinking collapsible ─────────────────────────────────────────────────
-function ThinkingBlock({ text, durationMs }) {
+function ThinkingBlock({ text, durationMs, streaming }) {
   const [open, setOpen] = useState(false);
   const secs = durationMs ? (durationMs / 1000).toFixed(1) : null;
   return (
@@ -67,7 +100,12 @@ function ThinkingBlock({ text, durationMs }) {
         className="flex items-center gap-1.5 text-neutral-600 hover:text-neutral-400 transition-colors"
       >
         {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-        <span className="italic">{secs ? `Thought for ${secs}s` : 'Thinking'}</span>
+        <span className="italic">
+          {streaming ? 'Thinking…' : secs ? `Thought for ${secs}s` : 'Thinking'}
+        </span>
+        {streaming && (
+          <span className="inline-block w-1 h-2.5 bg-neutral-600 animate-pulse ml-0.5" />
+        )}
       </button>
       <AnimatePresence>
         {open && (
@@ -169,7 +207,7 @@ function parseInline(text, key = 0) {
   return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts;
 }
 
-function MarkdownRenderer({ text }) {
+function MarkdownRenderer({ text, streaming }) {
   const segments = useMemo(() => text.split(/(```[\s\S]*?```)/g), [text]);
 
   return (
@@ -219,6 +257,9 @@ function MarkdownRenderer({ text }) {
         flushList('end');
         return <div key={si} className="space-y-1">{out}</div>;
       })}
+      {streaming && (
+        <span className="inline-block w-1.5 h-3.5 bg-violet-400/80 align-middle animate-pulse ml-0.5" style={{ borderRadius: 1 }} />
+      )}
     </div>
   );
 }
@@ -243,6 +284,7 @@ function UserBubble({ text, time }) {
 function BrianBubble({ msg, time, onFeedback }) {
   const [feedback, setFeedback] = useState(null);
   const handleFeedback = (val) => { setFeedback(val); onFeedback?.(val); };
+  const isStreaming = !!msg.streaming;
 
   return (
     <motion.div
@@ -257,22 +299,25 @@ function BrianBubble({ msg, time, onFeedback }) {
         </div>
         <span className="text-[10px] font-semibold text-violet-400">Brian</span>
         <span className="text-[9px] text-neutral-700">{time}</span>
+        {isStreaming && (
+          <span className="text-[9px] text-violet-500/60 font-mono animate-pulse">writing…</span>
+        )}
       </div>
 
       <div className="ml-6">
-        {/* Real thinking — collapsible */}
         {msg.thinking && (
-          <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} />
+          <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} streaming={isStreaming && !msg.text} />
         )}
 
         {msg.flow ? (
           <BrianWorkflowPlan text={msg.text} flow={msg.flow} onAccept={msg.onAccept} />
-        ) : (
-          <MarkdownRenderer text={msg.text} />
-        )}
+        ) : msg.text ? (
+          <MarkdownRenderer text={msg.text} streaming={isStreaming} />
+        ) : isStreaming ? (
+          <ThinkingDots />
+        ) : null}
 
-        {/* Message actions */}
-        {!msg.flow && msg.text && (
+        {!msg.flow && !isStreaming && msg.text && (
           <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <CopyBtn text={msg.text} className="text-[9px]" />
             <div className="w-px h-3 bg-neutral-800" />
@@ -296,7 +341,6 @@ function EmptyState({ onSend }) {
   const [hovered, setHovered] = useState(null);
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      {/* Hero */}
       <div className="flex flex-col items-center px-5 pt-8 pb-5 text-center shrink-0">
         <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
           <img src={brianLogo} alt="Brian" className="w-8 h-8 object-contain" />
@@ -307,7 +351,6 @@ function EmptyState({ onSend }) {
         </p>
       </div>
 
-      {/* Suggestion groups */}
       <div className="px-3 pb-4 space-y-4">
         {SUGGESTION_GROUPS.map((group) => (
           <div key={group.label}>
@@ -344,6 +387,7 @@ function ContextStrip({ nodeCount, workflowName }) {
       <span className="text-[10px] text-neutral-600 truncate">
         {nodeCount} node{nodeCount !== 1 ? 's' : ''} on canvas
         {workflowName ? ` · ${workflowName}` : ''}
+        {nodeCount > 0 && <span className="text-violet-600/80"> · Brian can see & extend these</span>}
       </span>
     </div>
   );
@@ -363,12 +407,10 @@ function ScrollToBottom({ onClick }) {
   );
 }
 
-// ── Timestamp helper ──────────────────────────────────────────────────────────
 function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// ── Export conversation ───────────────────────────────────────────────────────
 function exportConversation(messages, workflowName) {
   const lines = [`# Brian Conversation — ${workflowName || 'Untitled'}\n`];
   messages.forEach(m => {
@@ -378,58 +420,57 @@ function exportConversation(messages, workflowName) {
     if (m.flow) lines.push(`\`\`\`json\n${JSON.stringify(m.flow, null, 2)}\n\`\`\`\n`);
   });
   const blob = new Blob([lines.join('\n---\n\n')], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
   a.download = `brian-${Date.now()}.md`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+const WELCOME_MSG = {
+  id: 'welcome', role: 'brian', ts: Date.now(),
+  text: "Hi! I'm Brian — describe what you want to automate and I'll build the workflow. I can also see what's already on your canvas and extend it.",
+  flow: null,
+};
+
 export default function BrianPanel({ width, onResizeStart }) {
-  const isBrianOpen   = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen  = useWorkspaceStore(s => s.setBrianOpen);
-  const addNode       = useWorkspaceStore(s => s.addNode);
-  const nodes         = useWorkspaceStore(s => s.nodes);
-  const workflowName  = useWorkspaceStore(s => s.workflowName);
+  const isBrianOpen  = useWorkspaceStore(s => s.isBrianOpen);
+  const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
+  const addNode      = useWorkspaceStore(s => s.addNode);
+  const nodes        = useWorkspaceStore(s => s.nodes);
+  const workflowName = useWorkspaceStore(s => s.workflowName);
 
-  const WELCOME = {
-    id: 'welcome', role: 'brian', ts: Date.now(),
-    text: "Hi! I'm Brian — describe what you want to automate and I'll build the workflow. You can also ask questions about your setup.",
-    flow: null,
-  };
+  const [messages, setMessages] = useState([WELCOME_MSG]);
+  const [input,    setInput]    = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [atBottom, setAtBottom] = useState(true);
 
-  const [messages,   setMessages]   = useState([WELCOME]);
-  const [input,      setInput]      = useState('');
-  const [loading,    setLoading]    = useState(false);
-  const [atBottom,   setAtBottom]   = useState(true);
-
-  const bottomRef  = useRef(null);
-  const scrollRef  = useRef(null);
-  const inputRef   = useRef(null);
+  const bottomRef   = useRef(null);
+  const scrollRef   = useRef(null);
+  const inputRef    = useRef(null);
   const textareaRef = useRef(null);
+  const abortRef    = useRef(null);
 
   const isFresh = messages.length === 1 && messages[0].id === 'welcome';
 
-  // Focus input when panel opens
   useEffect(() => {
     if (isBrianOpen) setTimeout(() => inputRef.current?.focus(), 120);
   }, [isBrianOpen]);
 
-  // Auto-scroll
   useEffect(() => {
     if (atBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading, atBottom]);
 
-  // Track whether user has scrolled up
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60);
   }, []);
 
-  // Auto-grow textarea
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -447,42 +488,80 @@ export default function BrianPanel({ width, onResizeStart }) {
     const txt = (text || input).trim();
     if (!txt || loading) return;
     setInput('');
-
-    const start = Date.now();
-    const userMsg = { id: Date.now(), role: 'user', ts: Date.now(), text: txt, flow: null };
-    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     setAtBottom(true);
+
+    abortRef.current?.abort();
+    const controller    = new AbortController();
+    abortRef.current    = controller;
+
+    const userMsg = { id: Date.now(), role: 'user', ts: Date.now(), text: txt, flow: null };
+    setMessages(prev => [...prev, userMsg]);
+
+    const msgId   = Date.now() + 1;
+    const thinkTs = Date.now();
+    setMessages(prev => [...prev, {
+      id: msgId, role: 'brian', ts: Date.now(),
+      text: '', thinking: null, flow: null, streaming: true,
+    }]);
 
     try {
       const history = [...messages, userMsg]
         .filter(m => m.id !== 'welcome')
-        .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
-      const result = await callBrian(history);
-      const thinkMs = Date.now() - start;
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1, role: 'brian', ts: Date.now(),
-        text:     result.text,
-        thinking: result.thinking || null,
-        thinkMs,
-        flow:     result.flow,
-        onAccept: applyFlow,
-      }]);
+        .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text || '' }));
+
+      const canvasContext = nodes.map(n => ({
+        id:          n.id,
+        label:       n.data?.label || n.data?.backendType || '',
+        backendType: n.data?.backendType || '',
+        type:        n.data?.type || 'action',
+      }));
+
+      for await (const event of streamBrian(history, canvasContext, controller.signal)) {
+        if (event.type === 'text_delta') {
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, text: (m.text || '') + event.delta }
+            : m));
+        } else if (event.type === 'thinking_delta') {
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, thinking: (m.thinking || '') + event.delta }
+            : m));
+        } else if (event.type === 'flow') {
+          const thinkMs = Date.now() - thinkTs;
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, text: event.text || m.text, flow: event.flow, onAccept: applyFlow, streaming: false, thinkMs }
+            : m));
+        } else if (event.type === 'error') {
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, text: `⚠️ ${event.message}`, streaming: false }
+            : m));
+        } else if (event.type === 'done') {
+          const thinkMs = Date.now() - thinkTs;
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, streaming: false, thinkMs }
+            : m));
+        }
+      }
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Unknown error';
-      const isConfig = msg.includes('GOOGLE_AI_KEY') || msg.includes('not configured');
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1, role: 'brian', ts: Date.now(), flow: null,
-        text: isConfig
-          ? '⚠️ Brian needs a Google AI key. Add `GOOGLE_AI_KEY` in your environment variables.'
-          : `⚠️ ${msg}`,
-      }]);
+      if (err.name === 'AbortError') return;
+      const msg = err?.message || 'Unknown error';
+      const isConfig = msg.includes('ANTHROPIC_API_KEY') || msg.includes('GOOGLE_AI_KEY') || msg.includes('not configured');
+      setMessages(prev => prev.map(m => m.id === msgId
+        ? { ...m, streaming: false, text: isConfig
+            ? '⚠️ Brian needs an API key. Add `ANTHROPIC_API_KEY` to your environment variables.'
+            : `⚠️ ${msg}` }
+        : m));
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, applyFlow]);
+  }, [input, loading, messages, nodes, applyFlow]);
 
-  const reset = useCallback(() => { setMessages([WELCOME]); setInput(''); setThinkMs(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const reset = useCallback(() => {
+    abortRef.current?.abort();
+    setMessages([WELCOME_MSG]);
+    setInput('');
+    setLoading(false);
+  }, []);
 
   if (!isBrianOpen) return null;
 
@@ -508,7 +587,7 @@ export default function BrianPanel({ width, onResizeStart }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-[12px] font-bold text-white leading-none">Brian</span>
-                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-6</span>
+                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-opus-4-7</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
@@ -545,7 +624,7 @@ export default function BrianPanel({ width, onResizeStart }) {
                 onScroll={onScroll}
                 className="absolute inset-0 overflow-y-auto px-4 py-4 space-y-5"
               >
-                {messages.map((msg, i) => {
+                {messages.map((msg) => {
                   if (msg.id === 'welcome') return null;
                   if (msg.role === 'user') return <UserBubble key={msg.id} text={msg.text} time={fmtTime(msg.ts)} />;
                   return (
@@ -556,32 +635,9 @@ export default function BrianPanel({ width, onResizeStart }) {
                     />
                   );
                 })}
-
-                {/* Loading dots while API is in flight */}
-                <AnimatePresence>
-                  {loading && (
-                    <motion.div key="loading"
-                      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                      className="flex flex-col gap-2"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
-                          <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
-                        </div>
-                        <span className="text-[10px] font-semibold text-violet-400">Brian</span>
-                      </div>
-                      <div className="ml-6">
-                        <ThinkingDots />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
                 <div ref={bottomRef} />
               </div>
 
-              {/* Scroll-to-bottom button */}
               <AnimatePresence>
                 {!atBottom && (
                   <ScrollToBottom onClick={() => {
@@ -603,7 +659,7 @@ export default function BrianPanel({ width, onResizeStart }) {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
                 }}
-                placeholder="Describe what you want to automate…"
+                placeholder={nodes.length > 0 ? `Extend or modify your ${nodes.length}-node workflow…` : 'Describe what you want to automate…'}
                 rows={1}
                 className="w-full bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 resize-none focus:outline-none leading-relaxed px-3 pt-2.5 pb-1"
                 style={{ maxHeight: 120, overflowY: 'auto' }}
@@ -619,13 +675,23 @@ export default function BrianPanel({ width, onResizeStart }) {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => send()}
-                  disabled={!input.trim() || loading}
-                  className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Send className="w-3.5 h-3.5 text-white" />
-                </button>
+                {loading ? (
+                  <button
+                    onClick={() => { abortRef.current?.abort(); setLoading(false); }}
+                    className="w-7 h-7 rounded-lg bg-neutral-800 border border-[#333] flex items-center justify-center shrink-0 hover:bg-neutral-700 transition-colors"
+                    title="Stop"
+                  >
+                    <div className="w-2.5 h-2.5 bg-neutral-400 rounded-sm" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => send()}
+                    disabled={!input.trim()}
+                    className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-3.5 h-3.5 text-white" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
