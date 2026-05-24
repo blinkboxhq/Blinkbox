@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, Loader2, Trash2, Paperclip, X, Image } from 'lucide-react';
+import { Send, Bot, User, Loader2, Trash2, Paperclip, X, Image, Plus } from 'lucide-react';
 import api from '../../../lib/api';
 import { useParams } from 'react-router-dom';
 import NodeTreePanel from './NodeTreePanel';
@@ -96,6 +96,24 @@ export default function BottomChatPanel({ height, onResizeStart }) {
   const hasChatTrigger = useWorkspaceStore(s =>
     s.nodes.some(n => n.data?.backendType === 'chat_trigger' || n.data?.label === 'On Chat Message')
   );
+  const addNode = useWorkspaceStore(s => s.addNode);
+  const nodes = useWorkspaceStore(s => s.nodes);
+  const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
+
+  const addChatTrigger = useCallback(() => {
+    const existingTriggers = nodes.filter(n => n.data?.type === 'trigger');
+    const position = existingTriggers.length > 0
+      ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
+      : { x: 400, y: 300 };
+    const newId = `chat-${crypto.randomUUID()}`;
+    addNode({
+      id: newId,
+      type: 'custom',
+      position,
+      data: { backendType: 'chat_trigger', label: 'On Chat Message', type: 'trigger', config: { triggerVariant: 'chat' } },
+    });
+    setSelectedNodeId(newId);
+  }, [addNode, nodes, setSelectedNodeId]);
   const [messages, setMessages] = useState([
     { id: 'sys', role: 'system', text: "Messages you send here fire your workflow's Chat Trigger node. Add a Chat Trigger node to the canvas to enable testing." }
   ]);
@@ -255,7 +273,14 @@ export default function BottomChatPanel({ height, onResizeStart }) {
           <div className="px-3 pb-3 pt-1.5 border-t border-[#222] shrink-0">
             {!hasChatTrigger ? (
               <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/5 border border-amber-500/15 rounded-xl">
-                <span className="text-[11px] text-amber-400/70">Add a Chat Trigger node to the canvas to test chat here</span>
+                <span className="text-[11px] text-amber-400/70 flex-1">Add a Chat Trigger node to test chat here</span>
+                <button
+                  onClick={addChatTrigger}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-[11px] font-semibold transition-colors shrink-0"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">

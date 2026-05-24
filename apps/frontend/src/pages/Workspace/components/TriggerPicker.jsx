@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   Plus,
 } from "lucide-react";
-import { CircleMenu } from "../../../components/ui/circle-menu";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_ACTIONS } from "../triggerActions";
 import { playNodeLand } from "../../../lib/sounds";
@@ -217,7 +216,7 @@ const ALL_SEARCHABLE = [
 
 export default function TriggerPicker() {
   const [search, setSearch] = useState("");
-  const [phase, setPhase] = useState("radial"); // "radial" | "apps" | "email" | "actions"
+  const [phase, setPhase] = useState("home"); // "home" | "apps" | "email" | "actions"
   const [pendingTrigger, setPendingTrigger] = useState(null);
   const [focusIdx, setFocusIdx] = useState(0);
   const [selected, setSelected] = useState([]);
@@ -237,8 +236,8 @@ export default function TriggerPicker() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
-        if (phase !== "radial" || search) {
-          setPhase("radial");
+        if (phase !== "home" || search) {
+          setPhase("home");
           setSearch("");
           setPendingTrigger(null);
         } else {
@@ -332,16 +331,6 @@ export default function TriggerPicker() {
       )
     : null;
 
-  const circleItems = CATEGORIES.map((cat) => {
-    const Icon = cat.icon;
-    return {
-      label: cat.label,
-      color: cat.color,
-      icon: <Icon size={18} strokeWidth={1.8} />,
-      onClick: () => handleCategoryClick(cat),
-    };
-  });
-
   const dragStart = (e, trigger) => {
     e.dataTransfer.effectAllowed = "copy";
     e.dataTransfer.setData("application/json", JSON.stringify({
@@ -408,7 +397,7 @@ export default function TriggerPicker() {
       className="flex flex-col h-full"
     >
       <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
-        <button onClick={() => setPhase("radial")}
+        <button onClick={() => setPhase("home")}
           className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
           <ArrowLeft size={15} />
         </button>
@@ -436,7 +425,7 @@ export default function TriggerPicker() {
         className="flex flex-col h-full"
       >
         <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
-          <button onClick={() => setPhase("radial")}
+          <button onClick={() => setPhase("home")}
             className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
             <ArrowLeft size={15} />
           </button>
@@ -467,7 +456,7 @@ export default function TriggerPicker() {
         className="flex flex-col h-full"
       >
         <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
-          <button onClick={() => { setPendingTrigger(null); setPhase("radial"); }}
+          <button onClick={() => { setPendingTrigger(null); setPhase("home"); }}
             className="p-1.5 text-white/50 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors">
             <ArrowLeft size={15} />
           </button>
@@ -487,7 +476,7 @@ export default function TriggerPicker() {
             return (
               <button
                 key={action.name}
-                onClick={() => { toggleTrigger(pendingTrigger, action.name); setPendingTrigger(null); setPhase("radial"); }}
+                onClick={() => { toggleTrigger(pendingTrigger, action.name); setPendingTrigger(null); setPhase("home"); }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all duration-150 text-left group ${isSel ? "bg-violet-500/10 border-violet-500/40" : "hover:bg-white/[0.05] border-transparent hover:border-white/15"}`}
               >
                 {pendingTrigger.logoUrl
@@ -541,13 +530,68 @@ export default function TriggerPicker() {
     </motion.div>
   );
 
-  // ── Radial home ─────────────────────────────────────────────────────────────
+  // ── Home page ────────────────────────────────────────────────────────────────
 
-  const renderRadial = () => null;
+  const renderHome = () => (
+    <motion.div
+      key="home"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.16 }}
+      className="flex flex-col h-full"
+    >
+      <div className="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
+        {CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          if (cat.isApps) {
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setPhase("apps")}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-transparent hover:bg-white/[0.05] hover:border-white/15 transition-all duration-150 text-left group"
+              >
+                <Icon size={18} strokeWidth={1.7} style={{ color: cat.color }} className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold text-white leading-tight">{cat.label}</div>
+                  <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60">{cat.description}</div>
+                </div>
+                <ChevronRight size={13} className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
+              </button>
+            );
+          }
+          if (cat.subTriggers) {
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setPhase("email")}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-transparent hover:bg-white/[0.05] hover:border-white/15 transition-all duration-150 text-left group"
+              >
+                <Icon size={18} strokeWidth={1.7} style={{ color: cat.color }} className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold text-white leading-tight">{cat.label}</div>
+                  <div className="text-[11px] text-white/45 mt-0.5 group-hover:text-white/60">{cat.description}</div>
+                </div>
+                <ChevronRight size={13} className="text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
+              </button>
+            );
+          }
+          return (
+            <CoreRow
+              key={cat.id}
+              trigger={{ ...cat.trigger, description: cat.description }}
+              icon={Icon}
+              color={cat.color}
+            />
+          );
+        })}
+      </div>
+    </motion.div>
+  );
 
   // ── Root render ─────────────────────────────────────────────────────────────
 
-  const isListPhase = filtered !== null || phase === "apps" || phase === "email" || phase === "actions";
+  const isListPhase = true;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 pointer-events-none backdrop-blur-md">
@@ -592,37 +636,19 @@ export default function TriggerPicker() {
         </div>
       )}
 
-      {/* Content — list phases get a floating panel, radial floats bare */}
+      {/* Content panel */}
       <AnimatePresence mode="wait">
-        {isListPhase ? (
-          <motion.div
-            key="list-panel"
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="w-full max-w-[420px] mx-4 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col pointer-events-auto"
-            style={{ maxHeight: "55vh" }}
-          >
-            {filtered !== null ? renderSearchResults() : phase === "apps" ? renderAppsGrid() : phase === "email" ? renderEmailPage() : renderActionsPage()}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="radial"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.16 }}
-            className="flex flex-col items-center gap-2 pointer-events-auto"
-          >
-            <CircleMenu
-              items={circleItems}
-              openIcon={<Zap size={20} className="text-black" strokeWidth={2} />}
-              closeIcon={<X size={20} className="text-black" strokeWidth={2} />}
-              centerLabel="open menu"
-            />
-          </motion.div>
-        )}
+        <motion.div
+          key="list-panel"
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          className="w-full max-w-[420px] mx-4 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col pointer-events-auto"
+          style={{ maxHeight: "55vh" }}
+        >
+          {filtered !== null ? renderSearchResults() : phase === "apps" ? renderAppsGrid() : phase === "email" ? renderEmailPage() : phase === "actions" ? renderActionsPage() : renderHome()}
+        </motion.div>
       </AnimatePresence>
     </div>
   );
