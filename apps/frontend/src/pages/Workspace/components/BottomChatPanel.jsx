@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Bot, User, Loader2, Trash2, Paperclip, X, Image, Plus, Download, FileText } from 'lucide-react';
 import api from '../../../lib/api';
+import { useParams } from 'react-router-dom';
 import NodeTreePanel from './NodeTreePanel';
 import useWorkspaceStore from '../../../store/workspaceStore';
 
@@ -115,6 +116,7 @@ function fileToAttachment(file) {
 }
 
 export default function BottomChatPanel({ height, onResizeStart }) {
+  const { id: automationId } = useParams();
   const nodeCount = useWorkspaceStore(s => s.nodes.length);
   const hasChatTrigger = useWorkspaceStore(s =>
     s.nodes.some(n => n.data?.backendType === 'chat_trigger' || n.data?.label === 'On Chat Message')
@@ -140,7 +142,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
   }, [addNode, nodes, setSelectedNodeId]);
 
   const [messages, setMessages] = useState([
-    { id: 'sys', role: 'system', text: 'Ask me anything — I can read files, write code, analyse data, and more.' }
+    { id: 'sys', role: 'system', text: 'Send a message to test your workflow, or just ask me anything.' }
   ]);
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState([]);
@@ -202,22 +204,34 @@ export default function BottomChatPanel({ height, onResizeStart }) {
         mimeType: a.mimeType,
         name: a.name,
       }));
-      const r = await api.post('/api/chat/message', {
-        message: txt,
-        attachments: apiAttachments,
-        sessionId: sessionIdRef.current,
-      }, { timeout: 120000 });
 
-      if (r.data?.sessionId) {
-        sessionIdRef.current = r.data.sessionId;
-        sessionStorage.setItem(SESSION_KEY, r.data.sessionId);
+      let replyText = '';
+      let replyFiles = [];
+
+      if (hasChatTrigger && automationId) {
+        // Run the actual workflow
+        const r = await api.post(`/api/chat/run/${automationId}`, {
+          message: txt,
+          attachments: apiAttachments,
+          sessionId: sessionIdRef.current,
+        }, { timeout: 120000 });
+        replyText = r.data?.reply || JSON.stringify(r.data?.output ?? {});
+      } else {
+        // No workflow trigger — use standalone AI
+        const r = await api.post('/api/chat/message', {
+          message: txt,
+          attachments: apiAttachments,
+          sessionId: sessionIdRef.current,
+        }, { timeout: 120000 });
+        if (r.data?.sessionId) {
+          sessionIdRef.current = r.data.sessionId;
+          sessionStorage.setItem(SESSION_KEY, r.data.sessionId);
+        }
+        replyText = r.data?.text || '';
+        replyFiles = r.data?.files || [];
       }
-      setMessages(p => [...p, {
-        id: Date.now() + 1,
-        role: 'bot',
-        text: r.data?.text || '',
-        files: r.data?.files || [],
-      }]);
+
+      setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: replyText, files: replyFiles }]);
     } catch (e) {
       setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: e.response?.data?.error || 'Something went wrong. Try again.' }]);
     } finally {
@@ -258,8 +272,8 @@ export default function BottomChatPanel({ height, onResizeStart }) {
             <Bot className="w-3.5 h-3.5 text-violet-400" />
             <span className="text-[11px] font-semibold text-neutral-300">Chat Trigger</span>
             {hasChatTrigger
-              ? <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">connected</span>
-              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400">no trigger</span>
+              ? <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">workflow</span>
+              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-violet-400">AI</span>
             }
           </div>
           <button
