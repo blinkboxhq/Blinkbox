@@ -468,6 +468,7 @@ export default function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
     const cardW = 120, cardH = 120;
+    const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "1.5px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.35)"
       : selected ? "2px solid rgba(255,255,255,0.45)"
@@ -481,7 +482,8 @@ export default function CustomNode({ id, data, selected }) {
         {toolbar}
         {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handlePlay} className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
+          onClick={isChatTrigger ? handleOpenConfig : handlePlay}
+          className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
@@ -493,7 +495,7 @@ export default function CustomNode({ id, data, selected }) {
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
           <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
