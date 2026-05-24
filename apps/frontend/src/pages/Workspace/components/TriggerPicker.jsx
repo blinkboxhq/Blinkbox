@@ -175,7 +175,7 @@ const CATEGORIES = [
     label: "On chat message",
     description: "User sends a message to your endpoint",
     color: "#fb923c",
-    trigger: { id: "chat", backendType: "webhook", label: "On chat message" },
+    trigger: { id: "chat", backendType: "chat_trigger", label: "On Chat Message" },
     direct: true,
   },
   {
@@ -311,7 +311,7 @@ export default function TriggerPicker() {
   };
 
   const handleSelect = (trigger) => {
-    if (NO_ACTION_PICKER.includes(trigger.id)) { toggleTrigger(trigger); return; }
+    if (NO_ACTION_PICKER.includes(trigger.id)) { commitNode(trigger, null); return; }
     const actions = TRIGGER_ACTIONS[trigger.id] || TRIGGER_ACTIONS[trigger.backendType] || [];
     if (actions.length === 0) { toggleTrigger(trigger); return; }
     setPendingTrigger(trigger);
