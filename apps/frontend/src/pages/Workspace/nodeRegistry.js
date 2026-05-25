@@ -154,6 +154,7 @@ import imgDeepSeek from "../../assets/deepseek-color.svg";
 import imgGrok from "../../assets/grok-color.svg";
 import imgGroq from "../../assets/groq.svg";
 import imgOllama from "../../assets/ollama.svg";
+import imgLmStudio from "../../assets/lmstudio.svg";
 import imgRedis from "../../assets/redis.svg";
 import imgMongoDB from "../../assets/mongodb.svg";
 import imgSupabase from "../../assets/supabase.svg";
@@ -1011,6 +1012,24 @@ export const NodeRegistry = {
       hasBaseUrl: true,
       models: ["llama3.2", "mistral", "codellama", "phi3"],
       color: "#7C3AED",
+    }),
+  },
+  agent_lmstudio: {
+    label: "LM Studio",
+    icon: Brain,
+    logoUrl: imgLmStudio,
+    colorClass: "text-purple-400",
+    accentColor: "192,132,252",
+    category: "ai",
+    agentOnly: true,
+    description: "Local LM Studio models powering the AI Agent",
+    defaultModel: "local-model",
+    models: null,
+    ConfigPanel: makeAgentModelPanel({
+      label: "LM Studio",
+      hasBaseUrl: true,
+      models: ["local-model", "llama-3.2-3b-instruct", "mistral-7b-instruct", "phi-3-mini-4k-instruct", "gemma-3-12b"],
+      color: "#C850C0",
     }),
   },
   agent_perplexity: {
@@ -3275,6 +3294,21 @@ export const NodeRegistry = {
       label: "Ollama (Local)",
       accent: "zinc",
       defaultModel: "llama3.2",
+      hasBaseUrl: true,
+    }),
+    category: "code",
+  },
+  lm_studio: {
+    label: "LM Studio",
+    icon: Server,
+    logoUrl: imgLmStudio,
+    colorClass: "text-purple-400",
+    accentColor: "192,132,252",
+    description: "Run local AI models via LM Studio's OpenAI-compatible server",
+    ConfigPanel: makeCodingAgentNode({
+      label: "LM Studio",
+      accent: "purple",
+      defaultModel: "local-model",
       hasBaseUrl: true,
     }),
     category: "code",

@@ -181,6 +181,7 @@ import codex         from "./integrations/codex.node.js";
 import geminiCli     from "./integrations/geminiCli.node.js";
 import groq          from "./integrations/groq.node.js";
 import ollama        from "./integrations/ollama.node.js";
+import lmstudio      from "./integrations/lmstudio.node.js";
 import githubCopilot from "./integrations/githubCopilot.node.js";
 
 // New Integrations
@@ -650,6 +651,7 @@ export const nodeRegistry = {
   gemini_cli:     geminiCli,
   groq:           groq,
   ollama:         ollama,
+  lm_studio:      lmstudio,
   github_copilot: githubCopilot,
 
   // New Integrations

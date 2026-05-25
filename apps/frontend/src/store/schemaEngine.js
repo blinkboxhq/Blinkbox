@@ -280,6 +280,7 @@ export const DEFAULT_SCHEMAS = {
   gemini_cli:     { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
   groq:           { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
   ollama:         { result: "string", code: "string", model: "string", operation: "string", provider: "string" },
+  lm_studio:      { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
   github_copilot: { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
 
   // Databases (Part C)
