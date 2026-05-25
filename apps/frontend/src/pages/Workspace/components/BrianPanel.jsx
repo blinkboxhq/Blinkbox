@@ -525,7 +525,7 @@ const WELCOME_MSG = {
   flow: null,
 };
 
-export default function BrianPanel({ width, onResizeStart }) {
+export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
   const isBrianOpen  = useWorkspaceStore(s => s.isBrianOpen);
   const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
   const addNode      = useWorkspaceStore(s => s.addNode);
@@ -549,6 +549,12 @@ export default function BrianPanel({ width, onResizeStart }) {
   useEffect(() => {
     if (isBrianOpen) setTimeout(() => inputRef.current?.focus(), 120);
   }, [isBrianOpen]);
+
+  useEffect(() => {
+    if (!initialPrompt) return;
+    const timer = setTimeout(() => send(initialPrompt), 400);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     if (atBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Monitor, ArrowLeft } from 'lucide-react';
 import useWorkspaceStore from '../../store/workspaceStore';
@@ -83,8 +83,14 @@ function MobileGate() {
 export default function Workspace() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const loadEngine = useWorkspaceStore(s => s.loadEngine);
   const panels     = useWorkspaceStore(s => s.panels);
+
+  const brianPrompt = location.state?.brianPrompt || null;
+  useEffect(() => {
+    if (brianPrompt) navigate(location.pathname, { replace: true, state: {} });
+  }, [brianPrompt]); // eslint-disable-line
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
 
@@ -151,7 +157,7 @@ export default function Workspace() {
 
             {/* Brian panel with drag handle on its left edge */}
             {panels.brian !== false && (
-              <BrianPanel width={brianW} onResizeStart={onBrianResize} />
+              <BrianPanel width={brianW} onResizeStart={onBrianResize} initialPrompt={brianPrompt} />
             )}
           </div>
 

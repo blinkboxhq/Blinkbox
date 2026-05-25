@@ -280,59 +280,17 @@ export default function Dashboard() {
     })();
   }, [activeTab]);
 
-  const handleBrianSubmit = async (prompt, messageHistory) => {
+  const handleBrianSubmit = async (prompt) => {
+    if (!prompt?.trim()) return;
     try {
-      const { data } = await api.post('/api/brian/chat', {
-        messages: messageHistory || [{ role: 'user', content: prompt }],
-      });
-
-      if (data?.flow?.nodes?.length) {
-        const triggerNode  = data.flow.nodes.find(n => n.data?.type === 'trigger');
-        const workflowName = prompt.length > 60 ? prompt.slice(0, 57) + '…' : prompt;
-
-        const created = await api.post('/api/automation', {
-          name: workflowName,
-          description: data.text || '',
-          trigger: triggerNode?.data?.backendType || 'manual',
-        });
-
-        if (created.data?.success) {
-          const wfId      = created.data.automation._id;
-          const entryNode = triggerNode || data.flow.nodes[0];
-          await api.put(`/api/automation/${wfId}`, {
-            name:        workflowName,
-            trigger:     entryNode.data?.backendType || 'manual',
-            entryNodeId: entryNode.id,
-            settings:    { maxParallel: 10 },
-            nodes: data.flow.nodes.map(n => ({
-              id:          n.id,
-              type:        n.data?.backendType || 'manual',
-              data:        n.data?.config || {},
-              description: n.data?.label || n.data?.backendType || 'Node',
-              position:    n.position || { x: 300, y: 100 },
-            })),
-            edges: (data.flow.edges || []).map(e => ({
-              id:           e.id,
-              source:       e.source,
-              target:       e.target,
-              sourceHandle: e.sourceHandle || null,
-              targetHandle: e.targetHandle || null,
-              type:         'onSuccess',
-              conditionPath: '',
-            })),
-          });
-
-          setWorkflows(prev => [created.data.automation, ...prev]);
-          navigate(`/workspace/${wfId}`);
-          return { text: data.text, navigated: true };
-        }
+      const name = prompt.length > 60 ? prompt.slice(0, 57) + '…' : prompt;
+      const r = await api.post('/api/automation', { name, description: '', trigger: 'manual' });
+      if (r.data?.success) {
+        setWorkflows(prev => [r.data.automation, ...prev]);
+        navigate(`/workspace/${r.data.automation._id}`, { state: { brianPrompt: prompt } });
       }
-
-      // No flow — return text so BrianBar can show it as a chat bubble
-      return { text: data?.text || '', navigated: false };
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Brian failed to respond.';
-      return { text: msg, navigated: false };
+    } catch {
+      toast.error('Failed to open workspace');
     }
   };
 
