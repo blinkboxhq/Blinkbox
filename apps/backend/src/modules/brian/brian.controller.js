@@ -135,11 +135,11 @@ CANVAS LAYOUT:
 
 | Edge | source | target | targetHandle |
 |------|--------|--------|--------------|
-| Trigger → Hub | chat_trigger id | ai_agent id | *(none)* |
-| Model → Hub | agent_model id | ai_agent id | `"chat_model"` |
-| Memory → Hub | agent_memory id | ai_agent id | `"memory"` |
-| Integration → Hub | agent_integration id | ai_agent id | `"integration"` |
-| Tool → Hub | agent_tool id | ai_agent id | `"tools"` |
+| Trigger → Hub | chat_trigger id | ai_agent id | (none) |
+| Model → Hub | agent_model id | ai_agent id | "chat_model" |
+| Memory → Hub | agent_memory id | ai_agent id | "memory" |
+| Integration → Hub | agent_integration id | ai_agent id | "integration" |
+| Tool → Hub | agent_tool id | ai_agent id | "tools" |
 
 **NEVER reverse these.** ai_agent is always the TARGET for satellite nodes, never the SOURCE.
 
