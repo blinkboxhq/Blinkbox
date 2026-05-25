@@ -119,17 +119,27 @@ USE FOR: Post to multiple channels, notify multiple teams
 
 ### Pattern 4 — AI Agent Hub (MOST IMPORTANT — read carefully)
 
-The AI Agent hub is the center. Every supporting node POINTS INTO it — never out of it.
+The AI Agent hub is the GRAVITATIONAL CENTER. Every satellite node points INTO it.
 
 \`\`\`
-CANVAS LAYOUT:
+DESIGNER LAYOUT — use these exact zones:
 
-                [agent_model]           ← ABOVE hub, x=400 y=80
-                      ↓ targetHandle:"chat_model"
-[chat_trigger] → [  ai_agent  ]        ← trigger LEFT of hub, no targetHandle
-                      ↑ targetHandle:"integration"
-         [integ_A]  [integ_B]  [integ_C]  ← BELOW hub, y=540
+   [memory]                    [model]
+   x:160, y:60                 x:640, y:60
+        ↓ targetHandle:memory       ↓ targetHandle:chat_model
+[trigger] ──────────→ [  ai_agent hub  ]
+x:80, y:300            x:400, y:300
+                              ↑ targetHandle:integration  (×N)
+              [integ_1]  [integ_2]  [integ_3]  [integ_4]
+              spread evenly below hub at y:560
 \`\`\`
+
+ZONE RULES:
+- memory node → always x:160, y:60 (top-left zone)
+- model node  → always x:640, y:60 (top-right zone)  ← NEVER at x:400
+- trigger     → always x:80,  y:300 (left zone)
+- ai_agent    → always x:400, y:300 (center)
+- integrations → always y:560 (bottom zone), spread by count (see table below)
 
 **WIRING CHEAT SHEET — memorize source/target direction:**
 
@@ -191,22 +201,39 @@ Each: \`{ credentialId:"", alias:"short_name" }\`
 
 ## 📐 LAYOUT COORDINATES
 
-| Slot | x | y |
+### AI Agent Hub layout (Pattern 4)
+
+| Node role | x | y | Notes |
+|-----------|---|---|-------|
+| chat_trigger | 80 | 300 | Always left of hub |
+| ai_agent | 400 | 300 | Center — never move |
+| Model (agent_anthropic etc) | 640 | 60 | Top-RIGHT — never x:400 |
+| Memory (agent_memory_*) | 160 | 60 | Top-LEFT |
+| 1 integration | 400 | 560 | Centered below hub |
+| 2 integrations | 220, 580 | 560 | Symmetric |
+| 3 integrations | 80, 400, 720 | 560 | Evenly spaced |
+| 4 integrations | 60, 280, 500, 720 | 560 | Even |
+| 5 integrations | 60, 230, 400, 570, 740 | 560 | Even |
+
+### Linear chain layout (Pattern 1)
+
+| Step | x | y |
 |------|---|---|
-| Trigger (left of agent) | 80 | 300 |
-| ai_agent hub | 400 | 300 |
-| Model circle (above agent) | 400 | 80 |
-| Memory circle (above-left) | 200 | 80 |
-| Integrations row (below) | 80→720 | 540 |
-| Linear chain step 1 | 400 | 80 |
-| Linear chain step 2 | 400 | 300 |
-| Linear chain step 3 | 400 | 520 |
-| Condition true branch | 680 | +220 per step |
-| Condition false branch | 120 | +220 per step |
+| Step 1 (trigger) | 400 | 80 |
+| Step 2 | 400 | 300 |
+| Step 3 | 400 | 520 |
+| Step 4 | 400 | 740 |
 
-Space integrations evenly: 2 integrations → x:180,x:620 / 3 → x:80,x:400,x:720 / 4 → x:80,x:300,x:520,x:740 / 5+ → x:80,x:240,x:400,x:560,x:720
+### Condition branch layout (Pattern 2)
 
-NEVER place two nodes at the same (x, y).
+| Node | x | y |
+|------|---|---|
+| Trigger | 400 | 80 |
+| Condition | 400 | 300 |
+| True path | 680 | 520 |
+| False path | 120 | 520 |
+
+NEVER place two nodes within 100px of each other (x AND y both similar). Minimum gap: 180px horizontal, 200px vertical.
 
 ---
 
@@ -255,6 +282,25 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 - Before \`condition\`: add \`ai_classify\` to produce a clean category field
 - Before any template: add \`ai_extract\` to pull structured fields from raw text
 - After critical actions (payment, CRM write): add \`success_failed\` for error handling
+
+---
+
+## 🔍 PRE-SUBMIT WIRING CHECKLIST (AI Agent workflows — MANDATORY)
+
+Before calling create_workflow, run this count silently:
+
+1. Count every agent_model node you added (agent_anthropic, agent_openai, agent_groq, agent_gemini)
+2. Count every agent_memory node you added
+3. Count every agent_integration node you added
+
+Then verify your edges array contains:
+- One edge per model node with targetHandle:"chat_model" and target = ai_agent id
+- One edge per memory node with targetHandle:"memory" and target = ai_agent id
+- One edge per integration node with targetHandle:"integration" and target = ai_agent id
+
+If any edge is missing → ADD IT NOW before submitting. A model node with no edge = broken workflow.
+
+ALSO verify positions: model must be at y:60 x:640, memory at y:60 x:160, never both at the same (x,y).
 
 ---
 
@@ -524,6 +570,38 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
       sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
     }));
+  }
+
+  // Auto-wire: satellite nodes that Brian forgot to connect get the right targetHandle edge
+  const HUB_SLOT = new Map([
+    ["agent_anthropic","chat_model"],["agent_openai","chat_model"],
+    ["agent_gemini","chat_model"],["agent_groq","chat_model"],
+    ["agent_memory_supabase","memory"],["agent_memory_pinecone","memory"],
+    ["agent_memory_postgres","memory"],["agent_memory_redis","memory"],
+    ["agent_integration_gmail","integration"],["agent_integration_google_sheets","integration"],
+    ["agent_integration_google_calendar","integration"],["agent_integration_google_drive","integration"],
+    ["agent_integration_github","integration"],["agent_integration_slack","integration"],
+    ["agent_integration_notion","integration"],["agent_integration_discord","integration"],
+    ["agent_integration_stripe","integration"],["agent_integration_hubspot","integration"],
+    ["agent_integration_jira","integration"],["agent_integration_linear","integration"],
+    ["agent_integration_airtable","integration"],["agent_integration_supabase","integration"],
+    ["agent_tool","tools"],
+  ]);
+  const agentHub = canvasNodes.find(n => n.data.backendType === "ai_agent");
+  if (agentHub) {
+    const wiredToHub = new Set(
+      canvasEdges.filter(e => e.target === agentHub.id && e.targetHandle).map(e => e.source)
+    );
+    canvasNodes.forEach(node => {
+      if (node.id === agentHub.id || wiredToHub.has(node.id)) return;
+      const slot = HUB_SLOT.get(node.data.backendType);
+      if (!slot) return;
+      canvasEdges.push({
+        id: `e_aw_${node.id}`, source: node.id, target: agentHub.id,
+        sourceHandle: null, targetHandle: slot,
+        type: "configurable", data: { conditionPath: "" }, style: {},
+      });
+    });
   }
 
   const hubConnectedTargets = new Set(canvasEdges.filter(e => e.targetHandle).map(e => e.source));
