@@ -133,13 +133,12 @@ CANVAS LAYOUT:
 
 **WIRING CHEAT SHEET — memorize source/target direction:**
 
-| Edge | source | target | targetHandle |
-|------|--------|--------|--------------|
-| Trigger → Hub | chat_trigger id | ai_agent id | (none) |
-| Model → Hub | agent_model id | ai_agent id | "chat_model" |
-| Memory → Hub | agent_memory id | ai_agent id | "memory" |
-| Integration → Hub | agent_integration id | ai_agent id | "integration" |
-| Tool → Hub | agent_tool id | ai_agent id | "tools" |
+EDGE RULES (source → target, targetHandle):
+- chat_trigger   → ai_agent,              no targetHandle   (trigger, main flow)
+- agent_model    → ai_agent,  targetHandle: chat_model      (model slot)
+- agent_memory   → ai_agent,  targetHandle: memory          (memory slot)
+- agent_integration → ai_agent, targetHandle: integration   (integration slot)
+- agent_tool     → ai_agent,  targetHandle: tools           (tool slot)
 
 **NEVER reverse these.** ai_agent is always the TARGET for satellite nodes, never the SOURCE.
 
