@@ -78,7 +78,10 @@ Never produce two separate trigger→action chains in a single response.
 - API-driven → \`webhook\`
 - Email-driven → \`gmail_trigger\` or \`imap_trigger\`
 
-**R5 — Trigger backendTypes are NOT action nodes.**
+**R5 — AI Agent workflows: include ONLY what was explicitly requested.**
+For agent workflows, add ONLY the integrations/tools the user named. Do NOT add extra services (Perplexity, Notion, Slack, etc.) unless the user explicitly mentioned them. Quality over quantity.
+
+**R7 — Trigger backendTypes are NOT action nodes.**
 \`gmail_trigger\` fires on incoming email. \`gmail\` SENDS an email. Never use _trigger nodes as actions.
 \`google_calendar_trigger\` fires on calendar events. Use \`agent_integration_google_calendar\` to let an agent READ/WRITE calendar.
 
@@ -570,6 +573,37 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
       sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
     }));
+  }
+
+  // Snap satellite nodes to correct canvas zones — fixes Brian's position mistakes
+  const MODEL_BT    = new Set(["agent_anthropic","agent_openai","agent_gemini","agent_groq"]);
+  const MEMORY_BT   = new Set(["agent_memory_supabase","agent_memory_pinecone","agent_memory_postgres","agent_memory_redis"]);
+  const INTEG_BT    = new Set([
+    "agent_integration_gmail","agent_integration_google_sheets","agent_integration_google_calendar",
+    "agent_integration_google_drive","agent_integration_github","agent_integration_slack",
+    "agent_integration_notion","agent_integration_discord","agent_integration_stripe",
+    "agent_integration_hubspot","agent_integration_jira","agent_integration_linear",
+    "agent_integration_airtable","agent_integration_supabase",
+  ]);
+  const agentHubForLayout = canvasNodes.find(n => n.data.backendType === "ai_agent");
+  if (agentHubForLayout) {
+    // Lock hub and trigger to fixed positions
+    agentHubForLayout.position = { x: 400, y: 300 };
+    const trigNode = canvasNodes.find(n => n.data.type === "trigger");
+    if (trigNode) trigNode.position = { x: 80, y: 300 };
+
+    // Snap model nodes to top-right zone
+    canvasNodes.forEach(n => {
+      const bt = n.data.backendType;
+      if (MODEL_BT.has(bt)) n.position = { x: 640, y: 60 };
+      else if (MEMORY_BT.has(bt)) n.position = { x: 160, y: 60 };
+    });
+
+    // Evenly space integration nodes below hub
+    const INTEG_X = [[], [400], [220,580], [80,400,720], [60,280,500,720], [60,230,400,570,740]];
+    const integNodes = canvasNodes.filter(n => INTEG_BT.has(n.data.backendType));
+    const xArr = INTEG_X[Math.min(integNodes.length, 5)] || integNodes.map((_, i) => 60 + i * 200);
+    integNodes.forEach((n, i) => { n.position = { x: xArr[i] ?? 400, y: 560 }; });
   }
 
   // Auto-wire: satellite nodes that Brian forgot to connect get the right targetHandle edge

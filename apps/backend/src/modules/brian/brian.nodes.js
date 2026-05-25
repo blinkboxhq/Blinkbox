@@ -532,6 +532,202 @@ export const NODE_KB = {
     ],
   },
 
+  // ─── AI AGENT SATELLITE NODES ────────────────────────────────────────────
+  // These nodes ONLY exist inside ai_agent hub workflows — never as standalone actions.
+  // role → hub slot → canvas position:
+  //   "model"       → targetHandle:"chat_model"  → x:640, y:60
+  //   "memory"      → targetHandle:"memory"       → x:160, y:60
+  //   "integration" → targetHandle:"integration"  → y:560 (evenly spaced)
+  //
+  // Config rule: always set credentialId:"" (user fills in). Always set alias to short name.
+
+  agent_anthropic: {
+    label: "Claude (Model Slot)",
+    role: "model",
+    out: [],
+    fields: [
+      { k: "model", t: "select", r: true, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|claude-haiku-4-5-20251001" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Anthropic API key — user connects after generation" },
+    ],
+  },
+  agent_openai: {
+    label: "OpenAI (Model Slot)",
+    role: "model",
+    out: [],
+    fields: [
+      { k: "model", t: "select", r: true, ex: "gpt-4o", d: "gpt-4o|gpt-4o-mini|gpt-4-turbo|o1-mini" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "OpenAI API key" },
+    ],
+  },
+  agent_groq: {
+    label: "Groq (Model Slot)",
+    role: "model",
+    out: [],
+    fields: [
+      { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|llama-3.1-8b-instant|mixtral-8x7b" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Groq API key" },
+    ],
+  },
+  agent_gemini: {
+    label: "Gemini (Model Slot)",
+    role: "model",
+    out: [],
+    fields: [
+      { k: "model", t: "select", r: true, ex: "gemini-2.0-flash", d: "gemini-2.0-flash|gemini-1.5-pro|gemini-1.5-flash" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Google AI Studio API key" },
+    ],
+  },
+  agent_memory_supabase: {
+    label: "Supabase RAG Memory",
+    role: "memory",
+    description: "Vector memory for RAG. Stores document embeddings in Supabase pgvector. Agent retrieves relevant context before every response.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Supabase service role key credential" },
+      { k: "tableName", t: "string", r: true, ex: "documents", d: "Table with pgvector embeddings (needs id, content, embedding columns)" },
+    ],
+  },
+  agent_memory_pinecone: {
+    label: "Pinecone RAG Memory",
+    role: "memory",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Pinecone API key credential" },
+      { k: "indexName", t: "string", r: true, ex: "my-rag-index", d: "Pinecone index name" },
+    ],
+  },
+  agent_integration_gmail: {
+    label: "Gmail (Integration Tool)",
+    role: "integration",
+    description: "Gives AI agent ability to read, search, send, and reply to Gmail emails on behalf of the user.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Gmail OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "gmail", d: "Short name the agent references in tool calls" },
+    ],
+  },
+  agent_integration_google_sheets: {
+    label: "Google Sheets (Integration Tool)",
+    role: "integration",
+    description: "Agent can read rows, append data, and update cells in any Google Sheet.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Google OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "sheets", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_google_calendar: {
+    label: "Google Calendar (Integration Tool)",
+    role: "integration",
+    description: "Agent can create events, check availability, and list upcoming meetings.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Google OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "calendar", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_google_drive: {
+    label: "Google Drive (Integration Tool)",
+    role: "integration",
+    description: "Agent can upload, download, search, and organize files in Google Drive.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Google OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "drive", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_github: {
+    label: "GitHub (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "GitHub OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "github", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_slack: {
+    label: "Slack (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Slack OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "slack", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_notion: {
+    label: "Notion (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Notion OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "notion", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_hubspot: {
+    label: "HubSpot (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "HubSpot API key credential" },
+      { k: "alias", t: "string", r: true, ex: "hubspot", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_linear: {
+    label: "Linear (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Linear API key credential" },
+      { k: "alias", t: "string", r: true, ex: "linear", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_jira: {
+    label: "Jira (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Jira API key credential" },
+      { k: "alias", t: "string", r: true, ex: "jira", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_airtable: {
+    label: "Airtable (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Airtable API key credential" },
+      { k: "alias", t: "string", r: true, ex: "airtable", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_stripe: {
+    label: "Stripe (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Stripe API key credential" },
+      { k: "alias", t: "string", r: true, ex: "stripe", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_supabase: {
+    label: "Supabase DB (Integration Tool)",
+    role: "integration",
+    description: "Agent can query, insert, update Supabase tables via SQL. Different from memory — this is direct DB access.",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Supabase service role key" },
+      { k: "alias", t: "string", r: true, ex: "supabase", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_discord: {
+    label: "Discord (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Discord Bot token credential" },
+      { k: "alias", t: "string", r: true, ex: "discord", d: "Short name agent uses" },
+    ],
+  },
+
   // ─── COMMUNICATION ────────────────────────────────────────────────────────
   slack: {
     label: "Slack",
@@ -832,7 +1028,8 @@ export function buildNodeRef() {
     const required = node.fields.filter(f => f.r).map(f => `${f.k}(ex:"${JSON.stringify(f.ex).slice(0,40)}")`).join(", ");
     const optional = node.fields.filter(f => !f.r).map(f => f.k).join(", ");
     const out = node.out.length ? `→ ${node.out.slice(0, 5).join(", ")}` : "";
-    lines.push(`${type}: ${required || "(no required fields)"}${optional ? ` | opt:${optional}` : ""} ${out}`);
+    const roleStr = node.role ? ` [hub-role:${node.role}]` : "";
+    lines.push(`${type}${roleStr}: ${required || "(no required fields)"}${optional ? ` | opt:${optional}` : ""} ${out}`);
   }
   return lines.join("\n");
 }
