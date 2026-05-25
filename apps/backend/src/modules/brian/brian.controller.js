@@ -118,57 +118,75 @@ USE FOR: Post to multiple channels, notify multiple teams
 \`\`\`
 
 ### Pattern 4 — AI Agent Hub (MOST IMPORTANT — read carefully)
+
+The AI Agent hub is the center. Every supporting node POINTS INTO it — never out of it.
+
 \`\`\`
-VISUAL on canvas:
+CANVAS LAYOUT:
 
-         ┌─────────────┐
-         │ agent_model │ (circle node ABOVE)
-         └──────┬──────┘
-                │ targetHandle:"chat_model"
-                ↓
-[Trigger]──●──[  AI Agent  ]  ← wide hub card with slots: Model Memory Integration Tools
-                ↑      ↑
-     ┌──────────┘      └──────────┐
-[integration] [integration] [integration]  (circle nodes BELOW)
-targetHandle  targetHandle  targetHandle
-"integration" "integration" "integration"
-
-LAYOUT:
-  n1 chat_trigger    x:80,  y:300   ← LEFT of agent, same row
-  n2 ai_agent        x:400, y:300   ← CENTER hub
-  n3 agent_model     x:400, y:80    ← ABOVE agent
-  n4..nN integrations x:80 to x:720, y:540  ← BELOW agent, spread horizontally
-
-EDGES (source = circle node, target = ai_agent, NEVER reversed):
-  { source:"n1", target:"n2" }                              ← main flow, no handle
-  { source:"n3", target:"n2", targetHandle:"chat_model" }   ← model circle → hub
-  { source:"n4", target:"n2", targetHandle:"integration" }  ← integration circle → hub
-  { source:"n5", target:"n2", targetHandle:"integration" }  ← integration circle → hub
+                [agent_model]           ← ABOVE hub, x=400 y=80
+                      ↓ targetHandle:"chat_model"
+[chat_trigger] → [  ai_agent  ]        ← trigger LEFT of hub, no targetHandle
+                      ↑ targetHandle:"integration"
+         [integ_A]  [integ_B]  [integ_C]  ← BELOW hub, y=540
 \`\`\`
 
-**Agent model nodes** (pick exactly ONE):
-- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-6", credentialId:"" }\` — default when user says "Claude" or "Anthropic" or doesn't specify
+**WIRING CHEAT SHEET — memorize source/target direction:**
+
+| Edge | source | target | targetHandle |
+|------|--------|--------|--------------|
+| Trigger → Hub | chat_trigger id | ai_agent id | *(none)* |
+| Model → Hub | agent_model id | ai_agent id | `"chat_model"` |
+| Memory → Hub | agent_memory id | ai_agent id | `"memory"` |
+| Integration → Hub | agent_integration id | ai_agent id | `"integration"` |
+| Tool → Hub | agent_tool id | ai_agent id | `"tools"` |
+
+**NEVER reverse these.** ai_agent is always the TARGET for satellite nodes, never the SOURCE.
+
+**Example edges array for a 3-integration agent:**
+\`\`\`json
+[
+  { "id":"e1", "source":"n1", "target":"n2" },
+  { "id":"e2", "source":"n3", "target":"n2", "targetHandle":"chat_model" },
+  { "id":"e3", "source":"n4", "target":"n2", "targetHandle":"integration" },
+  { "id":"e4", "source":"n5", "target":"n2", "targetHandle":"integration" },
+  { "id":"e5", "source":"n6", "target":"n2", "targetHandle":"integration" }
+]
+\`\`\`
+*(n1=chat_trigger, n2=ai_agent, n3=model, n4-6=integrations)*
+
+**Agent model nodes** — pick exactly ONE, default to Anthropic:
+- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-6", credentialId:"" }\`
 - \`agent_openai\`    → \`{ model:"gpt-4o", credentialId:"" }\`
 - \`agent_groq\`      → \`{ model:"llama-3.3-70b-versatile", credentialId:"" }\`
 - \`agent_gemini\`    → \`{ model:"gemini-2.0-flash", credentialId:"" }\`
 
-**Agent integration nodes** (pick what user mentions):
+**Agent integration nodes** — one per service, each needs a credential:
 Each: \`{ credentialId:"", alias:"short_name" }\`
-- Gmail → \`agent_integration_gmail\` alias:"gmail"
-- Google Sheets → \`agent_integration_google_sheets\` alias:"sheets"
-- Google Calendar → \`agent_integration_google_calendar\` alias:"calendar"
-- Google Drive → \`agent_integration_google_drive\` alias:"drive"
-- GitHub → \`agent_integration_github\` alias:"github"
-- Slack → \`agent_integration_slack\` alias:"slack"
-- Notion → \`agent_integration_notion\` alias:"notion"
-- Linear → \`agent_integration_linear\` alias:"linear"
-- HubSpot → \`agent_integration_hubspot\` alias:"hubspot"
-- Jira → \`agent_integration_jira\` alias:"jira"
-- Airtable → \`agent_integration_airtable\` alias:"airtable"
-- Supabase → \`agent_integration_supabase\` alias:"supabase" (if user mentions Supabase/database)
 
-**AI Agent system prompt** — always write a real one:
-\`{ systemPrompt: "You are a helpful assistant with access to [services]. When the user asks about X, use [integration] to [action]. Always respond in a friendly, concise tone." }\`
+| Service | backendType | alias |
+|---------|-------------|-------|
+| Gmail | \`agent_integration_gmail\` | "gmail" |
+| Google Sheets | \`agent_integration_google_sheets\` | "sheets" |
+| Google Calendar | \`agent_integration_google_calendar\` | "calendar" |
+| Google Drive | \`agent_integration_google_drive\` | "drive" |
+| GitHub | \`agent_integration_github\` | "github" |
+| Slack | \`agent_integration_slack\` | "slack" |
+| Notion | \`agent_integration_notion\` | "notion" |
+| Linear | \`agent_integration_linear\` | "linear" |
+| HubSpot | \`agent_integration_hubspot\` | "hubspot" |
+| Jira | \`agent_integration_jira\` | "jira" |
+| Airtable | \`agent_integration_airtable\` | "airtable" |
+| Supabase/DB | \`agent_integration_supabase\` | "supabase" |
+
+**Agent memory nodes** (for RAG):
+- \`agent_memory_supabase\` → \`{ credentialId:"", tableName:"documents" }\` targetHandle:"memory"
+- \`agent_memory_pinecone\` → \`{ credentialId:"", indexName:"" }\` targetHandle:"memory"
+
+**AI Agent system prompt** — always write a real, specific one:
+\`{ systemPrompt: "You are a [role] assistant with access to [services]. When the user asks about X, use [alias] to [action]. Format responses as [style]." }\`
+
+**credentialId rule**: Always \`""\` — the user fills it in via the credential picker after you generate the workflow.
 
 ---
 
@@ -253,7 +271,11 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 | Two separate trigger chains in one response | One connected graph |
 | Orphaned node with no edges | Connect every node |
 | Edge reversed: source=ai_agent, target=integration | source=integration, target=ai_agent |
-| Trigger node as source with targetHandle set | Triggers only connect to main input, never hub handles |
+| Trigger node as source with targetHandle set | Triggers connect to ai_agent with NO targetHandle |
+| model node with targetHandle:"integration" | model uses targetHandle:"chat_model" only |
+| integration node with targetHandle:"chat_model" | integration uses targetHandle:"integration" only |
+| memory node with targetHandle:"integration" | memory uses targetHandle:"memory" only |
+| Missing credentialId on model/integration nodes | Always include credentialId:"" in config |
 | Empty config fields | Real values always |
 | Generic labels "Node 1", "Step A" | "Parse Invoice", "Post to #sales" |
 

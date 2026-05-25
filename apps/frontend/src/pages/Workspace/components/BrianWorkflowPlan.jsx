@@ -1,35 +1,73 @@
 import { useState, useCallback } from 'react';
-import { Check, X, ChevronRight, AlertTriangle, Zap, Globe, Code2, Mail, GitBranch,
-  Database, Cpu, Clock, Box, Link, Shield, KeyRound, ExternalLink, Pencil, ChevronUp } from 'lucide-react';
+import { Check, X, ChevronRight, Zap, Globe, Code2, Mail,
+  GitBranch, Database, Cpu, Clock, Box, Link, Pencil, ChevronUp, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
-import api from '../../../lib/api';
+import CredentialPicker from '../../../components/ui/CredentialPicker';
 
-// ── Which nodes need OAuth vs API key ─────────────────────────────────────────
-const OAUTH_NODES = {
-  slack:                    { provider: 'slack',    label: 'Slack' },
-  slack_trigger:            { provider: 'slack',    label: 'Slack' },
-  gmail:                    { provider: 'google',   label: 'Gmail' },
-  gmail_trigger:            { provider: 'google',   label: 'Gmail' },
-  google_sheets:            { provider: 'google',   label: 'Google Sheets' },
-  google_calendar:          { provider: 'google',   label: 'Google Calendar' },
-  google_calendar_trigger:  { provider: 'google',   label: 'Google Calendar' },
-  google_drive:             { provider: 'google',   label: 'Google Drive' },
-  airtable:                 { provider: 'airtable', label: 'Airtable' },
-  airtable_trigger:         { provider: 'airtable', label: 'Airtable' },
-  notion:                   { provider: 'notion',   label: 'Notion' },
-  notion_trigger:           { provider: 'notion',   label: 'Notion' },
+// ── Credential metadata — backendType → picker config ─────────────────────────
+const CRED_META = {
+  // AI model nodes
+  agent_anthropic:                   { label: 'Anthropic API Key',       credentialType: 'api_key',  hint: 'sk-ant-...' },
+  agent_openai:                      { label: 'OpenAI API Key',          credentialType: 'api_key',  hint: 'sk-...' },
+  agent_groq:                        { label: 'Groq API Key',            credentialType: 'api_key',  hint: 'gsk_...' },
+  agent_gemini:                      { label: 'Google AI Key',           credentialType: 'api_key',  hint: 'AI Studio key' },
+
+  // Agent integrations — Google
+  agent_integration_gmail:           { label: 'Gmail',                   credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'red' },
+  agent_integration_google_sheets:   { label: 'Google Sheets',           credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'green' },
+  agent_integration_google_calendar: { label: 'Google Calendar',         credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'blue' },
+  agent_integration_google_drive:    { label: 'Google Drive',            credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'amber' },
+
+  // Agent integrations — OAuth
+  agent_integration_github:          { label: 'GitHub',                  credentialType: 'oauth',    oauthProvider: 'github',    accentColor: 'zinc' },
+  agent_integration_slack:           { label: 'Slack',                   credentialType: 'oauth',    oauthProvider: 'slack',     accentColor: 'pink' },
+  agent_integration_notion:          { label: 'Notion',                  credentialType: 'api_key',  hint: 'secret_...',         accentColor: 'zinc' },
+  agent_integration_airtable:        { label: 'Airtable',                credentialType: 'api_key',  hint: 'pat...',             accentColor: 'red' },
+
+  // Agent integrations — API key
+  agent_integration_linear:          { label: 'Linear API Key',          credentialType: 'api_key',  hint: 'lin_api_...' },
+  agent_integration_hubspot:         { label: 'HubSpot API Key',         credentialType: 'api_key',  hint: 'pat-...' },
+  agent_integration_jira:            { label: 'Jira API Token',          credentialType: 'api_key',  hint: 'API token' },
+  agent_integration_supabase:        { label: 'Supabase Service Key',    credentialType: 'api_key',  hint: 'eyJ...' },
+
+  // Agent memory
+  agent_memory_supabase:             { label: 'Supabase (Memory)',       credentialType: 'api_key',  hint: 'service_role key' },
+  agent_memory_pinecone:             { label: 'Pinecone API Key',        credentialType: 'api_key',  hint: 'pc-...' },
+
+  // Direct service nodes — Google
+  gmail:                             { label: 'Gmail',                   credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'red' },
+  gmail_trigger:                     { label: 'Gmail',                   credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'red' },
+  google_sheets:                     { label: 'Google Sheets',           credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'green' },
+  google_calendar:                   { label: 'Google Calendar',         credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'blue' },
+  google_calendar_trigger:           { label: 'Google Calendar',         credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'blue' },
+  google_drive:                      { label: 'Google Drive',            credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'amber' },
+
+  // Direct service nodes — OAuth
+  slack:                             { label: 'Slack',                   credentialType: 'oauth',    oauthProvider: 'slack',     accentColor: 'pink' },
+  slack_trigger:                     { label: 'Slack',                   credentialType: 'oauth',    oauthProvider: 'slack',     accentColor: 'pink' },
+  github:                            { label: 'GitHub',                  credentialType: 'api_key',  hint: 'ghp_...',            accentColor: 'zinc' },
+  github_trigger:                    { label: 'GitHub',                  credentialType: 'oauth',    oauthProvider: 'github',    accentColor: 'zinc' },
+  notion:                            { label: 'Notion',                  credentialType: 'api_key',  hint: 'secret_...',         accentColor: 'zinc' },
+  notion_trigger:                    { label: 'Notion',                  credentialType: 'api_key',  hint: 'secret_...',         accentColor: 'zinc' },
+  airtable:                          { label: 'Airtable',                credentialType: 'api_key',  hint: 'pat...',             accentColor: 'red' },
+  airtable_trigger:                  { label: 'Airtable',                credentialType: 'api_key',  hint: 'pat...',             accentColor: 'red' },
+
+  // Direct service nodes — API key
+  hubspot:                           { label: 'HubSpot',                 credentialType: 'api_key',  hint: 'pat-...',            accentColor: 'orange' },
+  hubspot_trigger:                   { label: 'HubSpot',                 credentialType: 'api_key',  hint: 'pat-...',            accentColor: 'orange' },
+  stripe:                            { label: 'Stripe',                  credentialType: 'api_key',  hint: 'sk_live_...',        accentColor: 'indigo' },
+  stripe_trigger:                    { label: 'Stripe',                  credentialType: 'api_key',  hint: 'whsec_...',          accentColor: 'indigo' },
+  linear:                            { label: 'Linear',                  credentialType: 'api_key',  hint: 'lin_api_...',        accentColor: 'indigo' },
+  linear_trigger:                    { label: 'Linear',                  credentialType: 'api_key',  hint: 'lin_api_...',        accentColor: 'indigo' },
+  sendgrid:                          { label: 'SendGrid',                credentialType: 'api_key',  hint: 'SG...',              accentColor: 'blue' },
+  twilio:                            { label: 'Twilio',                  credentialType: 'api_key',  hint: 'auth token',         accentColor: 'red' },
+  openai:                            { label: 'OpenAI',                  credentialType: 'api_key',  hint: 'sk-...' },
+  anthropic:                         { label: 'Anthropic',               credentialType: 'api_key',  hint: 'sk-ant-...' },
+  telegram:                          { label: 'Telegram Bot Token',      credentialType: 'api_key',  hint: 'bot token' },
+  discord:                           { label: 'Discord Bot Token',       credentialType: 'api_key',  hint: 'bot token',          accentColor: 'indigo' },
+  telegram_trigger:                  { label: 'Telegram Bot Token',      credentialType: 'api_key',  hint: 'bot token' },
+  discord_trigger:                   { label: 'Discord Bot Token',       credentialType: 'api_key',  hint: 'bot token',          accentColor: 'indigo' },
 };
-
-const API_KEY_NODES = new Set([
-  'openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'perplexity',
-  'twilio', 'sendgrid', 'resend', 'telegram', 'discord', 'whatsapp',
-  'stripe', 'shopify', 'hubspot', 'github', 'jira', 'linear',
-  'mongodb', 'postgres', 'redis', 'firebase', 'supabase', 'pinecone',
-  'elevenlabs', 'twitter', 'web_search', 'zoom',
-  'shopify_trigger', 'stripe_trigger', 'linear_trigger', 'github_trigger',
-  'discord_trigger', 'telegram_trigger',
-]);
 
 // ── Node icon map ─────────────────────────────────────────────────────────────
 const ICONS = {
@@ -42,103 +80,10 @@ function NodeIcon({ type }) {
   return <Icon className="w-3.5 h-3.5" />;
 }
 
-// ── Inline OAuth connect ──────────────────────────────────────────────────────
-function OAuthPrompt({ provider, label, onConnected }) {
-  const [connecting, setConnecting] = useState(false);
-  const [done, setDone]             = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-  const connect = useCallback(() => {
-    setConnecting(true);
-    const token = localStorage.getItem('blinkbox_token');
-    const popup = window.open(
-      `${API_URL}/api/oauth/${provider}/authorize?token=${token}`,
-      'blinkbox_oauth', 'width=600,height=700'
-    );
-    const handler = (e) => {
-      if (e.origin !== window.location.origin) return;
-      if (e.data?.type !== 'blinkbox:oauth') return;
-      window.removeEventListener('message', handler);
-      setConnecting(false);
-      if (e.data.success) { setDone(true); onConnected?.(e.data.credential); }
-    };
-    window.addEventListener('message', handler);
-    const poll = setInterval(() => {
-      if (popup?.closed) { clearInterval(poll); setConnecting(false); window.removeEventListener('message', handler); }
-    }, 500);
-  }, [provider, API_URL, onConnected]);
-
-  if (done) return (
-    <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 mt-1">
-      <Check className="w-3 h-3" /> {label} connected
-    </div>
-  );
-  return (
-    <button onClick={connect} disabled={connecting}
-      className="flex items-center gap-1.5 text-[10px] text-violet-400 hover:text-violet-300 mt-1 transition-colors disabled:opacity-50">
-      <ExternalLink className="w-3 h-3" />
-      {connecting ? `Connecting ${label}…` : `Connect ${label} →`}
-    </button>
-  );
-}
-
-// ── Inline API key credential ─────────────────────────────────────────────────
-function ApiKeyPrompt({ nodeLabel, onSaved }) {
-  const [open, setOpen]     = useState(false);
-  const [name, setName]     = useState(`${nodeLabel} key`);
-  const [secret, setSecret] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [done, setDone]     = useState(false);
-
-  const save = async () => {
-    if (!secret.trim()) return;
-    setSaving(true);
-    try {
-      const { data } = await api.post('/api/credentials', {
-        name: name.trim(), type: 'api_key', secret: secret.trim(),
-      });
-      setDone(true);
-      onSaved?.(data.credential);
-    } catch { toast.error('Failed to save credential'); }
-    setSaving(false);
-  };
-
-  if (done) return (
-    <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 mt-1">
-      <Check className="w-3 h-3" /> Credential saved
-    </div>
-  );
-  return (
-    <div className="mt-1">
-      {!open ? (
-        <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 text-[10px] text-violet-400 hover:text-violet-300 transition-colors">
-          <KeyRound className="w-3 h-3" /> Add API key →
-        </button>
-      ) : (
-        <div className="mt-1.5 space-y-1.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-2">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Credential name"
-            className="w-full bg-neutral-950 border border-[#333] rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-neutral-600 placeholder-neutral-700" />
-          <input type="password" value={secret} onChange={e => setSecret(e.target.value)} placeholder="API key / secret"
-            className="w-full bg-neutral-950 border border-[#333] rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-neutral-600 placeholder-neutral-700" />
-          <div className="flex gap-1.5">
-            <button onClick={save} disabled={saving || !secret.trim()}
-              className="flex-1 flex items-center justify-center gap-1 py-1 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-semibold rounded transition-colors disabled:opacity-40">
-              <Shield className="w-3 h-3" /> {saving ? 'Saving…' : 'Encrypt & Save'}
-            </button>
-            <button onClick={() => setOpen(false)} className="px-2 py-1 text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors">
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Modify plan input ─────────────────────────────────────────────────────────
 function ModifyInput({ onModify }) {
-  const [open, setOpen]     = useState(false);
-  const [text, setText]     = useState('');
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
 
   const submit = () => {
     if (!text.trim()) return;
@@ -186,9 +131,10 @@ function ModifyInput({ onModify }) {
 
 // ── Main plan card ─────────────────────────────────────────────────────────────
 export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onModify }) {
-  const [accepted,  setAccepted]  = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-  const [expanded,  setExpanded]  = useState(true);
+  const [accepted,       setAccepted]       = useState(false);
+  const [dismissed,      setDismissed]      = useState(false);
+  const [expanded,       setExpanded]       = useState(true);
+  const [credAssignments, setCredAssignments] = useState({});
 
   if (dismissed) return null;
   if (!flow) return (
@@ -197,13 +143,28 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
 
   const { nodes = [], edges = [] } = flow;
 
-  const accept = () => { setAccepted(true); onAccept(flow); };
-  const dismiss = () => { setDismissed(true); onDismiss?.(); };
-
   const credNodes = nodes.filter(n => {
     const bt = n.data?.backendType || n.backendType || '';
-    return OAUTH_NODES[bt] || API_KEY_NODES.has(bt);
+    return !!CRED_META[bt];
   });
+
+  const accept = useCallback(() => {
+    setAccepted(true);
+    const mergedFlow = {
+      ...flow,
+      nodes: flow.nodes.map(n => {
+        const assigned = credAssignments[n.id];
+        if (!assigned) return n;
+        return {
+          ...n,
+          data: { ...n.data, config: { ...(n.data?.config || {}), credentialId: assigned } },
+        };
+      }),
+    };
+    onAccept(mergedFlow);
+  }, [flow, credAssignments, onAccept]);
+
+  const dismiss = () => { setDismissed(true); onDismiss?.(); };
 
   return (
     <div className="flex flex-col gap-2">
@@ -222,10 +183,12 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
           onClick={() => setExpanded(v => !v)}
           className="w-full flex items-center gap-2 px-3 py-2 border-b border-[#2a2a2a] bg-neutral-900/60 hover:bg-neutral-900 transition-colors text-left"
         >
-          <div className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+          <div className="w-1.5 h-1.5 rounded-full bg-neutral-500 shrink-0" />
           <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest flex-1">Workflow Plan</span>
           <span className="text-[10px] font-mono text-neutral-600 shrink-0">{nodes.length} nodes · {edges.length} edges</span>
-          {expanded ? <ChevronUp className="w-3 h-3 text-neutral-700 shrink-0" /> : <ChevronRight className="w-3 h-3 text-neutral-700 shrink-0" />}
+          {expanded
+            ? <ChevronUp className="w-3 h-3 text-neutral-700 shrink-0" />
+            : <ChevronRight className="w-3 h-3 text-neutral-700 shrink-0" />}
         </button>
 
         {/* ── Node list ── */}
@@ -242,10 +205,8 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
                 {nodes.map((node, i) => {
                   const bt        = node.data?.backendType || node.backendType || '';
                   const isTrigger = node.data?.type === 'trigger' || bt.endsWith('_trigger') || bt === 'manual' || bt === 'webhook';
-                  const oauthInfo = OAUTH_NODES[bt];
-                  const needsApiKey = API_KEY_NODES.has(bt);
-                  const needsCred   = oauthInfo || needsApiKey;
-                  const isLast      = i === nodes.length - 1;
+                  const meta      = CRED_META[bt];
+                  const isLast    = i === nodes.length - 1;
 
                   return (
                     <div key={node.id}>
@@ -255,7 +216,7 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
                           {i + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <NodeIcon type={bt} />
                             <span className="text-[12px] font-medium text-neutral-200 truncate">
                               {node.data?.label || bt}
@@ -267,17 +228,25 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
                               <span className="text-[9px] text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">trigger</span>
                             )}
                           </div>
-                          {needsCred && !accepted && (
-                            <div className="mt-1 flex items-start gap-1.5">
-                              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <span className="text-[10px] text-amber-400/80">Needs credentials</span>
-                                {oauthInfo ? (
-                                  <OAuthPrompt provider={oauthInfo.provider} label={oauthInfo.label} />
-                                ) : (
-                                  <ApiKeyPrompt nodeLabel={node.data?.label || bt} />
-                                )}
-                              </div>
+
+                          {meta && !accepted && (
+                            <div className="mt-2 pl-0.5">
+                              <CredentialPicker
+                                value={credAssignments[node.id] || ''}
+                                onChange={credId => setCredAssignments(prev => ({ ...prev, [node.id]: credId }))}
+                                label={meta.label}
+                                placeholder="Select or create credential…"
+                                credentialType={meta.credentialType}
+                                oauthProvider={meta.oauthProvider}
+                                accentColor={meta.accentColor || 'zinc'}
+                                hint={meta.hint}
+                              />
+                            </div>
+                          )}
+
+                          {meta && accepted && credAssignments[node.id] && (
+                            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-emerald-400">
+                              <Check className="w-3 h-3" /> Credential assigned
                             </div>
                           )}
                         </div>
@@ -298,9 +267,10 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
 
         {/* ── Credential summary banner ── */}
         {credNodes.length > 0 && !accepted && (
-          <div className="mx-3 mb-2 px-2.5 py-2 bg-amber-500/5 border border-amber-500/10 rounded-lg">
-            <p className="text-[10px] text-amber-400/70 leading-relaxed">
-              {credNodes.length} node{credNodes.length > 1 ? 's' : ''} need credentials — connect them above before running.
+          <div className="mx-3 mb-2 px-2.5 py-2 bg-neutral-900 border border-[#2a2a2a] rounded-lg flex items-start gap-2">
+            <KeyRound className="w-3 h-3 text-neutral-600 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-neutral-500 leading-relaxed">
+              {credNodes.length} node{credNodes.length > 1 ? 's need' : ' needs'} credentials — select or connect above, then apply.
             </p>
           </div>
         )}
