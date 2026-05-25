@@ -5,7 +5,7 @@ export default {
   async run(config) {
     const operation = config.operation || "generate";
     const model     = config.model     || "llama3.2";
-    const baseUrl   = (config.baseUrl  || "http://localhost:11434").replace(/\/$/, "");
+    const baseUrl   = (config.baseUrl  || "http://127.0.0.1:11434").replace(/\/$/, "");
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 

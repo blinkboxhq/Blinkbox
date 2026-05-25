@@ -1,7 +1,7 @@
 import { useState } from "react";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
-export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl = false, defaultBaseUrl = "http://localhost:11434", models = [], color = "#6B7280" }) {
+export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl = false, defaultBaseUrl = "http://127.0.0.1:11434", models = [], color = "#6B7280" }) {
   return function AgentModelPanel({ config = {}, updateConfig }) {
     const [streaming, setStreaming] = useState(config.streaming !== false);
 

@@ -1028,7 +1028,7 @@ export const NodeRegistry = {
     ConfigPanel: makeAgentModelPanel({
       label: "LM Studio",
       hasBaseUrl: true,
-      defaultBaseUrl: "http://localhost:1234",
+      defaultBaseUrl: "http://127.0.0.1:1234",
       models: ["local-model", "llama-3.2-3b-instruct", "mistral-7b-instruct", "phi-3-mini-4k-instruct", "gemma-3-12b"],
       color: "#C850C0",
     }),
