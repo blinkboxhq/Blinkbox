@@ -26,6 +26,7 @@ import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { storeBinary, isBinaryContentType } from "../infra/binary.store.js";
+import { ALLOW_LOCAL_REQUESTS } from "../config/env.js";
 
 const MAX_RESPONSE_BYTES = 25 * 1024 * 1024; // 25 MB for binary downloads
 const MAX_TIMEOUT_MS = 60000;
@@ -71,22 +72,19 @@ export default {
 
       const hostname = parsed.hostname.toLowerCase();
 
-      const blocked = [
-        /^localhost$/,
-        /^127\./,
-        /^0\.0\.0\.0$/,
-        /^::1$/,
-        /^10\./,
-        /^172\.(1[6-9]|2\d|3[01])\./,
-        /^192\.168\./,
-        /^169\.254\./,    // AWS/GCP/Azure metadata
-        /^fc00:/i,        // IPv6 unique local
-        /^fe80:/i,        // IPv6 link-local
-        /^fd[0-9a-f]{2}:/i,
-        /^0\b/,
+      const localPatterns = [/^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/];
+      const privatePatterns = [
+        /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+        /^169\.254\./,
+        /^fc00:/i, /^fe80:/i, /^fd[0-9a-f]{2}:/i, /^0\b/,
       ];
 
-      if (blocked.some((re) => re.test(hostname))) {
+      const isLocal   = localPatterns.some((re) => re.test(hostname));
+      const isPrivate = privatePatterns.some((re) => re.test(hostname));
+
+      if (isLocal && ALLOW_LOCAL_REQUESTS) {
+        // Self-hosted: ALLOW_LOCAL_REQUESTS=true permits localhost/127.x (e.g. LM Studio, Ollama)
+      } else if (isLocal || isPrivate) {
         throw new Error(`HTTP Request: requests to internal addresses are not allowed (${hostname})`);
       }
 

@@ -167,4 +167,5 @@ export const ALERT_EMAIL_FROM   = process.env.ALERT_EMAIL_FROM   || null;
 export const ALERT_EMAIL_TO     = process.env.ALERT_EMAIL_TO     || null;
 export const ALERT_EMAIL_PASS   = process.env.ALERT_EMAIL_PASS   || null;
 export const SLACK_WEBHOOK_URL  = process.env.SLACK_WEBHOOK_URL  || null;
-export const ENABLE_SHELL_TOOLS = process.env.ENABLE_SHELL_TOOLS === "true";
+export const ENABLE_SHELL_TOOLS    = process.env.ENABLE_SHELL_TOOLS    === "true";
+export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true";
