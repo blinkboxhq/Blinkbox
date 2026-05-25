@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown, ChevronRight,
-  Download, Zap, Globe, Mail, Clock, Code2, Database, Layers, ArrowDown,
-  Sparkles, CircleHelp, CheckCircle2,
+  Download, Zap, Mail, Clock, Database, Layers, ArrowDown,
+  Sparkles, HelpCircle, CheckCircle2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
@@ -132,7 +132,7 @@ function ThinkingDots() {
     <div className="flex items-center gap-1.5 py-1">
       {[0, 1, 2].map(i => (
         <motion.span key={i}
-          className="w-1.5 h-1.5 rounded-full bg-violet-500/60"
+          className="w-1.5 h-1.5 rounded-full bg-neutral-600"
           animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
           transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18 }}
         />
@@ -181,8 +181,8 @@ function QuestionBlock({ intro, questions, onAnswer }) {
       {questions.map((q, qi) => (
         <div key={q.id} className="flex flex-col gap-2">
           <div className="flex items-center gap-1.5">
-            <CircleHelp className="w-3 h-3 text-violet-400/70 shrink-0" />
-            <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{q.question}</p>
+            <HelpCircle className="w-3 h-3 text-neutral-700 shrink-0" />
+            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">{q.question}</p>
           </div>
           <div className="flex flex-wrap gap-1.5 pl-4">
             {q.options.map(opt => {
@@ -193,11 +193,11 @@ function QuestionBlock({ intro, questions, onAnswer }) {
                   onClick={() => setSelections(s => ({ ...s, [q.id]: opt.value }))}
                   className={`group relative px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150 border ${
                     selected
-                      ? 'border-violet-500/60 bg-violet-500/10 text-violet-300'
+                      ? 'border-neutral-500 bg-neutral-800 text-white'
                       : 'border-[#2a2a2a] bg-neutral-900 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300 hover:bg-neutral-800/60'
                   }`}
                 >
-                  {selected && <span className="mr-1 text-violet-400">✓</span>}
+                  {selected && <span className="mr-1 text-neutral-400">✓</span>}
                   {opt.label}
                   {opt.hint && (
                     <span className="block text-[9px] text-neutral-600 group-hover:text-neutral-500 mt-0.5 font-normal">{opt.hint}</span>
@@ -267,7 +267,7 @@ function parseInline(text, key = 0) {
     const codeM = rem.match(/^`([^`]+)`/);
     if (codeM) {
       parts.push(
-        <code key={i++} className="px-1.5 py-0.5 bg-neutral-800 rounded text-[11px] font-mono text-violet-300">
+        <code key={i++} className="px-1.5 py-0.5 bg-neutral-800 rounded text-[11px] font-mono text-neutral-300">
           {codeM[1]}
         </code>
       );
@@ -312,7 +312,7 @@ function MarkdownRenderer({ text, streaming }) {
             <ul key={`list-${idx}`} className="pl-1 space-y-1">
               {listBuf.map((item, ii) => (
                 <li key={ii} className="flex gap-2">
-                  <span className="text-violet-400 shrink-0 mt-px">{item.ordered ? `${item.n}.` : '·'}</span>
+                  <span className="text-neutral-600 shrink-0 mt-px">{item.ordered ? `${item.n}.` : '·'}</span>
                   <span>{parseInline(item.content, ii)}</span>
                 </li>
               ))}
@@ -342,7 +342,7 @@ function MarkdownRenderer({ text, streaming }) {
         return <div key={si} className="space-y-1">{out}</div>;
       })}
       {streaming && (
-        <span className="inline-block w-1.5 h-3.5 bg-violet-400/80 align-middle animate-pulse ml-0.5" style={{ borderRadius: 1 }} />
+        <span className="inline-block w-[2px] h-3.5 bg-white/40 align-middle animate-pulse ml-0.5" style={{ borderRadius: 1 }} />
       )}
     </div>
   );
@@ -353,7 +353,7 @@ function UserBubble({ text, time }) {
   return (
     <div className="flex justify-end group">
       <div className="max-w-[88%] flex flex-col items-end gap-1">
-        <div className="px-3 py-2 rounded-2xl rounded-tr-sm bg-violet-600/20 border border-violet-500/20 text-[12.5px] text-neutral-200 leading-relaxed">
+        <div className="px-3 py-2 rounded-2xl rounded-tr-sm bg-[#1e1e1e] border border-[#2a2a2a] text-[12.5px] text-neutral-200 leading-relaxed">
           {text}
         </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -378,13 +378,13 @@ function BrianBubble({ msg, time, onFeedback, onAnswer, onModify }) {
       className="flex flex-col gap-2 group"
     >
       <div className="flex items-center gap-1.5">
-        <div className="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shrink-0">
+        <div className="w-5 h-5 rounded-md overflow-hidden shrink-0 flex items-center justify-center">
           <img src={brianLogo} alt="" className="w-3.5 h-3.5 object-contain" />
         </div>
-        <span className="text-[10px] font-semibold text-violet-400">Brian</span>
+        <span className="text-[10px] font-medium text-neutral-500">Brian</span>
         <span className="text-[9px] text-neutral-700">{time}</span>
         {isStreaming && (
-          <span className="text-[9px] text-violet-500/60 font-mono animate-pulse">writing…</span>
+          <span className="text-[9px] text-neutral-700 font-mono animate-pulse">writing…</span>
         )}
       </div>
 
@@ -393,7 +393,7 @@ function BrianBubble({ msg, time, onFeedback, onAnswer, onModify }) {
           <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} streaming={isStreaming && !msg.text && !msg.questions} />
         )}
 
-        {msg.questions ? (
+        {msg.questions?.length > 0 ? (
           <QuestionBlock
             intro={msg.text || ''}
             questions={msg.questions}
@@ -432,7 +432,7 @@ function EmptyState({ onSend }) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="flex flex-col items-center px-5 pt-8 pb-5 text-center shrink-0">
-        <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
+        <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-[#2a2a2a] flex items-center justify-center mb-3">
           <img src={brianLogo} alt="Brian" className="w-8 h-8 object-contain" />
         </div>
         <h2 className="text-[15px] font-bold text-white mb-1">Hi, I'm Brian</h2>
@@ -477,7 +477,7 @@ function ContextStrip({ nodeCount, workflowName }) {
       <span className="text-[10px] text-neutral-600 truncate">
         {nodeCount} node{nodeCount !== 1 ? 's' : ''} on canvas
         {workflowName ? ` · ${workflowName}` : ''}
-        {nodeCount > 0 && <span className="text-violet-600/80"> · Brian can see &amp; extend these</span>}
+        {nodeCount > 0 && <span className="text-neutral-700"> · Brian can see &amp; extend these</span>}
       </span>
     </div>
   );
@@ -688,7 +688,7 @@ export default function BrianPanel({ width, onResizeStart }) {
       >
         {/* ── Drag handle ── */}
         <div onMouseDown={onResizeStart}
-          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#161616]">
+          className="w-1 shrink-0 cursor-col-resize hover:bg-neutral-700/40 active:bg-neutral-600/40 transition-colors border-r border-[#161616]">
           <div className="w-0.5 h-8 bg-neutral-800 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
         </div>
 
@@ -697,7 +697,7 @@ export default function BrianPanel({ width, onResizeStart }) {
           {/* ── Header ── */}
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a] shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden">
+              <div className="w-6 h-6 rounded-md overflow-hidden flex items-center justify-center">
                 <img src={brianLogo} alt="Brian" className="w-4 h-4 object-contain" />
               </div>
               <div className="flex flex-col">
@@ -804,9 +804,9 @@ export default function BrianPanel({ width, onResizeStart }) {
                   <button
                     onClick={() => send()}
                     disabled={!input.trim()}
-                    className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0 hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 hover:bg-neutral-200 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-3.5 h-3.5 text-white" />
+                    <Send className="w-3.5 h-3.5 text-black" />
                   </button>
                 )}
               </div>
