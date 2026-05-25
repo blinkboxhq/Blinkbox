@@ -2,14 +2,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
+import Credential from "../../models/credential.model.js";
+import {
+  ANTHROPIC_API_KEY,
+  GROQ_API_KEY,
+  GOOGLE_AI_KEY,
+  BRIAN_WEBHOOK_URL as _BRIAN_WEBHOOK_URL,
+} from "../../config/env.js";
 
-const ANTHROPIC_MODEL = "claude-sonnet-4-5";
-const GROQ_URL        = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL      = "llama-3.3-70b-versatile";
-const GROQ_FAST       = "llama-3.1-8b-instant";
-const sleep           = ms => new Promise(r => setTimeout(r, ms));
-
-const BRIAN_WEBHOOK_URL = process.env.BRIAN_WEBHOOK_URL || "";
+const ANTHROPIC_MODEL   = "claude-sonnet-4-6";
+const GROQ_URL          = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL        = "llama-3.3-70b-versatile";
+const GROQ_FAST         = "llama-3.1-8b-instant";
+const BRIAN_WEBHOOK_URL = _BRIAN_WEBHOOK_URL || "";
+const sleep             = ms => new Promise(r => setTimeout(r, ms));
 
 const TRIGGERS = new Set([
   "manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger",
@@ -22,9 +28,29 @@ const TRIGGERS = new Set([
 
 const NODE_REF = buildNodeRef();
 
+// ── Sanitize untrusted strings before prompt injection ────────────────────────
+const safeStr = (s, max = 80) =>
+  String(s || "").replace(/[`\n\r]/g, " ").slice(0, max);
+
+// ── Credential context builder ────────────────────────────────────────────────
+async function buildCredentialContext(userId) {
+  try {
+    const creds = await Credential.find({ workspaceId: userId })
+      .select("name type provider")
+      .lean();
+    if (!creds.length) return "";
+    const lines = creds
+      .map(c => `  - "${safeStr(c.name, 50)}" (${c.provider || c.type || "api_key"})`)
+      .join("\n");
+    return `\n\n## User's Connected Credentials\nAlready authenticated — available immediately:\n${lines}\nFor nodes that use these services, mention by name in your response and set credentialId to the credential name above.`;
+  } catch {
+    return "";
+  }
+}
+
 const SYSTEM_PROMPT_BASE = `You are Brian — the senior AI workflow architect inside Blinkbox, a visual automation platform (like n8n/Zapier but smarter).
 
-Before generating ANY workflow, reason through these 4 questions silently:
+Before deciding what to do, run this checklist silently:
 1. What is the user's REAL end goal — not just what they typed?
 2. Which trigger fits best? (chat_trigger for agents, gmail_trigger for email, cron_trigger for schedules, webhook for API events — NEVER manual unless the user literally said "test manually")
 3. What intermediate steps would a senior engineer add that the user forgot? (classify, filter, enrich, format, error-handle)
@@ -121,7 +147,7 @@ EDGES (source = circle node, target = ai_agent, NEVER reversed):
 \`\`\`
 
 **Agent model nodes** (pick exactly ONE):
-- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-5", credentialId:"" }\` — default when user says "Claude" or "Anthropic" or doesn't specify
+- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-6", credentialId:"" }\` — default when user says "Claude" or "Anthropic" or doesn't specify
 - \`agent_openai\`    → \`{ model:"gpt-4o", credentialId:"" }\`
 - \`agent_groq\`      → \`{ model:"llama-3.3-70b-versatile", credentialId:"" }\`
 - \`agent_gemini\`    → \`{ model:"gemini-2.0-flash", credentialId:"" }\`
@@ -233,23 +259,47 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 
 ---
 
-## When to call create_workflow vs plain text
-- User asks to build/automate/create → call create_workflow with full nodes+edges
-- User asks a question or needs clarification → plain text only, NO tool call
-- Empty canvas answer (pure text response) → create_workflow with nodes:[] edges:[]`;
+## 🎯 DECISION PROTOCOL — what to call for each request
 
-function buildSystemPrompt(canvasNodes = [], canvasEdges = []) {
-  if (!canvasNodes?.length) return SYSTEM_PROMPT_BASE;
+Run this before every response:
+
+**KNOW the trigger type?** (schedule/webhook/email/chat/etc.) → ✓ or ✗
+**KNOW the service(s)?** (Slack, Gmail, Notion, etc.) → ✓ or ✗
+**KNOW the goal clearly?** (what action, what output) → ✓ or ✗
+
+All ✓ → call **create_workflow** immediately. Don't waste a turn asking.
+Any ✗ → call **ask_user** with 1–2 targeted questions and 3–5 option chips each.
+User already answered ask_user → call **create_workflow** RIGHT NOW. Never ask again.
+Pure explanation / how-to question → plain text only, no tool call.
+
+**Ask when genuinely ambiguous:**
+- "notify me when something happens" — trigger unclear
+- "automate my business" — too vague
+- "build me an AI assistant" — purpose/tools unclear
+- "help me with emails" — unclear whether trigger, action, or both
+
+**Build directly (don't ask):**
+- "every morning at 8am, email me HackerNews top posts" → cron+http+gmail, build it
+- "when a Stripe payment fails, send me a Slack DM" → stripe_trigger+slack, build it
+- "sync Gmail leads to HubSpot" → gmail_trigger+hubspot, build it
+- Any message after you already called ask_user → ALWAYS build now, no more questions
+
+**Empty text response** → create_workflow with nodes:[] edges:[]`;
+
+function buildSystemPrompt(canvasNodes = [], canvasEdges = [], credContext = "") {
+  let base = SYSTEM_PROMPT_BASE;
+  if (credContext) base += credContext;
+  if (!canvasNodes?.length) return base;
 
   const nodeList = canvasNodes
-    .map(n => `  [${n.id}] backendType:${n.backendType} label:"${n.label}" type:${n.type} pos:(${n.x},${n.y})`)
+    .map(n => `  [${safeStr(n.id, 20)}] backendType:${safeStr(n.backendType, 40)} label:"${safeStr(n.label)}" type:${safeStr(n.type, 10)} pos:(${Number(n.x)||0},${Number(n.y)||0})`)
     .join("\n");
 
   const edgeList = canvasEdges.length
     ? canvasEdges.map(e => {
-        const th = e.targetHandle ? ` targetHandle:"${e.targetHandle}"` : "";
-        const sh = e.sourceHandle ? ` sourceHandle:"${e.sourceHandle}"` : "";
-        return `  ${e.source} → ${e.target}${sh}${th}`;
+        const th = e.targetHandle ? ` targetHandle:"${safeStr(e.targetHandle, 20)}"` : "";
+        const sh = e.sourceHandle ? ` sourceHandle:"${safeStr(e.sourceHandle, 20)}"` : "";
+        return `  ${safeStr(e.source, 20)} → ${safeStr(e.target, 20)}${sh}${th}`;
       }).join("\n")
     : "  (none yet)";
 
@@ -268,10 +318,10 @@ ${edgeList}
 - Never duplicate existing nodes. Never change IDs or positions of existing nodes.
 - Preserve all existing edges AND add new ones for the new nodes.`;
 
-  return SYSTEM_PROMPT_BASE + canvasSection;
+  return base + canvasSection;
 }
 
-// ── Anthropic tool definition ─────────────────────────────────────────────────
+// ── Anthropic tool: create_workflow ───────────────────────────────────────────
 const WORKFLOW_TOOL = {
   name: "create_workflow",
   description: "Create a BlinkBox automation workflow with fully configured nodes. REQUIREMENT: every node config must be production-ready — real field values, real prompts, real channel names, real cron expressions. No placeholders, no empty strings (except credentialId which users fill in). A workflow that needs manual editing before running is a failure.",
@@ -321,6 +371,52 @@ const WORKFLOW_TOOL = {
   },
 };
 
+// ── Anthropic tool: ask_user ──────────────────────────────────────────────────
+const ASK_USER_TOOL = {
+  name: "ask_user",
+  description: "Ask 1–2 targeted clarifying questions when the request is genuinely ambiguous — trigger type unknown, services unclear, or scope uncertain. Each question must have 3–5 clickable option chips. Call this ONLY ONCE per conversation — after the user answers, always call create_workflow immediately. Never ask follow-up questions.",
+  input_schema: {
+    type: "object",
+    properties: {
+      intro: {
+        type: "string",
+        description: "One sentence acknowledging the request and explaining you need one quick detail.",
+      },
+      questions: {
+        type: "array",
+        minItems: 1,
+        maxItems: 2,
+        items: {
+          type: "object",
+          properties: {
+            id:       { type: "string", description: "Short id: 'trigger', 'service', 'scope', etc." },
+            question: { type: "string", description: "The question text shown to the user." },
+            options: {
+              type: "array",
+              minItems: 2,
+              maxItems: 5,
+              items: {
+                type: "object",
+                properties: {
+                  label: { type: "string", description: "Display label for the chip button" },
+                  value: { type: "string", description: "Machine value sent back" },
+                  hint:  { type: "string", description: "Optional 6-word hint shown under the chip" },
+                },
+                required: ["label", "value"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["id", "question", "options"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["intro", "questions"],
+    additionalProperties: false,
+  },
+};
+
 // ── Convert tool output → ReactFlow canvas format ─────────────────────────────
 function toolToCanvas({ nodes = [], edges = [] }) {
   if (!nodes.length) return null;
@@ -333,24 +429,21 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     "google_calendar_trigger","form_trigger","chat_trigger","db_trigger","error_trigger",
   ]);
 
-  // ── Step 0: Sanitize — remove spurious manual nodes in AI agent workflows ──
-  const hasAiAgent    = nodes.some(n => n.backendType === "ai_agent");
+  const hasAiAgent     = nodes.some(n => n.backendType === "ai_agent");
   const hasRealTrigger = nodes.some(n => n.backendType && n.backendType !== "manual" && TRIGGER_TYPES.has(n.backendType));
   const sanitizedNodes = nodes.filter(n => {
-    if (n.backendType === "manual" && hasAiAgent) return false;        // manual trigger never in AI agent workflows
-    if (n.backendType === "manual" && hasRealTrigger) return false;    // strip duplicate manual when real trigger exists
+    if (n.backendType === "manual" && hasAiAgent) return false;
+    if (n.backendType === "manual" && hasRealTrigger) return false;
     return true;
   });
-  // If no trigger left after sanitizing, inject a chat_trigger for ai_agent workflows
   const hasTriggerAfterSanitize = sanitizedNodes.some(n => TRIGGER_TYPES.has(n.backendType || "") || n.nodeType === "trigger");
   if (!hasTriggerAfterSanitize && hasAiAgent) {
     sanitizedNodes.unshift({ id: "n_trigger", backendType: "chat_trigger", label: "On Chat Message", nodeType: "trigger", x: 80, y: 300, config: {} });
   }
 
-  // ── Step 1: Build canvas nodes ────────────────────────────────────────────
   const canvasNodes = sanitizedNodes.map((n, i) => {
-    const bt      = n.backendType || "manual";
-    const isTrig  = TRIGGER_TYPES.has(bt) || n.nodeType === "trigger";
+    const bt     = n.backendType || "manual";
+    const isTrig = TRIGGER_TYPES.has(bt) || n.nodeType === "trigger";
     return {
       id:       String(n.id || `n${i + 1}`),
       type:     "custom",
@@ -374,7 +467,6 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     "agent_integration_hubspot","agent_integration_jira","agent_integration_linear",
     "agent_integration_airtable","agent_tool"]);
 
-  // ── Step 2: Build and validate edges ─────────────────────────────────────
   let canvasEdges = edges
     .map((e, i) => {
       const raw = {
@@ -387,8 +479,6 @@ function toolToCanvas({ nodes = [], edges = [] }) {
         data:         { conditionPath: "" },
         style:        {},
       };
-      // Auto-fix reversed ai_agent hub edges: if source is ai_agent and targetHandle is a hub handle,
-      // swap source/target so the hub node feeds INTO the ai_agent
       if (raw.targetHandle && AI_AGENT_HANDLES.has(raw.targetHandle)) {
         const srcNode = canvasNodes.find(n => n.id === raw.source);
         const tgtNode = canvasNodes.find(n => n.id === raw.target);
@@ -403,14 +493,11 @@ function toolToCanvas({ nodes = [], edges = [] }) {
       if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
       const sourceNode = canvasNodes.find(n => n.id === e.source);
       const targetNode = canvasNodes.find(n => n.id === e.target);
-      // Strip edges where target is a trigger node (triggers are always sources, never targets)
       if (targetNode?.data?.type === "trigger") return false;
-      // Strip hub-handle edges where the source is a trigger — triggers cannot plug into ai_agent hub slots
       if (e.targetHandle && AI_AGENT_HANDLES.has(e.targetHandle) && sourceNode?.data?.type === "trigger") return false;
       return true;
     });
 
-  // ── Step 3: Auto-chain if no valid edges produced ─────────────────────────
   if (!canvasEdges.length && canvasNodes.length > 1) {
     canvasEdges = canvasNodes.slice(0, -1).map((n, i) => ({
       id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
@@ -418,13 +505,10 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     }));
   }
 
-  // ── Step 4: Remove orphaned nodes (unreachable from trigger) ─────────────
-  // Hub-connected nodes (targetHandle set) are already properly connected — don't re-chain them.
   const hubConnectedTargets = new Set(canvasEdges.filter(e => e.targetHandle).map(e => e.source));
   const triggerNode = canvasNodes.find(n => n.data.type === "trigger") || canvasNodes[0];
   if (triggerNode && canvasNodes.length > 1) {
     const reachable = new Set([triggerNode.id]);
-    // Pre-seed hub-connected nodes as reachable (they plug into a hub, not the main chain)
     for (const id of hubConnectedTargets) reachable.add(id);
     let changed = true;
     while (changed) {
@@ -436,12 +520,10 @@ function toolToCanvas({ nodes = [], edges = [] }) {
         }
       }
     }
-    // Only keep reachable nodes; remove edges to removed nodes
     const removed = canvasNodes.filter(n => !reachable.has(n.id));
     if (removed.length) {
       const keepIds = reachable;
       canvasEdges = canvasEdges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
-      // Re-chain truly orphaned (non-hub) action nodes linearly
       const lastReachable = [...reachable].filter(id => !hubConnectedTargets.has(id)).pop() || [...reachable].pop();
       removed.forEach((orphan, oi) => {
         const prevId = oi === 0 ? lastReachable : removed[oi - 1].id;
@@ -454,14 +536,12 @@ function toolToCanvas({ nodes = [], edges = [] }) {
     }
   }
 
-  // ── Step 5: Ensure trigger is first node, promote if needed ──────────────
   const trigIdx = canvasNodes.findIndex(n => n.data.type === "trigger");
   if (trigIdx > 0) {
     const [trig] = canvasNodes.splice(trigIdx, 1);
     canvasNodes.unshift(trig);
   }
 
-  // ── Step 6: Dedup positions ───────────────────────────────────────────────
   const positionsSeen = new Set();
   canvasNodes.forEach(n => {
     const key = `${n.position.x},${n.position.y}`;
@@ -532,7 +612,7 @@ async function callBlinkBoxWebhook(webhookUrl, userText, history) {
 }
 
 // ── Provider 2: Anthropic Claude streaming ────────────────────────────────────
-async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, res) {
+async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, credContext, res) {
   const client = new Anthropic({ apiKey });
 
   const rawHistory = messages.slice(0, -1);
@@ -556,25 +636,32 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, r
 
   const sendEvent = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
+  const ac      = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 90_000);
+
   try {
     const stream = client.messages.stream({
-      model:      ANTHROPIC_MODEL,
-      max_tokens: 32000,
-      system:     buildSystemPrompt(canvasNodes, canvasEdges),
+      model:       ANTHROPIC_MODEL,
+      max_tokens:  32000,
+      system:      buildSystemPrompt(canvasNodes, canvasEdges, credContext),
       messages:    [...history, { role: "user", content: userText }],
-      tools:       [WORKFLOW_TOOL],
+      tools:       [WORKFLOW_TOOL, ASK_USER_TOOL],
       tool_choice: { type: "auto" },
-    });
+    }, { signal: ac.signal });
 
     const blockTypes  = {};
     const toolBuffers = {};
+    const toolNames   = {};
 
     for await (const event of stream) {
       if (event.type === "content_block_start") {
         const idx = event.index;
         const bt  = event.content_block.type;
         blockTypes[idx] = bt;
-        if (bt === "tool_use") toolBuffers[idx] = "";
+        if (bt === "tool_use") {
+          toolBuffers[idx] = "";
+          toolNames[idx]   = event.content_block.name;
+        }
       }
 
       if (event.type === "content_block_delta") {
@@ -593,29 +680,41 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, r
         const idx = event.index;
         if (blockTypes[idx] === "tool_use") {
           try {
-            const input        = JSON.parse(toolBuffers[idx] || "{}");
-            const { text, nodes, edges } = input;
-            const flow         = nodes?.length ? toolToCanvas({ nodes, edges }) : null;
-            sendEvent({ type: "flow", text: text || "", flow });
+            const input    = JSON.parse(toolBuffers[idx] || "{}");
+            const toolName = toolNames[idx];
+
+            if (toolName === "ask_user") {
+              sendEvent({ type: "questions", intro: input.intro || "", questions: input.questions || [] });
+            } else {
+              const { text, nodes, edges } = input;
+              const flow = nodes?.length ? toolToCanvas({ nodes, edges }) : null;
+              sendEvent({ type: "flow", text: text || "", flow });
+            }
           } catch {
-            // Malformed JSON — tool call failed silently
+            // Malformed JSON — silent
           }
           delete blockTypes[idx];
           delete toolBuffers[idx];
+          delete toolNames[idx];
         }
       }
     }
 
     sendEvent({ type: "done" });
   } catch (err) {
-    sendEvent({ type: "error", message: err.message || "Stream error" });
+    if (err.name === "AbortError") {
+      sendEvent({ type: "error", message: "Request timed out. Please try again." });
+    } else {
+      sendEvent({ type: "error", message: err.message || "Stream error" });
+    }
   } finally {
+    clearTimeout(timeout);
     res.end();
   }
 }
 
-// ── Provider 2b: Anthropic non-streaming (kept for internal fallback logic) ───
-async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = []) {
+// ── Provider 2b: Anthropic non-streaming ─────────────────────────────────────
+async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [], credContext = "") {
   const client = new Anthropic({ apiKey });
 
   const rawHistory = messages.slice(0, -1);
@@ -633,11 +732,11 @@ async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const response = await client.messages.create({
-    model:      ANTHROPIC_MODEL,
-    max_tokens: 32000,
-    system:     buildSystemPrompt(canvasNodes, canvasEdges),
+    model:       ANTHROPIC_MODEL,
+    max_tokens:  32000,
+    system:      buildSystemPrompt(canvasNodes, canvasEdges, credContext),
     messages:    [...history, { role: "user", content: userText }],
-    tools:       [WORKFLOW_TOOL],
+    tools:       [WORKFLOW_TOOL, ASK_USER_TOOL],
     tool_choice: { type: "auto" },
   });
 
@@ -646,12 +745,11 @@ async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [
 
   const toolUse = response.content.find(b => b.type === "tool_use");
   if (toolUse?.input) {
+    if (toolUse.name === "ask_user") {
+      return { text: toolUse.input.intro || "", thinking, questions: toolUse.input.questions || [], flow: null };
+    }
     const { text, nodes, edges } = toolUse.input;
-    return {
-      text:     text || "",
-      thinking,
-      flow:     nodes?.length ? toolToCanvas({ nodes, edges }) : null,
-    };
+    return { text: text || "", thinking, flow: nodes?.length ? toolToCanvas({ nodes, edges }) : null };
   }
 
   const textBlock = response.content.find(b => b.type === "text");
@@ -681,14 +779,14 @@ async function callGroq(apiKey, model, payload) {
 }
 
 // ── Provider 4: Google Gemini ─────────────────────────────────────────────────
-async function callGemini(apiKey, messages, canvasNodes = [], canvasEdges = []) {
+async function callGemini(apiKey, messages, canvasNodes = [], canvasEdges = [], credContext = "") {
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: buildSystemPrompt(canvasNodes, canvasEdges),
+    systemInstruction: buildSystemPrompt(canvasNodes, canvasEdges, credContext),
     generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
   });
 
@@ -707,6 +805,17 @@ async function callGemini(apiKey, messages, canvasNodes = [], canvasEdges = []) 
   return result.response.text();
 }
 
+// ── Validate individual messages ──────────────────────────────────────────────
+function validateMessages(messages) {
+  for (const m of messages) {
+    if (!m || typeof m !== "object") return "Invalid message format.";
+    if (!["user", "assistant"].includes(m.role)) return "Invalid message role.";
+    const content = String(m.content || m.text || "");
+    if (content.length > 6000) return "A message in history is too long.";
+  }
+  return null;
+}
+
 // ── Streaming route handler ───────────────────────────────────────────────────
 export async function brianChatStream(req, res) {
   const { messages = [], canvasContext = {} } = req.body;
@@ -715,18 +824,18 @@ export async function brianChatStream(req, res) {
   }
   if (messages.length > 100) return res.status(400).json({ message: "Too many messages in history." });
 
+  const validationError = validateMessages(messages);
+  if (validationError) return res.status(400).json({ message: validationError });
+
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
   if (!userText) return res.status(400).json({ message: "Empty message." });
   if (userText.length > 8000) return res.status(400).json({ message: "Message too long (max 8000 characters)." });
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const groqKey      = process.env.GROQ_API_KEY;
-  const googleKey    = process.env.GOOGLE_AI_KEY;
-
-  // Support both legacy array format and new {nodes, edges} object
   const canvasNodes = Array.isArray(canvasContext) ? canvasContext : (canvasContext?.nodes || []);
   const canvasEdges = Array.isArray(canvasContext) ? [] : (canvasContext?.edges || []);
+
+  const credContext = await buildCredentialContext(req.user.id);
 
   if (BRIAN_WEBHOOK_URL) {
     try {
@@ -747,26 +856,26 @@ export async function brianChatStream(req, res) {
     }
   }
 
-  if (!anthropicKey && !groqKey && !googleKey) {
+  if (!ANTHROPIC_API_KEY && !GROQ_API_KEY && !GOOGLE_AI_KEY) {
     return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
   }
 
-  if (anthropicKey) {
+  if (ANTHROPIC_API_KEY) {
     try {
-      return await callAnthropicStream(anthropicKey, messages, canvasNodes, canvasEdges, res);
+      return await callAnthropicStream(ANTHROPIC_API_KEY, messages, canvasNodes, canvasEdges, credContext, res);
     } catch (err) {
       const s = err.status || err.response?.status;
       console.warn("[Brian/stream] Anthropic failed:", s, err.message);
       if (s === 401 || s === 403) {
         return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
       }
-      if (!groqKey && !googleKey) {
+      if (!GROQ_API_KEY && !GOOGLE_AI_KEY) {
         return res.status(500).json({ message: "AI provider error. Please try again." });
       }
     }
   }
 
-  // Groq / Gemini fallback — run non-streaming, emit single flow event via SSE
+  // Groq / Gemini fallback — non-streaming, emit via SSE
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.flushHeaders();
@@ -783,15 +892,15 @@ export async function brianChatStream(req, res) {
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
 
-  if (groqKey) {
+  if (GROQ_API_KEY) {
     const payload = [
-      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges) },
+      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges, credContext) },
       ...history,
       { role: "user", content: userText },
     ];
     try {
-      const raw     = await callGroq(groqKey, GROQ_MODEL, payload)
-                        .catch(() => callGroq(groqKey, GROQ_FAST, payload));
+      const raw     = await callGroq(GROQ_API_KEY, GROQ_MODEL, payload)
+                        .catch(() => callGroq(GROQ_API_KEY, GROQ_FAST, payload));
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch {
@@ -804,16 +913,16 @@ export async function brianChatStream(req, res) {
       return res.end();
     } catch (err) {
       console.warn("[Brian/stream] Groq failed:", err.response?.status, err.message);
-      if (!googleKey) {
+      if (!GOOGLE_AI_KEY) {
         sendEvent({ type: "error", message: "AI provider error. Please try again." });
         return res.end();
       }
     }
   }
 
-  if (googleKey) {
+  if (GOOGLE_AI_KEY) {
     try {
-      const raw     = await callGemini(googleKey, messages, canvasNodes);
+      const raw     = await callGemini(GOOGLE_AI_KEY, messages, canvasNodes, canvasEdges, credContext);
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch {
@@ -834,19 +943,22 @@ export async function brianChatStream(req, res) {
 
 // ── Non-streaming route handler (kept for compatibility) ──────────────────────
 export async function brianChat(req, res) {
-  const { messages = [], canvasContext = [] } = req.body;
+  const { messages = [], canvasContext = {} } = req.body;
   if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ message: "Empty messages." });
   if (messages.length > 100) return res.status(400).json({ message: "Too many messages in history." });
+
+  const validationError = validateMessages(messages);
+  if (validationError) return res.status(400).json({ message: validationError });
 
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
   if (!userText) return res.status(400).json({ message: "Empty message." });
   if (userText.length > 8000) return res.status(400).json({ message: "Message too long (max 8000 characters)." });
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const groqKey      = process.env.GROQ_API_KEY;
-  const googleKey    = process.env.GOOGLE_AI_KEY;
-  const canvasNodes  = Array.isArray(canvasContext) ? canvasContext : [];
+  const canvasNodes = Array.isArray(canvasContext) ? canvasContext : (canvasContext?.nodes || []);
+  const canvasEdges = Array.isArray(canvasContext) ? [] : (canvasContext?.edges || []);
+
+  const credContext = await buildCredentialContext(req.user.id);
 
   if (BRIAN_WEBHOOK_URL) {
     try {
@@ -862,18 +974,18 @@ export async function brianChat(req, res) {
     }
   }
 
-  if (!anthropicKey && !groqKey && !googleKey) {
+  if (!ANTHROPIC_API_KEY && !GROQ_API_KEY && !GOOGLE_AI_KEY) {
     return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
   }
 
-  if (anthropicKey) {
+  if (ANTHROPIC_API_KEY) {
     try {
-      return res.json(await callAnthropic(anthropicKey, messages, canvasNodes));
+      return res.json(await callAnthropic(ANTHROPIC_API_KEY, messages, canvasNodes, canvasEdges, credContext));
     } catch (err) {
       const status = err.status || err.response?.status;
       console.warn("[Brian] Anthropic failed:", status, err.message);
       if (status === 401 || status === 403) return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
-      if (!groqKey && !googleKey) return res.status(500).json({ message: "AI provider error. Please try again." });
+      if (!GROQ_API_KEY && !GOOGLE_AI_KEY) return res.status(500).json({ message: "AI provider error. Please try again." });
     }
   }
 
@@ -887,28 +999,28 @@ export async function brianChat(req, res) {
   if (firstUser > 0)    history = history.slice(firstUser);
   if (firstUser === -1) history = [];
 
-  if (groqKey) {
+  if (GROQ_API_KEY) {
     const payload = [
-      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges) },
+      { role: "system", content: buildSystemPrompt(canvasNodes, canvasEdges, credContext) },
       ...history,
       { role: "user", content: userText },
     ];
     try {
-      const raw     = await callGroq(groqKey, GROQ_MODEL, payload)
-                        .catch(() => callGroq(groqKey, GROQ_FAST, payload));
+      const raw     = await callGroq(GROQ_API_KEY, GROQ_MODEL, payload)
+                        .catch(() => callGroq(GROQ_API_KEY, GROQ_FAST, payload));
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
       return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
     } catch (err) {
       console.warn("[Brian] Groq failed:", err.response?.status, err.message);
-      if (!googleKey) return res.status(500).json({ message: "AI provider error. Please try again." });
+      if (!GOOGLE_AI_KEY) return res.status(500).json({ message: "AI provider error. Please try again." });
     }
   }
 
-  if (googleKey) {
+  if (GOOGLE_AI_KEY) {
     try {
-      const raw     = await callGemini(googleKey, messages, canvasNodes);
+      const raw     = await callGemini(GOOGLE_AI_KEY, messages, canvasNodes, canvasEdges, credContext);
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }

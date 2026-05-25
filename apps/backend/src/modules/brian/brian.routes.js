@@ -7,11 +7,12 @@ const router = express.Router();
 
 async function brianRateLimit(req, res, next) {
   try {
-    const key   = `bb:rl:brian:${req.user.id}`;
-    const count = await redis.incr(key);
-    if (count === 1) await redis.expire(key, 3600);
-    if (count > 60) return res.status(429).json({ message: "Rate limit reached. Try again in an hour." });
-  } catch { /* Redis down — fail open */ }
+    const key = `bb:rl:brian:${req.user.id}`;
+    const [[, count]] = await redis.multi().incr(key).expire(key, 3600).exec();
+    if (count >= 60) return res.status(429).json({ message: "Rate limit reached. Try again in an hour." });
+  } catch {
+    return res.status(503).json({ message: "Service temporarily unavailable. Try again shortly." });
+  }
   next();
 }
 

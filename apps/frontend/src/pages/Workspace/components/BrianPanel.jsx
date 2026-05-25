@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown, ChevronRight,
-  Download, Zap, Globe, Mail, Clock, Code2, Database,
-  Layers, ArrowDown,
+  Download, Zap, Globe, Mail, Clock, Code2, Database, Layers, ArrowDown,
+  Sparkles, CircleHelp, CheckCircle2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
@@ -89,7 +89,7 @@ const SUGGESTION_GROUPS = [
   },
 ];
 
-// ── Real thinking collapsible ─────────────────────────────────────────────────
+// ── ThinkingBlock ─────────────────────────────────────────────────────────────
 function ThinkingBlock({ text, durationMs, streaming }) {
   const [open, setOpen] = useState(false);
   const secs = durationMs ? (durationMs / 1000).toFixed(1) : null;
@@ -126,7 +126,7 @@ function ThinkingBlock({ text, durationMs, streaming }) {
   );
 }
 
-// ── Loading dots while waiting for API ────────────────────────────────────────
+// ── ThinkingDots ──────────────────────────────────────────────────────────────
 function ThinkingDots() {
   return (
     <div className="flex items-center gap-1.5 py-1">
@@ -141,7 +141,94 @@ function ThinkingDots() {
   );
 }
 
-// ── Markdown renderer ─────────────────────────────────────────────────────────
+// ── QuestionBlock — n8n-style HITL clarification ──────────────────────────────
+function QuestionBlock({ intro, questions, onAnswer }) {
+  const [selections, setSelections] = useState({});
+  const [submitted, setSubmitted]   = useState(false);
+
+  const allAnswered = questions.every(q => selections[q.id]);
+
+  const submit = useCallback(() => {
+    if (!allAnswered || submitted) return;
+    setSubmitted(true);
+    const parts = questions.map(q => {
+      const opt = q.options.find(o => o.value === selections[q.id]);
+      return `${q.question}: ${opt?.label || selections[q.id]}`;
+    });
+    onAnswer(parts.join('\n'));
+  }, [allAnswered, submitted, questions, selections, onAnswer]);
+
+  if (submitted) {
+    return (
+      <div className="flex items-center gap-1.5 text-[11px] text-neutral-600 italic mt-1">
+        <CheckCircle2 className="w-3 h-3 text-emerald-500/60" />
+        Got it — building your workflow…
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col gap-3 mt-1"
+    >
+      {intro && (
+        <p className="text-[12.5px] text-neutral-300 leading-relaxed">{intro}</p>
+      )}
+
+      {questions.map((q, qi) => (
+        <div key={q.id} className="flex flex-col gap-2">
+          <div className="flex items-center gap-1.5">
+            <CircleHelp className="w-3 h-3 text-violet-400/70 shrink-0" />
+            <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{q.question}</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5 pl-4">
+            {q.options.map(opt => {
+              const selected = selections[q.id] === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelections(s => ({ ...s, [q.id]: opt.value }))}
+                  className={`group relative px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150 border ${
+                    selected
+                      ? 'border-violet-500/60 bg-violet-500/10 text-violet-300'
+                      : 'border-[#2a2a2a] bg-neutral-900 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300 hover:bg-neutral-800/60'
+                  }`}
+                >
+                  {selected && <span className="mr-1 text-violet-400">✓</span>}
+                  {opt.label}
+                  {opt.hint && (
+                    <span className="block text-[9px] text-neutral-600 group-hover:text-neutral-500 mt-0.5 font-normal">{opt.hint}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      <AnimatePresence>
+        {allAnswered && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            onClick={submit}
+            className="self-start flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-bold transition-colors mt-1"
+          >
+            <Sparkles className="w-3 h-3" />
+            Build my workflow
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── Markdown ──────────────────────────────────────────────────────────────────
 function CopyBtn({ text, className = '' }) {
   const [copied, setCopied] = useState(false);
   const copy = useCallback(() => {
@@ -165,7 +252,7 @@ function CodeBlock({ lang, code }) {
         <span className="text-[10px] font-mono text-neutral-600">{lang || 'code'}</span>
         <CopyBtn text={code} />
       </div>
-      <pre className="px-3 py-3 bg-[#0a0a0c] overflow-x-auto scrollbar-thin">
+      <pre className="px-3 py-3 bg-[#0a0a0c] overflow-x-auto">
         <code className="text-[11px] font-mono text-neutral-300 leading-[1.7]">{code}</code>
       </pre>
     </div>
@@ -209,7 +296,6 @@ function parseInline(text, key = 0) {
 
 function MarkdownRenderer({ text, streaming }) {
   const segments = useMemo(() => text.split(/(```[\s\S]*?```)/g), [text]);
-
   return (
     <div className="space-y-2 text-[12.5px] text-neutral-300 leading-relaxed">
       {segments.map((seg, si) => {
@@ -220,7 +306,6 @@ function MarkdownRenderer({ text, streaming }) {
         const lines = seg.split('\n');
         const out = [];
         let listBuf = [];
-
         const flushList = (idx) => {
           if (!listBuf.length) return;
           out.push(
@@ -235,12 +320,11 @@ function MarkdownRenderer({ text, streaming }) {
           );
           listBuf = [];
         };
-
         lines.forEach((line, li) => {
           const bulletM = line.match(/^[-*]\s+(.+)/);
-          const numM = line.match(/^(\d+)\.\s+(.+)/);
+          const numM    = line.match(/^(\d+)\.\s+(.+)/);
           if (bulletM) { listBuf.push({ ordered: false, content: bulletM[1] }); return; }
-          if (numM) { listBuf.push({ ordered: true, n: numM[1], content: numM[2] }); return; }
+          if (numM)    { listBuf.push({ ordered: true, n: numM[1], content: numM[2] }); return; }
           flushList(li);
           if (line.startsWith('### ')) {
             out.push(<p key={li} className="font-semibold text-neutral-100 text-[13px] mt-1">{parseInline(line.slice(4), li)}</p>);
@@ -281,7 +365,7 @@ function UserBubble({ text, time }) {
   );
 }
 
-function BrianBubble({ msg, time, onFeedback }) {
+function BrianBubble({ msg, time, onFeedback, onAnswer, onModify }) {
   const [feedback, setFeedback] = useState(null);
   const handleFeedback = (val) => { setFeedback(val); onFeedback?.(val); };
   const isStreaming = !!msg.streaming;
@@ -306,18 +390,24 @@ function BrianBubble({ msg, time, onFeedback }) {
 
       <div className="ml-6">
         {msg.thinking && (
-          <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} streaming={isStreaming && !msg.text} />
+          <ThinkingBlock text={msg.thinking} durationMs={msg.thinkMs} streaming={isStreaming && !msg.text && !msg.questions} />
         )}
 
-        {msg.flow ? (
-          <BrianWorkflowPlan text={msg.text} flow={msg.flow} onAccept={msg.onAccept} />
+        {msg.questions ? (
+          <QuestionBlock
+            intro={msg.text || ''}
+            questions={msg.questions}
+            onAnswer={onAnswer}
+          />
+        ) : msg.flow ? (
+          <BrianWorkflowPlan text={msg.text} flow={msg.flow} onAccept={msg.onAccept} onModify={msg.onModify || onModify} />
         ) : msg.text ? (
           <MarkdownRenderer text={msg.text} streaming={isStreaming} />
         ) : isStreaming ? (
           <ThinkingDots />
         ) : null}
 
-        {!msg.flow && !isStreaming && msg.text && (
+        {!msg.flow && !msg.questions && !isStreaming && msg.text && (
           <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <CopyBtn text={msg.text} className="text-[9px]" />
             <div className="w-px h-3 bg-neutral-800" />
@@ -347,7 +437,7 @@ function EmptyState({ onSend }) {
         </div>
         <h2 className="text-[15px] font-bold text-white mb-1">Hi, I'm Brian</h2>
         <p className="text-[12px] text-neutral-500 max-w-[200px] leading-relaxed">
-          Tell me what to automate and I'll build the workflow on your canvas.
+          Tell me what to automate and I'll build the workflow. I'll ask if I need details.
         </p>
       </div>
 
@@ -387,13 +477,13 @@ function ContextStrip({ nodeCount, workflowName }) {
       <span className="text-[10px] text-neutral-600 truncate">
         {nodeCount} node{nodeCount !== 1 ? 's' : ''} on canvas
         {workflowName ? ` · ${workflowName}` : ''}
-        {nodeCount > 0 && <span className="text-violet-600/80"> · Brian can see & extend these</span>}
+        {nodeCount > 0 && <span className="text-violet-600/80"> · Brian can see &amp; extend these</span>}
       </span>
     </div>
   );
 }
 
-// ── Scroll-to-bottom button ───────────────────────────────────────────────────
+// ── Scroll-to-bottom ──────────────────────────────────────────────────────────
 function ScrollToBottom({ onClick }) {
   return (
     <motion.button
@@ -431,7 +521,7 @@ function exportConversation(messages, workflowName) {
 // ════════════════════════════════════════════════════════════════════════════
 const WELCOME_MSG = {
   id: 'welcome', role: 'brian', ts: Date.now(),
-  text: "Hi! I'm Brian — describe what you want to automate and I'll build the workflow. I can also see what's already on your canvas and extend it.",
+  text: "Hi! I'm Brian — describe what you want to automate and I'll build the workflow. If I need details, I'll ask first.",
   flow: null,
 };
 
@@ -493,8 +583,8 @@ export default function BrianPanel({ width, onResizeStart }) {
     setAtBottom(true);
 
     abortRef.current?.abort();
-    const controller    = new AbortController();
-    abortRef.current    = controller;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const userMsg = { id: Date.now(), role: 'user', ts: Date.now(), text: txt, flow: null };
     setMessages(prev => [...prev, userMsg]);
@@ -503,13 +593,16 @@ export default function BrianPanel({ width, onResizeStart }) {
     const thinkTs = Date.now();
     setMessages(prev => [...prev, {
       id: msgId, role: 'brian', ts: Date.now(),
-      text: '', thinking: null, flow: null, streaming: true,
+      text: '', thinking: null, flow: null, questions: null, streaming: true,
     }]);
 
     try {
       const history = [...messages, userMsg]
         .filter(m => m.id !== 'welcome')
-        .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text || '' }));
+        .map(m => ({
+          role:    m.role === 'user' ? 'user' : 'assistant',
+          content: m.text || (m.questions ? m.questions.map(q => q.question).join(' | ') : '') || '',
+        }));
 
       const canvasContext = {
         nodes: nodes.map(n => ({
@@ -538,10 +631,15 @@ export default function BrianPanel({ width, onResizeStart }) {
           setMessages(prev => prev.map(m => m.id === msgId
             ? { ...m, thinking: (m.thinking || '') + event.delta }
             : m));
+        } else if (event.type === 'questions') {
+          // Brian is asking clarifying questions — render as QuestionBlock
+          setMessages(prev => prev.map(m => m.id === msgId
+            ? { ...m, text: event.intro || '', questions: event.questions || [], streaming: false }
+            : m));
         } else if (event.type === 'flow') {
           const thinkMs = Date.now() - thinkTs;
           setMessages(prev => prev.map(m => m.id === msgId
-            ? { ...m, text: event.text || m.text, flow: event.flow, onAccept: applyFlow, streaming: false, thinkMs }
+            ? { ...m, text: event.text || m.text, flow: event.flow, onAccept: applyFlow, onModify: (mod) => send(mod), streaming: false, thinkMs }
             : m));
         } else if (event.type === 'error') {
           setMessages(prev => prev.map(m => m.id === msgId
@@ -568,6 +666,11 @@ export default function BrianPanel({ width, onResizeStart }) {
     }
   }, [input, loading, messages, nodes, edges, applyFlow]);
 
+  // Called when user answers Brian's clarifying questions
+  const handleAnswer = useCallback((answerText) => {
+    send(answerText);
+  }, [send]);
+
   const reset = useCallback(() => {
     abortRef.current?.abort();
     setMessages([WELCOME_MSG]);
@@ -586,7 +689,7 @@ export default function BrianPanel({ width, onResizeStart }) {
         {/* ── Drag handle ── */}
         <div onMouseDown={onResizeStart}
           className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors border-r border-[#161616]">
-          <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+          <div className="w-0.5 h-8 bg-neutral-800 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -599,7 +702,7 @@ export default function BrianPanel({ width, onResizeStart }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-[12px] font-bold text-white leading-none">Brian</span>
-                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-5</span>
+                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-6</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
@@ -644,6 +747,8 @@ export default function BrianPanel({ width, onResizeStart }) {
                       key={msg.id}
                       msg={msg}
                       time={fmtTime(msg.ts)}
+                      onAnswer={handleAnswer}
+                      onModify={send}
                     />
                   );
                 })}
