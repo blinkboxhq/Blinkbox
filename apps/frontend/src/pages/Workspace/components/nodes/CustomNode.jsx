@@ -110,7 +110,7 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
   const showPlus = !hasConnection || (slot.showPlus && hovered);
 
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH, transform: "translateX(-50%)" }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 10, transform: "translateX(-50%)" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
@@ -538,18 +538,15 @@ export default function CustomNode({ id, data, selected }) {
 
           {badge}
 
-          {/* Logo left · Name right */}
-          <div className="flex items-center gap-3 px-5 flex-1">
+          {/* Logo left · Name right — centered in upper portion of card */}
+          <div className="flex items-center justify-center gap-3 px-5" style={{ height: cardH - 24 }}>
             <Bot className="w-9 h-9 text-white opacity-80 group-hover:opacity-100 shrink-0 transition-opacity duration-300" strokeWidth={1.4} />
-            <div className="flex flex-col min-w-0">
-              <p className="text-[13px] font-bold text-white leading-tight">{nodeDef.label || data.label || "AI Agent"}</p>
-              <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">AI Automation</p>
-            </div>
+            <p className="text-[13px] font-bold text-white leading-tight">{nodeDef.label || data.label || "AI Agent"}</p>
           </div>
 
-          {/* Slot labels pinned to bottom edge */}
+          {/* Slot labels pinned to bottom strip */}
           <div className="absolute bottom-0 left-0 right-0 grid pointer-events-none select-none"
-            style={{ gridTemplateColumns: `repeat(${n}, 1fr)`, height: 28 }}>
+            style={{ gridTemplateColumns: `repeat(${n}, 1fr)`, height: 24 }}>
             {AGENT_BOTTOM_SLOTS.map(slot => (
               <span key={slot.id} className="flex items-center justify-center text-[9px] font-medium text-zinc-500 tracking-wide">
                 {slot.label}
