@@ -389,7 +389,7 @@ const agentNode = {
 
     // Local providers support configurable base URL from the satellite node config.
     if (LOCAL_PROVIDERS.has(provider) && _llm?.baseUrl) {
-      const customBase = _llm.baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "");
+      const customBase = _llm.baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
       ENDPOINTS[provider] = `${customBase}/v1/chat/completions`;
     }
 
