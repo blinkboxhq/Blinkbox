@@ -798,6 +798,7 @@ export const nodeRegistry = {
   agent_xai:           xai,
   agent_groq:          groq,
   agent_ollama:        ollama,
+  agent_lmstudio:      lmstudio,
   agent_llm:           openai,
   agent_memory:        vectorMemory,
   agent_memory_mongodb:   mongodb,

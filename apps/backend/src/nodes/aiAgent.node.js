@@ -91,7 +91,8 @@ const ENDPOINTS = {
   groq: "https://api.groq.com/openai/v1/chat/completions",
   fireworks: "https://api.fireworks.ai/inference/v1/chat/completions",
   cerebras: "https://api.cerebras.ai/v1/chat/completions",
-  ollama: "http://localhost:11434/v1/chat/completions",
+  ollama:   "http://localhost:11434/v1/chat/completions",
+  lmstudio: "http://localhost:1234/v1/chat/completions",
   novita: "https://api.novita.ai/v3/openai/chat/completions",
   deepinfra: "https://api.deepinfra.com/v1/openai/chat/completions",
   hyperbolic: "https://api.hyperbolic.xyz/v1/chat/completions",
@@ -108,7 +109,8 @@ const DEFAULT_MODELS = {
   xai: "grok-beta",
   fireworks: "accounts/fireworks/models/firefunction-v2",
   cerebras: "llama3.1-70b",
-  ollama: "llama3",
+  ollama:   "llama3",
+  lmstudio: "local-model",
   groq: "llama-3.3-70b-versatile",
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
@@ -329,7 +331,7 @@ const agentNode = {
     const BACKENDTYPE_TO_PROVIDER = {
       agent_openai: "openai", agent_anthropic: "anthropic", agent_gemini: "gemini",
       agent_xai: "xai", agent_deepseek: "deepseek", agent_groq: "groq",
-      agent_perplexity: "perplexity", agent_ollama: "ollama",
+      agent_perplexity: "perplexity", agent_ollama: "ollama", agent_lmstudio: "lmstudio",
     };
     const _llm = _chatModel?.config || _chatModel;
     const _derivedProvider = _chatModel?.backendType ? BACKENDTYPE_TO_PROVIDER[_chatModel.backendType] : null;
@@ -369,11 +371,13 @@ const agentNode = {
       hyperbolic:  "HYPERBOLIC_API_KEY",
     };
 
+    const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio"]);
+
     let apiKey;
     if (credentialId) {
       const cred = await resolveCredential(credentialId, context.workspaceId, "AI Agent");
       apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-    } else {
+    } else if (!LOCAL_PROVIDERS.has(provider)) {
       const envKey = PROVIDER_ENV_KEYS[provider];
       apiKey = envKey ? process.env[envKey] : null;
       if (!apiKey) {
@@ -381,6 +385,12 @@ const agentNode = {
           `AI Agent: No API key configured for "${provider}". Add a credential in the node settings or set ${envKey || "the provider API key"} on the server.`
         );
       }
+    }
+
+    // Local providers support configurable base URL from the satellite node config.
+    if (LOCAL_PROVIDERS.has(provider) && _llm?.baseUrl) {
+      const customBase = _llm.baseUrl.replace(/\/$/, "");
+      ENDPOINTS[provider] = `${customBase}/v1/chat/completions`;
     }
 
     // ── Conversation Memory — load from Redis ─────────────────────
