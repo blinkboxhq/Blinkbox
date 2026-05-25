@@ -15,6 +15,56 @@ import * as agentToolNodes from "./agentTools.nodes.js";
 
 // Triggers
 import cronTrigger from "./cronTrigger.node.js";
+import stripeTrigger from "./triggers/stripe.trigger.js";
+import githubTrigger from "./triggers/github.trigger.js";
+import gitlabTrigger from "./triggers/gitlab.trigger.js";
+import jiraTrigger from "./triggers/jira.trigger.js";
+import trelloTrigger from "./triggers/trello.trigger.js";
+import asanaTrigger from "./triggers/asana.trigger.js";
+import pipedriveTrigger from "./triggers/pipedrive.trigger.js";
+import sentryTrigger from "./triggers/sentry.trigger.js";
+import vercelTrigger from "./triggers/vercel.trigger.js";
+import netlifyTrigger from "./triggers/netlify.trigger.js";
+import pagerdutyTrigger from "./triggers/pagerduty.trigger.js";
+import datadogTrigger from "./triggers/datadog.trigger.js";
+import zendeskTrigger from "./triggers/zendesk.trigger.js";
+import calendlyTrigger from "./triggers/calendly.trigger.js";
+import mailchimpTrigger from "./triggers/mailchimp.trigger.js";
+import clickupTrigger from "./triggers/clickup.trigger.js";
+import mondayTrigger from "./triggers/monday.trigger.js";
+import figmaTrigger from "./triggers/figma.trigger.js";
+import intercomTrigger from "./triggers/intercom.trigger.js";
+import woocommerceTrigger from "./triggers/woocommerce.trigger.js";
+import azureDevopsTrigger from "./triggers/azure_devops.trigger.js";
+import instagramTrigger from "./triggers/instagram.trigger.js";
+import tiktokTrigger from "./triggers/tiktok.trigger.js";
+import mastodonTrigger from "./triggers/mastodon.trigger.js";
+import producthuntTrigger from "./triggers/producthunt.trigger.js";
+import sharepointTrigger from "./triggers/sharepoint.trigger.js";
+import virustotalTrigger from "./triggers/virustotal.trigger.js";
+import rssTrigger from "./triggers/rss.trigger.js";
+import youtubeTrigger from "./triggers/youtube.trigger.js";
+import redditTrigger from "./triggers/reddit.trigger.js";
+import hackernewsTrigger from "./triggers/hackernews.trigger.js";
+import googleCalendarTrigger from "./triggers/google_calendar.trigger.js";
+import googleSheetsTrigger from "./triggers/google_sheets.trigger.js";
+import googleDriveTrigger from "./triggers/google_drive.trigger.js";
+import googleDocsTrigger from "./triggers/google_docs.trigger.js";
+import googleFormsTrigger from "./triggers/google_forms.trigger.js";
+import onedriveTrigger from "./triggers/onedrive.trigger.js";
+import outlookTrigger from "./triggers/outlook.trigger.js";
+import teamsTrigger from "./triggers/teams.trigger.js";
+import priceAlertTrigger from "./triggers/price_alert.trigger.js";
+import httpMonitorTrigger from "./triggers/http_monitor.trigger.js";
+import sslTrigger from "./triggers/ssl.trigger.js";
+import dnsTrigger from "./triggers/dns.trigger.js";
+import portMonitorTrigger from "./triggers/port_monitor.trigger.js";
+import sshTrigger from "./triggers/ssh.trigger.js";
+import dockerTrigger from "./triggers/docker.trigger.js";
+import dbTrigger from "./triggers/db.trigger.js";
+import imapTrigger from "./triggers/imap.trigger.js";
+import errorTriggerTrigger from "./triggers/error_trigger.trigger.js";
+import githubIssueTrigger from "./triggers/github_issue.trigger.js";
 
 // Core
 import httpRequest from "./httpRequest.node.js";
@@ -235,13 +285,13 @@ export const nodeRegistry = {
       };
     },
   },
-  error_trigger: { async run(config, input) { return input; } },
-  rss_trigger: { async run(config, input) { return input; } },
-  imap_trigger: { async run(config, input) { return input; } },
-  db_trigger: { async run(config, input) { return input; } },
-  github_trigger: { async run(config, input) { return input; } },
-  stripe_trigger: { async run(config, input) { return input; } },
-  cron_trigger: cronTrigger,
+  error_trigger:  errorTriggerTrigger,
+  rss_trigger:    rssTrigger,
+  imap_trigger:   imapTrigger,
+  db_trigger:     dbTrigger,
+  github_trigger: githubTrigger,
+  stripe_trigger: stripeTrigger,
+  cron_trigger:   cronTrigger,
 
   // Integration Triggers (webhook-push) — extract service-specific fields so
   // downstream nodes can use {{ nodeId.text }} instead of {{ nodeId.body.message.text }}
@@ -544,27 +594,52 @@ export const nodeRegistry = {
   notification_hub: notificationHub,
   browser_agent: browserAgent,
 
-  // New Trigger pass-throughs (pollers fire; node just returns input)
-  youtube_trigger:          { async run(config, input) { return input?.body ?? input; } },
-  price_alert_trigger:      { async run(config, input) { return input?.body ?? input; } },
-  reddit_trigger:           { async run(config, input) { return input?.body ?? input; } },
-  google_calendar_trigger:  { async run(config, input) { return input?.body ?? input; } },
-  github_issue_trigger:     { async run(config, input) { return input?.body ?? input; } },
-  ssh_trigger:              { async run(config, input) { return input?.body ?? input; } },
-  docker_trigger:           { async run(config, input) { return input?.body ?? input; } },
-  jira_trigger:             { async run(config, input) { return input?.body ?? input; } },
-  trello_trigger:           { async run(config, input) { return input?.body ?? input; } },
-  google_sheets_trigger:    { async run(config, input) { return input?.body ?? input; } },
-  outlook_trigger:          { async run(config, input) { return input?.body ?? input; } },
-  teams_trigger:            { async run(config, input) { return input?.body ?? input; } },
-  http_monitor_trigger:     { async run(config, input) { return input?.body ?? input; } },
-  gitlab_trigger:           { async run(config, input) { return input?.body ?? input; } },
-  ssl_trigger:              { async run(config, input) { return input?.body ?? input; } },
-  dns_trigger:              { async run(config, input) { return input?.body ?? input; } },
-  port_monitor_trigger:     { async run(config, input) { return input?.body ?? input; } },
-  hackernews_trigger:       { async run(config, input) { return input?.body ?? input; } },
-  pipedrive_trigger:        { async run(config, input) { return input?.body ?? input; } },
-  asana_trigger:            { async run(config, input) { return input?.body ?? input; } },
+  // Trigger implementations
+  youtube_trigger:          youtubeTrigger,
+  price_alert_trigger:      priceAlertTrigger,
+  reddit_trigger:           redditTrigger,
+  google_calendar_trigger:  googleCalendarTrigger,
+  github_issue_trigger:     githubIssueTrigger,
+  ssh_trigger:              sshTrigger,
+  docker_trigger:           dockerTrigger,
+  jira_trigger:             jiraTrigger,
+  trello_trigger:           trelloTrigger,
+  google_sheets_trigger:    googleSheetsTrigger,
+  outlook_trigger:          outlookTrigger,
+  teams_trigger:            teamsTrigger,
+  http_monitor_trigger:     httpMonitorTrigger,
+  gitlab_trigger:           gitlabTrigger,
+  ssl_trigger:              sslTrigger,
+  dns_trigger:              dnsTrigger,
+  port_monitor_trigger:     portMonitorTrigger,
+  hackernews_trigger:       hackernewsTrigger,
+  pipedrive_trigger:        pipedriveTrigger,
+  asana_trigger:            asanaTrigger,
+  // Frontend-only triggers now wired to real implementations
+  google_drive_trigger:     googleDriveTrigger,
+  google_docs_trigger:      googleDocsTrigger,
+  google_forms_trigger:     googleFormsTrigger,
+  onedrive_trigger:         onedriveTrigger,
+  sharepoint_trigger:       sharepointTrigger,
+  azure_devops_trigger:     azureDevopsTrigger,
+  sentry_trigger:           sentryTrigger,
+  vercel_trigger:           vercelTrigger,
+  netlify_trigger:          netlifyTrigger,
+  pagerduty_trigger:        pagerdutyTrigger,
+  datadog_trigger:          datadogTrigger,
+  zendesk_trigger:          zendeskTrigger,
+  calendly_trigger:         calendlyTrigger,
+  mailchimp_trigger:        mailchimpTrigger,
+  clickup_trigger:          clickupTrigger,
+  monday_trigger:           mondayTrigger,
+  figma_trigger:            figmaTrigger,
+  instagram_trigger:        instagramTrigger,
+  tiktok_trigger:           tiktokTrigger,
+  mastodon_trigger:         mastodonTrigger,
+  producthunt_trigger:      producthuntTrigger,
+  intercom_trigger:         intercomTrigger,
+  woocommerce_trigger:      woocommerceTrigger,
+  virustotal_trigger:       virustotalTrigger,
 
   // Virtual Computer
   virtual_computer: virtualComputer,
