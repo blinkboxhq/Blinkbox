@@ -13,58 +13,73 @@
 // Agent Tool Nodes (all 98 tool_* implementations)
 import * as agentToolNodes from "./agentTools.nodes.js";
 
-// Triggers
-import cronTrigger from "./cronTrigger.node.js";
-import stripeTrigger from "./triggers/stripe.trigger.js";
-import githubTrigger from "./triggers/github.trigger.js";
-import gitlabTrigger from "./triggers/gitlab.trigger.js";
-import jiraTrigger from "./triggers/jira.trigger.js";
-import trelloTrigger from "./triggers/trello.trigger.js";
-import asanaTrigger from "./triggers/asana.trigger.js";
-import pipedriveTrigger from "./triggers/pipedrive.trigger.js";
-import sentryTrigger from "./triggers/sentry.trigger.js";
-import vercelTrigger from "./triggers/vercel.trigger.js";
-import netlifyTrigger from "./triggers/netlify.trigger.js";
-import pagerdutyTrigger from "./triggers/pagerduty.trigger.js";
-import datadogTrigger from "./triggers/datadog.trigger.js";
-import zendeskTrigger from "./triggers/zendesk.trigger.js";
-import calendlyTrigger from "./triggers/calendly.trigger.js";
-import mailchimpTrigger from "./triggers/mailchimp.trigger.js";
-import clickupTrigger from "./triggers/clickup.trigger.js";
-import mondayTrigger from "./triggers/monday.trigger.js";
-import figmaTrigger from "./triggers/figma.trigger.js";
-import intercomTrigger from "./triggers/intercom.trigger.js";
-import woocommerceTrigger from "./triggers/woocommerce.trigger.js";
-import azureDevopsTrigger from "./triggers/azure_devops.trigger.js";
-import instagramTrigger from "./triggers/instagram.trigger.js";
-import tiktokTrigger from "./triggers/tiktok.trigger.js";
-import mastodonTrigger from "./triggers/mastodon.trigger.js";
-import producthuntTrigger from "./triggers/producthunt.trigger.js";
-import sharepointTrigger from "./triggers/sharepoint.trigger.js";
-import virustotalTrigger from "./triggers/virustotal.trigger.js";
-import rssTrigger from "./triggers/rss.trigger.js";
-import youtubeTrigger from "./triggers/youtube.trigger.js";
-import redditTrigger from "./triggers/reddit.trigger.js";
-import hackernewsTrigger from "./triggers/hackernews.trigger.js";
-import googleCalendarTrigger from "./triggers/google_calendar.trigger.js";
-import googleSheetsTrigger from "./triggers/google_sheets.trigger.js";
-import googleDriveTrigger from "./triggers/google_drive.trigger.js";
-import googleDocsTrigger from "./triggers/google_docs.trigger.js";
-import googleFormsTrigger from "./triggers/google_forms.trigger.js";
-import onedriveTrigger from "./triggers/onedrive.trigger.js";
-import outlookTrigger from "./triggers/outlook.trigger.js";
-import teamsTrigger from "./triggers/teams.trigger.js";
-import priceAlertTrigger from "./triggers/price_alert.trigger.js";
-import httpMonitorTrigger from "./triggers/http_monitor.trigger.js";
-import sslTrigger from "./triggers/ssl.trigger.js";
-import dnsTrigger from "./triggers/dns.trigger.js";
-import portMonitorTrigger from "./triggers/port_monitor.trigger.js";
-import sshTrigger from "./triggers/ssh.trigger.js";
-import dockerTrigger from "./triggers/docker.trigger.js";
-import dbTrigger from "./triggers/db.trigger.js";
-import imapTrigger from "./triggers/imap.trigger.js";
-import errorTriggerTrigger from "./triggers/error_trigger.trigger.js";
-import githubIssueTrigger from "./triggers/github_issue.trigger.js";
+// Triggers — each in its own folder: triggers/<name>/index.js
+import cronTrigger        from "./cronTrigger.node.js";
+import manualTrigger      from "./triggers/manual/index.js";
+import webhookTrigger     from "./triggers/webhook/index.js";
+import chatTrigger        from "./triggers/chat/index.js";
+import formTrigger        from "./triggers/form/index.js";
+import telegramTrigger    from "./triggers/telegram/index.js";
+import slackTrigger       from "./triggers/slack/index.js";
+import discordTrigger     from "./triggers/discord/index.js";
+import shopifyTrigger     from "./triggers/shopify/index.js";
+import linearTrigger      from "./triggers/linear/index.js";
+import typeformTrigger    from "./triggers/typeform/index.js";
+import whatsappTrigger    from "./triggers/whatsapp/index.js";
+import gmailTrigger       from "./triggers/gmail/index.js";
+import airtableTrigger    from "./triggers/airtable/index.js";
+import notionTrigger      from "./triggers/notion/index.js";
+import hubspotTrigger     from "./triggers/hubspot/index.js";
+import stripeTrigger      from "./triggers/stripe/index.js";
+import githubTrigger      from "./triggers/github/index.js";
+import gitlabTrigger      from "./triggers/gitlab/index.js";
+import jiraTrigger        from "./triggers/jira/index.js";
+import trelloTrigger      from "./triggers/trello/index.js";
+import asanaTrigger       from "./triggers/asana/index.js";
+import pipedriveTrigger   from "./triggers/pipedrive/index.js";
+import sentryTrigger      from "./triggers/sentry/index.js";
+import vercelTrigger      from "./triggers/vercel/index.js";
+import netlifyTrigger     from "./triggers/netlify/index.js";
+import pagerdutyTrigger   from "./triggers/pagerduty/index.js";
+import datadogTrigger     from "./triggers/datadog/index.js";
+import zendeskTrigger     from "./triggers/zendesk/index.js";
+import calendlyTrigger    from "./triggers/calendly/index.js";
+import mailchimpTrigger   from "./triggers/mailchimp/index.js";
+import clickupTrigger     from "./triggers/clickup/index.js";
+import mondayTrigger      from "./triggers/monday/index.js";
+import figmaTrigger       from "./triggers/figma/index.js";
+import intercomTrigger    from "./triggers/intercom/index.js";
+import woocommerceTrigger from "./triggers/woocommerce/index.js";
+import azureDevopsTrigger from "./triggers/azure_devops/index.js";
+import instagramTrigger   from "./triggers/instagram/index.js";
+import tiktokTrigger      from "./triggers/tiktok/index.js";
+import mastodonTrigger    from "./triggers/mastodon/index.js";
+import producthuntTrigger from "./triggers/producthunt/index.js";
+import sharepointTrigger  from "./triggers/sharepoint/index.js";
+import virustotalTrigger  from "./triggers/virustotal/index.js";
+import rssTrigger         from "./triggers/rss/index.js";
+import youtubeTrigger     from "./triggers/youtube/index.js";
+import redditTrigger      from "./triggers/reddit/index.js";
+import hackernewsTrigger  from "./triggers/hackernews/index.js";
+import googleCalendarTrigger from "./triggers/google_calendar/index.js";
+import googleSheetsTrigger   from "./triggers/google_sheets/index.js";
+import googleDriveTrigger    from "./triggers/google_drive/index.js";
+import googleDocsTrigger     from "./triggers/google_docs/index.js";
+import googleFormsTrigger    from "./triggers/google_forms/index.js";
+import onedriveTrigger    from "./triggers/onedrive/index.js";
+import outlookTrigger     from "./triggers/outlook/index.js";
+import teamsTrigger       from "./triggers/teams/index.js";
+import priceAlertTrigger  from "./triggers/price_alert/index.js";
+import httpMonitorTrigger from "./triggers/http_monitor/index.js";
+import sslTrigger         from "./triggers/ssl/index.js";
+import dnsTrigger         from "./triggers/dns/index.js";
+import portMonitorTrigger from "./triggers/port_monitor/index.js";
+import sshTrigger         from "./triggers/ssh/index.js";
+import dockerTrigger      from "./triggers/docker/index.js";
+import dbTrigger          from "./triggers/db/index.js";
+import imapTrigger        from "./triggers/imap/index.js";
+import errorTriggerNode   from "./triggers/error_trigger/index.js";
+import githubIssueTrigger from "./triggers/github_issue/index.js";
 
 // Core
 import httpRequest from "./httpRequest.node.js";
@@ -238,55 +253,15 @@ import mailchimp from "./integrations/mailchimp.node.js";
 import tiktok from "./integrations/tiktok.node.js";
 import instagram from "./integrations/instagram.node.js";
 import ocr from "./ocr.node.js";
-import axios from "axios";
-import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 export const nodeRegistry = {
   // Triggers (genesis nodes)
-  manual: {
-    async run(config, input) {
-      return { ...input, triggeredAt: new Date().toISOString(), triggerType: "manual" };
-    },
-  },
-  webhook: {
-    async run(config, input) {
-      const body = input?.body ?? input;
-      return {
-        body,
-        headers: input?.headers ?? {},
-        method:  input?.method  ?? "POST",
-        query:   input?.query   ?? {},
-        triggeredAt: new Date().toISOString(),
-        triggerType: "webhook",
-      };
-    },
-  },
-  chat_trigger: {
-    async run(config, input) {
-      const body = input?.body ?? input;
-      const sidField = config.sessionIdField || "sessionId";
-      return {
-        message:      body.message    ?? body.text ?? "",
-        sessionId:    body[sidField]  ?? body.sessionId ?? "",
-        systemPrompt: config.systemPrompt ?? "",
-        body,
-        triggeredAt:  new Date().toISOString(),
-        triggerType:  "chat",
-      };
-    },
-  },
-  form_trigger: {
-    async run(config, input) {
-      const body = input?.body ?? input;
-      return {
-        fields:      body.fields ?? body,
-        submittedAt: body.submittedAt ?? new Date().toISOString(),
-        body,
-        triggerType: "form",
-      };
-    },
-  },
-  error_trigger:  errorTriggerTrigger,
+  manual:       manualTrigger,
+  webhook:      webhookTrigger,
+  chat_trigger: chatTrigger,
+  form_trigger: formTrigger,
+
+  error_trigger:  errorTriggerNode,
   rss_trigger:    rssTrigger,
   imap_trigger:   imapTrigger,
   db_trigger:     dbTrigger,
@@ -294,199 +269,18 @@ export const nodeRegistry = {
   stripe_trigger: stripeTrigger,
   cron_trigger:   cronTrigger,
 
-  // Integration Triggers (webhook-push) — extract service-specific fields so
-  // downstream nodes can use {{ nodeId.text }} instead of {{ nodeId.body.message.text }}
-  telegram_trigger: {
-    async run(config, input, context = {}) {
-      const body = input?.body ?? input;
-      const msg  = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
-
-      let mediaFileId   = null;
-      let mediaMimeType = "application/octet-stream";
-      let mediaName     = "file";
-      let mediaType     = null;
-
-      if (Array.isArray(msg.photo) && msg.photo.length > 0) {
-        // Pick second-to-last (medium quality) to avoid huge images exceeding LLM vision limits
-        const photoIndex = msg.photo.length >= 3 ? msg.photo.length - 2 : msg.photo.length >= 2 ? 1 : 0;
-        const best = msg.photo[photoIndex];
-        mediaFileId = best.file_id; mediaMimeType = "image/jpeg"; mediaName = "photo.jpg"; mediaType = "photo";
-      } else if (msg.document) {
-        mediaFileId = msg.document.file_id; mediaMimeType = msg.document.mime_type || "application/octet-stream"; mediaName = msg.document.file_name || "document"; mediaType = "document";
-      } else if (msg.video) {
-        mediaFileId = msg.video.file_id; mediaMimeType = msg.video.mime_type || "video/mp4"; mediaName = msg.video.file_name || "video.mp4"; mediaType = "video";
-      } else if (msg.audio) {
-        mediaFileId = msg.audio.file_id; mediaMimeType = msg.audio.mime_type || "audio/mpeg"; mediaName = msg.audio.file_name || "audio.mp3"; mediaType = "audio";
-      } else if (msg.voice) {
-        mediaFileId = msg.voice.file_id; mediaMimeType = "audio/ogg"; mediaName = "voice.ogg"; mediaType = "voice";
-      } else if (msg.sticker) {
-        mediaFileId = msg.sticker.file_id; mediaMimeType = msg.sticker.is_animated ? "application/x-tgsticker" : "image/webp"; mediaName = "sticker.webp"; mediaType = "sticker";
-      }
-
-      let attachments = [];
-      if (mediaFileId && config?.botToken) {
-        try {
-          const token = await getOAuthToken(config.botToken, context.workspaceId, "Telegram").catch(() => config.botToken);
-          const { data: fileInfo } = await axios.get(`https://api.telegram.org/bot${token}/getFile`, { params: { file_id: mediaFileId }, timeout: 10000 });
-          const filePath = fileInfo?.result?.file_path;
-          if (filePath) {
-            const { data: buf } = await axios.get(`https://api.telegram.org/file/bot${token}/${filePath}`, { responseType: "arraybuffer", timeout: 30000 });
-            attachments = [{ dataUrl: `data:${mediaMimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType: mediaMimeType, name: mediaName }];
-          }
-        } catch (err) {
-          console.warn("[telegram_trigger] Failed to download media:", err.message);
-        }
-      }
-
-      return {
-        text: msg.text ?? msg.caption ?? "",
-        from: msg.from ?? {}, chat: msg.chat ?? {}, date: msg.date ?? null,
-        messageId: msg.message_id ?? null, updateId: body?.update_id ?? null,
-        hasMedia: attachments.length > 0, mediaType, attachments,
-      };
-    },
-  },
-  slack_trigger: {
-    async run(config, input, context = {}) {
-      const body  = input?.body ?? input;
-      const event = body?.event ?? body;
-
-      let attachments = [];
-      const files = Array.isArray(event?.files) ? event.files : [];
-      if (files.length > 0 && config?.botToken) {
-        try {
-          const token = await getOAuthToken(config.botToken, context.workspaceId, "Slack").catch(() => config.botToken);
-          const file = files[0];
-          const { data: buf } = await axios.get(file.url_private, {
-            headers: { Authorization: `Bearer ${token}` },
-            responseType: "arraybuffer", timeout: 30000,
-          });
-          const mimeType = file.mimetype || "application/octet-stream";
-          attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: file.name || "file" }];
-        } catch (err) {
-          console.warn("[slack_trigger] Failed to download file:", err.message);
-        }
-      }
-
-      return {
-        text: event.text ?? "", user: event.user ?? "", channel: event.channel ?? "",
-        ts: event.ts ?? "", event, teamId: body?.team_id ?? "",
-        hasMedia: attachments.length > 0, attachments,
-      };
-    },
-  },
-  discord_trigger: {
-    async run(config, input, context = {}) {
-      const body = input?.body ?? input;
-
-      let attachments = [];
-      const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
-      if (rawAttachments.length > 0) {
-        const results = await Promise.allSettled(
-          rawAttachments.slice(0, 5).map(async (a) => {
-            const { data: buf } = await axios.get(a.url, { responseType: "arraybuffer", timeout: 20000 });
-            const mimeType = a.content_type || "application/octet-stream";
-            return { dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: a.filename || "file" };
-          })
-        );
-        attachments = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
-      }
-
-      return {
-        content: body.content ?? "", author: body.author ?? {}, username: body.author?.username ?? "",
-        userId: body.author?.id ?? "", channelId: body.channel_id ?? "", guildId: body.guild_id ?? "",
-        messageId: body.id ?? "", hasMedia: attachments.length > 0, attachments, embeds: body.embeds ?? [], message: body,
-      };
-    },
-  },
-  shopify_trigger:  {
-    async run(config, input) {
-      const body = input?.body ?? input;
-      return {
-        id:         body.id         ?? null,
-        email:      body.email      ?? "",
-        total_price: body.total_price ?? "",
-        line_items: body.line_items  ?? [],
-        order:      body,
-        customer:   body.customer    ?? {},
-      };
-    },
-  },
-  linear_trigger:   { async run(config, input) { const b = input?.body ?? input; return { id: b?.data?.id, title: b?.data?.title, state: b?.data?.state, assignee: b?.data?.assignee, team: b?.data?.team, issue: b?.data, type: b?.type }; } },
-  typeform_trigger: { async run(config, input) { const b = input?.body ?? input; const r = b?.form_response ?? b; return { form_id: b?.form_id, token: r.token, answers: r.answers ?? [], submitted_at: r.submitted_at, form_response: r }; } },
-  whatsapp_trigger: {
-    async run(config, input, context = {}) {
-      const body   = input?.body ?? input;
-      const provider = config?.provider || "twilio";
-
-      // ── Twilio provider ───────────────────────────────────────────────
-      if (provider === "twilio") {
-        const text = body?.Body ?? "";
-        const from = body?.From ?? "";
-        const numMedia = parseInt(body?.NumMedia ?? "0", 10);
-        let attachments = [];
-        if (numMedia > 0 && body?.MediaUrl0) {
-          try {
-            // Twilio media URLs require Basic auth with AccountSid:AuthToken
-            let auth = undefined;
-            if (config?.twilioAuthToken) {
-              try {
-                const token = await getOAuthToken(config.twilioAuthToken, context.workspaceId, "WhatsApp").catch(() => config.twilioAuthToken);
-                const accountSid = body.AccountSid;
-                if (accountSid) auth = { username: accountSid, password: token };
-              } catch (_) {}
-            }
-            const { data: buf } = await axios.get(body.MediaUrl0, { auth, responseType: "arraybuffer", timeout: 30000 });
-            const mimeType = body.MediaContentType0 || "application/octet-stream";
-            attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name: `media.${mimeType.split("/")[1] || "bin"}` }];
-          } catch (err) {
-            console.warn("[whatsapp_trigger] Twilio media download failed:", err.message);
-          }
-        }
-        return { text, from, to: body?.To ?? "", messageId: body?.MessageSid ?? "", accountSid: body?.AccountSid ?? "", numMedia, hasMedia: attachments.length > 0, attachments, body };
-      }
-
-      // ── Meta (Cloud API) provider ─────────────────────────────────────
-      const entry  = body?.entry?.[0] ?? {};
-      const change = entry?.changes?.[0]?.value ?? {};
-      const msg    = change?.messages?.[0] ?? {};
-
-      let mediaInfo = null; let mediaType = null;
-      if (msg.image)    { mediaInfo = msg.image;    mediaType = "image"; }
-      else if (msg.document) { mediaInfo = msg.document; mediaType = "document"; }
-      else if (msg.audio)    { mediaInfo = msg.audio;    mediaType = "audio"; }
-      else if (msg.video)    { mediaInfo = msg.video;    mediaType = "video"; }
-      else if (msg.sticker)  { mediaInfo = msg.sticker;  mediaType = "sticker"; }
-
-      let attachments = [];
-      // Meta media download requires a permanent access token — stored in metaAppSecret credential
-      // We skip download if the token isn't available; the media_id is still passed through
-      if (mediaInfo?.id && config?.metaAppSecret) {
-        try {
-          const token = await getOAuthToken(config.metaAppSecret, context.workspaceId, "WhatsApp").catch(() => config.metaAppSecret);
-          const { data: mediaData } = await axios.get(`https://graph.facebook.com/v18.0/${mediaInfo.id}`, { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 });
-          const { data: buf } = await axios.get(mediaData.url, { headers: { Authorization: `Bearer ${token}` }, responseType: "arraybuffer", timeout: 30000 });
-          const mimeType = mediaInfo.mime_type || mediaData.mime_type || "application/octet-stream";
-          const name = mediaInfo.filename || `${mediaType}.${mimeType.split("/")[1] || "bin"}`;
-          attachments = [{ dataUrl: `data:${mimeType};base64,${Buffer.from(buf).toString("base64")}`, mimeType, name }];
-        } catch (err) {
-          console.warn("[whatsapp_trigger] Meta media download failed:", err.message);
-        }
-      }
-
-      return {
-        text: msg.text?.body ?? msg.caption ?? "", from: msg.from ?? "",
-        phoneNumberId: change.metadata?.phone_number_id ?? "", message: msg,
-        contacts: change.contacts ?? [], hasMedia: attachments.length > 0, mediaType, attachments,
-      };
-    },
-  },
-
-  // Integration Triggers (polling) — data already extracted by pollers, pass through
-  gmail_trigger:    { async run(config, input) { return input?.body ?? input; } },
-  airtable_trigger: { async run(config, input) { return input?.body ?? input; } },
-  notion_trigger:   { async run(config, input) { return input?.body ?? input; } },
-  hubspot_trigger:  { async run(config, input) { return input?.body ?? input; } },
+  // Integration Triggers (webhook-push)
+  telegram_trigger: telegramTrigger,
+  slack_trigger:    slackTrigger,
+  discord_trigger:  discordTrigger,
+  shopify_trigger:  shopifyTrigger,
+  linear_trigger:   linearTrigger,
+  typeform_trigger: typeformTrigger,
+  whatsapp_trigger: whatsappTrigger,
+  gmail_trigger:    gmailTrigger,
+  airtable_trigger: airtableTrigger,
+  notion_trigger:   notionTrigger,
+  hubspot_trigger:  hubspotTrigger,
 
   // Core Nodes
   http_request: httpRequest,
