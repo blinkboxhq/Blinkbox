@@ -1,7 +1,7 @@
 export default {
   async run(config, input) {
     const b = input?.body ?? input;
-    const event = input?.githubEvent || input?.headers?.["x-github-event"] || b?.action ? "issues" : "push";
+    const event = input?.githubEvent || input?.headers?.["x-github-event"] || (b?.action ? "issues" : "push");
     const issue = b?.issue ?? {};
     const pr = b?.pull_request ?? {};
     const label = b?.label ?? {};
