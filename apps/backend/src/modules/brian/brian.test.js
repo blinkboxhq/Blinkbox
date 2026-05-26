@@ -116,10 +116,15 @@ test("Brian preflight asks before building credential-heavy Google RAG agents", 
   ], "make me a rag agent with all the google integrations and power it with chat and use claude cheaper one");
 
   assert.ok(questions);
-  assert.equal(questions.questions.length, 2);
-  assert.equal(questions.questions[0].id, "memory_provider");
-  assert.equal(questions.questions[0].options[0].value, "agent_memory_pinecone");
-  assert.equal(questions.questions[1].id, "credential_setup");
+  assert.equal(questions.questions.length, 5);
+  assert.deepEqual(questions.questions.map((q) => q.id), [
+    "agent_goal",
+    "entrypoint",
+    "model_choice",
+    "memory_provider",
+    "credential_setup",
+  ]);
+  assert.equal(questions.questions[3].options[0].value, "agent_memory_pinecone");
 });
 
 test("Google RAG agent output uses cheap Claude, Pinecone memory, llm slot, and Google integrations", () => {
@@ -138,6 +143,9 @@ test("Google RAG agent output uses cheap Claude, Pinecone memory, llm slot, and 
   });
 
   assert.equal(flow.nodes.find((node) => node.id === "n3").data.config.model, "claude-haiku-4-5-20251001");
+  assert.deepEqual(flow.nodes.find((node) => node.id === "n3").position, { x: 260, y: 560 });
+  assert.deepEqual(flow.nodes.find((node) => node.id === "n4").position, { x: 540, y: 560 });
+  assert.ok(flow.nodes.filter((node) => node.data.backendType.startsWith("agent_integration_")).every((node) => node.position.y === 780));
   assert.ok(flow.edges.some((edge) => edge.source === "n3" && edge.target === "n2" && edge.targetHandle === "llm"));
   assert.ok(flow.edges.some((edge) => edge.source === "n4" && edge.target === "n2" && edge.targetHandle === "memory"));
   for (const id of ["n5", "n6", "n7", "n8"]) {

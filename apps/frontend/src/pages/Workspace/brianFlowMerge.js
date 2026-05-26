@@ -15,9 +15,9 @@ const HUB_HANDLES = new Set(["llm", "chat_model", "memory", "integration", "tool
 const LAYOUT = {
   trigger: { x: 80, y: 300 },
   hub: { x: 400, y: 300 },
-  model: { x: 640, y: 60 },
-  memory: { x: 160, y: 60 },
-  integrationY: 560,
+  model: { x: 260, y: 560 },
+  memory: { x: 540, y: 560 },
+  integrationY: 780,
   integrationGap: 220,
 };
 

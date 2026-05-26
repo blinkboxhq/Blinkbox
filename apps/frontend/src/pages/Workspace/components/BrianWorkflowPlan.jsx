@@ -100,7 +100,11 @@ function roleForNode(node) {
   return 'Steps';
 }
 
-function PlanSummary({ nodes, edges, flow, credNodes, assignedCount }) {
+function hasNodeCredential(node, credAssignments) {
+  return Boolean(credAssignments[node.id] || node.data?.config?.credentialId);
+}
+
+function PlanSummary({ nodes, edges, flow, credNodes, assignedCount, configComplete }) {
   const groups = ['Trigger', 'Agent', 'Model', 'Memory', 'Integrations', 'Steps']
     .map(label => ({ label, count: nodes.filter(n => roleForNode(n) === label).length }))
     .filter(g => g.count > 0);
@@ -112,6 +116,7 @@ function PlanSummary({ nodes, edges, flow, credNodes, assignedCount }) {
           { label: 'Nodes', value: nodes.length },
           { label: 'Edges', value: edges.length },
           { label: 'Credentials', value: `${assignedCount}/${credNodes.length}` },
+          { label: 'Config', value: configComplete ? 'complete' : 'locked' },
           { label: 'Checks', value: issueCount ? `${issueCount} issue${issueCount === 1 ? '' : 's'}` : 'clean' },
         ].map(item => (
           <div key={item.label} className="rounded-lg border border-[#252525] bg-neutral-900/50 px-2 py-1.5">
@@ -200,7 +205,10 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
     const bt = n.data?.backendType || n.backendType || '';
     return !!CRED_META[bt];
   });
-  const assignedCount = credNodes.filter(n => credAssignments[n.id]).length;
+  const missingCredNodes = credNodes.filter(n => !hasNodeCredential(n, credAssignments));
+  const assignedCount = credNodes.length - missingCredNodes.length;
+  const configComplete = structuralErrors.length === 0 && warnings.length === 0 && missingCredNodes.length === 0;
+  const applyDisabled = !configComplete;
 
   const accept = () => {
     setAccepted(true);
@@ -245,7 +253,7 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
             : <ChevronRight className="w-3 h-3 text-neutral-700 shrink-0" />}
         </button>
 
-        <PlanSummary nodes={nodes} edges={edges} flow={flow} credNodes={credNodes} assignedCount={assignedCount} />
+        <PlanSummary nodes={nodes} edges={edges} flow={flow} credNodes={credNodes} assignedCount={assignedCount} configComplete={configComplete} />
 
         {(structuralErrors.length > 0 || warnings.length > 0) && (
           <div className={`mx-3 mt-2 px-2.5 py-2 rounded-lg border ${structuralErrors.length ? 'border-red-500/25 bg-red-500/8' : 'border-amber-500/20 bg-amber-500/8'}`}>
@@ -343,7 +351,17 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
           <div className="mx-3 mb-2 px-2.5 py-2 bg-neutral-900 border border-[#2a2a2a] rounded-lg flex items-start gap-2">
             <KeyRound className="w-3 h-3 text-neutral-600 shrink-0 mt-0.5" />
             <p className="text-[10px] text-neutral-500 leading-relaxed">
-              {credNodes.length} node{credNodes.length > 1 ? 's need' : ' needs'} credentials — select or connect above, then apply.
+              {missingCredNodes.length > 0
+                ? `${missingCredNodes.length} credential${missingCredNodes.length > 1 ? 's are' : ' is'} required before this can be added to the canvas.`
+                : 'Credentials are ready. Brian can apply this once validation is clean.'}
+            </p>
+          </div>
+        )}
+
+        {!configComplete && !accepted && (
+          <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-amber-500/15 bg-amber-500/5">
+            <p className="text-[10px] text-amber-400/80 leading-relaxed">
+              Complete credentials and clear configuration warnings before adding this workflow to the canvas.
             </p>
           </div>
         )}
@@ -352,9 +370,9 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
         {!accepted ? (
           <div className="flex flex-col gap-2 px-3 py-2.5 border-t border-[#2a2a2a] bg-neutral-900/30">
             <div className="flex items-center gap-2">
-              <button onClick={accept} disabled={structuralErrors.length > 0}
+              <button onClick={accept} disabled={applyDisabled}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                <Check className="w-3.5 h-3.5" /> Apply to Canvas
+                <Check className="w-3.5 h-3.5" /> {applyDisabled ? 'Complete Config First' : 'Apply to Canvas'}
               </button>
               <button onClick={dismiss}
                 className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#333] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 rounded-lg text-[11px] font-semibold transition-colors">

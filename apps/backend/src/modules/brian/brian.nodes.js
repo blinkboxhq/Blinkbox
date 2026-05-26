@@ -535,9 +535,9 @@ export const NODE_KB = {
   // ─── AI AGENT SATELLITE NODES ────────────────────────────────────────────
   // These nodes ONLY exist inside ai_agent hub workflows — never as standalone actions.
   // role → hub slot → canvas position:
-  //   "model"       → targetHandle:"llm"  → x:640, y:60
-  //   "memory"      → targetHandle:"memory"       → x:160, y:60
-  //   "integration" → targetHandle:"integration"  → y:560 (evenly spaced)
+  //   "model"       → targetHandle:"llm"          → x:260, y:560
+  //   "memory"      → targetHandle:"memory"       → x:540, y:560
+  //   "integration" → targetHandle:"integration"  → y:780 (evenly spaced)
   //
   // Config rule: always set credentialId:"" (user fills in). Always set alias to short name.
 

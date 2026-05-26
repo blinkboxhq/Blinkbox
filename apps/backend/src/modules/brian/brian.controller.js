@@ -128,24 +128,25 @@ USE FOR: Post to multiple channels, notify multiple teams
 The AI Agent hub is the GRAVITATIONAL CENTER. Every satellite node points INTO it.
 
 \`\`\`
-DESIGNER LAYOUT — use these exact zones:
+DESIGNER LAYOUT — golden rule: every AI Agent satellite node lives BELOW the AI Agent hub.
 
-   [memory]                    [model]
-   x:160, y:60                 x:640, y:60
-        ↓ targetHandle:memory       ↓ targetHandle:llm
 [trigger] ──────────→ [  ai_agent hub  ]
 x:80, y:300            x:400, y:300
-                              ↑ targetHandle:integration  (×N)
+                         ↓ slots point into hub from below
+              [model]       [memory]
+              x:260,y:560   x:540,y:560
+
               [integ_1]  [integ_2]  [integ_3]  [integ_4]
-              spread evenly below hub at y:560
+              spread evenly below hub at y:780
 \`\`\`
 
 ZONE RULES:
-- memory node → always x:160, y:60 (top-left zone)
-- model node  → always x:640, y:60 (top-right zone)  ← NEVER at x:400
 - trigger     → always x:80,  y:300 (left zone)
 - ai_agent    → always x:400, y:300 (center)
-- integrations → always y:560 (bottom zone), spread by count (see table below)
+- model node  → always x:260, y:560 (below-left zone)
+- memory node → always x:540, y:560 (below-right zone)
+- integrations → always y:780 (bottom zone), spread by count (see table below)
+- NEVER place agent model/memory/integration/tool satellites above the ai_agent.
 
 **WIRING CHEAT SHEET — memorize source/target direction:**
 
@@ -315,7 +316,7 @@ Then verify your edges array contains:
 
 If any edge is missing → ADD IT NOW before submitting. A model node with no edge = broken workflow.
 
-ALSO verify positions: model must be at y:60 x:640, memory at y:60 x:160, never both at the same (x,y).
+ALSO verify positions: model must be below the hub at x:260 y:560, memory below the hub at x:540 y:560, integrations at y:780. Never place an AI-agent satellite above the hub.
 
 ---
 
@@ -350,7 +351,8 @@ Run this before every response:
 **KNOW the goal clearly?** (what action, what output) → ✓ or ✗
 
 All ✓ → call **create_workflow** immediately. Don't waste a turn asking.
-Any ✗ → call **ask_user** with 1–2 targeted questions and 3–5 option chips each.
+Any ✗ → call **ask_user** with targeted questions and 3–5 option chips each.
+AI agent request → ask the 5-point agent build brief first: goal, entrypoint, model/cost, memory, credential/config readiness.
 User already answered ask_user → call **create_workflow** RIGHT NOW. Never ask again.
 Pure explanation / how-to question → plain text only, no tool call.
 
@@ -456,7 +458,7 @@ const WORKFLOW_TOOL = {
 // ── Anthropic tool: ask_user ──────────────────────────────────────────────────
 const ASK_USER_TOOL = {
   name: "ask_user",
-  description: "Ask 1–2 targeted clarifying questions when the request is genuinely ambiguous — trigger type unknown, services unclear, or scope uncertain. Each question must have 3–5 clickable option chips. Call this ONLY ONCE per conversation — after the user answers, always call create_workflow immediately. Never ask follow-up questions.",
+  description: "Ask targeted clarifying questions when the request is genuinely ambiguous or when building an AI agent. AI-agent requests should use a 5-point build brief: goal, entrypoint, model/cost, memory, and credential/config readiness. Each question must have 3–5 clickable option chips. Call this ONLY ONCE per conversation — after the user answers, always call create_workflow immediately. Never ask follow-up questions.",
   input_schema: {
     type: "object",
     properties: {
@@ -467,7 +469,7 @@ const ASK_USER_TOOL = {
       questions: {
         type: "array",
         minItems: 1,
-        maxItems: 2,
+        maxItems: 5,
         items: {
           type: "object",
           properties: {

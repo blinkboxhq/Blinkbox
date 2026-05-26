@@ -79,9 +79,9 @@ export const HUB_SLOT = new Map([
 export const AGENT_LAYOUT = Object.freeze({
   trigger: { x: 80, y: 300 },
   hub: { x: 400, y: 300 },
-  model: { x: 640, y: 60 },
-  memory: { x: 160, y: 60 },
-  integrationY: 560,
+  model: { x: 260, y: 560 },
+  memory: { x: 540, y: 560 },
+  integrationY: 780,
   integrationGap: 220,
   integrationX: [
     [],
