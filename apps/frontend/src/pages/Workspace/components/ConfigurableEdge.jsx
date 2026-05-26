@@ -25,6 +25,7 @@ export default function ConfigurableEdge({
   selected,
   markerEnd,
   sourceHandleId,
+  targetHandleId,
 }) {
   const [hovered, setHovered] = useState(false);
   const hideTimer = useRef(null);
@@ -36,7 +37,9 @@ export default function ConfigurableEdge({
   const tgtType = nodes.find(n => n.id === target)?.data?.backendType;
   // Slot edges: sub-node → ai_agent only (agent_out handle or sub-node source type)
   const isSlotEdge = sourceHandleId === AGENT_HANDLE
+    || ["llm", "chat_model", "memory", "integration", "tools"].includes(targetHandleId)
     || AGENT_SUB_TYPES.has(srcType)
+    || srcType?.startsWith("agent_")
     || srcType?.startsWith("agent_memory_")
     || srcType?.startsWith("agent_integration_");
   // Agent edge (broader): any edge touching an agent node — suppresses insert button
@@ -51,7 +54,7 @@ export default function ConfigurableEdge({
 
   // Soft cursive curvature — gentle bend that avoids going under nodes
   const dx = Math.abs(targetX - sourceX);
-  const curvature = Math.max(0.25, Math.min(0.5, dx / 800));
+  const curvature = isSlotEdge ? Math.max(0.12, Math.min(0.28, dx / 1200)) : Math.max(0.25, Math.min(0.5, dx / 800));
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -70,10 +73,10 @@ export default function ConfigurableEdge({
   const isFailed = targetStatus === "failed";
 
   let stroke = isSlotEdge
-    ? (hovered ? "#7a7a7a" : "#636363")
+    ? (hovered ? "#a1a1aa" : "#71717a")
     : (hovered ? "#71717a" : "#3f3f46");
-  let strokeWidth = isSlotEdge ? 1.5 : 2.5;
-  let strokeDasharray = isSlotEdge ? "4 5" : "none";
+  let strokeWidth = isSlotEdge ? 1.75 : 2.5;
+  let strokeDasharray = isSlotEdge ? "5 7" : "none";
   let animation = "none";
   let filter = "none";
 

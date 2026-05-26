@@ -1,6 +1,7 @@
 import { NODE_KB } from "./brian.nodes.js";
 
 export const BRIAN_ANTHROPIC_MODEL = "claude-sonnet-4-6";
+export const BRIAN_CHEAP_ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 
 export const TRIGGER_BT = new Set([
   "manual", "webhook", "cron_trigger", "rss_trigger", "imap_trigger", "gmail_trigger",
@@ -61,6 +62,7 @@ export const HUB_TYPES = new Set([
 ]);
 
 export const AI_AGENT_HANDLES = new Set([
+  "llm",
   "chat_model",
   "integration",
   "tools",
@@ -68,7 +70,7 @@ export const AI_AGENT_HANDLES = new Set([
 ]);
 
 export const HUB_SLOT = new Map([
-  ...[...MODEL_BT].map((bt) => [bt, "chat_model"]),
+  ...[...MODEL_BT].map((bt) => [bt, "llm"]),
   ...[...MEMORY_BT].map((bt) => [bt, "memory"]),
   ...[...INTEG_BT].map((bt) => [bt, "integration"]),
   ...[...TOOL_BT].map((bt) => [bt, "tools"]),
@@ -80,6 +82,7 @@ export const AGENT_LAYOUT = Object.freeze({
   model: { x: 640, y: 60 },
   memory: { x: 160, y: 60 },
   integrationY: 560,
+  integrationGap: 220,
   integrationX: [
     [],
     [400],

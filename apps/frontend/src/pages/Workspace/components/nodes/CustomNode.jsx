@@ -143,7 +143,7 @@ function getConfigHint(data, edges, nodeId) {
   if (data.backendType === "loop" && c.arrayPath) return `each ${c.arrayPath}`;
   if (data.backendType === "web_scraper" && c.url) return c.url.slice(0, 40);
   if (data.backendType === "ai_agent") {
-    const llmEdge = edges?.find(e => e.target === nodeId && e.targetHandle === "llm");
+    const llmEdge = edges?.find(e => e.target === nodeId && (e.targetHandle === "llm" || e.targetHandle === "chat_model"));
     if (llmEdge) {
       const nodes = useWorkspaceStore.getState().nodes;
       const llmNode = nodes.find(n => n.id === llmEdge.source);
@@ -574,6 +574,12 @@ export default function CustomNode({ id, data, selected }) {
     const models = nodeDef.models || [];
     const selectedModel = data.config?.model || nodeDef.defaultModel || "";
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
+    const agentComponentLabel =
+      selectedLabel ||
+      data.config?.alias ||
+      data.config?.memoryType?.replace(/_/g, " ") ||
+      data.label ||
+      nodeDef.label;
 
     const cardBorder = parentAgentRunning
       ? "1.5px solid transparent"
@@ -639,7 +645,7 @@ export default function CustomNode({ id, data, selected }) {
         {/* Model name below circle */}
         <div className="absolute text-center select-none pointer-events-none" style={{ top: d + 5, left: 0, width: d }}>
           <span className="text-[9px] text-zinc-400 font-medium block truncate leading-tight">
-            {selectedLabel || nodeDef.label}
+            {agentComponentLabel}
           </span>
         </div>
       </div>

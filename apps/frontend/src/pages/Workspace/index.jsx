@@ -153,12 +153,12 @@ export default function Workspace() {
               <WorkspaceRightSidebar width={rightW} onResizeStart={onRightResize} />
               <NodeConfigModal />
               <CommandPalette />
-            </ReactFlowProvider>
 
-            {/* Brian panel with drag handle on its left edge */}
-            {panels.brian !== false && (
-              <BrianPanel width={brianW} onResizeStart={onBrianResize} initialPrompt={brianPrompt} />
-            )}
+              {/* Brian panel with drag handle on its left edge */}
+              {panels.brian !== false && (
+                <BrianPanel width={brianW} onResizeStart={onBrianResize} initialPrompt={brianPrompt} />
+              )}
+            </ReactFlowProvider>
           </div>
 
           {/* Bottom chat panel (already has its own resize) */}

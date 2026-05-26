@@ -2,6 +2,7 @@ import { NODE_KB } from "./brian.nodes.js";
 import {
   AGENT_LAYOUT,
   AI_AGENT_HANDLES,
+  BRIAN_CHEAP_ANTHROPIC_MODEL,
   HUB_SLOT,
   HUB_TYPES,
   INTEG_BT,
@@ -42,6 +43,18 @@ function dedupeEdges(edges) {
     out.push(edge);
   }
   return out;
+}
+
+function canonicalAgentHandle(handle) {
+  return handle === "chat_model" ? "llm" : handle;
+}
+
+function integrationXs(count) {
+  const predefined = AGENT_LAYOUT.integrationX[Math.min(count, AGENT_LAYOUT.integrationX.length - 1)];
+  if (predefined?.length === count) return predefined;
+  const gap = AGENT_LAYOUT.integrationGap || 220;
+  const start = AGENT_LAYOUT.hub.x - ((count - 1) * gap) / 2;
+  return Array.from({ length: count }, (_, i) => Math.round(start + i * gap));
 }
 
 function isEmptyRequiredValue(value) {
@@ -146,7 +159,7 @@ export function toolToCanvas({ nodes = [], edges = [] }) {
         source: String(e.source || ""),
         target: String(e.target || ""),
         sourceHandle: e.sourceHandle || null,
-        targetHandle: e.targetHandle || null,
+        targetHandle: canonicalAgentHandle(e.targetHandle || null),
         type: "configurable",
         data: { conditionPath: "" },
         style: {},
@@ -197,12 +210,18 @@ export function toolToCanvas({ nodes = [], edges = [] }) {
 
     canvasNodes.forEach((n) => {
       const bt = n.data.backendType;
-      if (MODEL_BT.has(bt)) n.position = { ...AGENT_LAYOUT.model };
+      if (MODEL_BT.has(bt)) {
+        n.position = { ...AGENT_LAYOUT.model };
+        if (bt === "agent_anthropic") {
+          const model = String(n.data.config?.model || "");
+          if (/cheap|haiku/i.test(model)) n.data.config.model = BRIAN_CHEAP_ANTHROPIC_MODEL;
+        }
+      }
       else if (MEMORY_BT.has(bt)) n.position = { ...AGENT_LAYOUT.memory };
     });
 
     const integNodes = canvasNodes.filter((n) => INTEG_BT.has(n.data.backendType));
-    const xArr = AGENT_LAYOUT.integrationX[Math.min(integNodes.length, 5)] || integNodes.map((_, i) => 60 + i * 200);
+    const xArr = integrationXs(integNodes.length);
     integNodes.forEach((n, i) => {
       n.position = { x: xArr[i] ?? 400, y: AGENT_LAYOUT.integrationY };
     });

@@ -3,7 +3,8 @@ import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
 import { normalizeFlow, toolToCanvas } from "./brian.repair.js";
-import { BRIAN_ANTHROPIC_MODEL } from "./brian.registry.js";
+import { BRIAN_ANTHROPIC_MODEL, BRIAN_CHEAP_ANTHROPIC_MODEL } from "./brian.registry.js";
+import { buildBrianPreflightQuestions } from "./brian.preflight.js";
 import Credential from "../../models/credential.model.js";
 import {
   ANTHROPIC_API_KEY,
@@ -44,7 +45,7 @@ async function buildCredentialContext(userId) {
     const lines = creds
       .map(c => `  - "${safeStr(c.name, 50)}" (${c.provider || c.type || "api_key"})`)
       .join("\n");
-    return `\n\n## User's Connected Credentials\nAlready authenticated — available immediately:\n${lines}\nFor nodes that use these services, mention by name in your response and set credentialId to the credential name above.`;
+    return `\n\n## User's Connected Credentials\nAlready authenticated — available immediately:\n${lines}\nMention matching credentials in your explanation, but keep generated node config credentialId as "" so the builder UI can assign the selected credential at apply time.`;
   } catch {
     return "";
   }
@@ -131,7 +132,7 @@ DESIGNER LAYOUT — use these exact zones:
 
    [memory]                    [model]
    x:160, y:60                 x:640, y:60
-        ↓ targetHandle:memory       ↓ targetHandle:chat_model
+        ↓ targetHandle:memory       ↓ targetHandle:llm
 [trigger] ──────────→ [  ai_agent hub  ]
 x:80, y:300            x:400, y:300
                               ↑ targetHandle:integration  (×N)
@@ -150,7 +151,7 @@ ZONE RULES:
 
 EDGE RULES (source → target, targetHandle):
 - chat_trigger   → ai_agent,              no targetHandle   (trigger, main flow)
-- agent_model    → ai_agent,  targetHandle: chat_model      (model slot)
+- agent_model    → ai_agent,  targetHandle: llm      (model slot; legacy chat_model is accepted but do not emit it)
 - agent_memory   → ai_agent,  targetHandle: memory          (memory slot)
 - agent_integration → ai_agent, targetHandle: integration   (integration slot)
 - agent_tool     → ai_agent,  targetHandle: tools           (tool slot)
@@ -161,7 +162,7 @@ EDGE RULES (source → target, targetHandle):
 \`\`\`json
 [
   { "id":"e1", "source":"n1", "target":"n2" },
-  { "id":"e2", "source":"n3", "target":"n2", "targetHandle":"chat_model" },
+  { "id":"e2", "source":"n3", "target":"n2", "targetHandle":"llm" },
   { "id":"e3", "source":"n4", "target":"n2", "targetHandle":"integration" },
   { "id":"e4", "source":"n5", "target":"n2", "targetHandle":"integration" },
   { "id":"e5", "source":"n6", "target":"n2", "targetHandle":"integration" }
@@ -170,7 +171,7 @@ EDGE RULES (source → target, targetHandle):
 *(n1=chat_trigger, n2=ai_agent, n3=model, n4-6=integrations)*
 
 **Agent model nodes** — pick exactly ONE, default to Anthropic:
-- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-6", credentialId:"" }\`
+- \`agent_anthropic\` → \`{ model:"claude-sonnet-4-6", credentialId:"" }\` normally; if the user asks for cheap/cheaper/lowest-cost Claude, use \`{ model:"${BRIAN_CHEAP_ANTHROPIC_MODEL}", credentialId:"" }\`
 - \`agent_openai\`    → \`{ model:"gpt-4o", credentialId:"" }\`
 - \`agent_groq\`      → \`{ model:"llama-3.3-70b-versatile", credentialId:"" }\`
 - \`agent_gemini\`    → \`{ model:"gemini-2.0-flash", credentialId:"" }\`
@@ -203,8 +204,8 @@ Each: \`{ credentialId:"", alias:"short_name" }\`
 | Redis | \`agent_integration_redis\` | "redis" |
 
 **Agent memory nodes** (for RAG):
-- \`agent_memory_supabase\` → \`{ credentialId:"", tableName:"documents" }\` targetHandle:"memory"
-- \`agent_memory_pinecone\` → \`{ credentialId:"", indexName:"" }\` targetHandle:"memory"
+- Default RAG memory: \`agent_memory_pinecone\` → \`{ credentialId:"", indexName:"blinkbox-rag" }\` targetHandle:"memory"
+- Only use \`agent_memory_supabase\`, \`agent_memory_postgres\`, or \`agent_memory_redis\` if the user explicitly asks for that provider.
 
 **AI Agent system prompt** — always write a real, specific one:
 \`{ systemPrompt: "You are a [role] assistant with access to [services]. When the user asks about X, use [alias] to [action]. Format responses as [style]." }\`
@@ -289,7 +290,7 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 - Email + calendar agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_gmail[integration], ← agent_integration_google_calendar[integration]\`
 - Full productivity agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_gmail[integration], ← agent_integration_google_drive[integration], ← agent_integration_google_sheets[integration], ← agent_integration_notion[integration]\`
 - Dev agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_github[integration], ← agent_integration_linear[integration], ← agent_integration_slack[integration]\`
-- RAG agent (with memory): add \`agent_memory_supabase\` or \`agent_memory_pinecone\` node → ai_agent targetHandle:"memory"
+- RAG agent (with memory): add \`agent_memory_pinecone\` by default → ai_agent targetHandle:"memory"; only use Supabase/Postgres/Redis memory when named.
 
 **Enriched linear patterns (add these steps even if user didn't ask):**
 - After any trigger: consider a \`filter\` node if not all events should continue
@@ -308,7 +309,7 @@ Before calling create_workflow, run this count silently:
 3. Count every agent_integration node you added
 
 Then verify your edges array contains:
-- One edge per model node with targetHandle:"chat_model" and target = ai_agent id
+- One edge per model node with targetHandle:"llm" and target = ai_agent id
 - One edge per memory node with targetHandle:"memory" and target = ai_agent id
 - One edge per integration node with targetHandle:"integration" and target = ai_agent id
 
@@ -331,8 +332,8 @@ ALSO verify positions: model must be at y:60 x:640, memory at y:60 x:160, never 
 | Orphaned node with no edges | Connect every node |
 | Edge reversed: source=ai_agent, target=integration | source=integration, target=ai_agent |
 | Trigger node as source with targetHandle set | Triggers connect to ai_agent with NO targetHandle |
-| model node with targetHandle:"integration" | model uses targetHandle:"chat_model" only |
-| integration node with targetHandle:"chat_model" | integration uses targetHandle:"integration" only |
+| model node with targetHandle:"integration" | model uses targetHandle:"llm" only |
+| integration node with targetHandle:"llm" or "chat_model" | integration uses targetHandle:"integration" only |
 | memory node with targetHandle:"integration" | memory uses targetHandle:"memory" only |
 | Missing credentialId on model/integration nodes | Always include credentialId:"" in config |
 | Empty config fields | Real values always |
@@ -440,7 +441,7 @@ const WORKFLOW_TOOL = {
             source:       { type: "string" },
             target:       { type: "string" },
             sourceHandle: { type: "string", description: "Only for condition nodes: 'true' or 'false'" },
-            targetHandle: { type: "string", description: "For ai_agent inputs only: 'chat_model', 'integration', 'tools', or 'memory'. Omit for all other nodes." },
+            targetHandle: { type: "string", description: "For ai_agent inputs only: 'llm', 'integration', 'tools', or 'memory'. Omit for all other nodes. Legacy 'chat_model' is accepted but do not emit it." },
           },
           required: ["id", "source", "target"],
           additionalProperties: false,
@@ -736,6 +737,15 @@ export async function brianChatStream(req, res) {
   const canvasEdges = Array.isArray(canvasContext) ? [] : (canvasContext?.edges || []);
 
   const credContext = await buildCredentialContext(req.user.id);
+  const preflight = buildBrianPreflightQuestions(messages, userText);
+  if (preflight) {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: "questions", ...preflight })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
+    return res.end();
+  }
 
   if (BRIAN_WEBHOOK_URL) {
     try {
@@ -859,6 +869,8 @@ export async function brianChat(req, res) {
   const canvasEdges = Array.isArray(canvasContext) ? [] : (canvasContext?.edges || []);
 
   const credContext = await buildCredentialContext(req.user.id);
+  const preflight = buildBrianPreflightQuestions(messages, userText);
+  if (preflight) return res.json({ text: preflight.intro, questions: preflight.questions, flow: null });
 
   if (BRIAN_WEBHOOK_URL) {
     try {

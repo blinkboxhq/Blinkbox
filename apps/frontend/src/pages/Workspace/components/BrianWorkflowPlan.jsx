@@ -41,6 +41,8 @@ const CRED_META = {
   // Agent memory
   agent_memory_supabase:             { label: 'Supabase (Memory)',       credentialType: 'api_key',  hint: 'service_role key' },
   agent_memory_pinecone:             { label: 'Pinecone API Key',        credentialType: 'api_key',  hint: 'pc-...' },
+  agent_memory_postgres:             { label: 'PostgreSQL Memory URI',   credentialType: 'api_key',  hint: 'postgresql://...' },
+  agent_memory_redis:                { label: 'Redis Memory URL',        credentialType: 'api_key',  hint: 'redis://...' },
 
   // Direct service nodes — Google
   gmail:                             { label: 'Gmail',                   credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'red' },
@@ -86,6 +88,47 @@ const ICONS = {
 function NodeIcon({ type }) {
   const Icon = ICONS[type] || Box;
   return <Icon className="w-3.5 h-3.5" />;
+}
+
+function roleForNode(node) {
+  const bt = node.data?.backendType || node.backendType || '';
+  if (node.data?.type === 'trigger' || bt.endsWith('_trigger') || bt === 'manual' || bt === 'webhook') return 'Trigger';
+  if (bt === 'ai_agent') return 'Agent';
+  if (bt.startsWith('agent_memory_')) return 'Memory';
+  if (bt.startsWith('agent_integration_')) return 'Integrations';
+  if (bt.startsWith('agent_')) return 'Model';
+  return 'Steps';
+}
+
+function PlanSummary({ nodes, edges, flow, credNodes, assignedCount }) {
+  const groups = ['Trigger', 'Agent', 'Model', 'Memory', 'Integrations', 'Steps']
+    .map(label => ({ label, count: nodes.filter(n => roleForNode(n) === label).length }))
+    .filter(g => g.count > 0);
+  const issueCount = (flow.errors?.length || 0) + (flow.warnings?.length || 0);
+  return (
+    <div className="px-3 py-2 border-b border-[#2a2a2a] bg-neutral-950/35">
+      <div className="grid grid-cols-2 gap-1.5 mb-2">
+        {[
+          { label: 'Nodes', value: nodes.length },
+          { label: 'Edges', value: edges.length },
+          { label: 'Credentials', value: `${assignedCount}/${credNodes.length}` },
+          { label: 'Checks', value: issueCount ? `${issueCount} issue${issueCount === 1 ? '' : 's'}` : 'clean' },
+        ].map(item => (
+          <div key={item.label} className="rounded-lg border border-[#252525] bg-neutral-900/50 px-2 py-1.5">
+            <p className="text-[9px] text-neutral-600 uppercase tracking-wider">{item.label}</p>
+            <p className="text-[12px] font-bold text-neutral-200">{item.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {groups.map(group => (
+          <span key={group.label} className="px-2 py-1 rounded-md border border-[#2a2a2a] bg-neutral-900 text-[10px] text-neutral-400">
+            {group.label}: <span className="text-neutral-200 font-semibold">{group.count}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ── Modify plan input ─────────────────────────────────────────────────────────
@@ -150,13 +193,16 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
   );
 
   const { nodes = [], edges = [] } = flow;
+  const structuralErrors = flow.errors || [];
+  const warnings = flow.warnings || [];
 
   const credNodes = nodes.filter(n => {
     const bt = n.data?.backendType || n.backendType || '';
     return !!CRED_META[bt];
   });
+  const assignedCount = credNodes.filter(n => credAssignments[n.id]).length;
 
-  const accept = useCallback(() => {
+  const accept = () => {
     setAccepted(true);
     const mergedFlow = {
       ...flow,
@@ -170,7 +216,7 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
       }),
     };
     onAccept(mergedFlow);
-  }, [flow, credAssignments, onAccept]);
+  };
 
   const dismiss = () => { setDismissed(true); onDismiss?.(); };
 
@@ -192,12 +238,25 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
           className="w-full flex items-center gap-2 px-3 py-2 border-b border-[#2a2a2a] bg-neutral-900/60 hover:bg-neutral-900 transition-colors text-left"
         >
           <div className="w-1.5 h-1.5 rounded-full bg-neutral-500 shrink-0" />
-          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest flex-1">Workflow Plan</span>
+          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest flex-1">Agent Build Plan</span>
           <span className="text-[10px] font-mono text-neutral-600 shrink-0">{nodes.length} nodes · {edges.length} edges</span>
           {expanded
             ? <ChevronUp className="w-3 h-3 text-neutral-700 shrink-0" />
             : <ChevronRight className="w-3 h-3 text-neutral-700 shrink-0" />}
         </button>
+
+        <PlanSummary nodes={nodes} edges={edges} flow={flow} credNodes={credNodes} assignedCount={assignedCount} />
+
+        {(structuralErrors.length > 0 || warnings.length > 0) && (
+          <div className={`mx-3 mt-2 px-2.5 py-2 rounded-lg border ${structuralErrors.length ? 'border-red-500/25 bg-red-500/8' : 'border-amber-500/20 bg-amber-500/8'}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${structuralErrors.length ? 'text-red-400' : 'text-amber-400'}`}>
+              {structuralErrors.length ? 'Structural errors' : 'Warnings'}
+            </p>
+            {[...structuralErrors, ...warnings].slice(0, 4).map(issue => (
+              <p key={issue} className="text-[10px] text-neutral-500 leading-relaxed">• {issue}</p>
+            ))}
+          </div>
+        )}
 
         {/* ── Node list ── */}
         <AnimatePresence initial={false}>
@@ -232,13 +291,19 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
                             <span className="text-[9px] font-mono text-neutral-600 bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
                               {bt}
                             </span>
-                            {isTrigger && (
-                              <span className="text-[9px] text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">trigger</span>
-                            )}
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 ${isTrigger ? 'text-amber-400/80 bg-amber-500/10' : 'text-neutral-500 bg-neutral-800/80'}`}>
+                              {roleForNode(node).toLowerCase()}
+                            </span>
                           </div>
 
                           {meta && !accepted && (
                             <div className="mt-2 pl-0.5">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Required credential</span>
+                                <span className={`text-[9px] ${credAssignments[node.id] ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                  {credAssignments[node.id] ? 'ready' : 'missing'}
+                                </span>
+                              </div>
                               <CredentialPicker
                                 value={credAssignments[node.id] || ''}
                                 onChange={credId => setCredAssignments(prev => ({ ...prev, [node.id]: credId }))}
@@ -287,8 +352,8 @@ export default function BrianWorkflowPlan({ text, flow, onAccept, onDismiss, onM
         {!accepted ? (
           <div className="flex flex-col gap-2 px-3 py-2.5 border-t border-[#2a2a2a] bg-neutral-900/30">
             <div className="flex items-center gap-2">
-              <button onClick={accept}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-bold transition-colors">
+              <button onClick={accept} disabled={structuralErrors.length > 0}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white hover:bg-neutral-100 text-neutral-950 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                 <Check className="w-3.5 h-3.5" /> Apply to Canvas
               </button>
               <button onClick={dismiss}

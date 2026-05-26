@@ -9,14 +9,16 @@ import CredentialPicker from "../../../../components/ui/CredentialPicker";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 
 function getSlotNode(edges, nodes, agentNodeId, slotId) {
-  const edge = edges.find(e => e.target === agentNodeId && e.targetHandle === slotId);
+  const handles = slotId === "llm" ? new Set(["llm", "chat_model"]) : new Set([slotId]);
+  const edge = edges.find(e => e.target === agentNodeId && handles.has(e.targetHandle));
   if (!edge) return null;
   return nodes.find(n => n.id === edge.source) || null;
 }
 
 function getNodesForSlot(edges, nodes, agentNodeId, slotId) {
+  const handles = slotId === "llm" ? new Set(["llm", "chat_model"]) : new Set([slotId]);
   return edges
-    .filter(e => e.target === agentNodeId && e.targetHandle === slotId)
+    .filter(e => e.target === agentNodeId && handles.has(e.targetHandle))
     .map(e => nodes.find(n => n.id === e.source))
     .filter(Boolean);
 }

@@ -2,8 +2,9 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Send, RotateCcw, Copy, ThumbsUp, ThumbsDown, Check, ChevronDown, ChevronRight,
   Download, Zap, Mail, Clock, Database, Layers, ArrowDown,
-  Sparkles, HelpCircle, CheckCircle2,
+  Sparkles, HelpCircle, CheckCircle2, KeyRound,
 } from 'lucide-react';
+import { useReactFlow } from '@xyflow/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
@@ -484,6 +485,60 @@ function ContextStrip({ nodeCount, workflowName }) {
   );
 }
 
+function BuildChecklist({ messages, nodeCount }) {
+  const latest = [...messages].reverse().find(m => m.role === 'brian' && (m.flow || m.questions?.length || m.streaming));
+  const flow = latest?.flow;
+  const nodes = flow?.nodes || [];
+  const edges = flow?.edges || [];
+  const needsCreds = nodes.filter(n => (n.data?.config || {}).credentialId === "").length;
+  const warnings = [...(flow?.warnings || []), ...(flow?.errors || [])];
+  const items = [
+    {
+      label: 'Canvas understood',
+      done: nodeCount > 0 || !!flow,
+      detail: nodeCount > 0 ? `${nodeCount} existing node${nodeCount === 1 ? '' : 's'}` : 'fresh build',
+      icon: Layers,
+    },
+    {
+      label: 'Questions locked',
+      done: !latest?.questions?.length && !latest?.streaming,
+      detail: latest?.questions?.length ? `${latest.questions.length} answer needed` : 'ready',
+      icon: HelpCircle,
+    },
+    {
+      label: 'Workflow validated',
+      done: !!flow && warnings.length === 0,
+      detail: flow ? `${nodes.length} nodes, ${edges.length} edges` : 'waiting',
+      icon: CheckCircle2,
+    },
+    {
+      label: 'Credentials',
+      done: !!flow && needsCreds === 0,
+      detail: flow ? (needsCreds ? `${needsCreds} to pick` : 'assigned') : 'after plan',
+      icon: KeyRound,
+    },
+  ];
+
+  return (
+    <div className="px-3 py-2 border-b border-[#1a1a1a] bg-[#0a0a0c] shrink-0">
+      <div className="grid grid-cols-2 gap-1.5">
+        {items.map(item => {
+          const Icon = item.icon;
+          return (
+            <div key={item.label} className="flex items-center gap-2 rounded-lg border border-[#202024] bg-neutral-900/45 px-2 py-1.5 min-w-0">
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${item.done ? 'text-emerald-400' : 'text-neutral-600'}`} />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-neutral-300 truncate">{item.label}</p>
+                <p className="text-[9px] text-neutral-600 truncate">{item.detail}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Scroll-to-bottom ──────────────────────────────────────────────────────────
 function ScrollToBottom({ onClick }) {
   return (
@@ -532,6 +587,7 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
   const nodes        = useWorkspaceStore(s => s.nodes);
   const edges        = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
+  const { fitView } = useReactFlow();
 
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input,    setInput]    = useState('');
@@ -578,7 +634,8 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
   const applyFlow = useCallback((flow) => {
     if (!flow?.nodes) return;
     useWorkspaceStore.setState(s => mergeBrianFlow(s.nodes, s.edges, flow));
-  }, []);
+    setTimeout(() => fitView({ padding: 0.35, duration: 450 }), 80);
+  }, [fitView]);
 
   const send = useCallback(async (text) => {
     const txt = (text || input).trim();
@@ -707,7 +764,7 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-[12px] font-bold text-white leading-none">Brian</span>
-                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">claude-sonnet-4-6</span>
+                <span className="text-[9px] font-mono text-neutral-700 leading-tight mt-0.5">agent builder · claude-sonnet-4-6</span>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
@@ -731,6 +788,7 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
 
           {/* ── Canvas context strip ── */}
           <ContextStrip nodeCount={nodes.length} workflowName={workflowName} />
+          <BuildChecklist messages={messages} nodeCount={nodes.length} />
 
           {/* ── Messages / empty state ── */}
           {isFresh && !loading ? (
