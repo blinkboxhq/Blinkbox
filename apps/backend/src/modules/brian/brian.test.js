@@ -169,3 +169,44 @@ test("visualRepairBrianFlow flips reversed satellites and removes inbound trigge
   assert.equal(repaired.edges.some((edge) => edge.target === "n1"), false);
   assert.ok(repaired.edges.some((edge) => edge.id === "reversed" && edge.source === "n3" && edge.target === "n2" && edge.targetHandle === "llm"));
 });
+
+test("toolToCanvas upgrades mistaken linear signup email flow into an AI agent hub", () => {
+  const flow = toolToCanvas({
+    userText: "when a automation fires a ai agent takes the users email gives him a thanks for signing email and saves it in a spreadsheet",
+    nodes: [
+      { id: "n1", backendType: "form_trigger", label: "Form Trigger", nodeType: "trigger", x: 0, y: 0, config: { fields: [{ name: "email", type: "email" }] } },
+      { id: "n2", backendType: "manual", label: "Manual Trigger", nodeType: "trigger", x: 0, y: 0, config: {} },
+      { id: "n3", backendType: "gmail", label: "Gmail", nodeType: "action", x: 0, y: 0, config: { credentialId: "", to: "{{$json.email}}" } },
+      { id: "n4", backendType: "google_sheets", label: "Google Sheets", nodeType: "action", x: 0, y: 0, config: { credentialId: "", operation: "append" } },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+      { id: "e3", source: "n3", target: "n4" },
+    ],
+  });
+
+  const backendTypes = flow.nodes.map((node) => node.data.backendType);
+  assert.ok(backendTypes.includes("form_trigger"));
+  assert.ok(backendTypes.includes("ai_agent"));
+  assert.ok(backendTypes.includes("agent_anthropic"));
+  assert.ok(backendTypes.includes("agent_integration_gmail"));
+  assert.ok(backendTypes.includes("agent_integration_google_sheets"));
+  assert.equal(backendTypes.includes("manual"), false);
+  assert.equal(backendTypes.includes("gmail"), false);
+  assert.equal(backendTypes.includes("google_sheets"), false);
+
+  const agent = flow.nodes.find((node) => node.data.backendType === "ai_agent");
+  const model = flow.nodes.find((node) => node.data.backendType === "agent_anthropic");
+  const gmail = flow.nodes.find((node) => node.data.backendType === "agent_integration_gmail");
+  const sheets = flow.nodes.find((node) => node.data.backendType === "agent_integration_google_sheets");
+
+  assert.ok(flow.edges.some((edge) => edge.source === "n1" && edge.target === agent.id));
+  assert.ok(flow.edges.some((edge) => edge.source === model.id && edge.target === agent.id && edge.targetHandle === "llm"));
+  assert.ok(flow.edges.some((edge) => edge.source === gmail.id && edge.target === agent.id && edge.targetHandle === "integration"));
+  assert.ok(flow.edges.some((edge) => edge.source === sheets.id && edge.target === agent.id && edge.targetHandle === "integration"));
+  assert.ok(flow.nodes.every((node) => {
+    const bt = node.data.backendType;
+    return !bt.startsWith("agent_") || bt === "ai_agent" || node.position.y > agent.position.y;
+  }));
+});

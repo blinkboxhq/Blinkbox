@@ -57,6 +57,115 @@ function integrationXs(count) {
   return Array.from({ length: count }, (_, i) => Math.round(start + i * gap));
 }
 
+function wantsAiAgent(userText = "") {
+  return /\b(ai\s*agent|agent\s+takes|agent\s+that|assistant)\b/i.test(String(userText || ""));
+}
+
+const DIRECT_TO_AGENT_INTEGRATION = new Map([
+  ["gmail", { backendType: "agent_integration_gmail", label: "Gmail", alias: "gmail" }],
+  ["google_sheets", { backendType: "agent_integration_google_sheets", label: "Google Sheets", alias: "sheets" }],
+  ["google_calendar", { backendType: "agent_integration_google_calendar", label: "Google Calendar", alias: "calendar" }],
+  ["google_drive", { backendType: "agent_integration_google_drive", label: "Google Drive", alias: "drive" }],
+  ["slack", { backendType: "agent_integration_slack", label: "Slack", alias: "slack" }],
+  ["notion", { backendType: "agent_integration_notion", label: "Notion", alias: "notion" }],
+  ["airtable", { backendType: "agent_integration_airtable", label: "Airtable", alias: "airtable" }],
+]);
+
+function uniqueNodeId(nodes, base) {
+  const ids = new Set(nodes.map((node) => String(node.id)));
+  if (!ids.has(base)) return base;
+  let i = 2;
+  while (ids.has(`${base}_${i}`)) i += 1;
+  return `${base}_${i}`;
+}
+
+function upgradeLinearServicesToAgent(nodes, edges, userText = "") {
+  if (!wantsAiAgent(userText)) return { nodes, edges };
+  if (nodes.some((node) => node.backendType === "ai_agent")) return { nodes, edges };
+
+  const serviceNodes = nodes.filter((node) => DIRECT_TO_AGENT_INTEGRATION.has(node.backendType));
+  if (!serviceNodes.length) return { nodes, edges };
+
+  const trigger = nodes.find((node) => TRIGGER_BT.has(node.backendType || "") && node.backendType !== "manual");
+  const triggerNodes = trigger ? [trigger] : [];
+  const aiAgentId = uniqueNodeId(nodes, "n_ai_agent");
+  const modelId = uniqueNodeId([...nodes, { id: aiAgentId }], "n_model");
+  const serviceIds = new Set(serviceNodes.map((node) => node.id));
+  const upgradedServices = serviceNodes.map((node) => {
+    const meta = DIRECT_TO_AGENT_INTEGRATION.get(node.backendType);
+    return {
+      ...node,
+      backendType: meta.backendType,
+      label: meta.label,
+      nodeType: "action",
+      config: {
+        credentialId: "",
+        alias: meta.alias,
+      },
+    };
+  });
+
+  const upgradedNodes = [
+    ...triggerNodes,
+    {
+      id: aiAgentId,
+      backendType: "ai_agent",
+      label: "Signup Thank You Agent",
+      nodeType: "action",
+      x: AGENT_LAYOUT.hub.x,
+      y: AGENT_LAYOUT.hub.y,
+      config: {
+        systemPrompt: "You are a signup automation agent. When a signup event arrives, read the user's email from the trigger payload, send a warm thank-you email through the Gmail integration, and append the signup email plus timestamp to the Google Sheets integration.",
+        userMessage: "New signup payload: {{$json}}",
+      },
+    },
+    {
+      id: modelId,
+      backendType: "agent_anthropic",
+      label: "Claude Model",
+      nodeType: "action",
+      x: AGENT_LAYOUT.model.x,
+      y: AGENT_LAYOUT.model.y,
+      config: {
+        model: BRIAN_CHEAP_ANTHROPIC_MODEL,
+        credentialId: "",
+      },
+    },
+    ...upgradedServices,
+  ];
+
+  const upgradedEdges = [
+    ...(trigger ? [{
+      id: "e_trigger_agent",
+      source: trigger.id,
+      target: aiAgentId,
+    }] : []),
+    {
+      id: "e_model_agent",
+      source: modelId,
+      target: aiAgentId,
+      targetHandle: "llm",
+    },
+    ...upgradedServices.map((node) => ({
+      id: `e_${node.id}_agent`,
+      source: node.id,
+      target: aiAgentId,
+      targetHandle: "integration",
+    })),
+  ];
+
+  const passthroughNodes = nodes.filter((node) =>
+    !serviceIds.has(node.id) &&
+    node.id !== trigger?.id &&
+    node.backendType !== "manual"
+  );
+
+  return {
+    nodes: [...upgradedNodes, ...passthroughNodes],
+    edges: upgradedEdges,
+  };
+}
+
 function isEmptyRequiredValue(value) {
   if (value == null) return true;
   if (typeof value === "string") return value.trim() === "";
@@ -109,8 +218,9 @@ function validateGeneratedNodes(rawNodes, canvasNodes, canvasEdges) {
   return { warnings, errors };
 }
 
-export function toolToCanvas({ nodes = [], edges = [] }) {
+export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
   if (!nodes.length) return null;
+  ({ nodes, edges } = upgradeLinearServicesToAgent(nodes, edges, userText));
 
   const hasAiAgent = nodes.some((n) => n.backendType === "ai_agent");
   const hasRealTrigger = nodes.some((n) => n.backendType && n.backendType !== "manual" && TRIGGER_BT.has(n.backendType));
@@ -309,7 +419,7 @@ export function toolToCanvas({ nodes = [], edges = [] }) {
   return flow;
 }
 
-export function normalizeFlow(parsed) {
+export function normalizeFlow(parsed, userText = "") {
   const src = parsed.flow || parsed.workflow || parsed;
   const nodes = src.nodes || parsed.nodes || [];
   const edges = src.edges || parsed.edges || [];
@@ -338,5 +448,5 @@ export function normalizeFlow(parsed) {
     targetHandle: e.targetHandle || null,
   })).filter((e) => e.source && e.target);
 
-  return toolToCanvas({ nodes: toolNodes, edges: toolEdges });
+  return toolToCanvas({ nodes: toolNodes, edges: toolEdges, userText });
 }

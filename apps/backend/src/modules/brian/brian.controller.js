@@ -84,6 +84,13 @@ Never produce two separate trigger→action chains in a single response.
 **R5 — AI Agent workflows: include ONLY what was explicitly requested.**
 For agent workflows, add ONLY the integrations/tools the user named. Do NOT add extra services (Perplexity, Notion, Slack, etc.) unless the user explicitly mentioned them. Quality over quantity.
 
+**R6 — If the user says AI agent, you MUST create an AI Agent hub.**
+Do not fake an AI-agent request with direct linear action nodes. If the user says "AI agent", "agent takes", or "assistant", the workflow must include:
+- one \`ai_agent\`
+- one model satellite such as \`agent_anthropic\`
+- service satellites such as \`agent_integration_gmail\` and \`agent_integration_google_sheets\`
+Never output \`gmail\` or \`google_sheets\` as direct linear action nodes for an AI-agent workflow; use agent integrations wired into the hub.
+
 **R7 — Trigger backendTypes are NOT action nodes.**
 \`gmail_trigger\` fires on incoming email. \`gmail\` SENDS an email. Never use _trigger nodes as actions.
 \`google_calendar_trigger\` fires on calendar events. Use \`agent_integration_google_calendar\` to let an agent READ/WRITE calendar.
@@ -290,6 +297,7 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 - Chat assistant: \`chat_trigger → ai_agent ← agent_anthropic[model]\`
 - Email + calendar agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_gmail[integration], ← agent_integration_google_calendar[integration]\`
 - Full productivity agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_gmail[integration], ← agent_integration_google_drive[integration], ← agent_integration_google_sheets[integration], ← agent_integration_notion[integration]\`
+- Signup thank-you agent: \`form_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_gmail[integration], ← agent_integration_google_sheets[integration]\`
 - Dev agent: \`chat_trigger → ai_agent ← agent_anthropic[model], ← agent_integration_github[integration], ← agent_integration_linear[integration], ← agent_integration_slack[integration]\`
 - RAG agent (with memory): add \`agent_memory_pinecone\` by default → ai_agent targetHandle:"memory"; only use Supabase/Postgres/Redis memory when named.
 
@@ -590,7 +598,7 @@ async function callAnthropicStream(apiKey, messages, canvasNodes, canvasEdges, c
               sendEvent({ type: "questions", intro: input.intro || "", questions: input.questions || [] });
             } else {
               const { text, nodes, edges } = input;
-              const flow = nodes?.length ? toolToCanvas({ nodes, edges }) : null;
+              const flow = nodes?.length ? toolToCanvas({ nodes, edges, userText }) : null;
               sendEvent({ type: "flow", text: text || "", flow });
             }
           } catch {
@@ -652,7 +660,7 @@ async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [
       return { text: toolUse.input.intro || "", thinking, questions: toolUse.input.questions || [], flow: null };
     }
     const { text, nodes, edges } = toolUse.input;
-    return { text: text || "", thinking, flow: nodes?.length ? toolToCanvas({ nodes, edges }) : null };
+    return { text: text || "", thinking, flow: nodes?.length ? toolToCanvas({ nodes, edges, userText }) : null };
   }
 
   const textBlock = response.content.find(b => b.type === "text");
@@ -759,7 +767,7 @@ export async function brianChatStream(req, res) {
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.flushHeaders();
-      const flow = result?.flow ? normalizeFlow(result) : null;
+      const flow = result?.flow ? normalizeFlow(result, userText) : null;
       res.write(`data: ${JSON.stringify({ type: "flow", text: result?.text || "", flow })}\n\n`);
       res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
       return res.end();
@@ -820,7 +828,7 @@ export async function brianChatStream(req, res) {
         sendEvent({ type: "done" });
         return res.end();
       }
-      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed) });
+      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
       sendEvent({ type: "done" });
       return res.end();
     } catch (err) {
@@ -842,7 +850,7 @@ export async function brianChatStream(req, res) {
         sendEvent({ type: "done" });
         return res.end();
       }
-      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed) });
+      sendEvent({ type: "flow", text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
       sendEvent({ type: "done" });
       return res.end();
     } catch (err) {
@@ -881,7 +889,7 @@ export async function brianChat(req, res) {
         content: m.content || m.text || "",
       }));
       const result = await callBlinkBoxWebhook(BRIAN_WEBHOOK_URL, userText, history);
-      if (result?.flow) return res.json({ text: result.text || "", flow: normalizeFlow(result) });
+      if (result?.flow) return res.json({ text: result.text || "", flow: normalizeFlow(result, userText) });
       return res.json({ text: result?.text || String(result || ""), flow: null });
     } catch (err) {
       console.warn("[Brian] webhook failed:", err.message, "— falling back");
@@ -925,7 +933,7 @@ export async function brianChat(req, res) {
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
-      return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
+      return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
     } catch (err) {
       console.warn("[Brian] Groq failed:", err.response?.status, err.message);
       if (!GOOGLE_AI_KEY) return res.status(500).json({ message: "AI provider error. Please try again." });
@@ -938,7 +946,7 @@ export async function brianChat(req, res) {
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
-      return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed) });
+      return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
     } catch (err) {
       console.error("[Brian] all providers failed:", err.message);
       return res.status(500).json({ message: "AI provider error. Please try again." });
