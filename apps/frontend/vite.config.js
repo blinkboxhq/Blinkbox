@@ -14,6 +14,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@triggers": path.resolve(__dirname, "../../packages/triggers"),
+      "@nodes": path.resolve(__dirname, "../../packages/nodes"),
     },
   },
   build: {
@@ -22,6 +23,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("/packages/triggers/"))   return "v-triggers";
+          if (id.includes("/packages/nodes/"))      return "v-nodes";
           if (!id.includes("node_modules")) return;
 
           // scheduler must be in the same chunk as react — it's react's internal
