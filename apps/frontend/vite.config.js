@@ -17,10 +17,11 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes("/packages/triggers/"))   return "v-triggers";
           if (!id.includes("node_modules")) return;
 
           // scheduler must be in the same chunk as react — it's react's internal
