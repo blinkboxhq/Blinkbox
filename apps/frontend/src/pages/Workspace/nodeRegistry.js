@@ -211,25 +211,18 @@ import imgMonday from "@triggers/monday/logo.svg";
 import imgLetsEncrypt from "@triggers/ssl/logo.svg";
 import imgHackerNews from "@triggers/hackernews/logo.svg";
 import imgPipedrive from "@triggers/pipedrive/logo.svg";
-import imgDns from "@triggers/dns/logo.svg";
-import imgPortMonitor from "@triggers/port_monitor/logo.svg";
-import imgInstagram from "@triggers/instagram/logo.svg";
-import imgTikTok from "@triggers/tiktok/logo.svg";
 import imgMastodon from "@triggers/mastodon/logo.svg";
 import imgProductHunt from "@triggers/producthunt/logo.svg";
 import imgIntercom from "@triggers/intercom/logo.svg";
 import imgWooCommerce from "@triggers/woocommerce/logo.svg";
-import imgVirusTotal from "@triggers/virustotal/logo.svg";
 import imgPagerDuty from "@triggers/pagerduty/logo.svg";
 import imgDatadog from "@triggers/datadog/logo.svg";
-import imgTwitter from "../../assets/twitter.svg";
 import imgElevenLabs from "../../assets/elevenlabs.svg";
 import imgZoom from "../../assets/zoom.svg";
 import imgResend from "../../assets/resend.svg";
 import imgCron from "../../assets/cron.svg";
 import imgGoogle from "../../assets/google-search.svg";
 import imgBrave from "../../assets/brave-search.svg";
-import imgDuckDuckGo from "../../assets/duckduckgo.svg";
 import imgElastic from "../../assets/elasticsearch.svg";
 import imgGCP from "../../assets/googlecloud.svg";
 import imgKubernetes from "../../assets/kubernetes.svg";
@@ -240,19 +233,10 @@ import imgJS from "../../assets/javascript.svg";
 import imgArxiv from "../../assets/arxiv.svg";
 import imgFirebase from "../../assets/firebase.svg";
 import imgAWS from "../../assets/aws.svg";
-import imgLinkedIn from "../../assets/linkedin.svg";
-import imgBing from "../../assets/bing.svg";
 import imgTavily from "../../assets/tavily.svg";
-import imgExa from "../../assets/exa.svg";
-import imgWolfram from "../../assets/wolfram.svg";
 import imgWeather from "../../assets/weather.svg";
-import imgMoonshot from "../../assets/moonshot.svg";
 import imgKimi from "../../assets/kimi-color.svg";
 import imgMCP from "../../assets/mcp.svg";
-import imgPubMed from "../../assets/pubmed.svg";
-import imgWikipedia from "../../assets/wikipedia.svg";
-import imgNews from "../../assets/news.svg";
-import imgWebSearch from "../../assets/web-scraper.svg";
 
 // Config Panels — existing
 import TriggerNode from "@triggers/manual/ConfigPanel.jsx";
@@ -285,10 +269,8 @@ import AgentToolNode from "./components/nodes/AgentToolNode";
 import makeAgentModelPanel from "./components/nodes/AgentModelPanel";
 import makeAgentMemoryPanel from "./components/nodes/AgentMemoryPanel";
 import makeAgentToolPanel from "./components/nodes/AgentToolPanel";
-import DistributorNode from "./components/nodes/DistributorNode";
 import DataMapperNode from "./components/nodes/DataMapperNode";
 import SetFieldsNode from "./components/nodes/SetFieldsNode";
-import LogicRouterNode from "./components/nodes/LogicRouterNode";
 import CodeNode from "./components/nodes/CodeNode";
 import LoopNode from "./components/nodes/LoopNode";
 import SlackNode from "./components/nodes/SlackNode";
@@ -335,17 +317,12 @@ import DataDiffNode from "./components/nodes/DataDiffNode";
 import EmailParserNode from "./components/nodes/EmailParserNode";
 import VectorMemoryNode from "./components/nodes/VectorMemoryNode";
 
-import NotificationHubNode from "./components/nodes/NotificationHubNode";
 import BrowserAgentNode from "./components/nodes/BrowserAgentNode";
 import ElevenLabsNode from "./components/nodes/ElevenLabsNode";
 import PineconeNode from "./components/nodes/PineconeNode";
 import ZoomNode from "./components/nodes/ZoomNode";
 import ResendNode from "./components/nodes/ResendNode";
 import OpenAIAssistantNode from "./components/nodes/OpenAIAssistantNode";
-import YouTubeTriggerNode from "@triggers/youtube/ConfigPanel.jsx";
-import PriceAlertTriggerNode from "@triggers/price_alert/ConfigPanel.jsx";
-import RedditTriggerNode from "@triggers/reddit/ConfigPanel.jsx";
-import GoogleCalendarTriggerNode from "@triggers/google_calendar/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
 import SshTriggerNode from "@triggers/ssh/ConfigPanel.jsx";
 import DockerTriggerNode from "@triggers/docker/ConfigPanel.jsx";
@@ -354,15 +331,10 @@ import TrelloTriggerNode from "@triggers/trello/ConfigPanel.jsx";
 import GoogleSheetsTriggerNode from "@triggers/google_sheets/ConfigPanel.jsx";
 import OutlookTriggerNode from "@triggers/outlook/ConfigPanel.jsx";
 import TeamsTriggerNode from "@triggers/teams/ConfigPanel.jsx";
-import HttpMonitorTriggerNode from "@triggers/http_monitor/ConfigPanel.jsx";
 import GitLabTriggerNode from "@triggers/gitlab/ConfigPanel.jsx";
-import SslTriggerNode from "@triggers/ssl/ConfigPanel.jsx";
-import DnsTriggerNode from "@triggers/dns/ConfigPanel.jsx";
-import PortMonitorTriggerNode from "@triggers/port_monitor/ConfigPanel.jsx";
 import HackerNewsTriggerNode from "@triggers/hackernews/ConfigPanel.jsx";
 import PipedriveTriggerNode from "@triggers/pipedrive/ConfigPanel.jsx";
 import AsanaTriggerNode from "@triggers/asana/ConfigPanel.jsx";
-import VirtualComputerNode from "./components/nodes/VirtualComputerNode";
 import makeCodingAgentNode from "./components/nodes/CodingAgentNode";
 import GenericActionNode from "./components/nodes/GenericActionNode";
 import AgentIntegrationNode from "./components/nodes/AgentIntegrationNode";
@@ -378,53 +350,30 @@ import CounterNode from "./components/nodes/CounterNode";
 import RandomPickNode from "./components/nodes/RandomPickNode";
 import ScheduleCheckNode from "./components/nodes/ScheduleCheckNode";
 import IpWhitelistNode from "./components/nodes/IpWhitelistNode";
-import PaginationHandlerNode from "./components/nodes/PaginationHandlerNode";
 import FileUploadNode from "./components/nodes/FileUploadNode";
 import FileDownloadNode from "./components/nodes/FileDownloadNode";
 import ZipFilesNode from "./components/nodes/ZipFilesNode";
 import Base64Node from "./components/nodes/Base64Node";
-import HashNode from "./components/nodes/HashNode";
-// Finance & Accounting nodes
-import GstCalculatorNode from "./components/nodes/GstCalculatorNode";
-import InvoiceParserNode from "./components/nodes/InvoiceParserNode";
-import TaxRateLookupNode from "./components/nodes/TaxRateLookupNode";
-import BankStatementParserNode from "./components/nodes/BankStatementParserNode";
-import LedgerEntryNode from "./components/nodes/LedgerEntryNode";
-import CompoundInterestNode from "./components/nodes/CompoundInterestNode";
-import PayrollCalculatorNode from "./components/nodes/PayrollCalculatorNode";
 // Social Media nodes
 import YouTubeUploadNode from "./components/nodes/YouTubeUploadNode";
-import InstagramPostNode from "./components/nodes/InstagramPostNode";
-import TikTokPostNode from "./components/nodes/TikTokPostNode";
-import LinkedInPostNode from "./components/nodes/LinkedInPostNode";
-import TwitterPostNode from "./components/nodes/TwitterPostNode";
 import RssFeedGeneratorNode from "./components/nodes/RssFeedGeneratorNode";
 // Design / Creative nodes
-import RemoveBackgroundNode from "./components/nodes/RemoveBackgroundNode";
 import FigmaCommentNode from "./components/nodes/FigmaCommentNode";
 // Developer Tools nodes
 import EnvVariableNode from "./components/nodes/EnvVariableNode";
 import GraphQLNode from "./components/nodes/GraphQLNode";
-import GrpcNode from "./components/nodes/GrpcNode";
 import SftpNode from "./components/nodes/SftpNode";
 import S3Node from "./components/nodes/S3Node";
-import DockerRunNode from "./components/nodes/DockerRunNode";
 import WebhookResponseNode from "./components/nodes/WebhookResponseNode";
-import NpmPackageInfoNode from "./components/nodes/NpmPackageInfoNode";
-import SemverCompareNode from "./components/nodes/SemverCompareNode";
 // Education / Student nodes
 import TranslationNode from "./components/nodes/TranslationNode";
 import TextToSpeechNode from "./components/nodes/TextToSpeechNode";
 import SpeechToTextNode from "./components/nodes/SpeechToTextNode";
 import OcrNode from "./components/nodes/OcrNode";
 // Research nodes
-import PubMedSearchNode from "./components/nodes/PubMedSearchNode";
-import ArxivSearchNode from "./components/nodes/ArxivSearchNode";
-import WikipediaLookupNode from "./components/nodes/WikipediaLookupNode";
 import DrugLookupNode from "./components/nodes/DrugLookupNode";
 import ClinicalTrialsNode from "./components/nodes/ClinicalTrialsNode";
 import WeatherNode from "./components/nodes/WeatherNode";
-import NewsSearchNode from "./components/nodes/NewsSearchNode";
 import StockPriceNode from "./components/nodes/StockPriceNode";
 import CurrencyExchangeNode from "./components/nodes/CurrencyExchangeNode";
 import IpLookupNode from "./components/nodes/IpLookupNode";
@@ -433,9 +382,6 @@ import NumberFormatNode from "./components/nodes/NumberFormatNode";
 import TextFormatNode from "./components/nodes/TextFormatNode";
 import RegexMatchNode from "./components/nodes/RegexMatchNode";
 import FindReplaceNode from "./components/nodes/FindReplaceNode";
-import HtmlToTextNode from "./components/nodes/HtmlToTextNode";
-import JsonToCsvNode from "./components/nodes/JsonToCsvNode";
-import XmlParserNode from "./components/nodes/XmlParserNode";
 import MarkdownRendererNode from "./components/nodes/MarkdownRendererNode";
 import UrlParserNode from "./components/nodes/UrlParserNode";
 import ColorConverterNode from "./components/nodes/ColorConverterNode";
@@ -464,7 +410,6 @@ import GoogleCalendarNode from "./components/nodes/GoogleCalendarNode";
 import GoogleDriveNode from "./components/nodes/GoogleDriveNode";
 import HubSpotNode from "./components/nodes/HubSpotNode";
 import ShopifyNode from "./components/nodes/ShopifyNode";
-import TwitterNode from "./components/nodes/TwitterNode";
 
 // Config Panels — previously stubbed (now real panels)
 import GitHubNode from "./components/nodes/GithubNode";
@@ -496,11 +441,6 @@ import FigmaNode from "./components/nodes/FigmaNode";
 import MastodonNode from "./components/nodes/MastodonNode";
 import ProductHuntNode from "./components/nodes/ProductHuntNode";
 import HackerNewsNode from "./components/nodes/HackerNewsNode";
-import VirusTotalNode from "./components/nodes/VirusTotalNode";
-import SSLMonitorNode from "./components/nodes/SSLMonitorNode";
-import DNSLookupNode from "./components/nodes/DNSLookupNode";
-import PortMonitorNode from "./components/nodes/PortMonitorNode";
-import HttpMonitorNode from "./components/nodes/HttpMonitorNode";
 import RedditNode from "./components/nodes/RedditNode";
 import CryptoPriceNode from "./components/nodes/CryptoPriceNode";
 
@@ -1221,28 +1161,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_bing_search: {
-    label: "Bing Search",
-    icon: Search,
-    logoUrl: imgBing,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    category: "ai",
-    agentOnly: true,
-    description: "Live Bing web search results",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Bing Search",
-      description: "Search the web with Bing",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Bing API Key",
-          type: "text",
-          placeholder: "your-bing-api-key",
-        },
-      ],
-    }),
-  },
   tool_brave_search: {
     label: "Brave Search",
     icon: Search,
@@ -1288,86 +1206,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_exa: {
-    label: "Exa Search",
-    icon: Search,
-    logoUrl: imgExa,
-    colorClass: "text-purple-400",
-    accentColor: "192,132,252",
-    category: "ai",
-    agentOnly: true,
-    description: "Semantic neural search for agents",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Exa Search",
-      description: "Semantic search with neural retrieval",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Exa API Key",
-          type: "text",
-          placeholder: "your-exa-api-key",
-        },
-      ],
-    }),
-  },
-  tool_duckduckgo: {
-    label: "DuckDuckGo",
-    icon: Search,
-    logoUrl: imgDuckDuckGo,
-    imgFilter: "invert(1)",
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    category: "ai",
-    agentOnly: true,
-    description: "Private DuckDuckGo search — no API key needed",
-    ConfigPanel: makeAgentToolPanel({
-      label: "DuckDuckGo",
-      description: "Privacy-friendly web search",
-    }),
-  },
-  tool_searxng: {
-    label: "SearXNG",
-    icon: Search,
-    colorClass: "text-blue-500",
-    accentColor: "59,130,246",
-    category: "ai",
-    agentOnly: true,
-    description: "Self-hosted metasearch (Google + Bing + DDG)",
-    ConfigPanel: makeAgentToolPanel({
-      label: "SearXNG",
-      description: "Connect to your SearXNG instance",
-      fields: [
-        {
-          key: "instanceUrl",
-          label: "Instance URL",
-          type: "text",
-          placeholder: "https://searxng.example.com",
-        },
-      ],
-    }),
-  },
-  tool_youtube_search: {
-    label: "YouTube Search",
-    icon: Youtube,
-    logoUrl: imgYouTube,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    category: "ai",
-    agentOnly: true,
-    description: "Search YouTube videos and channels",
-    ConfigPanel: makeAgentToolPanel({
-      label: "YouTube Search",
-      description: "Search YouTube content",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Google API Key",
-          type: "text",
-          placeholder: "your-google-api-key",
-        },
-      ],
-    }),
-  },
   tool_news: {
     label: "News Search",
     icon: Newspaper,
@@ -1385,43 +1223,6 @@ export const NodeRegistry = {
           label: "NewsAPI Key",
           type: "text",
           placeholder: "your-newsapi-key",
-        },
-      ],
-    }),
-  },
-  tool_arxiv: {
-    label: "arXiv Search",
-    icon: Microscope,
-    logoUrl: imgArxiv,
-    imgFilter: "invert(1)",
-    colorClass: "text-red-300",
-    accentColor: "252,165,165",
-    category: "ai",
-    agentOnly: true,
-    description: "Search arXiv scientific papers — free",
-    ConfigPanel: makeAgentToolPanel({
-      label: "arXiv Search",
-      description: "Search scientific preprints on arXiv",
-    }),
-  },
-  tool_wolfram: {
-    label: "Wolfram Alpha",
-    icon: Atom,
-    logoUrl: imgWolfram,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    category: "ai",
-    agentOnly: true,
-    description: "Computational knowledge: math, science, facts",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Wolfram Alpha",
-      description: "Answer computational and factual questions",
-      fields: [
-        {
-          key: "appId",
-          label: "Wolfram App ID",
-          type: "text",
-          placeholder: "your-app-id",
         },
       ],
     }),
@@ -1505,56 +1306,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_docker_exec: {
-    label: "Docker Exec",
-    icon: Box,
-    logoUrl: imgDocker,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Run commands inside Docker containers",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Docker Exec",
-      description: "Execute commands inside a container",
-      fields: [
-        {
-          key: "container",
-          label: "Container Name/ID",
-          type: "text",
-          placeholder: "my_container",
-        },
-      ],
-    }),
-  },
-  tool_git: {
-    label: "Git Operations",
-    icon: GitBranch,
-    logoUrl: imgGitHub,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    category: "ai",
-    agentOnly: true,
-    description: "Clone, commit, push, pull, and branch git repos",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Git",
-      description: "Perform git operations on repositories",
-      fields: [
-        {
-          key: "repoUrl",
-          label: "Repository URL",
-          type: "text",
-          placeholder: "https://github.com/org/repo",
-        },
-        {
-          key: "credential",
-          label: "GitHub Credential",
-          type: "credential",
-          credentialType: "GitHub",
-        },
-      ],
-    }),
-  },
   tool_virtual_computer: {
     label: "Virtual Computer",
     icon: Monitor,
@@ -1591,32 +1342,6 @@ export const NodeRegistry = {
           placeholder: "article, .content, body",
         },
       ],
-    }),
-  },
-  tool_screenshot: {
-    label: "Screenshot",
-    icon: Camera,
-    colorClass: "text-sky-300",
-    accentColor: "125,211,252",
-    category: "ai",
-    agentOnly: true,
-    description: "Take screenshots of any URL",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Screenshot",
-      description: "Capture a full-page screenshot of a URL",
-    }),
-  },
-  tool_form_fill: {
-    label: "Form Fill",
-    icon: Edit2,
-    colorClass: "text-sky-500",
-    accentColor: "14,165,233",
-    category: "ai",
-    agentOnly: true,
-    description: "Fill and submit web forms automatically",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Form Fill",
-      description: "Automate form filling on web pages",
     }),
   },
   tool_http_request: {
@@ -1764,79 +1489,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_redis: {
-    label: "Redis Tool",
-    icon: Database,
-    logoUrl: imgRedis,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    category: "ai",
-    agentOnly: true,
-    description: "Get, set, and query Redis keys",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Redis Tool",
-      description: "Read and write Redis key-value data",
-      fields: [
-        {
-          key: "connectionString",
-          label: "Connection String",
-          type: "text",
-          placeholder: "redis://localhost:6379",
-        },
-      ],
-    }),
-  },
-  tool_elasticsearch: {
-    label: "Elasticsearch",
-    icon: Search,
-    logoUrl: imgElastic,
-    imgFilter: "invert(1)",
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    category: "ai",
-    agentOnly: true,
-    description: "Full-text search on Elasticsearch indices",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Elasticsearch",
-      description: "Search documents in Elasticsearch",
-      fields: [
-        {
-          key: "url",
-          label: "Elasticsearch URL",
-          type: "text",
-          placeholder: "http://localhost:9200",
-        },
-        {
-          key: "apiKey",
-          label: "API Key",
-          type: "text",
-          placeholder: "optional",
-        },
-      ],
-    }),
-  },
-  tool_supabase: {
-    label: "Supabase Query",
-    icon: Database,
-    logoUrl: imgSupabase,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    category: "ai",
-    agentOnly: true,
-    description: "Query Supabase tables and functions",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Supabase Query",
-      description: "Query your Supabase project",
-      fields: [
-        {
-          key: "credential",
-          label: "Supabase Credential",
-          type: "credential",
-          credentialType: "Supabase",
-        },
-      ],
-    }),
-  },
 
   // ── Agent Tools — Communication (6) ─────────────────────────────────────────
   tool_email: {
@@ -1927,28 +1579,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_sms: {
-    label: "SMS",
-    icon: PhoneCall,
-    logoUrl: imgTwilio,
-    colorClass: "text-rose-300",
-    accentColor: "253,164,175",
-    category: "ai",
-    agentOnly: true,
-    description: "Send SMS messages via Twilio",
-    ConfigPanel: makeAgentToolPanel({
-      label: "SMS",
-      description: "Send text messages with Twilio",
-      fields: [
-        {
-          key: "credential",
-          label: "Twilio Credential",
-          type: "credential",
-          credentialType: "Twilio",
-        },
-      ],
-    }),
-  },
   tool_webhook: {
     label: "Webhook Call",
     icon: Webhook,
@@ -2021,81 +1651,8 @@ export const NodeRegistry = {
       description: "Compute math without hallucination",
     }),
   },
-  tool_unit_convert: {
-    label: "Unit Converter",
-    icon: ArrowRightLeft,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Convert between any units of measurement",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Unit Converter",
-      description: "Convert lengths, weights, temperatures, etc.",
-    }),
-  },
-  tool_currency: {
-    label: "Currency",
-    icon: DollarSign,
-    colorClass: "text-green-400",
-    accentColor: "74,222,128",
-    category: "ai",
-    agentOnly: true,
-    description: "Convert between currencies with live rates",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Currency",
-      description: "Live currency conversion",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Exchange Rate API Key",
-          type: "text",
-          placeholder: "optional — uses free tier",
-        },
-      ],
-    }),
-  },
-  tool_datetime: {
-    label: "DateTime Calc",
-    icon: Calendar,
-    colorClass: "text-cyan-400",
-    accentColor: "34,211,238",
-    category: "ai",
-    agentOnly: true,
-    description: "Add, subtract, and compare dates and times",
-    ConfigPanel: makeAgentToolPanel({
-      label: "DateTime Calc",
-      description: "Perform date and time arithmetic",
-    }),
-  },
-  tool_statistics: {
-    label: "Statistics",
-    icon: Sigma,
-    colorClass: "text-purple-400",
-    accentColor: "192,132,252",
-    category: "ai",
-    agentOnly: true,
-    description: "Mean, median, variance, correlation, and more",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Statistics",
-      description: "Statistical analysis on numeric datasets",
-    }),
-  },
-  tool_regex: {
-    label: "Regex Tool",
-    icon: Regex,
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    category: "ai",
-    agentOnly: true,
-    description: "Test, match, and extract using regular expressions",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Regex Tool",
-      description: "Run regex patterns on text",
-    }),
-  },
 
-  // ── Agent Tools — Productivity (6) ──────────────────────────────────────────
+  // ── Agent Tools — Productivity ──────────────────────────────────────────────
   tool_calendar: {
     label: "Google Calendar",
     icon: Calendar,
@@ -2118,272 +1675,7 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_approval: {
-    label: "Approval Gate",
-    icon: CheckCircle2,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    category: "ai",
-    agentOnly: true,
-    description: "Pause and wait for human approval",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Approval Gate",
-      description: "Request human confirmation before proceeding",
-    }),
-  },
-
-  // ── Agent Tools — Infrastructure (8) ────────────────────────────────────────
-  tool_aws: {
-    label: "AWS CLI",
-    icon: Server,
-    logoUrl: imgAWS,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    category: "ai",
-    agentOnly: true,
-    description: "Run AWS CLI commands: S3, EC2, Lambda, and more",
-    ConfigPanel: makeAgentToolPanel({
-      label: "AWS CLI",
-      description: "Execute AWS operations via CLI",
-      fields: [
-        {
-          key: "credential",
-          label: "AWS Credential",
-          type: "credential",
-          credentialType: "AWS",
-        },
-      ],
-    }),
-  },
-  tool_gcp: {
-    label: "GCP CLI",
-    icon: Server,
-    logoUrl: imgGCP,
-    imgFilter: "invert(1)",
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Run Google Cloud CLI commands",
-    ConfigPanel: makeAgentToolPanel({
-      label: "GCP CLI",
-      description: "Execute GCP operations via gcloud",
-      fields: [
-        {
-          key: "credential",
-          label: "GCP Credential",
-          type: "credential",
-          credentialType: "GCP",
-        },
-      ],
-    }),
-  },
-  tool_azure: {
-    label: "Azure CLI",
-    icon: Server,
-    logoUrl: imgAzureDevOps,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    category: "ai",
-    agentOnly: true,
-    description: "Run Azure CLI commands and manage resources",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Azure CLI",
-      description: "Execute Azure operations via az CLI",
-      fields: [
-        {
-          key: "credential",
-          label: "Azure Credential",
-          type: "credential",
-          credentialType: "Azure",
-        },
-      ],
-    }),
-  },
-  tool_kubernetes: {
-    label: "Kubernetes",
-    icon: Cpu,
-    logoUrl: imgKubernetes,
-    imgFilter: "invert(1)",
-    colorClass: "text-blue-500",
-    accentColor: "59,130,246",
-    category: "ai",
-    agentOnly: true,
-    description: "kubectl commands: deploy, scale, inspect pods",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Kubernetes",
-      description: "Run kubectl commands on a cluster",
-      fields: [
-        {
-          key: "kubeconfig",
-          label: "Kubeconfig",
-          type: "text",
-          placeholder: "paste kubeconfig YAML or leave blank for local",
-        },
-      ],
-    }),
-  },
-  tool_terraform: {
-    label: "Terraform",
-    icon: HardDrive,
-    logoUrl: imgTerraform,
-    imgFilter: "invert(1)",
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    category: "ai",
-    agentOnly: true,
-    description: "Plan and apply Terraform infrastructure changes",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Terraform",
-      description: "Manage infrastructure as code",
-    }),
-  },
-  tool_docker_compose: {
-    label: "Docker Compose",
-    icon: Box,
-    logoUrl: imgDocker,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Start, stop, and inspect Docker Compose stacks",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Docker Compose",
-      description: "Control multi-container Docker apps",
-    }),
-  },
-  tool_ansible: {
-    label: "Ansible",
-    icon: Server,
-    logoUrl: imgAnsible,
-    imgFilter: "invert(1)",
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    category: "ai",
-    agentOnly: true,
-    description: "Run Ansible playbooks on remote hosts",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Ansible",
-      description: "Automate configuration and provisioning",
-    }),
-  },
-  tool_vercel_deploy: {
-    label: "Vercel Deploy",
-    icon: UploadCloud,
-    logoUrl: imgVercel,
-    colorClass: "text-zinc-100",
-    accentColor: "244,244,245",
-    category: "ai",
-    agentOnly: true,
-    description: "Trigger Vercel deployments via API",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Vercel Deploy",
-      description: "Deploy projects to Vercel",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Vercel API Key",
-          type: "text",
-          placeholder: "your-vercel-token",
-        },
-      ],
-    }),
-  },
-
-  // ── Agent Tools — Security & Network (7) ────────────────────────────────────
-  tool_password: {
-    label: "Password Gen",
-    icon: Key,
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    category: "ai",
-    agentOnly: true,
-    description: "Generate cryptographically secure passwords",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Password Gen",
-      description: "Generate strong random passwords",
-    }),
-  },
-  tool_hash: {
-    label: "Hash Generator",
-    icon: Hash,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
-    category: "ai",
-    agentOnly: true,
-    description: "Compute MD5, SHA-256, SHA-512, and more",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Hash Generator",
-      description: "Hash data with common algorithms",
-    }),
-  },
-  tool_jwt: {
-    label: "JWT Tool",
-    icon: Lock,
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    category: "ai",
-    agentOnly: true,
-    description: "Sign, decode, and verify JWT tokens",
-    ConfigPanel: makeAgentToolPanel({
-      label: "JWT Tool",
-      description: "Work with JSON Web Tokens",
-    }),
-  },
-  tool_ip_geo: {
-    label: "IP Geolocation",
-    icon: MapPin,
-    colorClass: "text-rose-400",
-    accentColor: "251,113,133",
-    category: "ai",
-    agentOnly: true,
-    description: "Resolve IP addresses to country, city, and ASN",
-    ConfigPanel: makeAgentToolPanel({
-      label: "IP Geolocation",
-      description: "Look up location info for any IP address",
-    }),
-  },
-  tool_nmap: {
-    label: "Port Scanner",
-    icon: Activity,
-    colorClass: "text-red-300",
-    accentColor: "252,165,165",
-    category: "ai",
-    agentOnly: true,
-    description: "Scan open ports on a host (via Nmap)",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Port Scanner",
-      description: "Discover open ports on a target host",
-    }),
-  },
-  tool_ssl_check: {
-    label: "SSL Check",
-    icon: Shield,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    category: "ai",
-    agentOnly: true,
-    description: "Verify SSL certificate validity and expiry",
-    ConfigPanel: makeAgentToolPanel({
-      label: "SSL Check",
-      description: "Inspect TLS/SSL certificates for any domain",
-    }),
-  },
-
-  // ── Agent Tools — Reference (6) ─────────────────────────────────────────────
-  tool_dictionary: {
-    label: "Dictionary",
-    icon: BookOpen,
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    category: "ai",
-    agentOnly: true,
-    description: "Look up definitions and synonyms",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Dictionary",
-      description: "Word definitions, etymology, and synonyms",
-    }),
-  },
+  // ── Agent Tools — Reference ─────────────────────────────────────────────────
   tool_weather: {
     label: "Weather",
     icon: Thermometer,
@@ -2404,133 +1696,6 @@ export const NodeRegistry = {
           placeholder: "your-api-key",
         },
       ],
-    }),
-  },
-  tool_stock: {
-    label: "Stock Price",
-    icon: TrendingUp,
-    colorClass: "text-green-400",
-    accentColor: "74,222,128",
-    category: "ai",
-    agentOnly: true,
-    description: "Look up live and historical stock prices",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Stock Price",
-      description: "Fetch stock market data",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Alpha Vantage API Key",
-          type: "text",
-          placeholder: "your-api-key",
-        },
-      ],
-    }),
-  },
-  tool_crypto: {
-    label: "Crypto Price",
-    icon: Bitcoin,
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    category: "ai",
-    agentOnly: true,
-    description: "Real-time crypto prices from CoinGecko",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Crypto Price",
-      description: "Fetch cryptocurrency prices (free)",
-    }),
-  },
-  tool_timezone: {
-    label: "Timezone",
-    icon: Clock,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
-    category: "ai",
-    agentOnly: true,
-    description: "Convert times across world time zones",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Timezone",
-      description: "Convert and look up time zones",
-    }),
-  },
-  tool_exchange_rate: {
-    label: "Exchange Rate",
-    icon: ArrowRightLeft,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    category: "ai",
-    agentOnly: true,
-    description: "Live fiat currency exchange rates",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Exchange Rate",
-      description: "Convert between fiat currencies",
-    }),
-  },
-
-  // ── Agent Tools — Utilities (6) ─────────────────────────────────────────────
-  tool_qr: {
-    label: "QR Code",
-    icon: QrCode,
-    colorClass: "text-zinc-300",
-    accentColor: "212,212,216",
-    category: "ai",
-    agentOnly: true,
-    description: "Generate QR codes from any text or URL",
-    ConfigPanel: makeAgentToolPanel({
-      label: "QR Code",
-      description: "Create QR codes",
-    }),
-  },
-  tool_uuid: {
-    label: "UUID Generator",
-    icon: Fingerprint,
-    colorClass: "text-purple-400",
-    accentColor: "192,132,252",
-    category: "ai",
-    agentOnly: true,
-    description: "Generate random UUIDs (v1, v4, v5)",
-    ConfigPanel: makeAgentToolPanel({
-      label: "UUID Generator",
-      description: "Generate universally unique identifiers",
-    }),
-  },
-  tool_data_diff: {
-    label: "Data Diff",
-    icon: SplitSquareHorizontal,
-    colorClass: "text-amber-400",
-    accentColor: "251,191,36",
-    category: "ai",
-    agentOnly: true,
-    description: "Compare two data objects and return the diff",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Data Diff",
-      description: "Find differences between two datasets",
-    }),
-  },
-  tool_html_parse: {
-    label: "HTML Parser",
-    icon: Code2,
-    colorClass: "text-orange-300",
-    accentColor: "253,186,116",
-    category: "ai",
-    agentOnly: true,
-    description: "Parse HTML and extract elements via CSS selectors",
-    ConfigPanel: makeAgentToolPanel({
-      label: "HTML Parser",
-      description: "Extract data from HTML documents",
-    }),
-  },
-  tool_xml_parse: {
-    label: "XML Parser",
-    icon: Code2,
-    colorClass: "text-blue-300",
-    accentColor: "147,197,253",
-    category: "ai",
-    agentOnly: true,
-    description: "Parse XML and extract nodes via XPath",
-    ConfigPanel: makeAgentToolPanel({
-      label: "XML Parser",
-      description: "Extract data from XML documents",
     }),
   },
   tool_base64: {
@@ -2760,65 +1925,7 @@ export const NodeRegistry = {
     ConfigPanel: WebSearchNode,
     category: "research",
   },
-  pubmed_search: {
-    label: "PubMed Search",
-    icon: Microscope,
-    logoUrl: imgPubMed,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    ConfigPanel: PubMedSearchNode,
-    category: "research",
-    description: "Search biomedical literature via NCBI PubMed",
-  },
-  arxiv_search: {
-    label: "ArXiv Search",
-    icon: Atom,
-    logoUrl: imgArxiv,
-    colorClass: "text-rose-400",
-    accentColor: "251,113,133",
-    ConfigPanel: ArxivSearchNode,
-    category: "research",
-    description: "Search scientific preprints on arXiv.org",
-  },
-  wikipedia_lookup: {
-    label: "Wikipedia Lookup",
-    icon: BookOpen,
-    logoUrl: imgWikipedia,
-    colorClass: "text-white",
-    accentColor: "161,161,170",
-    ConfigPanel: WikipediaLookupNode,
-    category: "research",
-    description: "Fetch article summaries from Wikipedia",
-  },
-  news_search: {
-    label: "News Search",
-    icon: Newspaper,
-    logoUrl: imgNews,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    ConfigPanel: NewsSearchNode,
-    category: "research",
-    description: "Fetch latest news articles by keyword",
-  },
   // Logic & Flow
-  distributor: {
-    label: "Distributor",
-    icon: Split,
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    category: "flow",
-    description:
-      "Fan-out tasks across N parallel worker nodes — like a super-smelter",
-    ConfigPanel: DistributorNode,
-  },
-  logic_router: {
-    label: "Logic Router",
-    icon: GitBranch,
-    colorClass: "text-white",
-    accentColor: "236,72,153",
-    ConfigPanel: LogicRouterNode,
-    category: "flow",
-  },
   delay: {
     label: "Delay",
     icon: Hourglass,
@@ -2994,15 +2101,6 @@ export const NodeRegistry = {
     category: "devtools",
     description: "Query or mutate any GraphQL API with variables and auth",
   },
-  grpc_call: {
-    label: "gRPC Call",
-    icon: Cpu,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    ConfigPanel: GrpcNode,
-    category: "devtools",
-    description: "Invoke a gRPC service method with protobuf payload",
-  },
   sftp: {
     label: "SFTP",
     icon: UploadCloud,
@@ -3022,15 +2120,6 @@ export const NodeRegistry = {
     description:
       "AWS S3 (and S3-compatible) object storage — upload, download, presign",
   },
-  docker_run: {
-    label: "Docker Run",
-    icon: Box,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    ConfigPanel: DockerRunNode,
-    category: "devtools",
-    description: "Spin up a container, run a command and capture stdout/stderr",
-  },
   webhook_response: {
     label: "Webhook Response",
     icon: Send,
@@ -3039,25 +2128,6 @@ export const NodeRegistry = {
     ConfigPanel: WebhookResponseNode,
     category: "devtools",
     description: "Send a custom HTTP response to the webhook caller",
-  },
-  npm_package_info: {
-    label: "NPM Package Info",
-    icon: Package,
-    colorClass: "text-red-400",
-    accentColor: "248,113,113",
-    ConfigPanel: NpmPackageInfoNode,
-    category: "devtools",
-    description:
-      "Fetch version, downloads, license and metadata from npm registry",
-  },
-  semver_compare: {
-    label: "Semver Compare",
-    icon: GitBranch,
-    colorClass: "text-indigo-400",
-    accentColor: "129,140,248",
-    ConfigPanel: SemverCompareNode,
-    category: "devtools",
-    description: "Compare, sort, validate and coerce semantic version strings",
   },
   github: {
     label: "GitHub",
@@ -3118,54 +2188,7 @@ export const NodeRegistry = {
     category: "crm",
   },
 
-  // Social Media
-  twitter: {
-    label: "Twitter / X",
-    icon: Twitter,
-    colorClass: "text-white",
-    accentColor: "228,228,231",
-    logoUrl: imgTwitter,
-    ConfigPanel: TwitterNode,
-    category: "social",
-  },
 
-  // ── New Triggers ───────────────────────────────────────────────────────────
-  youtube_trigger: {
-    label: "YouTube Trigger",
-    icon: Youtube,
-    colorClass: "text-red-400",
-    accentColor: "248,113,113",
-    logoUrl: imgYouTube,
-    ConfigPanel: YouTubeTriggerNode,
-    category: "trigger",
-  },
-  price_alert_trigger: {
-    label: "Price Alert Trigger",
-    icon: TrendingUp,
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    logoUrl: imgBitcoin,
-    ConfigPanel: PriceAlertTriggerNode,
-    category: "trigger",
-  },
-  reddit_trigger: {
-    label: "Reddit Trigger",
-    icon: MessageSquarePlus,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    logoUrl: imgReddit,
-    ConfigPanel: RedditTriggerNode,
-    category: "trigger",
-  },
-  google_calendar_trigger: {
-    label: "Google Calendar Trigger",
-    icon: Calendar,
-    colorClass: "text-[#4285F4]",
-    accentColor: "66,133,244",
-    logoUrl: imgGoogleCalendar,
-    ConfigPanel: GoogleCalendarTriggerNode,
-    category: "trigger",
-  },
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────
   text_splitter: {
@@ -3200,14 +2223,6 @@ export const NodeRegistry = {
     ConfigPanel: AggregateNode,
     category: "flow",
   },
-  notification_hub: {
-    label: "Notification Hub",
-    icon: Zap,
-    colorClass: "text-pink-400",
-    accentColor: "244,114,182",
-    ConfigPanel: NotificationHubNode,
-    category: "integration",
-  },
   // ── Coding Agents ─────────────────────────────────────────────────────────
   claude_code: {
     label: "Claude Code",
@@ -3224,44 +2239,6 @@ export const NodeRegistry = {
         { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4.6" },
         { value: "claude-opus-4-20250514", label: "Claude Opus 4" },
         { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
-      ],
-    }),
-    category: "code",
-  },
-  codex: {
-    label: "Codex",
-    icon: Brain,
-    logoUrl: imgOpenAI,
-    colorClass: "text-[#10A37F]",
-    accentColor: "16,163,127",
-    ConfigPanel: makeCodingAgentNode({
-      label: "Codex (GPT-4o)",
-      accent: "emerald",
-      credentialType: "OpenAI",
-      defaultModel: "gpt-4o",
-      models: [
-        { value: "gpt-4o", label: "GPT-4o" },
-        { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-        { value: "o4-mini", label: "o4-mini" },
-      ],
-    }),
-    category: "code",
-  },
-  gemini_cli: {
-    label: "Gemini CLI",
-    icon: Brain,
-    logoUrl: imgGemini,
-    colorClass: "text-[#4285F4]",
-    accentColor: "66,133,244",
-    ConfigPanel: makeCodingAgentNode({
-      label: "Gemini CLI",
-      accent: "blue",
-      credentialType: "Gemini",
-      defaultModel: "gemini-2.0-flash",
-      models: [
-        { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-        { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
-        { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
       ],
     }),
     category: "code",
@@ -3312,32 +2289,6 @@ export const NodeRegistry = {
       defaultModel: "local-model",
       hasBaseUrl: true,
     }),
-    category: "code",
-  },
-  github_copilot: {
-    label: "GitHub Copilot",
-    icon: Github,
-    logoUrl: imgGitHub,
-    imgFilter: "invert(1)",
-    colorClass: "text-zinc-200",
-    accentColor: "244,244,245",
-    ConfigPanel: makeCodingAgentNode({
-      label: "GitHub Copilot",
-      accent: "zinc",
-      credentialType: "GitHub",
-      defaultModel: "gpt-4o",
-      models: [{ value: "gpt-4o", label: "GPT-4o (Copilot)" }],
-    }),
-    category: "code",
-  },
-
-  virtual_computer: {
-    label: "Virtual Computer",
-    icon: Server,
-    logoUrl: imgComputer,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    ConfigPanel: VirtualComputerNode,
     category: "code",
   },
 
@@ -3641,37 +2592,6 @@ export const NodeRegistry = {
     category: "design",
     description: "Fetch files, post comments and export assets from Figma",
   },
-  // Social
-  instagram: {
-    label: "Instagram",
-    icon: Camera,
-    colorClass: "text-[#E4405F]",
-    accentColor: "228,64,95",
-    logoUrl: imgInstagram,
-    ConfigPanel: InstagramPostNode,
-    category: "social_pub",
-    description: "Post images, reels, stories and carousels to Instagram",
-  },
-  tiktok: {
-    label: "TikTok",
-    icon: Video,
-    colorClass: "text-white",
-    accentColor: "238,29,82",
-    logoUrl: imgTikTok,
-    ConfigPanel: TikTokPostNode,
-    category: "social_pub",
-    description: "Publish videos to TikTok via Content Posting API",
-  },
-  virustotal: {
-    label: "VirusTotal",
-    icon: Shield,
-    colorClass: "text-[#394EFF]",
-    accentColor: "57,78,255",
-    logoUrl: imgVirusTotal,
-    ConfigPanel: VirusTotalNode,
-    category: "devtools",
-    description: "Scan files and URLs for malware via VirusTotal API",
-  },
   // Infra
   ssh: {
     label: "SSH Command",
@@ -3682,55 +2602,6 @@ export const NodeRegistry = {
     ConfigPanel: SshTriggerNode,
     category: "devtools",
     description: "Run a command on a remote server via SSH and capture output",
-  },
-  docker: {
-    label: "Docker",
-    icon: Box,
-    colorClass: "text-[#2496ED]",
-    accentColor: "36,150,237",
-    logoUrl: imgDocker,
-    ConfigPanel: DockerRunNode,
-    category: "devtools",
-    description: "Manage Docker containers, images and events",
-  },
-  ssl: {
-    label: "SSL Cert Monitor",
-    icon: Lock,
-    colorClass: "text-green-400",
-    accentColor: "74,222,128",
-    logoUrl: imgLetsEncrypt,
-    ConfigPanel: SSLMonitorNode,
-    category: "devtools",
-    description: "Check SSL certificate expiry and validity for any domain",
-  },
-  dns: {
-    label: "DNS Lookup",
-    icon: Globe,
-    colorClass: "text-white",
-    accentColor: "56,189,248",
-    logoUrl: imgDns,
-    ConfigPanel: DNSLookupNode,
-    category: "devtools",
-    description: "Query A, MX, TXT, CNAME and other DNS records for a domain",
-  },
-  port_monitor: {
-    label: "Port Monitor",
-    icon: Wifi,
-    colorClass: "text-white",
-    accentColor: "167,139,250",
-    logoUrl: imgPortMonitor,
-    ConfigPanel: PortMonitorNode,
-    category: "devtools",
-    description: "Check if a TCP port is open or closed on a server",
-  },
-  http_monitor: {
-    label: "HTTP Monitor",
-    icon: Activity,
-    colorClass: "text-white",
-    accentColor: "248,113,113",
-    ConfigPanel: HttpMonitorNode,
-    category: "devtools",
-    description: "Check URL uptime, response time and status code",
   },
   // Content / Feed
   youtube: {
@@ -3814,16 +2685,6 @@ export const NodeRegistry = {
     description:
       "Store and retrieve values across nodes with execution/workflow/global scope",
   },
-  pagination_handler: {
-    label: "Pagination Handler",
-    icon: ArrowRightLeft,
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    ConfigPanel: PaginationHandlerNode,
-    category: "automation",
-    description:
-      "Auto-paginate APIs — offset, cursor, page number or next link",
-  },
   file_upload: {
     label: "File Upload",
     icon: Upload,
@@ -3862,121 +2723,7 @@ export const NodeRegistry = {
     category: "automation",
     description: "Encode or decode text, URLs and binary with URL-safe support",
   },
-  hash: {
-    label: "Hash",
-    icon: Fingerprint,
-    colorClass: "text-white",
-    accentColor: "251,113,133",
-    ConfigPanel: HashNode,
-    category: "automation",
-    description:
-      "MD5, SHA-256/512, SHA3, HMAC, bcrypt, Argon2 — with verify mode",
-  },
 
-  // ── Finance & Accounting Nodes ───────────────────────────────────────────
-  gst_calculator: {
-    label: "GST Calculator",
-    icon: Calculator,
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    ConfigPanel: GstCalculatorNode,
-    category: "finance",
-    description:
-      "Indian GST with CGST/SGST/IGST breakdown, cess, inclusive/exclusive",
-  },
-  invoice_parser: {
-    label: "Invoice Parser",
-    icon: ScanLine,
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    ConfigPanel: InvoiceParserNode,
-    category: "finance",
-    description:
-      "Extract structured fields from invoice images or PDFs using AI vision",
-  },
-  tax_rate_lookup: {
-    label: "Tax Rate Lookup",
-    icon: Search,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    ConfigPanel: TaxRateLookupNode,
-    category: "finance",
-    description:
-      "Fetch tax rates by country/category, HSN lookup, GSTIN validation",
-  },
-  bank_statement_parser: {
-    label: "Bank Statement Parser",
-    icon: Table2,
-    colorClass: "text-indigo-400",
-    accentColor: "129,140,248",
-    ConfigPanel: BankStatementParserNode,
-    category: "finance",
-    description:
-      "Parse CSV bank statements — SBI, HDFC, ICICI and more, with AI categorization",
-  },
-  ledger_entry: {
-    label: "Ledger Entry",
-    icon: BookOpen,
-    colorClass: "text-teal-400",
-    accentColor: "45,212,191",
-    ConfigPanel: LedgerEntryNode,
-    category: "finance",
-    description:
-      "Double-entry bookkeeping — add debit/credit entries, query, balance, P&L",
-  },
-  compound_interest: {
-    label: "Compound Interest",
-    icon: TrendingUp,
-    colorClass: "text-green-400",
-    accentColor: "74,222,128",
-    ConfigPanel: CompoundInterestNode,
-    category: "finance",
-    description: "CI, SI, EMI, SIP, lumpsum and FD maturity calculations",
-  },
-  payroll_calculator: {
-    label: "Payroll Calculator",
-    icon: Briefcase,
-    colorClass: "text-violet-400",
-    accentColor: "167,139,250",
-    ConfigPanel: PayrollCalculatorNode,
-    category: "finance",
-    description: "Net salary with PF, ESI, TDS, LOP — India new/old tax regime",
-  },
-
-  // ── Social Media Publishing Nodes ────────────────────────────────────────
-  youtube_upload: {
-    label: "YouTube Upload",
-    icon: Youtube,
-    colorClass: "text-red-400",
-    accentColor: "248,113,113",
-    logoUrl: imgYouTube,
-    ConfigPanel: YouTubeUploadNode,
-    category: "social_pub",
-    description:
-      "Upload a video to YouTube with title, tags, privacy and playlist",
-  },
-  linkedin_post: {
-    label: "LinkedIn Post",
-    icon: Users,
-    logoUrl: imgLinkedIn,
-    colorClass: "text-[#0A66C2]",
-    accentColor: "10,102,194",
-    ConfigPanel: LinkedInPostNode,
-    category: "social_pub",
-    description: "Publish text, image, video, article or document to LinkedIn",
-  },
-
-  // ── Design & Creative Nodes ──────────────────────────────────────────────
-  remove_background: {
-    label: "Remove Background",
-    icon: Scissors,
-    colorClass: "text-pink-400",
-    accentColor: "244,114,182",
-    ConfigPanel: RemoveBackgroundNode,
-    category: "design",
-    description:
-      "Strip image background, replace with transparent, color or image",
-  },
   // ── Education & AI Nodes ─────────────────────────────────────────────────
   translation: {
     label: "Translation",
@@ -4017,34 +2764,6 @@ export const NodeRegistry = {
     description: "Extract text from images and scanned documents",
   },
 
-  // ── Data Processing Nodes ────────────────────────────────────────────────
-  html_to_text: {
-    label: "HTML to Text",
-    icon: FileText,
-    colorClass: "text-white",
-    accentColor: "34,211,238",
-    ConfigPanel: HtmlToTextNode,
-    category: "transform",
-    description: "Strip HTML tags and extract clean plain text",
-  },
-  json_to_csv: {
-    label: "JSON ↔ CSV",
-    icon: Table2,
-    colorClass: "text-white",
-    accentColor: "52,211,153",
-    ConfigPanel: JsonToCsvNode,
-    category: "transform",
-    description: "Convert between JSON arrays and CSV format",
-  },
-  xml_parser: {
-    label: "XML Parser",
-    icon: Code2,
-    colorClass: "text-white",
-    accentColor: "251,191,36",
-    ConfigPanel: XmlParserNode,
-    category: "transform",
-    description: "Parse XML to JSON or build XML from JSON",
-  },
   // ── Flow Control Nodes ────────────────────────────────────────────────────
   condition: {
     label: "Condition",

@@ -87,7 +87,6 @@ import webScraper from "./webScraper.node.js";
 import aiAgent from "./aiAgent.node.js";
 import toolThink from "./toolThink.node.js";
 import dataMapper from "./dataMapper.node.js";
-import logicRouter from "./logicRouter.node.js";
 
 // Flow Control
 import condition from "./condition.node.js";
@@ -95,7 +94,6 @@ import successFailed from "./successFailed.node.js";
 import stopError from "./stopError.node.js";
 import retry from "./retry.node.js";
 import rateLimiter from "./rateLimiter.node.js";
-import distributor from "./distributor.node.js";
 import waitForEvent from "./waitForEvent.node.js";
 import approval from "./approval.node.js";
 import subWorkflow from "./subWorkflow.node.js";
@@ -167,9 +165,6 @@ import googleDrive from "./integrations/googleDrive.node.js";
 import hubspot from "./integrations/hubspot.node.js";
 import shopify from "./integrations/shopify.node.js";
 
-// Integrations: Social Media
-import twitter from "./integrations/twitter.node.js";
-
 // New Utility Nodes
 import qrCode from "./qrCode.node.js";
 import textSplitter from "./textSplitter.node.js";
@@ -184,11 +179,7 @@ import dataDiff from "./dataDiff.node.js";
 // AI Innovated Nodes
 import emailParser from "./emailParser.node.js";
 import vectorMemory from "./vectorMemory.node.js";
-import notificationHub from "./notificationHub.node.js";
 import browserAgent from "./browserAgent.node.js";
-
-// Virtual Computer
-import virtualComputer from "./virtualComputer.node.js";
 
 // Coding Agents
 import claudeCode    from "./integrations/claudeCode.node.js";
@@ -208,7 +199,6 @@ import openaiAssistant from "./integrations/openaiAssistant.node.js";
 
 // New Utility Nodes
 import urlParser from "./urlParser.node.js";
-import xmlParser from "./xmlParser.node.js";
 import weather from "./weather.node.js";
 import translation from "./translation.node.js";
 import speechToText from "./speechToText.node.js";
@@ -287,7 +277,6 @@ export const nodeRegistry = {
   web_scraper: webScraper,
   ai_agent: aiAgent,
   data_mapper: dataMapper,
-  logic_router: logicRouter,
 
   // Flow Control
   condition: condition,
@@ -295,7 +284,6 @@ export const nodeRegistry = {
   stop_error: stopError,
   retry: retry,
   rate_limiter: rateLimiter,
-  distributor: distributor,
   wait_for_event: waitForEvent,
   approval: approval,
   sub_workflow: subWorkflow,
@@ -369,9 +357,6 @@ export const nodeRegistry = {
   hubspot: hubspot,
   shopify: shopify,
 
-  // Social Media
-  twitter: twitter,
-
   // New Utility Nodes
   qr_code: qrCode,
   text_splitter: textSplitter,
@@ -386,7 +371,6 @@ export const nodeRegistry = {
   // AI Innovated Nodes
   email_parser: emailParser,
   vector_memory: vectorMemory,
-  notification_hub: notificationHub,
   browser_agent: browserAgent,
 
   // Trigger implementations
@@ -436,9 +420,6 @@ export const nodeRegistry = {
   woocommerce_trigger:      woocommerceTrigger,
   virustotal_trigger:       virustotalTrigger,
 
-  // Virtual Computer
-  virtual_computer: virtualComputer,
-
   // Coding Agents
   claude_code:    claudeCode,
   codex:          codex,
@@ -457,7 +438,6 @@ export const nodeRegistry = {
 
   // Utility nodes
   url_parser: urlParser,
-  xml_parser: xmlParser,
   weather: weather,
   translation: translation,
   speech_to_text: speechToText,
@@ -493,76 +473,50 @@ export const nodeRegistry = {
   sftp: sftp,
   mailchimp: mailchimp,
   tiktok: tiktok,
-  tiktok_post: tiktok,
   instagram: instagram,
-  instagram_post: instagram,
   ocr: ocr,
 
   // ── Utility nodes ──────────────────────────────────────────────────────────
   base64:              utilityNodes.base64,
-  hash:                utilityNodes.hash,
   color_converter:     utilityNodes.color_converter,
   unit_converter:      utilityNodes.unit_converter,
   number_format:       utilityNodes.number_format,
   find_replace:        utilityNodes.find_replace,
   regex_match:         utilityNodes.regex_match,
   math_expression:     utilityNodes.math_expression,
-  html_to_text:        utilityNodes.html_to_text,
-  json_to_csv:         utilityNodes.json_to_csv,
   markdown_renderer:   utilityNodes.markdown_renderer,
   text_format:         utilityNodes.text_format,
   random_pick:         utilityNodes.random_pick,
-  pagination_handler:  utilityNodes.pagination_handler,
   counter:             utilityNodes.counter,
   variable_set_get:    utilityNodes.variable_set_get,
   schedule_check:      utilityNodes.schedule_check,
-  semver_compare:      utilityNodes.semver_compare,
   env_variable:        utilityNodes.env_variable,
   error:               utilityNodes.error,
   zip_files:           utilityNodes.zip_files,
-  compound_interest:   utilityNodes.compound_interest,
-  gst_calculator:      utilityNodes.gst_calculator,
-  payroll_calculator:  utilityNodes.payroll_calculator,
-  tax_rate_lookup:     utilityNodes.tax_rate_lookup,
   price_alert:         utilityNodes.price_alert,
-  ledger_entry:        utilityNodes.ledger_entry,
 
   // ── Network / infra nodes ──────────────────────────────────────────────────
-  dns:                 networkNodes.dns_lookup,
-  ssl:                 networkNodes.ssl,
-  http_monitor:        networkNodes.http_monitor,
-  port_monitor:        networkNodes.port_monitor,
   ip_lookup:           networkNodes.ip_lookup,
   ip_whitelist:        networkNodes.ip_whitelist,
 
   // ── Public API nodes ───────────────────────────────────────────────────────
-  arxiv_search:        publicApiNodes.arxiv_search,
-  pubmed_search:       publicApiNodes.pubmed_search,
   clinical_trials:     publicApiNodes.clinical_trials,
   drug_lookup:         publicApiNodes.drug_lookup,
   hackernews:          publicApiNodes.hackernews,
-  wikipedia_lookup:    publicApiNodes.wikipedia_lookup,
-  npm_package_info:    publicApiNodes.npm_package_info,
-  news_search:         publicApiNodes.news_search,
   producthunt:         publicApiNodes.producthunt,
   stock_price:         publicApiNodes.stock_price,
   currency_exchange:   publicApiNodes.currency_exchange,
   twitch_stream_status: publicApiNodes.twitch_stream_status,
 
   // ── AI content nodes ───────────────────────────────────────────────────────
-  remove_background:   aiContentNodes.remove_background,
-  invoice_parser:      aiContentNodes.invoice_parser,
-  bank_statement_parser: aiContentNodes.bank_statement_parser,
   chat:                aiContentNodes.chat,
 
   // ── Dev tools nodes ────────────────────────────────────────────────────────
   graphql_request:     devToolNodes.graphql_request,
-  grpc_call:           devToolNodes.grpc_call,
   gitlab:              devToolNodes.gitlab,
   azure_devops:        devToolNodes.azure_devops,
   github_issue:        devToolNodes.github_issue,
   docker:              devToolNodes.docker,
-  docker_run:          devToolNodes.docker_run,
   ssh:                 devToolNodes.ssh,
   google_docs:         devToolNodes.google_docs,
   google_forms:        devToolNodes.google_forms,
@@ -570,9 +524,6 @@ export const nodeRegistry = {
   figma_comment:       devToolNodes.figma_comment,
 
   // ── Social / publishing nodes ──────────────────────────────────────────────
-  twitter_post:        socialNodes.twitter_post,
-  linkedin_post:       socialNodes.linkedin_post,
-  youtube_upload:      socialNodes.youtube_upload,
   discord_role_assign: socialNodes.discord_role_assign,
   mastodon:            socialNodes.mastodon,
   imap:                socialNodes.imap,
@@ -615,7 +566,6 @@ export const nodeRegistry = {
   set_fields: dataMapper,
   transform: dataMapper,
   filter: dataMapper,
-  if_condition: logicRouter,
 
   // Agent Tool Nodes — spread all tool_* exports
   ...Object.fromEntries(
