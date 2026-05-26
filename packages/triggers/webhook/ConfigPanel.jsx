@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Copy, Check, Lock, Webhook, Zap } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../../../../lib/api';
+import { API_URL } from '@/lib/api';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 

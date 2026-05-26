@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../../../../lib/api';
+import { API_URL } from '@/lib/api';
 import imgTelegram from '@/assets/telegram.png';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 

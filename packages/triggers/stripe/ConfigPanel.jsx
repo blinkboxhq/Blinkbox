@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CreditCard, Info, CheckCircle, Circle } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../../../../lib/api';
+import { API_URL } from '@/lib/api';
 
 const STRIPE_EVENTS = [
   {

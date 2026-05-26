@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MessageSquare, Copy, Check, Bot, Lock } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../../../../lib/api';
+import { API_URL } from '@/lib/api';
 
 export default function ChatTriggerNode({ config = {}, updateConfig, nodeId }) {
   const { id: automationId } = useParams();

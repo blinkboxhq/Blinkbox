@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ClipboardList, Copy, Check, X, Info, Code2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { API_URL } from '../../../../lib/api';
+import { API_URL } from '@/lib/api';
 
 export default function FormTriggerNode({ config = {}, updateConfig, nodeId }) {
   const { id: automationId } = useParams();
