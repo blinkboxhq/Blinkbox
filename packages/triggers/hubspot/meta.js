@@ -1,0 +1,1 @@
+export default { label: "On HubSpot CRM Event", description: "Fires on HubSpot contact or deal events", category: "triggers", colorClass: "text-[#FF7A59]", accentColor: "255,122,89", backendType: "hubspot_trigger" };

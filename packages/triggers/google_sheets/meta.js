@@ -1,0 +1,1 @@
+export default { label: "On Google Sheets Row", description: "Fires when a new row is added to Google Sheets", category: "triggers", colorClass: "text-[#34A853]", accentColor: "52,168,83", backendType: "google_sheets_trigger" };

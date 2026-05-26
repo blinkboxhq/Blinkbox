@@ -1,0 +1,1 @@
+export default { label: "On Reddit Post", description: "Fires on new posts in a subreddit", category: "triggers", colorClass: "text-orange-400", accentColor: "251,146,60", backendType: "reddit_trigger" };

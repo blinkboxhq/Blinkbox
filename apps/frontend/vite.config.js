@@ -5,9 +5,15 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   base: "/",
+  server: {
+    fs: {
+      allow: [".", "../../packages"],
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@triggers": path.resolve(__dirname, "../../packages/triggers"),
     },
   },
   build: {

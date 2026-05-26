@@ -1,0 +1,1 @@
+export default { label: "On Chat Message", description: "Fires when a user sends a chat message", category: "triggers", colorClass: "text-pink-400", accentColor: "236,72,153", backendType: "chat_trigger" };

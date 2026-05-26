@@ -1,0 +1,1 @@
+export default { label: "On Teams Message", description: "Fires on Microsoft Teams message events", category: "triggers", colorClass: "text-[#6264A7]", accentColor: "98,100,167", backendType: "teams_trigger" };

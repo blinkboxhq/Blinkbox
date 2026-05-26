@@ -20,108 +20,108 @@ import {
   Calendar,
 } from "lucide-react";
 
-import TriggerNode         from "./components/nodes/TriggerNode";
-import WebhookTriggerNode  from "./components/nodes/WebhookTriggerNode";
-import ScheduleTriggerNode from "./components/nodes/ScheduleTriggerNode";
-import ChatTriggerNode     from "./components/nodes/ChatTriggerNode";
-import EmailTriggerNode    from "./components/nodes/EmailTriggerNode";
-import ErrorTriggerNode    from "./components/nodes/ErrorTriggerNode";
-import RssTriggerNode      from "./components/nodes/RssTriggerNode";
-import ImapTriggerNode     from "./components/nodes/ImapTriggerNode";
-import DatabaseTriggerNode from "./components/nodes/DatabaseTriggerNode";
-import GitHubTriggerNode   from "./components/nodes/GitHubTriggerNode";
-import StripeTriggerNode   from "./components/nodes/StripeTriggerNode";
+import TriggerNode         from "@triggers/manual/ConfigPanel.jsx";
+import WebhookTriggerNode  from "@triggers/webhook/ConfigPanel.jsx";
+import ScheduleTriggerNode from "@triggers/cron/ConfigPanel.jsx";
+import ChatTriggerNode     from "@triggers/chat/ConfigPanel.jsx";
+import EmailTriggerNode    from "@triggers/imap/ConfigPanel.jsx";
+import ErrorTriggerNode    from "@triggers/error_trigger/ConfigPanel.jsx";
+import RssTriggerNode      from "@triggers/rss/ConfigPanel.jsx";
+import ImapTriggerNode     from "@triggers/imap/ConfigPanel.jsx";
+import DatabaseTriggerNode from "@triggers/db/ConfigPanel.jsx";
+import GitHubTriggerNode   from "@triggers/github/ConfigPanel.jsx";
+import StripeTriggerNode   from "@triggers/stripe/ConfigPanel.jsx";
 
 // Integration triggers
-import TelegramTriggerNode from "./components/nodes/TelegramTriggerNode";
-import SlackTriggerNode    from "./components/nodes/SlackTriggerNode";
-import DiscordTriggerNode  from "./components/nodes/DiscordTriggerNode";
-import GmailTriggerNode    from "./components/nodes/GmailTriggerNode";
-import AirtableTriggerNode from "./components/nodes/AirtableTriggerNode";
-import NotionTriggerNode   from "./components/nodes/NotionTriggerNode";
-import HubSpotTriggerNode  from "./components/nodes/HubSpotTriggerNode";
-import ShopifyTriggerNode  from "./components/nodes/ShopifyTriggerNode";
-import LinearTriggerNode   from "./components/nodes/LinearTriggerNode";
-import TypeformTriggerNode from "./components/nodes/TypeformTriggerNode";
-import WhatsAppTriggerNode from "./components/nodes/WhatsAppTriggerNode";
-import YouTubeTriggerNode        from "./components/nodes/YouTubeTriggerNode";
-import PriceAlertTriggerNode     from "./components/nodes/PriceAlertTriggerNode";
-import RedditTriggerNode         from "./components/nodes/RedditTriggerNode";
-import GoogleCalendarTriggerNode from "./components/nodes/GoogleCalendarTriggerNode";
-import GitHubIssueTriggerNode    from "./components/nodes/GitHubIssueTriggerNode";
-import SshTriggerNode              from "./components/nodes/SshTriggerNode";
-import DockerTriggerNode           from "./components/nodes/DockerTriggerNode";
-import JiraTriggerNode             from "./components/nodes/JiraTriggerNode";
-import TrelloTriggerNode           from "./components/nodes/TrelloTriggerNode";
-import GoogleSheetsTriggerNode     from "./components/nodes/GoogleSheetsTriggerNode";
-import OutlookTriggerNode          from "./components/nodes/OutlookTriggerNode";
-import TeamsTriggerNode            from "./components/nodes/TeamsTriggerNode";
-import HttpMonitorTriggerNode      from "./components/nodes/HttpMonitorTriggerNode";
-import GitLabTriggerNode           from "./components/nodes/GitLabTriggerNode";
-import SslTriggerNode              from "./components/nodes/SslTriggerNode";
-import DnsTriggerNode              from "./components/nodes/DnsTriggerNode";
-import PortMonitorTriggerNode      from "./components/nodes/PortMonitorTriggerNode";
-import HackerNewsTriggerNode       from "./components/nodes/HackerNewsTriggerNode";
-import PipedriveTriggerNode        from "./components/nodes/PipedriveTriggerNode";
-import AsanaTriggerNode            from "./components/nodes/AsanaTriggerNode";
+import TelegramTriggerNode from "@triggers/telegram/ConfigPanel.jsx";
+import SlackTriggerNode    from "@triggers/slack/ConfigPanel.jsx";
+import DiscordTriggerNode  from "@triggers/discord/ConfigPanel.jsx";
+import GmailTriggerNode    from "@triggers/gmail/ConfigPanel.jsx";
+import AirtableTriggerNode from "@triggers/airtable/ConfigPanel.jsx";
+import NotionTriggerNode   from "@triggers/notion/ConfigPanel.jsx";
+import HubSpotTriggerNode  from "@triggers/hubspot/ConfigPanel.jsx";
+import ShopifyTriggerNode  from "@triggers/shopify/ConfigPanel.jsx";
+import LinearTriggerNode   from "@triggers/linear/ConfigPanel.jsx";
+import TypeformTriggerNode from "@triggers/typeform/ConfigPanel.jsx";
+import WhatsAppTriggerNode from "@triggers/whatsapp/ConfigPanel.jsx";
+import YouTubeTriggerNode        from "@triggers/youtube/ConfigPanel.jsx";
+import PriceAlertTriggerNode     from "@triggers/price_alert/ConfigPanel.jsx";
+import RedditTriggerNode         from "@triggers/reddit/ConfigPanel.jsx";
+import GoogleCalendarTriggerNode from "@triggers/google_calendar/ConfigPanel.jsx";
+import GitHubIssueTriggerNode    from "@triggers/github_issue/ConfigPanel.jsx";
+import SshTriggerNode              from "@triggers/ssh/ConfigPanel.jsx";
+import DockerTriggerNode           from "@triggers/docker/ConfigPanel.jsx";
+import JiraTriggerNode             from "@triggers/jira/ConfigPanel.jsx";
+import TrelloTriggerNode           from "@triggers/trello/ConfigPanel.jsx";
+import GoogleSheetsTriggerNode     from "@triggers/google_sheets/ConfigPanel.jsx";
+import OutlookTriggerNode          from "@triggers/outlook/ConfigPanel.jsx";
+import TeamsTriggerNode            from "@triggers/teams/ConfigPanel.jsx";
+import HttpMonitorTriggerNode      from "@triggers/http_monitor/ConfigPanel.jsx";
+import GitLabTriggerNode           from "@triggers/gitlab/ConfigPanel.jsx";
+import SslTriggerNode              from "@triggers/ssl/ConfigPanel.jsx";
+import DnsTriggerNode              from "@triggers/dns/ConfigPanel.jsx";
+import PortMonitorTriggerNode      from "@triggers/port_monitor/ConfigPanel.jsx";
+import HackerNewsTriggerNode       from "@triggers/hackernews/ConfigPanel.jsx";
+import PipedriveTriggerNode        from "@triggers/pipedrive/ConfigPanel.jsx";
+import AsanaTriggerNode            from "@triggers/asana/ConfigPanel.jsx";
 
-import imgTelegram       from "../../assets/telegram.png";
-import imgSlack          from "../../assets/slack.png";
-import imgDiscord        from "../../assets/discord.png";
-import imgGmail          from "../../assets/gmail.png";
-import imgWhatsApp       from "../../assets/whatsapp.png";
-import imgAirtable       from "../../assets/Airtable--Streamline-Svg-Logos.svg";
-import imgNotion         from "../../assets/notion.svg";
-import imgGitHub         from "../../assets/github.svg";
-import imgStripe         from "../../assets/stripe.svg";
-import imgHubSpot        from "../../assets/hubspot.svg";
-import imgShopify        from "../../assets/shopify.svg";
-import imgLinear         from "../../assets/linear.svg";
-import imgTypeform       from "../../assets/typeform.svg";
-import imgYouTube        from "../../assets/youtube.png";
-import imgReddit         from "../../assets/reddit.svg";
-import imgGoogleCalendar from "../../assets/google-calendar.svg";
-import imgRss            from "../../assets/rss.svg";
-import imgPostgres       from "../../assets/postgresql.svg";
-import imgBitcoin        from "../../assets/bitcoin.svg";
-import imgSsh            from "../../assets/ssh.svg";
-import imgDocker         from "../../assets/docker.svg";
-import imgJira           from "../../assets/jira.svg";
-import imgTrello         from "../../assets/trello.svg";
-import imgGoogleSheets   from "../../assets/google-sheets.svg";
-import imgOutlook        from "../../assets/outlook.svg";
-import imgTeams          from "../../assets/microsoft-teams.svg";
-import imgVercel         from "../../assets/vercel.svg";
-import imgGitLab         from "../../assets/gitlab.svg";
-import imgLetsEncrypt    from "../../assets/letsencrypt.svg";
-import imgHackerNews     from "../../assets/hackernews.svg";
-import imgPipedrive      from "../../assets/pipedrive.svg";
-import imgAsana          from "../../assets/asana.svg";
-import imgDns            from "../../assets/dns.svg";
-import imgPortMonitor    from "../../assets/port-monitor.svg";
-import imgGoogleDrive    from "../../assets/google-drive.svg";
-import imgGoogleDocs     from "../../assets/google-docs.svg";
-import imgGoogleForms    from "../../assets/google-forms.svg";
-import imgOneDrive       from "../../assets/onedrive.svg";
-import imgSharePoint     from "../../assets/sharepoint.svg";
-import imgAzureDevOps    from "../../assets/azure-devops.svg";
-import imgSentry         from "../../assets/sentry.svg";
-import imgNetlify        from "../../assets/netlify.svg";
-import imgPagerDuty      from "../../assets/pagerduty.svg";
-import imgDatadog        from "../../assets/datadog.svg";
-import imgZendesk        from "../../assets/zendesk.svg";
-import imgCalendly       from "../../assets/calendly.svg";
-import imgMailchimp      from "../../assets/mailchimp.svg";
-import imgClickUp        from "../../assets/clickup.svg";
-import imgMonday         from "../../assets/monday.svg";
-import imgFigma          from "../../assets/figma.svg";
-import imgInstagram      from "../../assets/instagram.svg";
-import imgTikTok         from "../../assets/tiktok.svg";
-import imgMastodon       from "../../assets/mastodon.svg";
-import imgProductHunt    from "../../assets/producthunt.svg";
-import imgIntercom       from "../../assets/intercom.svg";
-import imgWooCommerce    from "../../assets/woocommerce.svg";
-import imgVirusTotal     from "../../assets/virustotal.svg";
+import imgTelegram       from "@triggers/telegram/logo.png";
+import imgSlack          from "@triggers/slack/logo.png";
+import imgDiscord        from "@triggers/discord/logo.png";
+import imgGmail          from "@triggers/gmail/logo.png";
+import imgWhatsApp       from "@triggers/whatsapp/logo.png";
+import imgAirtable       from "@triggers/airtable/logo.svg";
+import imgNotion         from "@triggers/notion/logo.svg";
+import imgGitHub         from "@triggers/github/logo.svg";
+import imgStripe         from "@triggers/stripe/logo.svg";
+import imgHubSpot        from "@triggers/hubspot/logo.svg";
+import imgShopify        from "@triggers/shopify/logo.svg";
+import imgLinear         from "@triggers/linear/logo.svg";
+import imgTypeform       from "@triggers/typeform/logo.svg";
+import imgYouTube        from "@triggers/youtube/logo.png";
+import imgReddit         from "@triggers/reddit/logo.svg";
+import imgGoogleCalendar from "@triggers/google_calendar/logo.svg";
+import imgRss            from "@triggers/rss/logo.svg";
+import imgPostgres       from "@triggers/db/logo.svg";
+import imgBitcoin        from "@triggers/price_alert/logo.svg";
+import imgSsh            from "@triggers/ssh/logo.svg";
+import imgDocker         from "@triggers/docker/logo.svg";
+import imgJira           from "@triggers/jira/logo.svg";
+import imgTrello         from "@triggers/trello/logo.svg";
+import imgGoogleSheets   from "@triggers/google_sheets/logo.svg";
+import imgOutlook        from "@triggers/outlook/logo.svg";
+import imgTeams          from "@triggers/teams/logo.svg";
+import imgVercel         from "@triggers/vercel/logo.svg";
+import imgGitLab         from "@triggers/gitlab/logo.svg";
+import imgLetsEncrypt    from "@triggers/ssl/logo.svg";
+import imgHackerNews     from "@triggers/hackernews/logo.svg";
+import imgPipedrive      from "@triggers/pipedrive/logo.svg";
+import imgAsana          from "@triggers/asana/logo.svg";
+import imgDns            from "@triggers/dns/logo.svg";
+import imgPortMonitor    from "@triggers/port_monitor/logo.svg";
+import imgGoogleDrive    from "@triggers/google_drive/logo.svg";
+import imgGoogleDocs     from "@triggers/google_docs/logo.svg";
+import imgGoogleForms    from "@triggers/google_forms/logo.svg";
+import imgOneDrive       from "@triggers/onedrive/logo.svg";
+import imgSharePoint     from "@triggers/sharepoint/logo.svg";
+import imgAzureDevOps    from "@triggers/azure_devops/logo.svg";
+import imgSentry         from "@triggers/sentry/logo.svg";
+import imgNetlify        from "@triggers/netlify/logo.svg";
+import imgPagerDuty      from "@triggers/pagerduty/logo.svg";
+import imgDatadog        from "@triggers/datadog/logo.svg";
+import imgZendesk        from "@triggers/zendesk/logo.svg";
+import imgCalendly       from "@triggers/calendly/logo.svg";
+import imgMailchimp      from "@triggers/mailchimp/logo.svg";
+import imgClickUp        from "@triggers/clickup/logo.svg";
+import imgMonday         from "@triggers/monday/logo.svg";
+import imgFigma          from "@triggers/figma/logo.svg";
+import imgInstagram      from "@triggers/instagram/logo.svg";
+import imgTikTok         from "@triggers/tiktok/logo.svg";
+import imgMastodon       from "@triggers/mastodon/logo.svg";
+import imgProductHunt    from "@triggers/producthunt/logo.svg";
+import imgIntercom       from "@triggers/intercom/logo.svg";
+import imgWooCommerce    from "@triggers/woocommerce/logo.svg";
+import imgVirusTotal     from "@triggers/virustotal/logo.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
@@ -508,7 +508,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Google Drive Event",
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: GoogleDriveTriggerNode,
   },
   google_docs: {
     backendType: "webhook",
@@ -517,7 +517,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Google Docs Edit",
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: GoogleDocsTriggerNode,
   },
   google_forms: {
     backendType: "webhook",
@@ -526,7 +526,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Google Forms Response",
     colorClass: "text-[#673AB7]",
     accentColor: "103,58,183",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: GoogleFormsTriggerNode,
   },
 
   // Microsoft
@@ -537,7 +537,7 @@ export const TRIGGER_VARIANTS = {
     label: "On OneDrive Event",
     colorClass: "text-[#0078D4]",
     accentColor: "0,120,212",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: OneDriveTriggerNode,
   },
   sharepoint: {
     backendType: "webhook",
@@ -546,7 +546,7 @@ export const TRIGGER_VARIANTS = {
     label: "On SharePoint Event",
     colorClass: "text-[#0078D4]",
     accentColor: "0,120,212",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: SharePointTriggerNode,
   },
   azure_devops: {
     backendType: "webhook",
@@ -555,7 +555,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Azure DevOps Event",
     colorClass: "text-[#0078D4]",
     accentColor: "0,120,212",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: AzureDevOpsTriggerNode,
   },
 
   // DevOps / Monitoring
@@ -566,7 +566,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Sentry Alert",
     colorClass: "text-[#362D59]",
     accentColor: "84,70,138",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: SentryTriggerNode,
   },
   vercel: {
     backendType: "webhook",
@@ -575,7 +575,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Vercel Deploy",
     colorClass: "text-zinc-100",
     accentColor: "228,228,231",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: VercelTriggerNode,
   },
   netlify: {
     backendType: "webhook",
@@ -584,7 +584,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Netlify Build",
     colorClass: "text-[#00C7B7]",
     accentColor: "0,199,183",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: NetlifyTriggerNode,
   },
   pagerduty: {
     backendType: "webhook",
@@ -593,7 +593,7 @@ export const TRIGGER_VARIANTS = {
     label: "On PagerDuty Alert",
     colorClass: "text-[#06AC38]",
     accentColor: "6,172,56",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: PagerDutyTriggerNode,
   },
   datadog: {
     backendType: "webhook",
@@ -602,7 +602,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Datadog Monitor Alert",
     colorClass: "text-[#632CA6]",
     accentColor: "99,44,166",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: DatadogTriggerNode,
   },
 
   // Business / PM
@@ -613,7 +613,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Zendesk Ticket",
     colorClass: "text-[#03363D]",
     accentColor: "3,54,61",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: ZendeskTriggerNode,
   },
   calendly: {
     backendType: "webhook",
@@ -622,7 +622,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Calendly Booking",
     colorClass: "text-[#006BFF]",
     accentColor: "0,107,255",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: CalendlyTriggerNode,
   },
   mailchimp: {
     backendType: "webhook",
@@ -631,7 +631,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Mailchimp Event",
     colorClass: "text-[#FFE01B]",
     accentColor: "255,224,27",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: MailchimpTriggerNode,
   },
   clickup: {
     backendType: "webhook",
@@ -640,7 +640,7 @@ export const TRIGGER_VARIANTS = {
     label: "On ClickUp Task Event",
     colorClass: "text-[#7B68EE]",
     accentColor: "123,104,238",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: ClickUpTriggerNode,
   },
   monday: {
     backendType: "webhook",
@@ -649,7 +649,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Monday.com Item",
     colorClass: "text-[#FF3D57]",
     accentColor: "255,61,87",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: MondayTriggerNode,
   },
 
   // Design
@@ -660,7 +660,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Figma Event",
     colorClass: "text-[#F24E1E]",
     accentColor: "242,78,30",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: FigmaTriggerNode,
   },
 
   // Social
@@ -671,7 +671,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Instagram Event",
     colorClass: "text-[#E4405F]",
     accentColor: "228,64,95",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: InstagramTriggerNode,
   },
   tiktok: {
     backendType: "webhook",
@@ -680,7 +680,7 @@ export const TRIGGER_VARIANTS = {
     label: "On TikTok Event",
     colorClass: "text-[#FF0050]",
     accentColor: "255,0,80",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: TikTokTriggerNode,
   },
   mastodon: {
     backendType: "webhook",
@@ -689,7 +689,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Mastodon Event",
     colorClass: "text-[#6364FF]",
     accentColor: "99,100,255",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: MastodonTriggerNode,
   },
   producthunt: {
     backendType: "hackernews_trigger",
@@ -698,7 +698,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Product Hunt Launch",
     colorClass: "text-[#DA552F]",
     accentColor: "218,85,47",
-    ConfigPanel: HackerNewsTriggerNode,
+    ConfigPanel: ProductHuntTriggerNode,
   },
 
   // CRM / Sales
@@ -709,7 +709,7 @@ export const TRIGGER_VARIANTS = {
     label: "On Intercom Event",
     colorClass: "text-[#1F8DED]",
     accentColor: "31,141,237",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: IntercomTriggerNode,
   },
   woocommerce: {
     backendType: "webhook",
@@ -718,7 +718,7 @@ export const TRIGGER_VARIANTS = {
     label: "On WooCommerce Order",
     colorClass: "text-[#7F54B3]",
     accentColor: "127,84,179",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: WooCommerceTriggerNode,
   },
 
   // Infra / Security
@@ -729,6 +729,32 @@ export const TRIGGER_VARIANTS = {
     label: "On VirusTotal Scan",
     colorClass: "text-[#394EFF]",
     accentColor: "57,78,255",
-    ConfigPanel: WebhookTriggerNode,
+    ConfigPanel: VirusTotalTriggerNode,
   },
 };
+
+// New trigger ConfigPanels (previously using WebhookTriggerNode stub)
+import AzureDevOpsTriggerNode from "@triggers/azure_devops/ConfigPanel.jsx";
+import CalendlyTriggerNode    from "@triggers/calendly/ConfigPanel.jsx";
+import ClickUpTriggerNode     from "@triggers/clickup/ConfigPanel.jsx";
+import DatadogTriggerNode     from "@triggers/datadog/ConfigPanel.jsx";
+import FigmaTriggerNode       from "@triggers/figma/ConfigPanel.jsx";
+import GoogleDocsTriggerNode  from "@triggers/google_docs/ConfigPanel.jsx";
+import GoogleDriveTriggerNode from "@triggers/google_drive/ConfigPanel.jsx";
+import GoogleFormsTriggerNode from "@triggers/google_forms/ConfigPanel.jsx";
+import InstagramTriggerNode   from "@triggers/instagram/ConfigPanel.jsx";
+import IntercomTriggerNode    from "@triggers/intercom/ConfigPanel.jsx";
+import MailchimpTriggerNode   from "@triggers/mailchimp/ConfigPanel.jsx";
+import MastodonTriggerNode    from "@triggers/mastodon/ConfigPanel.jsx";
+import MondayTriggerNode      from "@triggers/monday/ConfigPanel.jsx";
+import NetlifyTriggerNode     from "@triggers/netlify/ConfigPanel.jsx";
+import OneDriveTriggerNode    from "@triggers/onedrive/ConfigPanel.jsx";
+import PagerDutyTriggerNode   from "@triggers/pagerduty/ConfigPanel.jsx";
+import ProductHuntTriggerNode from "@triggers/producthunt/ConfigPanel.jsx";
+import SentryTriggerNode      from "@triggers/sentry/ConfigPanel.jsx";
+import SharePointTriggerNode  from "@triggers/sharepoint/ConfigPanel.jsx";
+import TikTokTriggerNode      from "@triggers/tiktok/ConfigPanel.jsx";
+import VercelTriggerNode      from "@triggers/vercel/ConfigPanel.jsx";
+import VirusTotalTriggerNode  from "@triggers/virustotal/ConfigPanel.jsx";
+import WooCommerceTriggerNode from "@triggers/woocommerce/ConfigPanel.jsx";
+import ZendeskTriggerNode     from "@triggers/zendesk/ConfigPanel.jsx";

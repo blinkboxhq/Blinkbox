@@ -1,0 +1,1 @@
+export default { label: "On Mastodon Event", description: "Fires on new Mastodon post or mention", category: "triggers", colorClass: "text-[#6364FF]", accentColor: "99,100,255", backendType: "mastodon_trigger" };

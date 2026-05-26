@@ -1,0 +1,1 @@
+export default { label: "On Vercel Deploy", description: "Fires on Vercel deployment events", category: "triggers", colorClass: "text-zinc-100", accentColor: "228,228,231", backendType: "vercel_trigger" };

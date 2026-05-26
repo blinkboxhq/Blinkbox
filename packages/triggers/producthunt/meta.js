@@ -1,0 +1,1 @@
+export default { label: "On Product Hunt Launch", description: "Fires on new Product Hunt launches", category: "triggers", colorClass: "text-[#DA552F]", accentColor: "218,85,47", backendType: "producthunt_trigger" };

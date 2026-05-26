@@ -1,0 +1,1 @@
+export default { label: "On Datadog Monitor Alert", description: "Fires when a Datadog monitor fires", category: "triggers", colorClass: "text-[#632CA6]", accentColor: "99,44,166", backendType: "datadog_trigger" };

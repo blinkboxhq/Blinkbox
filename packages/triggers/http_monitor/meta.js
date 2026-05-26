@@ -1,0 +1,1 @@
+export default { label: "HTTP Monitor", description: "Fires when a URL goes down or changes status", category: "triggers", colorClass: "text-red-400", accentColor: "248,113,113", backendType: "http_monitor_trigger" };
