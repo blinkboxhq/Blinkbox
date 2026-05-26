@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
+import { normalizeFlow, toolToCanvas } from "./brian.repair.js";
+import { BRIAN_ANTHROPIC_MODEL } from "./brian.registry.js";
 import Credential from "../../models/credential.model.js";
 import {
   ANTHROPIC_API_KEY,
@@ -10,7 +12,7 @@ import {
   BRIAN_WEBHOOK_URL as _BRIAN_WEBHOOK_URL,
 } from "../../config/env.js";
 
-const ANTHROPIC_MODEL   = "claude-sonnet-4-6";
+const ANTHROPIC_MODEL   = BRIAN_ANTHROPIC_MODEL;
 const GROQ_URL          = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL        = "llama-3.3-70b-versatile";
 const GROQ_FAST         = "llama-3.1-8b-instant";
@@ -189,7 +191,16 @@ Each: \`{ credentialId:"", alias:"short_name" }\`
 | HubSpot | \`agent_integration_hubspot\` | "hubspot" |
 | Jira | \`agent_integration_jira\` | "jira" |
 | Airtable | \`agent_integration_airtable\` | "airtable" |
-| Supabase/DB | \`agent_integration_supabase\` | "supabase" |
+| Discord | \`agent_integration_discord\` | "discord" |
+| Telegram | \`agent_integration_telegram\` | "telegram" |
+| Outlook | \`agent_integration_outlook\` | "outlook" |
+| Asana | \`agent_integration_asana\` | "asana" |
+| Shopify | \`agent_integration_shopify\` | "shopify" |
+| ClickUp | \`agent_integration_clickup\` | "clickup" |
+| Twilio | \`agent_integration_twilio\` | "twilio" |
+| MongoDB | \`agent_integration_mongodb\` | "mongodb" |
+| PostgreSQL | \`agent_integration_postgres\` | "postgres" |
+| Redis | \`agent_integration_redis\` | "redis" |
 
 **Agent memory nodes** (for RAG):
 - \`agent_memory_supabase\` → \`{ credentialId:"", tableName:"documents" }\` targetHandle:"memory"
@@ -486,250 +497,6 @@ const ASK_USER_TOOL = {
     additionalProperties: false,
   },
 };
-
-// ── Convert tool output → ReactFlow canvas format ─────────────────────────────
-function toolToCanvas({ nodes = [], edges = [] }) {
-  if (!nodes.length) return null;
-
-  const TRIGGER_TYPES = new Set([
-    "manual","webhook","cron_trigger","rss_trigger","imap_trigger","gmail_trigger",
-    "slack_trigger","discord_trigger","telegram_trigger","github_trigger",
-    "shopify_trigger","linear_trigger","notion_trigger","airtable_trigger",
-    "stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger",
-    "google_calendar_trigger","form_trigger","chat_trigger","db_trigger","error_trigger",
-  ]);
-
-  const hasAiAgent     = nodes.some(n => n.backendType === "ai_agent");
-  const hasRealTrigger = nodes.some(n => n.backendType && n.backendType !== "manual" && TRIGGER_TYPES.has(n.backendType));
-  const sanitizedNodes = nodes.filter(n => {
-    if (n.backendType === "manual" && hasAiAgent) return false;
-    if (n.backendType === "manual" && hasRealTrigger) return false;
-    return true;
-  });
-  const hasTriggerAfterSanitize = sanitizedNodes.some(n => TRIGGER_TYPES.has(n.backendType || "") || n.nodeType === "trigger");
-  if (!hasTriggerAfterSanitize && hasAiAgent) {
-    sanitizedNodes.unshift({ id: "n_trigger", backendType: "chat_trigger", label: "On Chat Message", nodeType: "trigger", x: 80, y: 300, config: {} });
-  }
-
-  const canvasNodes = sanitizedNodes.map((n, i) => {
-    const bt     = n.backendType || "manual";
-    const isTrig = TRIGGER_TYPES.has(bt) || n.nodeType === "trigger";
-    return {
-      id:       String(n.id || `n${i + 1}`),
-      type:     "custom",
-      position: { x: Number(n.x) || 400, y: Number(n.y) || (80 + i * 220) },
-      data: {
-        label:       n.label || bt,
-        backendType: bt,
-        type:        isTrig ? "trigger" : "action",
-        config:      n.config || {},
-      },
-    };
-  });
-
-  const nodeIds = new Set(canvasNodes.map(n => n.id));
-
-  const AI_AGENT_HANDLES = new Set(["chat_model", "integration", "tools", "memory"]);
-  const HUB_TYPES = new Set(["agent_anthropic","agent_openai","agent_gemini","agent_groq",
-    "agent_integration_gmail","agent_integration_google_sheets","agent_integration_google_calendar",
-    "agent_integration_google_drive","agent_integration_github","agent_integration_slack",
-    "agent_integration_notion","agent_integration_discord","agent_integration_stripe",
-    "agent_integration_hubspot","agent_integration_jira","agent_integration_linear",
-    "agent_integration_airtable","agent_tool"]);
-
-  let canvasEdges = edges
-    .map((e, i) => {
-      const raw = {
-        id:           String(e.id || `e${i + 1}`),
-        source:       String(e.source || ""),
-        target:       String(e.target || ""),
-        sourceHandle: e.sourceHandle || null,
-        targetHandle: e.targetHandle || null,
-        type:         "configurable",
-        data:         { conditionPath: "" },
-        style:        {},
-      };
-      if (raw.targetHandle && AI_AGENT_HANDLES.has(raw.targetHandle)) {
-        const srcNode = canvasNodes.find(n => n.id === raw.source);
-        const tgtNode = canvasNodes.find(n => n.id === raw.target);
-        if (srcNode?.data?.backendType === "ai_agent" && tgtNode && HUB_TYPES.has(tgtNode.data?.backendType)) {
-          [raw.source, raw.target] = [raw.target, raw.source];
-        }
-      }
-      return raw;
-    })
-    .filter(e => {
-      if (!e.source || !e.target) return false;
-      if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
-      const sourceNode = canvasNodes.find(n => n.id === e.source);
-      const targetNode = canvasNodes.find(n => n.id === e.target);
-      if (targetNode?.data?.type === "trigger") return false;
-      if (e.targetHandle && AI_AGENT_HANDLES.has(e.targetHandle) && sourceNode?.data?.type === "trigger") return false;
-      return true;
-    });
-
-  if (!canvasEdges.length && canvasNodes.length > 1) {
-    canvasEdges = canvasNodes.slice(0, -1).map((n, i) => ({
-      id: `e${i + 1}`, source: n.id, target: canvasNodes[i + 1].id,
-      sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
-    }));
-  }
-
-  // Snap satellite nodes to correct canvas zones — fixes Brian's position mistakes
-  const MODEL_BT    = new Set(["agent_anthropic","agent_openai","agent_gemini","agent_groq"]);
-  const MEMORY_BT   = new Set(["agent_memory_supabase","agent_memory_pinecone","agent_memory_postgres","agent_memory_redis"]);
-  const INTEG_BT    = new Set([
-    "agent_integration_gmail","agent_integration_google_sheets","agent_integration_google_calendar",
-    "agent_integration_google_drive","agent_integration_github","agent_integration_slack",
-    "agent_integration_notion","agent_integration_discord","agent_integration_stripe",
-    "agent_integration_hubspot","agent_integration_jira","agent_integration_linear",
-    "agent_integration_airtable","agent_integration_supabase",
-  ]);
-  const agentHubForLayout = canvasNodes.find(n => n.data.backendType === "ai_agent");
-  if (agentHubForLayout) {
-    // Lock hub and trigger to fixed positions
-    agentHubForLayout.position = { x: 400, y: 300 };
-    const trigNode = canvasNodes.find(n => n.data.type === "trigger");
-    if (trigNode) trigNode.position = { x: 80, y: 300 };
-
-    // Snap model nodes to top-right zone
-    canvasNodes.forEach(n => {
-      const bt = n.data.backendType;
-      if (MODEL_BT.has(bt)) n.position = { x: 640, y: 60 };
-      else if (MEMORY_BT.has(bt)) n.position = { x: 160, y: 60 };
-    });
-
-    // Evenly space integration nodes below hub
-    const INTEG_X = [[], [400], [220,580], [80,400,720], [60,280,500,720], [60,230,400,570,740]];
-    const integNodes = canvasNodes.filter(n => INTEG_BT.has(n.data.backendType));
-    const xArr = INTEG_X[Math.min(integNodes.length, 5)] || integNodes.map((_, i) => 60 + i * 200);
-    integNodes.forEach((n, i) => { n.position = { x: xArr[i] ?? 400, y: 560 }; });
-  }
-
-  // Auto-wire: satellite nodes that Brian forgot to connect get the right targetHandle edge
-  const HUB_SLOT = new Map([
-    ["agent_anthropic","chat_model"],["agent_openai","chat_model"],
-    ["agent_gemini","chat_model"],["agent_groq","chat_model"],
-    ["agent_memory_supabase","memory"],["agent_memory_pinecone","memory"],
-    ["agent_memory_postgres","memory"],["agent_memory_redis","memory"],
-    ["agent_integration_gmail","integration"],["agent_integration_google_sheets","integration"],
-    ["agent_integration_google_calendar","integration"],["agent_integration_google_drive","integration"],
-    ["agent_integration_github","integration"],["agent_integration_slack","integration"],
-    ["agent_integration_notion","integration"],["agent_integration_discord","integration"],
-    ["agent_integration_stripe","integration"],["agent_integration_hubspot","integration"],
-    ["agent_integration_jira","integration"],["agent_integration_linear","integration"],
-    ["agent_integration_airtable","integration"],["agent_integration_supabase","integration"],
-    ["agent_tool","tools"],
-  ]);
-  const agentHub = canvasNodes.find(n => n.data.backendType === "ai_agent");
-  if (agentHub) {
-    const wiredToHub = new Set(
-      canvasEdges.filter(e => e.target === agentHub.id && e.targetHandle).map(e => e.source)
-    );
-    canvasNodes.forEach(node => {
-      if (node.id === agentHub.id || wiredToHub.has(node.id)) return;
-      const slot = HUB_SLOT.get(node.data.backendType);
-      if (!slot) return;
-      canvasEdges.push({
-        id: `e_aw_${node.id}`, source: node.id, target: agentHub.id,
-        sourceHandle: null, targetHandle: slot,
-        type: "configurable", data: { conditionPath: "" }, style: {},
-      });
-    });
-  }
-
-  const hubConnectedTargets = new Set(canvasEdges.filter(e => e.targetHandle).map(e => e.source));
-  const triggerNode = canvasNodes.find(n => n.data.type === "trigger") || canvasNodes[0];
-  if (triggerNode && canvasNodes.length > 1) {
-    const reachable = new Set([triggerNode.id]);
-    for (const id of hubConnectedTargets) reachable.add(id);
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (const e of canvasEdges) {
-        if (reachable.has(e.source) && !reachable.has(e.target)) {
-          reachable.add(e.target);
-          changed = true;
-        }
-      }
-    }
-    const removed = canvasNodes.filter(n => !reachable.has(n.id));
-    if (removed.length) {
-      const keepIds = reachable;
-      canvasEdges = canvasEdges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
-      const lastReachable = [...reachable].filter(id => !hubConnectedTargets.has(id)).pop() || [...reachable].pop();
-      removed.forEach((orphan, oi) => {
-        const prevId = oi === 0 ? lastReachable : removed[oi - 1].id;
-        canvasEdges.push({
-          id: `e_fix_${oi}`, source: prevId, target: orphan.id,
-          sourceHandle: null, targetHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
-        });
-        reachable.add(orphan.id);
-      });
-    }
-  }
-
-  const trigIdx = canvasNodes.findIndex(n => n.data.type === "trigger");
-  if (trigIdx > 0) {
-    const [trig] = canvasNodes.splice(trigIdx, 1);
-    canvasNodes.unshift(trig);
-  }
-
-  const positionsSeen = new Set();
-  canvasNodes.forEach(n => {
-    const key = `${n.position.x},${n.position.y}`;
-    if (positionsSeen.has(key)) n.position.x += 220;
-    positionsSeen.add(`${n.position.x},${n.position.y}`);
-  });
-
-  return { nodes: canvasNodes, edges: canvasEdges };
-}
-
-// ── Normalize plain-JSON response (Groq / Gemini) ─────────────────────────────
-function normalizeFlow(parsed) {
-  const src   = parsed.flow || parsed.workflow || parsed;
-  const nodes = src.nodes || parsed.nodes || [];
-  const edges = src.edges || parsed.edges || [];
-  if (!nodes.length) return null;
-
-  const normNodes = nodes.map((n, i) => {
-    const bt      = n.backendType || n.data?.backendType || n.type || "manual";
-    const cleanBt = bt === "custom" ? "manual" : bt;
-    const isTrig  = TRIGGERS.has(cleanBt) || n.data?.type === "trigger";
-    const pos     = n.position || {};
-    return {
-      id:       String(n.id || `n${i + 1}`),
-      type:     "custom",
-      position: { x: Number(pos.x) || 300, y: Number(pos.y) || 100 + i * 220 },
-      data: {
-        label:       n.label || n.data?.label || n.name || cleanBt,
-        backendType: cleanBt,
-        type:        isTrig ? "trigger" : "action",
-        config:      n.config || n.data?.config || {},
-      },
-    };
-  });
-
-  let normEdges = edges.map((e, i) => ({
-    id:           String(e.id || `e${i + 1}`),
-    source:       String(e.source || e.from || ""),
-    target:       String(e.target || e.to   || ""),
-    sourceHandle: e.sourceHandle || null,
-    targetHandle: e.targetHandle || null,
-    type:         "configurable",
-    data:         { conditionPath: "" },
-    style:        {},
-  })).filter(e => e.source && e.target);
-
-  if (!normEdges.length && normNodes.length > 1) {
-    normEdges = normNodes.slice(0, -1).map((n, i) => ({
-      id: `e${i + 1}`, source: n.id, target: normNodes[i + 1].id,
-      sourceHandle: null, type: "configurable", data: { conditionPath: "" }, style: {},
-    }));
-  }
-
-  return { nodes: normNodes, edges: normEdges };
-}
 
 // ── Provider 1: BlinkBox webhook ──────────────────────────────────────────────
 async function callBlinkBoxWebhook(webhookUrl, userText, history) {

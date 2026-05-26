@@ -50,6 +50,7 @@ import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
+import { BRIAN_ANTHROPIC_MODEL } from "../modules/brian/brian.registry.js";
 
 // Platform integration nodes — imported for autonomous tool use
 import _slackNode    from "./integrations/slack.node.js";
@@ -100,7 +101,7 @@ const ENDPOINTS = {
 
 const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
-  anthropic: "claude-sonnet-4-20250514",
+  anthropic: BRIAN_ANTHROPIC_MODEL,
   gemini: "gemini-2.0-flash",
   deepseek: "deepseek-chat",
   openrouter: "anthropic/claude-3.5-sonnet",

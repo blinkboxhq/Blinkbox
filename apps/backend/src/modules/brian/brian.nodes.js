@@ -708,16 +708,6 @@ export const NODE_KB = {
       { k: "alias", t: "string", r: true, ex: "stripe", d: "Short name agent uses" },
     ],
   },
-  agent_integration_supabase: {
-    label: "Supabase DB (Integration Tool)",
-    role: "integration",
-    description: "Agent can query, insert, update Supabase tables via SQL. Different from memory — this is direct DB access.",
-    out: [],
-    fields: [
-      { k: "credentialId", t: "credential", r: true, ex: "", d: "Supabase service role key" },
-      { k: "alias", t: "string", r: true, ex: "supabase", d: "Short name agent uses" },
-    ],
-  },
   agent_integration_discord: {
     label: "Discord (Integration Tool)",
     role: "integration",
@@ -725,6 +715,87 @@ export const NODE_KB = {
     fields: [
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Discord Bot token credential" },
       { k: "alias", t: "string", r: true, ex: "discord", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_telegram: {
+    label: "Telegram (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Telegram Bot token credential" },
+      { k: "alias", t: "string", r: true, ex: "telegram", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_outlook: {
+    label: "Outlook (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Microsoft OAuth credential" },
+      { k: "alias", t: "string", r: true, ex: "outlook", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_asana: {
+    label: "Asana (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Asana API credential" },
+      { k: "alias", t: "string", r: true, ex: "asana", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_shopify: {
+    label: "Shopify (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Shopify API credential" },
+      { k: "alias", t: "string", r: true, ex: "shopify", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_clickup: {
+    label: "ClickUp (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "ClickUp API credential" },
+      { k: "alias", t: "string", r: true, ex: "clickup", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_twilio: {
+    label: "Twilio (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Twilio credential" },
+      { k: "alias", t: "string", r: true, ex: "twilio", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_mongodb: {
+    label: "MongoDB (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "MongoDB connection string credential" },
+      { k: "alias", t: "string", r: true, ex: "mongodb", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_postgres: {
+    label: "PostgreSQL (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "PostgreSQL connection string credential" },
+      { k: "alias", t: "string", r: true, ex: "postgres", d: "Short name agent uses" },
+    ],
+  },
+  agent_integration_redis: {
+    label: "Redis (Integration Tool)",
+    role: "integration",
+    out: [],
+    fields: [
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Redis URL credential" },
+      { k: "alias", t: "string", r: true, ex: "redis", d: "Short name agent uses" },
     ],
   },
 

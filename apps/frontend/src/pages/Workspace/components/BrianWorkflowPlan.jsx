@@ -23,13 +23,21 @@ const CRED_META = {
   agent_integration_slack:           { label: 'Slack',                   credentialType: 'oauth',    oauthProvider: 'slack',     accentColor: 'pink' },
   agent_integration_notion:          { label: 'Notion',                  credentialType: 'api_key',  hint: 'secret_...',         accentColor: 'zinc' },
   agent_integration_airtable:        { label: 'Airtable',                credentialType: 'api_key',  hint: 'pat...',             accentColor: 'red' },
+  agent_integration_discord:         { label: 'Discord Bot Token',       credentialType: 'api_key',  hint: 'bot token',          accentColor: 'indigo' },
+  agent_integration_telegram:        { label: 'Telegram Bot Token',      credentialType: 'api_key',  hint: 'bot token',          accentColor: 'blue' },
+  agent_integration_outlook:         { label: 'Outlook',                 credentialType: 'oauth',    oauthProvider: 'microsoft', accentColor: 'blue' },
 
   // Agent integrations — API key
   agent_integration_linear:          { label: 'Linear API Key',          credentialType: 'api_key',  hint: 'lin_api_...' },
   agent_integration_hubspot:         { label: 'HubSpot API Key',         credentialType: 'api_key',  hint: 'pat-...' },
   agent_integration_jira:            { label: 'Jira API Token',          credentialType: 'api_key',  hint: 'API token' },
-  agent_integration_supabase:        { label: 'Supabase Service Key',    credentialType: 'api_key',  hint: 'eyJ...' },
-
+  agent_integration_asana:           { label: 'Asana API Key',           credentialType: 'api_key',  hint: 'access token' },
+  agent_integration_shopify:         { label: 'Shopify API Key',         credentialType: 'api_key',  hint: 'access token' },
+  agent_integration_clickup:         { label: 'ClickUp API Key',         credentialType: 'api_key',  hint: 'pk_...' },
+  agent_integration_twilio:          { label: 'Twilio Credential',       credentialType: 'api_key',  hint: 'sid:token' },
+  agent_integration_mongodb:         { label: 'MongoDB URI',             credentialType: 'api_key',  hint: 'mongodb+srv://...' },
+  agent_integration_postgres:        { label: 'PostgreSQL URI',          credentialType: 'api_key',  hint: 'postgresql://...' },
+  agent_integration_redis:           { label: 'Redis URL',               credentialType: 'api_key',  hint: 'redis://...' },
   // Agent memory
   agent_memory_supabase:             { label: 'Supabase (Memory)',       credentialType: 'api_key',  hint: 'service_role key' },
   agent_memory_pinecone:             { label: 'Pinecone API Key',        credentialType: 'api_key',  hint: 'pc-...' },

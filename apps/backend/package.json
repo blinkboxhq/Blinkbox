@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx src/index.js",
     "start": "tsx src/index.js",
+    "test": "node --test \"src/**/*.test.js\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import brianLogo from '../../../assets/brian.webp';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
+import { mergeBrianFlow } from '../brianFlowMerge';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -528,7 +529,6 @@ const WELCOME_MSG = {
 export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
   const isBrianOpen  = useWorkspaceStore(s => s.isBrianOpen);
   const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
-  const addNode      = useWorkspaceStore(s => s.addNode);
   const nodes        = useWorkspaceStore(s => s.nodes);
   const edges        = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
@@ -577,9 +577,8 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
 
   const applyFlow = useCallback((flow) => {
     if (!flow?.nodes) return;
-    flow.nodes.forEach(n => addNode(n));
-    useWorkspaceStore.setState(s => ({ edges: [...s.edges, ...(flow.edges || [])] }));
-  }, [addNode]);
+    useWorkspaceStore.setState(s => mergeBrianFlow(s.nodes, s.edges, flow));
+  }, []);
 
   const send = useCallback(async (text) => {
     const txt = (text || input).trim();
