@@ -178,7 +178,7 @@ export default function AddNodeSidebar() {
   }
 
   const SelectionFooter = () => selected.size === 0 ? null : (
-    <div className="shrink-0 px-4 py-3 border-t border-[#1a1a25] bg-[#0d0d12] flex items-center gap-2">
+    <div className="shrink-0 px-4 py-3 border-t border-white/10 bg-[#0d0d10] flex items-center gap-2">
       <button
         onClick={() => setSelected(new Set())}
         className="p-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded-lg transition-colors shrink-0"
@@ -242,7 +242,7 @@ export default function AddNodeSidebar() {
       </div>
 
       <div className="px-5 pb-4 shrink-0">
-        <div className="flex items-center gap-2.5 px-4 py-3 bg-[#17171f] border border-[#26263a] rounded-xl focus-within:border-[#38385a] transition-colors">
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-white/[0.04] border border-white/15 rounded-xl focus-within:border-white/30 transition-colors">
           <Search className="w-4 h-4 text-white/50 shrink-0" />
           <input
             type="text"
