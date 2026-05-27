@@ -368,7 +368,7 @@ export default function Canvas() {
         panOnScroll
         zoomOnPinch
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} color="#3f3f46" />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";
