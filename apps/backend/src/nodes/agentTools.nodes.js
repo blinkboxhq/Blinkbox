@@ -1279,7 +1279,7 @@ Actions:
 - close: destroy the session and free memory`,
     {
       action:    { type: "string", description: "Action to perform (see list above)" },
-      sessionId: { type: "string", description: "Reuse the same sessionId across calls to maintain cookies and login state. Omit for a one-shot call." },
+      sessionId: { type: "string", description: "Optional. Browser state (cookies, login, navigation) is automatically shared across all your tool calls in this run. Only set this if you need a DIFFERENT browser session from the current one." },
       url:       { type: "string", description: "URL to navigate to (open_url)" },
       selector:  { type: "string", description: "CSS selector for the target element" },
       text:      { type: "string", description: "Text to type, or JavaScript expression for evaluate" },
@@ -1291,7 +1291,7 @@ Actions:
     },
     ["action"]
   ),
-  async run(config, args) {
+  async run(config, args, ctx) {
     let puppeteer;
     try {
       puppeteer = (await import("puppeteer")).default;
@@ -1301,8 +1301,10 @@ Actions:
 
     if (args.url) assertSafeUrl(args.url);
 
-    const sessionId = args.sessionId || `_vc_ephemeral_${Date.now()}`;
-    const ephemeral = !args.sessionId;
+    // Auto-use executionId as session so all calls within one agent run share the same browser.
+    // Agent can still override with an explicit sessionId for multi-run persistence.
+    const sessionId = args.sessionId || ctx?.executionId || `_vc_ephemeral_${Date.now()}`;
+    const ephemeral = !args.sessionId && !ctx?.executionId;
 
     let session = _vcSessions.get(sessionId);
     if (!session) {

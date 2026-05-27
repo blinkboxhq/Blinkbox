@@ -296,6 +296,7 @@ export async function processCursor({ executionId, cursorId }) {
                     const mergedConfig = { ...savedConfig, ...agentArgs };
                     return toolHandler.run(mergedConfig, agentArgs, {
                       workspaceId: execution.workspaceId,
+                      executionId: execution._id?.toString(),
                     });
                   };
                   handleDeps._tools.push(toolDef);
