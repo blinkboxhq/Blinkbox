@@ -1,0 +1,37 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive DISPLAY=:99
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xvfb \
+    xdotool \
+    imagemagick \
+    chromium-browser \
+    openbox \
+    dbus-x11 \
+    x11-utils \
+    xclip \
+    curl \
+    wget \
+    bash \
+    coreutils \
+ && rm -rf /var/lib/apt/lists/*
+
+# Allow Chromium to run without sandbox (inside Docker)
+RUN mkdir -p /etc/chromium-browser/policies/managed && \
+    printf '{"CommandLineFlagSecurityWarningsEnabled":false}\n' \
+    > /etc/chromium-browser/policies/managed/policy.json
+
+# imagemagick policy: allow reading from X display
+RUN sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' \
+    /etc/ImageMagick-6/policy.xml 2>/dev/null || true && \
+    sed -i 's/<policy domain="resource" name="memory" value="256MiB"\/>/<policy domain="resource" name="memory" value="1GiB"\/>/' \
+    /etc/ImageMagick-6/policy.xml 2>/dev/null || true
+
+WORKDIR /root
+
+# Start Xvfb + openbox in foreground, sleep keeps container alive
+CMD ["sh", "-c", \
+    "Xvfb :99 -screen 0 1280x800x24 -ac +extension GLX +render -noreset & \
+     sleep 1 && \
+     DISPLAY=:99 openbox --sm-disable & \
+     sleep infinity"]

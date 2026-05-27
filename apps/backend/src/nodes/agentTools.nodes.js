@@ -1244,177 +1244,70 @@ export const tool_ssh = {
   },
 };
 
-// Persistent browser sessions — keyed by sessionId, TTL 30 min idle
-const _vcSessions = new Map();
-const _VC_SESSION_TTL = 30 * 60 * 1000;
-setInterval(() => {
-  const now = Date.now();
-  for (const [id, s] of _vcSessions) {
-    if (now - s.lastUsed > _VC_SESSION_TTL) {
-      s.browser.close().catch(() => {});
-      _vcSessions.delete(id);
-    }
-  }
-}, 5 * 60 * 1000);
+import {
+  screenshot as _dsScreenshot,
+  openUrl    as _dsOpenUrl,
+  leftClick  as _dsLeftClick,
+  rightClick as _dsRightClick,
+  doubleClick as _dsDoubleClick,
+  mouseMove  as _dsMouseMove,
+  typeText   as _dsType,
+  pressKey   as _dsKey,
+  scroll     as _dsScroll,
+  runCommand as _dsRun,
+  closeSession as _dsClose,
+} from "../infra/desktop.pool.js";
 
 export const tool_virtual_computer = {
   toolDefinition: td(
     "tool_virtual_computer",
-    `Control a persistent headless browser to automate any website. Sessions survive across calls — pass the same sessionId to keep cookies, auth, and navigation history. Every action returns a screenshot so you can see the current state before deciding the next step.
+    `Full Linux desktop computer (1280×800) running Chromium inside a persistent Docker container. You control it with pixel coordinates — just like a human using a mouse and keyboard.
+
+CRITICAL WORKFLOW: Always take a screenshot first to see the current state. Then decide where to click/type based on what you see. After every action, take another screenshot to confirm the result. Never guess coordinates — look at the screenshot and read the pixel positions.
 
 Actions:
-- open_url: navigate to a URL
-- click: click an element (requires selector)
-- type: type text into a field (requires selector + text; clears field first)
-- scroll: scroll the page (x/y pixels)
-- evaluate: run JavaScript and return the result (requires text as JS expression)
-- get_text: extract visible text (selector optional — whole page if omitted)
-- get_html: extract raw HTML (selector optional — capped at 50 KB)
-- hover: move mouse over element (requires selector)
-- key: press a keyboard key (requires key, e.g. "Enter", "Tab", "Escape")
-- wait: pause for ms milliseconds (max 30 s)
-- select: pick a dropdown option (requires selector + value)
-- back / forward / reload: browser navigation
-- screenshot: capture current screen without any action
-- close: destroy the session and free memory`,
+- screenshot: capture the current screen (do this first and after every action)
+- open_url: launch Chromium and navigate to a URL (waits 3.5s for page load)
+- left_click: left-click at pixel (x, y)
+- right_click: right-click at pixel (x, y)
+- double_click: double-click at pixel (x, y)
+- mouse_move: move mouse to (x, y) without clicking
+- type: type text at current cursor position (uses clipboard — handles any unicode/special chars)
+- key: press a keyboard key, e.g. "Return", "Tab", "Escape", "ctrl+a", "ctrl+c"
+- scroll: scroll at (x, y) — direction "up" or "down", amount = number of scroll steps (1-20)
+- run_command: run a bash command inside the container and return stdout/stderr
+- close: destroy the session and free the container`,
     {
-      action:    { type: "string", description: "Action to perform (see list above)" },
-      sessionId: { type: "string", description: "Optional. Browser state (cookies, login, navigation) is automatically shared across all your tool calls in this run. Only set this if you need a DIFFERENT browser session from the current one." },
-      url:       { type: "string", description: "URL to navigate to (open_url)" },
-      selector:  { type: "string", description: "CSS selector for the target element" },
-      text:      { type: "string", description: "Text to type, or JavaScript expression for evaluate" },
-      value:     { type: "string", description: "Option value for select dropdowns" },
-      x:         { type: "number", description: "Horizontal scroll distance in pixels" },
-      y:         { type: "number", description: "Vertical scroll distance in pixels (default 400)" },
-      key:       { type: "string", description: "Key to press, e.g. Enter, Tab, Escape, ArrowDown" },
-      ms:        { type: "number", description: "Milliseconds to wait (max 30000)" },
+      action:    { type: "string",  description: "Action to perform (see list above)" },
+      sessionId: { type: "string",  description: "Optional. All calls in this workflow run share the same desktop automatically. Only set if you need a separate session." },
+      url:       { type: "string",  description: "URL to open (open_url action)" },
+      x:         { type: "number",  description: "X pixel coordinate (left_click, right_click, double_click, mouse_move, scroll)" },
+      y:         { type: "number",  description: "Y pixel coordinate (left_click, right_click, double_click, mouse_move, scroll)" },
+      text:      { type: "string",  description: "Text to type (type action) or bash command (run_command action)" },
+      key:       { type: "string",  description: "Key to press, e.g. Return, Tab, Escape, ctrl+a, ctrl+c, BackSpace" },
+      direction: { type: "string",  description: "Scroll direction: 'up' or 'down' (default 'down')" },
+      amount:    { type: "number",  description: "Scroll steps 1-20 (default 3)" },
     },
     ["action"]
   ),
   async run(config, args, ctx) {
-    let puppeteer;
-    try {
-      puppeteer = (await import("puppeteer")).default;
-    } catch {
-      throw new Error("[tool_virtual_computer] Puppeteer is not installed on this server.");
-    }
-
     if (args.url) assertSafeUrl(args.url);
+    const sid = args.sessionId || ctx?.executionId || `_vc_${Date.now()}`;
+    const wid = ctx?.workspaceId || "default";
 
-    // Auto-use executionId as session so all calls within one agent run share the same browser.
-    // Agent can still override with an explicit sessionId for multi-run persistence.
-    const sessionId = args.sessionId || ctx?.executionId || `_vc_ephemeral_${Date.now()}`;
-    const ephemeral = !args.sessionId && !ctx?.executionId;
-
-    let session = _vcSessions.get(sessionId);
-    if (!session) {
-      const browser = await puppeteer.launch({
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-        headless: "new",
-      });
-      const page = await browser.newPage();
-      await page.setViewport({ width: 1280, height: 800 });
-      await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36");
-      session = { browser, page, lastUsed: Date.now() };
-      _vcSessions.set(sessionId, session);
-    }
-    session.lastUsed = Date.now();
-    const { page } = session;
-
-    const snap = async () => {
-      try {
-        return `data:image/png;base64,${await page.screenshot({ encoding: "base64" })}`;
-      } catch { return null; }
-    };
-
-    const waitIdle = () => page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 }).catch(() => {});
-
-    try {
-      switch (args.action) {
-        case "open_url": {
-          await page.goto(args.url, { waitUntil: "networkidle2", timeout: 60000 });
-          return { success: true, url: page.url(), title: await page.title(), sessionId, screenshot: await snap() };
-        }
-        case "click": {
-          await page.waitForSelector(args.selector, { timeout: 10000 });
-          await page.click(args.selector);
-          await waitIdle();
-          return { success: true, action: "click", selector: args.selector, url: page.url(), sessionId, screenshot: await snap() };
-        }
-        case "type": {
-          await page.waitForSelector(args.selector, { timeout: 10000 });
-          await page.click(args.selector, { clickCount: 3 });
-          await page.type(args.selector, args.text || "", { delay: 20 });
-          return { success: true, action: "type", sessionId, screenshot: await snap() };
-        }
-        case "scroll": {
-          await page.evaluate((x, y) => window.scrollBy(x, y), args.x || 0, args.y ?? 400);
-          return { success: true, action: "scroll", sessionId, screenshot: await snap() };
-        }
-        case "evaluate": {
-          const result = await page.evaluate(args.text || "document.title");
-          return { success: true, result, sessionId, screenshot: await snap() };
-        }
-        case "get_text": {
-          const text = args.selector
-            ? await page.$eval(args.selector, el => el.innerText).catch(() => null)
-            : await page.evaluate(() => document.body.innerText);
-          return { success: true, text, sessionId };
-        }
-        case "get_html": {
-          const html = args.selector
-            ? await page.$eval(args.selector, el => el.outerHTML).catch(() => null)
-            : await page.evaluate(() => document.documentElement.outerHTML);
-          return { success: true, html: html?.slice(0, 50000), sessionId };
-        }
-        case "hover": {
-          await page.waitForSelector(args.selector, { timeout: 10000 });
-          await page.hover(args.selector);
-          return { success: true, action: "hover", sessionId, screenshot: await snap() };
-        }
-        case "key": {
-          await page.keyboard.press(args.key || "Enter");
-          await waitIdle();
-          return { success: true, action: "key", key: args.key, url: page.url(), sessionId, screenshot: await snap() };
-        }
-        case "wait": {
-          await new Promise(r => setTimeout(r, Math.min(args.ms || 1000, 30000)));
-          return { success: true, waited: args.ms, sessionId, screenshot: await snap() };
-        }
-        case "select": {
-          await page.waitForSelector(args.selector, { timeout: 10000 });
-          await page.select(args.selector, args.value || "");
-          return { success: true, action: "select", sessionId, screenshot: await snap() };
-        }
-        case "back": {
-          await page.goBack({ waitUntil: "networkidle2", timeout: 30000 });
-          return { success: true, url: page.url(), sessionId, screenshot: await snap() };
-        }
-        case "forward": {
-          await page.goForward({ waitUntil: "networkidle2", timeout: 30000 });
-          return { success: true, url: page.url(), sessionId, screenshot: await snap() };
-        }
-        case "reload": {
-          await page.reload({ waitUntil: "networkidle2", timeout: 30000 });
-          return { success: true, url: page.url(), sessionId, screenshot: await snap() };
-        }
-        case "screenshot": {
-          return { url: page.url(), title: await page.title(), sessionId, screenshot: await snap() };
-        }
-        case "close": {
-          await session.browser.close().catch(() => {});
-          _vcSessions.delete(sessionId);
-          return { success: true, closed: sessionId };
-        }
-        default: {
-          return { url: page.url(), title: await page.title(), sessionId, screenshot: await snap() };
-        }
-      }
-    } finally {
-      if (ephemeral) {
-        await session.browser.close().catch(() => {});
-        _vcSessions.delete(sessionId);
-      }
+    switch (args.action) {
+      case "screenshot":    return _dsScreenshot(sid, wid);
+      case "open_url":      return _dsOpenUrl(sid, wid, args.url);
+      case "left_click":    return _dsLeftClick(sid, wid, args.x, args.y);
+      case "right_click":   return _dsRightClick(sid, wid, args.x, args.y);
+      case "double_click":  return _dsDoubleClick(sid, wid, args.x, args.y);
+      case "mouse_move":    return _dsMouseMove(sid, wid, args.x, args.y);
+      case "type":          return _dsType(sid, wid, args.text || "");
+      case "key":           return _dsKey(sid, wid, args.key || "Return");
+      case "scroll":        return _dsScroll(sid, wid, args.x, args.y, args.direction || "down", args.amount || 3);
+      case "run_command":   return _dsRun(sid, wid, args.text || "echo ok");
+      case "close":         return _dsClose(sid);
+      default:              return _dsScreenshot(sid, wid);
     }
   },
 };
