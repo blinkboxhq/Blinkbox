@@ -292,12 +292,12 @@ function SuccessFailedOutputHandles({ cardHeight }) {
 
 // ─── Spinning border overlay (n8n-style live execution ring) ─────────────────
 // Renders behind the card. The inner mask div recreates the card background so
-// only a 2px rim of the rotating conic-gradient is visible.
+// only a 4px rim of the rotating conic-gradient is visible.
 function SpinBorder({ radius, w, h, slow = false, color1 = "rgba(59,130,246,0.95)", color2 = "rgba(96,165,250,0.8)" }) {
   return (
     <div
       className="absolute pointer-events-none"
-      style={{ top: -2, left: -2, width: w + 4, height: h + 4, borderRadius: radius + 2, overflow: "hidden", zIndex: 0 }}
+      style={{ top: -4, left: -4, width: w + 8, height: h + 8, borderRadius: radius + 4, overflow: "hidden", zIndex: 0 }}
     >
       <div
         className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
@@ -313,7 +313,7 @@ function SpinBorder({ radius, w, h, slow = false, color1 = "rgba(59,130,246,0.95
       {/* Inner mask — same bg as card — makes only the rim visible */}
       <div style={{
         position: "absolute",
-        top: 2, left: 2, width: w, height: h,
+        top: 4, left: 4, width: w, height: h,
         borderRadius: radius,
         background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
       }} />
@@ -477,7 +477,7 @@ export default function CustomNode({ id, data, selected }) {
   if (isTrigger) {
     const cardW = 120, cardH = 120;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
-    const cardBorder = status === "running" ? "2px solid transparent"
+    const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
       : selected ? "2.5px solid rgba(255,255,255,0.5)"
       : isHovered ? "6px solid rgba(255,255,255,0.14)"
@@ -515,7 +515,7 @@ export default function CustomNode({ id, data, selected }) {
     const cardH = 120;
     const n = AGENT_BOTTOM_SLOTS.length;
 
-    const cardBorder = status === "running" ? "2px solid transparent"
+    const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
       : selected ? "2.5px solid rgba(255,255,255,0.5)"
       : isHovered ? "6px solid rgba(255,255,255,0.14)"
@@ -584,7 +584,7 @@ export default function CustomNode({ id, data, selected }) {
       nodeDef.label;
 
     const cardBorder = parentAgentRunning
-      ? "2px solid transparent"
+      ? "4px solid transparent"
       : selected
       ? "2.5px solid rgba(255,255,255,0.5)"
       : isHovered ? "6px solid rgba(255,255,255,0.14)"
@@ -706,7 +706,7 @@ export default function CustomNode({ id, data, selected }) {
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
   const cardW = 120, cardH = 120;
 
-  const cardBorderTop = status === "running" ? "2px solid transparent"
+  const cardBorderTop = status === "running" ? "4px solid transparent"
     : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
     : selected ? "2.5px solid rgba(255,255,255,0.5)"
     : isHovered ? "6px solid rgba(255,255,255,0.14)"
