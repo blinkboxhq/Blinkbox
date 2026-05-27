@@ -477,10 +477,10 @@ export default function CustomNode({ id, data, selected }) {
     const cardW = 120, cardH = 120;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "4px solid transparent"
-      : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
-      : selected ? "2.5px solid rgba(255,255,255,0.5)"
-      : isHovered ? "6px solid rgba(255,255,255,0.14)"
-      : "1.5px solid rgba(255,255,255,0.14)";
+      : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
+      : selected ? "3.5px solid rgba(255,255,255,0.55)"
+      : isHovered ? "7px solid rgba(255,255,255,0.16)"
+      : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -515,10 +515,10 @@ export default function CustomNode({ id, data, selected }) {
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "4px solid transparent"
-      : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
-      : selected ? "2.5px solid rgba(255,255,255,0.5)"
-      : isHovered ? "6px solid rgba(255,255,255,0.14)"
-      : "1.5px solid rgba(255,255,255,0.14)";
+      : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
+      : selected ? "3.5px solid rgba(255,255,255,0.55)"
+      : isHovered ? "7px solid rgba(255,255,255,0.16)"
+      : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
@@ -585,9 +585,9 @@ export default function CustomNode({ id, data, selected }) {
     const cardBorder = parentAgentRunning
       ? "4px solid transparent"
       : selected
-      ? "2.5px solid rgba(255,255,255,0.5)"
-      : isHovered ? "6px solid rgba(255,255,255,0.14)"
-      : "1.5px solid rgba(255,255,255,0.14)";
+      ? "3.5px solid rgba(255,255,255,0.55)"
+      : isHovered ? "7px solid rgba(255,255,255,0.16)"
+      : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = selected
       ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -671,7 +671,7 @@ export default function CustomNode({ id, data, selected }) {
           onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-            border: selected ? "2.5px solid rgba(255,255,255,0.5)" : isHovered ? "6px solid rgba(255,255,255,0.14)" : "1.5px solid rgba(255,255,255,0.14)",
+            border: selected ? "3.5px solid rgba(255,255,255,0.55)" : isHovered ? "7px solid rgba(255,255,255,0.16)" : "2.5px solid rgba(255,255,255,0.22)",
             boxShadow: selected ? "0 0 24px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6)" : "0 12px 40px rgba(0,0,0,0.6)" }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -706,12 +706,12 @@ export default function CustomNode({ id, data, selected }) {
   const cardW = 120, cardH = 120;
 
   const cardBorderTop = status === "running" ? "4px solid transparent"
-    : status === "failed" ? "2px solid rgba(239,68,68,0.5)"
-    : selected ? "2.5px solid rgba(255,255,255,0.5)"
-    : isHovered ? "6px solid rgba(255,255,255,0.14)"
-    : "1.5px solid rgba(255,255,255,0.14)";
+    : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
+    : selected ? "3.5px solid rgba(255,255,255,0.55)"
+    : isHovered ? "7px solid rgba(255,255,255,0.16)"
+    : "2.5px solid rgba(255,255,255,0.22)";
   const cardBorder = cardBorderTop;
-  const cardBottomBorder = status === "failed" ? "2px solid rgba(239,68,68,0.35)" : "3px solid rgba(255,255,255,0.22)";
+  const cardBottomBorder = status === "failed" ? "3px solid rgba(239,68,68,0.4)" : "4px solid rgba(255,255,255,0.28)";
   const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   return (
