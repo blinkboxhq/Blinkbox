@@ -10,6 +10,7 @@
  *   - Output size cap (10 MB) — prevents OOM from infinite output
  *   - Fork bomb protection via PidsLimit: 50
  *   - Deterministic timeout via Promise.race + container.stop({ t: 0 })
+ *   - Timeout: default 5 min, configurable up to 4 hours via config.timeoutSeconds
  */
 
 import Docker from "dockerode";
@@ -175,7 +176,7 @@ function demuxLogs(buffer) {
 export async function execute(config, workspaceId = "default") {
   const language    = LANGUAGE_CONFIG[config.language] ? config.language : "bash";
   const command     = (config.command || config.commands || "").trim();
-  const timeoutMs   = Math.min(Math.max(parseInt(config.timeoutSeconds || 30) * 1000, 1000), 300_000);
+  const timeoutMs   = Math.min(Math.max(parseInt(config.timeoutSeconds || 300) * 1000, 1000), 14_400_000);
 
   if (!command) return { stdout: "", stderr: "", exitCode: 0, language, executionTimeMs: 0, timedOut: false, truncated: false };
 
@@ -271,7 +272,7 @@ export async function execute(config, workspaceId = "default") {
 export async function executeCustom({ image, command, env = {}, timeoutSeconds = 60 }, workspaceId = "default") {
   if (!image) throw new Error("executeCustom: image is required");
   const command_ = (command || "").trim();
-  const timeoutMs = Math.min(Math.max(timeoutSeconds * 1000, 1000), 300_000);
+  const timeoutMs = Math.min(Math.max(timeoutSeconds * 1000, 1000), 14_400_000);
   const envVars = Object.entries(env).map(([k, v]) => `${k}=${v}`);
   const cmdArr = command_ ? ["sh", "-c", command_] : undefined;
   const startedAt = Date.now();
