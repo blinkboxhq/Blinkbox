@@ -250,6 +250,15 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
     }));
 
     // Auto-deactivate: only in passive mode and only when NOT a manual active run
+    // Fire error toast immediately on any node failure (passive or active)
+    if (displayStatus === "failed" && !get().isRunning) {
+      const label = data.nodeLabel || data.nodeId;
+      toast.error(`Node failed: ${label}`, {
+        description: data.errorMessage ? data.errorMessage.slice(0, 120) : "Open the execution trace for details.",
+        duration: 8000,
+      });
+    }
+
     if (passive) {
       clearTimeout(idleTimer);
       idleTimer = setTimeout(async () => {

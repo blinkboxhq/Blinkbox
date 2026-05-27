@@ -64,7 +64,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <Toaster theme="dark" position="bottom-right" richColors />
+        <Toaster theme="dark" position="top-center" richColors expand={false} closeButton duration={5000} />
         <FeedbackWidget />
         <Suspense fallback={<PageLoader />}>
           <Routes>
