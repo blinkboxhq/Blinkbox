@@ -568,6 +568,7 @@ const agentNode = {
     // ══════════════════════════════════════════════════════════════════
     const maxIter = Math.min(Math.max(maxIterations, 1), MAX_ITERATIONS_CEILING);
     const intermediateSteps = [];
+    const collectedScreenshots = [];
     let totalTokens = 0;
     let iteration = 0;
 
@@ -625,7 +626,18 @@ const agentNode = {
             // can self-correct: "Tool X failed because Y, let me try Z."
             const observation = await executeToolCall(tc, tools);
 
-            intermediateSteps[stepIndex].observation = observation;
+            // Collect screenshots from virtual computer calls for the output gallery
+            if (tc.name === "tool_virtual_computer" && observation?.screenshot) {
+              collectedScreenshots.push({
+                iteration,
+                action: tc.arguments?.action || "screenshot",
+                screenshot: observation.screenshot,
+              });
+            }
+
+            // Strip screenshot from stored intermediateStep to avoid duplicating MBs of data
+            const { screenshot: _ss, ...observationForLog } = (observation && typeof observation === "object") ? observation : {};
+            intermediateSteps[stepIndex].observation = _ss ? observationForLog : observation;
             return { tc, observation };
           })
         );
@@ -672,6 +684,7 @@ const agentNode = {
         iterations: iteration,
         intermediateSteps,
         returnIntermediateSteps,
+        screenshots: collectedScreenshots,
       });
     }
 
@@ -697,6 +710,7 @@ const agentNode = {
       iterations: iteration,
       intermediateSteps,
       returnIntermediateSteps,
+      screenshots: collectedScreenshots,
       warning: "max_iterations_exhausted",
     });
   },
@@ -1564,6 +1578,7 @@ function buildOutput({
   iterations,
   intermediateSteps,
   returnIntermediateSteps,
+  screenshots,
   warning,
 }) {
   const output = {
@@ -1577,6 +1592,11 @@ function buildOutput({
 
   if (returnIntermediateSteps && intermediateSteps.length > 0) {
     output.intermediateSteps = intermediateSteps;
+  }
+
+  // Keep last 8 screenshots to cap memory/storage usage (~2MB max)
+  if (screenshots && screenshots.length > 0) {
+    output.screenshots = screenshots.slice(-8);
   }
 
   if (warning) {

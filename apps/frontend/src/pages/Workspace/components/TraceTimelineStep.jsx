@@ -26,6 +26,62 @@ function DataBlock({ label, data, isError }) {
   );
 }
 
+function ScreenshotGallery({ screenshots }) {
+  const [active, setActive] = useState(screenshots.length - 1);
+  const s = screenshots[active];
+  return (
+    <div style={{ background: "#141414", border: "1px solid #2a2a2a", borderRadius: 4, overflow: "hidden" }}>
+      <div className="px-3 py-1.5 flex items-center justify-between"
+        style={{ borderBottom: "1px solid #2a2a2a" }}>
+        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "#555" }}>
+          Screenshots · {screenshots.length}
+        </span>
+        <span className="text-[9px] font-mono" style={{ color: "#444" }}>
+          {s?.action} · iter {s?.iteration}
+        </span>
+      </div>
+      {s?.screenshot && (
+        <img
+          src={s.screenshot}
+          alt={`screenshot ${active + 1}`}
+          className="w-full block"
+          style={{ maxHeight: 200, objectFit: "contain", background: "#000" }}
+        />
+      )}
+      {screenshots.length > 1 && (
+        <div className="flex gap-1.5 px-3 py-2 overflow-x-auto" style={{ borderTop: "1px solid #2a2a2a" }}>
+          {screenshots.map((sc, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              style={{
+                width: 44, height: 30, flexShrink: 0, borderRadius: 3, overflow: "hidden",
+                border: i === active ? "1px solid #7c5cfc" : "1px solid #333",
+                opacity: i === active ? 1 : 0.5,
+              }}
+            >
+              <img src={sc.screenshot} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OutputBlock({ data, isError }) {
+  if (!data || typeof data !== "object") return <DataBlock label="Output" data={data} isError={isError} />;
+  const { screenshots, ...rest } = data;
+  return (
+    <div className="space-y-2">
+      {Array.isArray(screenshots) && screenshots.length > 0 && (
+        <ScreenshotGallery screenshots={screenshots} />
+      )}
+      <DataBlock label="Output" data={rest} isError={isError} />
+    </div>
+  );
+}
+
 export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLogs = [] }) {
   const status      = cursor ? cursor.status : (isLive ? "pending" : "idle");
   const hasFailed   = status === "failed";
@@ -169,10 +225,10 @@ export default function TraceTimelineStep({ node, cursor, isLast, isLive, nodeLo
                 {hasLogData ? (
                   <>
                     {logInput !== undefined && <DataBlock label="Input" data={logInput} />}
-                    {logOutput !== undefined && <DataBlock label="Output" data={logOutput} isError={hasFailed} />}
+                    {logOutput !== undefined && <OutputBlock data={logOutput} isError={hasFailed} />}
                   </>
                 ) : cursor?.output ? (
-                  <DataBlock label="Output" data={cursor.output} isError={hasFailed} />
+                  <OutputBlock data={cursor.output} isError={hasFailed} />
                 ) : null}
               </div>
             </div>
