@@ -249,16 +249,6 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
       nodeStatuses: { ...prev.nodeStatuses, [data.nodeId]: displayStatus },
     }));
 
-    // Auto-deactivate: only in passive mode and only when NOT a manual active run
-    // Fire error toast immediately on any node failure (passive or active)
-    if (displayStatus === "failed" && !get().isRunning) {
-      const label = data.nodeLabel || data.nodeId;
-      toast.error(`Node failed: ${label}`, {
-        description: data.errorMessage ? data.errorMessage.slice(0, 120) : "Open the execution trace for details.",
-        duration: 8000,
-      });
-    }
-
     if (passive) {
       clearTimeout(idleTimer);
       idleTimer = setTimeout(async () => {
@@ -329,13 +319,6 @@ function _subscribeToExecution(set, get, executionId, automationId) {
         }
       }).catch(() => { toast.error('Failed to load execution logs'); });
 
-      if (data.status === "executed") {
-        toast.success("Execution completed successfully.");
-      } else if (data.status === "failed") {
-        const failedCursors = data.cursors?.filter((c) => c.status === "failed") || [];
-        const firstError = failedCursors[0]?.errorMessage;
-        toast.error(firstError ? `Failed: ${firstError.slice(0, 120)}` : "Execution failed. Check trace.");
-      }
     }
   };
   socket.on("execution:update", handler);
