@@ -109,8 +109,9 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
 
   const showPlus = !hasConnection || (slot.showPlus && hovered);
 
+  // Dots sit below the card (cardH + 22px) so edges originate visibly below the card edge
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 8, transform: "translateX(-50%)" }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH + 22, transform: "translateX(-50%)", zIndex: 2 }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
@@ -532,31 +533,31 @@ export default function CustomNode({ id, data, selected }) {
           style={{ top: cardH / 2, zIndex: 2, position: "absolute" }} />
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig} className="relative flex flex-col cursor-pointer transition-all duration-300"
+          onClick={handleOpenConfig} className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
 
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
 
           {badge}
 
-          {/* Logo left · Name right — centered in upper portion of card */}
-          <div className="flex items-center justify-center gap-3 px-5" style={{ height: cardH - 24 }}>
+          {/* Icon + name centered in the full card */}
+          <div className="flex items-center gap-3 px-5">
             <Bot className="w-9 h-9 text-white opacity-80 group-hover:opacity-100 shrink-0 transition-opacity duration-300" strokeWidth={1.4} />
             <p className="text-[13px] font-bold text-white leading-tight">{nodeDef.label || data.label || "AI Agent"}</p>
           </div>
-
-          {/* Slot labels pinned to bottom strip */}
-          <div className="absolute bottom-0 left-0 right-0 grid pointer-events-none select-none"
-            style={{ gridTemplateColumns: `repeat(${n}, 1fr)`, height: 24 }}>
-            {AGENT_BOTTOM_SLOTS.map(slot => (
-              <span key={slot.id} className="flex items-center justify-center text-[9px] font-medium text-zinc-500 tracking-wide">
-                {slot.label}
-              </span>
-            ))}
-          </div>
         </motion.div>
 
-        {/* Slot dots — pixel-exact so they sit dead-center under each label column */}
+        {/* Slot labels — below the card, above the dots */}
+        <div className="absolute left-0 right-0 grid pointer-events-none select-none"
+          style={{ top: cardH + 4, gridTemplateColumns: `repeat(${n}, 1fr)`, height: 18, zIndex: 2 }}>
+          {AGENT_BOTTOM_SLOTS.map(slot => (
+            <span key={slot.id} className="flex items-center justify-center text-[9px] font-medium text-zinc-500 tracking-wide">
+              {slot.label}
+            </span>
+          ))}
+        </div>
+
+        {/* Slot dots — fully below the card so edge origins are unobscured */}
         {AGENT_BOTTOM_SLOTS.map((slot, i) => (
           <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
             hasConnection={getSlotConnected(slot.id)}
