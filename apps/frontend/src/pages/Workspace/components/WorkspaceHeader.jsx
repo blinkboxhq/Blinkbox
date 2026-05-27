@@ -18,7 +18,7 @@ import brianLogo from '../../../assets/brian.webp';
 const H = 'h-7';
 const ICON = `${H} w-7 flex items-center justify-center rounded-md text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.06] transition-all duration-150 shrink-0 cursor-pointer`;
 const TEXT = `${H} flex items-center gap-1.5 px-2.5 rounded-md text-[11px] font-semibold transition-all duration-150 shrink-0 cursor-pointer border`;
-const DIV  = 'w-px h-4 bg-[#2a2a2a] shrink-0';
+const DIV  = 'w-px h-4 bg-[#26263a] shrink-0';
 
 function UserBubble({ user, title, onClick, color, pulse = false }) {
   const src = user?.avatar || user?.picture;
@@ -130,7 +130,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
 
   return (
     <>
-      <div className="relative w-full h-14 bg-neutral-950 border-b-2 border-white/15 z-50 flex items-center justify-between px-3 shrink-0">
+      <div className="relative w-full h-14 bg-[#0d0d12] border-b border-[#1a1a25] z-50 flex items-center justify-between px-3 shrink-0">
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">
@@ -165,7 +165,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
         {/* ── CENTER — panel toggles (workspace only) ───────────── */}
         {!isDashboard && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-0.5">
+            <div className="pointer-events-auto flex items-center gap-0.5 bg-[#17171f] border border-[#26263a] rounded-lg p-0.5">
               {panelToggles.map(({ key, title, active, onClick, icon }) => (
                 <button key={key} onClick={onClick} title={title}
                   className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
@@ -210,7 +210,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
           {!isDashboard && (
             <>
               <button onClick={() => setCollabOpen(true)} title="Share & collaborators"
-                className={`${TEXT} bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]`}>
+                className={`${TEXT} bg-[#17171f] border-[#26263a] text-[#8a8aa8] hover:text-neutral-200 hover:bg-white/[0.04]`}>
                 <Users className="w-3.5 h-3.5" />
                 Share
                 {presence.length > 0 && (
@@ -239,7 +239,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
                 className={`${TEXT} disabled:opacity-40 disabled:cursor-not-allowed
                   ${isActive
                     ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]'}`}
+                    : 'bg-[#17171f] border-[#26263a] text-[#8a8aa8] hover:text-neutral-200 hover:bg-white/[0.04]'}`}
               >
                 {isActivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
                 {isActive ? 'Active' : 'Activate'}

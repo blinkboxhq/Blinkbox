@@ -9,7 +9,7 @@ function Msg({ m }) {
   const isUser = m.role === 'user';
   return (
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUser ? 'bg-neutral-800' : 'bg-violet-500/20 border border-violet-500/30'}`}>
+      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUser ? 'bg-[#1d1d27]' : 'bg-violet-500/20 border border-violet-500/30'}`}>
         {isUser ? <User className="w-3 h-3 text-neutral-300" /> : <Bot className="w-3 h-3 text-violet-400" />}
       </div>
       <div className={`max-w-[80%] flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
@@ -30,7 +30,7 @@ function Msg({ m }) {
           </div>
         )}
         {m.text && (
-          <div className={`px-3 py-2 rounded-xl text-[12px] leading-relaxed whitespace-pre-wrap ${isUser ? 'bg-neutral-800 text-neutral-200 rounded-tr-sm' : 'bg-neutral-900 border border-[#222] text-neutral-300 rounded-tl-sm'}`}>
+          <div className={`px-3 py-2 rounded-xl text-[12px] leading-relaxed whitespace-pre-wrap ${isUser ? 'bg-[#1d1d27] text-neutral-200 rounded-tr-sm' : 'bg-[#17171f] border border-[#1a1a25] text-neutral-300 rounded-tl-sm'}`}>
             {m.text}
           </div>
         )}
@@ -189,7 +189,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
 
   return (
     <div
-      className="flex flex-col bg-[#0d0d10] border-t border-[#222]"
+      className="flex flex-col bg-[#111118] border-t border-[#1a1a25]"
       style={{ height }}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -207,18 +207,18 @@ export default function BottomChatPanel({ height, onResizeStart }) {
         className="h-1 w-full cursor-row-resize hover:bg-violet-500/30 transition-colors shrink-0 group"
         onMouseDown={onResizeStart}
       >
-        <div className="w-8 h-0.5 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-0.5 transition-colors" />
+        <div className="w-8 h-0.5 bg-[#26263a] group-hover:bg-violet-400 rounded-full mx-auto mt-0.5 transition-colors" />
       </div>
 
       {/* Panel header */}
-      <div className="flex items-center border-b border-[#222] shrink-0" style={{ height: 33 }}>
+      <div className="flex items-center border-b border-[#1a1a25] shrink-0" style={{ height: 33 }}>
         <div className="flex items-center justify-between px-4 shrink-0" style={{ width: `${leftPct}%`, height: '100%' }}>
           <div className="flex items-center gap-2">
             <Bot className="w-3.5 h-3.5 text-violet-400" />
             <span className="text-[11px] font-semibold text-neutral-300">Chat</span>
             {hasChatTrigger
               ? <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">live</span>
-              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-500">no trigger</span>
+              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1d1d27] border border-[#26263a] text-[#4a4a65]">no trigger</span>
             }
           </div>
           <button
@@ -233,7 +233,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
           </button>
         </div>
 
-        <div className="w-px bg-[#222] self-stretch" />
+        <div className="w-px bg-[#1a1a25] self-stretch" />
 
         <div className="flex items-center justify-between px-3 flex-1 min-w-0" style={{ height: '100%' }}>
           <span className="text-[10px] font-medium text-neutral-600 uppercase tracking-widest">Flow</span>
@@ -257,14 +257,14 @@ export default function BottomChatPanel({ height, onResizeStart }) {
                 <div className="w-5 h-5 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
                   <Loader2 className="w-3 h-3 text-violet-400 animate-spin" />
                 </div>
-                <div className="px-3 py-2 rounded-xl rounded-tl-sm bg-neutral-900 border border-[#222] text-[12px] text-neutral-600">Running…</div>
+                <div className="px-3 py-2 rounded-xl rounded-tl-sm bg-[#17171f] border border-[#1a1a25] text-[12px] text-[#4a4a65]">Running…</div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
           {/* Input area */}
-          <div className="px-3 pb-3 pt-1.5 border-t border-[#222] shrink-0">
+          <div className="px-3 pb-3 pt-1.5 border-t border-[#1a1a25] shrink-0">
             <div className="flex flex-col gap-1.5">
               {attachments.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 px-1">
@@ -273,7 +273,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
                       {a.mimeType.startsWith('image/') ? (
                         <img src={a.dataUrl} alt={a.name} className="w-14 h-14 rounded-lg object-cover border border-neutral-700" />
                       ) : (
-                        <div className="w-14 h-14 rounded-lg border border-neutral-700 bg-neutral-900 flex flex-col items-center justify-center gap-0.5 px-1">
+                        <div className="w-14 h-14 rounded-lg border border-[#26263a] bg-[#17171f] flex flex-col items-center justify-center gap-0.5 px-1">
                           <Paperclip className="w-4 h-4 text-neutral-500" />
                           <span className="text-[8px] text-neutral-600 text-center truncate w-full">{a.name}</span>
                         </div>
@@ -289,7 +289,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 bg-neutral-900 border border-[#2a2a2a] rounded-xl px-3 py-2 focus-within:border-neutral-700 transition-colors">
+              <div className="flex items-center gap-2 bg-[#17171f] border border-[#26263a] rounded-xl px-3 py-2 focus-within:border-[#38385a] transition-colors">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="text-neutral-600 hover:text-neutral-400 shrink-0 transition-colors"

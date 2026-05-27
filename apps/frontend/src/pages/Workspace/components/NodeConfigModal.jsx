@@ -43,7 +43,7 @@ function Divider({ onMouseDown }) {
   return (
     <div
       onMouseDown={onMouseDown}
-      className="w-px shrink-0 bg-[#1e1e20] hover:bg-violet-500/40 active:bg-violet-500/60 transition-colors cursor-col-resize relative group"
+      className="w-px shrink-0 bg-[#1a1a25] hover:bg-violet-500/40 active:bg-violet-500/60 transition-colors cursor-col-resize relative group"
       style={{ zIndex: 1 }}
     >
       <div className="absolute inset-y-0 -left-1.5 -right-1.5 group-hover:bg-violet-500/5 transition-colors" />
@@ -66,9 +66,9 @@ function InputPanel({ canvasNodes, currentNodeId }) {
   const others = canvasNodes.filter((n) => n.id !== currentNodeId);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
+    <div className="flex flex-col h-full" style={{ background: "#111118" }}>
       {/* Panel header — fixed height matches others */}
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1a1a25]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-neutral-200">Input</p>
         <p className="text-[10px] text-neutral-600 mt-0.5">Click a node to see its output variables</p>
       </div>
@@ -100,7 +100,7 @@ function InputPanel({ canvasNodes, currentNodeId }) {
                 onClick={() => setExpanded(isOpen ? null : n.id)}
                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] transition-colors group text-left"
               >
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border border-[#1e1e20] bg-[#111]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border border-[#26263a] bg-[#17171f]">
                   {def?.logoUrl
                     ? <img src={def.logoUrl} alt="" className="w-5 h-5 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
                     : def?.icon
@@ -191,16 +191,16 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: "#111113" }}>
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "#111118" }}>
       {/* Panel header */}
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1a1a25]" style={{ height: PANEL_HEADER_H }}>
         {editing ? (
           <div className="flex items-center gap-2">
             <input
               autoFocus value={nameVal}
               onChange={(e) => setNameVal(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setEditing(false); }}
-              className="flex-1 bg-[#0d0d0f] border border-[#444] rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white focus:outline-none focus:border-neutral-500 transition-colors"
+              className="flex-1 bg-[#17171f] border border-[#38385a] rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white focus:outline-none focus:border-violet-500/50 transition-colors"
             />
             <button onClick={commitRename} className="p-1.5 text-emerald-400 hover:text-emerald-300 transition-colors shrink-0"><Check className="w-4 h-4" /></button>
             <button onClick={() => setEditing(false)} className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"><X className="w-4 h-4" /></button>
@@ -306,23 +306,23 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
   const display = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
+    <div className="flex flex-col h-full" style={{ background: "#111118" }}>
       {/* Panel header */}
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1a1a25]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-neutral-200">Output</p>
-        <p className="text-[10px] text-neutral-600 mt-0.5">Test this node with sample data</p>
+        <p className="text-[10px] text-[#4a4a65] mt-0.5">Test this node with sample data</p>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Input area */}
-        <div className="px-4 pt-4 pb-3 border-b border-[#1e1e20] shrink-0">
-          <p className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider mb-2">Test Input (JSON)</p>
+        <div className="px-4 pt-4 pb-3 border-b border-[#1a1a25] shrink-0">
+          <p className="text-[10px] font-semibold text-[#4a4a65] uppercase tracking-wider mb-2">Test Input (JSON)</p>
           <textarea
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
             rows={3}
             spellCheck={false}
-            className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2.5 text-[12px] text-neutral-300 font-mono focus:outline-none focus:border-neutral-600 resize-none transition-colors"
+            className="w-full bg-[#17171f] border border-[#26263a] rounded-lg px-3 py-2.5 text-[12px] text-neutral-300 font-mono focus:outline-none focus:border-[#38385a] resize-none transition-colors"
             placeholder="{}"
           />
         </div>
@@ -362,7 +362,7 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
                   <span className="ml-auto text-[11px] text-neutral-600 font-mono">{display.durationMs ?? display.clientMs}ms</span>
                 )}
               </div>
-              <div className="bg-[#111] border border-[#1e1e20] rounded-xl p-4 overflow-auto max-h-[420px]">
+              <div className="bg-[#17171f] border border-[#26263a] rounded-xl p-4 overflow-auto max-h-[420px]">
                 <JsonView data={display.output ?? display.error ?? display} />
               </div>
             </div>
@@ -453,10 +453,10 @@ export default function NodeConfigModal() {
           exit={{ opacity: 0, y: 6 }}
           transition={{ duration: 0.16, ease: "easeOut" }}
           className="fixed inset-0 flex flex-col"
-          style={{ zIndex: 60, background: "#0a0a0a" }}
+          style={{ zIndex: 60, background: "#0d0d12" }}
         >
           {/* Top bar */}
-          <div className="flex items-center gap-3 px-5 shrink-0 border-b border-[#333]" style={{ height: 52, background: "#0a0a0a" }}>
+          <div className="flex items-center gap-3 px-5 shrink-0 border-b border-[#1a1a25]" style={{ height: 52, background: "#0d0d12" }}>
             <div className="w-7 h-7 shrink-0 flex items-center justify-center">
               {logoUrl
                 ? <img src={logoUrl} alt="" className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />

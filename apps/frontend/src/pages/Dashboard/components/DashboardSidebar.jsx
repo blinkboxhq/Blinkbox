@@ -54,9 +54,9 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bg-neutral-950 border-r-2 border-white/15 flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+      <aside className={`${w} bg-[#0d0d12] border-r border-[#1a1a25] flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
         {/* Header — logo links to dashboard */}
-        <div className={`h-14 flex items-center border-b-2 border-white/15 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+        <div className={`h-14 flex items-center border-b border-[#1a1a25] shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (
             <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
@@ -90,7 +90,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           {expanded && <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          <div className={`border-t-2 border-white/15 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
+          <div className={`border-t border-[#1a1a25] my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
@@ -98,12 +98,12 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {/* Usage meter */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="p-3 rounded-lg bg-neutral-900 border border-white/10">
+            <div className="p-3 rounded-lg bg-[#17171f] border border-[#26263a]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Usage</span>
-                <span className="text-[10px] text-white/40">{usedPct}%</span>
+                <span className="text-[10px] font-medium text-[#8a8aa8] uppercase tracking-wider">Usage</span>
+                <span className="text-[10px] text-[#8a8aa8]">{usedPct}%</span>
               </div>
-              <div className="w-full bg-neutral-800 rounded-full h-1">
+              <div className="w-full bg-[#1d1d27] rounded-full h-1">
                 <div
                   className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-yellow-400' : 'bg-white'}`}
                   style={{ width: `${usedPct}%` }}
@@ -115,7 +115,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         )}
 
         {/* User */}
-        <div className={`border-t-2 border-white/15 ${expanded ? 'p-3' : 'p-2'}`}>
+        <div className={`border-t border-[#1a1a25] ${expanded ? 'p-3' : 'p-2'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-1">
               <UserAvatar />
@@ -142,7 +142,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
       {/* Logout modal */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]" style={{ animation: 'dbFadeIn 0.12s ease-out' }}>
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
+          <div className="bg-[#111118] border border-[#26263a] rounded-xl w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
             <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out of Blinkbox?</h3>
             <p className="text-[13px] text-neutral-500 mb-5">You'll need to sign in again to access your workspace.</p>
             <div className="flex items-center gap-2.5 justify-end">
