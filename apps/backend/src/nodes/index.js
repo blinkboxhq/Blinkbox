@@ -188,6 +188,7 @@ import geminiCli     from "./integrations/geminiCli.node.js";
 import groq          from "./integrations/groq.node.js";
 import ollama        from "./integrations/ollama.node.js";
 import lmstudio      from "./integrations/lmstudio.node.js";
+import { agentOllamaNode, agentLmStudioNode } from "./integrations/agentLocalModel.node.js";
 import githubCopilot from "./integrations/githubCopilot.node.js";
 
 // New Integrations
@@ -542,8 +543,8 @@ export const nodeRegistry = {
   agent_perplexity:    perplexity,
   agent_xai:           xai,
   agent_groq:          groq,
-  agent_ollama:        ollama,
-  agent_lmstudio:      lmstudio,
+  agent_ollama:        agentOllamaNode,
+  agent_lmstudio:      agentLmStudioNode,
   agent_llm:           openai,
   agent_memory:        vectorMemory,
   agent_memory_mongodb:   mongodb,

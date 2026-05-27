@@ -1,7 +1,7 @@
 import { useState } from "react";
 import CredentialPicker from "@/components/ui/CredentialPicker";
 
-export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl = false, defaultBaseUrl = "http://127.0.0.1:11434", models = [], color = "#6B7280" }) {
+export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl = false, defaultBaseUrl = "http://127.0.0.1:11434", models = [], color = "#6B7280", localOnly = false }) {
   return function AgentModelPanel({ config = {}, updateConfig }) {
     const [streaming, setStreaming] = useState(config.streaming !== false);
 
@@ -26,6 +26,15 @@ export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl 
             <p className="text-[10px] text-zinc-500 mt-0.5">AI chat model provider</p>
           </div>
         </div>
+
+        {localOnly && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.07]">
+            <span className="text-amber-400 text-[11px] shrink-0 mt-0.5">⚠</span>
+            <p className="text-[11px] text-amber-300 leading-relaxed">
+              Local provider — {label} and the Blinkbox backend must run on the same machine.
+            </p>
+          </div>
+        )}
 
         {/* Model selector */}
         {models.length > 0 && (
