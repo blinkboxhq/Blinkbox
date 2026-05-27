@@ -68,7 +68,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
           show ? (
             <span
               key={i}
-              className="absolute top-0 bottom-0 border-l border-[#26263a]"
+              className="absolute top-0 bottom-0 border-l border-neutral-800"
               style={{ left: `${i * LINE_W + 8 + LINE_W / 2}px` }}
             />
           ) : null
@@ -79,7 +79,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
           <>
             {/* Vertical part of connector (top half) */}
             <span
-              className="absolute top-0 border-l border-[#26263a]"
+              className="absolute top-0 border-l border-neutral-800"
               style={{
                 left: `${(depth - 1) * LINE_W + 8 + LINE_W / 2}px`,
                 height: '13px',
@@ -87,7 +87,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
             />
             {/* Horizontal part */}
             <span
-              className="absolute border-t border-[#26263a]"
+              className="absolute border-t border-neutral-800"
               style={{
                 top: '13px',
                 left: `${(depth - 1) * LINE_W + 8 + LINE_W / 2}px`,
@@ -97,7 +97,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
             {/* Vertical continuation below (only if NOT last child) */}
             {!isLast && (
               <span
-                className="absolute border-l border-[#26263a]"
+                className="absolute border-l border-neutral-800"
                 style={{
                   left: `${(depth - 1) * LINE_W + 8 + LINE_W / 2}px`,
                   top: '13px',
@@ -114,7 +114,7 @@ function TreeNode({ node, edges, allNodes, depth, isLast, ancestorLines, visited
             className="w-3.5 h-3.5 flex items-center justify-center mr-1 shrink-0 relative z-10"
             onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
           >
-            <span className={`w-1.5 h-1.5 rounded-sm border border-[#26263a] bg-[#17171f] flex items-center justify-center transition-colors group-hover:border-[#38385a]`}>
+            <span className={`w-1.5 h-1.5 rounded-sm border border-neutral-700 bg-neutral-900 flex items-center justify-center transition-colors group-hover:border-neutral-600`}>
               <span className={`block w-[5px] h-px bg-neutral-600 transition-transform ${open ? '' : 'rotate-90'}`} />
               <span className="block w-px h-[5px] bg-neutral-600 absolute" style={{ display: open ? 'none' : 'block' }} />
             </span>
@@ -166,10 +166,10 @@ export default function NodeTreePanel({ embedded = false, hideHeader = false, cl
   const displayRoots = roots.length > 0 ? roots : nodes.slice(0, 1);
 
   return (
-    <div className={`${embedded ? 'flex-1 min-w-0' : 'w-[220px] shrink-0 border-l border-[#1a1a25]'} bg-[#111118] flex flex-col overflow-hidden ${className}`}>
+    <div className={`${embedded ? 'flex-1 min-w-0' : 'w-[220px] shrink-0 border-l border-[#222]'} bg-neutral-950 flex flex-col overflow-hidden ${className}`}>
       {/* Header */}
       {!hideHeader && (
-        <div className="px-3 py-2 border-b border-[#1a1a25] shrink-0 flex items-center justify-between">
+        <div className="px-3 py-2 border-b border-[#222] shrink-0 flex items-center justify-between">
           <p className="text-[10px] font-medium text-neutral-600 uppercase tracking-widest">Flow</p>
           <span className="text-[10px] text-neutral-700 font-mono">{nodes.length}</span>
         </div>

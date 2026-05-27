@@ -38,9 +38,9 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
       onDragStart={handleDragStart}
       onDoubleClick={handleDoubleClick}
       title={`${node.label} — double-click or drag to add`}
-      className="flex items-center justify-start gap-3 py-2 px-2 group/sidebar rounded-lg hover:bg-[#1d1d27] cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
+      className="flex items-center justify-start gap-3 py-2 px-2 group/sidebar rounded-lg hover:bg-zinc-800/40 cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
     >
-      <div className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-[#1d1d27] text-white">
+      <div className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-zinc-800/80 text-white">
         <Icon className="w-3.5 h-3.5" />
       </div>
 
@@ -70,9 +70,9 @@ const CategoryFolder = ({ category, nodes }) => {
       {/* Category header — clickable toggle */}
       <button
         onClick={() => setExpanded((prev) => !prev)}
-        className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-[#17171f] transition-colors w-full group"
+        className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/30 transition-colors w-full group"
       >
-        <div className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-[#1a1a25] text-[#8a8aa8] group-hover:text-neutral-300 transition-colors">
+        <div className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center bg-zinc-800/50 text-zinc-500 group-hover:text-zinc-400 transition-colors">
           <CatIcon className="w-3.5 h-3.5" />
         </div>
 
@@ -132,11 +132,11 @@ export default function WorkspaceLeftSidebar() {
 
   return (
     <Sidebar open={open} setOpen={setOpen}>
-      <SidebarBody className="bg-[#0d0d12]">
+      <SidebarBody className="bg-zinc-950">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll">
 
           {/* Logo */}
-          <div className="px-3 h-14 flex items-center gap-3 border-b border-[#1a1a25] shrink-0 mb-2">
+          <div className="px-3 h-14 flex items-center gap-3 border-b-2 border-white/15 shrink-0 mb-2">
             <img
               src={logo}
               alt="BlinkBox"
