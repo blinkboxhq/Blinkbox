@@ -582,8 +582,10 @@ const WELCOME_MSG = {
 };
 
 export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
-  const isBrianOpen  = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen = useWorkspaceStore(s => s.setBrianOpen);
+  const isBrianOpen        = useWorkspaceStore(s => s.isBrianOpen);
+  const setBrianOpen       = useWorkspaceStore(s => s.setBrianOpen);
+  const brianQueuedMessage = useWorkspaceStore(s => s.brianQueuedMessage);
+  const clearBrianQueue    = useWorkspaceStore(s => s.clearBrianQueue);
   const nodes        = useWorkspaceStore(s => s.nodes);
   const edges        = useWorkspaceStore(s => s.edges);
   const workflowName = useWorkspaceStore(s => s.workflowName);
@@ -611,6 +613,13 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
     const timer = setTimeout(() => send(initialPrompt), 400);
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (!brianQueuedMessage) return;
+    clearBrianQueue();
+    const timer = setTimeout(() => send(brianQueuedMessage), 300);
+    return () => clearTimeout(timer);
+  }, [brianQueuedMessage]); // eslint-disable-line
 
   useEffect(() => {
     if (atBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

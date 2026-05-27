@@ -36,6 +36,7 @@ export const createUISlice = (set, get) => ({
   isAgentPickerOpen: false,
   agentPickerParentId: null,
   suggestionNode: null,
+  brianQueuedMessage: null,
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -43,6 +44,8 @@ export const createUISlice = (set, get) => ({
   setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen, ...(isOpen ? { isAddNodeOpen: false } : {}) }),
   setAddNodeOpen: (isOpen) => set({ isAddNodeOpen: isOpen, ...(isOpen ? { isTriggerPickerOpen: false } : {}) }),
   setBrianOpen: (isOpen) => { if (isOpen) playBottomPanel(); set({ isBrianOpen: isOpen }); },
+  queueBrianMessage: (msg) => set({ brianQueuedMessage: msg, panels: { ...get().panels, brian: true } }),
+  clearBrianQueue: () => set({ brianQueuedMessage: null }),
   togglePanel: (key) => set(s => {
     const opening = !s.panels[key];
     if (opening) playBottomPanel();

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NodeContextMenu from "./NodeContextMenu";
+import ExecutionErrorPanel from "./ExecutionErrorPanel";
 import { playNodeLand, playDelete } from "../../../lib/sounds";
 import {
   ReactFlow,
@@ -109,7 +110,8 @@ export default function Canvas() {
   const isRunning        = useWorkspaceStore((s) => s.isRunning);
   const runEngine        = useWorkspaceStore((s) => s.runEngine);
   const executionError   = useWorkspaceStore((s) => s.executionError);
-  const openTraceSidebar = useWorkspaceStore((s) => s.openTraceSidebar);
+  const openTraceSidebar    = useWorkspaceStore((s) => s.openTraceSidebar);
+  const liveExecutionState  = useWorkspaceStore((s) => s.liveExecutionState);
   const applyRemoteNodeMove = useWorkspaceStore((s) => s.applyRemoteNodeMove);
   const applyGraphSync      = useWorkspaceStore((s) => s.applyGraphSync);
   const watchAutomation     = useWorkspaceStore((s) => s.watchAutomation);
@@ -247,11 +249,13 @@ export default function Canvas() {
   // Track run result for floating button feedback
   const [lastRunResult, setLastRunResult] = useState(null); // null | "success" | "error"
   const [runDurationMs, setRunDurationMs] = useState(null);
+  const [errorPanelDismissed, setErrorPanelDismissed] = useState(false);
   const runStartRef = useRef(null);
   useEffect(() => {
     if (isRunning) {
       runStartRef.current = Date.now();
       setLastRunResult(null);
+      setErrorPanelDismissed(false);
     } else if (runStartRef.current) {
       const dur = Date.now() - runStartRef.current;
       setRunDurationMs(dur);
@@ -468,6 +472,16 @@ export default function Canvas() {
           {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
         </button>
       </div>
+
+      {/* ── Execution error panel (bottom-right) ── */}
+      <AnimatePresence>
+        {lastRunResult === 'error' && !errorPanelDismissed && liveExecutionState && (
+          <ExecutionErrorPanel
+            liveExecutionState={liveExecutionState}
+            onDismiss={() => setErrorPanelDismissed(true)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Unified bottom toolbar ── */}
       <AnimatePresence>
