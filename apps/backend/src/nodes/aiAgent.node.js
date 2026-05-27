@@ -354,7 +354,7 @@ const agentNode = {
     const _llm = _chatModel?.config || _chatModel;
     const _derivedProvider = _chatModel?.backendType ? BACKENDTYPE_TO_PROVIDER[_chatModel.backendType] : null;
     const provider = _llm?.provider || _derivedProvider || _configProvider;
-    const model = _llm?.model || _configModel;
+    const model = _llm?.customModel?.trim() || _llm?.model || _configModel;
     const credentialId = _llm?.credentialId || _configCredentialId;
 
     // ── Validation ─────────────────────────────────────────────────────
@@ -2369,7 +2369,11 @@ agentNode._think = async function ({
 }) {
   const provider = nodeConfig.provider || "openai";
   const resolvedModel =
-    nodeConfig.model || DEFAULT_MODELS[provider];
+    nodeConfig.customModel?.trim() || nodeConfig.model || DEFAULT_MODELS[provider];
+  if ((provider === "ollama" || provider === "lmstudio") && nodeConfig.baseUrl) {
+    const base = nodeConfig.baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
+    ENDPOINTS[provider] = `${base}/v1/chat/completions`;
+  }
 
   // ── Resolve credentials ─────────────────────────────────────────
   const cred = await resolveCredential(
@@ -2544,7 +2548,7 @@ agentNode._summarize = async function ({
 }) {
   const provider = nodeConfig.provider || "openai";
   const resolvedModel =
-    nodeConfig.model || DEFAULT_MODELS[provider];
+    nodeConfig.customModel?.trim() || nodeConfig.model || DEFAULT_MODELS[provider];
 
   const cred = await resolveCredential(
     nodeConfig.credentialId,
