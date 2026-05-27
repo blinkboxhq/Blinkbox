@@ -53,7 +53,7 @@ function VHandle({ onMouseDown, side = 'right' }) {
     <div
       onMouseDown={onMouseDown}
       className={`w-1 h-full flex-shrink-0 cursor-col-resize group relative z-10
-        ${side === 'right' ? 'border-r border-[#333]' : 'border-l border-[#333]'}
+        ${side === 'right' ? 'border-r border-[#1a1a25]' : 'border-l border-[#1a1a25]'}
         hover:bg-white/[0.06] active:bg-violet-500/20 transition-colors`}
     >
       <div className={`absolute inset-y-0 ${side === 'right' ? '-right-1' : '-left-1'} w-3`} />
@@ -64,9 +64,9 @@ function VHandle({ onMouseDown, side = 'right' }) {
 function MobileGate() {
   const navigate = useNavigate();
   return (
-    <div className="w-screen h-screen bg-zinc-900 flex flex-col items-center justify-center px-8 text-center">
+    <div className="w-screen h-screen bg-[#0d0d12] flex flex-col items-center justify-center px-8 text-center">
       <img src={logo} alt="BlinkBox" className="w-10 h-10 mb-8 opacity-60" />
-      <div className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
+      <div className="w-12 h-12 rounded-2xl bg-[#17171f] border border-[#26263a] flex items-center justify-center mb-6">
         <Monitor className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
       </div>
       <h1 className="text-white text-xl font-semibold tracking-tight mb-2">Open on a larger screen</h1>
@@ -126,7 +126,7 @@ export default function Workspace() {
   if (isMobile) return <MobileGate />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#1E1E20]">
+    <div className="flex h-screen overflow-hidden bg-[#09090b]">
 
       {/* Left sidebar — has its own internal collapse toggle */}
       {panels.leftSidebar && (

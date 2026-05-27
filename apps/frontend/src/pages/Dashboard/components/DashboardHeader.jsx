@@ -13,7 +13,7 @@ export default function DashboardHeader({
   const filterRow = (
     <div className="flex items-center gap-2 flex-wrap">
       {/* Status tabs */}
-      <div className="flex items-center bg-neutral-950 border border-neutral-900/80 rounded-md p-0.5">
+      <div className="flex items-center bg-[#111118] border border-[#26263a] rounded-md p-0.5">
         {TABS.map(tab => (
           <button
             key={tab.key}
@@ -35,12 +35,12 @@ export default function DashboardHeader({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search…"
-          className="pl-7 pr-3 py-[5px] bg-neutral-950 border border-neutral-900/80 rounded-md text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-colors w-[140px]"
+          className="pl-7 pr-3 py-[5px] bg-[#111118] border border-[#26263a] rounded-md text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-colors w-[140px]"
         />
       </div>
 
       {/* View toggle */}
-      <div className="flex items-center bg-neutral-950 border border-neutral-900/80 rounded-md p-0.5">
+      <div className="flex items-center bg-[#111118] border border-[#26263a] rounded-md p-0.5">
         <button onClick={() => setViewMode('grid')} title="Grid view"
           className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}>
           <LayoutGrid className="w-3.5 h-3.5" />
