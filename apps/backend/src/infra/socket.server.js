@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env.js";
 import Execution from "../models/execution.model.js";
 import Automation from "../models/automation.model.js";
+import { initVCSocket } from "../nodes/VirtualComputer.js";
 
 let io = null;
 
@@ -172,6 +173,7 @@ export function initSocketServer(httpServer) {
   });
 
   console.log("WebSocket server initialized");
+  initVCSocket(io);
   return io;
 }
 

@@ -16,6 +16,7 @@ import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
 import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
+import { vcRouter } from "../nodes/VirtualComputer.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
@@ -117,6 +118,7 @@ app.use("/api/oauth", oauthRoutes);
 app.use("/api/billing", billingRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/vc", vcRouter);
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
