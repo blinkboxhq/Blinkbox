@@ -380,6 +380,10 @@ export async function cleanupOrphans() {
   }
 }
 
+export async function isDockerAvailable() {
+  try { await docker.ping(); return true; } catch { return false; }
+}
+
 export function scheduleOrphanScan() {
   setInterval(async () => {
     try {

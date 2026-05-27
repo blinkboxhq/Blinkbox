@@ -26,12 +26,14 @@ async function bootstrap() {
       console.warn("Puppeteer cluster pre-warm skipped:", err.message);
     }
 
-    // 3b. Container pool — orphan cleanup + image warming (non-fatal)
+    // 3b. Container pool — orphan cleanup + image warming (non-fatal, skipped if Docker absent)
     try {
-      const { warmImages, cleanupOrphans, scheduleOrphanScan } = await import("./infra/container.pool.js");
-      await cleanupOrphans();
-      warmImages().catch((err) => console.warn("[ContainerPool] image warm error:", err.message));
-      scheduleOrphanScan();
+      const { warmImages, cleanupOrphans, scheduleOrphanScan, isDockerAvailable } = await import("./infra/container.pool.js");
+      if (await isDockerAvailable()) {
+        await cleanupOrphans();
+        warmImages().catch((err) => console.warn("[ContainerPool] image warm error:", err.message));
+        scheduleOrphanScan();
+      }
     } catch (err) {
       console.warn("Container pool init skipped:", err.message);
     }
