@@ -122,15 +122,15 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
         <button
           onClick={e => { e.stopPropagation(); openAgentPicker(parentNodeId); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-4 h-4 bg-zinc-800 border-[2px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
-          style={{ transform: "rotate(45deg)" }}
+          className="w-5 h-5 flex items-center justify-center active:scale-95 transition-all duration-100"
+          style={{ transform: "rotate(45deg)", backgroundColor: "#1e1e22", border: `2px solid ${slot.color}`, boxShadow: `0 0 6px ${slot.color}55` }}
           title={slot.label}
         >
-          <Plus className="w-2 h-2 text-zinc-300" strokeWidth={3} style={{ transform: "rotate(-45deg)" }} />
+          <Plus className="w-2.5 h-2.5" strokeWidth={3} style={{ transform: "rotate(-45deg)", color: slot.color }} />
         </button>
       ) : (
-        <div className="w-4 h-4 border-[2.5px] border-[#1a1a1e]"
-          style={{ backgroundColor: "#71717a", transform: "rotate(45deg)" }} />
+        <div className="w-5 h-5"
+          style={{ backgroundColor: slot.color, transform: "rotate(45deg)", boxShadow: `0 0 8px ${slot.color}88`, border: "2px solid #1a1a1e" }} />
       )}
     </div>
   );
