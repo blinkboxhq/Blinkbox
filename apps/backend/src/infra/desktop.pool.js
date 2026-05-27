@@ -1,15 +1,13 @@
 /**
- * Desktop Pool — Persistent Virtual Computer Sessions
+ * Desktop Pool — Persistent Browser Sessions via Puppeteer
  *
- * Each session is a Docker container running:
- *   - Xvfb :99  — 1280×800 virtual display
- *   - openbox   — minimal window manager
- *   - chromium  — browser
- *   - xdotool   — mouse/keyboard control
- *   - imagemagick — screenshots
+ * Replaces the Docker/Xvfb approach with Puppeteer's native coordinate API:
+ *   page.mouse.click(x, y)   — pixel-precise clicking
+ *   page.mouse.wheel(delta)  — scrolling
+ *   page.keyboard.type()     — text input
+ *   page.screenshot()        — screenshots as base64
  *
- * Build the image once before using:
- *   cd apps/backend && docker build -f Dockerfile.desktop -t blinkbox-desktop:latest .
+ * Same public API as the Docker version — tool_virtual_computer does not change.
  *
  * Session lifecycle:
  *   - Created on first use, keyed by sessionId
@@ -17,226 +15,184 @@
  *   - Manually closeable via closeSession()
  */
 
-import Docker from "dockerode";
-
-const docker = new Docker();
-const DESKTOP_IMAGE = process.env.DESKTOP_IMAGE || "blinkbox-desktop:latest";
 const SCREEN_W = 1280;
 const SCREEN_H = 800;
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
 const _sessions = new Map();
 
-// ── Cleanup idle sessions ─────────────────────────────────────────────────────
-
 setInterval(async () => {
   const now = Date.now();
   for (const [id, s] of _sessions) {
     if (now - s.lastUsed > SESSION_TTL_MS) {
-      await _kill(s.containerId);
+      await s.browser.close().catch(() => {});
       _sessions.delete(id);
     }
   }
 }, 5 * 60 * 1000);
 
-async function _kill(containerId) {
-  try {
-    const c = docker.getContainer(containerId);
-    await c.stop({ t: 0 }).catch(() => {});
-    await c.remove({ force: true }).catch(() => {});
-  } catch {}
-}
-
-// ── Docker exec helper — demuxes stdout/stderr ────────────────────────────────
-
-async function _exec(containerId, cmd, timeoutMs = 30000) {
-  const container = docker.getContainer(containerId);
-  const execObj = await container.exec({
-    Cmd: ["sh", "-c", cmd],
-    AttachStdout: true,
-    AttachStderr: true,
-    Env: ["DISPLAY=:99", "DBUS_SESSION_BUS_ADDRESS=disabled"],
-  });
-
-  const stream = await execObj.start({ hijack: true, stdin: false });
-
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    const timer = setTimeout(() => reject(new Error(`exec timeout: ${cmd.slice(0, 80)}`)), timeoutMs);
-
-    stream.on("data", (c) => chunks.push(c));
-    stream.on("end", () => {
-      clearTimeout(timer);
-      let stdout = "", stderr = "";
-      const buf = Buffer.concat(chunks);
-      let offset = 0;
-      while (offset + 8 <= buf.length) {
-        const type = buf[offset];
-        const sz   = buf.readUInt32BE(offset + 4);
-        const text = buf.slice(offset + 8, offset + 8 + sz).toString("utf8");
-        if (type === 1) stdout += text;
-        else if (type === 2) stderr += text;
-        offset += 8 + sz;
-      }
-      resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
-    });
-    stream.on("error", (err) => { clearTimeout(timer); reject(err); });
-  });
-}
-
-// ── Session management ────────────────────────────────────────────────────────
-
-async function _getOrCreate(sessionId, workspaceId) {
+async function _getOrCreate(sessionId) {
   if (_sessions.has(sessionId)) {
     const s = _sessions.get(sessionId);
     s.lastUsed = Date.now();
     return s;
   }
 
-  try { await docker.ping(); } catch {
-    throw new Error("Virtual Computer: Docker is not available on this server. Self-hosted deployment with Docker required.");
+  let puppeteer;
+  try {
+    puppeteer = (await import("puppeteer")).default;
+  } catch {
+    throw new Error("Virtual Computer: Puppeteer is not installed. Run: npm install puppeteer");
   }
 
-  let imageExists = false;
-  try { await docker.getImage(DESKTOP_IMAGE).inspect(); imageExists = true; } catch {}
-  if (!imageExists) {
-    throw new Error(
-      `Virtual Computer: Desktop image "${DESKTOP_IMAGE}" not found. ` +
-      `Build it with: cd apps/backend && docker build -f Dockerfile.desktop -t blinkbox-desktop:latest .`
-    );
-  }
-
-  const container = await docker.createContainer({
-    Image: DESKTOP_IMAGE,
-    Labels: {
-      "blinkbox.managed":    "true",
-      "blinkbox.type":       "desktop",
-      "blinkbox.workspace":  String(workspaceId),
-      "blinkbox.created_at": String(Date.now()),
-    },
-    HostConfig: {
-      Memory:    768 * 1024 * 1024,
-      NanoCpus:  1_000_000_000,
-      ShmSize:   256 * 1024 * 1024,
-      AutoRemove: false,
-    },
+  const browser = await puppeteer.launch({
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      `--window-size=${SCREEN_W},${SCREEN_H}`,
+    ],
+    headless: "new",
+    defaultViewport: { width: SCREEN_W, height: SCREEN_H },
   });
 
-  await container.start();
+  const page = await browser.newPage();
+  await page.setViewport({ width: SCREEN_W, height: SCREEN_H });
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  );
 
-  // Wait for Xvfb + openbox to be ready
-  await new Promise(r => setTimeout(r, 1800));
-
-  const session = { containerId: container.id, lastUsed: Date.now() };
+  const session = { browser, page, lastUsed: Date.now() };
   _sessions.set(sessionId, session);
   return session;
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+async function _snap(page) {
+  const b64 = await page.screenshot({ encoding: "base64" });
+  return { screenshot: `data:image/png;base64,${b64}`, width: SCREEN_W, height: SCREEN_H };
+}
 
 export async function screenshot(sessionId, workspaceId) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  const { stdout, stderr } = await _exec(
-    s.containerId,
-    `import -window root -resize ${SCREEN_W}x${SCREEN_H} png:- 2>/dev/null | base64 -w 0`,
-    15000
-  );
-  if (!stdout) throw new Error(`Screenshot failed${stderr ? ": " + stderr : " — display may not be ready"}`);
-  return {
-    screenshot: `data:image/png;base64,${stdout}`,
-    width: SCREEN_W,
-    height: SCREEN_H,
-  };
+  return _snap(s.page);
 }
 
 export async function openUrl(sessionId, workspaceId, url) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  // Kill any existing chromium first, then open fresh
-  await _exec(s.containerId, `pkill -f chromium 2>/dev/null; sleep 0.3`).catch(() => {});
-  await _exec(
-    s.containerId,
-    `chromium-browser --no-sandbox --disable-gpu --disable-software-rasterizer ` +
-    `--window-size=${SCREEN_W},${SCREEN_H} --start-maximized '${url.replace(/'/g, "\\'")}' &`
-  );
-  await new Promise(r => setTimeout(r, 3500));
-  return screenshot(sessionId, workspaceId);
+  await s.page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await new Promise(r => setTimeout(r, 2500));
+  return _snap(s.page);
 }
 
 export async function leftClick(sessionId, workspaceId, x, y) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  await _exec(s.containerId, `xdotool mousemove ${x} ${y} click 1`);
-  await new Promise(r => setTimeout(r, 400));
-  return screenshot(sessionId, workspaceId);
+  await s.page.mouse.click(x, y, { button: "left" });
+  await new Promise(r => setTimeout(r, 500));
+  return _snap(s.page);
 }
 
 export async function rightClick(sessionId, workspaceId, x, y) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  await _exec(s.containerId, `xdotool mousemove ${x} ${y} click 3`);
+  await s.page.mouse.click(x, y, { button: "right" });
   await new Promise(r => setTimeout(r, 400));
-  return screenshot(sessionId, workspaceId);
+  return _snap(s.page);
 }
 
 export async function doubleClick(sessionId, workspaceId, x, y) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  await _exec(s.containerId, `xdotool mousemove ${x} ${y} click --repeat 2 --delay 100 1`);
+  await s.page.mouse.click(x, y, { button: "left", clickCount: 2 });
   await new Promise(r => setTimeout(r, 400));
-  return screenshot(sessionId, workspaceId);
+  return _snap(s.page);
 }
 
 export async function mouseMove(sessionId, workspaceId, x, y) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  await _exec(s.containerId, `xdotool mousemove ${x} ${y}`);
-  return screenshot(sessionId, workspaceId);
+  await s.page.mouse.move(x, y);
+  return _snap(s.page);
 }
 
 export async function typeText(sessionId, workspaceId, text) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  // Use clipboard for reliable unicode/special character support
-  const b64 = Buffer.from(text, "utf8").toString("base64");
-  await _exec(
-    s.containerId,
-    `echo '${b64}' | base64 -d | xclip -selection clipboard && xdotool key --clearmodifiers ctrl+v`
-  );
+  await s.page.keyboard.type(text, { delay: 15 });
   await new Promise(r => setTimeout(r, 300));
-  return screenshot(sessionId, workspaceId);
+  return _snap(s.page);
 }
 
+// Maps xdotool-style key names to Puppeteer key names
+const KEY_MAP = {
+  "Return":    "Enter",
+  "ctrl+a":    ["Control", "a"],
+  "ctrl+c":    ["Control", "c"],
+  "ctrl+v":    ["Control", "v"],
+  "ctrl+x":    ["Control", "x"],
+  "ctrl+z":    ["Control", "z"],
+  "ctrl+y":    ["Control", "y"],
+  "ctrl+s":    ["Control", "s"],
+  "ctrl+l":    ["Control", "l"],
+  "ctrl+r":    ["Control", "r"],
+  "ctrl+t":    ["Control", "t"],
+  "ctrl+w":    ["Control", "w"],
+  "ctrl+plus": ["Control", "+"],
+  "ctrl+minus":["Control", "-"],
+  "alt+Left":  ["Alt", "ArrowLeft"],
+  "alt+Right": ["Alt", "ArrowRight"],
+  "alt+F4":    ["Alt", "F4"],
+};
+
 export async function pressKey(sessionId, workspaceId, key) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  await _exec(s.containerId, `xdotool key --clearmodifiers '${key}'`);
+  const mapped = KEY_MAP[key];
+  if (Array.isArray(mapped)) {
+    const [mod, char] = mapped;
+    await s.page.keyboard.down(mod);
+    await s.page.keyboard.press(char);
+    await s.page.keyboard.up(mod);
+  } else {
+    await s.page.keyboard.press(mapped || key);
+  }
   await new Promise(r => setTimeout(r, 400));
-  return screenshot(sessionId, workspaceId);
+  return _snap(s.page);
 }
 
 export async function scroll(sessionId, workspaceId, x, y, direction = "down", amount = 3) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  const btn = direction === "up" ? 4 : 5;
-  const safeAmount = Math.min(Math.max(Math.floor(amount), 1), 20);
-  await _exec(s.containerId, `xdotool mousemove ${x} ${y} click --repeat ${safeAmount} ${btn}`);
-  await new Promise(r => setTimeout(r, 300));
-  return screenshot(sessionId, workspaceId);
+  await s.page.mouse.move(x, y);
+  const delta = direction === "up" ? -120 * amount : 120 * amount;
+  await s.page.mouse.wheel({ deltaY: delta });
+  await new Promise(r => setTimeout(r, 400));
+  return _snap(s.page);
 }
 
 export async function runCommand(sessionId, workspaceId, cmd) {
-  const s = await _getOrCreate(sessionId, workspaceId);
+  const s = await _getOrCreate(sessionId);
   s.lastUsed = Date.now();
-  const { stdout, stderr } = await _exec(s.containerId, cmd, 60000);
-  return { stdout, stderr, exitedWith: stderr ? "stderr" : "ok" };
+  try {
+    const result = await s.page.evaluate(async (c) => {
+      try { return { ok: true, value: String(eval(c)) }; }
+      catch (e) { return { ok: false, error: e.message }; }
+    }, cmd);
+    return result.ok
+      ? { stdout: result.value, stderr: "", exitedWith: "ok" }
+      : { stdout: "", stderr: result.error, exitedWith: "error" };
+  } catch (err) {
+    return { stdout: "", stderr: err.message, exitedWith: "error" };
+  }
 }
 
 export async function closeSession(sessionId) {
   const s = _sessions.get(sessionId);
   if (!s) return { closed: false, reason: "session not found" };
-  await _kill(s.containerId);
+  await s.browser.close().catch(() => {});
   _sessions.delete(sessionId);
   return { closed: true, sessionId };
 }
@@ -244,9 +200,5 @@ export async function closeSession(sessionId) {
 export function sessionInfo(sessionId) {
   const s = _sessions.get(sessionId);
   if (!s) return null;
-  return {
-    sessionId,
-    containerId: s.containerId,
-    idleSecs: Math.floor((Date.now() - s.lastUsed) / 1000),
-  };
+  return { sessionId, idleSecs: Math.floor((Date.now() - s.lastUsed) / 1000) };
 }

@@ -1261,22 +1261,29 @@ import {
 export const tool_virtual_computer = {
   toolDefinition: td(
     "tool_virtual_computer",
-    `Full Linux desktop computer (1280×800) running Chromium inside a persistent Docker container. You control it with pixel coordinates — just like a human using a mouse and keyboard.
+    `Full 1280×800 browser computer you control with pixel coordinates — exactly like a human using a mouse and keyboard. Powered by Puppeteer (no Docker needed).
 
-CRITICAL WORKFLOW: Always take a screenshot first to see the current state. Then decide where to click/type based on what you see. After every action, take another screenshot to confirm the result. Never guess coordinates — look at the screenshot and read the pixel positions.
+CRITICAL WORKFLOW:
+1. Always call screenshot first to see what's on screen
+2. Look at the screenshot — find what you want to interact with and read its pixel position
+3. Act (click/type/scroll/key)
+4. Take another screenshot to confirm the result
+5. Repeat until the task is done
+
+Never guess coordinates. Never fabricate results. The screenshot is your proof.
 
 Actions:
-- screenshot: capture the current screen (do this first and after every action)
-- open_url: launch Chromium and navigate to a URL (waits 3.5s for page load)
-- left_click: left-click at pixel (x, y)
-- right_click: right-click at pixel (x, y)
-- double_click: double-click at pixel (x, y)
-- mouse_move: move mouse to (x, y) without clicking
-- type: type text at current cursor position (uses clipboard — handles any unicode/special chars)
-- key: press a keyboard key, e.g. "Return", "Tab", "Escape", "ctrl+a", "ctrl+c"
-- scroll: scroll at (x, y) — direction "up" or "down", amount = number of scroll steps (1-20)
-- run_command: run a bash command inside the container and return stdout/stderr
-- close: destroy the session and free the container`,
+- screenshot: capture the current screen — do this first and after every action
+- open_url: navigate to a URL (waits 2.5s for the page to settle)
+- left_click: left-click at pixel coordinates (x, y)
+- right_click: right-click at pixel coordinates (x, y)
+- double_click: double-click at pixel coordinates (x, y)
+- mouse_move: move the mouse cursor to (x, y)
+- type: type text at the current cursor position (handles unicode and special characters)
+- key: press a key — e.g. "Return", "Tab", "Escape", "BackSpace", "ctrl+a", "ctrl+c", "ctrl+v"
+- scroll: scroll at position (x, y) — direction "up"/"down", amount = scroll steps 1-20
+- run_command: evaluate JavaScript in the browser page context and return the result
+- close: destroy the browser session`,
     {
       action:    { type: "string",  description: "Action to perform (see list above)" },
       sessionId: { type: "string",  description: "Optional. All calls in this workflow run share the same desktop automatically. Only set if you need a separate session." },
