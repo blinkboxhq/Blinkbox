@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useMemo, useEffect, useState } from "react"
 import { useParams } from "react-router-dom";
 import NodeContextMenu from "./NodeContextMenu";
 import ExecutionErrorPanel from "./ExecutionErrorPanel";
+import NotificationCenter from "./NotificationCenter";
 import { playNodeLand, playDelete } from "../../../lib/sounds";
 import {
   ReactFlow,
@@ -475,13 +476,16 @@ export default function Canvas() {
 
       {/* ── Execution error panel (bottom-right) ── */}
       <AnimatePresence>
-        {lastRunResult === 'error' && !errorPanelDismissed && liveExecutionState && (
+        {!isRunning && !errorPanelDismissed && liveExecutionState?.status === 'failed' && (
           <ExecutionErrorPanel
             liveExecutionState={liveExecutionState}
             onDismiss={() => setErrorPanelDismissed(true)}
           />
         )}
       </AnimatePresence>
+
+      {/* ── Notification cards ── */}
+      <NotificationCenter />
 
       {/* ── Unified bottom toolbar ── */}
       <AnimatePresence>

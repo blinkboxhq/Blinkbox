@@ -1,5 +1,4 @@
 import api from "../lib/api";
-import { toast } from "sonner";
 import { playBottomPanel, playConnect } from "../lib/sounds";
 import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
 
@@ -44,7 +43,7 @@ export const createUISlice = (set, get) => ({
   setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen, ...(isOpen ? { isAddNodeOpen: false } : {}) }),
   setAddNodeOpen: (isOpen) => set({ isAddNodeOpen: isOpen, ...(isOpen ? { isTriggerPickerOpen: false } : {}) }),
   setBrianOpen: (isOpen) => { if (isOpen) playBottomPanel(); set({ isBrianOpen: isOpen }); },
-  queueBrianMessage: (msg) => set({ brianQueuedMessage: msg, panels: { ...get().panels, brian: true } }),
+  queueBrianMessage: (msg) => set({ brianQueuedMessage: msg, isBrianOpen: true, panels: { ...get().panels, brian: true } }),
   clearBrianQueue: () => set({ brianQueuedMessage: null }),
   togglePanel: (key) => set(s => {
     const opening = !s.panels[key];
@@ -163,11 +162,11 @@ export const createUISlice = (set, get) => ({
       console.error("Load error:", error);
       const status = error.response?.status;
       if (status === 404) {
-        toast.error("Workflow not found — it may have been deleted.");
+        get().addNotification({ type: "error", title: "Workflow not found", message: "It may have been deleted." });
       } else if (status === 403) {
-        toast.error("Access denied — you don't have permission to view this workflow.");
+        get().addNotification({ type: "error", title: "Access denied", message: "You don't have permission to view this workflow." });
       } else {
-        toast.error("Failed to load workflow. Check your connection and try again.");
+        get().addNotification({ type: "error", title: "Failed to load workflow", message: "Check your connection and try again." });
       }
       set({ isLoading: false });
     }
@@ -181,14 +180,14 @@ export const createUISlice = (set, get) => ({
       if (isActive) {
         await api.post(`/api/automation/${automationId}/deactivate`);
         set({ isActive: false });
-        toast.success("Workflow deactivated");
+        get().addNotification({ type: "info", title: "Workflow deactivated", message: "Trigger is no longer listening." });
       } else {
         await api.post(`/api/automation/${automationId}/activate`);
         set({ isActive: true });
-        toast.success("Workflow activated — trigger is now live");
+        get().addNotification({ type: "success", title: "Workflow activated", message: "Trigger is now live." });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update workflow status");
+      get().addNotification({ type: "error", title: "Status update failed", message: err.response?.data?.message || "Failed to update workflow status." });
     } finally {
       set({ isActivating: false });
     }
@@ -238,13 +237,13 @@ export const createUISlice = (set, get) => ({
 
       // Soft warnings for obviously incomplete trigger configs
       if (bt === "cron_trigger" && !trigConf.schedule && !trigConf.customCron) {
-        toast.warning("Cron trigger has no schedule — defaulting to 9am daily. Open the trigger node to configure.");
+        get().addNotification({ type: "warning", title: "No schedule set", message: "Cron trigger defaulting to 9am daily. Open the trigger to configure." });
       }
       if (bt === "rss_trigger" && !trigConf.feedUrl) {
-        toast.warning("RSS trigger has no feed URL. Open the trigger node to add one.");
+        get().addNotification({ type: "warning", title: "No feed URL", message: "Open the RSS trigger node to add one." });
       }
       if (bt === "imap_trigger" && !trigConf.credentialId) {
-        toast.warning("IMAP trigger has no email credential. Open the trigger node to configure.");
+        get().addNotification({ type: "warning", title: "No email credential", message: "Open the IMAP trigger node to configure." });
       }
 
       const isCron = bt === 'cron_trigger';
@@ -279,15 +278,12 @@ export const createUISlice = (set, get) => ({
       };
 
       await api.put(`/api/automation/${automationId}`, payload);
-      if (!silent) toast.success("Workflow saved");
+      if (!silent) get().addNotification({ type: "success", title: "Workflow saved", message: "" });
       const thumbnail = get().generateThumbnail(state.nodes, state.edges);
       if (thumbnail) api.patch(`/api/automation/${automationId}/thumbnail`, { thumbnail }).catch(() => {});
     } catch (error) {
-      // Suppress access-denied errors on silent auto-saves (viewer collaborators, etc.)
       if (silent && (error.response?.status === 403 || error.response?.status === 401)) return;
-      toast.error(
-        "Save failed: " + (error.response?.data?.message || error.message),
-      );
+      get().addNotification({ type: "error", title: "Save failed", message: error.response?.data?.message || error.message });
     } finally {
       set({ isSaving: false });
     }

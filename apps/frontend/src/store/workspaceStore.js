@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createGraphSlice } from "./createGraphSlice";
 import { createExecutionSlice } from "./createExecutionSlice";
 import { createUISlice } from "./createUISlice";
+import { createNotificationSlice } from "./createNotificationSlice";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Merged Store — Zustand "Slice Pattern"
@@ -16,6 +17,7 @@ const useWorkspaceStore = create((...args) => ({
   ...createGraphSlice(...args),
   ...createExecutionSlice(...args),
   ...createUISlice(...args),
+  ...createNotificationSlice(...args),
 }));
 
 export default useWorkspaceStore;

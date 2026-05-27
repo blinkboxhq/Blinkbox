@@ -317,8 +317,12 @@ function _subscribeToExecution(set, get, executionId, automationId) {
           }
           set({ lastRunOutputs: outputs });
         }
-      }).catch(() => { toast.error('Failed to load execution logs'); });
+      }).catch(() => {});
 
+      if (data.status === "executed") {
+        const count = data.cursors?.filter((c) => c.status === "completed").length ?? 0;
+        get().addNotification({ type: "success", title: "Execution completed", message: `${count} node${count !== 1 ? "s" : ""} ran successfully.` });
+      }
     }
   };
   socket.on("execution:update", handler);
