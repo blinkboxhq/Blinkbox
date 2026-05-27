@@ -1244,56 +1244,63 @@ export const tool_ssh = {
   },
 };
 
-import {
-  screenshot as _dsScreenshot,
-  openUrl    as _dsOpenUrl,
-  leftClick  as _dsLeftClick,
-  rightClick as _dsRightClick,
-  doubleClick as _dsDoubleClick,
-  mouseMove  as _dsMouseMove,
-  typeText   as _dsType,
-  pressKey   as _dsKey,
-  scroll     as _dsScroll,
-  runCommand as _dsRun,
-  closeSession as _dsClose,
-} from "../infra/desktop.pool.js";
+import { dispatchAction as _vcDispatch, closeSession as _dsClose } from "../infra/desktop.pool.js";
 
 export const tool_virtual_computer = {
   toolDefinition: td(
     "tool_virtual_computer",
-    `Full 1280×800 browser computer you control with pixel coordinates — exactly like a human using a mouse and keyboard. Powered by Puppeteer (no Docker needed).
+    `Full 1280×800 browser you control like a human. Powered by Puppeteer.
 
-CRITICAL WORKFLOW:
-1. Always call screenshot first to see what's on screen
-2. Look at the screenshot — find what you want to interact with and read its pixel position
-3. Act (click/type/scroll/key)
-4. Take another screenshot to confirm the result
-5. Repeat until the task is done
+━━ MANDATORY WORKFLOW ━━
+1. screenshot — ALWAYS start here. Look at the image before every action.
+2. Identify the element: read its EXACT pixel coordinates from the screenshot.
+3. Act with real coordinates or label — never invent positions.
+4. screenshot again — confirm the result before continuing.
+5. Repeat until done. Screenshots are your proof. Guessing is forbidden.
 
-Never guess coordinates. Never fabricate results. The screenshot is your proof.
+━━ COORDINATE ACTIONS (use pixel x,y from screenshot) ━━
+- screenshot          — capture the screen (do this constantly)
+- open_url            — navigate to a URL; waits for page to settle
+- left_click          — left-click at (x, y)
+- right_click         — right-click at (x, y)
+- double_click        — double-click at (x, y)
+- mouse_move          — move cursor to (x, y)
+- scroll              — scroll at (x, y), direction up/down, amount 1-20
 
-Actions:
-- screenshot: capture the current screen — do this first and after every action
-- open_url: navigate to a URL (waits 2.5s for the page to settle)
-- left_click: left-click at pixel coordinates (x, y)
-- right_click: right-click at pixel coordinates (x, y)
-- double_click: double-click at pixel coordinates (x, y)
-- mouse_move: move the mouse cursor to (x, y)
-- type: type text at the current cursor position (handles unicode and special characters)
-- key: press a key — e.g. "Return", "Tab", "Escape", "BackSpace", "ctrl+a", "ctrl+c", "ctrl+v"
-- scroll: scroll at position (x, y) — direction "up"/"down", amount = scroll steps 1-20
-- run_command: evaluate JavaScript in the browser page context and return the result
-- close: destroy the browser session`,
+━━ KEYBOARD ACTIONS ━━
+- type                — type text at current focus (click the field first!)
+- key                 — press a key: Return, Tab, Escape, BackSpace, ctrl+a, ctrl+v, ctrl+l, etc.
+
+━━ SMART FORM ACTIONS (no coordinates needed) ━━
+- fill_field          — find a form field by its label/placeholder/name and fill it in one step
+                        e.g. label="Email", value="user@example.com"
+                        PREFERRED for forms — more reliable than click+type
+
+━━ PAGE READING ACTIONS ━━
+- get_text            — get all visible text from the page (or a CSS selector)
+- get_html            — get the raw HTML (use to find selectors when stuck)
+- evaluate            — run JavaScript in the page; returns result as text
+
+━━ ADVANCED ━━
+- wait_for_selector   — wait until a CSS selector appears (ms timeout, default 5000)
+- hover               — hover over a CSS selector
+- select_dropdown     — choose an option from a <select> by CSS selector + value
+- navigate            — browser navigation: "back", "forward", "reload"
+- close               — destroy this browser session`,
     {
-      action:    { type: "string",  description: "Action to perform (see list above)" },
-      sessionId: { type: "string",  description: "Optional. All calls in this workflow run share the same desktop automatically. Only set if you need a separate session." },
-      url:       { type: "string",  description: "URL to open (open_url action)" },
-      x:         { type: "number",  description: "X pixel coordinate (left_click, right_click, double_click, mouse_move, scroll)" },
-      y:         { type: "number",  description: "Y pixel coordinate (left_click, right_click, double_click, mouse_move, scroll)" },
-      text:      { type: "string",  description: "Text to type (type action) or bash command (run_command action)" },
-      key:       { type: "string",  description: "Key to press, e.g. Return, Tab, Escape, ctrl+a, ctrl+c, BackSpace" },
-      direction: { type: "string",  description: "Scroll direction: 'up' or 'down' (default 'down')" },
+      action:    { type: "string",  description: "Action name (see list above). Required." },
+      sessionId: { type: "string",  description: "Optional. Omit to share the session across the whole workflow run." },
+      url:       { type: "string",  description: "URL to navigate to (open_url)" },
+      x:         { type: "number",  description: "Pixel X coordinate" },
+      y:         { type: "number",  description: "Pixel Y coordinate" },
+      text:      { type: "string",  description: "Text to type (type), JS to run (evaluate/run_command), or key name (key)" },
+      key:       { type: "string",  description: "Key name: Return, Tab, Escape, BackSpace, ctrl+a, ctrl+v, ctrl+l, ctrl+r, etc." },
+      direction: { type: "string",  description: "Scroll direction: 'up' or 'down'" },
       amount:    { type: "number",  description: "Scroll steps 1-20 (default 3)" },
+      label:     { type: "string",  description: "Field label/placeholder/name for fill_field action" },
+      value:     { type: "string",  description: "Value to fill into the field (fill_field action)" },
+      selector:  { type: "string",  description: "CSS selector for get_html, get_text, hover, select_dropdown, wait_for_selector" },
+      ms:        { type: "number",  description: "Milliseconds to wait (wait action) or timeout for wait_for_selector" },
     },
     ["action"]
   ),
@@ -1301,21 +1308,7 @@ Actions:
     if (args.url) assertSafeUrl(args.url);
     const sid = args.sessionId || ctx?.executionId || `_vc_${Date.now()}`;
     const wid = ctx?.workspaceId || "default";
-
-    switch (args.action) {
-      case "screenshot":    return _dsScreenshot(sid, wid);
-      case "open_url":      return _dsOpenUrl(sid, wid, args.url);
-      case "left_click":    return _dsLeftClick(sid, wid, args.x, args.y);
-      case "right_click":   return _dsRightClick(sid, wid, args.x, args.y);
-      case "double_click":  return _dsDoubleClick(sid, wid, args.x, args.y);
-      case "mouse_move":    return _dsMouseMove(sid, wid, args.x, args.y);
-      case "type":          return _dsType(sid, wid, args.text || "");
-      case "key":           return _dsKey(sid, wid, args.key || "Return");
-      case "scroll":        return _dsScroll(sid, wid, args.x, args.y, args.direction || "down", args.amount || 3);
-      case "run_command":   return _dsRun(sid, wid, args.text || "echo ok");
-      case "close":         return _dsClose(sid);
-      default:              return _dsScreenshot(sid, wid);
-    }
+    return _vcDispatch(sid, wid, args.action, args);
   },
 };
 

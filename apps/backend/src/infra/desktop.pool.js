@@ -11,4 +11,5 @@ export {
   runCommand,
   closeSession,
   sessionInfo,
+  dispatchAction,
 } from "../nodes/VirtualComputer.js";

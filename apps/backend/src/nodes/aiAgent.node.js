@@ -274,13 +274,15 @@ const REACT_SYSTEM_PROMPT =
   `  9. Final answer: when you have everything needed, respond directly without another tool call.\n` +
   `  10. Quality > Speed: a complete, accurate answer is worth the extra iteration.\n` +
   `\n` +
-  `## Browser / Virtual Computer Strategy\n` +
-  `  - Every action returns a screenshot. Look at it before deciding the next step.\n` +
-  `  - Browser state persists automatically — you do NOT need to re-navigate between calls.\n` +
-  `  - Workflow: open_url → screenshot → identify fields → click field → type value → repeat → click submit → verify confirmation page.\n` +
-  `  - If the page shows a CAPTCHA, login wall, or error, stop and report it — do not guess past it.\n` +
-  `  - Use get_text or get_html to read page content before interacting with it.\n` +
-  `  - If a selector fails, use get_html to find the real selector from the DOM.\n` +
+  `## Browser / Virtual Computer Rules (STRICT — follow exactly)\n` +
+  `  - EVERY action returns a screenshot. You MUST look at it before deciding the next action. Never skip this.\n` +
+  `  - Browser state persists — do NOT re-navigate between calls.\n` +
+  `  - FOR FORMS: Use fill_field (label=, value=) — it finds the field automatically. Do NOT guess x,y for inputs.\n` +
+  `  - Coordinate workflow (non-form clicks): screenshot → read the x,y pixel position from the image → left_click at those exact coords.\n` +
+  `  - Full form workflow: open_url → screenshot → fill_field for each field → left_click submit button (from screenshot coords) → screenshot → confirm.\n` +
+  `  - If fill_field fails: use get_html to find the actual selector, then left_click that element's coordinates from a fresh screenshot.\n` +
+  `  - If the page shows a CAPTCHA, login wall, or anti-bot page: stop immediately and report it.\n` +
+  `  - NEVER claim you filled a field or clicked a button unless a tool call confirms it. The screenshot is your proof.\n` +
   `\n` +
   `## Tool Strategy\n` +
   `  - For research: search broadly first, then drill into the most relevant result\n` +
@@ -1974,9 +1976,12 @@ function buildAssistantToolCallMessage(response, provider) {
 function buildToolResultMessage(toolCall, result, provider) {
   // Extract screenshot from the result object so it isn't JSON-stringified
   let screenshotB64 = null;
+  let screenshotMime = "image/jpeg";
   let textResult = result;
   if (result && typeof result === "object" && typeof result.screenshot === "string" && result.screenshot.startsWith("data:image/")) {
     const { screenshot, ...rest } = result;
+    const semi = screenshot.indexOf(";");
+    if (semi !== -1) screenshotMime = screenshot.slice(5, semi); // extract mime from data URI
     const comma = screenshot.indexOf(",");
     screenshotB64 = comma !== -1 ? screenshot.slice(comma + 1) : screenshot;
     textResult = rest;
@@ -1987,7 +1992,7 @@ function buildToolResultMessage(toolCall, result, provider) {
   if (provider === "anthropic") {
     const contentBlocks = [{ type: "text", text: resultStr }];
     if (screenshotB64) {
-      contentBlocks.push({ type: "image", source: { type: "base64", media_type: "image/png", data: screenshotB64 } });
+      contentBlocks.push({ type: "image", source: { type: "base64", media_type: screenshotMime, data: screenshotB64 } });
     }
     return {
       role: "user",
@@ -2008,7 +2013,7 @@ function buildToolResultMessage(toolCall, result, provider) {
       { role: "tool", tool_call_id: toolCall.id, content: resultStr },
       {
         role: "user",
-        content: [{ type: "image_url", image_url: { url: `data:image/png;base64,${screenshotB64}` } }],
+        content: [{ type: "image_url", image_url: { url: `data:${screenshotMime};base64,${screenshotB64}` } }],
       },
     ];
   }
