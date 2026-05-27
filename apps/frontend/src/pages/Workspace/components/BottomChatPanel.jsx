@@ -1,153 +1,88 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, Loader2, Trash2, Paperclip, X, Image, Plus } from 'lucide-react';
+import { Send, Loader2, Trash2, Plus, MessageSquare } from 'lucide-react';
 import api from '../../../lib/api';
 import { useParams } from 'react-router-dom';
-import NodeTreePanel from './NodeTreePanel';
 import useWorkspaceStore from '../../../store/workspaceStore';
+
+function BotAvatar() {
+  return (
+    <div style={{ width: 22, height: 22, borderRadius: 6, background: '#1a1a2e', border: '1px solid #2d2d4a', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+        <circle cx="6" cy="6" r="5" stroke="#7c5cfc" strokeWidth="1.2" />
+        <circle cx="6" cy="6" r="2" fill="#7c5cfc" />
+      </svg>
+    </div>
+  );
+}
 
 function Msg({ m }) {
   const isUser = m.role === 'user';
+  const isSystem = m.role === 'system';
+
+  if (isSystem) {
+    return (
+      <p style={{ textAlign: 'center', fontSize: 10, color: '#3a3a3a', padding: '2px 0' }}>{m.text}</p>
+    );
+  }
+
   return (
-    <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUser ? 'bg-neutral-800' : 'bg-violet-500/20 border border-violet-500/30'}`}>
-        {isUser ? <User className="w-3 h-3 text-neutral-300" /> : <Bot className="w-3 h-3 text-violet-400" />}
-      </div>
-      <div className={`max-w-[80%] flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
-        {m.attachments?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {m.attachments.map((a, i) =>
-              a.mimeType?.startsWith('image/') ? (
-                <img key={i} src={a.dataUrl} alt={a.name || 'attachment'}
-                  className="max-w-[150px] max-h-[150px] rounded-lg border border-neutral-700 object-cover cursor-pointer"
-                  onClick={() => window.open(a.dataUrl, '_blank')} />
-              ) : (
-                <div key={i} className="flex items-center gap-1.5 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded-lg">
-                  <Paperclip className="w-3 h-3 text-neutral-400" />
-                  <span className="text-[10px] text-neutral-300">{a.name}</span>
-                </div>
-              )
-            )}
-          </div>
-        )}
-        {m.text && (
-          <div className={`px-3 py-2 rounded-xl text-[12px] leading-relaxed whitespace-pre-wrap ${isUser ? 'bg-neutral-800 text-neutral-200 rounded-tr-sm' : 'bg-neutral-900 border border-[#222] text-neutral-300 rounded-tl-sm'}`}>
-            {m.text}
-          </div>
-        )}
+    <div style={{ display: 'flex', gap: 8, flexDirection: isUser ? 'row-reverse' : 'row', alignItems: 'flex-start' }}>
+      {!isUser && <BotAvatar />}
+      <div
+        style={{
+          maxWidth: '78%',
+          padding: '8px 12px',
+          fontSize: 12,
+          lineHeight: 1.55,
+          whiteSpace: 'pre-wrap',
+          borderRadius: isUser ? '8px 2px 8px 8px' : '2px 8px 8px 8px',
+          background: isUser ? '#1c1c22' : '#111115',
+          border: `1px solid ${isUser ? '#2a2a35' : '#1e1e24'}`,
+          color: isUser ? '#d4d4d8' : '#b4b4bb',
+        }}
+      >
+        {m.text}
       </div>
     </div>
   );
 }
 
-function useSplitResize({ containerRef }) {
-  const [leftPct, setLeftPct] = useState(50);
-
-  const onMouseDown = useCallback((e) => {
-    e.preventDefault();
-    const container = containerRef.current;
-    if (!container) return;
-
-    const onMove = (ev) => {
-      const rect = container.getBoundingClientRect();
-      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-      setLeftPct(Math.min(80, Math.max(20, pct)));
-    };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, [containerRef]);
-
-  return [leftPct, onMouseDown];
-}
-
-const ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml,application/pdf,text/plain,text/csv';
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-function fileToAttachment(file) {
-  return new Promise((resolve, reject) => {
-    if (file.size > MAX_FILE_SIZE) {
-      reject(new Error(`${file.name} is too large (max 10 MB)`));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => resolve({ dataUrl: reader.result, mimeType: file.type, name: file.name });
-    reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function BottomChatPanel({ height, onResizeStart }) {
   const { id: automationId } = useParams();
-  const nodeCount = useWorkspaceStore(s => s.nodes.length);
+
   const hasChatTrigger = useWorkspaceStore(s =>
     s.nodes.some(n => n.data?.backendType === 'chat_trigger' || n.data?.label === 'On Chat Message')
   );
   const addNode = useWorkspaceStore(s => s.addNode);
-  const nodes = useWorkspaceStore(s => s.nodes);
+  const nodes   = useWorkspaceStore(s => s.nodes);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const sessionIdRef = useRef(null);
 
   const addChatTrigger = useCallback(() => {
-    const existingTriggers = nodes.filter(n => n.data?.type === 'trigger');
-    const position = existingTriggers.length > 0
-      ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
+    const triggers = nodes.filter(n => n.data?.type === 'trigger');
+    const position = triggers.length
+      ? { x: triggers[triggers.length - 1].position.x, y: triggers[triggers.length - 1].position.y + 220 }
       : { x: 400, y: 300 };
     const newId = `chat-${crypto.randomUUID()}`;
-    addNode({
-      id: newId,
-      type: 'custom',
-      position,
-      data: { backendType: 'chat_trigger', label: 'On Chat Message', type: 'trigger', config: { triggerVariant: 'chat' } },
-    });
+    addNode({ id: newId, type: 'custom', position, data: { backendType: 'chat_trigger', label: 'On Chat Message', type: 'trigger', config: { triggerVariant: 'chat' } } });
     setSelectedNodeId(newId);
   }, [addNode, nodes, setSelectedNodeId]);
 
   const [messages, setMessages] = useState([
-    { id: 'sys', role: 'system', text: 'Send a message to test your workflow.' }
+    { id: 'sys', role: 'system', text: 'Messages sent here run through your workflow.' }
   ]);
-  const [input, setInput] = useState('');
-  const [attachments, setAttachments] = useState([]);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [input, setInput]     = useState('');
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-  const bodyRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  const [leftPct, onSplitResize] = useSplitResize({ containerRef: bodyRef });
+  const bottomRef  = useRef(null);
+  const inputRef   = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const addFiles = useCallback(async (files) => {
-    const fileArr = Array.from(files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf' || f.type.startsWith('text/'));
-    if (!fileArr.length) return;
-    try {
-      const converted = await Promise.all(fileArr.map(fileToAttachment));
-      setAttachments(prev => [...prev, ...converted].slice(0, 5));
-    } catch (err) {
-      console.warn('File read error:', err.message);
-    }
-  }, []);
-
-  const onDragOver = useCallback((e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }, []);
-  const onDragLeave = useCallback((e) => { e.preventDefault(); setIsDragOver(false); }, []);
-  const onDrop = useCallback((e) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragOver(false);
-    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
-  }, [addFiles]);
-
   const send = async () => {
     const txt = input.trim();
-    if ((!txt && !attachments.length) || sending) return;
+    if (!txt || sending) return;
 
     if (!hasChatTrigger) {
       setMessages(p => [...p, { id: Date.now(), role: 'bot', text: 'Add a Chat Trigger node to your workflow first.' }]);
@@ -159,26 +94,16 @@ export default function BottomChatPanel({ height, onResizeStart }) {
     }
 
     setInput('');
-    const sentAttachments = [...attachments];
-    setAttachments([]);
     setSending(true);
-    setMessages(p => [...p, { id: Date.now(), role: 'user', text: txt, attachments: sentAttachments }]);
+    setMessages(p => [...p, { id: Date.now(), role: 'user', text: txt }]);
 
     try {
-      const apiAttachments = sentAttachments.map(a => ({
-        data: a.dataUrl.split(',')[1] ?? '',
-        mimeType: a.mimeType,
-        name: a.name,
-      }));
-
       const r = await api.post(`/api/chat/run/${automationId}`, {
         message: txt,
-        attachments: apiAttachments,
         sessionId: sessionIdRef.current,
       }, { timeout: 120000 });
-
-      const replyText = r.data?.reply || JSON.stringify(r.data?.output ?? {});
-      setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: replyText }]);
+      const reply = r.data?.reply || JSON.stringify(r.data?.output ?? {});
+      setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: reply }]);
     } catch (e) {
       setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: e.response?.data?.error || 'Workflow execution failed.' }]);
     } finally {
@@ -187,166 +112,110 @@ export default function BottomChatPanel({ height, onResizeStart }) {
     }
   };
 
+  const clearChat = () => {
+    sessionIdRef.current = null;
+    setMessages([{ id: 'sys', role: 'system', text: 'Chat cleared.' }]);
+  };
+
   return (
     <div
-      className="flex flex-col bg-[#0d0d10] border-t border-[#222]"
-      style={{ height }}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      style={{ height, display: 'flex', flexDirection: 'column', background: '#0a0a0c', borderTop: '1px solid #1a1a1e' }}
     >
-      {isDragOver && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-violet-500/10 border-2 border-violet-500/50 border-dashed rounded pointer-events-none">
-          <Image className="w-8 h-8 text-violet-400 mb-2" />
-          <p className="text-[13px] font-semibold text-violet-300">Drop files here</p>
-          <p className="text-[10px] text-violet-500 mt-0.5">Images, PDFs, text files up to 10 MB</p>
-        </div>
-      )}
-
+      {/* Resize grip */}
       <div
-        className="h-1 w-full cursor-row-resize hover:bg-violet-500/30 transition-colors shrink-0 group"
         onMouseDown={onResizeStart}
+        style={{ height: 4, flexShrink: 0, cursor: 'row-resize', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        className="group hover:bg-white/[0.03] transition-colors"
       >
-        <div className="w-8 h-0.5 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-0.5 transition-colors" />
+        <div style={{ width: 28, height: 2, borderRadius: 2, background: '#222' }} className="group-hover:bg-[#333] transition-colors" />
       </div>
 
-      {/* Panel header */}
-      <div className="flex items-center border-b border-[#222] shrink-0" style={{ height: 33 }}>
-        <div className="flex items-center justify-between px-4 shrink-0" style={{ width: `${leftPct}%`, height: '100%' }}>
-          <div className="flex items-center gap-2">
-            <Bot className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-[11px] font-semibold text-neutral-300">Chat</span>
-            {hasChatTrigger
-              ? <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">live</span>
-              : <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-500">no trigger</span>
-            }
+      {/* Header */}
+      <div style={{ height: 34, flexShrink: 0, borderBottom: '1px solid #141418', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <MessageSquare style={{ width: 12, height: 12, color: '#555' }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#666', letterSpacing: '0.04em' }}>CHAT TEST</span>
+          <div style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+            padding: '2px 6px', borderRadius: 3,
+            background: hasChatTrigger ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${hasChatTrigger ? 'rgba(34,197,94,0.2)' : '#222'}`,
+            color: hasChatTrigger ? '#22c55e' : '#3a3a3a',
+          }}>
+            {hasChatTrigger ? 'live' : 'no trigger'}
           </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {!hasChatTrigger && (
+            <button
+              onClick={addChatTrigger}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, border: '1px solid #222', background: 'transparent', color: '#555', fontSize: 10, cursor: 'pointer' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.borderColor = '#333'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#555'; e.currentTarget.style.borderColor = '#222'; }}
+            >
+              <Plus style={{ width: 10, height: 10 }} />
+              Add trigger
+            </button>
+          )}
           <button
-            onClick={() => {
-              sessionIdRef.current = null;
-              setMessages([{ id: 'sys', role: 'system', text: 'Chat cleared.' }]);
-            }}
-            className="p-1 text-neutral-700 hover:text-neutral-400 rounded transition-colors"
+            onClick={clearChat}
+            style={{ padding: 4, borderRadius: 4, background: 'transparent', border: 'none', color: '#333', cursor: 'pointer' }}
             title="Clear chat"
+            onMouseEnter={e => e.currentTarget.style.color = '#666'}
+            onMouseLeave={e => e.currentTarget.style.color = '#333'}
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 style={{ width: 12, height: 12 }} />
           </button>
         </div>
-
-        <div className="w-px bg-[#222] self-stretch" />
-
-        <div className="flex items-center justify-between px-3 flex-1 min-w-0" style={{ height: '100%' }}>
-          <span className="text-[10px] font-medium text-neutral-600 uppercase tracking-widest">Flow</span>
-          <span className="text-[10px] text-neutral-700 font-mono">{nodeCount}</span>
-        </div>
       </div>
 
-      {/* Split body */}
-      <div ref={bodyRef} className="flex flex-1 overflow-hidden min-h-0 relative">
-
-        {/* Left: Chat */}
-        <div className="flex flex-col overflow-hidden" style={{ width: `${leftPct}%` }}>
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
-            {messages.map(m => (
-              m.role === 'system'
-                ? <p key={m.id} className="text-[10px] text-neutral-700 text-center py-1">{m.text}</p>
-                : <Msg key={m.id} m={m} />
-            ))}
-            {sending && (
-              <div className="flex gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
-                  <Loader2 className="w-3 h-3 text-violet-400 animate-spin" />
-                </div>
-                <div className="px-3 py-2 rounded-xl rounded-tl-sm bg-neutral-900 border border-[#222] text-[12px] text-neutral-600">Running…</div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input area */}
-          <div className="px-3 pb-3 pt-1.5 border-t border-[#222] shrink-0">
-            <div className="flex flex-col gap-1.5">
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 px-1">
-                  {attachments.map((a, i) => (
-                    <div key={i} className="relative group">
-                      {a.mimeType.startsWith('image/') ? (
-                        <img src={a.dataUrl} alt={a.name} className="w-14 h-14 rounded-lg object-cover border border-neutral-700" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-lg border border-neutral-700 bg-neutral-900 flex flex-col items-center justify-center gap-0.5 px-1">
-                          <Paperclip className="w-4 h-4 text-neutral-500" />
-                          <span className="text-[8px] text-neutral-600 text-center truncate w-full">{a.name}</span>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => setAttachments(p => p.filter((_, j) => j !== i))}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-neutral-950 border border-neutral-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-2.5 h-2.5 text-neutral-400" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 bg-neutral-900 border border-[#2a2a2a] rounded-xl px-3 py-2 focus-within:border-neutral-700 transition-colors">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-neutral-600 hover:text-neutral-400 shrink-0 transition-colors"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPT}
-                  multiple
-                  className="hidden"
-                  onChange={e => { addFiles(e.target.files); e.target.value = ''; }}
-                />
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                  placeholder={hasChatTrigger ? 'Send a message…' : 'Add a Chat Trigger first…'}
-                  className="flex-1 bg-transparent text-[12px] text-neutral-200 placeholder:text-neutral-700 focus:outline-none"
-                  disabled={sending}
-                />
-                <button
-                  onClick={send}
-                  disabled={(!input.trim() && !attachments.length) || sending}
-                  className="w-6 h-6 rounded-lg bg-violet-600 flex items-center justify-center hover:bg-violet-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
-                >
-                  <Send className="w-3 h-3 text-white" />
-                </button>
-              </div>
-
-              {!hasChatTrigger && (
-                <div className="flex items-center gap-2 px-1">
-                  <span className="text-[10px] text-neutral-700 flex-1">No Chat Trigger on canvas</span>
-                  <button onClick={addChatTrigger} className="flex items-center gap-1 text-[10px] text-neutral-600 hover:text-violet-400 transition-colors">
-                    <Plus className="w-3 h-3" />Add
-                  </button>
-                </div>
-              )}
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        {messages.map(m => <Msg key={m.id} m={m} />)}
+        {sending && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BotAvatar />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: '2px 8px 8px 8px', background: '#111115', border: '1px solid #1e1e24' }}>
+              <Loader2 style={{ width: 10, height: 10, color: '#444', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: 11, color: '#444' }}>Running…</span>
             </div>
           </div>
-        </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
 
-        {/* Vertical drag divider */}
+      {/* Input */}
+      <div style={{ flexShrink: 0, borderTop: '1px solid #141418', padding: '10px 14px' }}>
         <div
-          onMouseDown={onSplitResize}
-          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/30 active:bg-violet-500/40 transition-colors group border-x border-[#222] relative z-10"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0f0f13', border: '1px solid #1e1e24', borderRadius: 8, padding: '7px 10px 7px 14px' }}
+          className="focus-within:border-[#2d2d3a] transition-colors"
         >
-          <div className="w-0.5 h-8 bg-neutral-800 group-hover:bg-violet-400 rounded-full mx-auto mt-[calc(50%-16px)] transition-colors" />
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder={hasChatTrigger ? 'Send a test message…' : 'Add a Chat Trigger first…'}
+            disabled={sending}
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 12, color: '#ccc', caretColor: '#7c5cfc' }}
+            className="placeholder:text-[#2a2a35]"
+          />
+          <button
+            onClick={send}
+            disabled={!input.trim() || sending}
+            style={{
+              width: 26, height: 26, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer',
+              background: input.trim() && !sending ? '#7c5cfc' : '#161618',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (input.trim() && !sending) e.currentTarget.style.background = '#6d4ef0'; }}
+            onMouseLeave={e => { if (input.trim() && !sending) e.currentTarget.style.background = '#7c5cfc'; }}
+          >
+            <Send style={{ width: 11, height: 11, color: input.trim() && !sending ? '#fff' : '#333' }} />
+          </button>
         </div>
-
-        {/* Right: Node Tree */}
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <NodeTreePanel embedded hideHeader />
-        </div>
+        <p style={{ fontSize: 9, color: '#252528', marginTop: 5, textAlign: 'right' }}>Enter to send</p>
       </div>
     </div>
   );
