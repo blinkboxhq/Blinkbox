@@ -1,5 +1,5 @@
 import { Client } from "ssh2";
-import { getOAuthToken } from "../../../apps/backend/src/utils/getOAuthToken.js";
+import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 export default {
   async run(config, input) {
