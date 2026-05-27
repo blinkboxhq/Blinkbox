@@ -632,7 +632,9 @@ const agentNode = {
 
         // Feed all observations back before next LLM call
         for (const { tc, observation } of toolCallResults) {
-          messages.push(buildToolResultMessage(tc, observation, provider));
+          const msg = buildToolResultMessage(tc, observation, provider);
+          if (Array.isArray(msg)) messages.push(...msg);
+          else messages.push(msg);
         }
 
         // Loop back → LLM sees tool results in the next THINK step
@@ -1945,44 +1947,52 @@ function buildAssistantToolCallMessage(response, provider) {
 
 /**
  * Build a tool result message to feed back into the conversation.
- * Uses safeStringify to prevent context window explosions.
+ * If the result contains a screenshot field, it is extracted and sent as a
+ * proper vision image block so the model can actually see it — not as a
+ * truncated base64 string mixed into the JSON text.
  */
 function buildToolResultMessage(toolCall, result, provider) {
-  const resultStr = safeStringify(result);
+  // Extract screenshot from the result object so it isn't JSON-stringified
+  let screenshotB64 = null;
+  let textResult = result;
+  if (result && typeof result === "object" && typeof result.screenshot === "string" && result.screenshot.startsWith("data:image/")) {
+    const { screenshot, ...rest } = result;
+    const comma = screenshot.indexOf(",");
+    screenshotB64 = comma !== -1 ? screenshot.slice(comma + 1) : screenshot;
+    textResult = rest;
+  }
+
+  const resultStr = safeStringify(textResult);
 
   if (provider === "anthropic") {
+    const contentBlocks = [{ type: "text", text: resultStr }];
+    if (screenshotB64) {
+      contentBlocks.push({ type: "image", source: { type: "base64", media_type: "image/png", data: screenshotB64 } });
+    }
     return {
       role: "user",
-      content: [
-        {
-          type: "tool_result",
-          tool_use_id: toolCall.id,
-          content: resultStr,
-        },
-      ],
+      content: [{ type: "tool_result", tool_use_id: toolCall.id, content: contentBlocks }],
     };
   }
 
   if (provider === "gemini") {
     return {
       role: "function",
-      parts: [
-        {
-          functionResponse: {
-            name: toolCall.name,
-            response: { result: resultStr },
-          },
-        },
-      ],
+      parts: [{ functionResponse: { name: toolCall.name, response: { result: resultStr } } }],
     };
   }
 
-  // OpenAI-compatible format
-  return {
-    role: "tool",
-    tool_call_id: toolCall.id,
-    content: resultStr,
-  };
+  // OpenAI-compatible: tool results are text-only — append image_url as a follow-up user block
+  if (screenshotB64) {
+    return [
+      { role: "tool", tool_call_id: toolCall.id, content: resultStr },
+      {
+        role: "user",
+        content: [{ type: "image_url", image_url: { url: `data:image/png;base64,${screenshotB64}` } }],
+      },
+    ];
+  }
+  return { role: "tool", tool_call_id: toolCall.id, content: resultStr };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -2488,7 +2498,9 @@ agentNode._act = async function ({
   // Append tool result to messages
   const provider = nodeConfig.provider || "openai";
   const updatedMessages = messages ? [...messages] : [];
-  updatedMessages.push(buildToolResultMessage(toolCall, observation, provider));
+  const toolMsg = buildToolResultMessage(toolCall, observation, provider);
+  if (Array.isArray(toolMsg)) updatedMessages.push(...toolMsg);
+  else updatedMessages.push(toolMsg);
 
   return {
     observation,
