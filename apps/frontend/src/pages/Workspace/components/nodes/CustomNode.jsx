@@ -109,9 +109,9 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
 
   const showPlus = !hasConnection || (slot.showPlus && hovered);
 
-  // Dots sit below the card (cardH + 22px) so edges originate visibly below the card edge
+  // Dots straddle the bottom border of the card but render above it via zIndex:2
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH + 22, transform: "translateX(-50%)", zIndex: 2 }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 8, transform: "translateX(-50%)", zIndex: 2 }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
@@ -547,9 +547,9 @@ export default function CustomNode({ id, data, selected }) {
           </div>
         </motion.div>
 
-        {/* Slot labels — below the card, above the dots */}
+        {/* Slot labels — below the card bottom border dots */}
         <div className="absolute left-0 right-0 grid pointer-events-none select-none"
-          style={{ top: cardH + 4, gridTemplateColumns: `repeat(${n}, 1fr)`, height: 18, zIndex: 2 }}>
+          style={{ top: cardH + 12, gridTemplateColumns: `repeat(${n}, 1fr)`, height: 18, zIndex: 2 }}>
           {AGENT_BOTTOM_SLOTS.map(slot => (
             <span key={slot.id} className="flex items-center justify-center text-[9px] font-medium text-zinc-500 tracking-wide">
               {slot.label}
