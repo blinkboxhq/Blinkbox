@@ -293,7 +293,8 @@ function SuccessFailedOutputHandles({ cardHeight }) {
 // ─── Spinning border overlay (n8n-style live execution ring) ─────────────────
 // Renders behind the card. The inner mask div recreates the card background so
 // only a 4px rim of the rotating conic-gradient is visible.
-function SpinBorder({ radius, w, h, slow = false, color1 = "rgba(59,130,246,0.95)", color2 = "rgba(96,165,250,0.8)" }) {
+function SpinBorder({ radius, w, h, slow = false, color1 = "#3b82f6", color2 = "#93c5fd" }) {
+  const grad = `conic-gradient(from 0deg, transparent 0deg, transparent 145deg, rgba(59,130,246,0.45) 180deg, ${color1} 235deg, ${color2} 262deg, ${color1} 288deg, rgba(59,130,246,0.35) 322deg, transparent 358deg)`;
   return (
     <div
       className="absolute pointer-events-none"
@@ -301,16 +302,14 @@ function SpinBorder({ radius, w, h, slow = false, color1 = "rgba(59,130,246,0.95
     >
       <div
         className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
-        style={{
-          position: "absolute",
-          width: "200%",
-          height: "200%",
-          top: "-50%",
-          left: "-50%",
-          background: `conic-gradient(from 0deg, transparent 0deg, transparent 210deg, ${color1} 255deg, ${color2} 300deg, transparent 345deg)`,
-        }}
+        style={{ position: "absolute", width: "200%", height: "200%", top: "-50%", left: "-50%",
+          background: grad, filter: "blur(3px)", opacity: 0.75 }}
       />
-      {/* Inner mask — same bg as card — makes only the rim visible */}
+      <div
+        className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
+        style={{ position: "absolute", width: "200%", height: "200%", top: "-50%", left: "-50%",
+          background: grad }}
+      />
       <div style={{
         position: "absolute",
         top: 4, left: 4, width: w, height: h,
@@ -597,7 +596,7 @@ export default function CustomNode({ id, data, selected }) {
       <div className="relative group" style={{ width: d, height: d + 22 }}
         onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         {toolbar}
-        {parentAgentRunning && <SpinBorder radius={9999} w={d} h={d} slow color1="rgba(167,139,250,0.8)" color2="rgba(99,102,241,0.8)" />}
+        {parentAgentRunning && <SpinBorder radius={9999} w={d} h={d} slow color1="#a78bfa" color2="#c4b5fd" />}
 
         {/* Model picker popup — floats above the circle */}
         {pickerOpen && models.length > 0 && (
