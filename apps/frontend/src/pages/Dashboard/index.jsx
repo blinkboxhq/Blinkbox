@@ -17,9 +17,7 @@ import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
-import BrianBar from './components/BrianBar';
 import NodeLibrary from './components/NodeLibrary';
-import BeamsBackground from '../../components/ui/BeamsBackground';
 import DashboardHero from './components/DashboardHero';
 import WorkflowPreview from './components/WorkflowPreview';
 import NotificationBell from '../../components/NotificationBell';
@@ -385,17 +383,18 @@ export default function Dashboard() {
         <div className="h-11 shrink-0 flex items-center justify-end px-6 border-b border-[#111]">
           <NotificationBell />
         </div>
-        <main className="flex-1 overflow-y-auto">
-        <BeamsBackground className="min-h-full" intensity="subtle">
+        <main className="flex-1 overflow-y-auto bg-[#080808]">
 
-          {/* ══ HERO ══════════════════════════════════════════════════════════ */}
+          {/* ══ HERO / BRIAN BAR ══════════════════════════════════════════════ */}
           {activeTab === 'workflows' && (
-            <div className="border-b border-[#111]">
-              <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} />
-            </div>
+            workflows.length > 0
+              ? <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} compact />
+              : <div className="border-b border-[#111]">
+                  <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} />
+                </div>
           )}
 
-          <div className="px-8 py-7 max-w-[1080px] mx-auto">
+          <div className="px-8 py-6 max-w-[1200px] mx-auto">
 
           {systemError && (
             <div className="mb-5 px-3 py-2 rounded-xl border border-red-500/15 bg-red-500/5 flex items-center gap-2 text-[12px] text-red-400">
@@ -445,9 +444,9 @@ export default function Dashboard() {
               </div>
 
               {workflowsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-[140px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
+                    <div key={i} className="h-[130px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
                   ))}
                 </div>
               ) : filtered.length === 0 ? (
@@ -537,8 +536,10 @@ export default function Dashboard() {
                         {/* Mini workflow canvas */}
                         <div className="px-4">
                           <WorkflowPreview
-                            thumbnail={wf.thumbnail}
+                            nodeCount={wf.nodeCount}
+                            trigger={wf.trigger}
                             accentColor={accentColor}
+                            lastRunStatus={wf.lastRunStatus}
                           />
                         </div>
 
@@ -772,7 +773,6 @@ export default function Dashboard() {
           )}
 
         </div>
-        </BeamsBackground>
       </main>
       </div>
     </div>
