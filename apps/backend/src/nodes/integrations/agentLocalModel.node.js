@@ -1,15 +1,51 @@
 /**
- * Satellite handler for agent_ollama / agent_lmstudio chat model nodes.
+ * Satellite handlers for agent_ollama / agent_lmstudio chat model nodes.
  *
- * These nodes exist purely to supply provider config to a connected AI Agent.
- * When tested standalone (Run Test), they do a quick connectivity ping to the
- * local server and return its model list so the user knows everything is wired up.
+ * When tested standalone (Run Test):
+ *  - Ollama: pings /api/tags, returns installed models. Falls back to server Ollama if no baseUrl set.
+ *  - LM Studio (OpenAI Compat): pings /v1/models at the configured URL.
  */
 
 import axios from "axios";
 
-async function ping(baseUrl, providerLabel) {
-  const base = baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
+const SERVER_OLLAMA_BASE = (process.env.OLLAMA_HOST || "http://127.0.0.1:11434").replace(/\/$/, "");
+
+async function pingOllama(baseUrl) {
+  const base = baseUrl
+    ? baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "")
+    : SERVER_OLLAMA_BASE;
+
+  try {
+    const res = await axios.get(`${base}/api/tags`, { timeout: 5000 });
+    const models = (res.data?.models || []).map((m) => m.name).filter(Boolean);
+    return {
+      status: "connected",
+      baseUrl: base,
+      provider: "Ollama",
+      modelsAvailable: models,
+      serverSide: !baseUrl,
+      hint: "Attach this node to an AI Agent node's Chat Model handle to use it.",
+    };
+  } catch (err) {
+    if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET" || err.code === "ETIMEDOUT") {
+      const where = baseUrl ? base : `server (${base})`;
+      throw new Error(
+        `Ollama: Cannot reach ${where}. ` +
+          (baseUrl
+            ? "Check the Base URL is correct and Ollama is running."
+            : "Ollama is not running on this server. It will start automatically on next reboot.")
+      );
+    }
+    return { status: "connected", baseUrl: base, provider: "Ollama", modelsAvailable: [] };
+  }
+}
+
+async function pingOpenAICompat(baseUrl, providerLabel) {
+  const base = (baseUrl || "http://127.0.0.1:1234")
+    .replace(/\/$/, "")
+    .replace(/\/v1\/chat\/completions$/, "")
+    .replace(/\/v1$/, "");
+
   try {
     const res = await axios.get(`${base}/v1/models`, { timeout: 5000 });
     const models = (res.data?.data || []).map((m) => m.id || m.name).filter(Boolean);
@@ -23,27 +59,21 @@ async function ping(baseUrl, providerLabel) {
   } catch (err) {
     if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET" || err.code === "ETIMEDOUT") {
       throw new Error(
-        `${providerLabel}: Cannot reach ${base}. ` +
-        (providerLabel === "Ollama"
-          ? "Make sure Ollama is running (ollama serve) and the backend is on the same machine."
-          : "Make sure LM Studio is running with the local server enabled (Developer tab → Start Server).")
+        `${providerLabel}: Cannot reach ${base}. Make sure the server is running and the Base URL is correct.`
       );
     }
-    // Server responded but /v1/models may not exist — still connected
     return { status: "connected", baseUrl: base, provider: providerLabel, modelsAvailable: [] };
   }
 }
 
 export const agentOllamaNode = {
   async run(config) {
-    const baseUrl = config.baseUrl || "http://127.0.0.1:11434";
-    return ping(baseUrl, "Ollama");
+    return pingOllama(config.baseUrl || null);
   },
 };
 
 export const agentLmStudioNode = {
   async run(config) {
-    const baseUrl = config.baseUrl || "http://127.0.0.1:1234";
-    return ping(baseUrl, "LM Studio");
+    return pingOpenAICompat(config.baseUrl || "http://127.0.0.1:1234", "OpenAI Compatible");
   },
 };

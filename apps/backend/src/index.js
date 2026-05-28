@@ -26,6 +26,14 @@ async function bootstrap() {
       console.warn("Puppeteer cluster pre-warm skipped:", err.message);
     }
 
+    // 3a. Start server-side Ollama (non-fatal — skipped if ollama binary not installed)
+    try {
+      const { ollamaManager } = await import("./infra/ollama.manager.js");
+      await ollamaManager.start();
+    } catch (err) {
+      console.warn("[OllamaManager] init skipped:", err.message);
+    }
+
     // 3b. Container pool — orphan cleanup + image warming (non-fatal, skipped if Docker absent)
     try {
       const { warmImages, cleanupOrphans, scheduleOrphanScan, isDockerAvailable } = await import("./infra/container.pool.js");

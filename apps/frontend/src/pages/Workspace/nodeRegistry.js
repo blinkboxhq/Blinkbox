@@ -267,6 +267,7 @@ import AgentLLMNode from "@nodes/agent_llm/ConfigPanel.jsx";
 import AgentMemoryNode from "@nodes/agent_memory/ConfigPanel.jsx";
 import AgentToolNode from "@nodes/agent_tool/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
+import OllamaConfigPanel from "@nodes/agent_ollama/ConfigPanel.jsx";
 import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
@@ -944,32 +945,26 @@ export const NodeRegistry = {
     accentColor: "212,212,216",
     category: "ai",
     agentOnly: true,
-    description: "Local Ollama models powering the AI Agent",
+    description: "Run Ollama models on the server or connect to any Ollama instance",
     defaultModel: "llama3.2",
     models: null,
-    ConfigPanel: makeAgentModelPanel({
-      label: "Ollama",
-      hasBaseUrl: true,
-      localOnly: true,
-      models: ["llama3.2", "mistral", "codellama", "phi3"],
-      color: "#7C3AED",
-    }),
+    ConfigPanel: OllamaConfigPanel,
   },
   agent_lmstudio: {
-    label: "LM Studio",
+    label: "OpenAI Compatible",
     icon: Brain,
     logoUrl: imgLmStudio,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
     category: "ai",
     agentOnly: true,
-    description: "Local LM Studio models powering the AI Agent",
+    description: "Any OpenAI-compatible server — LM Studio, llama.cpp, vLLM, KoboldCpp, or a remote endpoint",
     defaultModel: "local-model",
     models: null,
     ConfigPanel: makeAgentModelPanel({
-      label: "LM Studio",
+      label: "OpenAI Compatible",
       hasBaseUrl: true,
-      localOnly: true,
+      localOnly: false,
       defaultBaseUrl: "http://127.0.0.1:1234",
       models: ["local-model", "llama-3.2-3b-instruct", "mistral-7b-instruct", "phi-3-mini-4k-instruct", "gemma-3-12b"],
       color: "#C850C0",

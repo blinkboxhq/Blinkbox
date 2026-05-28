@@ -1,8 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "chromium", "python3", "vips", "pkg-config", "gcc", "gnumake"]
+nixPkgs = ["nodejs_22", "chromium", "python3", "vips", "pkg-config", "gcc", "gnumake", "curl"]
 
 [phases.install]
-cmds = ["PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install --prefer-offline"]
+cmds = [
+  "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install --prefer-offline",
+  "curl -fsSL https://ollama.com/install.sh | sh || echo 'Ollama install skipped'"
+]
 
 [phases.build]
 cmds = []

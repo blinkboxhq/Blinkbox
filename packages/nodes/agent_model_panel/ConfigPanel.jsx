@@ -28,10 +28,10 @@ export default function makeAgentModelPanel({ label, credentialType, hasBaseUrl 
         </div>
 
         {localOnly && (
-          <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.07]">
-            <span className="text-amber-400 text-[11px] shrink-0 mt-0.5">⚠</span>
-            <p className="text-[11px] text-amber-300 leading-relaxed">
-              Local provider — {label} and the Blinkbox backend must run on the same machine.
+          <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-zinc-700/30 bg-zinc-800/20">
+            <span className="text-zinc-500 text-[11px] shrink-0 mt-0.5">ℹ</span>
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              Point the Base URL to any OpenAI-compatible server — local or remote (LM Studio, llama.cpp, vLLM, etc.)
             </p>
           </div>
         )}
