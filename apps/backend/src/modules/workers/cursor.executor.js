@@ -134,6 +134,7 @@ export async function processCursor({ executionId, cursorId }) {
     { _id: executionId },
     {
       $set: {
+        status: "running",
         "cursors.$[c].status": "running",
         "cursors.$[c].lockedAt": new Date(),
         "cursors.$[c].lockedBy": `cell-${cellId}`,
@@ -461,8 +462,8 @@ export async function processCursor({ executionId, cursorId }) {
       const category = errorClassification?.category || "unknown";
       const hint = errorClassification?.hint || "";
 
-      // Don't auto-retry config/auth errors — they won't self-fix
-      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota"];
+      // Don't auto-retry errors that won't self-fix on a bare re-run
+      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout"];
       const shouldRetry = currentRetries < MAX_RETRIES && !noRetryCategories.includes(category);
 
       if (shouldRetry) {

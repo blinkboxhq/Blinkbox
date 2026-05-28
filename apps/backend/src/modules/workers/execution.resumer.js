@@ -63,10 +63,10 @@ export function startExecutionResumer() {
           }
         }
       }
-      // Recover "waiting" cursors stuck for too long (Redis delay entry may have been lost)
+      // Recover "waiting" cursors whose Redis ZADD entry was lost (e.g. Redis restart)
       const staleWaiting = new Date(Date.now() - 5 * 60 * 1000);
       const stuckWaitingExecutions = await Execution.find({
-        status: "pending",
+        status: { $in: ["pending", "running"] },
         "cursors.status": "waiting",
         "cursors.lockedAt": null,
         updatedAt: { $lte: staleWaiting },
