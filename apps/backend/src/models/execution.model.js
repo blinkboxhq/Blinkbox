@@ -67,7 +67,7 @@ const ExecutionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "executed", "failed", "partial", "cancelled"],
+      enum: ["pending", "running", "executed", "failed", "partial", "cancelled"],
       default: "pending",
     },
 
