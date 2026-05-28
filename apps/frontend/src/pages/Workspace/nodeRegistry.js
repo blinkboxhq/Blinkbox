@@ -268,6 +268,7 @@ import AgentMemoryNode from "@nodes/agent_memory/ConfigPanel.jsx";
 import AgentToolNode from "@nodes/agent_tool/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
 import OllamaConfigPanel from "@nodes/agent_ollama/ConfigPanel.jsx";
+import LmStudioConfigPanel from "@nodes/agent_lmstudio/ConfigPanel.jsx";
 import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
@@ -961,14 +962,7 @@ export const NodeRegistry = {
     description: "Any OpenAI-compatible server — LM Studio, llama.cpp, vLLM, KoboldCpp, or a remote endpoint",
     defaultModel: "local-model",
     models: null,
-    ConfigPanel: makeAgentModelPanel({
-      label: "OpenAI Compatible",
-      hasBaseUrl: true,
-      localOnly: false,
-      defaultBaseUrl: "http://127.0.0.1:1234",
-      models: ["local-model", "llama-3.2-3b-instruct", "mistral-7b-instruct", "phi-3-mini-4k-instruct", "gemma-3-12b"],
-      color: "#C850C0",
-    }),
+    ConfigPanel: LmStudioConfigPanel,
   },
   agent_perplexity: {
     label: "Perplexity",
