@@ -1,5 +1,6 @@
 import { Settings } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
 
 // ── visibility ───────────────────────────────────────────────────────────────
 function isVisible(field, config) {
@@ -159,6 +160,18 @@ function MultiOptionsField({ field, value, onChange }) {
   );
 }
 
+function CredentialField({ field, value, onChange }) {
+  return (
+    <CredentialPicker
+      value={value ?? ''}
+      onChange={onChange}
+      accentColor={field.accentColor ?? 'blue'}
+      label={field.label}
+      placeholder={field.placeholder ?? 'Select credential…'}
+    />
+  );
+}
+
 function ColorField({ field, value, onChange }) {
   return (
     <div>
@@ -213,6 +226,7 @@ function Field({ field, config, updateConfig, nodeId }) {
     case 'options':      return <OptionsField field={field} value={value} onChange={onChange} />;
     case 'multiOptions': return <MultiOptionsField field={field} value={value} onChange={onChange} />;
     case 'color':        return <ColorField field={field} value={value} onChange={onChange} />;
+    case 'credential':   return <CredentialField field={field} value={value} onChange={onChange} />;
     case 'notice':       return <NoticeField field={field} />;
     case 'row':          return <RowField field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />;
     default:             return null;
