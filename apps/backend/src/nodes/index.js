@@ -183,7 +183,6 @@ import browserAgent from "./browserAgent.node.js";
 
 // Coding Agents
 import claudeCode    from "./integrations/claudeCode.node.js";
-import codex         from "./integrations/codex.node.js";
 import geminiCli     from "./integrations/geminiCli.node.js";
 import groq          from "./integrations/groq.node.js";
 import ollama        from "./integrations/ollama.node.js";
@@ -423,7 +422,6 @@ export const nodeRegistry = {
 
   // Coding Agents
   claude_code:    claudeCode,
-  codex:          codex,
   gemini_cli:     geminiCli,
   groq:           groq,
   ollama:         ollama,

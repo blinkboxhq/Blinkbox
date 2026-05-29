@@ -33,7 +33,6 @@ import {
   Merge,
   CheckSquare,
   Server,
-  QrCode,
   SplitSquareHorizontal,
   AlignLeft,
   CheckCircle2,
@@ -59,7 +58,6 @@ import {
   Hash,
   Sigma,
   Table2,
-  BookOpen,
   HeartPulse,
   FlaskConical,
   GraduationCap,
@@ -76,15 +74,12 @@ import {
   Rss,
   Bell,
   BellOff,
-  Cloud,
-  Tv,
   UploadCloud,
   DownloadCloud,
   FolderOpen,
   Archive,
   Trash2,
   RefreshCw,
-  AlarmClock,
   StickyNote,
   ListChecks,
   Clipboard,
@@ -111,7 +106,6 @@ import {
   Atom,
   Calculator,
   PenTool,
-  Palette,
   Film,
   Headphones,
   Radio,
@@ -135,8 +129,6 @@ import {
   Regex,
   Split,
   Combine,
-  Shuffle,
-  ArrowRightLeft,
   Fingerprint,
   Triangle,
   AlertTriangle,
@@ -144,7 +136,6 @@ import {
   Network,
   Wrench,
   Monitor,
-  Bitcoin,
 } from "lucide-react";
 
 // Local asset icons
@@ -225,13 +216,11 @@ import imgGoogle from "../../assets/google-search.svg";
 import imgBrave from "../../assets/brave-search.svg";
 import imgPython from "../../assets/python.svg";
 import imgJS from "../../assets/javascript.svg";
-import imgArxiv from "../../assets/arxiv.svg";
 import imgFirebase from "@nodes/firebase/logo.svg";
 import imgAWS from "@nodes/s3/logo.svg";
 import imgInstagram from "@nodes/instagram/logo.svg";
 import imgTikTok from "@nodes/tiktok/logo.svg";
 import imgLinkedIn from "@nodes/linkedin/logo.svg";
-import imgVirusTotal from "@nodes/virustotal/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
 import imgWeather from "@nodes/weather/logo.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
@@ -320,15 +309,12 @@ import CryptoUtilsNode from "@nodes/crypto_utils/ConfigPanel.jsx";
 
 
 // Config Panels — Innovation Sprint nodes
-import QRCodeNode from "@nodes/qr_code/ConfigPanel.jsx";
 import TextSplitterNode from "@nodes/text_splitter/ConfigPanel.jsx";
 import TemplateRendererNode from "@nodes/template_renderer/ConfigPanel.jsx";
-import JSONValidatorNode from "@nodes/json_validator/ConfigPanel.jsx";
 import SwitchNode from "@nodes/switch/ConfigPanel.jsx";
 import ImageResizeNode from "@nodes/image_resize/ConfigPanel.jsx";
 import AggregateNode from "@nodes/aggregate/ConfigPanel.jsx";
 import PDFGeneratorNode from "@nodes/pdf_generator/ConfigPanel.jsx";
-import DataDiffNode from "@nodes/data_diff/ConfigPanel.jsx";
 import EmailParserNode from "@nodes/email_parser/ConfigPanel.jsx";
 import VectorMemoryNode from "@nodes/vector_memory/ConfigPanel.jsx";
 
@@ -339,7 +325,6 @@ import ZoomNode from "@nodes/zoom/ConfigPanel.jsx";
 import InstagramNode from "@nodes/instagram/ConfigPanel.jsx";
 import TikTokNode from "@nodes/tiktok/ConfigPanel.jsx";
 import LinkedInNode from "@nodes/linkedin/ConfigPanel.jsx";
-import VirusTotalNode from "@nodes/virustotal/ConfigPanel.jsx";
 import ResendNode from "@nodes/resend/ConfigPanel.jsx";
 import OpenAIAssistantNode from "@nodes/openai_assistant/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
@@ -360,24 +345,14 @@ import AgentIntegrationNode from "@nodes/agent_integration/ConfigPanel.jsx";
 import EmailTriggerNode from "@triggers/imap/ConfigPanel.jsx";
 import ImapTriggerNode from "@triggers/imap/ConfigPanel.jsx";
 import ErrorTriggerNode from "@triggers/error_trigger/ConfigPanel.jsx";
-// Gamers nodes
-import TwitchStreamStatusNode from "@nodes/twitch/ConfigPanel.jsx";
-import DiscordRoleAssignNode from "@nodes/discord_role_assign/ConfigPanel.jsx";
 // Automators nodes
 import VariableSetGetNode from "@nodes/variable_set_get/ConfigPanel.jsx";
-import CounterNode from "@nodes/counter/ConfigPanel.jsx";
-import RandomPickNode from "@nodes/random_pick/ConfigPanel.jsx";
-import ScheduleCheckNode from "@nodes/schedule_check/ConfigPanel.jsx";
-import IpWhitelistNode from "@nodes/ip_whitelist/ConfigPanel.jsx";
 import FileUploadNode from "@nodes/file_upload/ConfigPanel.jsx";
 import FileDownloadNode from "@nodes/file_download/ConfigPanel.jsx";
 import ZipFilesNode from "@nodes/zip_files/ConfigPanel.jsx";
-import Base64Node from "@nodes/base64/ConfigPanel.jsx";
 // Social Media nodes
 import YouTubeUploadNode from "@nodes/youtube/ConfigPanel.jsx";
 import RssFeedGeneratorNode from "@nodes/rss_feed/ConfigPanel.jsx";
-// Design / Creative nodes
-import FigmaCommentNode from "@nodes/figma_comment/ConfigPanel.jsx";
 // Developer Tools nodes
 import EnvVariableNode from "@nodes/env_variable/ConfigPanel.jsx";
 import GraphQLNode from "@nodes/graphql/ConfigPanel.jsx";
@@ -389,26 +364,14 @@ import TranslationNode from "@nodes/translation/ConfigPanel.jsx";
 import TextToSpeechNode from "@nodes/text_to_speech/ConfigPanel.jsx";
 import SpeechToTextNode from "@nodes/speech_to_text/ConfigPanel.jsx";
 import OcrNode from "@nodes/ocr/ConfigPanel.jsx";
-// Research nodes
-import DrugLookupNode from "@nodes/drug_lookup/ConfigPanel.jsx";
-import ClinicalTrialsNode from "@nodes/clinical_trials/ConfigPanel.jsx";
-import WeatherNode from "@nodes/weather/ConfigPanel.jsx";
-import StockPriceNode from "@nodes/stock_price/ConfigPanel.jsx";
-import CurrencyExchangeNode from "@nodes/currency_exchange/ConfigPanel.jsx";
 import IpLookupNode from "@nodes/ip_lookup/ConfigPanel.jsx";
 import DnsLookupNode from "@nodes/dns_lookup/ConfigPanel.jsx";
 import SslCheckNode from "@nodes/ssl_check/ConfigPanel.jsx";
-import PortMonitorNode from "@nodes/port_monitor/ConfigPanel.jsx";
 import HttpMonitorNode from "@nodes/http_monitor/ConfigPanel.jsx";
 // Data Processing nodes
-import NumberFormatNode from "@nodes/number_format/ConfigPanel.jsx";
 import TextFormatNode from "@nodes/text_format/ConfigPanel.jsx";
 import RegexMatchNode from "@nodes/regex_match/ConfigPanel.jsx";
-import FindReplaceNode from "@nodes/find_replace/ConfigPanel.jsx";
-import MarkdownRendererNode from "@nodes/markdown_renderer/ConfigPanel.jsx";
 import UrlParserNode from "@nodes/url_parser/ConfigPanel.jsx";
-import ColorConverterNode from "@nodes/color_converter/ConfigPanel.jsx";
-import UnitConverterNode from "@nodes/unit_converter/ConfigPanel.jsx";
 import MathExpressionNode from "@nodes/math_expression/ConfigPanel.jsx";
 import ConditionNode from "@nodes/condition/ConfigPanel.jsx";
 import RetryNode from "@nodes/retry/ConfigPanel.jsx";
@@ -461,11 +424,7 @@ import ZendeskNode from "@nodes/zendesk/ConfigPanel.jsx";
 import CalendlyNode from "@nodes/calendly/ConfigPanel.jsx";
 import MailchimpNode from "@nodes/mailchimp/ConfigPanel.jsx";
 import FigmaNode from "@nodes/figma/ConfigPanel.jsx";
-import MastodonNode from "@nodes/mastodon/ConfigPanel.jsx";
-import ProductHuntNode from "@nodes/product_hunt/ConfigPanel.jsx";
-import HackerNewsNode from "@nodes/hacker_news/ConfigPanel.jsx";
 import RedditNode from "@nodes/reddit/ConfigPanel.jsx";
-import CryptoPriceNode from "@nodes/crypto_price/ConfigPanel.jsx";
 
 // OpenAI-compatible providers
 const PerplexityNode = makeOpenAICompatNode({
@@ -1950,20 +1909,12 @@ export const NodeRegistry = {
   },
   date_time:         { label: "Date & Time",        icon: Calendar,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DateTimeNode,         category: "transform", description: "Parse, format and manipulate dates and times" },
   crypto_utils:      { label: "Crypto / Hash",       icon: Lock,           colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoUtilsNode,      category: "transform", description: "Hash, encrypt and HMAC sign data with SHA, MD5, AES" },
-  qr_code:           { label: "QR Code",             icon: QrCode,         colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: QRCodeNode,           category: "transform", description: "Generate or scan QR codes from text and URLs" },
-  json_validator:    { label: "JSON Validator",      icon: FileText,       colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: JSONValidatorNode,    category: "transform", description: "Validate, format and minify JSON payloads" },
   image_resize:      { label: "Image Resize",        icon: Image,          colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: ImageResizeNode,      category: "transform", description: "Resize, crop, convert and optimise images" },
   pdf_generator:     { label: "PDF Generator",       icon: FileText,       colorClass: "text-red-400",    accentColor: "248,113,113", ConfigPanel: PDFGeneratorNode,     category: "transform", description: "Generate PDFs from HTML templates and merge documents" },
-  data_diff:         { label: "Data Diff",           icon: Merge,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DataDiffNode,         category: "transform", description: "Compare two objects or arrays and return the diff" },
   email_parser:      { label: "Email Parser",        icon: Mail,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: EmailParserNode,      category: "transform", description: "Parse raw email into subject, body, attachments and headers" },
-  number_format:     { label: "Number Format",       icon: Hash,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: NumberFormatNode,     category: "transform", description: "Round, format, clamp and convert numbers" },
   text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "transform", description: "Trim, truncate, slugify, case-convert and pad strings" },
   regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "transform", description: "Test, capture and replace with regular expressions" },
-  find_replace:      { label: "Find & Replace",      icon: Replace,        colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: FindReplaceNode,      category: "transform", description: "Find and replace values in strings, arrays or objects" },
-  markdown_renderer: { label: "Markdown Renderer",   icon: FileText,       colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: MarkdownRendererNode, category: "transform", description: "Convert Markdown to HTML and sanitise output" },
   url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "transform", description: "Parse URLs into protocol, host, path, query and hash" },
-  color_converter:   { label: "Color Converter",     icon: Palette,        colorClass: "text-pink-400",   accentColor: "244,114,182", ConfigPanel: ColorConverterNode,   category: "transform", description: "Convert colors between HEX, RGB, HSL and CSS names" },
-  unit_converter:    { label: "Unit Converter",      icon: ArrowRightLeft, colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: UnitConverterNode,    category: "transform", description: "Convert length, weight, temperature, volume and more" },
   math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "transform", description: "Evaluate math expressions, formulas and unit conversions" },
 
   // Research
@@ -2068,8 +2019,6 @@ export const NodeRegistry = {
     ConfigPanel: DiscordNode,
     category: "integration",
   },
-  discord_role_assign: { label: "Discord Role Assign", icon: Users, logoUrl: imgDiscord, colorClass: "text-[#5865F2]", accentColor: "88,101,242", ConfigPanel: DiscordRoleAssignNode, category: "social", description: "Assign or remove a role from a Discord guild member" },
-  mastodon:            { label: "Mastodon",             icon: Users, logoUrl: imgMastodon, colorClass: "text-[#563ACC]", accentColor: "86,58,204",  ConfigPanel: MastodonNode,          category: "social", description: "Post statuses and interact with the Mastodon federated network" },
   gmail: {
     label: "Gmail",
     icon: Brain,
@@ -2387,19 +2336,6 @@ export const NodeRegistry = {
     ConfigPanel: ResendNode,
     category: "integration",
   },
-  // ── Missing Integration Action Nodes ──────────────────────────────────────
-  // GitHub
-  github_issue: {
-    label: "GitHub Issues / PRs",
-    icon: Github,
-    colorClass: "text-white",
-    accentColor: "244,244,245",
-    logoUrl: imgGitHub,
-    ConfigPanel: GitHubNode,
-    category: "devtools",
-    description:
-      "Create, update, comment on or close GitHub issues and pull requests",
-  },
   gitlab: {
     label: "GitLab",
     icon: Github,
@@ -2659,7 +2595,6 @@ export const NodeRegistry = {
     category: "design",
     description: "Fetch files, post comments and export assets from Figma",
   },
-  figma_comment: { label: "Figma Comment", icon: MessageSquarePlus, colorClass: "text-[#F24E1E]", accentColor: "242,78,30", logoUrl: imgFigma, ConfigPanel: FigmaCommentNode, category: "design", description: "Post or fetch comments on a Figma file or frame" },
   // Infra
   ssh: {
     label: "SSH Command",
@@ -2732,21 +2667,9 @@ export const NodeRegistry = {
     category: "integration",
     description: "Create and manage Zoom meetings",
   },
-  virustotal: {
-    label: "VirusTotal",
-    icon: Shield,
-    colorClass: "text-[#394EFF]",
-    accentColor: "57,78,255",
-    logoUrl: imgVirusTotal,
-    ConfigPanel: VirusTotalNode,
-    category: "devtools",
-    description: "Scan URLs, file hashes and IPs for threats via VirusTotal API",
-  },
   ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "devtools", description: "Geolocate any IP — city, country, timezone, ISP" },
-  ip_whitelist: { label: "IP Whitelist", icon: Shield, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: IpWhitelistNode, category: "devtools", description: "Allow or block execution based on IP address or CIDR range" },
   dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "devtools", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
   ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "devtools", description: "Inspect TLS certificate expiry and validity for any hostname" },
-  port_monitor: { label: "Port Monitor", icon: Server, colorClass: "text-sky-400", accentColor: "56,189,248", ConfigPanel: PortMonitorNode, category: "devtools", description: "Check if a TCP port is open and measure connection latency" },
   http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "devtools", description: "Check if an HTTP endpoint is up, track status code and latency" },
   rss: {
     label: "RSS Feed",
@@ -2758,21 +2681,6 @@ export const NodeRegistry = {
     category: "research",
     description: "Read, parse and generate RSS / Atom feeds",
   },
-  weather: { label: "Weather", icon: Cloud, colorClass: "text-sky-400", accentColor: "56,189,248", logoUrl: imgWeather, ConfigPanel: WeatherNode, category: "research", description: "Get current weather and forecasts for any location" },
-  stock_price: { label: "Stock Price", icon: TrendingUp, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: StockPriceNode, category: "research", description: "Fetch real-time and historical stock prices" },
-  currency_exchange: { label: "Currency Exchange", icon: DollarSign, colorClass: "text-yellow-400", accentColor: "250,204,21", ConfigPanel: CurrencyExchangeNode, category: "research", description: "Convert currencies using live exchange rates" },
-  hacker_news: { label: "HackerNews", icon: TrendingUp, colorClass: "text-orange-500", accentColor: "249,115,22", logoUrl: imgHackerNews, ConfigPanel: HackerNewsNode, category: "research", description: "Fetch top stories, comments and user data from HackerNews" },
-  drug_lookup: { label: "Drug Lookup", icon: Search, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DrugLookupNode, category: "research", description: "Look up FDA drug information and interaction data" },
-  clinical_trials: { label: "Clinical Trials", icon: Search, colorClass: "text-teal-400", accentColor: "45,212,191", ConfigPanel: ClinicalTrialsNode, category: "research", description: "Search ClinicalTrials.gov for active and past trials" },
-  twitch_stream_status: { label: "Twitch Status", icon: Tv, colorClass: "text-[#9146FF]", accentColor: "145,70,255", ConfigPanel: TwitchStreamStatusNode, category: "research", description: "Check if a Twitch channel is live and get stream info" },
-  product_hunt: { label: "Product Hunt", icon: TrendingUp, colorClass: "text-[#DA552F]", accentColor: "218,85,47", logoUrl: imgProductHunt, ConfigPanel: ProductHuntNode, category: "research", description: "Fetch trending products and launches from Product Hunt" },
-  arxiv_search: { label: "arXiv Search", icon: BookOpen, colorClass: "text-red-400", accentColor: "248,113,113", logoUrl: imgArxiv, ConfigPanel: GenericActionNode, category: "research", description: "Search arXiv for academic papers and preprints" },
-  pubmed_search: { label: "PubMed Search", icon: BookOpen, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: GenericActionNode, category: "research", description: "Search PubMed for medical and life science literature" },
-  wikipedia_lookup: { label: "Wikipedia", icon: BookOpen, colorClass: "text-zinc-300", accentColor: "212,212,216", ConfigPanel: GenericActionNode, category: "research", description: "Fetch article summaries and content from Wikipedia" },
-  npm_package_info: { label: "npm Package", icon: Package, colorClass: "text-red-400", accentColor: "248,113,113", ConfigPanel: GenericActionNode, category: "research", description: "Look up npm package metadata, downloads and versions" },
-  news_search: { label: "News Search", icon: Newspaper, colorClass: "text-zinc-300", accentColor: "212,212,216", ConfigPanel: GenericActionNode, category: "research", description: "Search news headlines and articles via NewsAPI" },
-  steam_game_lookup: { label: "Steam Game", icon: Gamepad2, colorClass: "text-[#1b2838]", accentColor: "27,40,56", imgFilter: "invert(1)", ConfigPanel: GenericActionNode, category: "gaming", description: "Look up Steam game details, pricing and reviews" },
-  crypto_price:      { label: "Crypto Price",        icon: Bitcoin,        colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoPriceNode,      category: "research", description: "Get live crypto prices, market cap and 24h change via CoinGecko" },
   database: {
     label: "Database",
     icon: Database,
@@ -2854,15 +2762,6 @@ export const NodeRegistry = {
     category: "automation",
     description:
       "Compress or extract ZIP, TAR and TAR.GZ archives with password support",
-  },
-  base64: {
-    label: "Base64 Encode/Decode",
-    icon: Lock,
-    colorClass: "text-white",
-    accentColor: "129,140,248",
-    ConfigPanel: Base64Node,
-    category: "automation",
-    description: "Encode or decode text, URLs and binary with URL-safe support",
   },
 
   // ── Education & AI Nodes ─────────────────────────────────────────────────
@@ -2960,7 +2859,4 @@ export const NodeRegistry = {
     category: "flow",
     description: "Throttle workflow to N executions per time window",
   },
-  counter:        { label: "Counter",        icon: Hash,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: CounterNode,       category: "flow", description: "Increment, decrement or reset a counter shared across executions" },
-  random_pick:    { label: "Random Pick",    icon: Shuffle,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: RandomPickNode,    category: "flow", description: "Pick one or more random items from an array" },
-  schedule_check: { label: "Schedule Check", icon: AlarmClock, colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: ScheduleCheckNode, category: "flow", description: "Check if the current time falls within a defined schedule window" },
 };
