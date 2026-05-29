@@ -10,21 +10,21 @@ const TRIGGER_CATEGORIES = [
     label: "Core",
     icon: Zap,
     description: "Built-in workflow triggers",
-    keys: ["manual", "cron", "webhook", "form", "error"],
+    keys: ["manual", "cron", "webhook", "email", "imap", "rss", "database", "http_monitor", "port_monitor", "dns", "ssl", "error"],
   },
   {
     id: "messaging",
     label: "Messaging",
     icon: MessageSquare,
     description: "Chat & email platforms",
-    keys: ["slack", "discord", "telegram", "gmail"],
+    keys: ["slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams", "chat", "mastodon"],
   },
   {
     id: "apps",
     label: "Apps",
     icon: Grid3x3,
     description: "SaaS integrations",
-    keys: ["notion", "airtable", "github", "stripe", "shopify"],
+    keys: ["notion", "airtable", "github", "github_issue", "gitlab", "stripe", "shopify", "woocommerce", "hubspot", "linear", "jira", "trello", "asana", "pipedrive", "clickup", "monday", "typeform", "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms", "onedrive", "sharepoint", "azure_devops", "figma", "calendly", "mailchimp", "intercom", "zendesk", "pagerduty", "datadog", "sentry", "vercel", "netlify", "youtube", "reddit", "hackernews", "producthunt", "instagram", "tiktok", "price_alert", "ssh", "docker", "virustotal"],
   },
 ];
 

@@ -186,7 +186,7 @@ import imgGoogleCalendar from "@nodes/google_calendar/logo.svg";
 import imgRss from "@nodes/rss_feed/logo.svg";
 import imgPostgres from "@nodes/postgres/logo.svg";
 import imgSsh from "@triggers/ssh/logo.svg";
-import imgImap from "@triggers/imap/logo.svg";
+import imgDocker from "@triggers/docker/logo.svg";
 import imgJira from "@nodes/jira/logo.svg";
 import imgTrello from "@nodes/trello/logo.svg";
 import imgFigma from "@nodes/figma/logo.svg";
@@ -209,6 +209,7 @@ import imgMailchimp from "@nodes/mailchimp/logo.svg";
 import imgAsana from "@nodes/asana/logo.svg";
 import imgClickUp from "@nodes/clickup/logo.svg";
 import imgMonday from "@nodes/monday/logo.svg";
+import imgLetsEncrypt from "@triggers/ssl/logo.svg";
 import imgHackerNews from "@nodes/hacker_news/logo.svg";
 import imgPipedrive from "@nodes/pipedrive/logo.svg";
 import imgMastodon from "@nodes/mastodon/logo.svg";
@@ -238,13 +239,23 @@ import imgMCP from "../../assets/mcp.svg";
 import imgManualTrigger from "@triggers/manual/logo.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgCronTrigger from "@triggers/cron/logo.svg";
+import imgChatTrigger from "@triggers/chat/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
 import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
+import imgImap from "@triggers/imap/logo.svg";
+import imgDbTrigger from "@triggers/db/logo.svg";
+import imgDnsTrigger from "@triggers/dns/logo.svg";
+import imgGitHubIssueTrigger from "@triggers/github_issue/logo.svg";
+import imgHackerNewsTrigger from "@triggers/hackernews/logo.svg";
+import imgHttpMonitorTrigger from "@triggers/http_monitor/logo.svg";
+import imgPortMonitorTrigger from "@triggers/port_monitor/logo.svg";
+import imgPriceAlertTrigger from "@triggers/price_alert/logo.svg";
 
 // Config Panels — existing
 import TriggerNode from "@triggers/manual/ConfigPanel.jsx";
 import WebhookTriggerNode from "@triggers/webhook/ConfigPanel.jsx";
 import ScheduleTriggerNode from "@triggers/cron/ConfigPanel.jsx";
+import ChatTriggerNode from "@triggers/chat/ConfigPanel.jsx";
 import FormTriggerNode from "@triggers/form/ConfigPanel.jsx";
 import GitHubTriggerNode from "@triggers/github/ConfigPanel.jsx";
 import StripeTriggerNode from "@triggers/stripe/ConfigPanel.jsx";
@@ -256,7 +267,11 @@ import DiscordTriggerNode from "@triggers/discord/ConfigPanel.jsx";
 import GmailTriggerNode from "@triggers/gmail/ConfigPanel.jsx";
 import AirtableTriggerNode from "@triggers/airtable/ConfigPanel.jsx";
 import NotionTriggerNode from "@triggers/notion/ConfigPanel.jsx";
+import HubSpotTriggerNode from "@triggers/hubspot/ConfigPanel.jsx";
 import ShopifyTriggerNode from "@triggers/shopify/ConfigPanel.jsx";
+import LinearTriggerNode from "@triggers/linear/ConfigPanel.jsx";
+import TypeformTriggerNode from "@triggers/typeform/ConfigPanel.jsx";
+import WhatsAppTriggerNode from "@triggers/whatsapp/ConfigPanel.jsx";
 import HttpRequestNode from "@nodes/http_request/ConfigPanel.jsx";
 import DelayNode from "@nodes/delay/ConfigPanel.jsx";
 import InformerNode from "@nodes/informer/ConfigPanel.jsx";
@@ -327,6 +342,18 @@ import LinkedInNode from "@nodes/linkedin/ConfigPanel.jsx";
 import VirusTotalNode from "@nodes/virustotal/ConfigPanel.jsx";
 import ResendNode from "@nodes/resend/ConfigPanel.jsx";
 import OpenAIAssistantNode from "@nodes/openai_assistant/ConfigPanel.jsx";
+import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
+import SshTriggerNode from "@triggers/ssh/ConfigPanel.jsx";
+import DockerTriggerNode from "@triggers/docker/ConfigPanel.jsx";
+import JiraTriggerNode from "@triggers/jira/ConfigPanel.jsx";
+import TrelloTriggerNode from "@triggers/trello/ConfigPanel.jsx";
+import GoogleSheetsTriggerNode from "@triggers/google_sheets/ConfigPanel.jsx";
+import OutlookTriggerNode from "@triggers/outlook/ConfigPanel.jsx";
+import TeamsTriggerNode from "@triggers/teams/ConfigPanel.jsx";
+import GitLabTriggerNode from "@triggers/gitlab/ConfigPanel.jsx";
+import HackerNewsTriggerNode from "@triggers/hackernews/ConfigPanel.jsx";
+import PipedriveTriggerNode from "@triggers/pipedrive/ConfigPanel.jsx";
+import AsanaTriggerNode from "@triggers/asana/ConfigPanel.jsx";
 import makeCodingAgentNode from "@nodes/coding_agent/ConfigPanel.jsx";
 import GenericActionNode from "@nodes/generic_action/ConfigPanel.jsx";
 import AgentIntegrationNode from "@nodes/agent_integration/ConfigPanel.jsx";
@@ -528,6 +555,15 @@ export const NodeRegistry = {
     ConfigPanel: ScheduleTriggerNode,
     category: "trigger",
   },
+  chat_trigger: {
+    label: "Chat Trigger",
+    icon: MessageSquarePlus,
+    colorClass: "text-pink-400",
+    accentColor: "236,72,153",
+    logoUrl: imgChatTrigger,
+    ConfigPanel: ChatTriggerNode,
+    category: "trigger",
+  },
   form_trigger: {
     label: "Form Trigger",
     icon: FileText,
@@ -609,6 +645,15 @@ export const NodeRegistry = {
     ConfigPanel: NotionTriggerNode,
     category: "trigger",
   },
+  hubspot_trigger: {
+    label: "HubSpot Trigger",
+    icon: Users,
+    colorClass: "text-[#FF7A59]",
+    accentColor: "255,122,89",
+    logoUrl: imgHubSpot,
+    ConfigPanel: HubSpotTriggerNode,
+    category: "trigger",
+  },
   shopify_trigger: {
     label: "Shopify Trigger",
     icon: ShoppingBag,
@@ -618,9 +663,59 @@ export const NodeRegistry = {
     ConfigPanel: ShopifyTriggerNode,
     category: "trigger",
   },
+  linear_trigger: {
+    label: "Linear Trigger",
+    icon: Circle,
+    colorClass: "text-[#5E6AD2]",
+    accentColor: "94,106,210",
+    logoUrl: imgLinear,
+    ConfigPanel: LinearTriggerNode,
+    category: "trigger",
+  },
+  typeform_trigger: {
+    label: "Typeform Trigger",
+    icon: FileText,
+    colorClass: "text-zinc-300",
+    accentColor: "212,212,216",
+    logoUrl: imgTypeform,
+    ConfigPanel: TypeformTriggerNode,
+    category: "trigger",
+  },
+  whatsapp_trigger: {
+    label: "WhatsApp Trigger",
+    icon: Brain,
+    colorClass: "text-[#25D366]",
+    accentColor: "37,211,102",
+    logoUrl: imgWhatsApp,
+    ConfigPanel: WhatsAppTriggerNode,
+    category: "trigger",
+  },
 
-  // ── Additional trigger node registry entries ──────────────────────────────────
+  // ── Additional trigger node registry entries (for canvas rendering) ──────────
   error_trigger:          { label: "Error Trigger",          icon: AlertTriangle, colorClass: "text-red-400",       accentColor: "239,68,68",    logoUrl: imgErrorTrigger,       category: "trigger", ConfigPanel: ErrorTriggerNode },
+  asana_trigger:          { label: "Asana Trigger",          icon: CheckSquare,   colorClass: "text-[#F06A6A]",     accentColor: "240,106,106",  logoUrl: imgAsana,              category: "trigger", ConfigPanel: AsanaTriggerNode },
+  db_trigger:             { label: "Database Trigger",       icon: Database,      colorClass: "text-emerald-400",   accentColor: "52,211,153",   logoUrl: imgDbTrigger,          category: "trigger", ConfigPanel: GenericActionNode },
+  dns_trigger:            { label: "DNS Trigger",            icon: Globe,         colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgDnsTrigger,         category: "trigger", ConfigPanel: GenericActionNode },
+  docker_trigger:         { label: "Docker Trigger",         icon: Box,           colorClass: "text-blue-500",      accentColor: "59,130,246",   logoUrl: imgDocker,             category: "trigger", ConfigPanel: DockerTriggerNode },
+  github_issue_trigger:   { label: "GitHub Issue Trigger",   icon: Circle,        colorClass: "text-zinc-200",      accentColor: "244,244,245",  logoUrl: imgGitHubIssueTrigger, category: "trigger", ConfigPanel: GitHubIssueTriggerNode },
+  gitlab_trigger:         { label: "GitLab Trigger",         icon: GitBranch,     colorClass: "text-[#FC6D26]",     accentColor: "252,109,38",   logoUrl: imgGitLab,             category: "trigger", ConfigPanel: GitLabTriggerNode },
+  google_calendar_trigger:{ label: "Google Calendar Trigger",icon: Calendar,      colorClass: "text-[#4285F4]",     accentColor: "66,133,244",   logoUrl: imgGoogleCalendar,     category: "trigger", ConfigPanel: GenericActionNode },
+  google_sheets_trigger:  { label: "Google Sheets Trigger",  icon: FileText,      colorClass: "text-[#34A853]",     accentColor: "52,168,83",    logoUrl: imgGoogleSheets,       category: "trigger", ConfigPanel: GoogleSheetsTriggerNode },
+  hackernews_trigger:     { label: "HackerNews Trigger",     icon: TrendingUp,    colorClass: "text-orange-500",    accentColor: "249,115,22",   logoUrl: imgHackerNewsTrigger,  category: "trigger", ConfigPanel: HackerNewsTriggerNode },
+  http_monitor_trigger:   { label: "HTTP Monitor Trigger",   icon: Globe,         colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgHttpMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
+  imap_trigger:           { label: "Email IMAP Trigger",     icon: Mail,          colorClass: "text-cyan-400",      accentColor: "34,211,238",   logoUrl: imgImap,               category: "trigger", ConfigPanel: GenericActionNode },
+  jira_trigger:           { label: "Jira Trigger",           icon: Ticket,        colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgJira,               category: "trigger", ConfigPanel: JiraTriggerNode },
+  outlook_trigger:        { label: "Outlook Trigger",        icon: Mail,          colorClass: "text-[#0078D4]",     accentColor: "0,120,212",    logoUrl: imgOutlook,            category: "trigger", ConfigPanel: OutlookTriggerNode },
+  pipedrive_trigger:      { label: "Pipedrive Trigger",      icon: TrendingUp,    colorClass: "text-[#272D3B]",     accentColor: "39,45,59",     logoUrl: imgPipedrive,          category: "trigger", ConfigPanel: PipedriveTriggerNode },
+  port_monitor_trigger:   { label: "Port Monitor Trigger",   icon: Server,        colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgPortMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
+  price_alert_trigger:    { label: "Price Alert Trigger",    icon: TrendingUp,    colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgPriceAlertTrigger,  category: "trigger", ConfigPanel: GenericActionNode },
+  reddit_trigger:         { label: "Reddit Trigger",         icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",     logoUrl: imgReddit,             category: "trigger", ConfigPanel: GenericActionNode },
+  rss_trigger:            { label: "RSS Trigger",            icon: Rss,           colorClass: "text-orange-400",    accentColor: "251,146,60",   logoUrl: imgRss,                category: "trigger", ConfigPanel: GenericActionNode },
+  ssh_trigger:            { label: "SSH Trigger",            icon: Server,        colorClass: "text-zinc-300",      accentColor: "212,212,216",  logoUrl: imgSsh,                category: "trigger", ConfigPanel: SshTriggerNode },
+  ssl_trigger:            { label: "SSL/TLS Trigger",        icon: Shield,        colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgLetsEncrypt,        category: "trigger", ConfigPanel: GenericActionNode },
+  teams_trigger:          { label: "Microsoft Teams Trigger",icon: Users,         colorClass: "text-[#5059C9]",     accentColor: "80,89,201",    logoUrl: imgTeams,              category: "trigger", ConfigPanel: TeamsTriggerNode },
+  trello_trigger:         { label: "Trello Trigger",         icon: LayoutGrid,    colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgTrello,             category: "trigger", ConfigPanel: TrelloTriggerNode },
+  youtube_trigger:        { label: "YouTube Trigger",        icon: Youtube,       colorClass: "text-red-400",       accentColor: "248,113,113",  logoUrl: imgYouTube,            category: "trigger", ConfigPanel: GenericActionNode },
 
   // AI Models
   openai: {
@@ -2572,7 +2667,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "161,161,170",
     logoUrl: imgSsh,
-    ConfigPanel: GenericActionNode,
+    ConfigPanel: SshTriggerNode,
     category: "devtools",
     description: "Run a command on a remote server via SSH and capture output",
   },
