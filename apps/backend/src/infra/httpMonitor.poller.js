@@ -34,7 +34,7 @@ async function checkUrl(url, expectedKeyword, timeoutMs = 10000) {
   }
 }
 
-async function pollHttpMonitor(automationId, cfg) {
+export async function pollHttpMonitor(automationId, cfg) {
   const lockKey = `bb:httpmon:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;

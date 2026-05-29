@@ -47,7 +47,7 @@ async function fetchDockerEvents(cfg) {
   return events;
 }
 
-async function pollDocker(automationId, cfg) {
+export async function pollDocker(automationId, cfg) {
   const lockKey = `bb:docker:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

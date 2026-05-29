@@ -5,33 +5,7 @@ import { startCursorWorker } from "../modules/workers/cursor.worker.js";
 import { startWebhookWorker } from "../modules/workers/webhook.worker.js";
 import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
-import { startRssPoller } from "../infra/rss.poller.js";
-import { startImapPoller } from "../infra/imap.poller.js";
-import { startDbPoller } from "../infra/db.poller.js";
-import { startGmailPoller } from "../infra/gmail.poller.js";
-import { startAirtablePoller } from "../infra/airtable.poller.js";
-import { startNotionPoller } from "../infra/notion.poller.js";
-import { startHubSpotPoller } from "../infra/hubspot.poller.js";
-import { startYouTubePoller } from "../infra/youtube.poller.js";
-import { startPriceAlertPoller } from "../infra/priceAlert.poller.js";
-import { startRedditPoller } from "../infra/reddit.poller.js";
-import { startGoogleCalendarPoller } from "../infra/googleCalendar.poller.js";
-import { startGitHubIssuePoller } from "../infra/githubIssue.poller.js";
-import { startSshPoller } from "../infra/ssh.poller.js";
-import { startDockerPoller } from "../infra/docker.poller.js";
-import { startJiraPoller } from "../infra/jira.poller.js";
-import { startTrelloPoller } from "../infra/trello.poller.js";
-import { startGoogleSheetsPoller } from "../infra/googleSheets.poller.js";
-import { startOutlookPoller } from "../infra/outlookEmail.poller.js";
-import { startTeamsPoller } from "../infra/teamsMessage.poller.js";
-import { startHttpMonitor } from "../infra/httpMonitor.poller.js";
-import { startGitLabPoller } from "../infra/gitlab.poller.js";
-import { startSslPoller } from "../infra/sslCert.poller.js";
-import { startDnsMonitor } from "../infra/dnsMonitor.poller.js";
-import { startPortMonitor } from "../infra/portMonitor.poller.js";
-import { startHackerNewsPoller } from "../infra/hackerNews.poller.js";
-import { startPipedrivePoller } from "../infra/pipedrive.poller.js";
-import { startAsanaPoller } from "../infra/asana.poller.js";
+import { startPollerHub } from "../infra/poller.hub.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -56,42 +30,8 @@ export async function startServer() {
   // 4. Start cron scheduler (BullMQ repeatable jobs)
   await startCronScheduler();
 
-  // 4a. Start RSS feed poller
-  await startRssPoller();
-
-  // 4b. Start IMAP email poller
-  await startImapPoller();
-
-  // 4c. Start database row poller
-  await startDbPoller();
-
-  // 4d. Start integration pollers (Gmail, Airtable, Notion, HubSpot)
-  await startGmailPoller();
-  await startAirtablePoller();
-  await startNotionPoller();
-  await startHubSpotPoller();
-
-  // 4e. Start new pollers
-  await startYouTubePoller();
-  await startPriceAlertPoller();
-  await startRedditPoller();
-  await startGoogleCalendarPoller();
-  await startGitHubIssuePoller();
-  await startSshPoller();
-  await startDockerPoller();
-  await startJiraPoller();
-  await startTrelloPoller();
-  await startGoogleSheetsPoller();
-  await startOutlookPoller();
-  await startTeamsPoller();
-  await startHttpMonitor();
-  await startGitLabPoller();
-  await startSslPoller();
-  await startDnsMonitor();
-  await startPortMonitor();
-  await startHackerNewsPoller();
-  await startPipedrivePoller();
-  await startAsanaPoller();
+  // 4a–4e. Start unified poller hub (replaces 27 individual poller instances)
+  await startPollerHub();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

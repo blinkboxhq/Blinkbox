@@ -39,7 +39,7 @@ async function notionPost(apiKey, endpoint, body) {
   return res.json();
 }
 
-async function pollNotion(
+export async function pollNotion(
   automationId, apiKey, databaseId,
   filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId,
 ) {

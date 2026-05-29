@@ -21,7 +21,7 @@ async function fetchBoardActions(boardId, apiKey, token) {
   return await res.json();
 }
 
-async function pollTrello(automationId, cfg) {
+export async function pollTrello(automationId, cfg) {
   const lockKey = `bb:trello:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

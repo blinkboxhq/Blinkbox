@@ -29,7 +29,7 @@ async function resolve(domain, type) {
   } catch { return ""; }
 }
 
-async function pollDns(automationId, cfg) {
+export async function pollDns(automationId, cfg) {
   const lockKey = `bb:dns:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;

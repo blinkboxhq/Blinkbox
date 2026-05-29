@@ -35,7 +35,7 @@ async function airtableGet(apiKey, baseId, tableId, params = {}) {
   return res.json();
 }
 
-async function pollAirtable(
+export async function pollAirtable(
   automationId, apiKey, baseId, tableId,
   viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId,
 ) {

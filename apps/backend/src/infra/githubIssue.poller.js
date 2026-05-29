@@ -57,7 +57,7 @@ async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
     }));
 }
 
-async function pollRepo(automationId, credentialId, workspaceId, owner, repo, type, labelFilter) {
+export async function pollRepo(automationId, credentialId, workspaceId, owner, repo, type, labelFilter) {
   const lockKey = `bb:ghissue:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

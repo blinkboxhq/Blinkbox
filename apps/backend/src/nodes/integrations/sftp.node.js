@@ -5,7 +5,8 @@
  */
 export default {
   async run(config, input, context = {}) {
-    const operation = config.operation || "listFiles";
+    const OP_ALIAS = { upload: "uploadFile", download: "downloadFile", list: "listFiles", delete: "deleteFile", mkdir: "makeDirectory" };
+    const operation = OP_ALIAS[config.operation] || config.operation || "listFiles";
     const host = config.host || input.host || "";
     if (!host) return { success: false, error: "SFTP: 'host' is required.", skipped: true };
 

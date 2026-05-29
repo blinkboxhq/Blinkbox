@@ -27,7 +27,7 @@ async function fetchEvents(host = "gitlab.com", projectId, token, eventType) {
   return await res.json();
 }
 
-async function pollGitLab(automationId, cfg) {
+export async function pollGitLab(automationId, cfg) {
   const lockKey = `bb:gitlab:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

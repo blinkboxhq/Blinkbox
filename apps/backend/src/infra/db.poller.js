@@ -81,7 +81,7 @@ async function queryRows(dbType, connectionString, tableName, timestampColumn, w
 
 // ── Poll logic ────────────────────────────────────────────────────────────────
 
-async function pollTable(automationId, cfg, resolvedConnectionString) {
+export async function pollTable(automationId, cfg, resolvedConnectionString) {
   const {
     dbType = "postgres",
     tableName,
@@ -107,7 +107,7 @@ async function pollTable(automationId, cfg, resolvedConnectionString) {
   }
 }
 
-async function pollTableInner(automationId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll) {
+export async function pollTableInner(automationId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll) {
   const watermarkKey = `bb:dbpoll:watermark:${automationId}`;
   const watermarkRaw = await redis.get(watermarkKey);
   // Default: 1 minute ago on first run to avoid mass-triggering historical data

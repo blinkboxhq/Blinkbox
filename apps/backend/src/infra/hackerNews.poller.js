@@ -24,7 +24,7 @@ async function fetchStories(query, storyType = "story", minPoints = 0) {
   return (data.hits || []).filter(h => !minPoints || (h.points || 0) >= minPoints);
 }
 
-async function pollHackerNews(automationId, cfg) {
+export async function pollHackerNews(automationId, cfg) {
   const lockKey = `bb:hn:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

@@ -33,7 +33,7 @@ async function fetchPrice(coinId, currency) {
   };
 }
 
-async function pollPrice(automationId, cfg) {
+export async function pollPrice(automationId, cfg) {
   const lockKey = `bb:price:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

@@ -27,7 +27,7 @@ async function fetchMessages(accessToken, teamId, channelId) {
   return data.value || [];
 }
 
-async function pollTeams(automationId, cfg) {
+export async function pollTeams(automationId, cfg) {
   const lockKey = `bb:teams:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

@@ -7,8 +7,9 @@
  */
 
 import axios from "axios";
+import { OLLAMA_HOST, LM_STUDIO_BASE_URL } from "../../config/env.js";
 
-const SERVER_OLLAMA_BASE = (process.env.OLLAMA_HOST || "http://127.0.0.1:11434").replace(/\/$/, "");
+const SERVER_OLLAMA_BASE = OLLAMA_HOST.replace(/\/$/, "");
 
 async function pingOllama(baseUrl) {
   const base = baseUrl
@@ -74,6 +75,6 @@ export const agentOllamaNode = {
 
 export const agentLmStudioNode = {
   async run(config) {
-    return pingOpenAICompat(config.baseUrl || "http://127.0.0.1:1234", "OpenAI Compatible");
+    return pingOpenAICompat(config.baseUrl || LM_STUDIO_BASE_URL, "OpenAI Compatible");
   },
 };

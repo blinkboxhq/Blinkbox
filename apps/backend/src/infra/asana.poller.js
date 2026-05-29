@@ -22,7 +22,7 @@ async function fetchTasks(token, projectId) {
   return data.data || [];
 }
 
-async function pollAsana(automationId, cfg) {
+export async function pollAsana(automationId, cfg) {
   const lockKey = `bb:asana:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

@@ -43,7 +43,7 @@ async function fetchVideos(channelId, apiKey, maxResults = 5) {
   }));
 }
 
-async function pollChannel(automationId, credentialId, workspaceId, channelId, maxResults) {
+export async function pollChannel(automationId, credentialId, workspaceId, channelId, maxResults) {
   const lockKey = `bb:yt:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

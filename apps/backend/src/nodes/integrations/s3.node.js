@@ -33,7 +33,8 @@ function sign(method, url, headers, body, accessKey, secretKey, region, service)
 
 export default {
   async run(config, input, context = {}) {
-    const operation = config.operation || "listObjects";
+    const OP_ALIAS = { upload: "putObject", download: "getObject", delete: "deleteObject", list: "listObjects", presign: "generatePresignedUrl" };
+    const operation = OP_ALIAS[config.operation] || config.operation || "listObjects";
     const bucket = config.bucket || input.bucket || "";
     const region = config.region || "us-east-1";
 
@@ -46,7 +47,8 @@ export default {
     if (!accessKey || !secretKey) return { success: false, error: "S3: AWS credentials required (accessKeyId + secretAccessKey).", skipped: true };
     if (!bucket) return { success: false, error: "S3: 'bucket' is required.", skipped: true };
 
-    const base = `https://${bucket}.s3.${region}.amazonaws.com`;
+    const customEndpoint = config.endpoint ? config.endpoint.replace(/\/$/, "") : null;
+    const base = customEndpoint ? `${customEndpoint}/${bucket}` : `https://${bucket}.s3.${region}.amazonaws.com`;
 
     switch (operation) {
       case "listObjects": {
@@ -85,10 +87,24 @@ export default {
       }
       case "generatePresignedUrl": {
         const key = config.key || input.key || "";
-        const expires = config.expiresIn || 3600;
+        const expires = config.presignExpiry || config.expiresIn || 3600;
         if (!key) return { success: false, error: "S3 generatePresignedUrl: 'key' is required.", skipped: true };
-        const url = `https://${bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(key)}?X-Amz-Expires=${expires}`;
+        const presignBase = customEndpoint ? `${customEndpoint}/${bucket}` : `https://${bucket}.s3.${region}.amazonaws.com`;
+        const url = `${presignBase}/${encodeURIComponent(key)}?X-Amz-Expires=${expires}`;
         return { url, key, bucket, expiresIn: expires };
+      }
+      case "exists": {
+        const key = config.key || input.key || "";
+        if (!key) return { success: false, error: "S3 exists: 'key' is required.", skipped: true };
+        const url = `${base}/${encodeURIComponent(key)}`;
+        const headers = sign("HEAD", url, {}, "", accessKey, secretKey, region, "s3");
+        try {
+          await axios.head(url, { headers, timeout: 10000 });
+          return { exists: true, key, bucket };
+        } catch (e) {
+          if (e.response?.status === 404) return { exists: false, key, bucket };
+          throw e;
+        }
       }
       default:
         return { success: false, error: `S3: Unknown operation "${operation}".`, skipped: true };

@@ -45,7 +45,7 @@ async function fetchPosts(subreddit, sort = "new") {
   });
 }
 
-async function pollSubreddit(automationId, cfg) {
+export async function pollSubreddit(automationId, cfg) {
   const lockKey = `bb:reddit:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

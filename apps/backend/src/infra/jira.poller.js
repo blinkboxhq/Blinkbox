@@ -30,7 +30,7 @@ async function fetchIssues(domain, email, token, jql) {
   return data.issues || [];
 }
 
-async function pollJira(automationId, cfg) {
+export async function pollJira(automationId, cfg) {
   const lockKey = `bb:jira:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

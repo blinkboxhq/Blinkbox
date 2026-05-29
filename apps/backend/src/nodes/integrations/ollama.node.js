@@ -1,11 +1,12 @@
 import axios from "axios";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
+import { OLLAMA_HOST } from "../../config/env.js";
 
 export default {
   async run(config) {
     const operation = config.operation || "generate";
     const model     = config.model     || "llama3.2";
-    const baseUrl   = (config.baseUrl  || "http://127.0.0.1:11434").replace(/\/$/, "");
+    const baseUrl   = (config.baseUrl  || OLLAMA_HOST).replace(/\/$/, "");
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 

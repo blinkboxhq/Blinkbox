@@ -31,7 +31,7 @@ const IMAP_QUEUE_NAME = "bb-imap-poller";
 let imapQueue = null;
 let imapWorker = null;
 
-async function pollMailbox(automationId, cfg, password) {
+export async function pollMailbox(automationId, cfg, password) {
   // Dynamic import — imapflow is optional dep, only loaded if IMAP trigger is used
   let ImapFlow;
   try {

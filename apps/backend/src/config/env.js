@@ -159,6 +159,10 @@ export const TIKTOK_ACCESS_TOKEN    = process.env.TIKTOK_ACCESS_TOKEN    || null
 export const TWITCH_CLIENT_ID       = process.env.TWITCH_CLIENT_ID       || null;
 export const TWITCH_ACCESS_TOKEN    = process.env.TWITCH_ACCESS_TOKEN    || null;
 
+// ── Local / Self-hosted AI ────────────────────────────────────────────────────
+export const OLLAMA_HOST        = process.env.OLLAMA_HOST        || "http://127.0.0.1:11434";
+export const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL || "http://127.0.0.1:1234";
+
 // ── Internal / Infrastructure ─────────────────────────────────────────────────
 export const CORS_ORIGINS       = process.env.CORS_ORIGINS       || null;
 export const BRIAN_WEBHOOK_URL  = process.env.BRIAN_WEBHOOK_URL  || null;

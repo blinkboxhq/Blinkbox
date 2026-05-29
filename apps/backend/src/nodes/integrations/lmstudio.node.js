@@ -1,11 +1,12 @@
 import axios from "axios";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
+import { LM_STUDIO_BASE_URL } from "../../config/env.js";
 
 export default {
   async run(config) {
     const operation = config.operation || "generate";
     const model     = config.model     || "local-model";
-    const baseUrl   = (config.baseUrl  || "http://127.0.0.1:1234").replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
+    const baseUrl   = (config.baseUrl  || LM_STUDIO_BASE_URL).replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 

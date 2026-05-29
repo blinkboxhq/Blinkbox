@@ -23,7 +23,7 @@ async function fetchItems(apiToken, watchType) {
   return data.data || [];
 }
 
-async function pollPipedrive(automationId, cfg) {
+export async function pollPipedrive(automationId, cfg) {
   const lockKey = `bb:pipedrive:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

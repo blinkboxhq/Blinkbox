@@ -27,7 +27,7 @@ function checkPort(host, port, timeoutMs = 5000) {
   });
 }
 
-async function pollPort(automationId, cfg) {
+export async function pollPort(automationId, cfg) {
   const lockKey = `bb:port:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;

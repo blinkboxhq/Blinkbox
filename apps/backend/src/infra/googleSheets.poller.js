@@ -26,7 +26,7 @@ async function fetchRows(spreadsheetId, range, accessToken) {
   return data.values || [];
 }
 
-async function pollGoogleSheets(automationId, cfg) {
+export async function pollGoogleSheets(automationId, cfg) {
   const lockKey = `bb:gsheets:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

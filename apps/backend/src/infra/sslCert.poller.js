@@ -31,7 +31,7 @@ function checkCert(host, port = 443) {
   });
 }
 
-async function pollSslCert(automationId, cfg) {
+export async function pollSslCert(automationId, cfg) {
   const lockKey = `bb:ssl:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

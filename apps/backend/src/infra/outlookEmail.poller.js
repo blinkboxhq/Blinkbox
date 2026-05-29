@@ -28,7 +28,7 @@ async function fetchMessages(accessToken, folder = "inbox", filter) {
   return data.value || [];
 }
 
-async function pollOutlook(automationId, cfg) {
+export async function pollOutlook(automationId, cfg) {
   const lockKey = `bb:outlook:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

@@ -499,15 +499,28 @@ export const nodeRegistry = {
   // ── Network / infra nodes ──────────────────────────────────────────────────
   ip_lookup:           networkNodes.ip_lookup,
   ip_whitelist:        networkNodes.ip_whitelist,
+  dns_lookup:          networkNodes.dns_lookup,
+  ssl_check:           networkNodes.ssl,
+  port_monitor:        networkNodes.port_monitor,
+  http_monitor:        networkNodes.http_monitor,
 
   // ── Public API nodes ───────────────────────────────────────────────────────
-  clinical_trials:     publicApiNodes.clinical_trials,
-  drug_lookup:         publicApiNodes.drug_lookup,
-  hackernews:          publicApiNodes.hackernews,
-  producthunt:         publicApiNodes.producthunt,
-  stock_price:         publicApiNodes.stock_price,
-  currency_exchange:   publicApiNodes.currency_exchange,
+  clinical_trials:      publicApiNodes.clinical_trials,
+  drug_lookup:          publicApiNodes.drug_lookup,
+  hackernews:           publicApiNodes.hackernews,
+  hacker_news:          publicApiNodes.hackernews,
+  producthunt:          publicApiNodes.producthunt,
+  product_hunt:         publicApiNodes.producthunt,
+  stock_price:          publicApiNodes.stock_price,
+  currency_exchange:    publicApiNodes.currency_exchange,
   twitch_stream_status: publicApiNodes.twitch_stream_status,
+  crypto_price:         publicApiNodes.crypto_price,
+  arxiv_search:         publicApiNodes.arxiv_search,
+  pubmed_search:        publicApiNodes.pubmed_search,
+  wikipedia_lookup:     publicApiNodes.wikipedia_lookup,
+  npm_package_info:     publicApiNodes.npm_package_info,
+  news_search:          publicApiNodes.news_search,
+  steam_game_lookup:    publicApiNodes.steam_game_lookup,
 
   // ── AI content nodes ───────────────────────────────────────────────────────
   chat:                aiContentNodes.chat,
@@ -567,6 +580,7 @@ export const nodeRegistry = {
   set_fields: dataMapper,
   transform: dataMapper,
   filter: dataMapper,
+  tool_base64: agentToolNodes.tool_base,
 
   // Agent Tool Nodes — spread all tool_* exports
   ...Object.fromEntries(

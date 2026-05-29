@@ -76,6 +76,8 @@ import {
   Rss,
   Bell,
   BellOff,
+  Cloud,
+  Tv,
   UploadCloud,
   DownloadCloud,
   FolderOpen,
@@ -183,7 +185,6 @@ import imgReddit from "@nodes/reddit/logo.svg";
 import imgGoogleCalendar from "@nodes/google_calendar/logo.svg";
 import imgRss from "@nodes/rss_feed/logo.svg";
 import imgPostgres from "@nodes/postgres/logo.svg";
-import imgBitcoin from "../../assets/bitcoin.svg";
 import imgSsh from "@triggers/ssh/logo.svg";
 import imgDocker from "@triggers/docker/logo.svg";
 import imgJira from "@nodes/jira/logo.svg";
@@ -220,23 +221,35 @@ import imgDatadog from "@nodes/datadog/logo.svg";
 import imgElevenLabs from "@nodes/elevenlabs/logo.svg";
 import imgZoom from "@nodes/zoom/logo.svg";
 import imgResend from "@nodes/resend/logo.svg";
-import imgCron from "../../assets/cron.svg";
 import imgGoogle from "../../assets/google-search.svg";
 import imgBrave from "../../assets/brave-search.svg";
-import imgElastic from "../../assets/elasticsearch.svg";
-import imgGCP from "../../assets/googlecloud.svg";
-import imgKubernetes from "../../assets/kubernetes.svg";
-import imgTerraform from "../../assets/terraform.svg";
-import imgAnsible from "../../assets/ansible.svg";
 import imgPython from "../../assets/python.svg";
 import imgJS from "../../assets/javascript.svg";
 import imgArxiv from "../../assets/arxiv.svg";
 import imgFirebase from "@nodes/firebase/logo.svg";
 import imgAWS from "@nodes/s3/logo.svg";
+import imgInstagram from "@nodes/instagram/logo.svg";
+import imgTikTok from "@nodes/tiktok/logo.svg";
+import imgLinkedIn from "@nodes/linkedin/logo.svg";
+import imgVirusTotal from "@nodes/virustotal/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
 import imgWeather from "@nodes/weather/logo.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
+import imgManualTrigger from "@triggers/manual/logo.svg";
+import imgWebhookTrigger from "@triggers/webhook/logo.png";
+import imgCronTrigger from "@triggers/cron/logo.svg";
+import imgChatTrigger from "@triggers/chat/logo.png";
+import imgFormTrigger from "@triggers/form/logo.png";
+import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
+import imgImap from "@triggers/imap/logo.svg";
+import imgDbTrigger from "@triggers/db/logo.svg";
+import imgDnsTrigger from "@triggers/dns/logo.svg";
+import imgGitHubIssueTrigger from "@triggers/github_issue/logo.svg";
+import imgHackerNewsTrigger from "@triggers/hackernews/logo.svg";
+import imgHttpMonitorTrigger from "@triggers/http_monitor/logo.svg";
+import imgPortMonitorTrigger from "@triggers/port_monitor/logo.svg";
+import imgPriceAlertTrigger from "@triggers/price_alert/logo.svg";
 
 // Config Panels — existing
 import TriggerNode from "@triggers/manual/ConfigPanel.jsx";
@@ -323,6 +336,10 @@ import BrowserAgentNode from "@nodes/browser_agent/ConfigPanel.jsx";
 import ElevenLabsNode from "@nodes/elevenlabs/ConfigPanel.jsx";
 import PineconeNode from "@nodes/pinecone/ConfigPanel.jsx";
 import ZoomNode from "@nodes/zoom/ConfigPanel.jsx";
+import InstagramNode from "@nodes/instagram/ConfigPanel.jsx";
+import TikTokNode from "@nodes/tiktok/ConfigPanel.jsx";
+import LinkedInNode from "@nodes/linkedin/ConfigPanel.jsx";
+import VirusTotalNode from "@nodes/virustotal/ConfigPanel.jsx";
 import ResendNode from "@nodes/resend/ConfigPanel.jsx";
 import OpenAIAssistantNode from "@nodes/openai_assistant/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
@@ -379,6 +396,10 @@ import WeatherNode from "@nodes/weather/ConfigPanel.jsx";
 import StockPriceNode from "@nodes/stock_price/ConfigPanel.jsx";
 import CurrencyExchangeNode from "@nodes/currency_exchange/ConfigPanel.jsx";
 import IpLookupNode from "@nodes/ip_lookup/ConfigPanel.jsx";
+import DnsLookupNode from "@nodes/dns_lookup/ConfigPanel.jsx";
+import SslCheckNode from "@nodes/ssl_check/ConfigPanel.jsx";
+import PortMonitorNode from "@nodes/port_monitor/ConfigPanel.jsx";
+import HttpMonitorNode from "@nodes/http_monitor/ConfigPanel.jsx";
 // Data Processing nodes
 import NumberFormatNode from "@nodes/number_format/ConfigPanel.jsx";
 import TextFormatNode from "@nodes/text_format/ConfigPanel.jsx";
@@ -512,6 +533,7 @@ export const NodeRegistry = {
     icon: MousePointerClick,
     colorClass: "text-green-400",
     accentColor: "34,197,94",
+    logoUrl: imgManualTrigger,
     ConfigPanel: TriggerNode,
     category: "trigger",
   },
@@ -520,6 +542,7 @@ export const NodeRegistry = {
     icon: Webhook,
     colorClass: "text-blue-400",
     accentColor: "59,130,246",
+    logoUrl: imgWebhookTrigger,
     ConfigPanel: WebhookTriggerNode,
     category: "trigger",
   },
@@ -528,6 +551,7 @@ export const NodeRegistry = {
     icon: Clock,
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
+    logoUrl: imgCronTrigger,
     ConfigPanel: ScheduleTriggerNode,
     category: "trigger",
   },
@@ -536,6 +560,7 @@ export const NodeRegistry = {
     icon: MessageSquarePlus,
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
+    logoUrl: imgChatTrigger,
     ConfigPanel: ChatTriggerNode,
     category: "trigger",
   },
@@ -544,6 +569,7 @@ export const NodeRegistry = {
     icon: FileText,
     colorClass: "text-violet-400",
     accentColor: "167,139,250",
+    logoUrl: imgFormTrigger,
     ConfigPanel: FormTriggerNode,
     category: "trigger",
   },
@@ -665,6 +691,32 @@ export const NodeRegistry = {
     category: "trigger",
   },
 
+  // ── Additional trigger node registry entries (for canvas rendering) ──────────
+  error_trigger:          { label: "Error Trigger",          icon: AlertTriangle, colorClass: "text-red-400",       accentColor: "239,68,68",    logoUrl: imgErrorTrigger,       category: "trigger", ConfigPanel: ErrorTriggerNode },
+  asana_trigger:          { label: "Asana Trigger",          icon: CheckSquare,   colorClass: "text-[#F06A6A]",     accentColor: "240,106,106",  logoUrl: imgAsana,              category: "trigger", ConfigPanel: AsanaTriggerNode },
+  db_trigger:             { label: "Database Trigger",       icon: Database,      colorClass: "text-emerald-400",   accentColor: "52,211,153",   logoUrl: imgDbTrigger,          category: "trigger", ConfigPanel: GenericActionNode },
+  dns_trigger:            { label: "DNS Trigger",            icon: Globe,         colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgDnsTrigger,         category: "trigger", ConfigPanel: GenericActionNode },
+  docker_trigger:         { label: "Docker Trigger",         icon: Box,           colorClass: "text-blue-500",      accentColor: "59,130,246",   logoUrl: imgDocker,             category: "trigger", ConfigPanel: DockerTriggerNode },
+  github_issue_trigger:   { label: "GitHub Issue Trigger",   icon: Circle,        colorClass: "text-zinc-200",      accentColor: "244,244,245",  logoUrl: imgGitHubIssueTrigger, category: "trigger", ConfigPanel: GitHubIssueTriggerNode },
+  gitlab_trigger:         { label: "GitLab Trigger",         icon: GitBranch,     colorClass: "text-[#FC6D26]",     accentColor: "252,109,38",   logoUrl: imgGitLab,             category: "trigger", ConfigPanel: GitLabTriggerNode },
+  google_calendar_trigger:{ label: "Google Calendar Trigger",icon: Calendar,      colorClass: "text-[#4285F4]",     accentColor: "66,133,244",   logoUrl: imgGoogleCalendar,     category: "trigger", ConfigPanel: GenericActionNode },
+  google_sheets_trigger:  { label: "Google Sheets Trigger",  icon: FileText,      colorClass: "text-[#34A853]",     accentColor: "52,168,83",    logoUrl: imgGoogleSheets,       category: "trigger", ConfigPanel: GoogleSheetsTriggerNode },
+  hackernews_trigger:     { label: "HackerNews Trigger",     icon: TrendingUp,    colorClass: "text-orange-500",    accentColor: "249,115,22",   logoUrl: imgHackerNewsTrigger,  category: "trigger", ConfigPanel: HackerNewsTriggerNode },
+  http_monitor_trigger:   { label: "HTTP Monitor Trigger",   icon: Globe,         colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgHttpMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
+  imap_trigger:           { label: "Email IMAP Trigger",     icon: Mail,          colorClass: "text-cyan-400",      accentColor: "34,211,238",   logoUrl: imgImap,               category: "trigger", ConfigPanel: GenericActionNode },
+  jira_trigger:           { label: "Jira Trigger",           icon: Ticket,        colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgJira,               category: "trigger", ConfigPanel: JiraTriggerNode },
+  outlook_trigger:        { label: "Outlook Trigger",        icon: Mail,          colorClass: "text-[#0078D4]",     accentColor: "0,120,212",    logoUrl: imgOutlook,            category: "trigger", ConfigPanel: OutlookTriggerNode },
+  pipedrive_trigger:      { label: "Pipedrive Trigger",      icon: TrendingUp,    colorClass: "text-[#272D3B]",     accentColor: "39,45,59",     logoUrl: imgPipedrive,          category: "trigger", ConfigPanel: PipedriveTriggerNode },
+  port_monitor_trigger:   { label: "Port Monitor Trigger",   icon: Server,        colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgPortMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
+  price_alert_trigger:    { label: "Price Alert Trigger",    icon: TrendingUp,    colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgPriceAlertTrigger,  category: "trigger", ConfigPanel: GenericActionNode },
+  reddit_trigger:         { label: "Reddit Trigger",         icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",     logoUrl: imgReddit,             category: "trigger", ConfigPanel: GenericActionNode },
+  rss_trigger:            { label: "RSS Trigger",            icon: Rss,           colorClass: "text-orange-400",    accentColor: "251,146,60",   logoUrl: imgRss,                category: "trigger", ConfigPanel: GenericActionNode },
+  ssh_trigger:            { label: "SSH Trigger",            icon: Server,        colorClass: "text-zinc-300",      accentColor: "212,212,216",  logoUrl: imgSsh,                category: "trigger", ConfigPanel: SshTriggerNode },
+  ssl_trigger:            { label: "SSL/TLS Trigger",        icon: Shield,        colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgLetsEncrypt,        category: "trigger", ConfigPanel: GenericActionNode },
+  teams_trigger:          { label: "Microsoft Teams Trigger",icon: Users,         colorClass: "text-[#5059C9]",     accentColor: "80,89,201",    logoUrl: imgTeams,              category: "trigger", ConfigPanel: TeamsTriggerNode },
+  trello_trigger:         { label: "Trello Trigger",         icon: LayoutGrid,    colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgTrello,             category: "trigger", ConfigPanel: TrelloTriggerNode },
+  youtube_trigger:        { label: "YouTube Trigger",        icon: Youtube,       colorClass: "text-red-400",       accentColor: "248,113,113",  logoUrl: imgYouTube,            category: "trigger", ConfigPanel: GenericActionNode },
+
   // AI Models
   openai: {
     label: "OpenAI",
@@ -725,6 +777,7 @@ export const NodeRegistry = {
     icon: Brain,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
+    logoUrl: imgKimi,
     description: "Kimi long-context models — 8K, 32K, 128K & vision",
     ConfigPanel: MoonshotNode,
     category: "ai",
@@ -1895,6 +1948,23 @@ export const NodeRegistry = {
     ConfigPanel: SetFieldsNode,
     category: "transform",
   },
+  date_time:         { label: "Date & Time",        icon: Calendar,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DateTimeNode,         category: "transform", description: "Parse, format and manipulate dates and times" },
+  crypto_utils:      { label: "Crypto / Hash",       icon: Lock,           colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoUtilsNode,      category: "transform", description: "Hash, encrypt and HMAC sign data with SHA, MD5, AES" },
+  qr_code:           { label: "QR Code",             icon: QrCode,         colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: QRCodeNode,           category: "transform", description: "Generate or scan QR codes from text and URLs" },
+  json_validator:    { label: "JSON Validator",      icon: FileText,       colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: JSONValidatorNode,    category: "transform", description: "Validate, format and minify JSON payloads" },
+  image_resize:      { label: "Image Resize",        icon: Image,          colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: ImageResizeNode,      category: "transform", description: "Resize, crop, convert and optimise images" },
+  pdf_generator:     { label: "PDF Generator",       icon: FileText,       colorClass: "text-red-400",    accentColor: "248,113,113", ConfigPanel: PDFGeneratorNode,     category: "transform", description: "Generate PDFs from HTML templates and merge documents" },
+  data_diff:         { label: "Data Diff",           icon: Merge,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DataDiffNode,         category: "transform", description: "Compare two objects or arrays and return the diff" },
+  email_parser:      { label: "Email Parser",        icon: Mail,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: EmailParserNode,      category: "transform", description: "Parse raw email into subject, body, attachments and headers" },
+  number_format:     { label: "Number Format",       icon: Hash,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: NumberFormatNode,     category: "transform", description: "Round, format, clamp and convert numbers" },
+  text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "transform", description: "Trim, truncate, slugify, case-convert and pad strings" },
+  regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "transform", description: "Test, capture and replace with regular expressions" },
+  find_replace:      { label: "Find & Replace",      icon: Replace,        colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: FindReplaceNode,      category: "transform", description: "Find and replace values in strings, arrays or objects" },
+  markdown_renderer: { label: "Markdown Renderer",   icon: FileText,       colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: MarkdownRendererNode, category: "transform", description: "Convert Markdown to HTML and sanitise output" },
+  url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "transform", description: "Parse URLs into protocol, host, path, query and hash" },
+  color_converter:   { label: "Color Converter",     icon: Palette,        colorClass: "text-pink-400",   accentColor: "244,114,182", ConfigPanel: ColorConverterNode,   category: "transform", description: "Convert colors between HEX, RGB, HSL and CSS names" },
+  unit_converter:    { label: "Unit Converter",      icon: ArrowRightLeft, colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: UnitConverterNode,    category: "transform", description: "Convert length, weight, temperature, volume and more" },
+  math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "transform", description: "Evaluate math expressions, formulas and unit conversions" },
 
   // Research
   web_scraper: {
@@ -1998,6 +2068,8 @@ export const NodeRegistry = {
     ConfigPanel: DiscordNode,
     category: "integration",
   },
+  discord_role_assign: { label: "Discord Role Assign", icon: Users, logoUrl: imgDiscord, colorClass: "text-[#5865F2]", accentColor: "88,101,242", ConfigPanel: DiscordRoleAssignNode, category: "social", description: "Assign or remove a role from a Discord guild member" },
+  mastodon:            { label: "Mastodon",             icon: Users, logoUrl: imgMastodon, colorClass: "text-[#563ACC]", accentColor: "86,58,204",  ConfigPanel: MastodonNode,          category: "social", description: "Post statuses and interact with the Mastodon federated network" },
   gmail: {
     label: "Gmail",
     icon: Brain,
@@ -2106,6 +2178,7 @@ export const NodeRegistry = {
     icon: DownloadCloud,
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
+    logoUrl: imgAWS,
     ConfigPanel: S3Node,
     category: "devtools",
     description:
@@ -2302,6 +2375,9 @@ export const NodeRegistry = {
     ConfigPanel: PineconeNode,
     category: "data",
   },
+  vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai", description: "Store and search vector embeddings with semantic similarity" },
+  browser_agent:     { label: "Browser Agent",    icon: Monitor,                          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: BrowserAgentNode,    category: "ai", description: "Autonomous Puppeteer agent that browses and extracts web data" },
+  openai_assistant:  { label: "OpenAI Assistant", icon: Cpu,          logoUrl: imgOpenAI, colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: OpenAIAssistantNode, category: "ai", description: "Create threads and run OpenAI Assistants API with file attachments" },
   resend: {
     label: "Resend",
     icon: Mail,
@@ -2583,6 +2659,7 @@ export const NodeRegistry = {
     category: "design",
     description: "Fetch files, post comments and export assets from Figma",
   },
+  figma_comment: { label: "Figma Comment", icon: MessageSquarePlus, colorClass: "text-[#F24E1E]", accentColor: "242,78,30", logoUrl: imgFigma, ConfigPanel: FigmaCommentNode, category: "design", description: "Post or fetch comments on a Figma file or frame" },
   // Infra
   ssh: {
     label: "SSH Command",
@@ -2615,6 +2692,62 @@ export const NodeRegistry = {
     category: "social_pub",
     description: "Post to subreddits, comment and fetch hot posts",
   },
+  instagram: {
+    label: "Instagram",
+    icon: Camera,
+    colorClass: "text-[#E4405F]",
+    accentColor: "228,64,95",
+    logoUrl: imgInstagram,
+    ConfigPanel: InstagramNode,
+    category: "social_pub",
+    description: "Read posts, user media and publish content via Meta Graph API",
+  },
+  tiktok: {
+    label: "TikTok",
+    icon: Video,
+    colorClass: "text-zinc-200",
+    accentColor: "244,244,245",
+    logoUrl: imgTikTok,
+    ConfigPanel: TikTokNode,
+    category: "social_pub",
+    description: "Read user videos and channel data via TikTok v2 API",
+  },
+  linkedin: {
+    label: "LinkedIn",
+    icon: Briefcase,
+    colorClass: "text-[#0A66C2]",
+    accentColor: "10,102,194",
+    logoUrl: imgLinkedIn,
+    ConfigPanel: LinkedInNode,
+    category: "social_pub",
+    description: "Share posts, get profile and company data",
+  },
+  zoom: {
+    label: "Zoom",
+    icon: Video,
+    colorClass: "text-[#2D8CFF]",
+    accentColor: "45,140,255",
+    logoUrl: imgZoom,
+    ConfigPanel: ZoomNode,
+    category: "integration",
+    description: "Create and manage Zoom meetings",
+  },
+  virustotal: {
+    label: "VirusTotal",
+    icon: Shield,
+    colorClass: "text-[#394EFF]",
+    accentColor: "57,78,255",
+    logoUrl: imgVirusTotal,
+    ConfigPanel: VirusTotalNode,
+    category: "devtools",
+    description: "Scan URLs, file hashes and IPs for threats via VirusTotal API",
+  },
+  ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "devtools", description: "Geolocate any IP — city, country, timezone, ISP" },
+  ip_whitelist: { label: "IP Whitelist", icon: Shield, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: IpWhitelistNode, category: "devtools", description: "Allow or block execution based on IP address or CIDR range" },
+  dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "devtools", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
+  ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "devtools", description: "Inspect TLS certificate expiry and validity for any hostname" },
+  port_monitor: { label: "Port Monitor", icon: Server, colorClass: "text-sky-400", accentColor: "56,189,248", ConfigPanel: PortMonitorNode, category: "devtools", description: "Check if a TCP port is open and measure connection latency" },
+  http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "devtools", description: "Check if an HTTP endpoint is up, track status code and latency" },
   rss: {
     label: "RSS Feed",
     icon: Rss,
@@ -2625,6 +2758,21 @@ export const NodeRegistry = {
     category: "research",
     description: "Read, parse and generate RSS / Atom feeds",
   },
+  weather: { label: "Weather", icon: Cloud, colorClass: "text-sky-400", accentColor: "56,189,248", logoUrl: imgWeather, ConfigPanel: WeatherNode, category: "research", description: "Get current weather and forecasts for any location" },
+  stock_price: { label: "Stock Price", icon: TrendingUp, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: StockPriceNode, category: "research", description: "Fetch real-time and historical stock prices" },
+  currency_exchange: { label: "Currency Exchange", icon: DollarSign, colorClass: "text-yellow-400", accentColor: "250,204,21", ConfigPanel: CurrencyExchangeNode, category: "research", description: "Convert currencies using live exchange rates" },
+  hacker_news: { label: "HackerNews", icon: TrendingUp, colorClass: "text-orange-500", accentColor: "249,115,22", logoUrl: imgHackerNews, ConfigPanel: HackerNewsNode, category: "research", description: "Fetch top stories, comments and user data from HackerNews" },
+  drug_lookup: { label: "Drug Lookup", icon: Search, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DrugLookupNode, category: "research", description: "Look up FDA drug information and interaction data" },
+  clinical_trials: { label: "Clinical Trials", icon: Search, colorClass: "text-teal-400", accentColor: "45,212,191", ConfigPanel: ClinicalTrialsNode, category: "research", description: "Search ClinicalTrials.gov for active and past trials" },
+  twitch_stream_status: { label: "Twitch Status", icon: Tv, colorClass: "text-[#9146FF]", accentColor: "145,70,255", ConfigPanel: TwitchStreamStatusNode, category: "research", description: "Check if a Twitch channel is live and get stream info" },
+  product_hunt: { label: "Product Hunt", icon: TrendingUp, colorClass: "text-[#DA552F]", accentColor: "218,85,47", logoUrl: imgProductHunt, ConfigPanel: ProductHuntNode, category: "research", description: "Fetch trending products and launches from Product Hunt" },
+  arxiv_search: { label: "arXiv Search", icon: BookOpen, colorClass: "text-red-400", accentColor: "248,113,113", logoUrl: imgArxiv, ConfigPanel: GenericActionNode, category: "research", description: "Search arXiv for academic papers and preprints" },
+  pubmed_search: { label: "PubMed Search", icon: BookOpen, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: GenericActionNode, category: "research", description: "Search PubMed for medical and life science literature" },
+  wikipedia_lookup: { label: "Wikipedia", icon: BookOpen, colorClass: "text-zinc-300", accentColor: "212,212,216", ConfigPanel: GenericActionNode, category: "research", description: "Fetch article summaries and content from Wikipedia" },
+  npm_package_info: { label: "npm Package", icon: Package, colorClass: "text-red-400", accentColor: "248,113,113", ConfigPanel: GenericActionNode, category: "research", description: "Look up npm package metadata, downloads and versions" },
+  news_search: { label: "News Search", icon: Newspaper, colorClass: "text-zinc-300", accentColor: "212,212,216", ConfigPanel: GenericActionNode, category: "research", description: "Search news headlines and articles via NewsAPI" },
+  steam_game_lookup: { label: "Steam Game", icon: Gamepad2, colorClass: "text-[#1b2838]", accentColor: "27,40,56", imgFilter: "invert(1)", ConfigPanel: GenericActionNode, category: "gaming", description: "Look up Steam game details, pricing and reviews" },
+  crypto_price:      { label: "Crypto Price",        icon: Bitcoin,        colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoPriceNode,      category: "research", description: "Get live crypto prices, market cap and 24h change via CoinGecko" },
   database: {
     label: "Database",
     icon: Database,
@@ -2650,6 +2798,7 @@ export const NodeRegistry = {
     icon: Mail,
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
+    logoUrl: imgImap,
     ConfigPanel: ImapTriggerNode,
     category: "integration",
     description: "Poll any IMAP inbox for new emails",
@@ -2659,6 +2808,7 @@ export const NodeRegistry = {
     icon: AlertTriangle,
     colorClass: "text-red-400",
     accentColor: "239,68,68",
+    logoUrl: imgErrorTrigger,
     ConfigPanel: ErrorTriggerNode,
     category: "flow",
     description: "Catch and handle errors from other nodes in the workflow",
@@ -2810,4 +2960,7 @@ export const NodeRegistry = {
     category: "flow",
     description: "Throttle workflow to N executions per time window",
   },
+  counter:        { label: "Counter",        icon: Hash,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: CounterNode,       category: "flow", description: "Increment, decrement or reset a counter shared across executions" },
+  random_pick:    { label: "Random Pick",    icon: Shuffle,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: RandomPickNode,    category: "flow", description: "Pick one or more random items from an array" },
+  schedule_check: { label: "Schedule Check", icon: AlarmClock, colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: ScheduleCheckNode, category: "flow", description: "Check if the current time falls within a defined schedule window" },
 };

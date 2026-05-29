@@ -50,7 +50,7 @@ async function hsSearch(apiKey, objectType, filters, properties, limit) {
   return res.json();
 }
 
-async function pollHubSpot(
+export async function pollHubSpot(
   automationId, apiKey, objectType,
   filterProperty, filterValue, limit, triggerOnUpdate, workspaceId,
 ) {

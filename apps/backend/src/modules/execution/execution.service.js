@@ -1,43 +1,25 @@
 /**
- * Execution Service — Starts automation runs via Temporal workflows.
+ * Execution Service — starts automation runs.
  *
- * Replaces the old BullMQ-based flow:
- *   OLD: executeAutomation() → Execution.create() → enqueueCursor() → BullMQ
- *   NEW: startWorkflowExecution() → Temporal Client → executeAutomationWorkflow
+ * Primary path: Temporal (approval signals, long-running workflows, DAG traversal).
+ * Fallback path: BullMQ cursor engine (when Temporal is unavailable or TEMPORAL_ADDRESS unset).
  *
- * The Temporal workflow handles DAG traversal, retries, timeouts, and
- * crash recovery — all previously managed by cursor.executor + resumer.
+ * Both paths are fully production-capable. Temporal is optional infrastructure.
  */
 
 import crypto from "crypto";
-import { getTemporalClient, TASK_QUEUE } from "../../temporal/client.js";
 import { validateAutomation } from "../automation/engine/automation.validator.js";
+import { executeAutomation } from "../automation/automation.executor.js";
 
-/**
- * Start a Temporal workflow for the given automation.
- *
- * @param {object} automation - Mongoose Automation document
- * @param {object|array} payload - Trigger data (webhook body, cron context, etc.)
- * @param {object} options
- * @param {string} options.workspaceId - Owning workspace
- * @param {string} [options.idempotencyKey] - Dedup key (auto-generated if missing)
- * @returns {{ workflowId: string, runId: string }}
- */
-export async function startWorkflowExecution(automation, payload = {}, options = {}) {
-  const {
-    workspaceId = "default",
-    idempotencyKey = crypto.randomUUID(),
-  } = options;
+const USE_TEMPORAL = !!process.env.TEMPORAL_ADDRESS;
 
-  const client = await getTemporalClient();
+async function getTemporalClient() {
+  const { getTemporalClient: _get } = await import("../../temporal/client.js");
+  return _get();
+}
 
-  // Normalize trigger payload (same logic as the old executor)
-  const triggerData = Array.isArray(payload)
-    ? { items: payload.map((item) => (item.json ? item : { json: item })) }
-    : payload;
-
-  // Build the WorkflowDefinition from the Mongoose document
-  const definition = {
+function buildDefinition(automation, workspaceId) {
+  return {
     name: automation.name,
     trigger: automation.trigger,
     active: automation.active,
@@ -50,14 +32,8 @@ export async function startWorkflowExecution(automation, payload = {}, options =
       description: n.description ?? "",
     })),
     edges: automation.edges.map((e) => {
-      // Visual editors store connection state in sourceHandle (e.g. 'success',
-      // 'error', 'true', 'false') or use UI-specific type names like 'default'.
-      // Temporal's DAG routing expects strict "onSuccess" / "onFailure" keywords.
       const isErrorPath =
-        e.sourceHandle === "error" ||
-        e.sourceHandle === "false" ||
-        e.type === "onFailure";
-
+        e.sourceHandle === "error" || e.sourceHandle === "false" || e.type === "onFailure";
       return {
         id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
         source: e.source ?? e.from,
@@ -72,89 +48,19 @@ export async function startWorkflowExecution(automation, payload = {}, options =
     entryNodeId: automation.entryNodeId,
     settings: automation.settings ?? { maxParallel: 10 },
     description: automation.description ?? "",
-  };
-
-  // Validate DAG before scheduling — rejects cycles, orphan edges, unreachable nodes
-  validateAutomation({
-    nodes: definition.nodes,
-    edges: definition.edges,
-    entryNodeId: definition.entryNodeId,
-  });
-
-  // Temporal workflowId doubles as idempotency key — same ID = same execution
-  const workflowId = `automation-${automation._id}-${idempotencyKey}`;
-
-  const handle = await client.workflow.start("executeAutomationWorkflow", {
-    taskQueue: TASK_QUEUE,
-    workflowId,
-    args: [automation._id.toString(), definition, triggerData],
-  });
-
-  return {
-    workflowId: handle.workflowId,
-    runId: handle.firstExecutionRunId,
   };
 }
 
-/**
- * Start a Temporal workflow and AWAIT its completion (synchronous bridge).
- *
- * Used by the webhook controller when ?wait=true — the HTTP connection stays
- * open until the workflow finishes and returns its full output (including any
- * __webhookResponse from a respond_webhook node).
- *
- * @param {object} automation - Mongoose Automation document
- * @param {object|array} payload - Trigger data
- * @param {object} options
- * @param {string} options.workspaceId
- * @param {string} [options.idempotencyKey]
- * @returns {Promise<Record<string, unknown>>} Full workflow output
- */
-export async function startAndAwaitWorkflowExecution(automation, payload = {}, options = {}) {
-  const {
-    workspaceId = "default",
-    idempotencyKey = crypto.randomUUID(),
-  } = options;
-
-  const client = await getTemporalClient();
-
-  const triggerData = Array.isArray(payload)
+function normalizeTriggerData(payload) {
+  return Array.isArray(payload)
     ? { items: payload.map((item) => (item.json ? item : { json: item })) }
     : payload;
+}
 
-  const definition = {
-    name: automation.name,
-    trigger: automation.trigger,
-    active: automation.active,
-    workspaceId,
-    nodes: automation.nodes.map((n) => ({
-      id: n.id,
-      type: n.type,
-      data: n.data ?? n.config ?? {},
-      position: n.position ?? { x: 0, y: 0 },
-      description: n.description ?? "",
-    })),
-    edges: automation.edges.map((e) => {
-      const isErrorPath =
-        e.sourceHandle === "error" ||
-        e.sourceHandle === "false" ||
-        e.type === "onFailure";
-
-      return {
-        id: e.id ?? `${e.source ?? e.from}-${e.target ?? e.to}`,
-        source: e.source ?? e.from,
-        target: e.target ?? e.to,
-        sourceHandle: e.sourceHandle ?? null,
-        targetHandle: e.targetHandle ?? null,
-        condition: e.condition ?? "always",
-        type: isErrorPath ? "onFailure" : "onSuccess",
-        description: e.description ?? "",
-      };
-    }),
-    entryNodeId: automation.entryNodeId,
-    settings: automation.settings ?? { maxParallel: 10 },
-    description: automation.description ?? "",
-  };
+export async function startWorkflowExecution(automation, payload = {}, options = {}) {
+  const { workspaceId = "default", idempotencyKey = crypto.randomUUID() } = options;
+  const triggerData = normalizeTriggerData(payload);
+  const definition = buildDefinition(automation, workspaceId);
 
   validateAutomation({
     nodes: definition.nodes,
@@ -162,14 +68,52 @@ export async function startAndAwaitWorkflowExecution(automation, payload = {}, o
     entryNodeId: definition.entryNodeId,
   });
 
-  const workflowId = `automation-${automation._id}-${idempotencyKey}`;
+  if (USE_TEMPORAL) {
+    try {
+      const client = await getTemporalClient();
+      const workflowId = `automation-${automation._id}-${idempotencyKey}`;
+      const { TASK_QUEUE } = await import("../../temporal/client.js");
+      const handle = await client.workflow.start("executeAutomationWorkflow", {
+        taskQueue: TASK_QUEUE,
+        workflowId,
+        args: [automation._id.toString(), definition, triggerData],
+      });
+      return { workflowId: handle.workflowId, runId: handle.firstExecutionRunId };
+    } catch (err) {
+      console.warn(`[ExecutionService] Temporal unavailable (${err.message}), falling back to BullMQ`);
+    }
+  }
 
-  // execute() starts the workflow AND awaits its completion, returning the result.
-  const result = await client.workflow.execute("executeAutomationWorkflow", {
-    taskQueue: TASK_QUEUE,
-    workflowId,
-    args: [automation._id.toString(), definition, triggerData],
+  const execution = await executeAutomation(automation, triggerData, { workspaceId });
+  return { executionId: execution._id?.toString() };
+}
+
+export async function startAndAwaitWorkflowExecution(automation, payload = {}, options = {}) {
+  const { workspaceId = "default", idempotencyKey = crypto.randomUUID() } = options;
+  const triggerData = normalizeTriggerData(payload);
+  const definition = buildDefinition(automation, workspaceId);
+
+  validateAutomation({
+    nodes: definition.nodes,
+    edges: definition.edges,
+    entryNodeId: definition.entryNodeId,
   });
 
-  return result;
+  if (USE_TEMPORAL) {
+    try {
+      const client = await getTemporalClient();
+      const workflowId = `automation-${automation._id}-${idempotencyKey}`;
+      const { TASK_QUEUE } = await import("../../temporal/client.js");
+      return await client.workflow.execute("executeAutomationWorkflow", {
+        taskQueue: TASK_QUEUE,
+        workflowId,
+        args: [automation._id.toString(), definition, triggerData],
+      });
+    } catch (err) {
+      console.warn(`[ExecutionService] Temporal unavailable (${err.message}), falling back to BullMQ (fire-and-forget)`);
+    }
+  }
+
+  await executeAutomation(automation, triggerData, { workspaceId });
+  return {};
 }

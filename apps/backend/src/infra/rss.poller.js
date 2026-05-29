@@ -101,7 +101,7 @@ async function claimIfUnseen(seenKey, guid, ttl) {
   return added === 1;
 }
 
-async function pollFeed(automationId, feedUrl, onlyNew) {
+export async function pollFeed(automationId, feedUrl, onlyNew) {
   const seenKey = `bb:rss:seen:${automationId}`;
 
   // Per-automation poll lock to prevent concurrent ticks from processing the same feed

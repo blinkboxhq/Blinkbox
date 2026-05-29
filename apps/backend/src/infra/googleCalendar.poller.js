@@ -55,7 +55,7 @@ async function fetchUpcomingEvents(token, calendarId, minutesBefore, filterQuery
   }));
 }
 
-async function pollCalendar(automationId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery) {
+export async function pollCalendar(automationId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery) {
   const lockKey = `bb:gcal:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;

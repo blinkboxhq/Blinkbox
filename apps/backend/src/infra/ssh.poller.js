@@ -53,7 +53,7 @@ function runCommand(cfg) {
   });
 }
 
-async function pollSsh(automationId, cfg) {
+export async function pollSsh(automationId, cfg) {
   const lockKey = `bb:ssh:lock:${automationId}`;
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;

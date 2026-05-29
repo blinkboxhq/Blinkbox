@@ -85,7 +85,7 @@ function parseMessage(msg) {
   };
 }
 
-async function pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId) {
+export async function pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId) {
   const lockKey = `bb:gmail:lock:${automationId}`;
   const seenKey = `bb:gmail:seen:${automationId}`;
 
