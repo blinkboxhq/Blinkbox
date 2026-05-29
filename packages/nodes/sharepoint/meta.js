@@ -1,1 +1,27 @@
-export default { backendType: "sharepoint" };
+export default {
+  backendType: "sharepoint",
+  label: "SharePoint",
+  description: "Read and write SharePoint lists, items, and files",
+  fields: [
+    { name: "credentialId", label: "Microsoft 365 (OAuth)", type: "credential", placeholder: "Select SharePoint credential...", accentColor: "#0078D4" },
+    { name: "operation", label: "Operation", type: "options", cols: 2, default: "listItems", options: [
+      { value: "getListItem",    label: "Get List Item" },
+      { value: "createListItem", label: "Create List Item" },
+      { value: "updateListItem", label: "Update List Item" },
+      { value: "deleteListItem", label: "Delete List Item" },
+      { value: "listItems",      label: "List Items" },
+      { value: "uploadFile",     label: "Upload File" },
+      { value: "listFiles",      label: "List Library Files" },
+    ]},
+    { name: "siteUrl", label: "Site URL", type: "string", smart: true, placeholder: "https://company.sharepoint.com/sites/MySite" },
+    { name: "listName", label: "List Name", type: "string", smart: true, placeholder: "Tasks", show: { operation: ["getListItem","createListItem","updateListItem","deleteListItem","listItems"] } },
+    { name: "itemId", label: "Item ID", type: "string", smart: true, placeholder: "{{ $json.id }}", show: { operation: ["getListItem","updateListItem","deleteListItem"] } },
+    { name: "fields", label: "Fields (JSON object)", type: "string", smart: true, multiline: true, mono: true, placeholder: '{"Title":"New Task","Status":"Active"}', show: { operation: ["createListItem","updateListItem"] } },
+    { name: "filter", label: "Filter (OData, optional)", type: "string", smart: true, placeholder: "Status eq 'Active'", show: { operation: "listItems" } },
+    { name: "limit", label: "Limit", type: "number", default: 100, show: { operation: "listItems" } },
+    { name: "libraryName", label: "Library Name", type: "string", smart: true, placeholder: "Documents", show: { operation: ["uploadFile","listFiles"] } },
+    { name: "fileName", label: "File Name", type: "string", smart: true, placeholder: "{{ $json.filename }}", show: { operation: "uploadFile" } },
+    { name: "content", label: "File Content (base64)", type: "string", smart: true, placeholder: "{{ $json.fileBase64 }}", show: { operation: "uploadFile" } },
+  ],
+  outputs: ["id", "fields", "webUrl", "createdDateTime", "items"],
+};

@@ -1,1 +1,30 @@
-export default { backendType: "linear" };
+export default {
+  backendType: "linear",
+  label: "Linear",
+  description: "Manage Linear issues, comments, and teams",
+  fields: [
+    { name: "credentialId", label: "API Key", type: "credential", placeholder: "Linear API key", accentColor: "#5e6ad2" },
+    { name: "operation", label: "Operation", type: "options", cols: 2, default: "listIssues", options: [
+      { value: "listIssues",    label: "List Issues" },
+      { value: "getIssue",      label: "Get Issue" },
+      { value: "createIssue",   label: "Create Issue" },
+      { value: "updateIssue",   label: "Update Issue" },
+      { value: "createComment", label: "Create Comment" },
+      { value: "listTeams",     label: "List Teams" },
+    ]},
+    { name: "teamId", label: "Team ID", type: "string", smart: true, placeholder: "TEAM_ID", show: { operation: ["listIssues","createIssue"] } },
+    { name: "issueId", label: "Issue ID", type: "string", smart: true, placeholder: "ISSUE-123", show: { operation: ["getIssue","updateIssue","createComment"] } },
+    { name: "title", label: "Title", type: "string", smart: true, placeholder: "Bug: login fails on mobile", show: { operation: ["createIssue","updateIssue"] } },
+    { name: "description", label: "Description", type: "string", smart: true, multiline: true, show: { operation: ["createIssue","updateIssue"] } },
+    { name: "priority", label: "Priority", type: "options", cols: 2, default: "0", options: [
+      { value: "0", label: "No priority" },
+      { value: "1", label: "Urgent" },
+      { value: "2", label: "High" },
+      { value: "3", label: "Medium" },
+      { value: "4", label: "Low" },
+    ], show: { operation: ["createIssue","updateIssue"] } },
+    { name: "body", label: "Comment", type: "string", smart: true, multiline: true, show: { operation: "createComment" } },
+    { name: "limit", label: "Limit", type: "number", default: 25, show: { operation: "listIssues" } },
+  ],
+  outputs: ["issue", "issues", "comment", "teams"],
+};
