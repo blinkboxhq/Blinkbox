@@ -136,6 +136,7 @@ export default function Workspace() {
           activeTab="workflows"
           setActiveTab={tab => navigate(`/dashboard?tab=${tab}`)}
           usage={null}
+          defaultExpanded={false}
         />
       )}
 

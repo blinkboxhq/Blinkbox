@@ -15,8 +15,8 @@ const NAV_BOTTOM = [
   { key: 'settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function DashboardSidebar({ user, onLogout, activeTab, setActiveTab, usage }) {
-  const [expanded, setExpanded] = useState(true);
+export default function DashboardSidebar({ user, onLogout, activeTab, setActiveTab, usage, defaultExpanded = true }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [showLogout, setShowLogout] = useState(false);
 
   const w = expanded ? 'w-[220px]' : 'w-[56px]';
