@@ -122,11 +122,19 @@ import imgProductHunt    from "@triggers/producthunt/logo.svg";
 import imgIntercom       from "@triggers/intercom/logo.svg";
 import imgWooCommerce    from "@triggers/woocommerce/logo.svg";
 import imgVirusTotal     from "@triggers/virustotal/logo.svg";
+import imgManual        from "@triggers/manual/logo.svg";
+import imgCron          from "@triggers/cron/logo.svg";
+import imgWebhook       from "@triggers/webhook/logo.png";
+import imgChat          from "@triggers/chat/logo.png";
+import imgImap          from "@triggers/imap/logo.svg";
+import imgErrorTrigger  from "@triggers/error_trigger/logo.svg";
+import imgHttpMonitor   from "@triggers/http_monitor/logo.svg";
 
 export const TRIGGER_VARIANTS = {
   manual: {
     backendType: "manual",
     icon: MousePointerClick,
+    logoUrl: imgManual,
     label: "Trigger Manually",
     colorClass: "text-green-400",
     accentColor: "34,197,94",
@@ -135,6 +143,7 @@ export const TRIGGER_VARIANTS = {
   cron: {
     backendType: "cron_trigger",
     icon: Clock,
+    logoUrl: imgCron,
     label: "On a Schedule",
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
@@ -143,6 +152,7 @@ export const TRIGGER_VARIANTS = {
   webhook: {
     backendType: "webhook",
     icon: Webhook,
+    logoUrl: imgWebhook,
     label: "On Webhook Call",
     colorClass: "text-blue-400",
     accentColor: "59,130,246",
@@ -151,6 +161,7 @@ export const TRIGGER_VARIANTS = {
   chat: {
     backendType: "chat_trigger",
     icon: MessageSquare,
+    logoUrl: imgChat,
     label: "On Chat Message",
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
@@ -167,6 +178,7 @@ export const TRIGGER_VARIANTS = {
   error: {
     backendType: "error_trigger",
     icon: AlertTriangle,
+    logoUrl: imgErrorTrigger,
     label: "On Workflow Error",
     colorClass: "text-red-400",
     accentColor: "239,68,68",
@@ -184,6 +196,7 @@ export const TRIGGER_VARIANTS = {
   imap: {
     backendType: "imap_trigger",
     icon: Inbox,
+    logoUrl: imgImap,
     label: "On Email in Inbox",
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
@@ -430,7 +443,7 @@ export const TRIGGER_VARIANTS = {
   http_monitor: {
     backendType: "http_monitor_trigger",
     icon: Github,
-    logoUrl: imgVercel,
+    logoUrl: imgHttpMonitor,
     label: "HTTP Monitor",
     colorClass: "text-red-400",
     accentColor: "248,113,113",
