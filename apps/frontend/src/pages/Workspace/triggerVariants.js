@@ -502,7 +502,7 @@ export const TRIGGER_VARIANTS = {
 
   // Google
   google_drive: {
-    backendType: "webhook",
+    backendType: "google_drive_trigger",
     icon: Webhook,
     logoUrl: imgGoogleDrive,
     label: "On Google Drive Event",
@@ -511,7 +511,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: GoogleDriveTriggerNode,
   },
   google_docs: {
-    backendType: "webhook",
+    backendType: "google_docs_trigger",
     icon: Webhook,
     logoUrl: imgGoogleDocs,
     label: "On Google Docs Edit",
@@ -520,7 +520,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: GoogleDocsTriggerNode,
   },
   google_forms: {
-    backendType: "webhook",
+    backendType: "google_forms_trigger",
     icon: Webhook,
     logoUrl: imgGoogleForms,
     label: "On Google Forms Response",
@@ -531,7 +531,7 @@ export const TRIGGER_VARIANTS = {
 
   // Microsoft
   onedrive: {
-    backendType: "webhook",
+    backendType: "onedrive_trigger",
     icon: Webhook,
     logoUrl: imgOneDrive,
     label: "On OneDrive Event",
@@ -540,7 +540,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: OneDriveTriggerNode,
   },
   sharepoint: {
-    backendType: "webhook",
+    backendType: "sharepoint_trigger",
     icon: Webhook,
     logoUrl: imgSharePoint,
     label: "On SharePoint Event",
@@ -549,7 +549,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: SharePointTriggerNode,
   },
   azure_devops: {
-    backendType: "webhook",
+    backendType: "azure_devops_trigger",
     icon: Webhook,
     logoUrl: imgAzureDevOps,
     label: "On Azure DevOps Event",
@@ -560,7 +560,7 @@ export const TRIGGER_VARIANTS = {
 
   // DevOps / Monitoring
   sentry: {
-    backendType: "webhook",
+    backendType: "sentry_trigger",
     icon: Webhook,
     logoUrl: imgSentry,
     label: "On Sentry Alert",
@@ -569,7 +569,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: SentryTriggerNode,
   },
   vercel: {
-    backendType: "webhook",
+    backendType: "vercel_trigger",
     icon: Webhook,
     logoUrl: imgVercel,
     label: "On Vercel Deploy",
@@ -578,7 +578,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: VercelTriggerNode,
   },
   netlify: {
-    backendType: "webhook",
+    backendType: "netlify_trigger",
     icon: Webhook,
     logoUrl: imgNetlify,
     label: "On Netlify Build",
@@ -587,7 +587,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: NetlifyTriggerNode,
   },
   pagerduty: {
-    backendType: "webhook",
+    backendType: "pagerduty_trigger",
     icon: Webhook,
     logoUrl: imgPagerDuty,
     label: "On PagerDuty Alert",
@@ -596,7 +596,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: PagerDutyTriggerNode,
   },
   datadog: {
-    backendType: "webhook",
+    backendType: "datadog_trigger",
     icon: Webhook,
     logoUrl: imgDatadog,
     label: "On Datadog Monitor Alert",
@@ -607,7 +607,7 @@ export const TRIGGER_VARIANTS = {
 
   // Business / PM
   zendesk: {
-    backendType: "webhook",
+    backendType: "zendesk_trigger",
     icon: Webhook,
     logoUrl: imgZendesk,
     label: "On Zendesk Ticket",
@@ -616,7 +616,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: ZendeskTriggerNode,
   },
   calendly: {
-    backendType: "webhook",
+    backendType: "calendly_trigger",
     icon: Webhook,
     logoUrl: imgCalendly,
     label: "On Calendly Booking",
@@ -625,7 +625,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: CalendlyTriggerNode,
   },
   mailchimp: {
-    backendType: "webhook",
+    backendType: "mailchimp_trigger",
     icon: Webhook,
     logoUrl: imgMailchimp,
     label: "On Mailchimp Event",
@@ -634,7 +634,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: MailchimpTriggerNode,
   },
   clickup: {
-    backendType: "webhook",
+    backendType: "clickup_trigger",
     icon: Webhook,
     logoUrl: imgClickUp,
     label: "On ClickUp Task Event",
@@ -643,7 +643,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: ClickUpTriggerNode,
   },
   monday: {
-    backendType: "webhook",
+    backendType: "monday_trigger",
     icon: Webhook,
     logoUrl: imgMonday,
     label: "On Monday.com Item",
@@ -654,7 +654,7 @@ export const TRIGGER_VARIANTS = {
 
   // Design
   figma: {
-    backendType: "webhook",
+    backendType: "figma_trigger",
     icon: Webhook,
     logoUrl: imgFigma,
     label: "On Figma Event",
@@ -665,7 +665,7 @@ export const TRIGGER_VARIANTS = {
 
   // Social
   instagram: {
-    backendType: "webhook",
+    backendType: "instagram_trigger",
     icon: Webhook,
     logoUrl: imgInstagram,
     label: "On Instagram Event",
@@ -674,7 +674,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: InstagramTriggerNode,
   },
   tiktok: {
-    backendType: "webhook",
+    backendType: "tiktok_trigger",
     icon: Webhook,
     logoUrl: imgTikTok,
     label: "On TikTok Event",
@@ -683,7 +683,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: TikTokTriggerNode,
   },
   mastodon: {
-    backendType: "webhook",
+    backendType: "mastodon_trigger",
     icon: Webhook,
     logoUrl: imgMastodon,
     label: "On Mastodon Event",
@@ -692,7 +692,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: MastodonTriggerNode,
   },
   producthunt: {
-    backendType: "hackernews_trigger",
+    backendType: "producthunt_trigger",
     icon: Webhook,
     logoUrl: imgProductHunt,
     label: "On Product Hunt Launch",
@@ -703,7 +703,7 @@ export const TRIGGER_VARIANTS = {
 
   // CRM / Sales
   intercom: {
-    backendType: "webhook",
+    backendType: "intercom_trigger",
     icon: Webhook,
     logoUrl: imgIntercom,
     label: "On Intercom Event",
@@ -712,7 +712,7 @@ export const TRIGGER_VARIANTS = {
     ConfigPanel: IntercomTriggerNode,
   },
   woocommerce: {
-    backendType: "webhook",
+    backendType: "woocommerce_trigger",
     icon: Webhook,
     logoUrl: imgWooCommerce,
     label: "On WooCommerce Order",
@@ -723,7 +723,7 @@ export const TRIGGER_VARIANTS = {
 
   // Infra / Security
   virustotal: {
-    backendType: "webhook",
+    backendType: "virustotal_trigger",
     icon: Webhook,
     logoUrl: imgVirusTotal,
     label: "On VirusTotal Scan",

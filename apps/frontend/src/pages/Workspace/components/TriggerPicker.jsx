@@ -1,30 +1,37 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, X, Plus, ArrowLeft, ChevronRight, Zap, MessageSquare, Grid3x3 } from "lucide-react";
+import { Search, X, Plus, ArrowLeft, ChevronRight, Zap, AppWindow } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { playNodeLand } from "../../../lib/sounds";
 
 const TRIGGER_CATEGORIES = [
   {
-    id: "core",
-    label: "Core",
+    id: "events",
+    label: "Events",
     icon: Zap,
-    description: "Built-in workflow triggers",
-    keys: ["manual", "cron", "webhook", "email", "imap", "rss", "database", "http_monitor", "port_monitor", "dns", "ssl", "error"],
+    description: "Built-in workflow & system triggers",
+    keys: [
+      "manual", "cron", "webhook", "email", "imap", "rss", "database",
+      "http_monitor", "port_monitor", "dns", "ssl", "error", "chat",
+      "price_alert", "ssh", "docker", "virustotal",
+    ],
   },
   {
-    id: "messaging",
-    label: "Messaging",
-    icon: MessageSquare,
-    description: "Chat & email platforms",
-    keys: ["slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams", "chat", "mastodon"],
-  },
-  {
-    id: "apps",
-    label: "Apps",
-    icon: Grid3x3,
-    description: "SaaS integrations",
-    keys: ["notion", "airtable", "github", "github_issue", "gitlab", "stripe", "shopify", "woocommerce", "hubspot", "linear", "jira", "trello", "asana", "pipedrive", "clickup", "monday", "typeform", "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms", "onedrive", "sharepoint", "azure_devops", "figma", "calendly", "mailchimp", "intercom", "zendesk", "pagerduty", "datadog", "sentry", "vercel", "netlify", "youtube", "reddit", "hackernews", "producthunt", "instagram", "tiktok", "price_alert", "ssh", "docker", "virustotal"],
+    id: "app_events",
+    label: "App Events",
+    icon: AppWindow,
+    description: "SaaS & platform integrations",
+    keys: [
+      "slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams",
+      "github", "github_issue", "gitlab", "stripe", "shopify", "notion", "airtable",
+      "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms",
+      "hubspot", "linear", "jira", "trello", "asana", "pipedrive",
+      "clickup", "monday", "typeform", "figma",
+      "sentry", "vercel", "netlify", "pagerduty", "datadog",
+      "zendesk", "calendly", "mailchimp", "intercom", "woocommerce",
+      "azure_devops", "onedrive", "sharepoint",
+      "instagram", "tiktok", "mastodon", "youtube", "reddit", "hackernews", "producthunt",
+    ],
   },
 ];
 

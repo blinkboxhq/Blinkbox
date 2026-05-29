@@ -29,6 +29,9 @@ import { pollSslCert } from "./sslCert.poller.js";
 import { pollTeams } from "./teamsMessage.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
+import { pollProductHunt } from "./producthunt.poller.js";
+import { pollMastodon } from "./mastodon.poller.js";
+import { pollVirusTotal } from "./virustotal.poller.js";
 
 const HUB_QUEUE = "bb-poll-hub";
 
@@ -424,6 +427,39 @@ const POLL_REGISTRY = {
     run: async ({ automationId, credentialId, workspaceId, channelId, maxResults }) => {
       await pollChannel(automationId, credentialId, workspaceId, channelId, maxResults);
     },
+  },
+
+  producthunt_trigger: {
+    triggerName: "producthunt_trigger",
+    required: [],
+    extract: (cfg) => ({
+      cfg: { apiKey: cfg.apiKey, category: cfg.category, minVotes: cfg.minVotes },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
+    jobPrefix: "ph",
+    run: async ({ automationId, cfg }) => { await pollProductHunt(automationId, cfg); },
+  },
+
+  mastodon_trigger: {
+    triggerName: "mastodon_trigger",
+    required: ["instanceUrl", "accessToken"],
+    extract: (cfg) => ({
+      cfg: { instanceUrl: cfg.instanceUrl, accessToken: cfg.accessToken, notificationTypes: cfg.notificationTypes },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "mastodon",
+    run: async ({ automationId, cfg }) => { await pollMastodon(automationId, cfg); },
+  },
+
+  virustotal_trigger: {
+    triggerName: "virustotal_trigger",
+    required: ["apiKey", "scanTarget"],
+    extract: (cfg) => ({
+      cfg: { apiKey: cfg.apiKey, scanTarget: cfg.scanTarget, scanType: cfg.scanType || "file" },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
+    jobPrefix: "vt",
+    run: async ({ automationId, cfg }) => { await pollVirusTotal(automationId, cfg); },
   },
 };
 
