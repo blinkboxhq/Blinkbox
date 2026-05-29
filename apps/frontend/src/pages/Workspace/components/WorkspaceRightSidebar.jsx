@@ -18,7 +18,7 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
   const isAddNodeOpen       = useWorkspaceStore(s => s.isAddNodeOpen);
   const isAgentPickerOpen   = useWorkspaceStore(s => s.isAgentPickerOpen);
 
-  const isSidebarOpen = isAddNodeOpen || isAgentPickerOpen;
+  const isSidebarOpen = isAgentPickerOpen;
   const prevOpen = useRef(false);
 
   useEffect(() => {
@@ -28,12 +28,17 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
 
   return (
     <>
-      {/* TriggerPicker renders as its own full-screen overlay */}
+      {/* TriggerPicker — full-screen centered modal */}
       <AnimatePresence>
         {isTriggerPickerOpen && <TriggerPicker />}
       </AnimatePresence>
 
-      {/* Right sidebar for AddNode / AgentPicker */}
+      {/* AddNodeSidebar — full-screen centered modal */}
+      <AnimatePresence>
+        {isAddNodeOpen && <AddNodeSidebar />}
+      </AnimatePresence>
+
+      {/* Right sidebar for AgentPicker */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.aside
@@ -59,7 +64,6 @@ export default function WorkspaceRightSidebar({ width = 320, onResizeStart }) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.04, duration: 0.18, ease: "easeOut" }}
             >
-              {isAddNodeOpen && <AddNodeSidebar />}
               {isAgentPickerOpen && <AgentPicker />}
             </motion.div>
           </motion.aside>
