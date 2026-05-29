@@ -7,7 +7,12 @@ function isVisible(field, config) {
   if (!field.show) return true;
   for (const [dep, expected] of Object.entries(field.show)) {
     const val = config[dep];
-    const ok = Array.isArray(expected) ? expected.includes(val) : val === expected;
+    let ok;
+    if (Array.isArray(val)) {
+      ok = Array.isArray(expected) ? expected.some((e) => val.includes(e)) : val.includes(expected);
+    } else {
+      ok = Array.isArray(expected) ? expected.includes(val) : val === expected;
+    }
     if (!ok) return false;
   }
   return true;
