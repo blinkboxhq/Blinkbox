@@ -154,6 +154,11 @@ export default function Auth() {
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [verifyPending, setVerifyPending] = useState(false);
+  const [verifyEmail, setVerifyEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -216,12 +221,23 @@ export default function Auth() {
     const payload = isLogin ? { email, password } : { name, email, password };
     try {
       const response = await api.post(`/api/auth${endpoint}`, payload);
+      if (response.data.needsVerification) {
+        setVerifyEmail(response.data.email || email);
+        setVerifyPending(true);
+        return;
+      }
       localStorage.setItem('blinkbox_token', response.data.token);
       localStorage.setItem('blinkbox_user', JSON.stringify(response.data.user));
       navigate('/dashboard');
     } catch (err) {
-      if (err.response?.data?.lockoutTimer) setLockoutTimer(err.response.data.lockoutTimer);
-      setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+      const data = err.response?.data;
+      if (data?.needsVerification) {
+        setVerifyEmail(data.email || email);
+        setVerifyPending(true);
+        return;
+      }
+      if (data?.lockoutTimer) setLockoutTimer(data.lockoutTimer);
+      setError(data?.message || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -235,11 +251,28 @@ export default function Auth() {
       await api.post('/api/auth/forgot-password', { email: forgotEmail });
       setForgotSent(true);
     } catch {
-      setForgotSent(true); // Always show success to prevent enumeration
+      setForgotSent(true);
     } finally {
       setForgotLoading(false);
     }
   };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resendLoading) return;
+    setResendLoading(true);
+    try {
+      await api.post('/api/auth/resend-verification', { email: verifyEmail });
+    } catch { /* always show success */ }
+    setResendLoading(false);
+    setResendSent(true);
+    setResendCooldown(60);
+  };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   return (
     <div className="flex min-h-screen w-full bg-black text-white overflow-hidden">
@@ -502,6 +535,55 @@ export default function Auth() {
           </p>
         </div>
       </div>
+
+      {/* Email verification pending overlay */}
+      {verifyPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          style={{ animation: 'fadeIn 0.2s ease-out' }}>
+          <div className="w-full max-w-[380px] mx-4 bg-neutral-950 border border-neutral-800 rounded-2xl p-8 flex flex-col items-center text-center"
+            style={{ animation: 'scaleIn 0.2s ease-out' }}>
+            <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-5">
+              <Mail className="w-8 h-8 text-violet-400" />
+            </div>
+            <h2 className="text-[18px] font-bold text-white mb-2">Check your email</h2>
+            <p className="text-[13px] text-neutral-400 leading-relaxed mb-1">
+              We sent a verification link to
+            </p>
+            <p className="text-[13px] font-semibold text-white mb-6 break-all">{verifyEmail}</p>
+            <p className="text-[12px] text-neutral-600 mb-6 leading-relaxed">
+              Click the link in the email to activate your account. The link expires in 24 hours.
+            </p>
+
+            {resendSent && (
+              <div className="flex items-center gap-2 text-emerald-400 text-[12px] mb-4">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                New verification email sent!
+              </div>
+            )}
+
+            <button
+              onClick={handleResend}
+              disabled={resendLoading || resendCooldown > 0}
+              className="w-full py-2.5 rounded-lg border border-neutral-800 text-[13px] text-neutral-400 hover:text-white hover:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mb-3"
+            >
+              {resendLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+              ) : resendCooldown > 0 ? (
+                `Resend in ${resendCooldown}s`
+              ) : (
+                'Resend email'
+              )}
+            </button>
+
+            <button
+              onClick={() => { setVerifyPending(false); switchMode(true); }}
+              className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors"
+            >
+              Back to sign in
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Forgot password modal */}
       {forgotOpen && (

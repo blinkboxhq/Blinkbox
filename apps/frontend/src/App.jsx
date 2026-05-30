@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import FeedbackWidget from './components/FeedbackWidget';
 
-const Landing   = lazy(() => import('./pages/Landing'));
-const Auth      = lazy(() => import('./pages/auth'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Workspace = lazy(() => import('./pages/Workspace'));
-const Privacy   = lazy(() => import('./pages/Privacy'));
-const Terms     = lazy(() => import('./pages/Terms'));
-const ChatPage  = lazy(() => import('./pages/Chat/ChatPage'));
+const Landing      = lazy(() => import('./pages/Landing'));
+const Auth         = lazy(() => import('./pages/auth'));
+const VerifyEmail  = lazy(() => import('./pages/auth/VerifyEmail'));
+const Dashboard    = lazy(() => import('./pages/Dashboard'));
+const Workspace    = lazy(() => import('./pages/Workspace'));
+const Privacy      = lazy(() => import('./pages/Privacy'));
+const Terms        = lazy(() => import('./pages/Terms'));
+const ChatPage     = lazy(() => import('./pages/Chat/ChatPage'));
 
 const PageLoader = () => (
   <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/" element={<RequireGuest><Landing /></RequireGuest>} />
             <Route path="/login" element={<RequireGuest><Auth /></RequireGuest>} />
             <Route path="/reset-password" element={<Auth />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/workspace/:id" element={<RequireAuth><Workspace /></RequireAuth>} />
             <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
