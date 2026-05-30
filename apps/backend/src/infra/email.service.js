@@ -485,7 +485,6 @@ export async function sendWelcomeEmail(user) {
 export async function sendPasswordResetEmail(user, resetUrl, opts = {}) {
   if (opts.googleOnly) {
     const firstName = user.name.split(" ")[0];
-    const { html } = buildPasswordResetEmail({ name: user.name, resetUrl });
     const googleBody = layout({
       preheader: `${firstName}, your account uses Google Sign-In — no password to reset.`,
       subject: `Password reset — ${APP_NAME}`,
