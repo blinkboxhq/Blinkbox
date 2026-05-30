@@ -166,15 +166,12 @@ import hubspot from "./integrations/hubspot.node.js";
 import shopify from "./integrations/shopify.node.js";
 
 // New Utility Nodes
-import qrCode from "./qrCode.node.js";
 import textSplitter from "./textSplitter.node.js";
 import templateRenderer from "./templateRenderer.node.js";
-import jsonValidator from "./jsonValidator.node.js";
 import switchNode from "./switch.node.js";
 import imageResize from "./imageResize.node.js";
 import aggregate from "./aggregate.node.js";
 import pdfGenerator from "./pdfGenerator.node.js";
-import dataDiff from "./dataDiff.node.js";
 
 // AI Innovated Nodes
 import emailParser from "./emailParser.node.js";
@@ -199,7 +196,6 @@ import openaiAssistant from "./integrations/openaiAssistant.node.js";
 
 // New Utility Nodes
 import urlParser from "./urlParser.node.js";
-import weather from "./weather.node.js";
 import translation from "./translation.node.js";
 import speechToText from "./speechToText.node.js";
 import textToSpeech from "./textToSpeech.node.js";
@@ -222,7 +218,6 @@ import trello from "./integrations/trello.node.js";
 import asana from "./integrations/asana.node.js";
 import clickup from "./integrations/clickup.node.js";
 import typeform from "./integrations/typeform.node.js";
-import virustotal from "./integrations/virustotal.node.js";
 import sharepoint from "./integrations/sharepoint.node.js";
 import outlook from "./integrations/outlook.node.js";
 import teams from "./integrations/teams.node.js";
@@ -358,15 +353,12 @@ export const nodeRegistry = {
   shopify: shopify,
 
   // New Utility Nodes
-  qr_code: qrCode,
   text_splitter: textSplitter,
   template_renderer: templateRenderer,
-  json_validator: jsonValidator,
   switch: switchNode,
   image_resize: imageResize,
   aggregate: aggregate,
   pdf_generator: pdfGenerator,
-  data_diff: dataDiff,
 
   // AI Innovated Nodes
   email_parser: emailParser,
@@ -437,7 +429,6 @@ export const nodeRegistry = {
 
   // Utility nodes
   url_parser: urlParser,
-  weather: weather,
   translation: translation,
   speech_to_text: speechToText,
   text_to_speech: textToSpeech,
@@ -453,7 +444,6 @@ export const nodeRegistry = {
   asana: asana,
   clickup: clickup,
   typeform: typeform,
-  virustotal: virustotal,
   sharepoint: sharepoint,
   outlook: outlook,
   teams: teams,
@@ -476,19 +466,10 @@ export const nodeRegistry = {
   ocr: ocr,
 
   // ── Utility nodes ──────────────────────────────────────────────────────────
-  base64:              utilityNodes.base64,
-  color_converter:     utilityNodes.color_converter,
-  unit_converter:      utilityNodes.unit_converter,
-  number_format:       utilityNodes.number_format,
-  find_replace:        utilityNodes.find_replace,
   regex_match:         utilityNodes.regex_match,
   math_expression:     utilityNodes.math_expression,
-  markdown_renderer:   utilityNodes.markdown_renderer,
   text_format:         utilityNodes.text_format,
-  random_pick:         utilityNodes.random_pick,
-  counter:             utilityNodes.counter,
   variable_set_get:    utilityNodes.variable_set_get,
-  schedule_check:      utilityNodes.schedule_check,
   env_variable:        utilityNodes.env_variable,
   error:               utilityNodes.error,
   zip_files:           utilityNodes.zip_files,
@@ -496,29 +477,10 @@ export const nodeRegistry = {
 
   // ── Network / infra nodes ──────────────────────────────────────────────────
   ip_lookup:           networkNodes.ip_lookup,
-  ip_whitelist:        networkNodes.ip_whitelist,
   dns_lookup:          networkNodes.dns_lookup,
   ssl_check:           networkNodes.ssl,
-  port_monitor:        networkNodes.port_monitor,
   http_monitor:        networkNodes.http_monitor,
 
-  // ── Public API nodes ───────────────────────────────────────────────────────
-  clinical_trials:      publicApiNodes.clinical_trials,
-  drug_lookup:          publicApiNodes.drug_lookup,
-  hackernews:           publicApiNodes.hackernews,
-  hacker_news:          publicApiNodes.hackernews,
-  producthunt:          publicApiNodes.producthunt,
-  product_hunt:         publicApiNodes.producthunt,
-  stock_price:          publicApiNodes.stock_price,
-  currency_exchange:    publicApiNodes.currency_exchange,
-  twitch_stream_status: publicApiNodes.twitch_stream_status,
-  crypto_price:         publicApiNodes.crypto_price,
-  arxiv_search:         publicApiNodes.arxiv_search,
-  pubmed_search:        publicApiNodes.pubmed_search,
-  wikipedia_lookup:     publicApiNodes.wikipedia_lookup,
-  npm_package_info:     publicApiNodes.npm_package_info,
-  news_search:          publicApiNodes.news_search,
-  steam_game_lookup:    publicApiNodes.steam_game_lookup,
 
   // ── AI content nodes ───────────────────────────────────────────────────────
   chat:                aiContentNodes.chat,
@@ -533,11 +495,8 @@ export const nodeRegistry = {
   google_docs:         devToolNodes.google_docs,
   google_forms:        devToolNodes.google_forms,
   figma:               devToolNodes.figma,
-  figma_comment:       devToolNodes.figma_comment,
 
   // ── Social / publishing nodes ──────────────────────────────────────────────
-  discord_role_assign: socialNodes.discord_role_assign,
-  mastodon:            socialNodes.mastodon,
   imap:                socialNodes.imap,
   email:               socialNodes.email,
   file_upload:         socialNodes.file_upload,
@@ -578,8 +537,6 @@ export const nodeRegistry = {
   set_fields: dataMapper,
   transform: dataMapper,
   filter: dataMapper,
-  tool_base64: agentToolNodes.tool_base,
-
   // Agent Tool Nodes — spread all tool_* exports
   ...Object.fromEntries(
     Object.entries(agentToolNodes).map(([key, val]) => [key, val])

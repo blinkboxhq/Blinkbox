@@ -99,7 +99,6 @@ import {
   MemoryStick,
   Wifi,
   Activity,
-  Thermometer,
   Pill,
   Stethoscope,
   Microscope,
@@ -126,7 +125,6 @@ import {
   ScanLine,
   Barcode,
   CaseSensitive,
-  Replace,
   Regex,
   Split,
   Combine,
@@ -214,8 +212,6 @@ import imgElevenLabs from "@nodes/elevenlabs/logo.svg";
 import imgZoom from "@nodes/zoom/logo.svg";
 import imgResend from "@nodes/resend/logo.svg";
 import imgGoogle from "../../assets/google-search.svg";
-import imgBrave from "../../assets/brave-search.svg";
-import imgPython from "../../assets/python.svg";
 import imgJS from "../../assets/javascript.svg";
 import imgFirebase from "@nodes/firebase/logo.svg";
 import imgAWS from "@nodes/s3/logo.svg";
@@ -223,7 +219,6 @@ import imgInstagram from "@nodes/instagram/logo.svg";
 import imgTikTok from "@nodes/tiktok/logo.svg";
 import imgLinkedIn from "@nodes/linkedin/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
-import imgWeather from "@nodes/weather/logo.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgManualTrigger from "@triggers/manual/logo.svg";
@@ -1143,29 +1138,6 @@ export const NodeRegistry = {
       ],
     }),
   },
-  tool_brave_search: {
-    label: "Brave Search",
-    icon: Search,
-    logoUrl: imgBrave,
-    imgFilter: "invert(1)",
-    colorClass: "text-orange-400",
-    accentColor: "251,146,60",
-    category: "ai",
-    agentOnly: true,
-    description: "Privacy-first Brave search results",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Brave Search",
-      description: "Search the web with Brave",
-      fields: [
-        {
-          key: "apiKey",
-          label: "Brave API Key",
-          type: "text",
-          placeholder: "your-brave-api-key",
-        },
-      ],
-    }),
-  },
   tool_tavily: {
     label: "Tavily Search",
     icon: Search,
@@ -1226,21 +1198,6 @@ export const NodeRegistry = {
       description: "Run JS code snippets safely",
     }),
   },
-  tool_python: {
-    label: "Python",
-    icon: Code2,
-    logoUrl: imgPython,
-    imgFilter: "invert(1)",
-    colorClass: "text-blue-400",
-    accentColor: "96,165,250",
-    category: "ai",
-    agentOnly: true,
-    description: "Execute Python in a sandboxed runtime",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Python",
-      description: "Run Python code snippets safely",
-    }),
-  },
   tool_bash: {
     label: "Bash Shell",
     icon: Terminal,
@@ -1252,40 +1209,6 @@ export const NodeRegistry = {
     ConfigPanel: makeAgentToolPanel({
       label: "Bash Shell",
       description: "Execute bash commands locally",
-    }),
-  },
-  tool_ssh: {
-    label: "SSH",
-    icon: Server,
-    logoUrl: imgSsh,
-    colorClass: "text-emerald-500",
-    accentColor: "16,185,129",
-    category: "ai",
-    agentOnly: true,
-    description: "Connect and run commands on remote servers via SSH",
-    ConfigPanel: makeAgentToolPanel({
-      label: "SSH",
-      description: "Execute commands on remote machines",
-      fields: [
-        {
-          key: "host",
-          label: "Host",
-          type: "text",
-          placeholder: "192.168.1.1 or hostname",
-        },
-        {
-          key: "username",
-          label: "Username",
-          type: "text",
-          placeholder: "ubuntu",
-        },
-        {
-          key: "privateKey",
-          label: "SSH Key Credential",
-          type: "credential",
-          credentialType: "SSH",
-        },
-      ],
     }),
   },
   tool_virtual_computer: {
@@ -1620,20 +1543,6 @@ export const NodeRegistry = {
   },
 
   // ── Agent Tools — Math & Compute (6) ────────────────────────────────────────
-  tool_calculator: {
-    label: "Calculator",
-    icon: Calculator,
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    category: "ai",
-    agentOnly: true,
-    description: "Evaluate math expressions precisely",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Calculator",
-      description: "Compute math without hallucination",
-    }),
-  },
-
   // ── Agent Tools — Productivity ──────────────────────────────────────────────
   tool_calendar: {
     label: "Google Calendar",
@@ -1657,44 +1566,7 @@ export const NodeRegistry = {
       ],
     }),
   },
-  // ── Agent Tools — Reference ─────────────────────────────────────────────────
-  tool_weather: {
-    label: "Weather",
-    icon: Thermometer,
-    logoUrl: imgWeather,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    category: "ai",
-    agentOnly: true,
-    description: "Get current weather and forecasts",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Weather",
-      description: "Fetch weather data for any location",
-      fields: [
-        {
-          key: "apiKey",
-          label: "OpenWeatherMap API Key",
-          type: "text",
-          placeholder: "your-api-key",
-        },
-      ],
-    }),
-  },
-  tool_base64: {
-    label: "Base64",
-    icon: Replace,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
-    category: "ai",
-    agentOnly: true,
-    description: "Encode and decode Base64 strings",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Base64",
-      description: "Encode and decode Base64 data",
-    }),
-  },
-
-  // ── Agent Tools — Orchestration (5) ─────────────────────────────────────────
+  // ── Agent Tools — Orchestration ─────────────────────────────────────────────
   tool_think: {
     label: "Think",
     icon: Brain,
