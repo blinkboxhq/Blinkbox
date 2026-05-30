@@ -16,7 +16,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import CustomNode from "./nodes/CustomNode";
+import CustomNode, { setNodeHovered } from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
 import { getSocket } from "../../../lib/socket";
 
@@ -334,6 +334,9 @@ export default function Canvas() {
     [screenToFlowPosition, addNode],
   );
 
+  const onNodeMouseEnter = useCallback((_, node) => setNodeHovered(node.id, true), []);
+  const onNodeMouseLeave = useCallback((_, node) => setNodeHovered(node.id, false), []);
+
   return (
     <div
       className="flex-1 h-full min-w-0 relative bg-[#0d0d0f]"
@@ -348,6 +351,8 @@ export default function Canvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         onNodeClick={(e, node) => { if (node.id !== "__placeholder__") setSelectedNodeId(node.id); }}
         onNodeContextMenu={(e, node) => {
           if (node.id === "__placeholder__") return;
