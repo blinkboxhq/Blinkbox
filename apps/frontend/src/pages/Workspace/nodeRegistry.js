@@ -200,10 +200,7 @@ import imgAsana from "@nodes/asana/logo.svg";
 import imgClickUp from "@nodes/clickup/logo.svg";
 import imgMonday from "@nodes/monday/logo.svg";
 import imgLetsEncrypt from "@triggers/ssl/logo.svg";
-import imgHackerNews from "@nodes/hacker_news/logo.svg";
 import imgPipedrive from "@nodes/pipedrive/logo.svg";
-import imgMastodon from "@nodes/mastodon/logo.svg";
-import imgProductHunt from "@nodes/product_hunt/logo.svg";
 import imgIntercom from "@nodes/intercom/logo.svg";
 import imgWooCommerce from "@nodes/woocommerce/logo.svg";
 import imgPagerDuty from "@nodes/pagerduty/logo.svg";
@@ -394,7 +391,6 @@ import HubSpotNode from "@nodes/hubspot/ConfigPanel.jsx";
 import ShopifyNode from "@nodes/shopify/ConfigPanel.jsx";
 
 // Config Panels — previously stubbed (now real panels)
-import GitHubNode from "@nodes/github/ConfigPanel.jsx";
 import GitLabNode from "@nodes/gitlab/ConfigPanel.jsx";
 import TrelloNode from "@nodes/trello/ConfigPanel.jsx";
 import AsanaNode from "@nodes/asana/ConfigPanel.jsx";
@@ -1957,7 +1953,7 @@ export const NodeRegistry = {
   },
   graphql_request: {
     label: "GraphQL Request",
-    icon: GitBranch,
+    icon: Network,
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: GraphQLNode,
