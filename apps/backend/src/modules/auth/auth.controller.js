@@ -1,53 +1,22 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import User from "../../models/user.model.js";
 import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
 import { JWT_SECRET } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendPasswordChangedEmail,
+} from "../../infra/email.service.js";
 
 const RESET_TTL  = 60 * 15;      // 15 minutes
 const VERIFY_TTL = 60 * 60 * 24; // 24 hours
 
 const APP_URL = process.env.VITE_APP_URL || "https://blinkbox.net";
-
-function makeMailer() {
-  const from = process.env.ALERT_EMAIL_FROM;
-  const pass = process.env.ALERT_EMAIL_PASS;
-  if (!from || !pass) return null;
-  return nodemailer.createTransport({ service: "gmail", auth: { user: from, pass } });
-}
-
-function emailWrapper(body) {
-  return `
-    <div style="background:#09090b;padding:40px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-      <div style="max-width:480px;margin:0 auto;background:#111113;border:1px solid #27272a;border-radius:16px;overflow:hidden">
-        <div style="padding:8px 24px;background:linear-gradient(135deg,#3b0764,#1e1b4b);border-bottom:1px solid #27272a">
-          <p style="margin:0;font-size:13px;font-weight:700;color:#a78bfa;letter-spacing:0.1em;text-transform:uppercase">BlinkBox</p>
-        </div>
-        <div style="padding:32px 24px">
-          ${body}
-        </div>
-        <div style="padding:16px 24px;border-top:1px solid #27272a">
-          <p style="margin:0;font-size:11px;color:#52525b;text-align:center">© BlinkBox · <a href="${APP_URL}/privacy" style="color:#52525b">Privacy</a> · <a href="${APP_URL}/terms" style="color:#52525b">Terms</a></p>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-async function sendMail({ to, subject, html }) {
-  const mailer = makeMailer();
-  if (!mailer) return;
-  await mailer.sendMail({
-    from: `"BlinkBox" <${process.env.ALERT_EMAIL_FROM}>`,
-    to,
-    subject,
-    html,
-  }).catch(err => console.error("[Auth] Email send failed:", err.message));
-}
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -157,22 +126,7 @@ export async function register(req, res) {
     await redis.set(`bb:verify:${verifyToken}`, String(user._id), "EX", VERIFY_TTL);
 
     const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
-    await sendMail({
-      to: user.email,
-      subject: "Verify your BlinkBox email",
-      html: emailWrapper(`
-        <h2 style="color:#fff;font-size:20px;margin:0 0 8px">Welcome to BlinkBox, ${user.name.split(" ")[0]}!</h2>
-        <p style="color:#a1a1aa;margin:0 0 24px;line-height:1.7;font-size:14px">
-          You're almost ready to start automating. Click below to verify your email address and activate your account.
-        </p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:13px 28px;background:#7c3aed;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.02em">
-          Verify my email →
-        </a>
-        <p style="color:#3f3f46;margin:28px 0 0;font-size:12px;line-height:1.6">
-          This link expires in 24 hours. If you didn't sign up for BlinkBox, you can safely ignore this email.
-        </p>
-      `),
-    });
+    await sendVerificationEmail(user, verifyUrl);
 
     res.status(201).json({
       needsVerification: true,
@@ -205,6 +159,8 @@ export async function verifyEmail(req, res) {
     user.emailVerified = true;
     await user.save();
     await redis.del(key);
+
+    sendWelcomeEmail(user).catch(() => {});
 
     const jwtToken = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
 
@@ -239,22 +195,7 @@ export async function resendVerification(req, res) {
     await redis.set(`bb:verify:${verifyToken}`, String(user._id), "EX", VERIFY_TTL);
 
     const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
-    await sendMail({
-      to: user.email,
-      subject: "Verify your BlinkBox email",
-      html: emailWrapper(`
-        <h2 style="color:#fff;font-size:20px;margin:0 0 8px">Verify your email</h2>
-        <p style="color:#a1a1aa;margin:0 0 24px;line-height:1.7;font-size:14px">
-          Here's a new verification link for your BlinkBox account.
-        </p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:13px 28px;background:#7c3aed;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.02em">
-          Verify my email →
-        </a>
-        <p style="color:#3f3f46;margin:28px 0 0;font-size:12px;line-height:1.6">
-          This link expires in 24 hours. If you didn't request this, ignore this email.
-        </p>
-      `),
-    });
+    await sendVerificationEmail(user, verifyUrl);
   } catch (err) {
     console.error("[Auth] resendVerification error:", err.message);
   }
@@ -275,22 +216,7 @@ export async function forgotPassword(req, res) {
     await redis.set(`bb:reset:${token}`, String(user._id), "EX", RESET_TTL);
 
     const resetUrl = `${APP_URL}/reset-password?token=${token}`;
-    await sendMail({
-      to: user.email,
-      subject: "Reset your BlinkBox password",
-      html: emailWrapper(`
-        <h2 style="color:#fff;font-size:20px;margin:0 0 8px">Reset your password</h2>
-        <p style="color:#a1a1aa;margin:0 0 24px;line-height:1.7;font-size:14px">
-          Click the button below to set a new password. This link expires in 15 minutes.
-        </p>
-        <a href="${resetUrl}" style="display:inline-block;padding:13px 28px;background:#7c3aed;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.02em">
-          Reset password →
-        </a>
-        <p style="color:#3f3f46;margin:28px 0 0;font-size:12px;line-height:1.6">
-          If you didn't request this, ignore this email — your password hasn't changed.
-        </p>
-      `),
-    });
+    await sendPasswordResetEmail(user, resetUrl);
   } catch (err) {
     console.error("[Auth] forgotPassword error:", err.message);
   }
@@ -316,6 +242,8 @@ export async function resetPassword(req, res) {
     user.password = await bcrypt.hash(password, 12);
     await user.save();
     await redis.del(key);
+
+    sendPasswordChangedEmail(user).catch(() => {});
 
     res.json({ success: true, message: "Password updated. You can now sign in." });
   } catch (err) {
