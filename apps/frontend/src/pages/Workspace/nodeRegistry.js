@@ -2403,7 +2403,7 @@ export const NodeRegistry = {
   zendesk: {
     label: "Zendesk",
     icon: MessageCircle,
-    colorClass: "text-[#03363D]",
+    colorClass: "text-[#00BFAD]",
     accentColor: "3,54,61",
     logoUrl: imgZendesk,
     ConfigPanel: ZendeskNode,

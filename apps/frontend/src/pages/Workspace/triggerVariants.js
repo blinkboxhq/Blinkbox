@@ -624,7 +624,7 @@ export const TRIGGER_VARIANTS = {
     icon: Webhook,
     logoUrl: imgZendesk,
     label: "On Zendesk Ticket",
-    colorClass: "text-[#03363D]",
+    colorClass: "text-[#00BFAD]",
     accentColor: "3,54,61",
     ConfigPanel: ZendeskTriggerNode,
   },
