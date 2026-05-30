@@ -1,8 +1,16 @@
 import nodemailer from "nodemailer";
 
 // ─── Transporter ─────────────────────────────────────────────────────────────
-// Priority: SMTP_HOST → Gmail (ALERT_EMAIL_FROM + ALERT_EMAIL_PASS)
+// Priority: Resend → custom SMTP → Gmail fallback
 function createTransport() {
+  if (process.env.RESEND_API_KEY) {
+    return nodemailer.createTransport({
+      host: "smtp.resend.com",
+      port: 465,
+      secure: true,
+      auth: { user: "resend", pass: process.env.RESEND_API_KEY },
+    });
+  }
   if (process.env.SMTP_HOST) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -13,7 +21,9 @@ function createTransport() {
   }
   if (process.env.ALERT_EMAIL_FROM && process.env.ALERT_EMAIL_PASS) {
     return nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: { user: process.env.ALERT_EMAIL_FROM, pass: process.env.ALERT_EMAIL_PASS },
     });
   }
