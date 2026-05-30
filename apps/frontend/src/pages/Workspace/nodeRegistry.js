@@ -43,6 +43,7 @@ import {
   Mic2,
   Box,
   Video,
+  MessageSquare,
   MessageSquarePlus,
   TrendingUp,
   Youtube,
@@ -450,39 +451,17 @@ const XAINode = makeOpenAICompatNode({
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [
-  { id: "trigger", label: "Triggers", icon: Zap, shape: "square" },
-  { id: "ai", label: "AI", icon: Sparkles, shape: "glass" },
-  { id: "data", label: "Data & APIs", icon: Database, shape: "sharp" },
-  { id: "transform", label: "Data Processing", icon: Layers, shape: "sharp" },
-  { id: "research", label: "Research", icon: Search, shape: "sharp" },
-  { id: "flow", label: "Flow Control", icon: GitFork, shape: "sharp" },
-  { id: "code", label: "Code", icon: Code2, shape: "sharp" },
-  { id: "integration", label: "Integrations", icon: Package, shape: "pill" },
-  { id: "devtools", label: "Developer Tools", icon: Server, shape: "rounded" },
-  { id: "payments", label: "Payments", icon: CreditCard, shape: "rounded" },
-  { id: "crm", label: "CRM & Commerce", icon: ShoppingBag, shape: "rounded" },
-  { id: "social", label: "Social Media", icon: Users, shape: "rounded" },
-  {
-    id: "education",
-    label: "Education & AI",
-    icon: GraduationCap,
-    shape: "rounded",
-  },
-  { id: "design", label: "Design & Creative", icon: PenTool, shape: "pill" },
-  { id: "social_pub", label: "Social Media", icon: Share2, shape: "rounded" },
-  {
-    id: "finance",
-    label: "Finance & Accounting",
-    icon: DollarSign,
-    shape: "rounded",
-  },
-  { id: "gaming", label: "Gaming", icon: Gamepad2, shape: "sharp" },
-  {
-    id: "automation",
-    label: "Automation Utilities",
-    icon: Zap,
-    shape: "sharp",
-  },
+  { id: "trigger",      label: "Triggers",        icon: Zap,           shape: "square"  },
+  { id: "ai",           label: "AI Models",        icon: Sparkles,      shape: "glass"   },
+  { id: "code",         label: "Code & Local AI",  icon: Code2,         shape: "sharp"   },
+  { id: "messaging",    label: "Messaging",        icon: MessageSquare, shape: "pill"    },
+  { id: "productivity", label: "Productivity",     icon: Briefcase,     shape: "pill"    },
+  { id: "social",       label: "Social & Content", icon: Share2,        shape: "rounded" },
+  { id: "commerce",     label: "Commerce & CRM",   icon: ShoppingBag,   shape: "rounded" },
+  { id: "data",         label: "Data & APIs",      icon: Database,      shape: "sharp"   },
+  { id: "transform",    label: "Transform",        icon: Layers,        shape: "sharp"   },
+  { id: "flow",         label: "Flow Control",     icon: GitFork,       shape: "sharp"   },
+  { id: "devops",       label: "DevOps",           icon: Server,        shape: "rounded" },
 ];
 
 export const NodeRegistry = {
@@ -1926,7 +1905,7 @@ export const NodeRegistry = {
     logoUrl: imgComputer,
     imgFilter: "brightness(0) invert(1)",
     ConfigPanel: InformerNode,
-    category: "research",
+    category: "data",
   },
   web_search: {
     label: "Web Search",
@@ -1935,7 +1914,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "129,140,248",
     ConfigPanel: WebSearchNode,
-    category: "research",
+    category: "data",
   },
   // Logic & Flow
   delay: {
@@ -1990,7 +1969,7 @@ export const NodeRegistry = {
     accentColor: "38,165,228",
     logoUrl: imgTelegram,
     ConfigPanel: TelegramNode,
-    category: "integration",
+    category: "messaging",
   },
   whatsapp: {
     label: "WhatsApp",
@@ -1999,7 +1978,7 @@ export const NodeRegistry = {
     accentColor: "37,211,102",
     logoUrl: imgWhatsApp,
     ConfigPanel: WhatsAppNode,
-    category: "integration",
+    category: "messaging",
   },
   slack: {
     label: "Slack",
@@ -2008,7 +1987,7 @@ export const NodeRegistry = {
     accentColor: "224,30,90",
     logoUrl: imgSlack,
     ConfigPanel: SlackNode,
-    category: "integration",
+    category: "messaging",
   },
   discord: {
     label: "Discord",
@@ -2017,7 +1996,7 @@ export const NodeRegistry = {
     accentColor: "88,101,242",
     logoUrl: imgDiscord,
     ConfigPanel: DiscordNode,
-    category: "integration",
+    category: "messaging",
   },
   gmail: {
     label: "Gmail",
@@ -2026,7 +2005,7 @@ export const NodeRegistry = {
     accentColor: "234,67,53",
     logoUrl: imgGmail,
     ConfigPanel: GmailNode,
-    category: "integration",
+    category: "messaging",
   },
   twilio: {
     label: "Twilio",
@@ -2035,7 +2014,7 @@ export const NodeRegistry = {
     accentColor: "242,47,70",
     logoUrl: imgTwilio,
     ConfigPanel: TwilioNode,
-    category: "integration",
+    category: "messaging",
   },
   sendgrid: {
     label: "SendGrid",
@@ -2044,7 +2023,7 @@ export const NodeRegistry = {
     accentColor: "26,130,226",
     logoUrl: imgSendGrid,
     ConfigPanel: SendGridNode,
-    category: "integration",
+    category: "messaging",
   },
   airtable: {
     label: "Airtable",
@@ -2053,7 +2032,7 @@ export const NodeRegistry = {
     accentColor: "246,88,88",
     logoUrl: imgAirtable,
     ConfigPanel: AirtableNode,
-    category: "integration",
+    category: "productivity",
   },
   google_sheets: {
     label: "Google Sheets",
@@ -2062,7 +2041,7 @@ export const NodeRegistry = {
     accentColor: "15,157,88",
     logoUrl: imgGoogleSheets,
     ConfigPanel: GoogleSheetsNode,
-    category: "integration",
+    category: "productivity",
   },
   notion: {
     label: "Notion",
@@ -2071,7 +2050,7 @@ export const NodeRegistry = {
     accentColor: "255,255,255",
     logoUrl: imgNotion,
     ConfigPanel: NotionNode,
-    category: "integration",
+    category: "productivity",
   },
 
   // Google Workspace
@@ -2082,7 +2061,7 @@ export const NodeRegistry = {
     accentColor: "66,133,244",
     logoUrl: imgGoogleCalendar,
     ConfigPanel: GoogleCalendarNode,
-    category: "integration",
+    category: "productivity",
   },
   google_drive: {
     label: "Google Drive",
@@ -2091,7 +2070,7 @@ export const NodeRegistry = {
     accentColor: "251,188,4",
     logoUrl: imgGoogleDrive,
     ConfigPanel: GoogleDriveNode,
-    category: "integration",
+    category: "productivity",
   },
 
   // Developer Tools
@@ -2101,7 +2080,7 @@ export const NodeRegistry = {
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: EnvVariableNode,
-    category: "devtools",
+    category: "devops",
     description: "Inject, read or assert environment variables in the workflow",
   },
   graphql_request: {
@@ -2110,7 +2089,7 @@ export const NodeRegistry = {
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: GraphQLNode,
-    category: "devtools",
+    category: "data",
     description: "Query or mutate any GraphQL API with variables and auth",
   },
   sftp: {
@@ -2119,7 +2098,7 @@ export const NodeRegistry = {
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: SftpNode,
-    category: "devtools",
+    category: "devops",
     description: "Upload, download, list or delete files via SFTP",
   },
   s3: {
@@ -2129,7 +2108,7 @@ export const NodeRegistry = {
     accentColor: "251,191,36",
     logoUrl: imgAWS,
     ConfigPanel: S3Node,
-    category: "devtools",
+    category: "devops",
     description:
       "AWS S3 (and S3-compatible) object storage — upload, download, presign",
   },
@@ -2139,7 +2118,7 @@ export const NodeRegistry = {
     colorClass: "text-violet-400",
     accentColor: "167,139,250",
     ConfigPanel: WebhookResponseNode,
-    category: "devtools",
+    category: "devops",
     description: "Send a custom HTTP response to the webhook caller",
   },
   github: {
@@ -2149,7 +2128,7 @@ export const NodeRegistry = {
     accentColor: "244,244,245",
     logoUrl: imgGitHub,
     ConfigPanel: GithubNode,
-    category: "devtools",
+    category: "devops",
   },
   jira: {
     label: "Jira",
@@ -2158,7 +2137,7 @@ export const NodeRegistry = {
     accentColor: "38,132,255",
     logoUrl: imgJira,
     ConfigPanel: JiraNode,
-    category: "devtools",
+    category: "productivity",
   },
   linear: {
     label: "Linear",
@@ -2167,7 +2146,7 @@ export const NodeRegistry = {
     accentColor: "94,106,210",
     logoUrl: imgLinear,
     ConfigPanel: LinearNode,
-    category: "devtools",
+    category: "productivity",
   },
 
   // Payments
@@ -2178,7 +2157,7 @@ export const NodeRegistry = {
     accentColor: "99,91,255",
     logoUrl: imgStripe,
     ConfigPanel: StripeNode,
-    category: "payments",
+    category: "commerce",
   },
 
   // CRM & E-commerce
@@ -2189,7 +2168,7 @@ export const NodeRegistry = {
     accentColor: "255,122,89",
     logoUrl: imgHubSpot,
     ConfigPanel: HubSpotNode,
-    category: "crm",
+    category: "commerce",
   },
   shopify: {
     label: "Shopify",
@@ -2198,7 +2177,7 @@ export const NodeRegistry = {
     accentColor: "149,191,71",
     logoUrl: imgShopify,
     ConfigPanel: ShopifyNode,
-    category: "crm",
+    category: "commerce",
   },
 
 
@@ -2313,7 +2292,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgElevenLabs,
     ConfigPanel: ElevenLabsNode,
-    category: "integration",
+    category: "transform",
   },
   pinecone: {
     label: "Pinecone",
@@ -2334,7 +2313,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgResend,
     ConfigPanel: ResendNode,
-    category: "integration",
+    category: "messaging",
   },
   gitlab: {
     label: "GitLab",
@@ -2343,7 +2322,7 @@ export const NodeRegistry = {
     accentColor: "252,109,38",
     logoUrl: imgGitLab,
     ConfigPanel: GitLabNode,
-    category: "devtools",
+    category: "devops",
     description: "Manage GitLab issues, MRs, pipelines and repositories",
   },
   trello: {
@@ -2353,7 +2332,7 @@ export const NodeRegistry = {
     accentColor: "0,82,204",
     logoUrl: imgTrello,
     ConfigPanel: TrelloNode,
-    category: "devtools",
+    category: "productivity",
     description:
       "Create cards, move to lists, add comments and manage Trello boards",
   },
@@ -2364,7 +2343,7 @@ export const NodeRegistry = {
     accentColor: "240,106,106",
     logoUrl: imgAsana,
     ConfigPanel: AsanaNode,
-    category: "crm",
+    category: "productivity",
     description: "Create tasks, update status and manage Asana projects",
   },
   clickup: {
@@ -2374,7 +2353,7 @@ export const NodeRegistry = {
     accentColor: "123,104,238",
     logoUrl: imgClickUp,
     ConfigPanel: ClickUpNode,
-    category: "crm",
+    category: "productivity",
     description: "Create tasks, update status and manage ClickUp spaces",
   },
   monday: {
@@ -2384,7 +2363,7 @@ export const NodeRegistry = {
     accentColor: "255,61,87",
     logoUrl: imgMonday,
     ConfigPanel: MondayNode,
-    category: "crm",
+    category: "productivity",
     description: "Create items, update columns and manage Monday.com boards",
   },
   pipedrive: {
@@ -2394,7 +2373,7 @@ export const NodeRegistry = {
     accentColor: "245,81,55",
     logoUrl: imgPipedrive,
     ConfigPanel: PipedriveNode,
-    category: "crm",
+    category: "commerce",
     description: "Create deals, contacts, activities and manage Pipedrive CRM",
   },
   intercom: {
@@ -2404,7 +2383,7 @@ export const NodeRegistry = {
     accentColor: "31,141,237",
     logoUrl: imgIntercom,
     ConfigPanel: IntercomNode,
-    category: "crm",
+    category: "commerce",
     description:
       "Send messages, create conversations and manage Intercom contacts",
   },
@@ -2415,7 +2394,7 @@ export const NodeRegistry = {
     accentColor: "127,84,179",
     logoUrl: imgWooCommerce,
     ConfigPanel: WooCommerceNode,
-    category: "crm",
+    category: "commerce",
     description: "Manage WooCommerce orders, products and customers",
   },
   typeform: {
@@ -2425,7 +2404,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgTypeform,
     ConfigPanel: TypeformNode,
-    category: "integration",
+    category: "productivity",
     description: "Create forms, fetch responses and manage Typeform workspaces",
   },
   // Microsoft
@@ -2436,7 +2415,7 @@ export const NodeRegistry = {
     accentColor: "0,120,212",
     logoUrl: imgOutlook,
     ConfigPanel: OutlookNode,
-    category: "integration",
+    category: "messaging",
     description:
       "Send emails, manage calendar and contacts via Microsoft Outlook",
   },
@@ -2447,7 +2426,7 @@ export const NodeRegistry = {
     accentColor: "98,100,167",
     logoUrl: imgTeams,
     ConfigPanel: TeamsNode,
-    category: "integration",
+    category: "messaging",
     description: "Send messages, create channels and manage Microsoft Teams",
   },
   onedrive: {
@@ -2457,7 +2436,7 @@ export const NodeRegistry = {
     accentColor: "0,120,212",
     logoUrl: imgOneDrive,
     ConfigPanel: OneDriveNode,
-    category: "integration",
+    category: "productivity",
     description: "Upload, download and manage files in Microsoft OneDrive",
   },
   sharepoint: {
@@ -2467,7 +2446,7 @@ export const NodeRegistry = {
     accentColor: "0,120,212",
     logoUrl: imgSharePoint,
     ConfigPanel: SharePointNode,
-    category: "integration",
+    category: "productivity",
     description: "Manage SharePoint lists, libraries and pages",
   },
   azure_devops: {
@@ -2477,7 +2456,7 @@ export const NodeRegistry = {
     accentColor: "0,120,212",
     logoUrl: imgAzureDevOps,
     ConfigPanel: AzureDevOpsNode,
-    category: "devtools",
+    category: "devops",
     description: "Manage work items, pipelines and repos in Azure DevOps",
   },
   // Google
@@ -2488,7 +2467,7 @@ export const NodeRegistry = {
     accentColor: "66,133,244",
     logoUrl: imgGoogleDocs,
     ConfigPanel: GoogleDocsNode,
-    category: "integration",
+    category: "productivity",
     description: "Create, read and update Google Docs documents",
   },
   google_forms: {
@@ -2498,7 +2477,7 @@ export const NodeRegistry = {
     accentColor: "103,58,183",
     logoUrl: imgGoogleForms,
     ConfigPanel: GoogleFormsNode,
-    category: "integration",
+    category: "productivity",
     description: "Create forms, fetch responses and manage Google Forms",
   },
   // DevOps / Monitoring
@@ -2509,7 +2488,7 @@ export const NodeRegistry = {
     accentColor: "251,66,38",
     logoUrl: imgSentry,
     ConfigPanel: SentryNode,
-    category: "devtools",
+    category: "devops",
     description: "Resolve issues, assign errors and manage Sentry projects",
   },
   vercel: {
@@ -2519,7 +2498,7 @@ export const NodeRegistry = {
     accentColor: "228,228,231",
     logoUrl: imgVercel,
     ConfigPanel: VercelNode,
-    category: "devtools",
+    category: "devops",
     description: "Trigger deployments, manage domains and fetch deploy status",
   },
   netlify: {
@@ -2529,7 +2508,7 @@ export const NodeRegistry = {
     accentColor: "0,199,183",
     logoUrl: imgNetlify,
     ConfigPanel: NetlifyNode,
-    category: "devtools",
+    category: "devops",
     description: "Trigger builds, manage deploys and update site config",
   },
   pagerduty: {
@@ -2539,7 +2518,7 @@ export const NodeRegistry = {
     accentColor: "6,172,56",
     logoUrl: imgPagerDuty,
     ConfigPanel: PagerDutyNode,
-    category: "devtools",
+    category: "devops",
     description:
       "Create incidents, acknowledge alerts and manage on-call schedules",
   },
@@ -2550,7 +2529,7 @@ export const NodeRegistry = {
     accentColor: "99,44,166",
     logoUrl: imgDatadog,
     ConfigPanel: DatadogNode,
-    category: "devtools",
+    category: "devops",
     description: "Send metrics, create monitors and query Datadog dashboards",
   },
   zendesk: {
@@ -2560,7 +2539,7 @@ export const NodeRegistry = {
     accentColor: "3,54,61",
     logoUrl: imgZendesk,
     ConfigPanel: ZendeskNode,
-    category: "crm",
+    category: "commerce",
     description:
       "Create tickets, reply to customers and manage Zendesk support",
   },
@@ -2571,7 +2550,7 @@ export const NodeRegistry = {
     accentColor: "0,107,255",
     logoUrl: imgCalendly,
     ConfigPanel: CalendlyNode,
-    category: "crm",
+    category: "productivity",
     description:
       "Fetch bookings, cancel meetings and manage Calendly event types",
   },
@@ -2582,7 +2561,7 @@ export const NodeRegistry = {
     accentColor: "255,224,27",
     logoUrl: imgMailchimp,
     ConfigPanel: MailchimpNode,
-    category: "integration",
+    category: "messaging",
     description: "Add subscribers, send campaigns and manage Mailchimp lists",
   },
   figma: {
@@ -2592,7 +2571,7 @@ export const NodeRegistry = {
     accentColor: "242,78,30",
     logoUrl: imgFigma,
     ConfigPanel: FigmaNode,
-    category: "design",
+    category: "productivity",
     description: "Fetch files, post comments and export assets from Figma",
   },
   // Infra
@@ -2603,7 +2582,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgSsh,
     ConfigPanel: SshTriggerNode,
-    category: "devtools",
+    category: "devops",
     description: "Run a command on a remote server via SSH and capture output",
   },
   // Content / Feed
@@ -2614,7 +2593,7 @@ export const NodeRegistry = {
     accentColor: "248,113,113",
     logoUrl: imgYouTube,
     ConfigPanel: YouTubeUploadNode,
-    category: "social_pub",
+    category: "social",
     description: "Upload videos, manage playlists and fetch channel data",
   },
   reddit: {
@@ -2624,7 +2603,7 @@ export const NodeRegistry = {
     accentColor: "255,69,0",
     logoUrl: imgReddit,
     ConfigPanel: RedditNode,
-    category: "social_pub",
+    category: "social",
     description: "Post to subreddits, comment and fetch hot posts",
   },
   instagram: {
@@ -2634,7 +2613,7 @@ export const NodeRegistry = {
     accentColor: "228,64,95",
     logoUrl: imgInstagram,
     ConfigPanel: InstagramNode,
-    category: "social_pub",
+    category: "social",
     description: "Read posts, user media and publish content via Meta Graph API",
   },
   tiktok: {
@@ -2644,7 +2623,7 @@ export const NodeRegistry = {
     accentColor: "244,244,245",
     logoUrl: imgTikTok,
     ConfigPanel: TikTokNode,
-    category: "social_pub",
+    category: "social",
     description: "Read user videos and channel data via TikTok v2 API",
   },
   linkedin: {
@@ -2654,7 +2633,7 @@ export const NodeRegistry = {
     accentColor: "10,102,194",
     logoUrl: imgLinkedIn,
     ConfigPanel: LinkedInNode,
-    category: "social_pub",
+    category: "social",
     description: "Share posts, get profile and company data",
   },
   zoom: {
@@ -2664,13 +2643,13 @@ export const NodeRegistry = {
     accentColor: "45,140,255",
     logoUrl: imgZoom,
     ConfigPanel: ZoomNode,
-    category: "integration",
+    category: "productivity",
     description: "Create and manage Zoom meetings",
   },
-  ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "devtools", description: "Geolocate any IP — city, country, timezone, ISP" },
-  dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "devtools", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
-  ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "devtools", description: "Inspect TLS certificate expiry and validity for any hostname" },
-  http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "devtools", description: "Check if an HTTP endpoint is up, track status code and latency" },
+  ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "devops", description: "Geolocate any IP — city, country, timezone, ISP" },
+  dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "devops", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
+  ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "devops", description: "Inspect TLS certificate expiry and validity for any hostname" },
+  http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "devops", description: "Check if an HTTP endpoint is up, track status code and latency" },
   rss: {
     label: "RSS Feed",
     icon: Rss,
@@ -2678,7 +2657,7 @@ export const NodeRegistry = {
     accentColor: "251,146,60",
     logoUrl: imgRss,
     ConfigPanel: RssFeedGeneratorNode,
-    category: "research",
+    category: "data",
     description: "Read, parse and generate RSS / Atom feeds",
   },
   database: {
@@ -2697,7 +2676,7 @@ export const NodeRegistry = {
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
     ConfigPanel: EmailTriggerNode,
-    category: "integration",
+    category: "messaging",
     description:
       "Receive inbound emails via Mailgun, SendGrid or Postmark webhook",
   },
@@ -2708,7 +2687,7 @@ export const NodeRegistry = {
     accentColor: "34,211,238",
     logoUrl: imgImap,
     ConfigPanel: ImapTriggerNode,
-    category: "integration",
+    category: "messaging",
     description: "Poll any IMAP inbox for new emails",
   },
   error: {
@@ -2730,7 +2709,7 @@ export const NodeRegistry = {
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
     ConfigPanel: VariableSetGetNode,
-    category: "automation",
+    category: "transform",
     description:
       "Store and retrieve values across nodes with execution/workflow/global scope",
   },
@@ -2740,7 +2719,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "96,165,250",
     ConfigPanel: FileUploadNode,
-    category: "automation",
+    category: "transform",
     description: "Upload to S3, GCS, Azure Blob, SFTP or HTTP PUT",
   },
   file_download: {
@@ -2749,7 +2728,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "52,211,153",
     ConfigPanel: FileDownloadNode,
-    category: "automation",
+    category: "transform",
     description:
       "Download any URL into payload as base64, text, JSON or buffer",
   },
@@ -2759,7 +2738,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "161,161,170",
     ConfigPanel: ZipFilesNode,
-    category: "automation",
+    category: "transform",
     description:
       "Compress or extract ZIP, TAR and TAR.GZ archives with password support",
   },
@@ -2771,7 +2750,7 @@ export const NodeRegistry = {
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     ConfigPanel: TranslationNode,
-    category: "education",
+    category: "transform",
     description:
       "Translate text between 25+ languages via OpenAI, Google or DeepL",
   },
@@ -2781,7 +2760,7 @@ export const NodeRegistry = {
     colorClass: "text-purple-400",
     accentColor: "167,139,250",
     ConfigPanel: TextToSpeechNode,
-    category: "education",
+    category: "transform",
     description:
       "Convert text to natural-sounding audio via Whisper, ElevenLabs or Google",
   },
@@ -2791,7 +2770,7 @@ export const NodeRegistry = {
     colorClass: "text-rose-400",
     accentColor: "251,113,133",
     ConfigPanel: SpeechToTextNode,
-    category: "education",
+    category: "transform",
     description: "Transcribe audio to text via Whisper, Google or AssemblyAI",
   },
   ocr: {
@@ -2800,7 +2779,7 @@ export const NodeRegistry = {
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     ConfigPanel: OcrNode,
-    category: "education",
+    category: "transform",
     description: "Extract text from images and scanned documents",
   },
 
