@@ -17,14 +17,12 @@ async function bootstrap() {
     const pong = await redis.get("ping");
     console.log("Redis ping:", pong);
 
-    // 3. Pre-warm browser cluster (non-fatal)
-    try {
-      const { browserCluster } = await import("./core/browser.manager.js");
-      console.log("Pre-warming browser cluster...");
-      await browserCluster.getCluster();
-    } catch (err) {
-      console.warn("Puppeteer cluster pre-warm skipped:", err.message);
-    }
+    // 3. Pre-warm browser cluster in background (non-blocking — lazy init on first scrape if Chrome absent)
+    import("./core/browser.manager.js").then(({ browserCluster }) => {
+      browserCluster.getCluster().catch((err) =>
+        console.warn("Puppeteer cluster pre-warm skipped:", err.message)
+      );
+    }).catch(() => {});
 
     // 3a. Start server-side Ollama (non-fatal — skipped if ollama binary not installed)
     try {

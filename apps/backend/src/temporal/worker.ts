@@ -23,6 +23,7 @@ const TASK_QUEUE = "blinkbox-workflows";
 export async function startTemporalWorker(): Promise<void> {
   const connection = await NativeConnection.connect({
     address: TEMPORAL_ADDRESS,
+    connectTimeout: { seconds: 5 },
   });
 
   const worker = await Worker.create({
