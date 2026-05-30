@@ -394,7 +394,7 @@ function SuggestionGhostNode({ data }) {
 function CustomNode({ id, data, selected }) {
   if (data.isSuggestion) return <SuggestionGhostNode id={id} data={data} />;
 
-  const [isHovered, setIsHovered] = useState(false);
+  const isHovered = useWorkspaceStore(s => s.hoveredNodeId === id);
   const [pickerOpen, setPickerOpen] = useState(false);
   const { id: automationId } = useParams();
   const { deleteElements } = useReactFlow();
@@ -485,8 +485,7 @@ function CustomNode({ id, data, selected }) {
     const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
-      <div className="relative group" style={{ width: cardW, height: cardH + 54 }}
-        onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className="relative group" style={{ width: cardW, height: cardH + 54 }}>
         {toolbar}
         {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
@@ -523,8 +522,7 @@ function CustomNode({ id, data, selected }) {
     const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
-      <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
-        onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className="relative group" style={{ width: cardW, height: cardH + 48 }}>
         {toolbar}
         {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
@@ -594,8 +592,7 @@ function CustomNode({ id, data, selected }) {
       : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
     return (
-      <div className="relative group" style={{ width: d, height: d + 22 }}
-        onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className="relative group" style={{ width: d, height: d + 22 }}>
         {toolbar}
         {parentAgentRunning && <SpinBorder radius={9999} w={d} h={d} slow color1="#a78bfa" color2="#c4b5fd" />}
 
@@ -662,8 +659,7 @@ function CustomNode({ id, data, selected }) {
     const cardH = Math.max(110, workers * 24 + 30);
 
     return (
-      <div className="relative group" style={{ width: cardW, height: cardH + 28 }}
-        onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className="relative group" style={{ width: cardW, height: cardH + 28 }}>
         {toolbar}
         <Handle type="target" position={Position.Left} id="input"
           className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
@@ -716,8 +712,7 @@ function CustomNode({ id, data, selected }) {
   const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   return (
-    <div className="relative group" style={{ width: cardW, height: cardH + 48 }}
-      onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div className="relative group" style={{ width: cardW, height: cardH + 48 }}>
       {toolbar}
       {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 

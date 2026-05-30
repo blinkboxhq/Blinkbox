@@ -20,6 +20,7 @@ for (const [id, v] of Object.entries(TRIGGER_VARIANTS)) {
 export const createUISlice = (set, get) => ({
   // ── State ────────────────────────────────────────────────────────────────
   selectedNodeId: null,
+  hoveredNodeId: null,
   isRightSidebarOpen: false,
   isTriggerPickerOpen: false,
   isAddNodeOpen: false,
@@ -39,6 +40,7 @@ export const createUISlice = (set, get) => ({
 
   // ── Actions ──────────────────────────────────────────────────────────────
   setSelectedNodeId: (nodeId) => set({ selectedNodeId: nodeId }),
+  setHoveredNodeId: (nodeId) => set({ hoveredNodeId: nodeId }),
   setRightSidebarOpen: (isOpen) => set({ isRightSidebarOpen: isOpen }),
   setTriggerPickerOpen: (isOpen) => set({ isTriggerPickerOpen: isOpen, ...(isOpen ? { isAddNodeOpen: false } : {}) }),
   setAddNodeOpen: (isOpen) => set({ isAddNodeOpen: isOpen, ...(isOpen ? { isTriggerPickerOpen: false } : {}) }),
