@@ -686,6 +686,8 @@ export default function Landing() {
             <a href="#features" className="hover:text-neutral-400 transition-colors">Features</a>
             <a href="#pricing" className="hover:text-neutral-400 transition-colors">Pricing</a>
             <a href="#how-it-works" className="hover:text-neutral-400 transition-colors">How it Works</a>
+            <a href="/privacy" className="hover:text-neutral-400 transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-neutral-400 transition-colors">Terms</a>
             <span>&copy; {new Date().getFullYear()} BlinkBox</span>
           </div>
         </div>
