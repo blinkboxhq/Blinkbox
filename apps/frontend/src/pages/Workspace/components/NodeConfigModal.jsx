@@ -384,8 +384,8 @@ export default function NodeConfigModal() {
   const nodes             = useWorkspaceStore((s) => s.nodes);
   const updateNodeConfig  = useWorkspaceStore((s) => s.updateNodeConfig);
   const renameNode        = useWorkspaceStore((s) => s.renameNode);
-  const lastRunOutputs    = useWorkspaceStore((s) => s.lastRunOutputs);
-  const nodeStatuses      = useWorkspaceStore((s) => s.nodeStatuses);
+  const lastOutput        = useWorkspaceStore((s) => s.lastRunOutputs?.[s.selectedNodeId] ?? null);
+  const nodeStatus        = useWorkspaceStore((s) => s.nodeStatuses?.[s.selectedNodeId] ?? null);
 
   const node       = nodes.find((n) => n.id === selectedNodeId) ?? null;
   const isOpen     = !!selectedNodeId && !!node;
@@ -398,8 +398,6 @@ export default function NodeConfigModal() {
   const logoUrl    = variant?.logoUrl || nodeDef?.logoUrl;
   const imgFilter  = variant?.imgFilter || nodeDef?.imgFilter;
   const nodeLabel  = node?.data.config?.customLabel || node?.data.config?.selectedAction || def?.label || node?.data.label || "";
-  const nodeStatus = nodeStatuses?.[selectedNodeId];
-  const lastOutput = lastRunOutputs?.[selectedNodeId];
 
   // Resizable panels — percentages [p0, p1, p2]
   const containerRef = useRef(null);

@@ -101,7 +101,6 @@ export default function Canvas() {
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const isValidConnection = useWorkspaceStore((s) => s.isValidConnection);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
-  const setHoveredNodeId = useWorkspaceStore((s) => s.setHoveredNodeId);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
   const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
@@ -349,8 +348,6 @@ export default function Canvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}
-        onNodeMouseEnter={(_, node) => setHoveredNodeId(node.id)}
-        onNodeMouseLeave={() => setHoveredNodeId(null)}
         onNodeClick={(e, node) => { if (node.id !== "__placeholder__") setSelectedNodeId(node.id); }}
         onNodeContextMenu={(e, node) => {
           if (node.id === "__placeholder__") return;
