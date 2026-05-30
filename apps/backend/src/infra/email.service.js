@@ -1,41 +1,68 @@
 import nodemailer from "nodemailer";
 
-// ─── Transporter ─────────────────────────────────────────────────────────────
-// Priority: Resend → custom SMTP → Gmail fallback
-function createTransport() {
-  if (process.env.RESEND_API_KEY) {
-    return nodemailer.createTransport({
-      host: "smtp.resend.com",
-      port: 465,
-      secure: true,
-      auth: { user: "resend", pass: process.env.RESEND_API_KEY },
-    });
-  }
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-  }
-  if (process.env.ALERT_EMAIL_FROM && process.env.ALERT_EMAIL_PASS) {
-    return nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: { user: process.env.ALERT_EMAIL_FROM, pass: process.env.ALERT_EMAIL_PASS },
-    });
-  }
-  return null;
-}
-
-const FROM_NAME  = process.env.EMAIL_FROM_NAME || "Blinkbox";
-const FROM_ADDR  = process.env.EMAIL_FROM_ADDR || process.env.SMTP_USER || process.env.ALERT_EMAIL_FROM;
-const APP_URL    = process.env.VITE_APP_URL    || "https://blinkbox.net";
+const APP_URL    = process.env.VITE_APP_URL || "https://blinkbox.net";
 const APP_NAME   = "Blinkbox";
 const BRAND_CLR  = "#7c3aed";
 const BRAND_DARK = "#5b21b6";
+
+// ─── Send ─────────────────────────────────────────────────────────────────────
+// Primary: Resend REST API (fetch — no SMTP, no port issues)
+// Fallback: nodemailer → Gmail SMTP
+async function send({ to, subject, html }) {
+  const fromName = process.env.EMAIL_FROM_NAME || "Blinkbox";
+  const fromAddr = process.env.EMAIL_FROM_ADDR || process.env.ALERT_EMAIL_FROM;
+
+  if (!fromAddr) {
+    console.error("[Email] EMAIL_FROM_ADDR not set — cannot send email");
+    return;
+  }
+
+  const from = `${fromName} <${fromAddr}>`;
+
+  // ── Resend REST API (preferred) ──────────────────────────────────────────
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ from, to, subject, html }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(`[Email] Resend API error ${res.status}:`, JSON.stringify(data));
+      } else {
+        console.log(`[Email] Sent via Resend — id:${data.id} to:${to} subject:"${subject}"`);
+      }
+      return;
+    } catch (err) {
+      console.error("[Email] Resend fetch failed:", err.message);
+    }
+  }
+
+  // ── Gmail SMTP fallback ──────────────────────────────────────────────────
+  if (process.env.ALERT_EMAIL_FROM && process.env.ALERT_EMAIL_PASS) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: { user: process.env.ALERT_EMAIL_FROM, pass: process.env.ALERT_EMAIL_PASS },
+      });
+      await transporter.sendMail({ from, to, subject, html });
+      console.log(`[Email] Sent via Gmail SMTP to:${to} subject:"${subject}"`);
+    } catch (err) {
+      console.error("[Email] Gmail SMTP failed:", err.message);
+    }
+    return;
+  }
+
+  console.error("[Email] No transport configured (set RESEND_API_KEY or ALERT_EMAIL_FROM+ALERT_EMAIL_PASS)");
+}
 
 // ─── Base layout ─────────────────────────────────────────────────────────────
 function layout({ preheader = "", subject = "", body = "" }) {
@@ -453,19 +480,6 @@ export function buildRegistrationEmail({ name, verifyUrl }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // SEND HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
-
-async function send({ to, subject, html }) {
-  const transporter = createTransport();
-  if (!transporter) {
-    console.warn("[Email] No email transporter configured — skipping send");
-    return;
-  }
-  try {
-    await transporter.sendMail({ from: `"${FROM_NAME}" <${FROM_ADDR}>`, to, subject, html });
-  } catch (err) {
-    console.error(`[Email] Failed to send "${subject}" to ${to}:`, err.message);
-  }
-}
 
 export async function sendRegistrationEmail(user, verifyUrl) {
   const { subject, html } = buildRegistrationEmail({ name: user.name, verifyUrl });

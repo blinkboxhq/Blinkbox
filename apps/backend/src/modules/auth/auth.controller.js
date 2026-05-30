@@ -162,7 +162,7 @@ export async function verifyEmail(req, res) {
     await user.save();
     await redis.del(key);
 
-    sendWelcomeEmail(user).catch(() => {});
+    sendWelcomeEmail(user).catch(err => console.error("[Auth] welcome email failed:", err.message));
 
     const jwtToken = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
 
@@ -266,7 +266,7 @@ export async function resetPassword(req, res) {
     await redis.del(key);
     await redis.del(`bb:reset:uid:${userId}`);
 
-    sendPasswordChangedEmail(user).catch(() => {});
+    sendPasswordChangedEmail(user).catch(err => console.error("[Auth] password-changed email failed:", err.message));
 
     res.json({ success: true, message: "Password updated. You can now sign in." });
   } catch (err) {
@@ -318,7 +318,7 @@ export async function login(req, res) {
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
 
     const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
-    sendLoginAlertEmail(user, { ip, userAgent: req.headers["user-agent"] }).catch(() => {});
+    sendLoginAlertEmail(user, { ip, userAgent: req.headers["user-agent"] }).catch(err => console.error("[Auth] login alert email failed:", err.message));
 
     res.json({
       message: "Authentication successful.",
