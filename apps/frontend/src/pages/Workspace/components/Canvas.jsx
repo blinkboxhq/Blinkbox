@@ -282,8 +282,10 @@ export default function Canvas() {
   }, [storeNodes, isLoading, suggestionNode]);
 
   const liveEdges = useMemo(() => {
+    if (!isExecutionLive) return edges;
     return edges.map((edge) => {
-      const sourceStatus = isExecutionLive ? nodeStatuses[edge.source] : null;
+      const sourceStatus = nodeStatuses[edge.source];
+      if (!sourceStatus) return edge;
 
       const arrowColor = sourceStatus === "running"
         ? "#3b82f6"
@@ -293,7 +295,7 @@ export default function Canvas() {
 
       return {
         ...edge,
-        data: { ...edge.data, ...(sourceStatus ? { status: sourceStatus } : {}) },
+        data: { ...edge.data, status: sourceStatus },
         markerEnd: {
           type: MarkerType.ArrowClosed,
           width: 24,

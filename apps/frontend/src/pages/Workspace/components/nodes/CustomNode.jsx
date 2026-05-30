@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
 import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles, Plug } from "lucide-react";
 import { motion } from "framer-motion";
@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import useWorkspaceStore from "../../../../store/workspaceStore";
+import { useShallow } from "zustand/react/shallow";
 
 // ─── Inline output preview chip shown below completed action nodes ────────────
 function NodeOutputChip({ output }) {
@@ -390,7 +391,7 @@ function SuggestionGhostNode({ data }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
-export default function CustomNode({ id, data, selected }) {
+function CustomNode({ id, data, selected }) {
   if (data.isSuggestion) return <SuggestionGhostNode id={id} data={data} />;
 
   const [isHovered, setIsHovered] = useState(false);
@@ -407,7 +408,7 @@ export default function CustomNode({ id, data, selected }) {
   const getMappingWarnings = useWorkspaceStore(s => s.getMappingWarnings);
   const isRunning = useWorkspaceStore(s => s.isRunning);
   const runEngine = useWorkspaceStore(s => s.runEngine);
-  const edges = useWorkspaceStore(s => s.edges);
+  const edges = useWorkspaceStore(useShallow(s => s.edges.filter(e => e.source === id || e.target === id)));
   const setAddNodeSource = useWorkspaceStore(s => s.setAddNodeSource);
   const setSelectedNodeId = useWorkspaceStore(s => s.setSelectedNodeId);
   const duplicateNode = useWorkspaceStore(s => s.duplicateNode);
@@ -777,3 +778,5 @@ export default function CustomNode({ id, data, selected }) {
     </div>
   );
 }
+
+export default memo(CustomNode);
