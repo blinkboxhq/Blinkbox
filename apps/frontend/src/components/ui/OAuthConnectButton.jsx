@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link2, Loader2, CheckCircle2, AlertCircle, Unlink } from 'lucide-react';
 import { API_URL } from '../../lib/api';
 import api from '../../lib/api';
@@ -26,17 +26,31 @@ export default function OAuthConnectButton({
   const [error, setError] = useState(null);
   const [connectedCred, setConnectedCred] = useState(null);
 
-  // Fetch credential info if value is set
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; });
+  const hasAutoSelected = useRef(false);
+
+  // Fetch credential info when value changes; auto-select first matching credential when empty
   useEffect(() => {
     if (!value) {
       setConnectedCred(null);
+      if (provider && !hasAutoSelected.current) {
+        api.get('/api/credentials').then((res) => {
+          const creds = res.data.credentials || [];
+          const match = creds.find((c) => c.type === 'oauth' && c.provider === provider);
+          if (match) {
+            hasAutoSelected.current = true;
+            onChangeRef.current(match._id);
+          }
+        }).catch(() => {});
+      }
       return;
     }
     api.get('/api/credentials').then((res) => {
       const cred = (res.data.credentials || []).find((c) => c._id === value);
       setConnectedCred(cred || null);
     }).catch(() => {});
-  }, [value]);
+  }, [value, provider]);
 
   // Listen for postMessage from OAuth popup
   const handleMessage = useCallback(
