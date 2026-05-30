@@ -7,10 +7,12 @@ import axios from "axios";
 import { JWT_SECRET } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
 import {
+  sendRegistrationEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordChangedEmail,
+  sendLoginAlertEmail,
 } from "../../infra/email.service.js";
 
 const RESET_TTL  = 60 * 15;      // 15 minutes
@@ -126,7 +128,7 @@ export async function register(req, res) {
     await redis.set(`bb:verify:${verifyToken}`, String(user._id), "EX", VERIFY_TTL);
 
     const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
-    await sendVerificationEmail(user, verifyUrl);
+    await sendRegistrationEmail(user, verifyUrl);
 
     res.status(201).json({
       needsVerification: true,
@@ -205,15 +207,35 @@ export async function resendVerification(req, res) {
 
 // ── Forgot Password ───────────────────────────────────────────────────────────
 export async function forgotPassword(req, res) {
+  // Always return success — never reveal whether an email exists
   const { email } = req.body;
-  if (!email || typeof email !== "string") return res.json({ success: true });
+  if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return res.json({ success: true });
+  }
 
   try {
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user || !user.password) return res.json({ success: true });
+
+    // Google-only account — no password to reset, send a helpful nudge
+    if (user && !user.password) {
+      await sendPasswordResetEmail(
+        user,
+        `${APP_URL}/login`,
+        { googleOnly: true },
+      ).catch(() => {});
+      return res.json({ success: true });
+    }
+
+    if (!user) return res.json({ success: true });
+
+    // Invalidate any existing reset token for this user before issuing a new one
+    const userTokenKey = `bb:reset:uid:${user._id}`;
+    const oldToken = await redis.get(userTokenKey);
+    if (oldToken) await redis.del(`bb:reset:${oldToken}`);
 
     const token = crypto.randomBytes(32).toString("hex");
-    await redis.set(`bb:reset:${token}`, String(user._id), "EX", RESET_TTL);
+    await redis.set(`bb:reset:${token}`,           String(user._id), "EX", RESET_TTL);
+    await redis.set(`bb:reset:uid:${user._id}`,    token,            "EX", RESET_TTL);
 
     const resetUrl = `${APP_URL}/reset-password?token=${token}`;
     await sendPasswordResetEmail(user, resetUrl);
@@ -242,6 +264,7 @@ export async function resetPassword(req, res) {
     user.password = await bcrypt.hash(password, 12);
     await user.save();
     await redis.del(key);
+    await redis.del(`bb:reset:uid:${userId}`);
 
     sendPasswordChangedEmail(user).catch(() => {});
 
@@ -293,6 +316,9 @@ export async function login(req, res) {
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+
+    const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
+    sendLoginAlertEmail(user, { ip, userAgent: req.headers["user-agent"] }).catch(() => {});
 
     res.json({
       message: "Authentication successful.",

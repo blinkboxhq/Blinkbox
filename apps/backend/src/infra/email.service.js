@@ -369,6 +369,77 @@ export function buildLoginAlertEmail({ name, ip, userAgent, time }) {
   };
 }
 
+// 6. REGISTRATION EMAIL (thanks for joining + verify) ─────────────────────────
+export function buildRegistrationEmail({ name, verifyUrl }) {
+  const firstName = name.split(" ")[0];
+  const body = `
+    <!-- Top accent bar -->
+    <div style="height:4px;background:linear-gradient(90deg,${BRAND_CLR},#a855f7,#ec4899)"></div>
+
+    <div style="padding:40px 44px 44px">
+      <!-- Icon -->
+      <div style="width:52px;height:52px;background:#f5f3ff;border-radius:14px;text-align:center;line-height:52px;font-size:26px;margin-bottom:24px">🚀</div>
+
+      <h1 style="margin:0 0 10px;font-size:24px;font-weight:800;color:#111827;letter-spacing:-0.03em">Thanks for joining, ${firstName}!</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:#6b7280;line-height:1.7">
+        You're almost ready to start building automations. Your account has been created — just one quick step left.
+      </p>
+      <p style="margin:0 0 32px;font-size:15px;color:#6b7280;line-height:1.7">
+        Click the button below to verify your email and unlock your workspace.
+      </p>
+
+      ${btn(verifyUrl, "Verify my email & get started →")}
+
+      ${infoBox("⏱ This link expires in <strong>24 hours</strong>. After that you'll need to request a new one from the sign-in page.")}
+
+      ${divider}
+
+      <!-- What's waiting for you -->
+      <p style="margin:0 0 16px;font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em">What's waiting for you</p>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        ${[
+          ["⚡", "250+ nodes", "Connect any app or API without writing code."],
+          ["🔄", "Unlimited runs", "Automate as much as you need — no per-task limits."],
+          ["📊", "Live execution logs", "See every step's output in real time."],
+        ].map(([icon, title, desc]) => `
+          <tr>
+            <td style="padding:0 0 14px">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="width:38px;vertical-align:top">
+                    <span style="font-size:18px">${icon}</span>
+                  </td>
+                  <td style="vertical-align:top">
+                    <span style="font-size:13px;font-weight:700;color:#111827">${title}</span>
+                    <span style="font-size:13px;color:#9ca3af"> — ${desc}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        `).join("")}
+      </table>
+
+      ${divider}
+
+      <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6">
+        Didn't create this account? You can safely ignore this email — nothing will happen.
+        <br/>Trouble clicking the button? Copy this into your browser:<br/>
+        <span style="font-size:11px;color:#d1d5db;word-break:break-all">${verifyUrl}</span>
+      </p>
+    </div>
+  `;
+
+  return {
+    subject: `Thanks for joining ${APP_NAME} — please verify your email`,
+    html: layout({
+      preheader: `Hi ${firstName}! Your ${APP_NAME} account is ready. Verify your email to get started.`,
+      subject: `Thanks for joining ${APP_NAME}`,
+      body,
+    }),
+  };
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // SEND HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
@@ -386,6 +457,11 @@ async function send({ to, subject, html }) {
   }
 }
 
+export async function sendRegistrationEmail(user, verifyUrl) {
+  const { subject, html } = buildRegistrationEmail({ name: user.name, verifyUrl });
+  await send({ to: user.email, subject, html });
+}
+
 export async function sendVerificationEmail(user, verifyUrl) {
   const { subject, html } = buildVerificationEmail({ name: user.name, verifyUrl });
   await send({ to: user.email, subject, html });
@@ -396,7 +472,33 @@ export async function sendWelcomeEmail(user) {
   await send({ to: user.email, subject, html });
 }
 
-export async function sendPasswordResetEmail(user, resetUrl) {
+export async function sendPasswordResetEmail(user, resetUrl, opts = {}) {
+  if (opts.googleOnly) {
+    const firstName = user.name.split(" ")[0];
+    const { html } = buildPasswordResetEmail({ name: user.name, resetUrl });
+    const googleBody = layout({
+      preheader: `${firstName}, your account uses Google Sign-In — no password to reset.`,
+      subject: `Password reset — ${APP_NAME}`,
+      body: `
+        <div style="height:4px;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
+        <div style="padding:40px 44px 44px">
+          <div style="width:52px;height:52px;background:#fffbeb;border-radius:14px;text-align:center;line-height:52px;font-size:26px;margin-bottom:24px">ℹ️</div>
+          <h1 style="margin:0 0 10px;font-size:24px;font-weight:800;color:#111827;letter-spacing:-0.03em">Your account uses Google Sign-In</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.7">
+            Hi ${firstName}, you signed up with Google so there's no password to reset. Just click below to sign in with your Google account.
+          </p>
+          ${btn(resetUrl, "Sign in with Google →", "#1d4ed8")}
+          <p style="margin:28px 0 0;font-size:13px;color:#9ca3af;line-height:1.6">If you didn't request this, you can safely ignore it.</p>
+        </div>
+      `,
+    });
+    await send({
+      to: user.email,
+      subject: `Password reset request — ${APP_NAME}`,
+      html: googleBody,
+    });
+    return;
+  }
   const { subject, html } = buildPasswordResetEmail({ name: user.name, resetUrl });
   await send({ to: user.email, subject, html });
 }
