@@ -660,7 +660,7 @@ function FeaturesSection() {
 
   return (
     <section ref={sectionRef} style={{ height: `${FEATURES.length * 80}vh` }} className="relative">
-      <div className="sticky top-0 h-screen flex items-center">
+      <div className="sticky top-0 h-screen flex items-center bg-[#080808]">
         <div className="w-full max-w-6xl mx-auto px-8 grid grid-cols-2 gap-16 items-center">
 
           {/* Left: text */}
@@ -981,7 +981,7 @@ export default function Landing() {
 
   return (
     <SilentBoundary>
-      <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
+      <div className="min-h-screen bg-[#080808] text-white" style={{ overflowX: 'clip' }}>
         <Header />
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
