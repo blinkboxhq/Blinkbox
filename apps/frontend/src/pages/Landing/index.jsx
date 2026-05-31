@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, Component } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Check, Minus, Plus, ArrowRight, Zap, Bot, Shield } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { DottedSurface } from '@/components/ui/dotted-surface';
 import logo from '../../assets/logo.svg';
 import heroScreenshot from '../../assets/logos/landingpage-hero-screenshot.png';
 
@@ -158,7 +159,7 @@ function Typewriter() {
       <span className="text-violet-400">
         {displayed}
       </span>
-      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-violet-400"
+      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-white"
         style={{ verticalAlign: 'middle' }} />
     </span>
   );
@@ -170,7 +171,7 @@ function HeroSection({ heroRef, heroInView }) {
     <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
       {/* Ambient violet glow — top left */}
       <div className="absolute pointer-events-none"
-        style={{ top: '-10%', left: '-5%', width: '55%', height: '70%', background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.18) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        style={{ top: '-10%', left: '-5%', width: '55%', height: '70%', background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       {/* Ambient indigo glow — center right */}
       <div className="absolute pointer-events-none"
         style={{ top: '20%', right: '5%', width: '40%', height: '60%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(60px)' }} />
@@ -195,10 +196,10 @@ function HeroSection({ heroRef, heroInView }) {
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
-            style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)' }}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-[11px] font-medium" style={{ color: '#c4b5fd' }}>Your competitors are already automating</span>
+            <span className="text-[11px] font-medium" style={{ color: '#a3a3a3' }}>Your competitors are already automating</span>
           </motion.div>
 
           {/* Headline with typewriter */}
@@ -234,8 +235,8 @@ function HeroSection({ heroRef, heroInView }) {
             className="flex items-center gap-3 mb-10"
           >
             <Link to="/register">
-              <button className="h-11 px-6 text-[14px] font-semibold rounded-lg text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                style={{ background: '#7c3aed', boxShadow: '0 0 24px rgba(124,58,237,0.35), 0 2px 8px rgba(0,0,0,0.4)' }}>
+              <button className="h-11 px-6 text-[14px] font-semibold rounded-lg transition-all duration-200 hover:bg-neutral-200 active:scale-[0.98]"
+                style={{ background: '#fff', color: '#000' }}>
                 Start for free →
               </button>
             </Link>
@@ -260,7 +261,7 @@ function HeroSection({ heroRef, heroInView }) {
               'Free forever. Upgrade only when you scale.',
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-[12px]" style={{ color: '#52525b' }}>
-                <div className="w-1 h-1 rounded-full shrink-0" style={{ background: '#7c3aed' }} />
+                <div className="w-1 h-1 rounded-full shrink-0" style={{ background: '#555' }} />
                 {item}
               </div>
             ))}
@@ -436,6 +437,240 @@ function LogoStrip() {
   );
 }
 
+// ─── Pricing ──────────────────────────────────────────────────────────────────
+const PLANS = [
+  {
+    name: 'Starter',
+    price: 'Free',
+    period: 'forever',
+    desc: 'For solo builders and side projects.',
+    features: ['5,000 executions / mo', '10 active workflows', '50+ integrations', 'Community support'],
+    cta: 'Get started free',
+    href: '/register',
+    highlight: false,
+  },
+  {
+    name: 'Pro',
+    price: '$29',
+    period: '/ month',
+    desc: 'For teams serious about automation.',
+    features: ['Unlimited executions', 'Unlimited workflows', '250+ integrations', 'AI agent builder', 'Headless scraping', 'Priority support'],
+    cta: 'Start Pro',
+    href: '/register',
+    highlight: true,
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    period: '',
+    desc: 'For regulated and large-scale deployments.',
+    features: ['Everything in Pro', 'Self-hosting', 'SSO / SAML', 'SLA guarantees', 'Dedicated engineer'],
+    cta: 'Contact us',
+    href: 'mailto:blinkbox.co.in@gmail.com',
+    highlight: false,
+  },
+];
+
+function PricingSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.15 });
+  return (
+    <section ref={ref} className="py-28 px-6" id="pricing">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
+        >
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mb-4">Pricing</p>
+          <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-4">One flat rate.<br />No surprises.</h2>
+          <p className="text-[15px] text-neutral-500">Run millions of tasks. Your bill doesn't move.</p>
+        </motion.div>
+        <div className="grid md:grid-cols-3 gap-4">
+          {PLANS.map((plan, i) => (
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 24 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col p-6 rounded-2xl border"
+              style={{
+                background: plan.highlight ? 'rgba(255,255,255,0.03)' : '#0d0d0d',
+                borderColor: plan.highlight ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)',
+              }}
+            >
+              {plan.highlight && (
+                <div className="absolute -top-px left-6 right-6 h-px"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }} />
+              )}
+              <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-4">{plan.name}</p>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-[32px] font-bold text-white">{plan.price}</span>
+                {plan.period && <span className="text-[13px] text-neutral-500">{plan.period}</span>}
+              </div>
+              <p className="text-[13px] text-neutral-500 mb-6">{plan.desc}</p>
+              <ul className="flex flex-col gap-2.5 mb-8 flex-1">
+                {plan.features.map(f => (
+                  <li key={f} className="flex items-center gap-2 text-[13px] text-neutral-400">
+                    <Check className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to={plan.href}>
+                <button
+                  className="w-full h-10 rounded-xl text-[13px] font-semibold transition-all duration-200"
+                  style={plan.highlight
+                    ? { background: '#fff', color: '#000' }
+                    : { background: 'transparent', color: '#a3a3a3', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  {plan.cta}
+                </button>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b py-5" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <button className="flex items-center justify-between w-full text-left gap-4" onClick={() => setOpen(v => !v)}>
+        <span className="text-[15px] font-medium text-white">{q}</span>
+        <div className="shrink-0 text-neutral-600">
+          {open ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+        </div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }}
+            className="overflow-hidden"
+          >
+            <p className="text-[14px] text-neutral-500 leading-relaxed pt-4">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FaqSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.15 });
+  return (
+    <section ref={ref} className="py-20 px-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+      <div className="max-w-2xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-[32px] font-bold text-white tracking-tight mb-12"
+        >Questions</motion.h2>
+        {[
+          { q: 'How is Blinkbox different from Zapier or Make?', a: "Zapier and Make charge per task — your costs grow with usage. Blinkbox is flat. Run 500 or 5,000,000 tasks for the same monthly price. We also ship first-class AI agents, headless browser automation, and a code sandbox." },
+          { q: 'What happens if a workflow fails mid-run?', a: "Blinkbox uses a cursor-based execution engine with Redis locking. If a run is interrupted, the resumer picks up exactly where it left off — no lost data, no duplicate processing." },
+          { q: 'Is my credential data safe?', a: "All credentials are stored in an AES-256 encrypted vault and are never logged or exposed in execution output. They are only decrypted at runtime, in memory, for the specific node that needs them." },
+          { q: 'Can I self-host Blinkbox?', a: "Yes. The Enterprise plan includes full self-hosting support. Blinkbox runs on Node.js, MongoDB, and Redis — straightforward to deploy on your own infrastructure." },
+        ].map(item => <FaqItem key={item.q} q={item.q} a={item.a} />)}
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="border-t py-16 px-6" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-10 mb-12">
+          <div className="max-w-[200px]">
+            <div className="flex items-center gap-2 mb-3">
+              <img src={logo} alt="Blinkbox" className="w-5 h-5" />
+              <span className="text-[14px] font-semibold text-white">Blinkbox</span>
+            </div>
+            <p className="text-[12px] text-neutral-600">The automation engine for teams that move fast.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-10">
+            {[
+              { header: 'Product',   links: [{ label: 'Features', href: '#' }, { label: 'Integrations', href: '#' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: '#' }] },
+              { header: 'Resources', links: [{ label: 'Docs', href: '#' }, { label: 'Blog', href: '#' }, { label: 'Templates', href: '#' }, { label: 'Status', href: '#' }] },
+              { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:blinkbox.co.in@gmail.com' }] },
+            ].map(col => (
+              <div key={col.header}>
+                <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">{col.header}</p>
+                {col.links.map(link => (
+                  <Link key={link.label} to={link.href}
+                    className="block text-[13px] text-neutral-600 hover:text-neutral-300 transition-colors mb-2">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+          <p className="text-[12px] text-neutral-700">© 2025 Blinkbox. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Terms of Service</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function CtaSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.3 });
+  return (
+    <section ref={ref} className="relative py-32 px-6 overflow-hidden">
+      <DottedSurface className="opacity-30" />
+      <div className="relative z-10 max-w-xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-8"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Zap className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-5">
+            Stop doing work<br />that shouldn't exist.
+          </h2>
+          <p className="text-[16px] text-neutral-500 mb-10">
+            Join thousands of teams automating their busywork. Free forever to start.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link to="/register">
+              <button className="h-11 px-7 text-[14px] font-semibold rounded-xl text-black bg-white hover:bg-neutral-200 transition-colors duration-200">
+                Automate for free <ArrowRight className="inline w-4 h-4 ml-1" />
+              </button>
+            </Link>
+            <Link to="/login">
+              <button className="h-11 px-7 text-[14px] font-medium rounded-xl transition-colors duration-200"
+                style={{ color: '#71717a', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+                Log in
+              </button>
+            </Link>
+          </div>
+          <p className="text-[12px] text-neutral-700 mt-5">No credit card required · Free forever on Starter</p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Landing() {
   const heroRef = useRef(null);
@@ -451,6 +686,18 @@ export default function Landing() {
 
         {/* ── LOGO STRIP ───────────────────────────────────────────────── */}
         <LogoStrip />
+
+        {/* ── PRICING ──────────────────────────────────────────────────── */}
+        <PricingSection />
+
+        {/* ── FAQ ──────────────────────────────────────────────────────── */}
+        <FaqSection />
+
+        {/* ── CTA + DOTTED SURFACE ─────────────────────────────────────── */}
+        <CtaSection />
+
+        {/* ── FOOTER ───────────────────────────────────────────────────── */}
+        <Footer />
 
       </div>
     </SilentBoundary>
