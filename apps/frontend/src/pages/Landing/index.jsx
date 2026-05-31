@@ -156,7 +156,7 @@ function Typewriter() {
 
   return (
     <span className="relative">
-      <span className="text-violet-400">
+      <span className="text-white">
         {displayed}
       </span>
       <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-white"
@@ -169,20 +169,14 @@ function Typewriter() {
 function HeroSection({ heroRef, heroInView }) {
   return (
     <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-      {/* Ambient violet glow — top left */}
-      <div className="absolute pointer-events-none"
-        style={{ top: '-10%', left: '-5%', width: '55%', height: '70%', background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-      {/* Ambient indigo glow — center right */}
-      <div className="absolute pointer-events-none"
-        style={{ top: '20%', right: '5%', width: '40%', height: '60%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(60px)' }} />
       {/* Dot grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.18]"
-        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.12]"
+        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-      {/* WebGL lightning — left only, subtle */}
+      {/* WebGL lightning — white, left only */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ maskImage: 'radial-gradient(ellipse 45% 55% at 15% 55%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 45% 55% at 15% 55%, black 0%, transparent 100%)' }}>
-        <LightningBg hue={255} speed={1.2} intensity={0.25} size={2.5} />
+        style={{ maskImage: 'radial-gradient(ellipse 50% 60% at 10% 50%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 50% 60% at 10% 50%, black 0%, transparent 100%)' }}>
+        <LightningBg hue={0} speed={0.8} intensity={0.18} size={2.2} />
       </div>
 
       <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
@@ -198,7 +192,7 @@ function HeroSection({ heroRef, heroInView }) {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />
             <span className="text-[11px] font-medium" style={{ color: '#a3a3a3' }}>Your competitors are already automating</span>
           </motion.div>
 
@@ -276,9 +270,9 @@ function HeroSection({ heroRef, heroInView }) {
           className="absolute top-0 bottom-0 flex items-center"
           style={{ left: '48vw', right: '-10vw' }}
         >
-          {/* Violet glow behind screenshot */}
+          {/* Subtle white glow behind screenshot */}
           <div className="absolute inset-0 pointer-events-none -z-10"
-            style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(124,58,237,0.15) 0%, transparent 60%)', filter: 'blur(30px)' }} />
+            style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.04) 0%, transparent 60%)', filter: 'blur(30px)' }} />
           {/* Right fade */}
           <div className="absolute inset-y-0 right-0 w-32 z-10 pointer-events-none"
             style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
@@ -292,7 +286,7 @@ function HeroSection({ heroRef, heroInView }) {
             src={heroScreenshot}
             alt="Blinkbox workflow canvas"
             className="w-full block rounded-2xl"
-            style={{ opacity: 0.75, boxShadow: '0 0 0 1px rgba(124,58,237,0.2), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.08)' }}
+            style={{ opacity: 0.8, boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 40px 80px rgba(0,0,0,0.7), 0 0 60px rgba(255,255,255,0.04)' }}
           />
         </motion.div>
 
@@ -434,6 +428,247 @@ function LogoStrip() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// ─── Features (scroll-expose) ─────────────────────────────────────────────────
+const FEATURES = [
+  {
+    step: '01',
+    label: 'Connect anything',
+    headline: '250+ integrations,\nzero configuration.',
+    body: 'Slack, Gmail, Stripe, GitHub, Notion — every tool your team uses, wired up in seconds. Blinkbox speaks every API so you don\'t have to.',
+    visual: {
+      nodes: [
+        { x: 50, y: 30, logo: 'Slack', color: '#4A154B' },
+        { x: 20, y: 60, logo: 'Gmail', color: '#EA4335' },
+        { x: 80, y: 60, logo: 'Stripe', color: '#6772E5' },
+        { x: 50, y: 85, logo: 'GitHub', color: '#333' },
+      ],
+      lines: [[0,1],[0,2],[1,3],[2,3]],
+    },
+  },
+  {
+    step: '02',
+    label: 'Build flows visually',
+    headline: 'Drag. Drop. Done.',
+    body: 'Visual canvas lets you map out logic, branches, loops and AI steps without touching code. If you can draw a flowchart, you can ship an automation.',
+    visual: { type: 'canvas' },
+  },
+  {
+    step: '03',
+    label: 'Run at any scale',
+    headline: 'Millions of executions.\nFlat monthly price.',
+    body: 'Your automations run on a resilient cursor-based engine with Redis-backed crash recovery. It restarts exactly where it left off, every time.',
+    visual: { type: 'metrics' },
+  },
+];
+
+function FeatureVisual({ feature, progress }) {
+  if (feature.visual.type === 'canvas') {
+    return (
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+        {/* Mock canvas nodes */}
+        {[
+          { x: 15, y: 40, label: 'Schedule', icon: '⏱' },
+          { x: 42, y: 40, label: 'Filter', icon: '⚡' },
+          { x: 70, y: 25, label: 'Slack', icon: '💬' },
+          { x: 70, y: 55, label: 'Email', icon: '✉' },
+        ].map((node, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: progress > i * 0.2 ? 1 : 0, scale: progress > i * 0.2 ? 1 : 0.6 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute flex flex-col items-center gap-1.5"
+            style={{ left: `${node.x}%`, top: `${node.y}%`, transform: 'translate(-50%, -50%)' }}
+          >
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}>
+              {node.icon}
+            </div>
+            <span className="text-[10px] text-neutral-500 font-medium">{node.label}</span>
+          </motion.div>
+        ))}
+        {/* Connector lines */}
+        <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+          {[[0,1],[1,2],[1,3]].map(([a, b], i) => {
+            const nodes = [{ x: 15, y: 40 }, { x: 42, y: 40 }, { x: 70, y: 25 }, { x: 70, y: 55 }];
+            return (
+              <motion.line
+                key={i}
+                x1={`${nodes[a].x}%`} y1={`${nodes[a].y}%`}
+                x2={`${nodes[b].x}%`} y2={`${nodes[b].y}%`}
+                stroke="rgba(255,255,255,0.12)" strokeWidth="1" strokeDasharray="4 3"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: progress > 0.3 ? 1 : 0, opacity: progress > 0.3 ? 1 : 0 }}
+                transition={{ duration: 0.7, delay: i * 0.15 }}
+              />
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+  if (feature.visual.type === 'metrics') {
+    const bars = [0.4, 0.7, 0.55, 0.9, 0.65, 0.85, 1.0];
+    return (
+      <div className="w-full h-full flex items-end justify-center gap-3 px-8 pb-8">
+        {bars.map((h, i) => (
+          <motion.div
+            key={i}
+            className="flex-1 rounded-t-lg"
+            style={{ background: `rgba(255,255,255,${0.06 + h * 0.14})`, border: '1px solid rgba(255,255,255,0.08)' }}
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: progress > i * 0.1 ? h : 0 }}
+            transition={{ duration: 0.7, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+            style={{ height: `${h * 70}%`, transformOrigin: 'bottom', background: `rgba(255,255,255,${0.06 + h * 0.14})`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px 4px 0 0' }}
+          />
+        ))}
+      </div>
+    );
+  }
+  // network graph for feature 0
+  const nodePositions = [{ x: 50, y: 28 }, { x: 20, y: 62 }, { x: 80, y: 62 }, { x: 50, y: 88 }];
+  const lines = [[0,1],[0,2],[1,3],[2,3]];
+  const nodeLabels = ['Slack', 'Gmail', 'Stripe', 'GitHub'];
+  const nodeColors = ['#4A154B', '#EA4335', '#6772E5', '#24292e'];
+  return (
+    <div className="relative w-full h-full">
+      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+        {lines.map(([a, b], i) => (
+          <motion.line
+            key={i}
+            x1={`${nodePositions[a].x}%`} y1={`${nodePositions[a].y}%`}
+            x2={`${nodePositions[b].x}%`} y2={`${nodePositions[b].y}%`}
+            stroke="rgba(255,255,255,0.1)" strokeWidth="1"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: progress > 0.2 ? 1 : 0, opacity: progress > 0.2 ? 1 : 0 }}
+            transition={{ duration: 0.6, delay: i * 0.1 }}
+          />
+        ))}
+      </svg>
+      {nodePositions.map((pos, i) => (
+        <motion.div
+          key={i}
+          className="absolute flex flex-col items-center gap-1"
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: progress > i * 0.18 ? 1 : 0, scale: progress > i * 0.18 ? 1 : 0.5 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[11px] font-bold text-white"
+            style={{ background: nodeColors[i], border: '1px solid rgba(255,255,255,0.15)' }}>
+            {nodeLabels[i][0]}
+          </div>
+          <span className="text-[10px] text-neutral-500">{nodeLabels[i]}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function FeaturesSection() {
+  const sectionRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [stepProgress, setStepProgress] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const totalH = sectionRef.current.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const pct = Math.max(0, Math.min(1, scrolled / totalH));
+      const idx = Math.min(FEATURES.length - 1, Math.floor(pct * FEATURES.length));
+      const localPct = (pct * FEATURES.length) - idx;
+      setActiveIdx(idx);
+      setStepProgress(localPct);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <section ref={sectionRef} style={{ height: `${FEATURES.length * 100}vh` }} className="relative">
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto px-8 grid grid-cols-2 gap-16 items-center">
+
+          {/* Left: text */}
+          <div className="flex flex-col">
+            {/* Step pills */}
+            <div className="flex items-center gap-3 mb-10">
+              {FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500"
+                    style={{
+                      background: i === activeIdx ? '#fff' : 'transparent',
+                      color: i === activeIdx ? '#000' : '#555',
+                      border: i === activeIdx ? '1px solid #fff' : '1px solid #333',
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  {i < FEATURES.length - 1 && (
+                    <div className="w-8 h-px" style={{ background: i < activeIdx ? '#fff' : '#222' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIdx}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <p className="text-[11px] font-bold text-neutral-600 uppercase tracking-widest mb-4">
+                  {FEATURES[activeIdx].label}
+                </p>
+                <h2 className="text-[42px] font-bold text-white tracking-tight leading-[1.08] mb-6"
+                  style={{ whiteSpace: 'pre-line' }}>
+                  {FEATURES[activeIdx].headline}
+                </h2>
+                <p className="text-[16px] text-neutral-500 leading-relaxed max-w-[380px]">
+                  {FEATURES[activeIdx].body}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Right: 3D-style card with visual */}
+          <div className="relative flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIdx}
+                initial={{ opacity: 0, rotateY: -15, scale: 0.92 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: 15, scale: 0.92 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                style={{ perspective: '800px', transformStyle: 'preserve-3d' }}
+                className="w-full aspect-square max-w-[420px] rounded-3xl overflow-hidden"
+              >
+                <div className="w-full h-full relative"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', backdropFilter: 'blur(20px)' }}>
+                  {/* Top-left accent line */}
+                  <div className="absolute top-0 left-8 right-8 h-px"
+                    style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
+                  <FeatureVisual feature={FEATURES[activeIdx]} progress={stepProgress} />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Floating glow */}
+            <div className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
+              style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+          </div>
+
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -686,6 +921,9 @@ export default function Landing() {
 
         {/* ── LOGO STRIP ───────────────────────────────────────────────── */}
         <LogoStrip />
+
+        {/* ── FEATURES ─────────────────────────────────────────────────── */}
+        <FeaturesSection />
 
         {/* ── PRICING ──────────────────────────────────────────────────── */}
         <PricingSection />
