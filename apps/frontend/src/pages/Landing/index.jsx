@@ -460,39 +460,43 @@ function Header() {
   }, []);
 
   return (
-    <motion.nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
-      animate={{
-        backgroundColor: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
-        borderBottomColor: scrolled ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0)',
-        backdropFilter: scrolled ? 'blur(16px)' : 'blur(0px)',
-      }}
-      style={{ borderBottomWidth: 1, borderBottomStyle: 'solid' }}
-      transition={{ duration: 0.2 }}
-    >
-      <Link to="/" className="flex items-center gap-2.5">
-        <img src={logo} alt="Blinkbox" className="w-6 h-6" />
-        <span className="text-[15px] font-semibold text-white tracking-tight">Blinkbox</span>
-      </Link>
-
-      <div className="hidden md:flex items-center gap-7">
-        {['Product', 'Integrations', 'Docs', 'Pricing'].map(item => (
-          <Link key={item} to="#" className="text-[13px] text-neutral-500 hover:text-white transition-colors duration-150">
-            {item}
-          </Link>
-        ))}
-      </div>
-
-      <div className="hidden md:flex items-center gap-3">
-        <Link to="/login" className="text-[13px] text-neutral-500 hover:text-white transition-colors duration-150">Sign in</Link>
-        <Link to="/register">
-          <Button size="sm" className="text-[13px] h-8 px-4 rounded-lg">Get started free</Button>
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4">
+      <motion.nav
+        className="flex items-center justify-between gap-6 px-4 py-2 rounded-full border border-white/[0.08]"
+        animate={{
+          backgroundColor: scrolled ? 'rgba(12,12,12,0.92)' : 'rgba(12,12,12,0.7)',
+          backdropFilter: 'blur(20px)',
+        }}
+        style={{ width: '100%', maxWidth: 860 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <img src={logo} alt="Blinkbox" className="w-5 h-5" />
+          <span className="text-[14px] font-semibold text-white tracking-tight">Blinkbox</span>
         </Link>
-      </div>
 
-      <button className="md:hidden text-neutral-400" onClick={() => setMobileOpen(v => !v)}>
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+        <div className="hidden md:flex items-center gap-6">
+          {['Product', 'Integrations', 'Docs', 'Pricing'].map(item => (
+            <Link key={item} to="#" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">
+              {item}
+            </Link>
+          ))}
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 shrink-0">
+          <div className="w-px h-4 bg-white/[0.1] mx-1" />
+          <Link to="/login" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</Link>
+          <Link to="/register">
+            <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-full">
+              Sign up
+            </button>
+          </Link>
+        </div>
+
+        <button className="md:hidden text-neutral-400" onClick={() => setMobileOpen(v => !v)}>
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </motion.nav>
 
       <AnimatePresence>
         {mobileOpen && (
@@ -500,19 +504,19 @@ function Header() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="absolute top-full left-0 right-0 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06] p-6 flex flex-col gap-4"
+            className="absolute top-full left-4 right-4 mt-2 bg-[#0c0c0c]/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 flex flex-col gap-4"
           >
             {['Product', 'Integrations', 'Docs', 'Pricing'].map(item => (
               <Link key={item} to="#" className="text-[15px] text-neutral-400" onClick={() => setMobileOpen(false)}>{item}</Link>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
-              <Link to="/login" className="text-[15px] text-neutral-500">Sign in</Link>
-              <Link to="/register"><Button className="w-full">Get started free</Button></Link>
+              <Link to="/login" className="text-[15px] text-neutral-500">Log in</Link>
+              <Link to="/register"><Button className="w-full rounded-full">Sign up</Button></Link>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </div>
   );
 }
 
