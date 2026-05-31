@@ -71,7 +71,7 @@ function LightningBg({ hue = 230, speed = 1.6, intensity = 0.55, size = 2 }) {
         uv=2.0*uv-1.0; uv.x*=iResolution.x/iResolution.y;
         uv+=2.0*fbm(uv*uSize+0.8*iTime*uSpeed)-1.0;
         float dist=abs(uv.x);
-        vec3 base=hsv2rgb(vec3(uHue/360.0,0.7,0.8));
+        vec3 base=hsv2rgb(vec3(uHue/360.0,0.0,1.0));
         vec3 col=base*pow(mix(0.0,0.07,hash11(iTime*uSpeed))/dist,1.0)*uIntensity;
         gl_FragColor=vec4(col,1.0);
       }
@@ -176,7 +176,7 @@ function HeroSection({ heroRef, heroInView }) {
       {/* WebGL lightning — white, left only */}
       <div className="absolute inset-0 pointer-events-none"
         style={{ maskImage: 'radial-gradient(ellipse 50% 60% at 10% 50%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 50% 60% at 10% 50%, black 0%, transparent 100%)' }}>
-        <LightningBg hue={0} speed={0.8} intensity={0.18} size={2.2} />
+        <LightningBg hue={0} speed={0.9} intensity={0.32} size={2.0} />
       </div>
 
       <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
@@ -465,176 +465,205 @@ const FEATURES = [
   },
 ];
 
-function FeatureVisual({ feature, progress }) {
-  if (feature.visual.type === 'canvas') {
-    return (
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-        {/* Mock canvas nodes */}
-        {[
-          { x: 15, y: 40, label: 'Schedule', icon: '⏱' },
-          { x: 42, y: 40, label: 'Filter', icon: '⚡' },
-          { x: 70, y: 25, label: 'Slack', icon: '💬' },
-          { x: 70, y: 55, label: 'Email', icon: '✉' },
-        ].map((node, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: progress > i * 0.2 ? 1 : 0, scale: progress > i * 0.2 ? 1 : 0.6 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute flex flex-col items-center gap-1.5"
-            style={{ left: `${node.x}%`, top: `${node.y}%`, transform: 'translate(-50%, -50%)' }}
-          >
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}>
-              {node.icon}
-            </div>
-            <span className="text-[10px] text-neutral-500 font-medium">{node.label}</span>
-          </motion.div>
-        ))}
-        {/* Connector lines */}
-        <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
-          {[[0,1],[1,2],[1,3]].map(([a, b], i) => {
-            const nodes = [{ x: 15, y: 40 }, { x: 42, y: 40 }, { x: 70, y: 25 }, { x: 70, y: 55 }];
-            return (
-              <motion.line
-                key={i}
-                x1={`${nodes[a].x}%`} y1={`${nodes[a].y}%`}
-                x2={`${nodes[b].x}%`} y2={`${nodes[b].y}%`}
-                stroke="rgba(255,255,255,0.12)" strokeWidth="1" strokeDasharray="4 3"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: progress > 0.3 ? 1 : 0, opacity: progress > 0.3 ? 1 : 0 }}
-                transition={{ duration: 0.7, delay: i * 0.15 }}
-              />
-            );
-          })}
-        </svg>
-      </div>
-    );
-  }
-  if (feature.visual.type === 'metrics') {
-    const bars = [0.4, 0.7, 0.55, 0.9, 0.65, 0.85, 1.0];
-    return (
-      <div className="w-full h-full flex flex-col justify-end px-8 pb-6 gap-2">
-        <div className="flex items-end gap-2 h-48">
-          {bars.map((h, i) => (
-            <motion.div key={i} className="flex-1"
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: progress > i * 0.1 ? 1 : 0 }}
-              transition={{ duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              style={{ height: `${h * 100}%`, transformOrigin: 'bottom', background: `rgba(255,255,255,${0.05 + h * 0.15})`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px 4px 0 0' }}
-            />
-          ))}
-        </div>
-        <div className="flex items-center justify-between text-[10px] text-neutral-700">
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => <span key={d}>{d}</span>)}
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <span className="text-[11px] text-neutral-500">Total runs this week</span>
-          <motion.span className="text-[13px] font-semibold text-white"
-            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.5 ? 1 : 0 }}>
-            2,847,301
-          </motion.span>
-        </div>
-      </div>
-    );
-  }
-  if (feature.visual.type === 'ai') {
-    const msgs = [
-      { role: 'user', text: 'Summarize this support ticket and classify its urgency.' },
-      { role: 'ai', text: 'Summary: Customer reports payment failure on checkout.\nUrgency: High — revenue impact.' },
-      { role: 'system', text: 'Routing to billing team… ✓' },
-    ];
-    return (
-      <div className="w-full h-full flex flex-col justify-center gap-3 px-6 py-6">
-        {msgs.map((msg, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: msg.role === 'user' ? 16 : -16 }}
-            animate={{ opacity: progress > i * 0.25 ? 1 : 0, x: progress > i * 0.25 ? 0 : (msg.role === 'user' ? 16 : -16) }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className="max-w-[80%] px-3 py-2 rounded-xl text-[12px] leading-relaxed"
-              style={msg.role === 'user'
-                ? { background: 'rgba(255,255,255,0.08)', color: '#e5e5e5', border: '1px solid rgba(255,255,255,0.1)' }
-                : msg.role === 'ai'
-                ? { background: 'rgba(255,255,255,0.04)', color: '#a3a3a3', border: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'pre-line' }
-                : { background: 'transparent', color: '#555', fontSize: '11px', fontStyle: 'italic' }
-              }>
-              {msg.text}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    );
-  }
-  if (feature.visual.type === 'log') {
-    const entries = [
-      { status: 'ok', node: 'Webhook trigger', ms: 1 },
-      { status: 'ok', node: 'Filter: is_paying_user', ms: 3 },
-      { status: 'ok', node: 'HTTP → Stripe API', ms: 214 },
-      { status: 'ok', node: 'Transform data', ms: 8 },
-      { status: 'ok', node: 'Send Slack message', ms: 67 },
-    ];
-    return (
-      <div className="w-full h-full flex flex-col justify-center gap-1.5 px-5 py-6">
-        {entries.map((e, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: progress > i * 0.15 ? 1 : 0, x: progress > i * 0.15 ? 0 : -12 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22c55e' }} />
-            <span className="text-[12px] text-neutral-400 flex-1">{e.node}</span>
-            <span className="text-[11px] text-neutral-700">{e.ms}ms</span>
-          </motion.div>
-        ))}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: progress > 0.8 ? 1 : 0 }}
-          transition={{ duration: 0.4 }}
-          className="mt-2 flex items-center gap-2 text-[11px] text-neutral-600">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
-          Completed in 293ms
-        </motion.div>
-      </div>
-    );
-  }
-  // network
-  const nodePositions = [{ x: 50, y: 20 }, { x: 20, y: 50 }, { x: 80, y: 50 }, { x: 35, y: 80 }, { x: 65, y: 80 }];
-  const lines = [[0,1],[0,2],[1,3],[2,4],[1,4]];
-  const nodeLabels = ['Blinkbox','Slack','Stripe','Gmail','GitHub'];
-  const nodeColors = ['#fff','#4A154B','#6772E5','#EA4335','#24292e'];
-  const nodeFg = ['#000','#fff','#fff','#fff','#fff'];
+function FeatureVisualNetwork({ progress }) {
+  const apps = [
+    { label: 'Slack', color: '#4A154B', x: 50, y: 18 },
+    { label: 'Gmail', color: '#EA4335', x: 18, y: 52 },
+    { label: 'Stripe', color: '#635BFF', x: 82, y: 52 },
+    { label: 'GitHub', color: '#24292e', x: 33, y: 82 },
+    { label: 'Notion', color: '#000', x: 67, y: 82 },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[2,4],[1,4]];
   return (
     <div className="relative w-full h-full">
       <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
-        {lines.map(([a, b], i) => (
+        {edges.map(([a, b], i) => (
           <motion.line key={i}
-            x1={`${nodePositions[a].x}%`} y1={`${nodePositions[a].y}%`}
-            x2={`${nodePositions[b].x}%`} y2={`${nodePositions[b].y}%`}
-            stroke="rgba(255,255,255,0.1)" strokeWidth="1"
-            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.15 ? 1 : 0 }}
-            transition={{ duration: 0.5, delay: i * 0.08 }}
+            x1={`${apps[a].x}%`} y1={`${apps[a].y}%`}
+            x2={`${apps[b].x}%`} y2={`${apps[b].y}%`}
+            stroke="rgba(255,255,255,0.08)" strokeWidth="1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: progress > 0.1 ? 1 : 0 }}
+            transition={{ duration: 0.4, delay: i * 0.06 }}
           />
         ))}
       </svg>
-      {nodePositions.map((pos, i) => (
+      {apps.map((app, i) => (
         <motion.div key={i}
-          className="absolute flex flex-col items-center gap-1"
-          style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: progress > i * 0.15 ? 1 : 0, scale: progress > i * 0.15 ? 1 : 0.5 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute flex flex-col items-center gap-1.5"
+          style={{ left: `${app.x}%`, top: `${app.y}%`, transform: 'translate(-50%,-50%)' }}
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: progress > i * 0.12 ? 1 : 0, scale: progress > i * 0.12 ? 1 : 0.6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-bold"
-            style={{ background: nodeColors[i], color: nodeFg[i], border: '1px solid rgba(255,255,255,0.15)' }}>
-            {nodeLabels[i][0]}
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-[11px] font-bold text-white"
+            style={{ background: app.color, border: '1px solid rgba(255,255,255,0.12)' }}>
+            {app.label[0]}
           </div>
-          <span className="text-[9px] text-neutral-600">{nodeLabels[i]}</span>
+          <span className="text-[10px] text-neutral-600 font-medium">{app.label}</span>
         </motion.div>
       ))}
     </div>
   );
+}
+
+function FeatureVisualCanvas({ progress }) {
+  const nodes = [
+    { x: 12, y: 50, label: 'Webhook', icon: '⚡', w: 88 },
+    { x: 42, y: 30, label: 'Filter', icon: '⚙', w: 72 },
+    { x: 42, y: 70, label: 'Delay', icon: '⏱', w: 72 },
+    { x: 72, y: 30, label: 'Slack', icon: '💬', w: 72 },
+    { x: 72, y: 70, label: 'Email', icon: '✉', w: 72 },
+  ];
+  const edges = [[0,1],[0,2],[1,3],[2,4]];
+  return (
+    <div className="relative w-full h-full">
+      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+        {edges.map(([a, b], i) => (
+          <motion.line key={i}
+            x1={`${nodes[a].x + 4}%`} y1={`${nodes[a].y}%`}
+            x2={`${nodes[b].x - 4}%`} y2={`${nodes[b].y}%`}
+            stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3"
+            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.15 ? 1 : 0 }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
+          />
+        ))}
+      </svg>
+      {nodes.map((n, i) => (
+        <motion.div key={i}
+          className="absolute flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11px]"
+          style={{ left: `${n.x}%`, top: `${n.y}%`, transform: 'translate(-50%,-50%)', width: n.w, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: progress > i * 0.15 ? 1 : 0, y: progress > i * 0.15 ? 0 : 8 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span>{n.icon}</span>
+          <span className="text-neutral-400 font-medium truncate">{n.label}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function FeatureVisualAI({ progress }) {
+  const msgs = [
+    { side: 'right', text: 'Classify this support ticket and set priority.' },
+    { side: 'left', text: 'Priority: High\nCategory: Billing\nSentiment: Frustrated' },
+    { side: 'system', text: 'Routed → billing-team channel ✓' },
+  ];
+  return (
+    <div className="w-full h-full flex flex-col justify-center gap-2.5 px-5 py-5">
+      {msgs.map((m, i) => (
+        <motion.div key={i}
+          className={`flex ${m.side === 'right' ? 'justify-end' : 'justify-start'}`}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: progress > i * 0.28 ? 1 : 0, y: progress > i * 0.28 ? 0 : 6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {m.side === 'system'
+            ? <span className="text-[11px] text-neutral-600 italic mx-auto">{m.text}</span>
+            : <div className="max-w-[85%] px-3 py-2 rounded-2xl text-[12px] leading-relaxed"
+                style={m.side === 'right'
+                  ? { background: 'rgba(255,255,255,0.07)', color: '#d4d4d4', border: '1px solid rgba(255,255,255,0.1)' }
+                  : { background: 'rgba(255,255,255,0.03)', color: '#737373', border: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'pre-line' }
+                }>{m.text}</div>
+          }
+        </motion.div>
+      ))}
+      <motion.div className="flex items-center gap-2 mt-1"
+        initial={{ opacity: 0 }} animate={{ opacity: progress > 0.85 ? 1 : 0 }}
+        transition={{ duration: 0.3 }}>
+        <div className="flex gap-0.5">
+          {[0,1,2].map(i => (
+            <motion.div key={i} className="w-1.5 h-1.5 rounded-full bg-white/20"
+              animate={{ opacity: [0.2, 1, 0.2] }}
+              transition={{ duration: 1.2, delay: i * 0.2, repeat: Infinity }} />
+          ))}
+        </div>
+        <span className="text-[10px] text-neutral-700">AI processing…</span>
+      </motion.div>
+    </div>
+  );
+}
+
+function FeatureVisualMetrics({ progress }) {
+  const bars = [
+    { h: 0.4, label: 'Mon' }, { h: 0.65, label: 'Tue' }, { h: 0.5, label: 'Wed' },
+    { h: 0.85, label: 'Thu' }, { h: 0.6, label: 'Fri' }, { h: 0.9, label: 'Sat' }, { h: 1.0, label: 'Sun' },
+  ];
+  return (
+    <div className="w-full h-full flex flex-col justify-end px-5 py-5 gap-3">
+      <div className="flex items-end gap-1.5" style={{ height: 120 }}>
+        {bars.map((b, i) => (
+          <motion.div key={i} className="flex-1 rounded-t"
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: progress > i * 0.08 ? 1 : 0 }}
+            transition={{ duration: 0.5, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+            style={{ height: `${b.h * 100}%`, transformOrigin: 'bottom', background: `rgba(255,255,255,${0.04 + b.h * 0.16})`, border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px 3px 0 0' }}
+          />
+        ))}
+      </div>
+      <div className="flex justify-between">
+        {bars.map(b => <span key={b.label} className="text-[9px] text-neutral-700">{b.label}</span>)}
+      </div>
+      <div className="flex items-center justify-between pt-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div>
+          <div className="text-[10px] text-neutral-600 mb-0.5">Runs this week</div>
+          <motion.div className="text-[18px] font-semibold text-white"
+            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.6 ? 1 : 0 }}
+            transition={{ duration: 0.4 }}>2,847,301</motion.div>
+        </div>
+        <motion.div className="text-[11px] px-2 py-1 rounded-lg"
+          style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', color: '#4ade80' }}
+          initial={{ opacity: 0 }} animate={{ opacity: progress > 0.7 ? 1 : 0 }}>
+          ↑ 18%
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureVisualLog({ progress }) {
+  const steps = [
+    { label: 'Webhook received', ms: '1ms', out: '{ event: "payment.success" }' },
+    { label: 'Filter: is_paying', ms: '2ms', out: 'true' },
+    { label: 'Stripe → fetch invoice', ms: '187ms', out: 'inv_3Ps9X2…' },
+    { label: 'Transform output', ms: '4ms', out: '{ amount: 4900, … }' },
+    { label: 'Slack notify', ms: '54ms', out: 'ok' },
+  ];
+  return (
+    <div className="w-full h-full flex flex-col justify-center gap-1 px-4 py-5">
+      {steps.map((s, i) => (
+        <motion.div key={i}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: progress > i * 0.14 ? 1 : 0, x: progress > i * 0.14 ? 0 : -10 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22c55e' }} />
+          <span className="text-[12px] text-neutral-400 flex-1">{s.label}</span>
+          <span className="text-[10px] font-mono text-neutral-600 shrink-0">{s.ms}</span>
+        </motion.div>
+      ))}
+      <motion.div className="flex items-center justify-between mt-2 pt-2 border-t text-[11px]"
+        style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+        initial={{ opacity: 0 }} animate={{ opacity: progress > 0.75 ? 1 : 0 }}
+        transition={{ duration: 0.3 }}>
+        <span className="text-neutral-600">Total duration</span>
+        <span className="text-white font-medium">248ms</span>
+      </motion.div>
+    </div>
+  );
+}
+
+function FeatureVisual({ feature, progress }) {
+  const t = feature.visual.type;
+  if (t === 'network') return <FeatureVisualNetwork progress={progress} />;
+  if (t === 'canvas')  return <FeatureVisualCanvas progress={progress} />;
+  if (t === 'ai')      return <FeatureVisualAI progress={progress} />;
+  if (t === 'metrics') return <FeatureVisualMetrics progress={progress} />;
+  if (t === 'log')     return <FeatureVisualLog progress={progress} />;
+  return null;
 }
 
 function FeaturesSection() {
