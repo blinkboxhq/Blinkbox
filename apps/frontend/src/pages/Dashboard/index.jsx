@@ -15,7 +15,6 @@ import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
-import DashboardHero from './components/DashboardHero';
 import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
 
@@ -234,18 +233,6 @@ export default function Dashboard() {
     api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
   }, [user]);
 
-  const handleBrianSubmit = async (prompt) => {
-    if (!prompt?.trim()) return;
-    try {
-      const name = prompt.length > 60 ? prompt.slice(0, 57) + '…' : prompt;
-      const r = await api.post('/api/automation', { name, description: '', trigger: 'manual' });
-      if (r.data?.success) {
-        setWorkflows(prev => [r.data.automation, ...prev]);
-        navigate(`/workspace/${r.data.automation._id}`, { state: { brianPrompt: prompt } });
-      }
-    } catch { toast.error('Failed to open workspace'); }
-  };
-
   const handleCreate = async (data) => {
     if (isCreating) return;
     setIsCreating(true); setSystemError(null);
@@ -317,13 +304,6 @@ export default function Dashboard() {
 
         {/* Universal header — matches workspace header exactly */}
         <WorkspaceHeader forceDashboard={true} />
-
-        {/* Brian AI panel */}
-        <DashboardHero
-          onSubmit={handleBrianSubmit}
-          userName={user?.name}
-          compact={workflows.length > 0}
-        />
 
         {/* Scrollable workflows area */}
         <main className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>

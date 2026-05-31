@@ -451,6 +451,17 @@ function CustomNode({ id, data, selected }) {
   const parentAgentRunning = isExecutionLive && parentAgentId ? getNodeStatus(parentAgentId) === "running" : false;
 
   const nodeOutput = lastRunOutputs?.[id];
+  const outputCount = (() => {
+    if (nodeOutput == null) return null;
+    if (nodeOutput.__loopFanOut) {
+      const arr = nodeOutput.items ?? nodeOutput.__loopItems;
+      return Array.isArray(arr) ? arr.length : null;
+    }
+    if (Array.isArray(nodeOutput)) return nodeOutput.length;
+    if (typeof nodeOutput === 'object') return 1;
+    return null;
+  })();
+
   const { hasMappingWarning, warnings } = getMappingWarnings(id);
 
   const isTrigger = data.type === "trigger";
@@ -536,6 +547,13 @@ function CustomNode({ id, data, selected }) {
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
+        {outputCount != null && (
+          <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
+            <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
+              {outputCount} item{outputCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
           <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
           <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
@@ -610,6 +628,13 @@ function CustomNode({ id, data, selected }) {
         ))}
 
         {!isOnResultPath && <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />}
+        {!isOnResultPath && outputCount != null && (
+          <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
+            <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
+              {outputCount} item{outputCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
     );
   }
@@ -805,6 +830,13 @@ function CustomNode({ id, data, selected }) {
       ) : (
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       ))}
+      {!isOnResultPath && outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && (
+        <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
+          <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
+            {outputCount} item{outputCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
 
       {/* Error/onFailure output handle — shown when error path is configured or connected */}
       {(hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
