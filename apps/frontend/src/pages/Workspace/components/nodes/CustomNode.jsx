@@ -258,18 +258,16 @@ function ConditionOutputHandles({ cardHeight }) {
   return (
     <>
       <Handle type="source" position={Position.Right} id="true"
-        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-emerald-500 touch-none"
-        style={{ top: topY, right: -8 }} />
-      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -56, top: topY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">True</span>
-        <CheckCheck className="w-3 h-3 text-emerald-400" />
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
+        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)" }} />
+      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">True</span>
       </div>
       <Handle type="source" position={Position.Right} id="false"
-        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-red-500 touch-none"
-        style={{ top: botY, right: -8 }} />
-      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -60, top: botY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider">False</span>
-        <XCircle className="w-3 h-3 text-red-400" />
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
+        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)" }} />
+      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">False</span>
       </div>
     </>
   );
@@ -282,18 +280,16 @@ function SuccessFailedOutputHandles({ cardHeight }) {
   return (
     <>
       <Handle type="source" position={Position.Right} id="success"
-        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-emerald-500 touch-none"
-        style={{ top: topY, right: -8 }} />
-      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -68, top: topY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Success</span>
-        <CheckCheck className="w-3 h-3 text-emerald-400" />
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
+        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)" }} />
+      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -60, top: topY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">Success</span>
       </div>
       <Handle type="source" position={Position.Right} id="failed"
-        className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-red-500 touch-none"
-        style={{ top: botY, right: -8 }} />
-      <div className="absolute z-10 nodrag flex items-center gap-1" style={{ right: -62, top: botY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider">Failed</span>
-        <AlertTriangle className="w-3 h-3 text-red-400" />
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
+        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)" }} />
+      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -52, top: botY, transform: "translateY(-50%)" }}>
+        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">Failed</span>
       </div>
     </>
   );
