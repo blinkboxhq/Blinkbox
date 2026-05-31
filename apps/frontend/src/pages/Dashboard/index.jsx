@@ -6,7 +6,8 @@ import {
   Copy, Trash2, Pencil, Check, X, Loader2,
   Power, Globe, Clock, Mail, Zap, Hash,
   Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
-  Search, LayoutGrid, List, Plus,
+  Search, LayoutGrid, List, Plus, Activity,
+  User, Lock, Server, Save,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
@@ -17,6 +18,9 @@ import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
+import VaultManager from './components/VaultManager';
+import Analytics from './components/Analytics';
+import NodeLibrary from './components/NodeLibrary';
 
 const TRIGGER_META = {
   manual:           { label: 'Manual',       Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
@@ -188,6 +192,22 @@ export default function Dashboard() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [billingUsage, setBillingUsage] = useState(null);
+  const [activeTab, setActiveTab] = useState('workflows');
+
+  // execution logs
+  const [executions, setExecutions] = useState([]);
+  const [execLoading, setExecLoading] = useState(false);
+
+  // settings
+  const [systemStats, setSystemStats] = useState(null);
+  const [isTogglingPause, setIsTogglingPause] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState('');
 
   const openMenu = (e, id) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuAnchor(r); setOpenMenuId(openMenuId === id ? null : id); };
   const closeMenu = () => { setOpenMenuId(null); setMenuAnchor(null); };
@@ -232,6 +252,55 @@ export default function Dashboard() {
     if (!user) return;
     api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'logs') return;
+    setExecLoading(true);
+    api.get('/api/execution/history', { params: { limit: 50 } })
+      .then(r => setExecutions(r.data?.executions || r.data || []))
+      .catch(() => {})
+      .finally(() => setExecLoading(false));
+  }, [user, activeTab]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'settings') return;
+    setProfileName(user.name || '');
+    api.get('/api/system/stats').then(r => setSystemStats(r.data)).catch(() => {});
+    api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
+  }, [user, activeTab]);
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) return;
+    setProfileSaving(true); setProfileMsg('');
+    try {
+      await api.patch('/api/auth/profile', { name: profileName.trim() });
+      const updated = { ...user, name: profileName.trim() };
+      localStorage.setItem('blinkbox_user', JSON.stringify(updated));
+      setProfileMsg('Saved!');
+    } catch { setProfileMsg('Failed to save.'); }
+    setProfileSaving(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwCurrent || !pwNew) return;
+    setPwSaving(true); setPwMsg('');
+    try {
+      await api.post('/api/auth/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
+      setPwMsg('Password updated!'); setPwCurrent(''); setPwNew('');
+    } catch (e) { setPwMsg(e.response?.data?.message || 'Failed.'); }
+    setPwSaving(false);
+  };
+
+  const handleToggleWorkers = async () => {
+    if (!systemStats || isTogglingPause) return;
+    setIsTogglingPause(true);
+    try {
+      const paused = systemStats.workersPaused;
+      await api.post(paused ? '/api/system/resume' : '/api/system/pause');
+      setSystemStats(s => ({ ...s, workersPaused: !paused }));
+    } catch { toast.error('Failed to toggle workers'); }
+    setIsTogglingPause(false);
+  };
 
   const handleCreate = async (data) => {
     if (isCreating) return;
@@ -298,14 +367,159 @@ export default function Dashboard() {
       <OnboardingModal />
       <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
 
-      <DashboardSidebar user={user} onLogout={handleLogout} activeTab="workflows" setActiveTab={() => {}} usage={billingUsage} />
+      <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Universal header — matches workspace header exactly */}
         <WorkspaceHeader forceDashboard={true} />
 
+        {/* ── Non-workflow tabs rendered full-height ── */}
+        {activeTab === 'nodes' && (
+          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+            <NodeLibrary />
+          </div>
+        )}
+        {activeTab === 'analytics' && (
+          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+            <Analytics />
+          </div>
+        )}
+        {activeTab === 'vault' && (
+          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+            <VaultManager />
+          </div>
+        )}
+        {activeTab === 'logs' && (
+          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <h2 className="text-[15px] font-bold text-white mb-5">Execution History</h2>
+            {execLoading ? (
+              <div className="flex items-center gap-2 text-neutral-600 text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+            ) : executions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <Activity className="w-8 h-8 text-neutral-800 mb-3" />
+                <p className="text-[13px] text-neutral-600">No executions yet.</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[#161616] overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-[#0a0a0a] border-b border-[#161616]">
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Workflow</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Started</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {executions.map((ex, i) => {
+                      const dur = ex.completedAt && ex.startedAt
+                        ? `${((new Date(ex.completedAt) - new Date(ex.startedAt)) / 1000).toFixed(1)}s`
+                        : '—';
+                      return (
+                        <tr key={ex._id || i} className="border-t border-[#111] hover:bg-white/[0.015] transition-colors">
+                          <td className="px-4 py-3 text-[12px] text-neutral-400 truncate max-w-[260px]">{ex.automationName || ex.automationId || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-[11px] font-medium ${ex.status === 'completed' || ex.status === 'executed' ? 'text-emerald-400' : ex.status === 'failed' ? 'text-red-400' : 'text-amber-400'}`}>
+                              {ex.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
+                          <td className="px-4 py-3 text-[11px] text-[#333] font-mono">{dur}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        {activeTab === 'settings' && (
+          <div className="flex-1 overflow-y-auto px-8 py-6 max-w-[680px]" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <h2 className="text-[15px] font-bold text-white mb-6">Settings</h2>
+
+            {/* Profile */}
+            <section className="mb-6 bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-4 h-4 text-neutral-500" />
+                <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">Profile</h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Name</label>
+                  <input value={profileName} onChange={e => setProfileName(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Email</label>
+                  <input value={user?.email || ''} disabled
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-[13px] text-zinc-600 cursor-not-allowed" />
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <button onClick={handleSaveProfile} disabled={profileSaving}
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all disabled:opacity-50">
+                    {profileSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                  </button>
+                  {profileMsg && <span className="text-[11px] text-neutral-500">{profileMsg}</span>}
+                </div>
+              </div>
+            </section>
+
+            {/* Password */}
+            <section className="mb-6 bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Lock className="w-4 h-4 text-neutral-500" />
+                <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">Password</h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Current password</label>
+                  <input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">New password</label>
+                  <input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <button onClick={handleChangePassword} disabled={pwSaving || !pwCurrent || !pwNew}
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all disabled:opacity-50">
+                    {pwSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />} Update
+                  </button>
+                  {pwMsg && <span className="text-[11px] text-neutral-500">{pwMsg}</span>}
+                </div>
+              </div>
+            </section>
+
+            {/* System */}
+            {systemStats && (
+              <section className="bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Server className="w-4 h-4 text-neutral-500" />
+                  <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">System</h3>
+                </div>
+                <div className="space-y-2 text-[12px] text-neutral-500 mb-4">
+                  <div className="flex justify-between"><span>Active executions</span><span className="font-mono text-neutral-400">{systemStats.activeExecutions ?? '—'}</span></div>
+                  <div className="flex justify-between"><span>Workers</span><span className={`font-mono ${systemStats.workersPaused ? 'text-amber-400' : 'text-emerald-400'}`}>{systemStats.workersPaused ? 'Paused' : 'Running'}</span></div>
+                </div>
+                <button onClick={handleToggleWorkers} disabled={isTogglingPause}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold rounded-lg border transition-all disabled:opacity-50 ${
+                    systemStats.workersPaused
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                  }`}>
+                  {isTogglingPause ? <Loader2 className="w-3 h-3 animate-spin" /> : <Server className="w-3 h-3" />}
+                  {systemStats.workersPaused ? 'Resume workers' : 'Pause workers'}
+                </button>
+              </section>
+            )}
+          </div>
+        )}
+
         {/* Scrollable workflows area */}
+        {activeTab === 'workflows' && (
         <main className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
           <div className="px-8 py-6 max-w-[1400px] mx-auto" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
 
@@ -510,6 +724,7 @@ export default function Dashboard() {
             )}
           </div>
         </main>
+        )}
       </div>
     </div>
   );
