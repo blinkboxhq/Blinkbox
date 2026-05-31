@@ -871,17 +871,17 @@ export default function Landing() {
               style={{ width: '58vw', marginRight: '-8vw' }}
             >
               {/* Right edge fade */}
-              <div className="absolute inset-y-0 right-0 w-64 z-10 pointer-events-none"
+              <div className="absolute inset-y-0 right-0 w-40 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
               {/* Top fade */}
-              <div className="absolute inset-x-0 top-0 h-24 z-10 pointer-events-none"
+              <div className="absolute inset-x-0 top-0 h-16 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to bottom, #080808, transparent)' }} />
               {/* Bottom fade */}
-              <div className="absolute inset-x-0 bottom-0 h-24 z-10 pointer-events-none"
+              <div className="absolute inset-x-0 bottom-0 h-16 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
-              {/* Left blur edge — bleeds into text col */}
-              <div className="absolute inset-y-0 left-0 w-32 z-10 pointer-events-none"
-                style={{ backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', maskImage: 'linear-gradient(to right, black 0%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 100%)' }} />
+              {/* Left edge fade */}
+              <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, #080808, transparent)' }} />
               <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
                 style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), -40px 0 80px rgba(0,0,0,0.6), 0 40px 100px rgba(0,0,0,0.8)' }}>
                 <img
