@@ -404,7 +404,7 @@ function LogoStrip() {
       <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
         style={{ background: 'linear-gradient(to left, #080808, transparent)' }} />
 
-      <p className="text-center text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-8">
+      <p className="text-center text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-6">
         Connects with everything you already use
       </p>
 
@@ -434,33 +434,34 @@ function LogoStrip() {
 // ─── Features (scroll-expose) ─────────────────────────────────────────────────
 const FEATURES = [
   {
-    step: '01',
     label: 'Connect anything',
-    headline: '250+ integrations,\nzero configuration.',
-    body: 'Slack, Gmail, Stripe, GitHub, Notion — every tool your team uses, wired up in seconds. Blinkbox speaks every API so you don\'t have to.',
-    visual: {
-      nodes: [
-        { x: 50, y: 30, logo: 'Slack', color: '#4A154B' },
-        { x: 20, y: 60, logo: 'Gmail', color: '#EA4335' },
-        { x: 80, y: 60, logo: 'Stripe', color: '#6772E5' },
-        { x: 50, y: 85, logo: 'GitHub', color: '#333' },
-      ],
-      lines: [[0,1],[0,2],[1,3],[2,3]],
-    },
+    headline: '250+ integrations,\nzero config.',
+    body: 'Slack, Gmail, Stripe, GitHub, Notion — every tool your team uses, wired in seconds. Blinkbox speaks every API so you don\'t have to.',
+    visual: { type: 'network' },
   },
   {
-    step: '02',
     label: 'Build flows visually',
-    headline: 'Drag. Drop. Done.',
-    body: 'Visual canvas lets you map out logic, branches, loops and AI steps without touching code. If you can draw a flowchart, you can ship an automation.',
+    headline: 'Drag. Drop.\nDone.',
+    body: 'Visual canvas maps out logic, branches, loops and AI steps without code. If you can draw a flowchart, you can ship an automation.',
     visual: { type: 'canvas' },
   },
   {
-    step: '03',
+    label: 'AI agents built-in',
+    headline: 'Your AI co-worker,\nnot a chatbot.',
+    body: 'Embed GPT-4, Claude, or any model inside any workflow. Summarize, classify, generate — AI steps chain into the rest of your automation naturally.',
+    visual: { type: 'ai' },
+  },
+  {
     label: 'Run at any scale',
-    headline: 'Millions of executions.\nFlat monthly price.',
-    body: 'Your automations run on a resilient cursor-based engine with Redis-backed crash recovery. It restarts exactly where it left off, every time.',
+    headline: 'Millions of runs.\nFlat price.',
+    body: 'Cursor-based execution with Redis crash recovery restarts exactly where it left off. No lost data. No duplicate runs. No surprise bills.',
     visual: { type: 'metrics' },
+  },
+  {
+    label: 'Observe everything',
+    headline: 'Full execution\nhistory.',
+    body: 'Every run logged step-by-step. See exactly what happened, what data flowed, where it failed — and replay any execution in one click.',
+    visual: { type: 'log' },
   },
 ];
 
@@ -513,55 +514,123 @@ function FeatureVisual({ feature, progress }) {
   if (feature.visual.type === 'metrics') {
     const bars = [0.4, 0.7, 0.55, 0.9, 0.65, 0.85, 1.0];
     return (
-      <div className="w-full h-full flex items-end justify-center gap-3 px-8 pb-8">
-        {bars.map((h, i) => (
-          <motion.div
-            key={i}
-            className="flex-1 rounded-t-lg"
-            style={{ background: `rgba(255,255,255,${0.06 + h * 0.14})`, border: '1px solid rgba(255,255,255,0.08)' }}
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: progress > i * 0.1 ? h : 0 }}
-            transition={{ duration: 0.7, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
-            style={{ height: `${h * 70}%`, transformOrigin: 'bottom', background: `rgba(255,255,255,${0.06 + h * 0.14})`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px 4px 0 0' }}
-          />
+      <div className="w-full h-full flex flex-col justify-end px-8 pb-6 gap-2">
+        <div className="flex items-end gap-2 h-48">
+          {bars.map((h, i) => (
+            <motion.div key={i} className="flex-1"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: progress > i * 0.1 ? 1 : 0 }}
+              transition={{ duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: `${h * 100}%`, transformOrigin: 'bottom', background: `rgba(255,255,255,${0.05 + h * 0.15})`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px 4px 0 0' }}
+            />
+          ))}
+        </div>
+        <div className="flex items-center justify-between text-[10px] text-neutral-700">
+          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => <span key={d}>{d}</span>)}
+        </div>
+        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <span className="text-[11px] text-neutral-500">Total runs this week</span>
+          <motion.span className="text-[13px] font-semibold text-white"
+            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.5 ? 1 : 0 }}>
+            2,847,301
+          </motion.span>
+        </div>
+      </div>
+    );
+  }
+  if (feature.visual.type === 'ai') {
+    const msgs = [
+      { role: 'user', text: 'Summarize this support ticket and classify its urgency.' },
+      { role: 'ai', text: 'Summary: Customer reports payment failure on checkout.\nUrgency: High — revenue impact.' },
+      { role: 'system', text: 'Routing to billing team… ✓' },
+    ];
+    return (
+      <div className="w-full h-full flex flex-col justify-center gap-3 px-6 py-6">
+        {msgs.map((msg, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, x: msg.role === 'user' ? 16 : -16 }}
+            animate={{ opacity: progress > i * 0.25 ? 1 : 0, x: progress > i * 0.25 ? 0 : (msg.role === 'user' ? 16 : -16) }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className="max-w-[80%] px-3 py-2 rounded-xl text-[12px] leading-relaxed"
+              style={msg.role === 'user'
+                ? { background: 'rgba(255,255,255,0.08)', color: '#e5e5e5', border: '1px solid rgba(255,255,255,0.1)' }
+                : msg.role === 'ai'
+                ? { background: 'rgba(255,255,255,0.04)', color: '#a3a3a3', border: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'pre-line' }
+                : { background: 'transparent', color: '#555', fontSize: '11px', fontStyle: 'italic' }
+              }>
+              {msg.text}
+            </div>
+          </motion.div>
         ))}
       </div>
     );
   }
-  // network graph for feature 0
-  const nodePositions = [{ x: 50, y: 28 }, { x: 20, y: 62 }, { x: 80, y: 62 }, { x: 50, y: 88 }];
-  const lines = [[0,1],[0,2],[1,3],[2,3]];
-  const nodeLabels = ['Slack', 'Gmail', 'Stripe', 'GitHub'];
-  const nodeColors = ['#4A154B', '#EA4335', '#6772E5', '#24292e'];
+  if (feature.visual.type === 'log') {
+    const entries = [
+      { status: 'ok', node: 'Webhook trigger', ms: 1 },
+      { status: 'ok', node: 'Filter: is_paying_user', ms: 3 },
+      { status: 'ok', node: 'HTTP → Stripe API', ms: 214 },
+      { status: 'ok', node: 'Transform data', ms: 8 },
+      { status: 'ok', node: 'Send Slack message', ms: 67 },
+    ];
+    return (
+      <div className="w-full h-full flex flex-col justify-center gap-1.5 px-5 py-6">
+        {entries.map((e, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: progress > i * 0.15 ? 1 : 0, x: progress > i * 0.15 ? 0 : -12 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg"
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22c55e' }} />
+            <span className="text-[12px] text-neutral-400 flex-1">{e.node}</span>
+            <span className="text-[11px] text-neutral-700">{e.ms}ms</span>
+          </motion.div>
+        ))}
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: progress > 0.8 ? 1 : 0 }}
+          transition={{ duration: 0.4 }}
+          className="mt-2 flex items-center gap-2 text-[11px] text-neutral-600">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
+          Completed in 293ms
+        </motion.div>
+      </div>
+    );
+  }
+  // network
+  const nodePositions = [{ x: 50, y: 20 }, { x: 20, y: 50 }, { x: 80, y: 50 }, { x: 35, y: 80 }, { x: 65, y: 80 }];
+  const lines = [[0,1],[0,2],[1,3],[2,4],[1,4]];
+  const nodeLabels = ['Blinkbox','Slack','Stripe','Gmail','GitHub'];
+  const nodeColors = ['#fff','#4A154B','#6772E5','#EA4335','#24292e'];
+  const nodeFg = ['#000','#fff','#fff','#fff','#fff'];
   return (
     <div className="relative w-full h-full">
       <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
         {lines.map(([a, b], i) => (
-          <motion.line
-            key={i}
+          <motion.line key={i}
             x1={`${nodePositions[a].x}%`} y1={`${nodePositions[a].y}%`}
             x2={`${nodePositions[b].x}%`} y2={`${nodePositions[b].y}%`}
             stroke="rgba(255,255,255,0.1)" strokeWidth="1"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: progress > 0.2 ? 1 : 0, opacity: progress > 0.2 ? 1 : 0 }}
-            transition={{ duration: 0.6, delay: i * 0.1 }}
+            initial={{ opacity: 0 }} animate={{ opacity: progress > 0.15 ? 1 : 0 }}
+            transition={{ duration: 0.5, delay: i * 0.08 }}
           />
         ))}
       </svg>
       {nodePositions.map((pos, i) => (
-        <motion.div
-          key={i}
+        <motion.div key={i}
           className="absolute flex flex-col items-center gap-1"
           style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
           initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: progress > i * 0.18 ? 1 : 0, scale: progress > i * 0.18 ? 1 : 0.5 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          animate={{ opacity: progress > i * 0.15 ? 1 : 0, scale: progress > i * 0.15 ? 1 : 0.5 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[11px] font-bold text-white"
-            style={{ background: nodeColors[i], border: '1px solid rgba(255,255,255,0.15)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-bold"
+            style={{ background: nodeColors[i], color: nodeFg[i], border: '1px solid rgba(255,255,255,0.15)' }}>
             {nodeLabels[i][0]}
           </div>
-          <span className="text-[10px] text-neutral-500">{nodeLabels[i]}</span>
+          <span className="text-[9px] text-neutral-600">{nodeLabels[i]}</span>
         </motion.div>
       ))}
     </div>
@@ -590,7 +659,7 @@ function FeaturesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} style={{ height: `${FEATURES.length * 100}vh` }} className="relative">
+    <section ref={sectionRef} style={{ height: `${FEATURES.length * 80}vh` }} className="relative">
       <div className="sticky top-0 h-screen flex items-center overflow-hidden">
         <div className="w-full max-w-6xl mx-auto px-8 grid grid-cols-2 gap-16 items-center">
 
@@ -710,15 +779,15 @@ function PricingSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.15 });
   return (
-    <section ref={ref} className="py-28 px-6" id="pricing">
+    <section ref={ref} className="py-16 px-6" id="pricing">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mb-4">Pricing</p>
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mb-3">Pricing</p>
           <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-4">One flat rate.<br />No surprises.</h2>
           <p className="text-[15px] text-neutral-500">Run millions of tasks. Your bill doesn't move.</p>
         </motion.div>
@@ -801,13 +870,13 @@ function FaqSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.15 });
   return (
-    <section ref={ref} className="py-20 px-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+    <section ref={ref} className="py-14 px-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-2xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-[32px] font-bold text-white tracking-tight mb-12"
+          className="text-[32px] font-bold text-white tracking-tight mb-8"
         >Questions</motion.h2>
         {[
           { q: 'How is Blinkbox different from Zapier or Make?', a: "Zapier and Make charge per task — your costs grow with usage. Blinkbox is flat. Run 500 or 5,000,000 tasks for the same monthly price. We also ship first-class AI agents, headless browser automation, and a code sandbox." },
@@ -823,9 +892,9 @@ function FaqSection() {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="border-t py-16 px-6" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+    <footer className="border-t py-10 px-6" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-10 mb-12">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
           <div className="max-w-[200px]">
             <div className="flex items-center gap-2 mb-3">
               <img src={logo} alt="Blinkbox" className="w-5 h-5" />
@@ -868,7 +937,7 @@ function CtaSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.3 });
   return (
-    <section ref={ref} className="relative py-32 px-6 overflow-hidden">
+    <section ref={ref} className="relative py-20 px-6 overflow-hidden">
       <DottedSurface className="opacity-30" />
       <div className="relative z-10 max-w-xl mx-auto text-center">
         <motion.div
@@ -876,14 +945,14 @@ function CtaSection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-8"
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-6"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <Zap className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-5">
+          <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-4">
             Stop doing work<br />that shouldn't exist.
           </h2>
-          <p className="text-[16px] text-neutral-500 mb-10">
+          <p className="text-[16px] text-neutral-500 mb-7">
             Join thousands of teams automating their busywork. Free forever to start.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
