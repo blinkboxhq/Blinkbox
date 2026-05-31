@@ -167,11 +167,28 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-0.5">
               {panelToggles.map(({ key, title, active, onClick, icon }) => (
-                <button key={key} onClick={onClick} title={title}
-                  className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
-                    ${active ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'}`}>
-                  {icon}
-                </button>
+                key === 'brian' ? (
+                  <div key={key} className="relative group">
+                    <button
+                      className={`${H} w-7 flex items-center justify-center rounded-md opacity-40 cursor-not-allowed text-neutral-600`}
+                      title="Brian AI — Coming soon"
+                      disabled
+                    >
+                      {icon}
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                      <div className="bg-[#111] border border-[#2a2a2a] text-[10px] text-neutral-400 font-medium px-2 py-1 rounded-md">
+                        Coming soon
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button key={key} onClick={onClick} title={title}
+                    className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
+                      ${active ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'}`}>
+                    {icon}
+                  </button>
+                )
               ))}
             </div>
           </div>
