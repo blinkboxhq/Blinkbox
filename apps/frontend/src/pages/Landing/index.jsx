@@ -347,6 +347,7 @@ function Header() {
       </AnimatePresence>
     </div>
   );
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Landing() {
