@@ -228,18 +228,18 @@ function HeroSection({ heroRef, heroInView }) {
             transition={{ duration: 0.55, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="flex items-center gap-3 mb-10"
           >
-            <Link to="/register">
+            <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="h-11 px-6 text-[14px] font-semibold rounded-lg transition-all duration-200 hover:bg-neutral-200 active:scale-[0.98]"
                 style={{ background: '#fff', color: '#000' }}>
                 Start for free →
               </button>
-            </Link>
-            <Link to="/docs">
+            </a>
+            <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="h-11 px-5 text-[14px] font-medium rounded-lg border transition-all duration-200 hover:text-white hover:border-white/20"
                 style={{ color: '#71717a', borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
                 See how it works
               </button>
-            </Link>
+            </a>
           </motion.div>
 
           {/* Social proof */}
@@ -323,21 +323,21 @@ function Header() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          {['Product', 'Integrations', 'Docs', 'Pricing'].map(item => (
-            <Link key={item} to="#" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">
+          {[['Product','https://blinkbox.net/login'],['Integrations','https://blinkbox.net/login'],['Docs','https://blinkbox.net/login'],['Pricing','#pricing']].map(([item,href]) => (
+            <a key={item} href={href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">
               {item}
-            </Link>
+            </a>
           ))}
         </div>
 
         <div className="hidden md:flex items-center gap-2 shrink-0">
           <div className="w-px h-4 bg-white/[0.1] mx-1" />
-          <Link to="/login" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</Link>
-          <Link to="/register">
+          <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</a>
+          <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-lg">
               Sign up
             </button>
-          </Link>
+          </a>
         </div>
 
         <button className="md:hidden text-neutral-400" onClick={() => setMobileOpen(v => !v)}>
@@ -353,12 +353,12 @@ function Header() {
             exit={{ opacity: 0, y: -8 }}
             className="absolute top-full left-4 right-4 mt-2 bg-[#0c0c0c]/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 flex flex-col gap-4"
           >
-            {['Product', 'Integrations', 'Docs', 'Pricing'].map(item => (
-              <Link key={item} to="#" className="text-[15px] text-neutral-400" onClick={() => setMobileOpen(false)}>{item}</Link>
+            {[['Product','https://blinkbox.net/login'],['Integrations','https://blinkbox.net/login'],['Docs','https://blinkbox.net/login'],['Pricing','#pricing']].map(([item,href]) => (
+              <a key={item} href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-400" onClick={() => setMobileOpen(false)}>{item}</a>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
-              <Link to="/login" className="text-[15px] text-neutral-500">Log in</Link>
-              <Link to="/register"><Button className="w-full rounded-full">Sign up</Button></Link>
+              <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-500">Log in</a>
+              <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer"><Button className="w-full rounded-full">Sign up</Button></a>
             </div>
           </motion.div>
         )}
@@ -850,7 +850,7 @@ function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link to={plan.href}>
+              <a href={plan.href} target="_blank" rel="noopener noreferrer">
                 <button
                   className="w-full h-10 rounded-xl text-[13px] font-semibold transition-all duration-200"
                   style={plan.highlight
@@ -859,7 +859,7 @@ function PricingSection() {
                 >
                   {plan.cta}
                 </button>
-              </Link>
+              </a>
             </motion.div>
           ))}
         </div>
@@ -932,17 +932,17 @@ function Footer() {
           </div>
           <div className="grid grid-cols-3 gap-10">
             {[
-              { header: 'Product',   links: [{ label: 'Features', href: '#' }, { label: 'Integrations', href: '#' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: '#' }] },
-              { header: 'Resources', links: [{ label: 'Docs', href: '#' }, { label: 'Blog', href: '#' }, { label: 'Templates', href: '#' }, { label: 'Status', href: '#' }] },
+              { header: 'Product',   links: [{ label: 'Features', href: 'https://blinkbox.net/login' }, { label: 'Integrations', href: 'https://blinkbox.net/login' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: 'https://blinkbox.net/login' }] },
+              { header: 'Resources', links: [{ label: 'Docs', href: 'https://blinkbox.net/login' }, { label: 'Blog', href: 'https://blinkbox.net/login' }, { label: 'Templates', href: 'https://blinkbox.net/login' }, { label: 'Status', href: 'https://blinkbox.net/login' }] },
               { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:blinkbox.co.in@gmail.com' }] },
             ].map(col => (
               <div key={col.header}>
                 <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">{col.header}</p>
                 {col.links.map(link => (
-                  <Link key={link.label} to={link.href}
+                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
                     className="block text-[13px] text-neutral-600 hover:text-neutral-300 transition-colors mb-2">
                     {link.label}
-                  </Link>
+                  </a>
                 ))}
               </div>
             ))}
@@ -951,8 +951,8 @@ function Footer() {
         <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
           <p className="text-[12px] text-neutral-700">© 2025 Blinkbox. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Terms of Service</Link>
+            <a href="/privacy" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Privacy Policy</a>
+            <a href="/terms" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Terms of Service</a>
           </div>
         </div>
       </div>
@@ -981,17 +981,17 @@ function CtaSection() {
             Join thousands of teams automating their busywork. Free forever to start.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/register">
+            <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="h-11 px-7 text-[14px] font-semibold rounded-xl text-black bg-white hover:bg-neutral-200 transition-colors duration-200">
                 Automate for free <ArrowRight className="inline w-4 h-4 ml-1" />
               </button>
-            </Link>
-            <Link to="/login">
+            </a>
+            <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="h-11 px-7 text-[14px] font-medium rounded-xl transition-colors duration-200"
                 style={{ color: '#71717a', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
                 Log in
               </button>
-            </Link>
+            </a>
           </div>
           <p className="text-[12px] text-neutral-700 mt-5">No credit card required · Free forever on Starter</p>
         </motion.div>
