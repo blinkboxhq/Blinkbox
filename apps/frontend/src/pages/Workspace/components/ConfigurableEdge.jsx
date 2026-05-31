@@ -75,7 +75,7 @@ export default function ConfigurableEdge({
   let stroke = isSlotEdge
     ? (hovered ? "#a1a1aa" : "#71717a")
     : (hovered ? "#71717a" : "#3f3f46");
-  let strokeWidth = isSlotEdge ? 1.75 : 2.5;
+  let strokeWidth = isSlotEdge ? 2 : 3;
   let strokeDasharray = isSlotEdge ? "5 7" : "none";
   let animation = "none";
   let filter = "none";
