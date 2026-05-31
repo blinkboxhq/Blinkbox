@@ -791,16 +791,6 @@ const PLANS = [
     href: 'https://blinkbox.net/login',
     highlight: true,
   },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    desc: 'For regulated and large-scale deployments.',
-    features: ['Everything in Pro', 'Self-hosting', 'SSO / SAML', 'SLA guarantees', 'Dedicated engineer'],
-    cta: 'Contact us',
-    href: 'mailto:blinkbox.co.in@gmail.com',
-    highlight: false,
-  },
 ];
 
 function PricingSection() {
@@ -819,7 +809,7 @@ function PricingSection() {
           <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-4">One flat rate.<br />No surprises.</h2>
           <p className="text-[15px] text-neutral-500">Run millions of tasks. Your bill doesn't move.</p>
         </motion.div>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 max-w-2xl mx-auto gap-4 w-full">
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -910,7 +900,7 @@ function FaqSection() {
           { q: 'How is Blinkbox different from Zapier or Make?', a: "Zapier and Make charge per task — your costs grow with usage. Blinkbox is flat. Run 500 or 5,000,000 tasks for the same monthly price. We also ship first-class AI agents, headless browser automation, and a code sandbox." },
           { q: 'What happens if a workflow fails mid-run?', a: "Blinkbox uses a cursor-based execution engine with Redis locking. If a run is interrupted, the resumer picks up exactly where it left off — no lost data, no duplicate processing." },
           { q: 'Is my credential data safe?', a: "All credentials are stored in an AES-256 encrypted vault and are never logged or exposed in execution output. They are only decrypted at runtime, in memory, for the specific node that needs them." },
-          { q: 'Can I self-host Blinkbox?', a: "Yes. The Enterprise plan includes full self-hosting support. Blinkbox runs on Node.js, MongoDB, and Redis — straightforward to deploy on your own infrastructure." },
+          { q: 'Can I self-host Blinkbox?', a: "Yes. Blinkbox is open-architecture — it runs on Node.js, MongoDB, and Redis, making it straightforward to deploy on your own infrastructure. Reach out for self-hosting guidance." },
         ].map(item => <FaqItem key={item.q} q={item.q} a={item.a} />)}
       </div>
     </section>

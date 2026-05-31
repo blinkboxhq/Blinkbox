@@ -109,6 +109,8 @@ export const VIRUSTOTAL_API_KEY       = process.env.VIRUSTOTAL_API_KEY       || 
 // ── CRM / SaaS Webhooks & API Keys ───────────────────────────────────────────
 export const STRIPE_SECRET_KEY       = process.env.STRIPE_SECRET_KEY       || null;
 export const STRIPE_WEBHOOK_SECRET   = process.env.STRIPE_WEBHOOK_SECRET   || null;
+export const STRIPE_PRICE_ID_PRO     = process.env.STRIPE_PRICE_ID_PRO     || null;
+export const FRONTEND_URL            = process.env.FRONTEND_URL             || 'http://localhost:5174';
 export const HUBSPOT_API_KEY         = process.env.HUBSPOT_API_KEY         || null;
 export const SHOPIFY_API_KEY         = process.env.SHOPIFY_API_KEY         || null;
 export const SHOPIFY_API_SECRET      = process.env.SHOPIFY_API_SECRET      || null;
