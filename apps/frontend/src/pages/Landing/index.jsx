@@ -880,7 +880,7 @@ export default function Landing() {
                 <img
                   src={heroScreenshot}
                   alt="Blinkbox workflow canvas"
-                  className="w-full block"
+                  className="w-full block opacity-70"
                   style={{ objectFit: 'cover', objectPosition: 'top left' }}
                 />
               </div>
