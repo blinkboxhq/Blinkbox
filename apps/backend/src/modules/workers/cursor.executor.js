@@ -624,7 +624,7 @@ async function routeEdges(
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
-    const isFailurePath = e.sourceHandle === 'error' || e.sourceHandle === 'false' || e.type === 'onFailure';
+    const isFailurePath = e.sourceHandle === 'error' || e.sourceHandle === 'false' || e.sourceHandle === 'failed' || e.type === 'onFailure';
     const normalizedType = isFailurePath ? "onFailure" : "onSuccess";
     return normalizedType === edgeType;
   });
