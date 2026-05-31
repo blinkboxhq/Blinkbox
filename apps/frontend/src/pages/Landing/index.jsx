@@ -973,10 +973,7 @@ function CtaSection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-6"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Zap className="w-5 h-5 text-white" />
-          </div>
+          <img src={logo} alt="Blinkbox" className="w-10 h-10 mb-6" />
           <h2 className="text-[40px] font-bold text-white tracking-tight leading-tight mb-4">
             Stop doing work<br />that shouldn't exist.
           </h2>
