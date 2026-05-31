@@ -488,9 +488,6 @@ function CustomNode({ id, data, selected }) {
   const hasFalseConnection   = edges.some(e => e.source === id && e.sourceHandle === "false");
   const hasSuccessConnection = edges.some(e => e.source === id && e.sourceHandle === "success");
   const hasFailedConnection  = edges.some(e => e.source === id && e.sourceHandle === "failed");
-  const isSuccessTarget = edges.some(e => e.target === id && e.sourceHandle === "success");
-  const isFailedTarget  = edges.some(e => e.target === id && e.sourceHandle === "failed");
-  const isOnResultPath  = isSuccessTarget || isFailedTarget;
 
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
   const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
@@ -589,16 +586,6 @@ function CustomNode({ id, data, selected }) {
           style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
 
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
-          {isOnResultPath && (
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] pointer-events-none" style={{ borderRadius: `${shapeRadius}px 0 0 ${shapeRadius}px`, background: isSuccessTarget ? "#22c55e" : "#ef4444", opacity: 0.85 }} />
-          )}
-          {isOnResultPath && (
-            <div className="absolute top-2 left-3 flex items-center gap-1 pointer-events-none">
-              <span className={`text-[8px] font-bold uppercase tracking-widest ${isSuccessTarget ? "text-emerald-400" : "text-red-400"}`}>
-                {isSuccessTarget ? "✓ Success" : "✗ Failed"}
-              </span>
-            </div>
-          )}
 
           {badge}
 
@@ -627,8 +614,8 @@ function CustomNode({ id, data, selected }) {
             cardH={cardH} />
         ))}
 
-        {!isOnResultPath && <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />}
-        {!isOnResultPath && outputCount != null && (
+        <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
+        {outputCount != null && (
           <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
             <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
               {outputCount} item{outputCount !== 1 ? 's' : ''}
@@ -796,17 +783,6 @@ function CustomNode({ id, data, selected }) {
         onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
         style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
-        {/* Success/Failed path accent bar */}
-        {isOnResultPath && (
-          <div className="absolute left-0 top-0 bottom-0 w-[3px] pointer-events-none" style={{ borderRadius: `${shapeRadius}px 0 0 ${shapeRadius}px`, background: isSuccessTarget ? "#22c55e" : "#ef4444", opacity: 0.85 }} />
-        )}
-        {isOnResultPath && (
-          <div className="absolute top-2 left-3 flex items-center gap-1 pointer-events-none">
-            <span className={`text-[8px] font-bold uppercase tracking-widest ${isSuccessTarget ? "text-emerald-400" : "text-red-400"}`}>
-              {isSuccessTarget ? "✓ Success" : "✗ Failed"}
-            </span>
-          </div>
-        )}
         {badge}
         {hasMappingWarning && (
           <div className="absolute top-2 left-2 group/warn">
@@ -823,14 +799,14 @@ function CustomNode({ id, data, selected }) {
         )}
       </motion.div>
 
-      {!isOnResultPath && (data.backendType === "condition" ? (
+      {data.backendType === "condition" ? (
         <ConditionOutputHandles cardHeight={cardH} trueConnected={hasTrueConnection} falseConnected={hasFalseConnection} onAdd={handleAddNext} />
       ) : data.backendType === "success_failed" ? (
         <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
-      ))}
-      {!isOnResultPath && outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && (
+      )}
+      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && (
         <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
           <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
             {outputCount} item{outputCount !== 1 ? 's' : ''}
