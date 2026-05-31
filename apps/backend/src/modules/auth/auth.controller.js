@@ -55,6 +55,7 @@ export async function googleLogin(req, res) {
     const safeName = name || given_name || email.split("@")[0];
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (!user) {
       user = await User.create({
@@ -64,8 +65,9 @@ export async function googleLogin(req, res) {
         googleId,
         picture,
         role: "user",
-        emailVerified: true, // Google validates the email
+        emailVerified: true,
       });
+      isNewUser = true;
     } else if (!user.googleId) {
       return res.status(403).json({
         message:
@@ -82,6 +84,14 @@ export async function googleLogin(req, res) {
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+
+    if (isNewUser) {
+      sendWelcomeEmail(user).catch(err => console.error("[Auth] Google welcome email failed:", err.message));
+    } else {
+      const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
+      sendLoginAlertEmail(user, { ip, userAgent: req.headers["user-agent"] })
+        .catch(err => console.error("[Auth] Google login alert email failed:", err.message));
+    }
 
     res.json({
       message: "Google Authentication successful.",
