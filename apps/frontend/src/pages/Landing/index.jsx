@@ -62,6 +62,88 @@ function Counter({ to, suffix = '', duration = 2000 }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
+// ─── WebGL Lightning Background ──────────────────────────────────────────────
+function LightningBg({ hue = 230, speed = 1.6, intensity = 0.55, size = 2 }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const gl = canvas.getContext('webgl');
+    if (!gl) return;
+
+    const vert = `attribute vec2 aPosition; void main(){gl_Position=vec4(aPosition,0.0,1.0);}`;
+    const frag = `
+      precision mediump float;
+      uniform vec2 iResolution; uniform float iTime;
+      uniform float uHue,uSpeed,uIntensity,uSize;
+      #define OCTAVE_COUNT 10
+      vec3 hsv2rgb(vec3 c){vec3 rgb=clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);return c.z*mix(vec3(1.0),rgb,c.y);}
+      float hash11(float p){p=fract(p*.1031);p*=p+33.33;p*=p+p;return fract(p);}
+      float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+      mat2 rot2d(float t){float c=cos(t),s=sin(t);return mat2(c,-s,s,c);}
+      float noise(vec2 p){vec2 ip=floor(p),fp=fract(p);float a=hash12(ip),b=hash12(ip+vec2(1,0)),c=hash12(ip+vec2(0,1)),d=hash12(ip+vec2(1,1));vec2 t=smoothstep(0.0,1.0,fp);return mix(mix(a,b,t.x),mix(c,d,t.x),t.y);}
+      float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<OCTAVE_COUNT;++i){v+=a*noise(p);p*=rot2d(0.45);p*=2.0;a*=0.5;}return v;}
+      void main(){
+        vec2 uv=gl_FragCoord.xy/iResolution.xy;
+        uv=2.0*uv-1.0; uv.x*=iResolution.x/iResolution.y;
+        uv+=2.0*fbm(uv*uSize+0.8*iTime*uSpeed)-1.0;
+        float dist=abs(uv.x);
+        vec3 base=hsv2rgb(vec3(uHue/360.0,0.7,0.8));
+        vec3 col=base*pow(mix(0.0,0.07,hash11(iTime*uSpeed))/dist,1.0)*uIntensity;
+        gl_FragColor=vec4(col,1.0);
+      }
+    `;
+
+    const compile = (src, type) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      return s;
+    };
+    const vs = compile(vert, gl.VERTEX_SHADER);
+    const fs = compile(frag, gl.FRAGMENT_SHADER);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
+    const ap = gl.getAttribLocation(prog, 'aPosition');
+    gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+
+    const uRes = gl.getUniformLocation(prog, 'iResolution');
+    const uTime = gl.getUniformLocation(prog, 'iTime');
+    const uHueL = gl.getUniformLocation(prog, 'uHue');
+    const uSpeedL = gl.getUniformLocation(prog, 'uSpeed');
+    const uIntL = gl.getUniformLocation(prog, 'uIntensity');
+    const uSizeL = gl.getUniformLocation(prog, 'uSize');
+
+    const t0 = performance.now();
+    let raf;
+    const render = () => {
+      resize();
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, (performance.now() - t0) / 1000);
+      gl.uniform1f(uHueL, hue);
+      gl.uniform1f(uSpeedL, speed);
+      gl.uniform1f(uIntL, intensity);
+      gl.uniform1f(uSizeL, size);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      raf = requestAnimationFrame(render);
+    };
+    render();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, [hue, speed, intensity, size]);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
+}
+
 // ─── 3D Node Graph Hero ───────────────────────────────────────────────────────
 
 // Nodes in 3D space [x, y, z] — centered around origin
@@ -694,9 +776,12 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* Subtle radial glow — bottom right, where the screenshot sits */}
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 60%, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
+          {/* WebGL lightning — hero background only */}
+          <div className="absolute inset-0 pointer-events-none">
+            <LightningBg hue={230} speed={1.4} intensity={0.5} size={2} />
+          </div>
+          {/* Dark overlay so text stays readable */}
+          <div className="absolute inset-0 pointer-events-none bg-black/70" />
 
           <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
 
