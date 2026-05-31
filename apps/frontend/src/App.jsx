@@ -9,6 +9,9 @@ const Workspace    = lazy(() => import('./pages/Workspace'));
 const Privacy      = lazy(() => import('./pages/Privacy'));
 const Terms        = lazy(() => import('./pages/Terms'));
 const ChatPage     = lazy(() => import('./pages/Chat/ChatPage'));
+const Product      = lazy(() => import('./pages/Product'));
+const Integrations = lazy(() => import('./pages/Integrations'));
+const Docs         = lazy(() => import('./pages/Docs'));
 
 const PageLoader = () => (
   <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -75,6 +78,9 @@ export default function App() {
             <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/product" element={<Product />} />
+            <Route path="/integrations" element={<Integrations />} />
+            <Route path="/docs" element={<Docs />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

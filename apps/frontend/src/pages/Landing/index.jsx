@@ -323,8 +323,8 @@ function Header() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          {[['Product','https://blinkbox.net/login'],['Integrations','https://blinkbox.net/login'],['Docs','https://blinkbox.net/login'],['Pricing','#pricing']].map(([item,href]) => (
-            <a key={item} href={href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">
+          {[['Product','/product'],['Integrations','/integrations'],['Docs','/docs'],['Pricing','#pricing']].map(([item,href]) => (
+            <a key={item} href={href} className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">
               {item}
             </a>
           ))}
@@ -353,8 +353,8 @@ function Header() {
             exit={{ opacity: 0, y: -8 }}
             className="absolute top-full left-4 right-4 mt-2 bg-[#0c0c0c]/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 flex flex-col gap-4"
           >
-            {[['Product','https://blinkbox.net/login'],['Integrations','https://blinkbox.net/login'],['Docs','https://blinkbox.net/login'],['Pricing','#pricing']].map(([item,href]) => (
-              <a key={item} href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-400" onClick={() => setMobileOpen(false)}>{item}</a>
+            {[['Product','/product'],['Integrations','/integrations'],['Docs','/docs'],['Pricing','#pricing']].map(([item,href]) => (
+              <a key={item} href={href} className="text-[15px] text-neutral-400" onClick={() => setMobileOpen(false)}>{item}</a>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
               <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-500">Log in</a>
@@ -932,14 +932,15 @@ function Footer() {
           </div>
           <div className="grid grid-cols-3 gap-10">
             {[
-              { header: 'Product',   links: [{ label: 'Features', href: 'https://blinkbox.net/login' }, { label: 'Integrations', href: 'https://blinkbox.net/login' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: 'https://blinkbox.net/login' }] },
-              { header: 'Resources', links: [{ label: 'Docs', href: 'https://blinkbox.net/login' }, { label: 'Blog', href: 'https://blinkbox.net/login' }, { label: 'Templates', href: 'https://blinkbox.net/login' }, { label: 'Status', href: 'https://blinkbox.net/login' }] },
+              { header: 'Product',   links: [{ label: 'Features', href: '/product' }, { label: 'Integrations', href: '/integrations' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: 'https://blinkbox.net/login' }] },
+              { header: 'Resources', links: [{ label: 'Docs', href: '/docs' }, { label: 'Blog', href: 'https://blinkbox.net/login' }, { label: 'Templates', href: 'https://blinkbox.net/login' }, { label: 'Status', href: 'https://blinkbox.net/login' }] },
               { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:blinkbox.co.in@gmail.com' }] },
             ].map(col => (
               <div key={col.header}>
                 <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">{col.header}</p>
                 {col.links.map(link => (
-                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
+                  <a key={link.label} href={link.href}
+                    {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     className="block text-[13px] text-neutral-600 hover:text-neutral-300 transition-colors mb-2">
                     {link.label}
                   </a>
