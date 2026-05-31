@@ -775,10 +775,10 @@ export default function Landing() {
               animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="absolute right-0 top-1/2 -translate-y-1/2"
-              style={{ width: '62vw', marginRight: '-6vw' }}
+              style={{ width: '75vw', marginRight: '-12vw' }}
             >
               {/* Right edge fade */}
-              <div className="absolute inset-y-0 right-0 w-48 z-10 pointer-events-none"
+              <div className="absolute inset-y-0 right-0 w-64 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
               {/* Top fade */}
               <div className="absolute inset-x-0 top-0 h-24 z-10 pointer-events-none"
