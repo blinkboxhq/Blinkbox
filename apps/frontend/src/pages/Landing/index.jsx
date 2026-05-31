@@ -709,8 +709,8 @@ export default function Landing() {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03] mb-8"
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-                <span className="text-[11px] text-neutral-400 font-medium">Now in public beta — free to start</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] text-neutral-400 font-medium">Your competitors are already automating</span>
               </motion.div>
 
               {/* Headline */}
@@ -720,7 +720,7 @@ export default function Landing() {
                 transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
                 className="text-[56px] sm:text-[64px] font-bold leading-[1.0] tracking-[-0.03em] mb-6 text-white"
               >
-                Build workflows<br />that run<br />themselves.
+                Stop doing<br />work that<br />shouldn't exist.
               </motion.h1>
 
               {/* Subline */}
@@ -730,8 +730,8 @@ export default function Landing() {
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 className="text-[16px] text-neutral-500 leading-relaxed mb-10"
               >
-                250+ integrations, AI agents, and logic routing —
-                on a flat plan that never charges per task.
+                Every hour you spend on manual tasks is an hour your
+                competitors spend on growth. Blinkbox runs it for you — silently, instantly, every time.
               </motion.p>
 
               {/* CTAs */}
@@ -739,30 +739,34 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
                 animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
                 transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-3 mb-8"
+                className="flex items-center gap-3 mb-10"
               >
                 <Link to="/register">
                   <Button className="h-11 px-6 text-[14px] rounded-lg bg-white text-black hover:bg-neutral-200">
-                    Get started
+                    Automate for free
                   </Button>
                 </Link>
                 <Link to="/docs">
                   <Button variant="ghost" className="h-11 px-6 text-[14px] rounded-lg text-neutral-400 hover:text-white">
-                    Documentation
+                    See how it works
                   </Button>
                 </Link>
               </motion.div>
 
-              {/* Trust strip */}
+              {/* Social proof strip */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={heroInView ? { opacity: 1 } : {}}
                 transition={{ duration: 0.5, delay: 0.38 }}
-                className="flex flex-col gap-2"
+                className="flex flex-col gap-2.5"
               >
-                {['No credit card required', 'AES-256 encrypted', 'Self-hostable'].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[12px] text-neutral-600">
-                    <Check className="w-3 h-3 text-neutral-700 shrink-0" />
+                {[
+                  'Saves teams 20+ hours every week',
+                  'Runs while you sleep — zero babysitting',
+                  'Free forever. Upgrade only when you scale.',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[12px] text-neutral-500">
+                    <Check className="w-3 h-3 text-neutral-600 shrink-0" />
                     {item}
                   </div>
                 ))}
