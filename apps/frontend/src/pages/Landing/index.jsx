@@ -1,17 +1,17 @@
 import { Component, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, Bot, Search, GitBranch, Globe, Shield, Cpu,
+  ArrowRight, Bot, Search, GitBranch, Shield, Cpu,
   Check, ChevronRight, Sparkles, Lock, Database, Workflow,
   Play, Layers, MousePointerClick, Menu, X, Mail,
   Minus, Plus, Zap, Webhook,
 } from 'lucide-react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { AnimatedGroup } from '@/components/ui/animated-group';
+import { Button } from '@/components/ui/button';
 import { BGPattern } from '@/components/ui/bg-pattern';
 import { DottedSurface } from '@/components/ui/dotted-surface';
 import { FeatureCard } from '@/components/ui/grid-feature-cards';
-import { BackgroundPaths } from '@/components/ui/background-paths';
 import { ParticleTextEffect } from '@/components/ui/particle-text-effect';
 import { cn } from '@/lib/utils';
 import logo from '../../assets/logo.svg';
@@ -63,16 +63,13 @@ const transitionVariants = {
   item: {
     hidden: { opacity: 0, filter: 'blur(12px)', y: 12 },
     visible: {
-      opacity: 1, filter: 'blur(0px)', y: 0,
+      opacity: 1,
+      filter: 'blur(0px)',
+      y: 0,
       transition: { type: 'spring', bounce: 0.3, duration: 1.5 },
     },
   },
 };
-
-const staggerHero = (delay = 0.2) => ({
-  container: { visible: { transition: { staggerChildren: 0.08, delayChildren: delay } } },
-  ...transitionVariants,
-});
 
 // ── FAQ ────────────────────────────────────────────────────────────────────
 function FaqItem({ q, a }) {
@@ -183,13 +180,13 @@ const INTEGRATIONS = [
 // ── Header ────────────────────────────────────────────────────────────────
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { scrollYProgress } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const unsub = scrollYProgress.on('change', (v) => setScrolled(v > 0.02));
-    return unsub;
-  }, [scrollYProgress]);
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <header>
@@ -198,7 +195,7 @@ function Header() {
         className="group fixed top-0 z-50 w-full px-2">
         <div className={cn(
           'mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12',
-          scrolled && 'bg-black/60 max-w-4xl rounded-2xl border border-white/[0.06] backdrop-blur-xl lg:px-5'
+          isScrolled && 'bg-black/60 max-w-4xl rounded-2xl border border-white/[0.06] backdrop-blur-xl lg:px-5'
         )}>
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full items-center justify-between lg:w-auto">
@@ -236,18 +233,15 @@ function Header() {
                 ))}
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Link to="/login"
-                  className={cn('px-4 py-2 text-[13px] font-medium text-neutral-500 hover:text-white transition-colors text-center rounded-lg', scrolled && 'lg:hidden')}>
-                  Log in
-                </Link>
-                <Link to="/login"
-                  className={cn('px-4 py-2 text-[13px] font-semibold text-black bg-white rounded-lg hover:bg-neutral-200 transition-all text-center', scrolled && 'lg:hidden')}>
-                  Sign Up
-                </Link>
-                <Link to="/login"
-                  className={cn('px-4 py-2 text-[13px] font-semibold text-black bg-white rounded-lg hover:bg-neutral-200 transition-all text-center', scrolled ? 'lg:inline-flex hidden' : 'hidden')}>
-                  Get Started
-                </Link>
+                <Button asChild variant="ghost" size="sm" className={cn(isScrolled && 'lg:hidden')}>
+                  <Link to="/login">Log in</Link>
+                </Button>
+                <Button asChild size="sm" className={cn(isScrolled && 'lg:hidden')}>
+                  <Link to="/login">Sign Up</Link>
+                </Button>
+                <Button asChild size="sm" className={cn(isScrolled ? 'lg:inline-flex hidden' : 'hidden')}>
+                  <Link to="/login">Get Started</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -284,8 +278,6 @@ function IntegrationsStrip() {
 // ── Main ──────────────────────────────────────────────────────────────────
 export default function Landing() {
   const pageRef = useScrollReveal();
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
 
   return (
     <div ref={pageRef} className="bg-black min-h-screen text-white overflow-x-hidden">
@@ -301,10 +293,11 @@ export default function Landing() {
 
       <Header />
 
-      {/* ══════════════════════════════════════════════════════════════════
-          HERO
-      ══════════════════════════════════════════════════════════════════ */}
       <main className="overflow-hidden">
+
+        {/* ══════════════════════════════════════════════════════════════════
+            HERO
+        ══════════════════════════════════════════════════════════════════ */}
 
         {/* Subtle background light rays */}
         <div aria-hidden className="z-[2] absolute inset-0 pointer-events-none isolate opacity-50 contain-strict hidden lg:block">
@@ -366,17 +359,19 @@ export default function Landing() {
                   }}
                   className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
                   <div className="bg-white/[0.08] rounded-[14px] border border-white/[0.1] p-0.5">
-                    <Link to="/login"
-                      className="group inline-flex items-center gap-2.5 bg-white text-black px-6 py-3 rounded-xl font-semibold text-[14px] hover:bg-neutral-100 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.08)]">
-                      <span className="text-nowrap">Start Building</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
+                    <Button asChild size="lg" className="rounded-xl px-6 text-[14px] font-semibold">
+                      <Link to="/login">
+                        <span className="text-nowrap">Start Building</span>
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
                   </div>
-                  <a href="#how-it-works"
-                    className="inline-flex items-center gap-1.5 px-5 py-3 text-[14px] font-medium text-neutral-500 hover:text-white transition-colors duration-200 rounded-xl hover:bg-white/[0.04]">
-                    <span className="text-nowrap">See how it works</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </a>
+                  <Button asChild size="lg" variant="ghost" className="rounded-xl px-5 text-[14px]">
+                    <a href="#how-it-works">
+                      <span className="text-nowrap">See how it works</span>
+                      <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </a>
+                  </Button>
                 </AnimatedGroup>
 
                 {/* Trust strip */}
@@ -410,11 +405,9 @@ export default function Landing() {
                 container: { visible: { transition: { staggerChildren: 0.05, delayChildren: 0.9 } } },
                 ...transitionVariants,
               }}>
-              <div className="relative -mr-56 mt-12 overflow-hidden px-2 sm:mr-0 sm:mt-16 md:mt-24">
-                {/* Gradient fade-out at bottom */}
+              <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
                 <div aria-hidden className="bg-gradient-to-b to-black absolute inset-0 z-10 from-transparent from-55% pointer-events-none" />
-                {/* Screenshot container */}
-                <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080808] p-3 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_32px_80px_rgba(0,0,0,0.8)] ring-1 ring-white/[0.04]">
+                <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/[0.08] p-3 shadow-lg shadow-zinc-950/15 ring-1 ring-white/[0.04] bg-[#080808]">
                   <img
                     src={heroScreenshot}
                     alt="Blinkbox canvas"
@@ -449,12 +442,12 @@ export default function Landing() {
                 { src: 'https://html.tailus.io/blocks/customers/laravel.svg',      alt: 'Laravel',      h: 'h-4' },
                 { src: imgSlack,                                                    alt: 'Slack',        h: 'h-5' },
                 { src: imgStripe,                                                   alt: 'Stripe',       h: 'h-5', invert: true },
-              ].map((logo) => (
-                <div key={logo.alt} className="flex items-center justify-center">
+              ].map((item) => (
+                <div key={item.alt} className="flex items-center justify-center">
                   <img
-                    src={logo.src}
-                    alt={logo.alt}
-                    className={`mx-auto w-fit ${logo.h} opacity-50 grayscale transition-all duration-300 group-hover:opacity-30 ${logo.invert ? 'invert' : ''}`}
+                    src={item.src}
+                    alt={item.alt}
+                    className={`mx-auto w-fit ${item.h} opacity-50 grayscale transition-all duration-300 group-hover:opacity-30 ${item.invert ? 'invert' : ''}`}
                   />
                 </div>
               ))}
@@ -605,15 +598,9 @@ export default function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/login"
-                    className={cn(
-                      'w-full py-2.5 rounded-lg text-sm font-semibold text-center transition-all duration-300',
-                      plan.highlight
-                        ? 'bg-white text-black hover:bg-neutral-200'
-                        : 'bg-white/[0.06] text-neutral-300 hover:bg-white/[0.1] border border-white/[0.08]'
-                    )}>
-                    {plan.cta}
-                  </Link>
+                  <Button asChild variant={plan.highlight ? 'default' : 'outline'} className="w-full">
+                    <Link to="/login">{plan.cta}</Link>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -644,11 +631,12 @@ export default function Landing() {
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 reveal-on-scroll">Ready?</h2>
             <p className="text-neutral-500 text-base max-w-sm mx-auto mb-10 leading-relaxed reveal-on-scroll">Free forever on Starter. No credit card. Set up your first workflow in 3 minutes.</p>
             <div className="reveal-on-scroll">
-              <Link to="/login"
-                className="group inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-base hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 shadow-[0_0_60px_rgba(255,255,255,0.04)]">
-                Get Started Free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <Button asChild size="lg" className="px-8 py-4 rounded-xl font-bold text-base shadow-[0_0_60px_rgba(255,255,255,0.04)] hover:-translate-y-0.5 transition-transform">
+                <Link to="/login">
+                  Get Started Free
+                  <ArrowRight className="w-4 h-4 ml-3" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
