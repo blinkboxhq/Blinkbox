@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Check, Zap, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { Check, Zap, ArrowLeft, Sparkles, Loader2, X, PartyPopper } from 'lucide-react';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import logo from '../assets/logo.svg';
@@ -8,7 +8,6 @@ import logo from '../assets/logo.svg';
 const FREE_FEATURES = [
   '5,000 executions / month',
   '10 active workflows',
-  '50+ integrations',
   'Webhook & schedule triggers',
   'Community support',
 ];
@@ -16,13 +15,66 @@ const FREE_FEATURES = [
 const PRO_FEATURES = [
   'Unlimited executions',
   'Unlimited workflows',
-  '250+ integrations',
   'AI agent builder',
   'Headless web scraping',
-  'Priority support',
-  'Advanced analytics',
   'Team collaboration',
+  'Advanced analytics',
+  'Priority support',
 ];
+
+function SuccessModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" style={{ animation: 'fadeIn 0.15s ease-out' }}>
+      <div className="relative bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-[400px] mx-4 p-8 flex flex-col items-center text-center" style={{ animation: 'scaleIn 0.15s ease-out' }}>
+        <button onClick={onClose} className="absolute top-4 right-4 text-neutral-600 hover:text-neutral-300 transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Icon */}
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 relative"
+          style={{ background: 'linear-gradient(135deg,#7c3aed22,#4f46e522)', border: '1px solid #7c3aed44' }}>
+          <PartyPopper className="w-7 h-7 text-violet-400" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
+            <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+          </div>
+        </div>
+
+        <h2 className="text-[22px] font-bold text-white mb-2 tracking-tight">You're on Pro!</h2>
+        <p className="text-[13px] text-neutral-500 mb-7 leading-relaxed">
+          Your workspace has been upgraded. All Pro features are now active.
+        </p>
+
+        {/* What you unlocked */}
+        <div className="w-full bg-[#0d0d0d] border border-[#1e1e1e] rounded-xl p-4 mb-6 text-left">
+          <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-3">What you unlocked</p>
+          <div className="flex flex-col gap-2">
+            {PRO_FEATURES.map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center shrink-0">
+                  <Check className="w-2.5 h-2.5 text-violet-400" strokeWidth={3} />
+                </div>
+                <span className="text-[12px] text-neutral-300">{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full h-10 rounded-xl text-[13px] font-semibold text-black transition-all duration-200 hover:opacity-90"
+          style={{ background: '#fff' }}
+        >
+          Start building
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95) } to { opacity: 1; transform: scale(1) } }
+      `}</style>
+    </div>
+  );
+}
 
 export default function Upgrade() {
   const navigate = useNavigate();
@@ -30,9 +82,10 @@ export default function Upgrade() {
   const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingUsage, setFetchingUsage] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const successMsg = searchParams.get('upgrade') === 'success';
-  const cancelMsg  = searchParams.get('upgrade') === 'cancelled';
+  const isSuccess   = searchParams.get('upgrade') === 'success';
+  const isCancelled = searchParams.get('upgrade') === 'cancelled';
 
   useEffect(() => {
     api.get('/api/billing/usage')
@@ -42,9 +95,9 @@ export default function Upgrade() {
   }, []);
 
   useEffect(() => {
-    if (successMsg) toast.success('You\'re now on Pro! 🎉');
-    if (cancelMsg)  toast('Checkout cancelled — no changes made.');
-  }, [successMsg, cancelMsg]);
+    if (isSuccess) setShowSuccess(true);
+    if (isCancelled) toast('Checkout cancelled — no changes made.');
+  }, [isSuccess, isCancelled]);
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -72,6 +125,8 @@ export default function Upgrade() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#080808' }}>
+      {showSuccess && <SuccessModal onClose={() => { setShowSuccess(false); navigate('/dashboard'); }} />}
+
       {/* Nav */}
       <header className="flex items-center justify-between px-6 h-14 border-b border-[#1a1a1a] shrink-0">
         <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
@@ -89,16 +144,15 @@ export default function Upgrade() {
 
       {/* Body */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-        {/* Heading */}
         <div className="text-center mb-12">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-3">Plans</p>
           <h1 className="text-[36px] font-bold text-white tracking-tight leading-tight mb-3">
-            {isPro ? 'You\'re on Pro' : 'Upgrade to Pro'}
+            {isPro ? "You're on Pro" : 'Upgrade to Pro'}
           </h1>
           <p className="text-[15px] text-neutral-500 max-w-sm mx-auto">
             {isPro
               ? 'Manage your subscription or view your usage below.'
-              : 'Unlock unlimited executions, workflows, and every integration.'}
+              : 'Unlock unlimited executions, workflows, and every feature.'}
           </p>
         </div>
 
@@ -142,7 +196,6 @@ export default function Upgrade() {
           {/* Pro */}
           <div className="flex-1 flex flex-col p-6 rounded-2xl border relative overflow-hidden"
             style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.15)' }}>
-            {/* Top shimmer line */}
             <div className="absolute top-0 left-6 right-6 h-px"
               style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)' }} />
 
@@ -191,7 +244,6 @@ export default function Upgrade() {
           </div>
         </div>
 
-        {/* Footer note */}
         {!isPro && (
           <p className="text-[11px] text-neutral-700 mt-6 text-center">
             Secure checkout via Stripe · Cancel anytime · No hidden fees
