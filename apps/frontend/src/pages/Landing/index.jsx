@@ -778,24 +778,24 @@ export default function Landing() {
         <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
           {/* WebGL lightning — hero background only */}
           <div className="absolute inset-0 pointer-events-none">
-            <LightningBg hue={230} speed={1.4} intensity={0.5} size={2} />
+            <LightningBg hue={230} speed={1.4} intensity={0.9} size={2} />
           </div>
           {/* Dark overlay so text stays readable */}
-          <div className="absolute inset-0 pointer-events-none bg-black/70" />
+          <div className="absolute inset-0 pointer-events-none bg-black/55" />
 
-          <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
+          <div className="relative z-10 w-full flex flex-col items-center pt-32 pb-0">
 
-            {/* ── Left: text column — pushed to ~20% from left ── */}
-            <div ref={heroRef} className="relative z-20 flex flex-col items-start flex-shrink-0 w-full max-w-[480px] py-32 ml-[8vw]">
+            {/* ── Text — centered, upper portion ── */}
+            <div ref={heroRef} className="flex flex-col items-center text-center max-w-3xl px-6 mb-16">
               {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
                 animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03] mb-8"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] mb-8"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] text-neutral-400 font-medium">Your competitors are already automating</span>
+                <span className="text-[11px] text-neutral-300 font-medium">Your competitors are already automating</span>
               </motion.div>
 
               {/* Headline */}
@@ -803,9 +803,9 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 24, filter: 'blur(12px)' }}
                 animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
                 transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[56px] sm:text-[64px] font-bold leading-[1.0] tracking-[-0.03em] mb-6 text-white"
+                className="text-[58px] sm:text-[72px] font-bold leading-[1.0] tracking-[-0.03em] mb-6 text-white"
               >
-                Stop doing<br />work that<br />shouldn't exist.
+                Stop doing work<br />that shouldn't exist.
               </motion.h1>
 
               {/* Subline */}
@@ -813,10 +813,10 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
                 animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[16px] text-neutral-500 leading-relaxed mb-10"
+                className="text-[17px] text-neutral-400 leading-relaxed mb-10 max-w-xl"
               >
-                Every hour you spend on manual tasks is an hour your
-                competitors spend on growth. Blinkbox runs it for you — silently, instantly, every time.
+                Every hour you spend on manual tasks is an hour your competitors
+                spend on growth. Blinkbox runs it for you — silently, instantly, every time.
               </motion.p>
 
               {/* CTAs */}
@@ -824,66 +824,89 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
                 animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
                 transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-3 mb-10"
+                className="flex items-center gap-3"
               >
                 <Link to="/register">
-                  <Button className="h-11 px-6 text-[14px] rounded-lg bg-white text-black hover:bg-neutral-200">
+                  <Button className="h-11 px-7 text-[14px] rounded-lg bg-white text-black hover:bg-neutral-100 font-semibold">
                     Automate for free
                   </Button>
                 </Link>
                 <Link to="/docs">
-                  <Button variant="ghost" className="h-11 px-6 text-[14px] rounded-lg text-neutral-400 hover:text-white">
+                  <Button variant="ghost" className="h-11 px-7 text-[14px] rounded-lg text-neutral-400 hover:text-white">
                     See how it works
                   </Button>
                 </Link>
               </motion.div>
-
-              {/* Social proof strip */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={heroInView ? { opacity: 1 } : {}}
-                transition={{ duration: 0.5, delay: 0.38 }}
-                className="flex flex-col gap-2.5"
-              >
-                {[
-                  'Saves teams 20+ hours every week',
-                  'Runs while you sleep — zero babysitting',
-                  'Free forever. Upgrade only when you scale.',
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[12px] text-neutral-500">
-                    <Check className="w-3 h-3 text-neutral-600 shrink-0" />
-                    {item}
-                  </div>
-                ))}
-              </motion.div>
             </div>
 
-            {/* ── Right: screenshot — oversized, bleeds off screen ── */}
+            {/* ── iPad-style screenshot showcase ── */}
             <motion.div
-              initial={{ opacity: 0, x: 60, filter: 'blur(16px)' }}
-              animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 bottom-0 flex items-center"
-              style={{ width: '58vw', marginRight: '-8vw' }}
+              initial={{ opacity: 0, y: 60, filter: 'blur(16px)' }}
+              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-5xl px-6"
             >
-              {/* Right edge fade */}
-              <div className="absolute inset-y-0 right-0 w-64 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
-              {/* Top fade */}
-              <div className="absolute inset-x-0 top-0 h-24 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, #080808, transparent)' }} />
-              {/* Bottom fade */}
-              <div className="absolute inset-x-0 bottom-0 h-24 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
-              <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
-                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), -40px 0 80px rgba(0,0,0,0.6), 0 40px 100px rgba(0,0,0,0.8)' }}>
+              {/* iPad frame */}
+              <div className="relative rounded-[28px] p-[10px]"
+                style={{
+                  background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 40%, #111 100%)',
+                  boxShadow: `
+                    0 0 0 1px rgba(255,255,255,0.12),
+                    0 0 0 2px rgba(0,0,0,0.8),
+                    inset 0 1px 0 rgba(255,255,255,0.15),
+                    inset 0 -1px 0 rgba(0,0,0,0.5),
+                    0 40px 100px rgba(0,0,0,0.9),
+                    0 0 60px rgba(100,140,255,0.12)
+                  `,
+                }}>
+
+                {/* Lightning reflection on top edge */}
+                <div className="absolute inset-x-8 top-0 h-px"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(150,180,255,0.6), rgba(255,255,255,0.9), rgba(150,180,255,0.6), transparent)' }} />
+
+                {/* Side reflections */}
+                <div className="absolute left-0 inset-y-8 w-px"
+                  style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
+                <div className="absolute right-0 inset-y-8 w-px"
+                  style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.15), transparent)' }} />
+
+                {/* Home button bar (iPad-style) */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full bg-white/20" />
+
+                {/* Screen */}
+                <div className="rounded-[20px] overflow-hidden"
+                  style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}>
+                  <img
+                    src={heroScreenshot}
+                    alt="Blinkbox workflow canvas"
+                    className="w-full block"
+                    style={{ objectFit: 'cover', objectPosition: 'top left', aspectRatio: '16/10' }}
+                  />
+                </div>
+              </div>
+
+              {/* Ground reflection */}
+              <div className="relative overflow-hidden mt-0" style={{ height: '120px' }}>
                 <img
                   src={heroScreenshot}
-                  alt="Blinkbox workflow canvas"
-                  className="w-full block"
-                  style={{ objectFit: 'cover', objectPosition: 'top left' }}
+                  alt=""
+                  aria-hidden
+                  className="w-full block absolute top-0 left-0"
+                  style={{
+                    objectFit: 'cover',
+                    objectPosition: 'top left',
+                    aspectRatio: '16/10',
+                    transform: 'scaleY(-1)',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 100%)',
+                    filter: 'blur(2px)',
+                  }}
                 />
               </div>
+
+              {/* Bottom fade into page */}
+              <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
+                style={{ background: 'linear-gradient(to bottom, transparent, #080808)' }} />
             </motion.div>
 
           </div>
