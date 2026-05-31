@@ -693,109 +693,107 @@ export default function Landing() {
         <Header />
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section className="relative pt-28 pb-0 overflow-hidden">
+        <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
+          {/* Subtle radial glow — bottom right, where the screenshot sits */}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 60%, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-6">
-            {/* Badge */}
-            <motion.div
-              ref={heroRef}
-              initial={{ opacity: 0, y: 12, filter: 'blur(12px)' }}
-              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex justify-center mb-8"
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] backdrop-blur-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          <div className="relative z-10 max-w-7xl mx-auto px-8 flex items-center gap-16" style={{ minHeight: '100vh' }}>
+
+            {/* ── Left: text column ── */}
+            <div ref={heroRef} className="flex flex-col items-start flex-shrink-0 w-full max-w-[480px] py-32">
+              {/* Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
+                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03] mb-8"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
                 <span className="text-[11px] text-neutral-400 font-medium">Now in public beta — free to start</span>
-              </div>
-            </motion.div>
+              </motion.div>
 
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20, filter: 'blur(12px)' }}
-              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
-              className="text-center text-5xl sm:text-6xl lg:text-[72px] font-bold leading-[1.05] tracking-[-0.03em] mb-6 max-w-4xl mx-auto"
-            >
-              Build workflows<br />
-              <span style={{
-                background: 'linear-gradient(90deg, #fff 30%, rgba(255,255,255,0.4) 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}>
-                that run themselves.
-              </span>
-            </motion.h1>
+              {/* Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 24, filter: 'blur(12px)' }}
+                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+                transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[56px] sm:text-[64px] font-bold leading-[1.0] tracking-[-0.03em] mb-6 text-white"
+              >
+                Build workflows<br />that run<br />themselves.
+              </motion.h1>
 
-            {/* Subline */}
-            <motion.p
-              initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
-              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="text-center text-[17px] text-neutral-400 leading-relaxed max-w-xl mx-auto mb-10"
-            >
-              250+ integrations, AI agents, and logic routing —
-              on a flat plan that never charges per task.
-            </motion.p>
+              {/* Subline */}
+              <motion.p
+                initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+                transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[16px] text-neutral-500 leading-relaxed mb-10"
+              >
+                250+ integrations, AI agents, and logic routing —
+                on a flat plan that never charges per task.
+              </motion.p>
 
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
-              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-center justify-center gap-3 mb-5"
-            >
-              <div className="bg-white/[0.06] rounded-[14px] border border-white/[0.1] p-0.5">
+              {/* CTAs */}
+              <motion.div
+                initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
+                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+                transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-3 mb-8"
+              >
                 <Link to="/register">
-                  <Button className="h-10 px-6 text-[14px] rounded-xl gap-2">
-                    Start for free <ArrowRight className="w-4 h-4" />
+                  <Button className="h-11 px-6 text-[14px] rounded-lg bg-white text-black hover:bg-neutral-200">
+                    Get started
                   </Button>
                 </Link>
-              </div>
-              <Link to="/login">
-                <Button variant="ghost" className="h-10 px-6 text-[14px] rounded-xl text-neutral-400 hover:text-white">
-                  Sign in
-                </Button>
-              </Link>
-            </motion.div>
+                <Link to="/docs">
+                  <Button variant="ghost" className="h-11 px-6 text-[14px] rounded-lg text-neutral-400 hover:text-white">
+                    Documentation
+                  </Button>
+                </Link>
+              </motion.div>
 
-            {/* Trust strip */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={heroInView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.5, delay: 0.38 }}
-              className="flex items-center justify-center gap-6 flex-wrap mb-14"
-            >
-              {['No credit card required', 'AES-256 encrypted', 'Self-hostable'].map((item, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-[12px] text-neutral-600">
-                  <Check className="w-3 h-3 text-neutral-700" />
-                  {item}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Screenshot card */}
-          <motion.div
-            initial={{ opacity: 0, y: 40, filter: 'blur(12px)' }}
-            animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-            transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="relative px-4 sm:px-6 md:px-10 max-w-6xl mx-auto"
-          >
-            {/* Bottom fade overlay */}
-            <div className="absolute inset-x-0 bottom-0 h-40 z-10 pointer-events-none"
-              style={{ background: 'linear-gradient(to bottom, transparent 0%, #080808 100%)' }} />
-            {/* Frame card */}
-            <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden shadow-2xl shadow-black/60"
-              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.7)' }}>
-              <img
-                src={heroScreenshot}
-                alt="Blinkbox workflow canvas"
-                className="w-full block"
-                style={{ aspectRatio: '16/10', objectFit: 'cover', objectPosition: 'top left' }}
-              />
+              {/* Trust strip */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={heroInView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.5, delay: 0.38 }}
+                className="flex flex-col gap-2"
+              >
+                {['No credit card required', 'AES-256 encrypted', 'Self-hostable'].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[12px] text-neutral-600">
+                    <Check className="w-3 h-3 text-neutral-700 shrink-0" />
+                    {item}
+                  </div>
+                ))}
+              </motion.div>
             </div>
-          </motion.div>
+
+            {/* ── Right: screenshot ── */}
+            <motion.div
+              initial={{ opacity: 0, x: 40, filter: 'blur(16px)' }}
+              animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex-1 min-w-0"
+            >
+              {/* Right edge fade */}
+              <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
+              {/* Bottom fade */}
+              <div className="absolute inset-x-0 bottom-0 h-32 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to bottom, transparent, #080808)' }} />
+              <div className="rounded-xl border border-white/[0.07] overflow-hidden"
+                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.8)' }}>
+                <img
+                  src={heroScreenshot}
+                  alt="Blinkbox workflow canvas"
+                  className="w-full block"
+                  style={{ objectFit: 'cover', objectPosition: 'top left' }}
+                />
+              </div>
+            </motion.div>
+
+          </div>
         </section>
 
         {/* ── STATS ────────────────────────────────────────────────────── */}
