@@ -413,16 +413,21 @@ function LogoStrip() {
         Connects with everything you already use
       </p>
 
-      <div className="flex overflow-hidden">
+      <div className="flex overflow-hidden group/strip">
         <motion.div
           className="flex gap-10 items-center shrink-0"
           animate={{ x: ['0%', '-50%'] }}
           transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+          style={{ animationPlayState: 'running' }}
+          whileHover={{ transition: { duration: 0 } }}
         >
           {track.map((l, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 shrink-0 opacity-40 hover:opacity-80 transition-opacity duration-200">
-              <img src={l.src} alt={l.name} className="w-7 h-7 object-contain" style={{ filter: 'grayscale(1) brightness(2)' }} />
-              <span className="text-[10px] text-neutral-600 font-medium whitespace-nowrap">{l.name}</span>
+            <div key={i} className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <img src={l.src} alt={l.name} className="w-6 h-6 object-contain transition-all duration-200" />
+              </div>
+              <span className="text-[10px] text-neutral-600 font-medium whitespace-nowrap group-hover:text-neutral-300 transition-colors duration-200">{l.name}</span>
             </div>
           ))}
         </motion.div>
