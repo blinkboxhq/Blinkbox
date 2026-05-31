@@ -882,15 +882,12 @@ export default function Landing() {
               {/* Left edge fade */}
               <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to right, #080808, transparent)' }} />
-              <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
-                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), -40px 0 80px rgba(0,0,0,0.6), 0 40px 100px rgba(0,0,0,0.8)' }}>
-                <img
-                  src={heroScreenshot}
-                  alt="Blinkbox workflow canvas"
-                  className="w-full block opacity-90"
-                  style={{ objectFit: 'cover', objectPosition: 'top left' }}
-                />
-              </div>
+              <img
+                src={heroScreenshot}
+                alt="Blinkbox workflow canvas"
+                className="w-full block opacity-90"
+                style={{ objectFit: 'cover', objectPosition: 'top left' }}
+              />
             </motion.div>
 
           </div>
