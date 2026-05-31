@@ -6,6 +6,29 @@ import { Button } from '@/components/ui/button';
 import logo from '../../assets/logo.svg';
 import heroScreenshot from '../../assets/logos/landingpage-hero-screenshot.png';
 
+import imgSlack from '../../assets/slack.png';
+import imgGmail from '../../assets/gmail.png';
+import imgStripe from '../../assets/stripe.svg';
+import imgGithub from '../../assets/github.svg';
+import imgNotion from '../../assets/notion.svg';
+import imgShopify from '../../assets/shopify.svg';
+import imgDiscord from '../../assets/discord.png';
+import imgTelegram from '../../assets/telegram.png';
+import imgOpenai from '../../assets/openai.svg';
+import imgJira from '../../assets/jira.svg';
+import imgLinear from '../../assets/linear.svg';
+import imgVercel from '../../assets/vercel.svg';
+import imgPostgres from '../../assets/postgresql.svg';
+import imgAnthropic from '../../assets/anthropic.svg';
+import imgHubspot from '../../assets/hubspot.svg';
+import imgFigma from '../../assets/figma.svg';
+import imgSalesforce from '../../assets/salesforce.svg';
+import imgGoogleSheets from '../../assets/google-sheets.svg';
+import imgAirtable from '../../assets/Airtable--Streamline-Svg-Logos.svg';
+import imgZoom from '../../assets/zoom.svg';
+import imgTwilio from '../../assets/Twilio-Icon--Streamline-Svg-Logos.svg';
+import imgTypeform from '../../assets/typeform.svg';
+
 // ─── Error boundary ───────────────────────────────────────────────────────────
 class SilentBoundary extends Component {
   constructor(props) { super(props); this.state = { err: false }; }
@@ -349,6 +372,65 @@ function Header() {
   );
 }
 
+// ─── Logo Strip ───────────────────────────────────────────────────────────────
+const LOGOS = [
+  { src: imgSlack,        name: 'Slack' },
+  { src: imgGmail,        name: 'Gmail' },
+  { src: imgStripe,       name: 'Stripe' },
+  { src: imgGithub,       name: 'GitHub' },
+  { src: imgNotion,       name: 'Notion' },
+  { src: imgShopify,      name: 'Shopify' },
+  { src: imgOpenai,       name: 'OpenAI' },
+  { src: imgAnthropic,    name: 'Anthropic' },
+  { src: imgJira,         name: 'Jira' },
+  { src: imgLinear,       name: 'Linear' },
+  { src: imgVercel,       name: 'Vercel' },
+  { src: imgPostgres,     name: 'Postgres' },
+  { src: imgHubspot,      name: 'HubSpot' },
+  { src: imgFigma,        name: 'Figma' },
+  { src: imgSalesforce,   name: 'Salesforce' },
+  { src: imgGoogleSheets, name: 'Sheets' },
+  { src: imgAirtable,     name: 'Airtable' },
+  { src: imgZoom,         name: 'Zoom' },
+  { src: imgTwilio,       name: 'Twilio' },
+  { src: imgTypeform,     name: 'Typeform' },
+  { src: imgDiscord,      name: 'Discord' },
+  { src: imgTelegram,     name: 'Telegram' },
+];
+
+function LogoStrip() {
+  const track = [...LOGOS, ...LOGOS];
+  return (
+    <div className="relative overflow-hidden py-12" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      {/* Left fade */}
+      <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, #080808, transparent)' }} />
+      {/* Right fade */}
+      <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, #080808, transparent)' }} />
+
+      <p className="text-center text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-8">
+        Connects with everything you already use
+      </p>
+
+      <div className="flex overflow-hidden">
+        <motion.div
+          className="flex gap-10 items-center shrink-0"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+        >
+          {track.map((l, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 shrink-0 opacity-40 hover:opacity-80 transition-opacity duration-200">
+              <img src={l.src} alt={l.name} className="w-7 h-7 object-contain" style={{ filter: 'grayscale(1) brightness(2)' }} />
+              <span className="text-[10px] text-neutral-600 font-medium whitespace-nowrap">{l.name}</span>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Landing() {
   const heroRef = useRef(null);
@@ -361,6 +443,9 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <HeroSection heroRef={heroRef} heroInView={heroInView} />
+
+        {/* ── LOGO STRIP ───────────────────────────────────────────────── */}
+        <LogoStrip />
 
       </div>
     </SilentBoundary>
