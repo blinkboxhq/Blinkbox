@@ -619,7 +619,7 @@ function HeroSection({ heroRef, heroInView }) {
             src={heroScreenshot}
             alt="Blinkbox workflow canvas"
             className="w-full block rounded-2xl"
-            style={{ opacity: 0.6, boxShadow: '0 0 0 1px rgba(124,58,237,0.2), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.08)' }}
+            style={{ opacity: 0.75, boxShadow: '0 0 0 1px rgba(124,58,237,0.2), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.08)' }}
           />
         </motion.div>
 
