@@ -694,9 +694,6 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="relative pt-28 pb-0 overflow-hidden">
-          {/* Radial glow behind text */}
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
 
           <div className="relative z-10 max-w-5xl mx-auto px-6">
             {/* Badge */}
@@ -790,7 +787,7 @@ export default function Landing() {
               style={{ background: 'linear-gradient(to bottom, transparent 0%, #080808 100%)' }} />
             {/* Frame card */}
             <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden shadow-2xl shadow-black/60"
-              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.7), 0 0 120px rgba(139,92,246,0.07)' }}>
+              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.7)' }}>
               <img
                 src={heroScreenshot}
                 alt="Blinkbox workflow canvas"
