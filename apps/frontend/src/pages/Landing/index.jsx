@@ -698,10 +698,10 @@ export default function Landing() {
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 60%, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-8 flex items-center overflow-hidden" style={{ minHeight: '100vh' }}>
+          <div className="relative z-10 w-full px-8 flex items-center" style={{ minHeight: '100vh' }}>
 
             {/* ── Left: text column ── */}
-            <div ref={heroRef} className="flex flex-col items-start flex-shrink-0 w-full max-w-[480px] py-32">
+            <div ref={heroRef} className="relative z-20 flex flex-col items-start flex-shrink-0 w-full max-w-[440px] py-32">
               {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
@@ -774,8 +774,8 @@ export default function Landing() {
               initial={{ opacity: 0, x: 60, filter: 'blur(16px)' }}
               animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-1/2 -translate-y-1/2"
-              style={{ width: '75vw', marginRight: '-12vw' }}
+              className="absolute right-0 top-0 bottom-0 flex items-center"
+              style={{ width: '62vw', marginRight: '-10vw' }}
             >
               {/* Right edge fade */}
               <div className="absolute inset-y-0 right-0 w-64 z-10 pointer-events-none"
