@@ -780,12 +780,12 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* WebGL lightning — left half only */}
-          <div className="absolute inset-y-0 left-0 pointer-events-none" style={{ width: '50%' }}>
-            <LightningBg hue={230} speed={1.4} intensity={0.45} size={2} />
+          {/* WebGL lightning — full section, faded hard with mask */}
+          <div className="absolute inset-0 pointer-events-none" style={{ maskImage: 'radial-gradient(ellipse 40% 60% at 20% 50%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 40% 60% at 20% 50%, black 0%, transparent 100%)' }}>
+            <LightningBg hue={230} speed={1.4} intensity={0.3} size={2} />
           </div>
           {/* Dark overlay */}
-          <div className="absolute inset-0 pointer-events-none bg-black/75" />
+          <div className="absolute inset-0 pointer-events-none bg-black/80" />
 
           <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
 
