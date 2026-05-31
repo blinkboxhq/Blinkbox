@@ -875,33 +875,14 @@ export default function Landing() {
               {/* Bottom fade */}
               <div className="absolute inset-x-0 bottom-0 h-24 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
-              {/* Liquid glass border — reflects the lightning */}
-              <div className="rounded-lg p-[6px]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(140,160,255,0.1) 30%, rgba(255,255,255,0.04) 60%, rgba(100,130,255,0.14) 100%)',
-                  boxShadow: `
-                    0 0 0 1px rgba(255,255,255,0.12),
-                    inset 0 1px 0 rgba(255,255,255,0.35),
-                    inset 0 -1px 0 rgba(255,255,255,0.08),
-                    inset 1px 0 0 rgba(255,255,255,0.2),
-                    inset -1px 0 0 rgba(255,255,255,0.08),
-                    0 0 40px rgba(100,140,255,0.15),
-                    0 0 80px rgba(80,120,255,0.08),
-                    -20px 0 60px rgba(0,0,0,0.5)
-                  `,
-                  backdropFilter: 'blur(12px)',
-                }}>
-                {/* Inner specular shine strip */}
-                <div className="absolute inset-x-6 top-[6px] h-px pointer-events-none"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)', zIndex: 20 }} />
-                <div className="rounded-[4px] overflow-hidden">
-                  <img
-                    src={heroScreenshot}
-                    alt="Blinkbox workflow canvas"
-                    className="w-full block opacity-75"
-                    style={{ objectFit: 'cover', objectPosition: 'top left' }}
-                  />
-                </div>
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
+                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), -40px 0 80px rgba(0,0,0,0.6), 0 40px 100px rgba(0,0,0,0.8)' }}>
+                <img
+                  src={heroScreenshot}
+                  alt="Blinkbox workflow canvas"
+                  className="w-full block opacity-70"
+                  style={{ objectFit: 'cover', objectPosition: 'top left' }}
+                />
               </div>
             </motion.div>
 
