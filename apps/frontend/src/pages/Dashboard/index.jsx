@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
   Copy, Trash2, Pencil, Check, X, Loader2,
-  Activity, Power, Globe, Clock, Mail, Zap, Hash,
+  Power, Globe, Clock, Mail, Zap, Hash,
   Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
-  Search, LayoutGrid, List, Box, Plus,
+  Search, LayoutGrid, List, Plus,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
@@ -15,27 +15,33 @@ import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
-import VaultManager from './components/VaultManager';
-import Analytics from './components/Analytics';
-import NodeLibrary from './components/NodeLibrary';
 import DashboardHero from './components/DashboardHero';
 import WorkflowPreview from './components/WorkflowPreview';
-import NotificationBell from '../../components/NotificationBell';
+import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
+
 const TRIGGER_META = {
-  manual:            { label: 'Manual',        Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
-  webhook:           { label: 'Webhook',        Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
-  cron_trigger:      { label: 'Scheduled',      Icon: Clock,         color: 'text-amber-400',    bg: 'bg-amber-500/10' },
-  gmail_trigger:     { label: 'Gmail',          Icon: Mail,          color: 'text-red-400',      bg: 'bg-red-500/10' },
-  imap_trigger:      { label: 'Email (IMAP)',   Icon: Mail,          color: 'text-blue-400',     bg: 'bg-blue-500/10' },
-  slack_trigger:     { label: 'Slack',          Icon: Hash,          color: 'text-purple-400',   bg: 'bg-purple-500/10' },
-  discord_trigger:   { label: 'Discord',        Icon: MessageSquare, color: 'text-indigo-400',   bg: 'bg-indigo-500/10' },
-  github_trigger:    { label: 'GitHub',         Icon: GitBranch,     color: 'text-neutral-300',  bg: 'bg-neutral-800/60' },
-  gitlab_trigger:    { label: 'GitLab',         Icon: GitBranch,     color: 'text-orange-400',   bg: 'bg-orange-500/10' },
-  rss_trigger:       { label: 'RSS Feed',       Icon: Rss,           color: 'text-orange-400',   bg: 'bg-orange-500/10' },
-  shopify_trigger:   { label: 'Shopify',        Icon: ShoppingCart,  color: 'text-emerald-400',  bg: 'bg-emerald-500/10' },
-  stripe_trigger:    { label: 'Stripe',         Icon: CreditCard,    color: 'text-violet-400',   bg: 'bg-violet-500/10' },
-  database_trigger:  { label: 'Database',       Icon: Database,      color: 'text-cyan-400',     bg: 'bg-cyan-500/10' },
-  telegram_trigger:  { label: 'Telegram',       Icon: MessageSquare, color: 'text-sky-400',      bg: 'bg-sky-500/10' },
+  manual:           { label: 'Manual',       Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
+  webhook:          { label: 'Webhook',       Icon: Globe,         color: 'text-blue-400',     bg: 'bg-blue-500/10' },
+  cron_trigger:     { label: 'Scheduled',     Icon: Clock,         color: 'text-amber-400',    bg: 'bg-amber-500/10' },
+  gmail_trigger:    { label: 'Gmail',         Icon: Mail,          color: 'text-red-400',      bg: 'bg-red-500/10' },
+  imap_trigger:     { label: 'Email (IMAP)',  Icon: Mail,          color: 'text-blue-400',     bg: 'bg-blue-500/10' },
+  slack_trigger:    { label: 'Slack',         Icon: Hash,          color: 'text-purple-400',   bg: 'bg-purple-500/10' },
+  discord_trigger:  { label: 'Discord',       Icon: MessageSquare, color: 'text-indigo-400',   bg: 'bg-indigo-500/10' },
+  github_trigger:   { label: 'GitHub',        Icon: GitBranch,     color: 'text-neutral-300',  bg: 'bg-neutral-800/60' },
+  gitlab_trigger:   { label: 'GitLab',        Icon: GitBranch,     color: 'text-orange-400',   bg: 'bg-orange-500/10' },
+  rss_trigger:      { label: 'RSS Feed',      Icon: Rss,           color: 'text-orange-400',   bg: 'bg-orange-500/10' },
+  shopify_trigger:  { label: 'Shopify',       Icon: ShoppingCart,  color: 'text-emerald-400',  bg: 'bg-emerald-500/10' },
+  stripe_trigger:   { label: 'Stripe',        Icon: CreditCard,    color: 'text-violet-400',   bg: 'bg-violet-500/10' },
+  database_trigger: { label: 'Database',      Icon: Database,      color: 'text-cyan-400',     bg: 'bg-cyan-500/10' },
+  telegram_trigger: { label: 'Telegram',      Icon: MessageSquare, color: 'text-sky-400',      bg: 'bg-sky-500/10' },
+};
+
+const TRIGGER_COLOR = {
+  webhook: '#3b82f6', cron_trigger: '#f59e0b', gmail_trigger: '#ef4444',
+  imap_trigger: '#3b82f6', slack_trigger: '#8b5cf6', discord_trigger: '#6366f1',
+  github_trigger: '#a3a3a3', gitlab_trigger: '#f97316', rss_trigger: '#f97316',
+  shopify_trigger: '#10b981', stripe_trigger: '#8b5cf6', database_trigger: '#06b6d4',
+  telegram_trigger: '#0ea5e9', manual: '#525252',
 };
 
 function TriggerBadge({ trigger }) {
@@ -49,8 +55,6 @@ function TriggerBadge({ trigger }) {
   );
 }
 
-
-// Stacked avatars for collaborators on a card
 function CollabAvatarStack({ collaborators = [] }) {
   if (!collaborators.length) return null;
   const shown = collaborators.slice(0, 3);
@@ -59,20 +63,11 @@ function CollabAvatarStack({ collaborators = [] }) {
       {shown.map((c, i) => {
         const src = c.avatar || c.picture;
         return src ? (
-          <img
-            key={c.userId || i}
-            src={src}
-            alt={c.name}
-            title={c.name}
-            referrerPolicy="no-referrer"
-            className="w-5 h-5 rounded-full border border-neutral-900 object-cover"
-          />
+          <img key={c.userId || i} src={src} alt={c.name} title={c.name} referrerPolicy="no-referrer"
+            className="w-5 h-5 rounded-full border border-neutral-900 object-cover" />
         ) : (
-          <div
-            key={c.userId || i}
-            title={c.name}
-            className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-700 flex items-center justify-center text-[8px] font-semibold text-neutral-300 uppercase"
-          >
+          <div key={c.userId || i} title={c.name}
+            className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-700 flex items-center justify-center text-[8px] font-semibold text-neutral-300 uppercase">
             {c.name?.charAt(0) || '?'}
           </div>
         );
@@ -96,7 +91,6 @@ function timeAgo(d) {
   return new Date(d).toLocaleDateString();
 }
 
-// ─── Dropdown menu ─────────────────────────────────────────────────────────
 function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClose, anchorRect }) {
   const [mode, setMode] = useState('menu');
   const [val, setVal] = useState(wf.name);
@@ -180,10 +174,8 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'workflows');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [workflows, setWorkflows] = useState([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(false);
@@ -196,22 +188,10 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [billingUsage, setBillingUsage] = useState(null);
+
   const openMenu = (e, id) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuAnchor(r); setOpenMenuId(openMenuId === id ? null : id); };
   const closeMenu = () => { setOpenMenuId(null); setMenuAnchor(null); };
-
-  const [systemStats, setSystemStats] = useState(null);
-  const [isTogglingPause, setIsTogglingPause] = useState(false);
-  const [billingUsage, setBillingUsage] = useState(null);
-  const [executions, setExecutions] = useState([]);
-  const [execLoading, setExecLoading] = useState(false);
-
-  const [profileName, setProfileName] = useState('');
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileMsg, setProfileMsg] = useState(null);
-  const [pwCurrent, setPwCurrent] = useState('');
-  const [pwNew, setPwNew] = useState('');
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMsg, setPwMsg] = useState(null);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('blinkbox_token');
@@ -221,7 +201,10 @@ export default function Dashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const i = api.interceptors.response.use((r) => r, (e) => { if (e.response?.status === 401 || e.response?.status === 403) handleLogout(); return Promise.reject(e); });
+    const i = api.interceptors.response.use((r) => r, (e) => {
+      if (e.response?.status === 401 || e.response?.status === 403) handleLogout();
+      return Promise.reject(e);
+    });
     return () => api.interceptors.response.eject(i);
   }, [handleLogout]);
 
@@ -229,17 +212,16 @@ export default function Dashboard() {
     const t = localStorage.getItem('blinkbox_token');
     const u = localStorage.getItem('blinkbox_user');
     if (!t || !u || u === 'undefined') { handleLogout(); return; }
-    try { const p = JSON.parse(u); if (!p.id || !p.email) throw 0; setUser(p); setProfileName(p.name || ''); } catch { handleLogout(); }
+    try { const p = JSON.parse(u); if (!p.id || !p.email) throw 0; setUser(p); } catch { handleLogout(); }
   }, [handleLogout]);
 
-  // Fetch workflows
   useEffect(() => {
     if (!user) return;
     (async () => {
+      setSystemError(null);
+      setWorkflowsLoading(true);
       try {
-        setSystemError(null);
-        setWorkflowsLoading(true);
-        const r = await api.get('/api/automation', { params: { page: currentPage, limit: 20 } });
+        const r = await api.get('/api/automation', { params: { page: currentPage, limit: 21 } });
         setWorkflows(r.data?.automations || []);
         setPagination(r.data?.pagination || null);
       } catch { setSystemError('Failed to load workflows.'); }
@@ -247,36 +229,10 @@ export default function Dashboard() {
     })();
   }, [user, currentPage]);
 
-  // Fetch billing
   useEffect(() => {
     if (!user) return;
-    (async () => { try { const r = await api.get('/api/billing/usage'); setBillingUsage(r.data); } catch {} })();
+    api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
   }, [user]);
-
-  // Fetch stats on settings tab (admin only)
-  useEffect(() => {
-    if (activeTab !== 'settings') return;
-    const f = async () => {
-      if (user?.role === 'admin') {
-        try { const r = await api.get('/api/admin/stats'); setSystemStats(r.data.stats); } catch {}
-      }
-      try { const r = await api.get('/api/billing/usage'); setBillingUsage(r.data); } catch {}
-    };
-    f(); const iv = setInterval(f, 5000); return () => clearInterval(iv);
-  }, [activeTab, user]);
-
-  // Fetch execution logs — single query across all workflows
-  useEffect(() => {
-    if (activeTab !== 'logs') return;
-    (async () => {
-      setExecLoading(true);
-      try {
-        const res = await api.get('/api/execution/recent', { params: { limit: 50 } });
-        setExecutions(res.data?.executions || []);
-      } catch { toast.error('Failed to load execution history'); }
-      setExecLoading(false);
-    })();
-  }, [activeTab]);
 
   const handleBrianSubmit = async (prompt) => {
     if (!prompt?.trim()) return;
@@ -287,37 +243,7 @@ export default function Dashboard() {
         setWorkflows(prev => [r.data.automation, ...prev]);
         navigate(`/workspace/${r.data.automation._id}`, { state: { brianPrompt: prompt } });
       }
-    } catch {
-      toast.error('Failed to open workspace');
-    }
-  };
-
-  const handleToggleWorkers = async () => { if (!systemStats || isTogglingPause) return; setIsTogglingPause(true); try { await api.post('/api/admin/kill-switch', { active: !systemStats.status.includes('OFFLINE') }); } catch { toast.error('Failed to toggle worker status'); } setIsTogglingPause(false); };
-
-  const handleSaveProfile = async () => {
-    if (!profileName.trim() || profileSaving) return;
-    setProfileSaving(true); setProfileMsg(null);
-    try {
-      const r = await api.put('/api/profile', { name: profileName.trim() });
-      const updated = { ...user, name: r.data.name };
-      setUser(updated);
-      localStorage.setItem('blinkbox_user', JSON.stringify(updated));
-      setProfileMsg({ ok: true, text: 'Name updated.' });
-    } catch (e) {
-      setProfileMsg({ ok: false, text: e.response?.data?.message || 'Failed to save.' });
-    } finally { setProfileSaving(false); }
-  };
-
-  const handleChangePassword = async () => {
-    if (!pwCurrent || !pwNew || pwSaving) return;
-    setPwSaving(true); setPwMsg(null);
-    try {
-      await api.post('/api/profile/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
-      setPwMsg({ ok: true, text: 'Password updated.' });
-      setPwCurrent(''); setPwNew('');
-    } catch (e) {
-      setPwMsg({ ok: false, text: e.response?.data?.message || 'Failed to update password.' });
-    } finally { setPwSaving(false); }
+    } catch { toast.error('Failed to open workspace'); }
   };
 
   const handleCreate = async (data) => {
@@ -330,10 +256,24 @@ export default function Dashboard() {
     setIsCreating(false);
   };
 
+  const handleDelete = async (id) => {
+    try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); }
+    catch { toast.error('Failed to delete workflow'); }
+  };
 
-  const handleDelete = async (id) => { try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); } catch { toast.error('Failed to delete workflow'); } };
-  const handleDuplicate = async (id) => { try { const r = await api.post(`/api/automation/${id}/duplicate`); if (r.data?.success) { setWorkflows([r.data.automation, ...workflows]); toast.success('Workflow duplicated'); } } catch { toast.error('Failed to duplicate workflow'); } };
-  const handleRename = async (id, name) => { try { const r = await api.patch(`/api/automation/${id}/rename`, { name }); if (r.data?.success) setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, name } : w)); } catch { toast.error('Failed to rename workflow'); } };
+  const handleDuplicate = async (id) => {
+    try {
+      const r = await api.post(`/api/automation/${id}/duplicate`);
+      if (r.data?.success) { setWorkflows([r.data.automation, ...workflows]); toast.success('Workflow duplicated'); }
+    } catch { toast.error('Failed to duplicate workflow'); }
+  };
+
+  const handleRename = async (id, name) => {
+    try {
+      const r = await api.patch(`/api/automation/${id}/rename`, { name });
+      if (r.data?.success) setWorkflows(workflows.map((w) => (w._id || w.id) === id ? { ...w, name } : w));
+    } catch { toast.error('Failed to rename workflow'); }
+  };
 
   const handleToggleActive = async (wf) => {
     const id = wf._id || wf.id;
@@ -347,25 +287,19 @@ export default function Dashboard() {
         setWorkflows((prev) => prev.map((w) => (w._id || w.id) === id ? { ...w, status: 'active', active: true } : w));
       }
     } catch (e) {
-      const msg = e.response?.data?.message || e.message || 'Failed to update status.';
-      setSystemError(msg);
+      toast.error(e.response?.data?.message || e.message || 'Failed to update status.');
     }
   };
 
-  // Filter
   let filtered = workflows;
   if (statusFilter !== 'all') filtered = filtered.filter((w) => (w.status || 'draft') === statusFilter);
   if (search) filtered = filtered.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (!user) return <div className="h-screen w-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>;
-
-  const TRIGGER_COLOR = {
-    webhook: '#3b82f6', cron_trigger: '#f59e0b', gmail_trigger: '#ef4444',
-    imap_trigger: '#3b82f6', slack_trigger: '#8b5cf6', discord_trigger: '#6366f1',
-    github_trigger: '#a3a3a3', gitlab_trigger: '#f97316', rss_trigger: '#f97316',
-    shopify_trigger: '#10b981', stripe_trigger: '#8b5cf6', database_trigger: '#06b6d4',
-    telegram_trigger: '#0ea5e9', manual: '#525252',
-  };
+  if (!user) return (
+    <div className="h-screen w-screen bg-neutral-950 flex items-center justify-center">
+      <Loader2 className="w-5 h-5 text-neutral-700 animate-spin" />
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-[#080808] text-white overflow-hidden">
@@ -376,404 +310,226 @@ export default function Dashboard() {
 
       <OnboardingModal />
       <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
-      <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <div className="h-11 shrink-0 flex items-center justify-end px-6 border-b border-[#111]">
-          <NotificationBell />
-        </div>
-        <main className="flex-1 overflow-y-auto bg-[#080808]">
+      <DashboardSidebar user={user} onLogout={handleLogout} activeTab="workflows" setActiveTab={() => {}} usage={billingUsage} />
 
-          {/* ══ HERO / BRIAN BAR ══════════════════════════════════════════════ */}
-          {activeTab === 'workflows' && (
-            workflows.length > 0
-              ? <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} compact />
-              : <div className="border-b border-[#111]">
-                  <DashboardHero onSubmit={handleBrianSubmit} userName={user?.name} />
-                </div>
-          )}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-          <div className="px-8 py-6 max-w-[1200px] mx-auto">
+        {/* Universal header — matches workspace header exactly */}
+        <WorkspaceHeader forceDashboard={true} />
 
-          {systemError && (
-            <div className="mb-5 px-3 py-2 rounded-xl border border-red-500/15 bg-red-500/5 flex items-center gap-2 text-[12px] text-red-400">
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {systemError}
-            </div>
-          )}
+        {/* Brian AI panel */}
+        <DashboardHero
+          onSubmit={handleBrianSubmit}
+          userName={user?.name}
+          compact={workflows.length > 0}
+        />
 
-          {/* ═══ WORKFLOWS ═══ */}
-          {activeTab === 'workflows' && (
-            <div style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
+        {/* Scrollable workflows area */}
+        <main className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+          <div className="px-8 py-6 max-w-[1400px] mx-auto" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
 
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-[15px] font-semibold text-white">Workflows</h2>
-                  {workflows.length > 0 && (
-                    <span className="text-[11px] text-neutral-700 font-mono bg-[#111] border border-[#1e1e1e] px-2 py-0.5 rounded-full">{workflows.length}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* Status filter */}
-                  <div className="flex items-center bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-0.5">
-                    {['all','active','draft'].map(f => (
-                      <button key={f} onClick={() => setStatusFilter(f)}
-                        className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${statusFilter === f ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300'}`}>
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-700" />
-                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
-                      className="pl-7 pr-3 py-[5px] bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-[#2a2a2a] w-[140px] transition-colors" />
-                  </div>
-                  {/* View */}
-                  <div className="flex items-center bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-0.5">
-                    <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}><List className="w-3.5 h-3.5" /></button>
-                  </div>
-                  {/* New */}
-                  <button onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-[6px] bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all active:scale-[0.97] shrink-0">
-                    <Plus className="w-3.5 h-3.5" /> New workflow
-                  </button>
-                </div>
+            {systemError && (
+              <div className="mb-5 px-3 py-2 rounded-xl border border-red-500/15 bg-red-500/5 flex items-center gap-2 text-[12px] text-red-400">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {systemError}
               </div>
+            )}
 
-              {workflowsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-[130px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-[15px] font-bold text-white tracking-tight">Workflows</h2>
+                {workflows.length > 0 && (
+                  <span className="text-[11px] text-neutral-700 font-mono bg-[#0f0f0f] border border-[#1c1c1c] px-2 py-0.5 rounded-full">
+                    {workflows.length}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Status filter */}
+                <div className="flex items-center bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg p-0.5">
+                  {['all', 'active', 'draft'].map(f => (
+                    <button key={f} onClick={() => setStatusFilter(f)}
+                      className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${statusFilter === f ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300'}`}>
+                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                    </button>
                   ))}
                 </div>
-              ) : filtered.length === 0 ? (
-                <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
-              ) : viewMode === 'list' ? (
-                /* ── LIST VIEW ── */
-                <div className="rounded-2xl border border-[#161616] overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-[#0a0a0a] border-b border-[#161616]">
-                        <th className="w-10" />
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Name</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Trigger</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Updated</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Team</th>
-                        <th className="w-10" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((wf, i) => (
-                        <tr key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                          className="group border-t border-[#111] hover:bg-white/[0.015] cursor-pointer transition-colors"
-                          style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}>
-                          <td className="pl-4 py-3" onClick={e => e.stopPropagation()}>
-                            <div className="w-2 h-2 rounded-full" style={{ background: TRIGGER_COLOR[wf.trigger] || '#525252' }} />
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
-                            {wf.description && <p className="text-[11px] text-[#3a3a3a] truncate max-w-[260px] mt-0.5">{wf.description}</p>}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-700'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-[#2a2a2a]'}`} />
-                              {wf.status === 'active' ? 'Active' : 'Draft'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3"><TriggerBadge trigger={wf.trigger || 'manual'} /></td>
-                          <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(wf.updatedAt)}</td>
-                          <td className="px-4 py-3"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
-                          <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
-                            <button onClick={e => openMenu(e, wf._id || wf.id)}
-                              className="p-1 text-neutral-800 hover:text-neutral-500 rounded opacity-0 group-hover:opacity-100 transition-all">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            {openMenuId === (wf._id || wf.id) && <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-700" />
+                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+                    className="pl-7 pr-3 py-[5px] bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-[#2a2a2a] w-[140px] transition-colors" />
                 </div>
-              ) : (
-                /* ── GRID VIEW ── */
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {filtered.map((wf, i) => {
-                    const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
-                    const isActive = wf.status === 'active';
-                    const wfId = wf._id || wf.id;
-                    return (
-                      <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
-                        className="group relative flex flex-col rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] hover:border-[#262626] cursor-pointer transition-all duration-200 overflow-hidden"
-                        style={{ animation: `dbSlide 0.15s ease-out ${i * 0.03}s both` }}>
 
-                        {/* Top row: name + status + menu */}
-                        <div className="flex items-start justify-between px-4 pt-4 pb-3">
-                          <div className="flex-1 min-w-0 pr-2">
-                            <h3 className="text-[13px] font-semibold text-neutral-200 group-hover:text-white truncate">{wf.name}</h3>
-                            <p className="text-[11px] text-[#383838] mt-0.5 truncate">
-                              {wf.description || 'No description'}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                              isActive ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/8' : 'text-[#3a3a3a] border-[#1e1e1e]'
-                            }`}>
-                              {isActive ? 'Active' : 'Draft'}
-                            </span>
-                            <button onClick={e => openMenu(e, wfId)}
-                              className={`p-1 rounded-md text-[#333] hover:text-neutral-400 hover:bg-white/[0.04] transition-all ${openMenuId === wfId ? 'opacity-100 text-neutral-400' : 'opacity-0 group-hover:opacity-100'}`}>
-                              <MoreHorizontal className="w-3.5 h-3.5" />
-                            </button>
-                            {openMenuId === wfId && <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />}
-                          </div>
+                {/* View toggle */}
+                <div className="flex items-center bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg p-0.5">
+                  <button onClick={() => setViewMode('grid')} title="Grid view"
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setViewMode('list')} title="List view"
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* New workflow */}
+                <button onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-[6px] bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all active:scale-[0.97] shrink-0">
+                  <Plus className="w-3.5 h-3.5" /> New workflow
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            {workflowsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-[210px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
+
+            ) : viewMode === 'list' ? (
+              /* ── LIST VIEW ── */
+              <div className="rounded-2xl border border-[#161616] overflow-hidden" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-[#0a0a0a] border-b border-[#161616]">
+                      <th className="w-10" />
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Name</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Trigger</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Updated</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Team</th>
+                      <th className="w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((wf, i) => (
+                      <tr key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
+                        className="group border-t border-[#111] hover:bg-white/[0.015] cursor-pointer transition-colors"
+                        style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}>
+                        <td className="pl-4 py-3">
+                          <div className="w-2 h-2 rounded-full" style={{ background: TRIGGER_COLOR[wf.trigger] || '#525252' }} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
+                          {wf.description && <p className="text-[11px] text-[#3a3a3a] truncate max-w-[260px] mt-0.5">{wf.description}</p>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-700'}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${wf.status === 'active' ? 'bg-emerald-500' : 'bg-[#2a2a2a]'}`} />
+                            {wf.status === 'active' ? 'Active' : 'Draft'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3"><TriggerBadge trigger={wf.trigger || 'manual'} /></td>
+                        <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(wf.updatedAt)}</td>
+                        <td className="px-4 py-3"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
+                        <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                          <button onClick={e => openMenu(e, wf._id || wf.id)}
+                            className="p-1 text-neutral-800 hover:text-neutral-500 rounded opacity-0 group-hover:opacity-100 transition-all">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                          {openMenuId === (wf._id || wf.id) && (
+                            <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+            ) : (
+              /* ── GRID VIEW — 3 columns with canvas thumbnails ── */
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
+                {filtered.map((wf, i) => {
+                  const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
+                  const isActive = wf.status === 'active';
+                  const wfId = wf._id || wf.id;
+                  return (
+                    <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
+                      className="group relative flex flex-col rounded-2xl border border-[#1a1a1a] bg-[#0c0c0c] hover:border-[#2a2a2a] hover:bg-[#0e0e0e] cursor-pointer transition-all duration-200 overflow-hidden"
+                      style={{ animation: `dbSlide 0.15s ease-out ${Math.min(i, 8) * 0.03}s both` }}>
+
+                      {/* Canvas thumbnail */}
+                      <div className="p-3 pb-2">
+                        <WorkflowPreview
+                          nodeCount={wf.nodeCount}
+                          trigger={wf.trigger}
+                          accentColor={accentColor}
+                          lastRunStatus={wf.lastRunStatus}
+                        />
+                      </div>
+
+                      {/* Name + status + menu */}
+                      <div className="flex items-start justify-between px-4 pt-1 pb-1">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <h3 className="text-[13px] font-semibold text-neutral-200 group-hover:text-white truncate leading-snug">{wf.name}</h3>
+                          {wf.description && (
+                            <p className="text-[11px] text-[#383838] mt-0.5 truncate">{wf.description}</p>
+                          )}
                         </div>
-
-                        {/* Mini workflow canvas */}
-                        <div className="px-4">
-                          <WorkflowPreview
-                            nodeCount={wf.nodeCount}
-                            trigger={wf.trigger}
-                            accentColor={accentColor}
-                            lastRunStatus={wf.lastRunStatus}
-                          />
+                        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                            isActive ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/[0.08]' : 'text-[#3a3a3a] border-[#1e1e1e]'
+                          }`}>
+                            {isActive ? 'Active' : 'Draft'}
+                          </span>
+                          <button onClick={e => openMenu(e, wfId)}
+                            className={`p-1 rounded-md text-[#333] hover:text-neutral-400 hover:bg-white/[0.04] transition-all ${openMenuId === wfId ? 'opacity-100 text-neutral-400' : 'opacity-0 group-hover:opacity-100'}`}>
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
+                          {openMenuId === wfId && (
+                            <ActionMenu wf={wf} anchorRect={menuAnchor} onDelete={handleDelete} onDuplicate={handleDuplicate} onRename={handleRename} onToggleActive={handleToggleActive} onClose={closeMenu} />
+                          )}
                         </div>
+                      </div>
 
-                        {/* Footer */}
-                        <div className="flex items-center justify-between px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {isActive
-                              ? <span className="flex items-center gap-1.5 text-[10px] text-emerald-500"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />online</span>
-                              : <span className="flex items-center gap-1.5 text-[10px] text-[#333]"><span className="w-1.5 h-1.5 rounded-full bg-[#282828]" />draft</span>
-                            }
-                            <span className="text-[#222]">·</span>
-                            <TriggerBadge trigger={wf.trigger || 'manual'} />
-                            {wf.nodeCount > 0 && <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>}
-                          </div>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between px-4 pb-3 pt-1.5">
+                        <div className="flex items-center gap-2">
+                          {isActive
+                            ? <span className="flex items-center gap-1.5 text-[10px] text-emerald-500"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />live</span>
+                            : <span className="flex items-center gap-1.5 text-[10px] text-[#2a2a2a]"><span className="w-1.5 h-1.5 rounded-full bg-[#202020]" />draft</span>
+                          }
+                          <span className="text-[#1e1e1e]">·</span>
+                          <TriggerBadge trigger={wf.trigger || 'manual'} />
+                          {wf.nodeCount > 0 && (
+                            <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CollabAvatarStack collaborators={wf.collaborators || []} />
                           <span className="text-[10px] text-[#2e2e2e]">{timeAgo(wf.updatedAt)}</span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-6">
-                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-zinc-800 rounded hover:bg-zinc-900 transition-all disabled:opacity-30"><ChevronLeft className="w-3 h-3" /> Prev</button>
-                  <span className="text-[11px] text-neutral-700 font-mono">{pagination.page} / {pagination.totalPages}</span>
-                  <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-600 hover:text-white border border-zinc-800 rounded hover:bg-zinc-900 transition-all disabled:opacity-30">Next <ChevronRight className="w-3 h-3" /></button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═══ EXECUTION LOGS ═══ */}
-          {activeTab === 'logs' && (
-            <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Execution History</h2>
-                <p className="text-xs text-neutral-600 mt-0.5">Recent runs across all workflows.</p>
+                    </div>
+                  );
+                })}
               </div>
-              {execLoading ? (
-                <div className="flex items-center justify-center py-20"><Loader2 className="w-5 h-5 text-neutral-700 animate-spin" /></div>
-              ) : executions.length === 0 ? (
-                <div className="flex flex-col items-center py-20 text-center">
-                  <Activity className="w-8 h-8 text-neutral-800 mb-3" />
-                  <p className="text-[13px] text-neutral-500">No executions yet.</p>
-                  <p className="text-[11px] text-neutral-700 mt-1">Run a workflow to see history here.</p>
-                </div>
-              ) : (
-                <div className="border border-zinc-800/80 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead><tr className="bg-zinc-900/50">
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Status</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Workflow</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Trigger</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">Duration</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-medium text-neutral-600 uppercase tracking-wider">When</th>
-                    </tr></thead>
-                    <tbody>
-                      {executions.map((ex, i) => {
-                        const sc = { executed: 'bg-emerald-500', completed: 'bg-emerald-500', failed: 'bg-red-500', pending: 'bg-yellow-500', cancelled: 'bg-neutral-600' };
-                        const durationMs = ex.completedAt && ex.createdAt ? new Date(ex.completedAt) - new Date(ex.createdAt) : null;
-                        const durationStr = durationMs === null ? '—' : durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(1)}s`;
-                        const isFailed = ex.status === 'failed';
-                        const errPreview = isFailed && ex.errorMessage ? ex.errorMessage.split(' — ').pop()?.slice(0, 80) : null;
-                        return (
-                          <tr
-                            key={ex._id}
-                            onClick={() => ex.automationId && navigate(`/workspace/${ex.automationId}`)}
-                            className="border-t border-zinc-800/50 transition-colors hover:bg-white/[0.02] cursor-pointer"
-                            style={{ animation: `dbSlide 0.1s ease-out ${i * 0.015}s both` }}
-                          >
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-1.5" title={ex.errorMessage || ''}>
-                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sc[ex.status] || 'bg-neutral-700'}`} />
-                                <div>
-                                  <span className="text-[11px] text-neutral-400 capitalize">{ex.status}</span>
-                                  {errPreview && <p className="text-[10px] text-red-400/70 truncate max-w-[160px] mt-0.5">{errPreview}</p>}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-[12px] text-neutral-300 truncate max-w-[220px]">{ex.automationName || '—'}</td>
-                            <td className="px-4 py-2.5"><TriggerBadge trigger={ex.trigger || 'manual'} /></td>
-                            <td className="px-4 py-2.5 text-[11px] text-neutral-600 font-mono">{durationStr}</td>
-                            <td className="px-4 py-2.5 text-[11px] text-neutral-700">{timeAgo(ex.createdAt)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* ═══ ANALYTICS ═══ */}
-          {activeTab === 'analytics' && <Analytics />}
-
-          {/* ═══ NODE LIBRARY ═══ */}
-          {activeTab === 'nodes' && <NodeLibrary />}
-
-          {/* ═══ VAULT ═══ */}
-          {activeTab === 'vault' && <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}><VaultManager /></div>}
-
-          {/* ═══ SETTINGS ═══ */}
-          {activeTab === 'settings' && (
-            <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Settings</h2>
-                <p className="text-xs text-neutral-600 mt-0.5">Workspace configuration and account.</p>
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-neutral-600 hover:text-white border border-[#1e1e1e] rounded-lg hover:bg-[#111] transition-all disabled:opacity-30">
+                  <ChevronLeft className="w-3 h-3" /> Prev
+                </button>
+                <span className="text-[11px] text-neutral-700 font-mono">{pagination.page} / {pagination.totalPages}</span>
+                <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-neutral-600 hover:text-white border border-[#1e1e1e] rounded-lg hover:bg-[#111] transition-all disabled:opacity-30">
+                  Next <ChevronRight className="w-3 h-3" />
+                </button>
               </div>
-
-              {/* Profile */}
-              <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Profile</h3>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-semibold text-neutral-400 uppercase shrink-0">{user?.name?.charAt(0) || '?'}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-neutral-600 mb-0.5">{user?.email}</p>
-                    <span className="text-[10px] font-medium text-neutral-700 uppercase tracking-wider bg-neutral-900 border border-zinc-700/60 px-2 py-0.5 rounded">{user?.role || 'user'}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Display name</label>
-                    <input
-                      value={profileName}
-                      onChange={(e) => setProfileName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSaveProfile()}
-                      placeholder="Your name"
-                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
-                    />
-                  </div>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={profileSaving || !profileName.trim()}
-                    className="mt-5 px-4 py-2 text-[12px] font-medium bg-white/[0.06] border border-zinc-700 rounded-lg text-white hover:bg-white/[0.09] disabled:opacity-40 transition-all shrink-0"
-                  >
-                    {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
-                  </button>
-                </div>
-                {profileMsg && (
-                  <p className={`text-[11px] mt-2 ${profileMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{profileMsg.text}</p>
-                )}
-              </section>
-
-              {/* Password */}
-              {user?.authProvider !== 'google' && (
-                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                  <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Change Password</h3>
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Current password</label>
-                      <input
-                        type="password"
-                        value={pwCurrent}
-                        onChange={(e) => setPwCurrent(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">New password</label>
-                      <input
-                        type="password"
-                        value={pwNew}
-                        onChange={(e) => setPwNew(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
-                        placeholder="Min 8 characters"
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
-                      />
-                    </div>
-                    <button
-                      onClick={handleChangePassword}
-                      disabled={pwSaving || !pwCurrent || !pwNew}
-                      className="self-start px-4 py-2 text-[12px] font-medium bg-white/[0.06] border border-zinc-700 rounded-lg text-white hover:bg-white/[0.09] disabled:opacity-40 transition-all"
-                    >
-                      {pwSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'Update password'}
-                    </button>
-                    {pwMsg && (
-                      <p className={`text-[11px] ${pwMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{pwMsg.text}</p>
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* Usage */}
-              {billingUsage && (
-                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                  <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider mb-4">Plan & Usage</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Plan</p><p className="text-[13px] font-medium text-white capitalize">{billingUsage.plan || 'Free'}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Used</p><p className="text-[13px] font-medium text-white">{billingUsage.creditsUsed || 0}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Limit</p><p className="text-[13px] font-medium text-white">{billingUsage.monthlyLimit || 0}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Remaining</p><p className="text-[13px] font-medium text-white">{billingUsage.remaining || 0}</p></div>
-                  </div>
-                  {billingUsage.monthlyLimit > 0 && (
-                    <div className="mt-4">
-                      <div className="w-full bg-neutral-900 rounded-full h-1"><div className="bg-white h-1 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, billingUsage.percentUsed || 0)}%` }} /></div>
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {/* System */}
-              {systemStats && (
-                <section className="mb-4 p-5 border border-zinc-800/80 rounded-lg bg-zinc-900/30">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[10px] font-medium text-neutral-600 uppercase tracking-wider">System</h3>
-                    <button onClick={handleToggleWorkers} disabled={isTogglingPause} className={`text-[11px] font-medium px-3 py-1 rounded border transition-all ${systemStats.status.includes('OFFLINE') ? 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10' : 'text-red-400 border-red-500/20 hover:bg-red-500/10'}`}>
-                      {systemStats.status.includes('OFFLINE') ? 'Resume' : 'Pause'}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Status</p><p className={`text-[13px] font-medium ${systemStats.status.includes('ONLINE') ? 'text-emerald-400' : 'text-red-400'}`}>{systemStats.status.includes('ONLINE') ? 'Online' : 'Offline'}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Uptime</p><p className="text-[13px] font-medium text-white">{systemStats.uptime}</p></div>
-                    <div><p className="text-[10px] text-neutral-600 mb-0.5">Memory</p><p className="text-[13px] font-medium text-white">{systemStats.hardware?.freeMem} free</p></div>
-                  </div>
-                </section>
-              )}
-
-              {/* Danger */}
-              <section className="p-5 border border-red-500/10 rounded-lg bg-zinc-900/30">
-                <h3 className="text-[10px] font-medium text-red-400/50 uppercase tracking-wider mb-3">Danger Zone</h3>
-                <div className="flex items-center justify-between">
-                  <div><p className="text-[13px] text-neutral-300">End session</p><p className="text-[11px] text-neutral-700 mt-0.5">Log out of your account.</p></div>
-                  <button onClick={handleLogout} className="text-[12px] font-medium text-red-400 border border-red-500/20 px-3.5 py-1.5 rounded hover:bg-red-500/10 transition-all">Log Out</button>
-                </div>
-              </section>
-            </div>
-          )}
-
-        </div>
-      </main>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
