@@ -483,11 +483,11 @@ function Typewriter() {
 
   return (
     <span className="relative">
-      <span style={{ background: 'linear-gradient(135deg, #a78bfa, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      <span className="text-violet-400">
         {displayed}
       </span>
-      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse"
-        style={{ background: 'linear-gradient(to bottom, #a78bfa, #818cf8)', verticalAlign: 'middle' }} />
+      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-violet-400"
+        style={{ verticalAlign: 'middle' }} />
     </span>
   );
 }
@@ -563,7 +563,7 @@ function HeroSection({ heroRef, heroInView }) {
           >
             <Link to="/register">
               <button className="h-11 px-6 text-[14px] font-semibold rounded-lg text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', boxShadow: '0 0 24px rgba(124,58,237,0.4), 0 2px 8px rgba(0,0,0,0.4)' }}>
+                style={{ background: '#7c3aed', boxShadow: '0 0 24px rgba(124,58,237,0.35), 0 2px 8px rgba(0,0,0,0.4)' }}>
                 Start for free →
               </button>
             </Link>
