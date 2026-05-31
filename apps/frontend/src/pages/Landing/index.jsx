@@ -156,10 +156,10 @@ function Typewriter() {
 
   return (
     <span className="relative">
-      <span className="text-white">
+      <span className="text-blue-400">
         {displayed}
       </span>
-      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-white"
+      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse bg-blue-400"
         style={{ verticalAlign: 'middle' }} />
     </span>
   );
