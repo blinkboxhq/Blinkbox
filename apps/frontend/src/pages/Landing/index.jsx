@@ -879,9 +879,6 @@ export default function Landing() {
               {/* Bottom fade */}
               <div className="absolute inset-x-0 bottom-0 h-16 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
-              {/* Left edge fade */}
-              <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, #080808, transparent)' }} />
               <img
                 src={heroScreenshot}
                 alt="Blinkbox workflow canvas"
