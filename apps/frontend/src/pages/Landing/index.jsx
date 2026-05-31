@@ -601,7 +601,7 @@ function HeroSection({ heroRef, heroInView }) {
           animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 1.1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="absolute top-0 bottom-0 flex items-center"
-          style={{ left: '46vw', right: '-2vw' }}
+          style={{ left: '48vw', right: '-10vw' }}
         >
           {/* Violet glow behind screenshot */}
           <div className="absolute inset-0 pointer-events-none -z-10"
