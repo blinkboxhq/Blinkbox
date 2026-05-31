@@ -698,7 +698,7 @@ export default function Landing() {
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 60%, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-8 flex items-center gap-16" style={{ minHeight: '100vh' }}>
+          <div className="relative z-10 max-w-7xl mx-auto px-8 flex items-center overflow-hidden" style={{ minHeight: '100vh' }}>
 
             {/* ── Left: text column ── */}
             <div ref={heroRef} className="flex flex-col items-start flex-shrink-0 w-full max-w-[480px] py-32">
@@ -769,21 +769,25 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            {/* ── Right: screenshot ── */}
+            {/* ── Right: screenshot — oversized, bleeds off screen ── */}
             <motion.div
-              initial={{ opacity: 0, x: 40, filter: 'blur(16px)' }}
+              initial={{ opacity: 0, x: 60, filter: 'blur(16px)' }}
               animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative flex-1 min-w-0"
+              className="absolute right-0 top-1/2 -translate-y-1/2"
+              style={{ width: '62vw', marginRight: '-6vw' }}
             >
               {/* Right edge fade */}
-              <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
+              <div className="absolute inset-y-0 right-0 w-48 z-10 pointer-events-none"
                 style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
+              {/* Top fade */}
+              <div className="absolute inset-x-0 top-0 h-24 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to bottom, #080808, transparent)' }} />
               {/* Bottom fade */}
-              <div className="absolute inset-x-0 bottom-0 h-32 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, transparent, #080808)' }} />
-              <div className="rounded-xl border border-white/[0.07] overflow-hidden"
-                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.8)' }}>
+              <div className="absolute inset-x-0 bottom-0 h-24 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
+              <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
+                style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), -40px 0 80px rgba(0,0,0,0.6), 0 40px 100px rgba(0,0,0,0.8)' }}>
                 <img
                   src={heroScreenshot}
                   alt="Blinkbox workflow canvas"
