@@ -428,6 +428,41 @@ export default function Landing() {
         </section>
 
         {/* ══════════════════════════════════════════════════════════════
+            CUSTOMER LOGOS — social proof
+        ══════════════════════════════════════════════════════════════ */}
+        <section className="pb-16 pt-16 md:pb-28">
+          <div className="group relative m-auto max-w-5xl px-6">
+            <div className="pointer-events-none absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100">
+              <a href="#" className="block text-sm text-white/70 duration-150 hover:text-white hover:opacity-75">
+                <span>Meet Our Customers</span>
+                <ChevronRight className="ml-1 inline-block size-3" />
+              </a>
+            </div>
+            <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] text-center mb-10">Trusted by teams at</p>
+            <div className="mx-auto mt-4 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-40 group-hover:blur-sm sm:gap-x-16 sm:gap-y-14">
+              {[
+                { src: 'https://html.tailus.io/blocks/customers/nvidia.svg',       alt: 'Nvidia',       h: 'h-5' },
+                { src: imgGithub,                                                   alt: 'GitHub',       h: 'h-4', invert: true },
+                { src: 'https://html.tailus.io/blocks/customers/nike.svg',         alt: 'Nike',         h: 'h-5' },
+                { src: imgOpenAI,                                                   alt: 'OpenAI',       h: 'h-6', invert: true },
+                { src: 'https://html.tailus.io/blocks/customers/lemonsqueezy.svg', alt: 'Lemon Squeezy',h: 'h-5' },
+                { src: 'https://html.tailus.io/blocks/customers/laravel.svg',      alt: 'Laravel',      h: 'h-4' },
+                { src: imgSlack,                                                    alt: 'Slack',        h: 'h-5' },
+                { src: imgStripe,                                                   alt: 'Stripe',       h: 'h-5', invert: true },
+              ].map((logo) => (
+                <div key={logo.alt} className="flex items-center justify-center">
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    className={`mx-auto w-fit ${logo.h} opacity-50 grayscale transition-all duration-300 group-hover:opacity-30 ${logo.invert ? 'invert' : ''}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════
             PARTICLE / "What will you automate?"
         ══════════════════════════════════════════════════════════════ */}
         <section className="relative overflow-hidden pt-12">
