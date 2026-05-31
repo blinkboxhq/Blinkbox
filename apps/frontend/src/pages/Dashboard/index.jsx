@@ -388,13 +388,17 @@ export default function Dashboard() {
           </div>
         )}
         {activeTab === 'analytics' && (
-          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
-            <Analytics />
+          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[1400px] mx-auto">
+              <Analytics />
+            </div>
           </div>
         )}
         {activeTab === 'vault' && (
-          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
-            <VaultManager />
+          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[1400px] mx-auto">
+              <VaultManager />
+            </div>
           </div>
         )}
         {activeTab === 'logs' && (
