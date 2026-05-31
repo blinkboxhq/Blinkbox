@@ -778,7 +778,7 @@ const PLANS = [
     desc: 'For solo builders and side projects.',
     features: ['5,000 executions / mo', '10 active workflows', '50+ integrations', 'Community support'],
     cta: 'Get started free',
-    href: '/register',
+    href: 'https://blinkbox.net/login',
     highlight: false,
   },
   {
@@ -788,7 +788,7 @@ const PLANS = [
     desc: 'For teams serious about automation.',
     features: ['Unlimited executions', 'Unlimited workflows', '250+ integrations', 'AI agent builder', 'Headless scraping', 'Priority support'],
     cta: 'Start Pro',
-    href: '/register',
+    href: 'https://blinkbox.net/login',
     highlight: true,
   },
   {
