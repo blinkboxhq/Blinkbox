@@ -1,5 +1,4 @@
 import { Router } from "express";
-import express from "express";
 import { verifyToken } from "../auth/auth.middleware.js";
 import {
   getUsage,
@@ -12,8 +11,8 @@ import {
 
 const router = Router();
 
-// Webhook must receive raw body — register before any JSON middleware
-router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
+// Raw body is captured globally via express.json verify callback (req.rawBody)
+router.post("/webhook", handleWebhook);
 
 router.get("/usage",       verifyToken, getUsage);
 router.get("/history",     verifyToken, getHistory);

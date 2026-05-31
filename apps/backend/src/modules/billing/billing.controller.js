@@ -105,9 +105,11 @@ export async function handleWebhook(req, res) {
     return res.status(503).json({ message: "Stripe webhook not configured." });
   }
 
+  const payload = req.rawBody || req.body;
+
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(payload, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).json({ message: `Webhook signature failed: ${err.message}` });
   }
