@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
-import api from '../../../lib/api';
-import { toast } from 'sonner';
 
 const NAV_TOP = [
   { key: 'workflows', icon: Network,  label: 'Workflows' },
@@ -18,33 +16,9 @@ const NAV_BOTTOM = [
 ];
 
 export default function DashboardSidebar({ user, onLogout, activeTab, setActiveTab, usage, defaultExpanded = true }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showLogout, setShowLogout] = useState(false);
-  const [upgrading, setUpgrading] = useState(false);
-
-  const handleUpgrade = async () => {
-    setUpgrading(true);
-    try {
-      const { data } = await api.post('/api/billing/checkout');
-      if (data.url) window.location.href = data.url;
-    } catch {
-      toast.error('Could not start checkout. Try again.');
-    } finally {
-      setUpgrading(false);
-    }
-  };
-
-  const handleManage = async () => {
-    setUpgrading(true);
-    try {
-      const { data } = await api.post('/api/billing/portal');
-      if (data.url) window.location.href = data.url;
-    } catch {
-      toast.error('Could not open billing portal.');
-    } finally {
-      setUpgrading(false);
-    }
-  };
 
   const w = expanded ? 'w-[220px]' : 'w-[56px]';
 
@@ -147,44 +121,40 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
             usage.plan === 'free' || usage.plan === 'starter' ? (
               <div className="px-3 pb-3">
                 <button
-                  onClick={handleUpgrade}
-                  disabled={upgrading}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-[12px] font-semibold transition-all duration-200 disabled:opacity-60"
+                  onClick={() => navigate('/upgrade')}
+                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-[12px] font-semibold transition-all duration-200"
                   style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: '#fff' }}
                 >
                   <Zap className="w-3.5 h-3.5 shrink-0" />
-                  {upgrading ? 'Redirecting…' : 'Upgrade to Pro'}
+                  Upgrade to Pro
                 </button>
               </div>
             ) : (
               <div className="px-3 pb-3">
                 <button
-                  onClick={handleManage}
-                  disabled={upgrading}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-violet-500/30 text-[12px] font-semibold text-violet-400 hover:bg-violet-500/10 transition-all duration-200 disabled:opacity-60"
+                  onClick={() => navigate('/upgrade')}
+                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-violet-500/30 text-[12px] font-semibold text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                  {upgrading ? 'Opening…' : 'Pro · Manage plan'}
+                  Pro · Manage plan
                 </button>
               </div>
             )
           ) : (
             usage.plan === 'free' || usage.plan === 'starter' ? (
               <button
-                onClick={handleUpgrade}
-                disabled={upgrading}
+                onClick={() => navigate('/upgrade')}
                 title="Upgrade to Pro"
-                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 disabled:opacity-60"
+                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
                 style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}
               >
                 <Zap className="w-3.5 h-3.5 text-white shrink-0" />
               </button>
             ) : (
               <button
-                onClick={handleManage}
-                disabled={upgrading}
+                onClick={() => navigate('/upgrade')}
                 title="Manage Pro plan"
-                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition-all duration-200 disabled:opacity-60"
+                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
               >
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
               </button>

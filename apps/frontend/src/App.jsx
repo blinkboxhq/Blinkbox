@@ -12,6 +12,7 @@ const ChatPage     = lazy(() => import('./pages/Chat/ChatPage'));
 const Product      = lazy(() => import('./pages/Product'));
 const Integrations = lazy(() => import('./pages/Integrations'));
 const Docs         = lazy(() => import('./pages/Docs'));
+const Upgrade      = lazy(() => import('./pages/Upgrade'));
 
 const PageLoader = () => (
   <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/product" element={<Product />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/docs" element={<Docs />} />
+            <Route path="/upgrade" element={<RequireAuth><Upgrade /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
