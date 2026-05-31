@@ -4,9 +4,9 @@ import {
   ArrowRight, Bot, Search, GitBranch, Shield, Cpu,
   Check, ChevronRight, Sparkles, Lock, Database, Workflow,
   Play, Layers, MousePointerClick, Menu, X, Mail,
-  Minus, Plus, Zap, Webhook,
+  Minus, Plus, Zap, Webhook, Braces, Globe,
 } from 'lucide-react';
-import { motion, useScroll, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { Button } from '@/components/ui/button';
 import { BGPattern } from '@/components/ui/bg-pattern';
@@ -63,15 +63,259 @@ const transitionVariants = {
   item: {
     hidden: { opacity: 0, filter: 'blur(12px)', y: 12 },
     visible: {
-      opacity: 1,
-      filter: 'blur(0px)',
-      y: 0,
+      opacity: 1, filter: 'blur(0px)', y: 0,
       transition: { type: 'spring', bounce: 0.3, duration: 1.5 },
     },
   },
 };
 
-// ── FAQ ────────────────────────────────────────────────────────────────────
+// ── Sunlight effect ────────────────────────────────────────────────────────
+function LightRays() {
+  const rays = [
+    { angle: -48, w: 180, o: 0.018 },
+    { angle: -36, w: 100, o: 0.032 },
+    { angle: -26, w: 70,  o: 0.048 },
+    { angle: -16, w: 50,  o: 0.065 },
+    { angle: -7,  w: 38,  o: 0.085 },
+    { angle: 0,   w: 32,  o: 0.1  },
+    { angle: 7,   w: 38,  o: 0.085 },
+    { angle: 16,  w: 50,  o: 0.065 },
+    { angle: 26,  w: 70,  o: 0.048 },
+    { angle: 36,  w: 100, o: 0.032 },
+    { angle: 48,  w: 180, o: 0.018 },
+  ];
+  return (
+    <div className="absolute top-0 left-1/2 pointer-events-none z-0" style={{ height: '85vh', width: 0 }}>
+      {rays.map((ray, i) => (
+        <div
+          key={i}
+          className="absolute top-0 left-0 origin-top"
+          style={{
+            width: `${ray.w}px`,
+            height: '85vh',
+            marginLeft: `-${ray.w / 2}px`,
+            background: `linear-gradient(to bottom, rgba(255,255,255,${ray.o}) 0%, rgba(220,210,255,${ray.o * 0.6}) 30%, transparent 65%)`,
+            transform: `rotate(${ray.angle}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SunlightEffect() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {/* Wide ambient glow */}
+      <div
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[700px]"
+        style={{
+          background: 'radial-gradient(ellipse 65% 55% at 50% 0%, rgba(255,255,255,0.11) 0%, rgba(180,160,255,0.07) 40%, rgba(100,80,200,0.03) 65%, transparent 80%)',
+        }}
+      />
+      {/* Tight bright core */}
+      <div
+        className="absolute -top-16 left-1/2 -translate-x-1/2 w-[440px] h-[340px]"
+        style={{
+          background: 'radial-gradient(ellipse 55% 65% at 50% 0%, rgba(255,255,255,0.22) 0%, rgba(230,220,255,0.12) 35%, transparent 65%)',
+        }}
+      />
+      {/* Hot-spot center */}
+      <div
+        className="absolute -top-4 left-1/2 -translate-x-1/2 w-[180px] h-[120px]"
+        style={{
+          background: 'radial-gradient(ellipse 50% 70% at 50% 0%, rgba(255,255,255,0.35) 0%, transparent 70%)',
+        }}
+      />
+      <LightRays />
+      {/* Ground bounce — subtle upwelling glow at bottom of hero */}
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[200px]"
+        style={{
+          background: 'radial-gradient(ellipse 80% 100% at 50% 100%, rgba(120,100,255,0.06) 0%, transparent 70%)',
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Floating 2D elements ───────────────────────────────────────────────────
+function FloatOrb({ style, size, color, delay, duration = 5 }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none rounded-full"
+      style={{ ...style, width: size, height: size,
+        background: `radial-gradient(circle at 35% 35%, ${color}50 0%, ${color}18 45%, transparent 70%)`,
+        boxShadow: `0 0 ${size * 0.8}px ${color}25, inset 0 0 ${size * 0.4}px ${color}15`,
+        border: `1px solid ${color}20`,
+      }}
+      animate={{ y: [0, -16, 0], x: [0, 8, 0], scale: [1, 1.06, 1] }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+function FloatNode({ style, label, Icon, color, delay, duration = 5.5 }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-black/70 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+      style={style}
+      animate={{ y: [0, -12, 0] }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}>
+      <div className="w-[18px] h-[18px] rounded flex items-center justify-center shrink-0"
+        style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+        <Icon className="w-[10px] h-[10px]" style={{ color }} />
+      </div>
+      <span className="text-[11px] text-neutral-400 font-medium tracking-wide whitespace-nowrap">{label}</span>
+      <div className="w-1.5 h-1.5 rounded-full ml-0.5" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
+    </motion.div>
+  );
+}
+
+function FloatDot({ style, color = '#a78bfa', delay, duration = 3.5 }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none rounded-full hidden md:block"
+      style={{ ...style, width: 5, height: 5, background: color, boxShadow: `0 0 10px ${color}80, 0 0 4px ${color}` }}
+      animate={{ scale: [1, 1.9, 1], opacity: [0.45, 1, 0.45] }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+function FloatSpark({ style, delay, duration = 6 }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none hidden md:block"
+      style={style}
+      animate={{ rotate: [0, 90, 0], scale: [0.7, 1.15, 0.7], opacity: [0.2, 0.6, 0.2] }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}>
+      <Sparkles className="w-4 h-4 text-violet-300/60" />
+    </motion.div>
+  );
+}
+
+function FloatLine({ style, w, angle, delay }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none origin-left hidden lg:block"
+      style={{
+        ...style, width: w, height: 1,
+        background: 'linear-gradient(to right, transparent, rgba(180,160,255,0.2), transparent)',
+        transform: `rotate(${angle}deg)`,
+      }}
+      animate={{ opacity: [0.2, 0.8, 0.2], scaleX: [0.85, 1.05, 0.85] }}
+      transition={{ duration: 4, delay, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+function FloatBadge({ style, text, delay }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/[0.07] bg-black/60 backdrop-blur-sm"
+      style={style}
+      animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
+      transition={{ duration: 5, delay, repeat: Infinity, ease: 'easeInOut' }}>
+      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+      <span className="text-[10px] text-neutral-500 font-medium tracking-wide">{text}</span>
+    </motion.div>
+  );
+}
+
+function HeroFloatingElements() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* ── Left cluster ── */}
+      <FloatOrb style={{ left: '5%', top: '22%' }}  size={52} color="#7c3aed" delay={0}   duration={5.5} />
+      <FloatOrb style={{ left: '1%', top: '52%' }}  size={28} color="#3b82f6" delay={1.8} duration={6.5} />
+      <FloatOrb style={{ left: '11%', top: '68%' }} size={18} color="#a78bfa" delay={0.7} duration={4.8} />
+
+      <FloatNode style={{ left: '1%', top: '36%' }} label="Webhook trigger" Icon={Webhook} color="#a78bfa" delay={0.4} />
+      <FloatNode style={{ left: '0.5%', top: '57%' }} label="AI Parse" Icon={Bot} color="#60a5fa" delay={1.5} />
+      <FloatNode style={{ left: '3%', top: '74%' }} label="HTTP Request" Icon={Globe} color="#34d399" delay={2.5} duration={6} />
+
+      <FloatSpark style={{ left: '20%', top: '18%' }} delay={0} />
+      <FloatSpark style={{ left: '14%', top: '63%' }} delay={2.2} />
+      <FloatSpark style={{ left: '8%',  top: '82%' }} delay={1.1} />
+
+      <FloatDot style={{ left: '23%', top: '38%' }} color="#a78bfa" delay={0.9} />
+      <FloatDot style={{ left: '7%',  top: '47%' }} color="#60a5fa" delay={0.3} />
+      <FloatDot style={{ left: '17%', top: '76%' }} color="#34d399" delay={1.6} />
+      <FloatDot style={{ left: '26%', top: '58%' }} color="#f472b6" delay={0.6} />
+
+      <FloatLine style={{ left: '6%',  top: '44%' }} w={70}  angle={-12} delay={1}   />
+      <FloatLine style={{ left: '10%', top: '65%' }} w={55}  angle={8}   delay={2.5} />
+
+      <FloatBadge style={{ left: '17%', top: '28%' }} text="Running · 2.3k/day" delay={0.5} />
+
+      {/* ── Right cluster ── */}
+      <FloatOrb style={{ right: '5%', top: '18%' }}  size={46} color="#2563eb" delay={1}   duration={5} />
+      <FloatOrb style={{ right: '2%', top: '50%' }}  size={32} color="#7c3aed" delay={0.5} duration={6} />
+      <FloatOrb style={{ right: '10%', top: '70%' }} size={20} color="#f472b6" delay={1.3} duration={5.2} />
+
+      <FloatNode style={{ right: '1%', top: '33%' }} label="Send Email" Icon={Mail}      color="#34d399" delay={1.2} />
+      <FloatNode style={{ right: '0.5%', top: '55%' }} label="Filter"  Icon={GitBranch} color="#f472b6" delay={0.3} />
+      <FloatNode style={{ right: '3%', top: '72%' }} label="Code"      Icon={Braces}    color="#facc15" delay={2.2} duration={6.5} />
+
+      <FloatSpark style={{ right: '20%', top: '22%' }} delay={1.5} />
+      <FloatSpark style={{ right: '13%', top: '60%' }} delay={0.5} />
+      <FloatSpark style={{ right: '7%',  top: '80%' }} delay={2.8} />
+
+      <FloatDot style={{ right: '24%', top: '40%' }} color="#2563eb" delay={1.2} />
+      <FloatDot style={{ right: '8%',  top: '44%' }} color="#f472b6" delay={0.4} />
+      <FloatDot style={{ right: '18%', top: '73%' }} color="#facc15" delay={2}   />
+      <FloatDot style={{ right: '28%', top: '57%' }} color="#a78bfa" delay={0.8} />
+
+      <FloatLine style={{ right: '6%',  top: '41%' }} w={65}  angle={10}  delay={1.5} />
+      <FloatLine style={{ right: '11%', top: '63%' }} w={52}  angle={-8}  delay={0.3} />
+
+      <FloatBadge style={{ right: '16%', top: '26%' }} text="250+ integrations" delay={1} />
+
+      {/* ── Top scattered ── */}
+      <FloatDot style={{ left: '38%', top: '8%'  }} color="#fff"    delay={0.2} duration={4} />
+      <FloatDot style={{ left: '50%', top: '5%'  }} color="#a78bfa" delay={1.4} duration={3} />
+      <FloatDot style={{ left: '62%', top: '9%'  }} color="#60a5fa" delay={0.7} duration={4.5} />
+      <FloatDot style={{ left: '44%', top: '14%' }} color="#ffffff" delay={1.9} duration={3.5} />
+      <FloatDot style={{ left: '56%', top: '13%' }} color="#c4b5fd" delay={0.5} duration={5} />
+    </div>
+  );
+}
+
+// ── Mini canvas preview ──────────────────────────────────────────────────
+function CanvasPreview() {
+  const nodes = [
+    { x: 0,   y: 0,   label: 'Webhook',    icon: Webhook,    color: '#a78bfa' },
+    { x: 200, y: -20, label: 'AI Parse',   icon: Bot,        color: '#60a5fa' },
+    { x: 400, y: 10,  label: 'Filter',     icon: GitBranch,  color: '#f472b6' },
+    { x: 600, y: -30, label: 'Send Email', icon: Mail,       color: '#34d399' },
+  ];
+  return (
+    <div className="relative w-full max-w-2xl mx-auto h-[140px] reveal-on-scroll">
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 700 140" fill="none" preserveAspectRatio="xMidYMid meet">
+        {["M 70 70 C 140 70, 160 50, 230 50", "M 280 50 C 350 50, 370 80, 440 80", "M 490 80 C 560 80, 580 40, 640 40"].map((d, i) => (
+          <motion.path key={i} d={d} stroke="white" strokeOpacity="0.12" strokeWidth="1.5"
+            initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.5 + i * 0.3 }} />
+        ))}
+      </svg>
+      {nodes.map((node, i) => (
+        <motion.div key={node.label}
+          className="absolute flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.1] bg-neutral-900/80 backdrop-blur-sm"
+          style={{ left: `${(node.x / 700) * 100}%`, top: `calc(50% + ${node.y}px)`, transform: 'translateY(-50%)' }}
+          initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}>
+          <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${node.color}15` }}>
+            <node.icon className="w-3.5 h-3.5" style={{ color: node.color }} />
+          </div>
+          <span className="text-xs text-neutral-300 font-medium whitespace-nowrap">{node.label}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+// ── FAQ ──────────────────────────────────────────────────────────────────
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
@@ -87,8 +331,7 @@ function FaqItem({ q, a }) {
           <motion.div
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
+            className="overflow-hidden">
             <p className="text-sm text-neutral-400 leading-relaxed pb-6">{a}</p>
           </motion.div>
         )}
@@ -97,44 +340,7 @@ function FaqItem({ q, a }) {
   );
 }
 
-// ── Mini canvas preview ───────────────────────────────────────────────────
-function CanvasPreview() {
-  const nodes = [
-    { x: 0,   y: 0,   label: 'Webhook',    icon: Webhook, color: '#a78bfa' },
-    { x: 200, y: -20, label: 'AI Parse',   icon: Bot,     color: '#60a5fa' },
-    { x: 400, y: 10,  label: 'Filter',     icon: GitBranch, color: '#f472b6' },
-    { x: 600, y: -30, label: 'Send Email', icon: Mail,    color: '#34d399' },
-  ];
-  return (
-    <div className="relative w-full max-w-2xl mx-auto h-[140px] reveal-on-scroll">
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 700 140" fill="none" preserveAspectRatio="xMidYMid meet">
-        {[
-          "M 70 70 C 140 70, 160 50, 230 50",
-          "M 280 50 C 350 50, 370 80, 440 80",
-          "M 490 80 C 560 80, 580 40, 640 40",
-        ].map((d, i) => (
-          <motion.path key={i} d={d} stroke="white" strokeOpacity="0.12" strokeWidth="1.5"
-            initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.5 + i * 0.3 }} />
-        ))}
-      </svg>
-      {nodes.map((node, i) => (
-        <motion.div key={node.label}
-          className="absolute flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.1] bg-neutral-900/80 backdrop-blur-sm"
-          style={{ left: `${(node.x / 700) * 100}%`, top: `calc(50% + ${node.y}px)`, transform: 'translateY(-50%)' }}
-          initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}>
-          <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: `${node.color}15` }}>
-            <node.icon className="w-3.5 h-3.5" style={{ color: node.color }} />
-          </div>
-          <span className="text-xs text-neutral-300 font-medium whitespace-nowrap">{node.label}</span>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-// ── Data ──────────────────────────────────────────────────────────────────
+// ── Data ─────────────────────────────────────────────────────────────────
 const FEATURES = [
   { icon: Sparkles, title: 'Brian AI Builder', description: 'Describe an automation in plain English. Brian builds the full workflow — real configs, real variable chaining — in seconds.' },
   { icon: Bot, title: 'AI Agents', description: 'Drop an LLM into any workflow. It reads incoming data, reasons, classifies, extracts, and outputs structured results.' },
@@ -155,7 +361,7 @@ const FAQS = [
   { q: 'What happens when I hit the limit?', a: 'Workflows pause until the next cycle. Upgrade to Pro anytime — your workflows resume in seconds.' },
   { q: 'Can I self-host?', a: 'Enterprise plan includes Docker images and Helm charts. Run it on your own infrastructure with full control.' },
   { q: 'How do you handle credentials?', a: 'AES-256-GCM encryption. Secrets are encrypted before they touch the database. Decrypted only in-memory during execution, scoped to your workspace.' },
-  { q: "What makes this different from Zapier?", a: "AI agents, headless scraping, sandboxed code execution, visual logic routing. And we don't charge per task — Pro is flat $29/mo." },
+  { q: 'What makes this different from Zapier?', a: "AI agents, headless scraping, sandboxed code execution, visual logic routing. And we don't charge per task — Pro is flat $29/mo." },
 ];
 
 const NAV_ITEMS = [
@@ -183,70 +389,87 @@ function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const handleScroll = () => setIsScrolled(window.scrollY > 60);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header>
-      <nav
-        data-state={menuOpen ? 'active' : undefined}
-        className="group fixed top-0 z-50 w-full px-2">
-        <div className={cn(
-          'mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12',
-          isScrolled && 'bg-black/60 max-w-4xl rounded-2xl border border-white/[0.06] backdrop-blur-xl lg:px-5'
-        )}>
-          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
-            <div className="flex w-full items-center justify-between lg:w-auto">
-              <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+    <header className="fixed top-0 z-50 w-full">
+      <div className="px-3 pt-3">
+        <motion.nav
+          animate={isScrolled
+            ? { backdropFilter: 'blur(20px)', backgroundColor: 'rgba(0,0,0,0.7)' }
+            : { backdropFilter: 'blur(0px)', backgroundColor: 'rgba(0,0,0,0)' }
+          }
+          transition={{ duration: 0.3 }}
+          className={cn(
+            'mx-auto max-w-6xl px-5 lg:px-8 transition-all duration-300',
+            isScrolled && 'max-w-4xl rounded-2xl border border-white/[0.07] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_32px_rgba(0,0,0,0.6)]'
+          )}>
+          <div className="relative flex items-center justify-between h-14">
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+              <div className="relative">
                 <img src={logo} alt="Blinkbox" className="w-6 h-6 object-contain" />
-                <span className="text-[13px] font-bold tracking-[0.05em] text-white/90">Blinkbox</span>
-              </Link>
-
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label={menuOpen ? 'Close' : 'Open'}
-                className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
-                <Menu className={cn('size-5 text-neutral-400 transition-all duration-200', menuOpen && 'rotate-180 scale-0 opacity-0')} />
-                <X className={cn('absolute inset-0 m-auto size-5 text-neutral-400 transition-all duration-200 -rotate-180 scale-0 opacity-0', menuOpen && 'rotate-0 scale-100 opacity-100')} />
-              </button>
-            </div>
-
-            <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-              <ul className="flex gap-8 text-sm">
-                {NAV_ITEMS.map((item) => (
-                  <li key={item.name}>
-                    <a href={item.href} className="text-neutral-500 hover:text-white transition-colors duration-150 text-[13px]">{item.name}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className={cn(
-              'bg-neutral-950 lg:bg-transparent mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-neutral-800 lg:border-transparent p-6 lg:p-0 shadow-2xl shadow-black/50 lg:shadow-none md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-4 lg:space-y-0',
-              menuOpen && 'block'
-            )}>
-              <div className="lg:hidden space-y-5 mb-5">
-                {NAV_ITEMS.map((item) => (
-                  <a key={item.name} href={item.href} onClick={() => setMenuOpen(false)} className="block text-neutral-400 hover:text-white transition-colors">{item.name}</a>
-                ))}
+                <div className="absolute inset-0 blur-sm opacity-0 group-hover:opacity-60 transition-opacity" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.8), transparent 70%)' }} />
               </div>
-              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Button asChild variant="ghost" size="sm" className={cn(isScrolled && 'lg:hidden')}>
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button asChild size="sm" className={cn(isScrolled && 'lg:hidden')}>
-                  <Link to="/login">Sign Up</Link>
-                </Button>
-                <Button asChild size="sm" className={cn(isScrolled ? 'lg:inline-flex hidden' : 'hidden')}>
-                  <Link to="/login">Get Started</Link>
-                </Button>
-              </div>
+              <span className="text-[13px] font-bold tracking-[0.06em] text-white/85 group-hover:text-white transition-colors">Blinkbox</span>
+            </Link>
+
+            {/* Desktop nav — centered */}
+            <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-1">
+              {NAV_ITEMS.map((item) => (
+                <a key={item.name} href={item.href}
+                  className="px-4 py-1.5 text-[13px] text-neutral-500 hover:text-white rounded-lg hover:bg-white/[0.05] transition-all duration-150 font-medium">
+                  {item.name}
+                </a>
+              ))}
             </div>
+
+            {/* CTA buttons */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm" className={cn('text-[13px] text-neutral-500 hover:text-white', isScrolled && 'hidden')}>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button asChild size="sm" className="text-[13px] rounded-lg h-8 px-4 shadow-[0_0_20px_rgba(255,255,255,0.06)]">
+                <Link to="/login">{isScrolled ? 'Get Started' : 'Sign Up'}</Link>
+              </Button>
+            </div>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden relative z-20 -mr-2 p-2 text-neutral-400 hover:text-white transition-colors">
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
-      </nav>
+        </motion.nav>
+      </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden absolute top-[72px] left-3 right-3 rounded-2xl border border-white/[0.08] bg-black/90 backdrop-blur-xl p-5 shadow-2xl">
+            <div className="flex flex-col gap-1 mb-5">
+              {NAV_ITEMS.map((item) => (
+                <a key={item.name} href={item.href} onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2.5 text-[14px] text-neutral-400 hover:text-white rounded-lg hover:bg-white/[0.05] transition-all font-medium">
+                  {item.name}
+                </a>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button asChild variant="outline" className="w-full"><Link to="/login">Log in</Link></Button>
+              <Button asChild className="w-full"><Link to="/login">Sign Up Free</Link></Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -275,7 +498,7 @@ function IntegrationsStrip() {
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────
+// ── Landing page ──────────────────────────────────────────────────────────
 export default function Landing() {
   const pageRef = useScrollReveal();
 
@@ -298,120 +521,134 @@ export default function Landing() {
         {/* ══════════════════════════════════════════════════════════════════
             HERO
         ══════════════════════════════════════════════════════════════════ */}
+        <section className="relative min-h-[100svh] flex flex-col">
 
-        {/* Subtle background light rays */}
-        <div aria-hidden className="z-[2] absolute inset-0 pointer-events-none isolate opacity-50 contain-strict hidden lg:block">
-          <div className="w-[35rem] h-[80rem] -translate-y-[350px] absolute left-0 top-0 -rotate-45 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,hsla(0,0%,85%,.08)_0,hsla(0,0%,55%,.02)_50%,hsla(0,0%,45%,0)_80%)]" />
-          <div className="h-[80rem] absolute left-0 top-0 w-56 -rotate-45 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.06)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)] [translate:5%_-50%]" />
-          <div className="h-[80rem] -translate-y-[350px] absolute left-0 top-0 w-56 -rotate-45 bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.04)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)]" />
-        </div>
+          {/* Background effects */}
+          <SunlightEffect />
 
-        <section>
-          <div className="relative pt-24 md:pt-36">
+          {/* Very subtle dot grid */}
+          <div
+            className="absolute inset-0 pointer-events-none z-0 opacity-[0.25]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+              maskImage: 'radial-gradient(ellipse 80% 70% at 50% 0%, black 0%, transparent 75%)',
+            }}
+          />
 
-            {/* Radial fade so screenshot blends into black */}
-            <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,black_75%)]" />
+          {/* Floating 2D elements */}
+          <HeroFloatingElements />
 
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
+          {/* Radial vignette so edges are dark */}
+          <div aria-hidden className="absolute inset-0 z-[1] pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 120% 100% at 50% 50%, transparent 30%, rgba(0,0,0,0.7) 80%, black 100%)' }} />
 
-                <AnimatedGroup variants={{
-                  container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
-                  ...transitionVariants,
-                }}>
-                  {/* Badge pill */}
-                  <Link to="/login"
-                    className="hover:bg-white/[0.06] group mx-auto flex w-fit items-center gap-4 rounded-full border border-white/[0.08] bg-white/[0.03] p-1 pl-4 shadow-md shadow-black/20 transition-all duration-300">
-                    <span className="text-neutral-400 text-sm flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                      Introducing Brian — AI workflow builder
-                    </span>
-                    <div className="bg-white/[0.06] group-hover:bg-white/[0.1] size-7 overflow-hidden rounded-full duration-300 flex items-center justify-center mr-1">
-                      <div className="flex w-14 -translate-x-1/2 duration-500 ease-in-out group-hover:translate-x-0">
-                        <span className="flex size-7 items-center justify-center">
-                          <ArrowRight className="w-3 h-3 text-neutral-400" />
-                        </span>
-                        <span className="flex size-7 items-center justify-center">
-                          <ArrowRight className="w-3 h-3 text-neutral-400" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+          {/* Hero content */}
+          <div className="relative z-10 flex flex-col items-center justify-center flex-1 pt-28 pb-0 px-6">
+            <div className="text-center max-w-7xl mx-auto w-full">
 
-                  {/* Headline */}
-                  <h1 className="mt-8 max-w-4xl mx-auto text-balance font-extrabold leading-[1.05] tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-neutral-500 text-[clamp(2.8rem,6vw,5.25rem)] lg:mt-16">
-                    Your workflows,<br className="hidden sm:block" /> on autopilot.
-                  </h1>
-
-                  {/* Sub */}
-                  <p className="mx-auto mt-8 max-w-2xl text-balance text-[17px] leading-relaxed text-neutral-400">
-                    Visual automation engine. Drag nodes, wire logic, deploy AI agents —
-                    or just tell <span className="text-white/80 font-medium">Brian</span> what you need
-                    and watch it build the workflow for you.
-                  </p>
-                </AnimatedGroup>
-
-                {/* CTAs */}
-                <AnimatedGroup
-                  variants={{
-                    container: { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.75 } } },
-                    ...transitionVariants,
-                  }}
-                  className="mt-10 flex flex-col items-center justify-center gap-3 md:flex-row">
-                  <div className="bg-white/[0.08] rounded-[14px] border border-white/[0.1] p-0.5">
-                    <Button asChild size="lg" className="rounded-xl px-6 text-[14px] font-semibold">
-                      <Link to="/login">
-                        <span className="text-nowrap">Start Building</span>
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-                  <Button asChild size="lg" variant="ghost" className="rounded-xl px-5 text-[14px]">
-                    <a href="#how-it-works">
-                      <span className="text-nowrap">See how it works</span>
-                      <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                    </a>
-                  </Button>
-                </AnimatedGroup>
-
-                {/* Trust strip */}
-                <AnimatedGroup
-                  variants={{
-                    container: { visible: { transition: { staggerChildren: 0.06, delayChildren: 1.0 } } },
-                    ...transitionVariants,
-                  }}
-                  className="mt-10 flex items-center justify-center gap-6 text-neutral-600">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-3 h-3" />
-                    <span className="text-[11px] uppercase tracking-widest">AES-256 Encrypted</span>
-                  </div>
-                  <div className="w-px h-4 bg-white/[0.06]" />
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-3 h-3" />
-                    <span className="text-[11px] uppercase tracking-widest">Self-Hostable</span>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-2">
-                    <div className="w-px h-4 bg-white/[0.06] mr-0" />
-                    <Zap className="w-3 h-3 ml-6" />
-                    <span className="text-[11px] uppercase tracking-widest">Free Forever Plan</span>
-                  </div>
-                </AnimatedGroup>
-              </div>
-            </div>
-
-            {/* ── Screenshot preview ───────────────────────────────────── */}
-            <AnimatedGroup
-              variants={{
-                container: { visible: { transition: { staggerChildren: 0.05, delayChildren: 0.9 } } },
+              <AnimatedGroup variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } },
                 ...transitionVariants,
               }}>
-              <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
-                <div aria-hidden className="bg-gradient-to-b to-black absolute inset-0 z-10 from-transparent from-55% pointer-events-none" />
-                <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/[0.08] p-3 shadow-lg shadow-zinc-950/15 ring-1 ring-white/[0.04] bg-[#080808]">
+                {/* Badge pill */}
+                <Link to="/login"
+                  className="group mx-auto mb-8 flex w-fit items-center gap-3.5 rounded-full border border-white/[0.09] bg-white/[0.04] px-4 py-1.5 pr-2 shadow-[0_0_0_1px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.07] transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                    <span className="text-[13px] text-neutral-400 font-medium">Introducing Brian — AI workflow builder</span>
+                  </div>
+                  <div className="h-5 w-5 rounded-full bg-white/[0.08] group-hover:bg-white/[0.14] flex items-center justify-center transition-colors duration-300">
+                    <ArrowRight className="w-2.5 h-2.5 text-neutral-400" />
+                  </div>
+                </Link>
+
+                {/* Headline */}
+                <h1 className="mt-2 text-balance font-extrabold tracking-[-0.03em] leading-[1.04] text-transparent bg-clip-text bg-gradient-to-b from-white from-40% via-white/90 to-neutral-500 text-[clamp(3rem,7vw,5.75rem)]">
+                  Your workflows,<br className="hidden sm:block" /> on autopilot.
+                </h1>
+
+                {/* Sub */}
+                <p className="mt-7 mx-auto max-w-xl text-balance text-[16px] leading-relaxed text-neutral-500">
+                  Visual automation engine. Drag nodes, wire logic, deploy AI agents —
+                  or just tell <span className="text-neutral-300 font-medium">Brian</span> what you need
+                  and watch it build the workflow for you.
+                </p>
+              </AnimatedGroup>
+
+              {/* CTAs */}
+              <AnimatedGroup
+                variants={{
+                  container: { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.7 } } },
+                  ...transitionVariants,
+                }}
+                className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <div className="p-[1px] rounded-[13px] bg-gradient-to-b from-white/20 to-white/5">
+                  <Button asChild size="lg" className="rounded-xl px-7 text-[14px] font-semibold bg-white text-black hover:bg-neutral-100 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    <Link to="/login">
+                      Start Building
+                      <ArrowRight className="w-4 h-4 ml-2.5" />
+                    </Link>
+                  </Button>
+                </div>
+                <Button asChild size="lg" variant="ghost" className="rounded-xl px-6 text-[14px] text-neutral-500 hover:text-white">
+                  <a href="#how-it-works">
+                    See how it works
+                    <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  </a>
+                </Button>
+              </AnimatedGroup>
+
+              {/* Trust strip */}
+              <AnimatedGroup
+                variants={{
+                  container: { visible: { transition: { staggerChildren: 0.05, delayChildren: 1.0 } } },
+                  ...transitionVariants,
+                }}
+                className="mt-8 flex items-center justify-center gap-5 flex-wrap">
+                {[
+                  { icon: Lock, label: 'AES-256 Encrypted' },
+                  { icon: Shield, label: 'Self-Hostable' },
+                  { icon: Zap, label: 'Free Forever Plan' },
+                ].map(({ icon: Icon, label }, i) => (
+                  <div key={label} className="flex items-center gap-1.5 text-neutral-600">
+                    {i > 0 && <div className="w-px h-3.5 bg-white/[0.06] mr-3" />}
+                    <Icon className="w-3 h-3" />
+                    <span className="text-[11px] uppercase tracking-widest font-medium">{label}</span>
+                  </div>
+                ))}
+              </AnimatedGroup>
+            </div>
+
+            {/* Screenshot */}
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { delayChildren: 0.85 } } },
+                ...transitionVariants,
+              }}
+              className="w-full mt-14 sm:mt-16 md:mt-20">
+              <div className="relative -mr-56 sm:mr-0 overflow-hidden px-2">
+                <div aria-hidden className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-transparent from-50% to-black" />
+                {/* Glow behind screenshot */}
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[300px] pointer-events-none"
+                  style={{ background: 'radial-gradient(ellipse 70% 100% at 50% 50%, rgba(120,100,255,0.07), transparent 70%)' }} />
+                {/* The frame */}
+                <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.9),0_0_0_1px_rgba(120,100,255,0.06)]"
+                  style={{ background: 'linear-gradient(to bottom, rgba(30,28,40,1), rgba(10,10,14,1))' }}>
+                  {/* Top bar decoration */}
+                  <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/[0.06]">
+                    <div className="w-2.5 h-2.5 rounded-full bg-white/[0.08]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-white/[0.06]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-white/[0.05]" />
+                    <div className="ml-3 h-5 flex-1 max-w-[200px] rounded-md bg-white/[0.04] border border-white/[0.05]" />
+                  </div>
                   <img
                     src={heroScreenshot}
                     alt="Blinkbox canvas"
-                    className="relative w-full rounded-xl object-cover"
+                    className="w-full object-cover block"
                     style={{ aspectRatio: '15/8' }}
                   />
                 </div>
@@ -434,21 +671,18 @@ export default function Landing() {
             <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.2em] text-center mb-10">Trusted by teams at</p>
             <div className="mx-auto mt-4 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-40 group-hover:blur-sm sm:gap-x-16 sm:gap-y-14">
               {[
-                { src: 'https://html.tailus.io/blocks/customers/nvidia.svg',       alt: 'Nvidia',       h: 'h-5' },
-                { src: imgGithub,                                                   alt: 'GitHub',       h: 'h-4', invert: true },
-                { src: 'https://html.tailus.io/blocks/customers/nike.svg',         alt: 'Nike',         h: 'h-5' },
-                { src: imgOpenAI,                                                   alt: 'OpenAI',       h: 'h-6', invert: true },
-                { src: 'https://html.tailus.io/blocks/customers/lemonsqueezy.svg', alt: 'Lemon Squeezy',h: 'h-5' },
-                { src: 'https://html.tailus.io/blocks/customers/laravel.svg',      alt: 'Laravel',      h: 'h-4' },
-                { src: imgSlack,                                                    alt: 'Slack',        h: 'h-5' },
-                { src: imgStripe,                                                   alt: 'Stripe',       h: 'h-5', invert: true },
+                { src: 'https://html.tailus.io/blocks/customers/nvidia.svg',        alt: 'Nvidia',       h: 'h-5' },
+                { src: imgGithub,                                                    alt: 'GitHub',       h: 'h-4', invert: true },
+                { src: 'https://html.tailus.io/blocks/customers/nike.svg',          alt: 'Nike',         h: 'h-5' },
+                { src: imgOpenAI,                                                    alt: 'OpenAI',       h: 'h-6', invert: true },
+                { src: 'https://html.tailus.io/blocks/customers/lemonsqueezy.svg',  alt: 'Lemon Squeezy',h: 'h-5' },
+                { src: 'https://html.tailus.io/blocks/customers/laravel.svg',       alt: 'Laravel',      h: 'h-4' },
+                { src: imgSlack,                                                     alt: 'Slack',        h: 'h-5' },
+                { src: imgStripe,                                                    alt: 'Stripe',       h: 'h-5', invert: true },
               ].map((item) => (
                 <div key={item.alt} className="flex items-center justify-center">
-                  <img
-                    src={item.src}
-                    alt={item.alt}
-                    className={`mx-auto w-fit ${item.h} opacity-50 grayscale transition-all duration-300 group-hover:opacity-30 ${item.invert ? 'invert' : ''}`}
-                  />
+                  <img src={item.src} alt={item.alt}
+                    className={`mx-auto w-fit ${item.h} opacity-50 grayscale transition-all duration-300 group-hover:opacity-30 ${item.invert ? 'invert' : ''}`} />
                 </div>
               ))}
             </div>
@@ -474,7 +708,6 @@ export default function Landing() {
             <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.2em] mb-3 reveal-on-scroll">How it works</p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 reveal-on-scroll">Three moves. You&apos;re live.</h2>
             <p className="text-neutral-500 max-w-md mb-16 reveal-on-scroll">No docs to read. No config files. Idea to production workflow in minutes.</p>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.06] rounded-2xl overflow-hidden mb-16">
               {[
                 { n: '01', title: 'Drag', desc: 'Pull nodes onto the canvas — triggers, API calls, AI, scrapers. Everything is a block.', icon: MousePointerClick },
@@ -631,12 +864,14 @@ export default function Landing() {
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 reveal-on-scroll">Ready?</h2>
             <p className="text-neutral-500 text-base max-w-sm mx-auto mb-10 leading-relaxed reveal-on-scroll">Free forever on Starter. No credit card. Set up your first workflow in 3 minutes.</p>
             <div className="reveal-on-scroll">
-              <Button asChild size="lg" className="px-8 py-4 rounded-xl font-bold text-base shadow-[0_0_60px_rgba(255,255,255,0.04)] hover:-translate-y-0.5 transition-transform">
-                <Link to="/login">
-                  Get Started Free
-                  <ArrowRight className="w-4 h-4 ml-3" />
-                </Link>
-              </Button>
+              <div className="inline-block p-[1px] rounded-xl bg-gradient-to-b from-white/20 to-white/5">
+                <Button asChild size="lg" className="rounded-[11px] px-8 font-bold text-base shadow-[0_0_60px_rgba(255,255,255,0.08)] hover:-translate-y-0.5 transition-transform">
+                  <Link to="/login">
+                    Get Started Free
+                    <ArrowRight className="w-4 h-4 ml-3" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
