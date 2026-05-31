@@ -868,7 +868,7 @@ export default function Landing() {
               animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="absolute right-0 top-0 bottom-0 flex items-center"
-              style={{ width: '58vw', marginRight: '-8vw' }}
+              style={{ width: '68vw', marginRight: '-4vw' }}
             >
               {/* Right edge fade */}
               <div className="absolute inset-y-0 right-0 w-40 z-10 pointer-events-none"
