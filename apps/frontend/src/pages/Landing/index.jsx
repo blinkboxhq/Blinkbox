@@ -780,12 +780,12 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* WebGL lightning — hero background only */}
-          <div className="absolute inset-0 pointer-events-none">
-            <LightningBg hue={230} speed={1.4} intensity={0.5} size={2} />
+          {/* WebGL lightning — left half only */}
+          <div className="absolute inset-y-0 left-0 pointer-events-none" style={{ width: '50%' }}>
+            <LightningBg hue={230} speed={1.4} intensity={0.45} size={2} />
           </div>
-          {/* Dark overlay so text stays readable */}
-          <div className="absolute inset-0 pointer-events-none bg-black/70" />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 pointer-events-none bg-black/75" />
 
           <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
 
