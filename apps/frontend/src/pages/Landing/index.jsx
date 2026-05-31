@@ -448,6 +448,186 @@ function NodeGraph3D() {
   );
 }
 
+// ─── Typewriter ──────────────────────────────────────────────────────────────
+const TYPEWRITER_WORDS = ['Shopify orders', 'lead follow-ups', 'invoice sending', 'support tickets', 'data syncing', 'report building'];
+
+function Typewriter() {
+  const [wordIdx, setWordIdx] = useState(0);
+  const [displayed, setDisplayed] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [pause, setPause] = useState(false);
+
+  useEffect(() => {
+    if (pause) {
+      const t = setTimeout(() => { setPause(false); setDeleting(true); }, 1800);
+      return () => clearTimeout(t);
+    }
+    const word = TYPEWRITER_WORDS[wordIdx];
+    if (!deleting) {
+      if (displayed.length < word.length) {
+        const t = setTimeout(() => setDisplayed(word.slice(0, displayed.length + 1)), 60);
+        return () => clearTimeout(t);
+      } else {
+        setPause(true);
+      }
+    } else {
+      if (displayed.length > 0) {
+        const t = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 35);
+        return () => clearTimeout(t);
+      } else {
+        setDeleting(false);
+        setWordIdx(i => (i + 1) % TYPEWRITER_WORDS.length);
+      }
+    }
+  }, [displayed, deleting, pause, wordIdx]);
+
+  return (
+    <span className="relative">
+      <span style={{ background: 'linear-gradient(135deg, #a78bfa, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        {displayed}
+      </span>
+      <span className="inline-block w-[2px] h-[0.85em] ml-[2px] align-middle rounded-sm animate-pulse"
+        style={{ background: 'linear-gradient(to bottom, #a78bfa, #818cf8)', verticalAlign: 'middle' }} />
+    </span>
+  );
+}
+
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection({ heroRef, heroInView }) {
+  return (
+    <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
+      {/* Ambient violet glow — top left */}
+      <div className="absolute pointer-events-none"
+        style={{ top: '-10%', left: '-5%', width: '55%', height: '70%', background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.18) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      {/* Ambient indigo glow — center right */}
+      <div className="absolute pointer-events-none"
+        style={{ top: '20%', right: '5%', width: '40%', height: '60%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+      {/* WebGL lightning — left only, subtle */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ maskImage: 'radial-gradient(ellipse 45% 55% at 15% 55%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 45% 55% at 15% 55%, black 0%, transparent 100%)' }}>
+        <LightningBg hue={255} speed={1.2} intensity={0.25} size={2.5} />
+      </div>
+
+      <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
+
+        {/* ── Left: text ── */}
+        <div ref={heroRef} className="relative z-20 flex flex-col items-start flex-shrink-0 w-full max-w-[520px] py-32 ml-[8vw]">
+
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+            style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)' }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            <span className="text-[11px] font-medium" style={{ color: '#c4b5fd' }}>Your competitors are already automating</span>
+          </motion.div>
+
+          {/* Headline with typewriter */}
+          <motion.h1
+            initial={{ opacity: 0, y: 28 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="font-bold leading-[1.05] tracking-[-0.03em] mb-4 text-white"
+            style={{ fontSize: 'clamp(40px, 5vw, 68px)' }}
+          >
+            Automate your<br />
+            <Typewriter /><br />
+            <span className="text-white">in minutes.</span>
+          </motion.h1>
+
+          {/* Subline */}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[16px] leading-relaxed mb-10"
+            style={{ color: '#71717a', maxWidth: 420 }}
+          >
+            Every hour spent on manual work is an hour your rivals spend on growth.
+            Blinkbox runs it for you — silently, 24/7, zero code.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-3 mb-10"
+          >
+            <Link to="/register">
+              <button className="h-11 px-6 text-[14px] font-semibold rounded-lg text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', boxShadow: '0 0 24px rgba(124,58,237,0.4), 0 2px 8px rgba(0,0,0,0.4)' }}>
+                Start for free →
+              </button>
+            </Link>
+            <Link to="/docs">
+              <button className="h-11 px-5 text-[14px] font-medium rounded-lg border transition-all duration-200 hover:text-white hover:border-white/20"
+                style={{ color: '#71717a', borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+                See how it works
+              </button>
+            </Link>
+          </motion.div>
+
+          {/* Social proof */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={heroInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex flex-col gap-2"
+          >
+            {[
+              'Saves teams 20+ hours every week',
+              'Runs while you sleep — zero babysitting',
+              'Free forever. Upgrade only when you scale.',
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-[12px]" style={{ color: '#52525b' }}>
+                <div className="w-1 h-1 rounded-full shrink-0" style={{ background: '#7c3aed' }} />
+                {item}
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* ── Right: screenshot ── */}
+        <motion.div
+          initial={{ opacity: 0, x: 50, filter: 'blur(20px)' }}
+          animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
+          transition={{ duration: 1.1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-0 bottom-0 flex items-center"
+          style={{ left: '46vw', right: '-2vw' }}
+        >
+          {/* Violet glow behind screenshot */}
+          <div className="absolute inset-0 pointer-events-none -z-10"
+            style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(124,58,237,0.15) 0%, transparent 60%)', filter: 'blur(30px)' }} />
+          {/* Right fade */}
+          <div className="absolute inset-y-0 right-0 w-32 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
+          {/* Top fade */}
+          <div className="absolute inset-x-0 top-0 h-20 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to bottom, #080808, transparent)' }} />
+          {/* Bottom fade */}
+          <div className="absolute inset-x-0 bottom-0 h-20 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
+          <img
+            src={heroScreenshot}
+            alt="Blinkbox workflow canvas"
+            className="w-full block rounded-2xl"
+            style={{ opacity: 0.92, boxShadow: '0 0 0 1px rgba(124,58,237,0.2), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.08)' }}
+          />
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -779,116 +959,7 @@ export default function Landing() {
         <Header />
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* WebGL lightning — full section, faded hard with mask */}
-          <div className="absolute inset-0 pointer-events-none" style={{ maskImage: 'radial-gradient(ellipse 40% 60% at 20% 50%, black 0%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 40% 60% at 20% 50%, black 0%, transparent 100%)' }}>
-            <LightningBg hue={230} speed={1.4} intensity={0.3} size={2} />
-          </div>
-          {/* Dark overlay */}
-          <div className="absolute inset-0 pointer-events-none bg-black/55" />
-
-          <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
-
-            {/* ── Left: text column — pushed to ~20% from left ── */}
-            <div ref={heroRef} className="relative z-20 flex flex-col items-start flex-shrink-0 w-full max-w-[480px] py-32 ml-[8vw]">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
-                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03] mb-8"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] text-neutral-400 font-medium">Your competitors are already automating</span>
-              </motion.div>
-
-              {/* Headline */}
-              <motion.h1
-                initial={{ opacity: 0, y: 24, filter: 'blur(12px)' }}
-                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-                transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[56px] sm:text-[64px] font-bold leading-[1.0] tracking-[-0.03em] mb-6 text-white"
-              >
-                Stop doing<br />work that<br />shouldn't exist.
-              </motion.h1>
-
-              {/* Subline */}
-              <motion.p
-                initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
-                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-                transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[16px] text-neutral-500 leading-relaxed mb-10"
-              >
-                Every hour you spend on manual tasks is an hour your
-                competitors spend on growth. Blinkbox runs it for you — silently, instantly, every time.
-              </motion.p>
-
-              {/* CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
-                animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-                transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-3 mb-10"
-              >
-                <Link to="/register">
-                  <Button className="h-11 px-6 text-[14px] rounded-lg bg-white text-black hover:bg-neutral-200">
-                    Automate for free
-                  </Button>
-                </Link>
-                <Link to="/docs">
-                  <Button variant="ghost" className="h-11 px-6 text-[14px] rounded-lg text-neutral-400 hover:text-white">
-                    See how it works
-                  </Button>
-                </Link>
-              </motion.div>
-
-              {/* Social proof strip */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={heroInView ? { opacity: 1 } : {}}
-                transition={{ duration: 0.5, delay: 0.38 }}
-                className="flex flex-col gap-2.5"
-              >
-                {[
-                  'Saves teams 20+ hours every week',
-                  'Runs while you sleep — zero babysitting',
-                  'Free forever. Upgrade only when you scale.',
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[12px] text-neutral-500">
-                    <Check className="w-3 h-3 text-neutral-600 shrink-0" />
-                    {item}
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* ── Right: screenshot — oversized, bleeds off screen ── */}
-            <motion.div
-              initial={{ opacity: 0, x: 60, filter: 'blur(16px)' }}
-              animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute top-0 bottom-0 flex items-center"
-              style={{ left: '46vw', right: '-2vw' }}
-            >
-              {/* Right edge fade */}
-              <div className="absolute inset-y-0 right-0 w-40 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, transparent, #080808)' }} />
-              {/* Top fade */}
-              <div className="absolute inset-x-0 top-0 h-16 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, #080808, transparent)' }} />
-              {/* Bottom fade */}
-              <div className="absolute inset-x-0 bottom-0 h-16 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, #080808, transparent)' }} />
-              <img
-                src={heroScreenshot}
-                alt="Blinkbox workflow canvas"
-                className="w-full block opacity-90 rounded-xl"
-                style={{ objectFit: 'cover', objectPosition: 'top left' }}
-              />
-            </motion.div>
-
-          </div>
-        </section>
+        <HeroSection heroRef={heroRef} heroInView={heroInView} />
 
         {/* ── STATS ────────────────────────────────────────────────────── */}
         <section className="py-16 px-6 border-y border-white/[0.05]">
