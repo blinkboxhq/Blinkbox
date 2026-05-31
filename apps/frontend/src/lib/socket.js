@@ -5,16 +5,25 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 let socket = null;
 
 export function getSocket() {
-  if (!socket) {
-    const token = localStorage.getItem("blinkbox_token");
-    socket = io(API_URL, {
-      auth: { token },
-      transports: ["polling", "websocket"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+  const token = localStorage.getItem("blinkbox_token");
+
+  if (socket) {
+    // If token changed (e.g. after login) update auth and reconnect
+    if (socket.auth?.token !== token) {
+      socket.auth = { token };
+      socket.disconnect().connect();
+    }
+    return socket;
   }
+
+  socket = io(API_URL, {
+    auth: { token },
+    transports: ["polling", "websocket"],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+  });
+
   return socket;
 }
 

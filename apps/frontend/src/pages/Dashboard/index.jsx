@@ -234,19 +234,26 @@ export default function Dashboard() {
     try { const p = JSON.parse(u); if (!p.id || !p.email) throw 0; setUser(p); } catch { handleLogout(); }
   }, [handleLogout]);
 
-  useEffect(() => {
+  const fetchWorkflows = useCallback(async () => {
     if (!user) return;
-    (async () => {
-      setSystemError(null);
-      setWorkflowsLoading(true);
-      try {
-        const r = await api.get('/api/automation', { params: { page: currentPage, limit: 21 } });
-        setWorkflows(r.data?.automations || []);
-        setPagination(r.data?.pagination || null);
-      } catch { setSystemError('Failed to load workflows.'); }
-      finally { setWorkflowsLoading(false); }
-    })();
+    setSystemError(null);
+    setWorkflowsLoading(true);
+    try {
+      const r = await api.get('/api/automation', { params: { page: currentPage, limit: 21 } });
+      setWorkflows(r.data?.automations || []);
+      setPagination(r.data?.pagination || null);
+    } catch { setSystemError('Failed to load workflows.'); }
+    finally { setWorkflowsLoading(false); }
   }, [user, currentPage]);
+
+  useEffect(() => { fetchWorkflows(); }, [fetchWorkflows]);
+
+  // Re-fetch when a collab invite is accepted elsewhere (NotificationBell fires this)
+  useEffect(() => {
+    const handler = () => fetchWorkflows();
+    window.addEventListener('blinkbox:workflows:refresh', handler);
+    return () => window.removeEventListener('blinkbox:workflows:refresh', handler);
+  }, [fetchWorkflows]);
 
   useEffect(() => {
     if (!user) return;

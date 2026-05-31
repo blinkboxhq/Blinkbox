@@ -95,11 +95,9 @@ export default function VaultManager() {
       setConnectingProvider(null);
 
       if (payload?.success && payload?.credential) {
-        setCredentials(prev => {
-          const already = prev.find(c => c._id === payload.credential._id);
-          return already ? prev : [payload.credential, ...prev];
-        });
         toast.success(`${payload.credential.name} connected successfully`);
+        // Re-fetch the full list so the new credential renders with all server-side fields
+        fetchCredentials();
       } else if (payload?.error) {
         toast.error(payload.error);
       }

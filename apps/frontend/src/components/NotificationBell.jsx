@@ -136,6 +136,8 @@ export default function NotificationBell() {
       await api.post(`/api/invites/${inviteId}/accept`);
       setInvites(prev => prev.filter(i => i._id !== inviteId));
       toast.success('You joined the workflow!');
+      // Tell the dashboard to re-fetch workflows without a page reload
+      window.dispatchEvent(new CustomEvent('blinkbox:workflows:refresh'));
     } catch { toast.error('Failed to accept invite'); }
   }, []);
 
