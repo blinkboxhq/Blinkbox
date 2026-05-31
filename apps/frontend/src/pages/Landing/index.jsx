@@ -789,21 +789,12 @@ export default function Landing() {
             <div className="absolute inset-x-0 bottom-0 h-40 z-10 pointer-events-none"
               style={{ background: 'linear-gradient(to bottom, transparent 0%, #080808 100%)' }} />
             {/* Frame card */}
-            <div className="relative rounded-2xl border border-white/[0.08] bg-[#0d0d0d] p-2 shadow-2xl shadow-black/60"
+            <div className="relative rounded-2xl border border-white/[0.08] overflow-hidden shadow-2xl shadow-black/60"
               style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.7), 0 0 120px rgba(139,92,246,0.07)' }}>
-              {/* Browser chrome strip */}
-              <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/[0.05] mb-1">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
-                <div className="flex-1 mx-4 h-5 rounded-md bg-white/[0.04] border border-white/[0.05] flex items-center justify-center">
-                  <span className="text-[10px] text-neutral-700">app.blinkbox.co.in</span>
-                </div>
-              </div>
               <img
                 src={heroScreenshot}
                 alt="Blinkbox workflow canvas"
-                className="w-full rounded-xl block"
+                className="w-full block"
                 style={{ aspectRatio: '16/10', objectFit: 'cover', objectPosition: 'top left' }}
               />
             </div>
