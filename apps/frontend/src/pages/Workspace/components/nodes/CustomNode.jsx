@@ -252,46 +252,66 @@ function AgentInHandle() {
 }
 
 // ─── Condition dual output handles ───────────────────────────────────────────
-function ConditionOutputHandles({ cardHeight }) {
-  const topY = cardHeight * 0.33;
-  const botY = cardHeight * 0.67;
+function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
+  const plusBtn = (y, handleId) => (
+    <div className="absolute z-10 nodrag" style={{ right: -16, top: y, transform: "translateY(-50%)" }}>
+      <button
+        onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
+        onMouseDown={e => e.stopPropagation()}
+        className="w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+        title="Add next step">
+        <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
+      </button>
+    </div>
+  );
+
   return (
     <>
-      <Handle type="source" position={Position.Right} id="true"
+      <Handle type="source" position={Position.Right} id={topId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)" }} />
-      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">True</span>
-      </div>
-      <Handle type="source" position={Position.Right} id="false"
+        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)", opacity: topConnected ? 1 : 0 }} />
+      {topConnected
+        ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
+            <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{topLabel}</span>
+          </div>
+        : plusBtn(topY, topId)
+      }
+
+      <Handle type="source" position={Position.Right} id={botId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)" }} />
-      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">False</span>
-      </div>
+        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)", opacity: botConnected ? 1 : 0 }} />
+      {botConnected
+        ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
+            <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{botLabel}</span>
+          </div>
+        : plusBtn(botY, botId)
+      }
     </>
   );
 }
 
-// ─── Success/Failed dual output handles ──────────────────────────────────────
-function SuccessFailedOutputHandles({ cardHeight }) {
-  const topY = cardHeight * 0.33;
-  const botY = cardHeight * 0.67;
+function ConditionOutputHandles({ cardHeight, trueConnected, falseConnected, onAdd }) {
   return (
-    <>
-      <Handle type="source" position={Position.Right} id="success"
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)" }} />
-      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -60, top: topY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">Success</span>
-      </div>
-      <Handle type="source" position={Position.Right} id="failed"
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)" }} />
-      <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -52, top: botY, transform: "translateY(-50%)" }}>
-        <span className="text-[9px] font-semibold text-white uppercase tracking-wider">Failed</span>
-      </div>
-    </>
+    <DualOutputHandle
+      topY={cardHeight * 0.33} botY={cardHeight * 0.67}
+      topId="true" botId="false"
+      topLabel="True" botLabel="False"
+      topConnected={trueConnected} botConnected={falseConnected}
+      onAdd={onAdd}
+    />
+  );
+}
+
+// ─── Success/Failed dual output handles ──────────────────────────────────────
+function SuccessFailedOutputHandles({ cardHeight, successConnected, failedConnected, onAdd }) {
+  return (
+    <DualOutputHandle
+      topY={cardHeight * 0.33} botY={cardHeight * 0.67}
+      topId="success" botId="failed"
+      topLabel="Success" botLabel="Failed"
+      topConnected={successConnected} botConnected={failedConnected}
+      onAdd={onAdd}
+    />
   );
 }
 
@@ -451,8 +471,12 @@ function CustomNode({ id, data, selected }) {
   const configHint = getConfigHint(data, edges, id);
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
-  const hasOutputConnection = edges.some(e => e.source === id && e.sourceHandle === "output");
-  const hasErrorConnection = edges.some(e => e.source === id && e.sourceHandle === "onFailure");
+  const hasOutputConnection  = edges.some(e => e.source === id && e.sourceHandle === "output");
+  const hasErrorConnection   = edges.some(e => e.source === id && e.sourceHandle === "onFailure");
+  const hasTrueConnection    = edges.some(e => e.source === id && e.sourceHandle === "true");
+  const hasFalseConnection   = edges.some(e => e.source === id && e.sourceHandle === "false");
+  const hasSuccessConnection = edges.some(e => e.source === id && e.sourceHandle === "success");
+  const hasFailedConnection  = edges.some(e => e.source === id && e.sourceHandle === "failed");
 
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
   const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
@@ -751,9 +775,9 @@ function CustomNode({ id, data, selected }) {
       </motion.div>
 
       {data.backendType === "condition" ? (
-        <ConditionOutputHandles cardHeight={cardH} />
+        <ConditionOutputHandles cardHeight={cardH} trueConnected={hasTrueConnection} falseConnected={hasFalseConnection} onAdd={handleAddNext} />
       ) : data.backendType === "success_failed" ? (
-        <SuccessFailedOutputHandles cardHeight={cardH} />
+        <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       )}
