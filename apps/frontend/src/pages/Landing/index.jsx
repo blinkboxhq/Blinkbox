@@ -502,9 +502,9 @@ function HeroSection({ heroRef, heroInView }) {
       {/* Ambient indigo glow — center right */}
       <div className="absolute pointer-events-none"
         style={{ top: '20%', right: '5%', width: '40%', height: '60%', background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-      {/* Subtle grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      {/* Dot grid */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.18]"
+        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
       {/* WebGL lightning — left only, subtle */}
       <div className="absolute inset-0 pointer-events-none"
