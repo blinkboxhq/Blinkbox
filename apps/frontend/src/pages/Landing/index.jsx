@@ -111,6 +111,94 @@ function project(x, y, z, rotY, rotX, W, H) {
   };
 }
 
+function GridCanvas3D() {
+  const canvasRef = useRef(null);
+  const frameRef  = useRef(null);
+  const offsetRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx    = canvas.getContext('2d');
+
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth  * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      offsetRef.current = (offsetRef.current + 0.003) % 1;
+      const t = offsetRef.current;
+
+      const HORIZON_Y = H * 0.52;
+      const VANISH_X  = W * 0.5;
+      const SPREAD     = W * 1.8;
+      const COLS       = 14;
+      const ROWS       = 18;
+
+      ctx.save();
+
+      for (let r = 0; r <= ROWS; r++) {
+        const frac = ((r / ROWS) + t) % 1;
+        const depth = Math.pow(frac, 2.4);
+        const y = HORIZON_Y + (H - HORIZON_Y) * depth;
+        const halfW = SPREAD * 0.5 * depth;
+        const alpha = Math.min(0.13, depth * 0.28) * (frac < 0.04 ? frac / 0.04 : 1);
+
+        ctx.beginPath();
+        ctx.moveTo(VANISH_X - halfW, y);
+        ctx.lineTo(VANISH_X + halfW, y);
+        ctx.strokeStyle = `rgba(139,92,246,${alpha})`;
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+      }
+
+      for (let c = 0; c <= COLS; c++) {
+        const fracX = c / COLS - 0.5;
+        const nearX  = VANISH_X + fracX * SPREAD;
+        const alpha  = 0.055;
+
+        ctx.beginPath();
+        ctx.moveTo(VANISH_X, HORIZON_Y);
+        ctx.lineTo(nearX, H);
+        ctx.strokeStyle = `rgba(139,92,246,${alpha})`;
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+      }
+
+      const gradH = HORIZON_Y * 1.1;
+      const glow = ctx.createLinearGradient(0, gradH, 0, H);
+      glow.addColorStop(0, 'rgba(139,92,246,0.0)');
+      glow.addColorStop(1, 'rgba(139,92,246,0.03)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, gradH, W, H - gradH);
+
+      ctx.restore();
+
+      frameRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(frameRef.current);
+      ro.disconnect();
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ width: '100%', height: '100%' }}
+    />
+  );
+}
+
 function NodeGraph3D() {
   const canvasRef = useRef(null);
   const nodesRef  = useRef([]);
@@ -605,7 +693,12 @@ export default function Landing() {
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* Full-bleed 3D graph background */}
+          {/* 3D perspective grid — deepest layer */}
+          <div className="absolute inset-0 pointer-events-none">
+            <GridCanvas3D />
+          </div>
+
+          {/* Full-bleed ambient glow */}
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(139,92,246,0.08) 0%, transparent 60%)' }} />
 
