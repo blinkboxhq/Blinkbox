@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, Component } from 'react';
+import { useEffect, useRef, useState, Component, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, Bot, GitBranch, Shield, Check, Zap,
+  ArrowRight, Bot, GitBranch, Check,
   Menu, X, Layers, Globe, MessageSquare, Lock,
-  Database, Code2, RefreshCw, BarChart3, Timer,
+  Database, Code2, RefreshCw,
   Webhook, Minus, Plus,
 } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
@@ -27,7 +27,6 @@ import imgVercel from '../../assets/vercel.svg';
 import imgPostgres from '../../assets/postgresql.svg';
 import imgAnthropic from '../../assets/anthropic.svg';
 import imgGemini from '../../assets/gemini-color.svg';
-import imgBrian from '../../assets/brian.webp';
 import logo from '../../assets/logo.svg';
 
 // ─── Error boundary ───────────────────────────────────────────────────────────
@@ -62,169 +61,218 @@ function Counter({ to, suffix = '', duration = 2000 }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
-// ─── Live workflow hero visual ────────────────────────────────────────────────
-const INITIAL_LOG = [
-  { id: 1, name: 'Sarah K.', result: '→ #enterprise-deals', ms: 340, ok: true },
-  { id: 2, name: 'James Liu', result: '→ nurture sequence', ms: 520, ok: true },
-  { id: 3, name: 'Priya M.', result: '→ #enterprise-deals', ms: 290, ok: true },
-  { id: 4, name: 'Omar Hassan', result: '→ HubSpot CRM', ms: 410, ok: true },
-  { id: 5, name: 'Chen Wei', result: 'Classifying…', ms: null, ok: null },
+// ─── 3D Node Graph Hero ───────────────────────────────────────────────────────
+
+// Nodes in 3D space [x, y, z] — centered around origin
+const GRAPH_NODES = [
+  { id: 0, pos: [-2.2,  0.8,  0.5], label: 'Webhook',   sub: 'HTTP trigger',     icon: Webhook,       color: '#a78bfa', status: 'live'    },
+  { id: 1, pos: [ 0.0,  1.4, -0.8], label: 'Filter',    sub: 'Condition check',  icon: GitBranch,     color: '#60a5fa', status: 'done'    },
+  { id: 2, pos: [ 2.0,  0.6,  0.3], label: 'Slack',     sub: '#alerts',          icon: MessageSquare, color: '#34d399', status: 'done'    },
+  { id: 3, pos: [-1.2, -1.0,  1.2], label: 'Database',  sub: 'Postgres write',   icon: Database,      color: '#f472b6', status: 'done'    },
+  { id: 4, pos: [ 1.0, -1.2, -0.6], label: 'AI Agent',  sub: 'GPT-4o task',      icon: Bot,           color: '#fb923c', status: 'running' },
+  { id: 5, pos: [-0.2,  0.1,  1.8], label: 'Code',      sub: 'Transform data',   icon: Code2,         color: '#facc15', status: 'done'    },
+  { id: 6, pos: [ 2.2, -0.4, -1.4], label: 'Email',     sub: 'SendGrid',         icon: Globe,         color: '#38bdf8', status: 'done'    },
+  { id: 7, pos: [-2.0, -0.2, -1.0], label: 'Encrypt',   sub: 'Vault store',      icon: Lock,          color: '#c084fc', status: 'done'    },
 ];
 
-const EXTRA_LOG = [
-  { id: 6, name: 'Léa Bernard', result: '→ #enterprise-deals', ms: 380 },
-  { id: 7, name: 'Amir Shah', result: '→ nurture sequence', ms: 510 },
-  { id: 8, name: 'Maria G.', result: '→ HubSpot CRM', ms: 300 },
-  { id: 9, name: 'Tom Burton', result: '→ #enterprise-deals', ms: 460 },
-  { id: 10, name: 'Riko Tanaka', result: '→ nurture sequence', ms: 390 },
+const GRAPH_EDGES = [
+  [0, 1], [0, 5], [1, 2], [1, 3], [1, 4],
+  [3, 5], [4, 6], [4, 7], [5, 2],
 ];
 
-function WFNode({ label, sub, icon: Icon, color, status, delay, posStyle }) {
-  return (
-    <motion.div
-      className="absolute w-[140px] rounded-xl border border-white/[0.08] bg-[#111] p-3"
-      style={posStyle}
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="w-6 h-6 rounded-md flex items-center justify-center"
-          style={{ background: `${color}18`, border: `1px solid ${color}28` }}>
-          <Icon className="w-3 h-3" style={{ color }} />
-        </div>
-        {status === 'live' && (
-          <div className="relative w-1.5 h-1.5">
-            <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-60" />
-            <div className="relative rounded-full w-full h-full bg-emerald-500" />
-          </div>
-        )}
-        {status === 'running' && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
-        {status === 'done' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-      </div>
-      <p className="text-[11px] font-semibold text-white leading-snug">{label}</p>
-      <p className="text-[9px] text-neutral-600 mt-0.5 leading-snug">{sub}</p>
-    </motion.div>
-  );
+// Pulse packets travelling along edges
+const PULSES = [
+  { edge: [0, 1], color: '#a78bfa', speed: 0.6, offset: 0.0 },
+  { edge: [0, 5], color: '#a78bfa', speed: 0.5, offset: 0.3 },
+  { edge: [1, 2], color: '#60a5fa', speed: 0.7, offset: 0.6 },
+  { edge: [1, 4], color: '#60a5fa', speed: 0.55, offset: 0.1 },
+  { edge: [4, 6], color: '#fb923c', speed: 0.65, offset: 0.5 },
+  { edge: [3, 5], color: '#f472b6', speed: 0.5, offset: 0.8 },
+  { edge: [5, 2], color: '#facc15', speed: 0.6, offset: 0.2 },
+];
+
+function project(x, y, z, rotY, rotX, W, H) {
+  // Rotate around Y axis
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+  const rx = x * cosY - z * sinY;
+  const rz = x * sinY + z * cosY;
+  // Rotate around X axis
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+  const ry = y * cosX - rz * sinX;
+  const fz = y * sinX + rz * cosX;
+  // Perspective
+  const fov = 5;
+  const scale = fov / (fov + fz + 2);
+  return {
+    sx: W / 2 + rx * scale * (W * 0.28),
+    sy: H / 2 + ry * scale * (H * 0.38),
+    scale,
+    z: fz,
+  };
 }
 
-function WorkflowHero() {
-  const [log, setLog] = useState(INITIAL_LOG);
-  const [count, setCount] = useState(2847);
-  const extraRef = useRef(0);
+function NodeGraph3D() {
+  const canvasRef = useRef(null);
+  const nodesRef  = useRef([]);
+  const frameRef  = useRef(null);
+  const rotY      = useRef(0.3);
+  const rotX      = useRef(-0.18);
+  const pulses    = useRef(PULSES.map(p => ({ ...p, t: p.offset })));
+  const [projected, setProjected] = useState([]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCount(c => c + 1);
-      extraRef.current += 1;
-      const next = EXTRA_LOG[extraRef.current % EXTRA_LOG.length];
-      setLog(prev => [
-        ...prev.slice(1),
-        { ...next, id: Date.now(), ok: true },
-        { id: Date.now() + 1, name: EXTRA_LOG[(extraRef.current + 1) % EXTRA_LOG.length].name, result: 'Classifying…', ms: null, ok: null },
-      ].slice(0, 5));
-    }, 2200);
-    return () => clearInterval(interval);
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    rotY.current += 0.0028;
+
+    // Project all nodes
+    const proj = GRAPH_NODES.map(n => ({
+      ...n,
+      ...project(n.pos[0], n.pos[1], n.pos[2], rotY.current, rotX.current, W, H),
+    }));
+
+    // Sort back-to-front for painter's algorithm
+    proj.sort((a, b) => a.z - b.z);
+
+    // Draw edges
+    for (const [ai, bi] of GRAPH_EDGES) {
+      const a = proj.find(p => p.id === ai);
+      const b = proj.find(p => p.id === bi);
+      const avgScale = (a.scale + b.scale) / 2;
+      const alpha = Math.max(0.04, Math.min(0.18, avgScale * 0.14));
+      ctx.beginPath();
+      ctx.moveTo(a.sx, a.sy);
+      ctx.lineTo(b.sx, b.sy);
+      ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw pulse packets
+    pulses.current.forEach(pulse => {
+      pulse.t = (pulse.t + pulse.speed * 0.004) % 1;
+      const [ai, bi] = pulse.edge;
+      const a = proj.find(p => p.id === ai);
+      const b = proj.find(p => p.id === bi);
+      const t = pulse.t;
+      const px = a.sx + (b.sx - a.sx) * t;
+      const py = a.sy + (b.sy - a.sy) * t;
+      const ps = a.scale + (b.scale - a.scale) * t;
+      // Glow
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 8 * ps);
+      grad.addColorStop(0, pulse.color + 'cc');
+      grad.addColorStop(1, pulse.color + '00');
+      ctx.beginPath();
+      ctx.arc(px, py, 8 * ps, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5 * ps, 0, Math.PI * 2);
+      ctx.fillStyle = pulse.color;
+      ctx.fill();
+    });
+
+    // Store for DOM node overlay
+    nodesRef.current = proj;
+    setProjected([...proj]);
+
+    frameRef.current = requestAnimationFrame(draw);
   }, []);
 
-  // SVG coordinate system: 580 × 280
-  const pTriggerAI = 'M 164 142 L 220 142';
-  const pAISlack   = 'M 384 142 C 414 142 424 88 444 88';
-  const pAICRM     = 'M 384 142 C 414 142 424 196 444 196';
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const resize = () => {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width  = rect.width  * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      canvas.style.width  = rect.width  + 'px';
+      canvas.style.height = rect.height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    frameRef.current = requestAnimationFrame(draw);
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(frameRef.current);
+    };
+  }, [draw]);
+
+  // Mouse drag to rotate
+  const dragRef = useRef(null);
+  const onMouseDown = (e) => { dragRef.current = { x: e.clientX, y: e.clientY, ry: rotY.current, rx: rotX.current }; };
+  const onMouseMove = (e) => {
+    if (!dragRef.current) return;
+    rotY.current = dragRef.current.ry + (e.clientX - dragRef.current.x) * 0.007;
+    rotX.current = dragRef.current.rx + (e.clientY - dragRef.current.y) * 0.004;
+    rotX.current = Math.max(-0.6, Math.min(0.6, rotX.current));
+  };
+  const onMouseUp = () => { dragRef.current = null; };
 
   return (
-    <div className="relative mx-auto max-w-[900px] rounded-2xl border border-white/[0.07] bg-[#0a0a0a] overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_60px_120px_rgba(0,0,0,0.9)]">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06]">
-        <div className="flex gap-1.5 shrink-0">
-          {[0.08, 0.06, 0.04].map((o, i) => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full" style={{ background: `rgba(255,255,255,${o})` }} />
-          ))}
-        </div>
-        <span className="text-[11px] text-neutral-600 font-medium flex-1 text-center">Lead Routing Pipeline</span>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] text-neutral-600">{count.toLocaleString()} today</span>
-          <div className="relative w-1.5 h-1.5">
-            <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-50" />
-            <div className="relative rounded-full w-full h-full bg-emerald-500" />
-          </div>
-          <span className="text-[10px] text-emerald-500 font-medium">Live</span>
-        </div>
-      </div>
+    <div
+      className="relative w-full select-none cursor-grab active:cursor-grabbing"
+      style={{ height: 520 }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+    >
+      {/* Canvas for edges + pulses */}
+      <canvas ref={canvasRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
 
-      {/* Body */}
-      <div className="flex">
-        {/* Canvas area */}
-        <div className="flex-1 relative" style={{ height: 280 }}>
-          <svg
-            viewBox="0 0 580 280"
-            className="absolute inset-0 w-full h-full"
-            fill="none"
+      {/* DOM node cards overlaid on canvas */}
+      {projected.map(node => {
+        const W = canvasRef.current?.parentElement?.offsetWidth  || 900;
+        const H = canvasRef.current?.parentElement?.offsetHeight || 520;
+        const cardW = 112, cardH = 60;
+        const left = node.sx - cardW / 2;
+        const top  = node.sy - cardH / 2;
+        const s    = Math.max(0.55, Math.min(1, node.scale * 1.8));
+        const opacity = Math.max(0.25, Math.min(1, (node.scale + 0.1) * 2.2));
+        return (
+          <div
+            key={node.id}
+            className="absolute rounded-xl border border-white/[0.08] bg-[#0f0f0f] p-2.5 pointer-events-none"
+            style={{
+              left, top, width: cardW,
+              transform: `scale(${s})`,
+              transformOrigin: 'center center',
+              opacity,
+              transition: 'none',
+              backdropFilter: 'blur(4px)',
+              boxShadow: `0 0 20px ${node.color}18, inset 0 1px 0 rgba(255,255,255,0.04)`,
+            }}
           >
-            <defs>
-              {['gv','gb','gg','gp'].map(id => (
-                <filter key={id} id={id} x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2.5" result="b" />
-                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              ))}
-            </defs>
-
-            {/* Edge lines */}
-            <path d={pTriggerAI} stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" />
-            <path d={pAISlack}   stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" />
-            <path d={pAICRM}     stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" />
-
-            {/* Branch labels */}
-            <text x="400" y="120" fill="rgba(52,211,153,0.4)" fontSize="8" fontFamily="monospace">true</text>
-            <text x="400" y="168" fill="rgba(248,113,113,0.4)" fontSize="8" fontFamily="monospace">false</text>
-
-            {/* Traveling data dots */}
-            <circle r="3.5" fill="#a78bfa" filter="url(#gv)">
-              <animateMotion dur="1.1s" begin="0.3s" repeatCount="indefinite" path={pTriggerAI} />
-            </circle>
-            <circle r="3.5" fill="#60a5fa" filter="url(#gb)">
-              <animateMotion dur="1.8s" begin="1.5s" repeatCount="indefinite" path={pAISlack} />
-            </circle>
-            <circle r="3.5" fill="#f472b6" filter="url(#gp)">
-              <animateMotion dur="1.8s" begin="3.1s" repeatCount="indefinite" path={pAICRM} />
-            </circle>
-          </svg>
-
-          {/* Nodes — positioned to match the SVG coordinate system (580×280) */}
-          <WFNode delay={0}    posStyle={{ left: '3.5%',  top: '37%' }} label="Form Submitted" sub="Typeform trigger"   icon={Webhook}        color="#a78bfa" status="live"    />
-          <WFNode delay={0.15} posStyle={{ left: '37.9%', top: '37%' }} label="AI Classify"    sub="Brian · GPT-4o"    icon={Bot}            color="#60a5fa" status="running" />
-          <WFNode delay={0.3}  posStyle={{ left: '76.6%', top: '16%' }} label="Slack Alert"    sub="#enterprise-deals" icon={MessageSquare}  color="#34d399" status="done"    />
-          <WFNode delay={0.45} posStyle={{ left: '76.6%', top: '59%' }} label="Update CRM"     sub="HubSpot · 1 field" icon={Database}       color="#f472b6" status="done"    />
-        </div>
-
-        {/* Execution log sidebar */}
-        <div className="w-[210px] shrink-0 border-l border-white/[0.06] p-4 flex flex-col overflow-hidden">
-          <p className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">Executions</p>
-          <div className="flex flex-col gap-0.5 flex-1">
-            <AnimatePresence mode="popLayout">
-              {log.map(entry => (
-                <motion.div
-                  key={entry.id}
-                  layout
-                  initial={{ opacity: 0, y: -12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 12 }}
-                  transition={{ duration: 0.28 }}
-                  className="flex items-center gap-2 py-1.5 border-b border-white/[0.04] last:border-0"
-                >
-                  <div className={`w-1 h-1 rounded-full shrink-0 ${entry.ok === null ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-white font-medium truncate">{entry.name}</p>
-                    <p className="text-[9px] text-neutral-600 truncate">{entry.result}</p>
-                  </div>
-                  {entry.ms && <span className="text-[9px] text-neutral-700 shrink-0">{entry.ms}ms</span>}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="w-5 h-5 rounded-md flex items-center justify-center"
+                style={{ background: `${node.color}1a`, border: `1px solid ${node.color}30` }}>
+                <node.icon className="w-2.5 h-2.5" style={{ color: node.color }} />
+              </div>
+              {node.status === 'live' && (
+                <div className="relative w-1.5 h-1.5">
+                  <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-60" />
+                  <div className="relative rounded-full w-full h-full bg-emerald-500" />
+                </div>
+              )}
+              {node.status === 'running' && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
+              {node.status === 'done' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />}
+            </div>
+            <p className="text-[10px] font-semibold text-white leading-none">{node.label}</p>
+            <p className="text-[8px] text-neutral-600 mt-0.5 leading-none">{node.sub}</p>
           </div>
-        </div>
-      </div>
+        );
+      })}
+
+      {/* Drag hint */}
+      <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-neutral-700 pointer-events-none select-none">drag to rotate</p>
     </div>
   );
 }
@@ -365,72 +413,73 @@ function IntegrationGrid() {
   );
 }
 
-// ─── Brian AI demo ────────────────────────────────────────────────────────────
-const BRIAN_PROMPT = 'When a new lead fills our Typeform, score them with AI, then route high-value leads to Slack and add everyone to HubSpot.';
+// ─── Scraper demo ─────────────────────────────────────────────────────────────
+const SCRAPE_ROWS = [
+  { company: 'Stripe', price: '$199/mo', status: 'Active', change: '+12%' },
+  { company: 'Linear', price: '$8/seat', status: 'Active', change: '+5%' },
+  { company: 'Vercel', price: '$20/mo', status: 'Active', change: '—' },
+  { company: 'Resend', price: '$20/mo', status: 'Active', change: '+3%' },
+];
 
-function BrianDemo() {
-  const [chars, setChars] = useState(0);
-  const [showFlow, setShowFlow] = useState(false);
+function ScraperDemo() {
+  const [rows, setRows] = useState([]);
   const { ref, inView } = useReveal(0.4);
 
   useEffect(() => {
     if (!inView) return;
     let i = 0;
     const tick = setInterval(() => {
-      i += 2;
-      setChars(i);
-      if (i >= BRIAN_PROMPT.length) {
-        clearInterval(tick);
-        setTimeout(() => setShowFlow(true), 400);
-      }
-    }, 30);
+      if (i < SCRAPE_ROWS.length) { setRows(r => [...r, SCRAPE_ROWS[i]]); i++; }
+      else clearInterval(tick);
+    }, 420);
     return () => clearInterval(tick);
   }, [inView]);
 
-  const nodes = [
-    { label: 'Typeform', icon: Webhook, color: '#a78bfa' },
-    { label: 'AI Score', icon: Bot, color: '#60a5fa' },
-    { label: 'Slack', icon: MessageSquare, color: '#34d399' },
-    { label: 'HubSpot', icon: Database, color: '#f472b6' },
-  ];
-
   return (
     <div ref={ref} className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] overflow-hidden w-full max-w-[480px]">
-      <div className="p-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2 mb-3">
-          <img src={imgBrian} alt="Brian" className="w-5 h-5 rounded-full" />
-          <span className="text-[11px] text-neutral-500 font-medium">Brian AI</span>
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06]">
+        <div className="flex gap-1.5">
+          {[0.08, 0.06, 0.04].map((o, i) => <div key={i} className="w-2 h-2 rounded-full" style={{ background: `rgba(255,255,255,${o})` }} />)}
         </div>
-        <p className="text-[12px] text-neutral-300 leading-relaxed font-mono min-h-[60px]">
-          {BRIAN_PROMPT.slice(0, chars)}
-          {chars < BRIAN_PROMPT.length && <span className="animate-pulse text-violet-400">|</span>}
-        </p>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
+            <Globe className="w-3 h-3 text-neutral-600" />
+            <span className="text-[10px] text-neutral-600 font-mono">pricing-monitor.blinkbox.run</span>
+          </div>
+        </div>
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
       </div>
-      <div className="p-5">
-        <p className="text-[10px] text-neutral-600 uppercase tracking-wider mb-3 font-semibold">Generated workflow</p>
-        <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
-          <AnimatePresence>
-            {showFlow && nodes.map((n, i) => (
-              <motion.div key={n.label} className="flex items-center gap-2"
-                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.15 }}>
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[0.08] bg-[#111]">
-                  <n.icon className="w-3 h-3" style={{ color: n.color }} />
-                  <span className="text-[11px] text-white font-medium">{n.label}</span>
-                </div>
-                {i < nodes.length - 1 && <ArrowRight className="w-3 h-3 text-neutral-700 shrink-0" />}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {!showFlow && (
-            <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-          )}
-        </div>
-        {showFlow && (
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            className="text-[10px] text-emerald-500 mt-3 font-medium">
-            ✓ Workflow ready · 4 nodes · ~1.2s per run
-          </motion.p>
+      <div className="p-4">
+        <p className="text-[10px] text-neutral-600 uppercase tracking-wider mb-3 font-semibold">Scraped · updated every 6h</p>
+        <table className="w-full">
+          <thead>
+            <tr className="text-[9px] text-neutral-700 uppercase tracking-wider">
+              <th className="text-left pb-2 font-semibold">Company</th>
+              <th className="text-left pb-2 font-semibold">Price</th>
+              <th className="text-left pb-2 font-semibold">Status</th>
+              <th className="text-right pb-2 font-semibold">30d Δ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence>
+              {rows.map(row => (
+                <motion.tr key={row.company}
+                  initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}
+                  className="border-t border-white/[0.04]">
+                  <td className="py-2 text-[12px] text-white font-medium">{row.company}</td>
+                  <td className="py-2 text-[12px] text-neutral-400 font-mono">{row.price}</td>
+                  <td className="py-2"><span className="text-[9px] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded font-medium">{row.status}</span></td>
+                  <td className="py-2 text-right text-[11px] text-neutral-500 font-mono">{row.change}</td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </tbody>
+        </table>
+        {rows.length < SCRAPE_ROWS.length && (
+          <div className="flex items-center gap-2 mt-3">
+            <div className="w-3 h-3 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+            <span className="text-[10px] text-neutral-700">Scraping…</span>
+          </div>
         )}
       </div>
     </div>
@@ -555,16 +604,23 @@ export default function Landing() {
         <Header />
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section className="relative pt-40 pb-20 px-6">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[480px] pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.10) 0%, transparent 65%)' }} />
+        <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
+          {/* Full-bleed 3D graph background */}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(139,92,246,0.08) 0%, transparent 60%)' }} />
 
-          <div ref={heroRef} className="relative max-w-4xl mx-auto text-center">
+          {/* 3D graph fills the whole viewport, text sits on top */}
+          <div className="absolute inset-0">
+            <NodeGraph3D />
+          </div>
+
+          {/* Text overlay — vertically centered in upper third */}
+          <div ref={heroRef} className="relative z-10 flex flex-col items-center justify-center text-center px-6 pt-32 pb-20" style={{ minHeight: '100vh' }}>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={heroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-10"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-black/40 backdrop-blur-sm mb-10"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
               <span className="text-[11px] text-neutral-400 font-medium">Now in public beta — free to start</span>
@@ -574,7 +630,8 @@ export default function Landing() {
               initial={{ opacity: 0, y: 24 }}
               animate={heroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl sm:text-6xl lg:text-[78px] font-bold leading-[1.0] tracking-[-0.04em] mb-6"
+              className="text-5xl sm:text-6xl lg:text-[82px] font-bold leading-[1.0] tracking-[-0.04em] mb-6 max-w-3xl"
+              style={{ textShadow: '0 0 80px rgba(0,0,0,0.9)' }}
             >
               Build workflows<br />
               <span style={{
@@ -590,43 +647,36 @@ export default function Landing() {
               initial={{ opacity: 0, y: 16 }}
               animate={heroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.18 }}
-              className="text-[17px] text-neutral-500 leading-relaxed max-w-xl mx-auto mb-10"
+              className="text-[17px] text-neutral-400 leading-relaxed max-w-lg mx-auto mb-10"
+              style={{ textShadow: '0 2px 20px rgba(0,0,0,1)' }}
             >
-              AI agents, headless scraping, and logic routing — all on a flat monthly plan
-              that doesn't charge you per task.
+              250+ integrations, AI agents, and logic routing —
+              on a flat plan that never charges per task.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={heroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.26 }}
-              className="flex items-center justify-center gap-3 mb-16"
+              className="flex items-center justify-center gap-3 mb-8"
             >
               <Link to="/register">
-                <Button className="h-11 px-7 text-[14px] rounded-xl gap-2">
+                <Button className="h-11 px-7 text-[14px] rounded-xl gap-2 shadow-[0_0_40px_rgba(139,92,246,0.3)]">
                   Start for free <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link to="/login">
-                <Button variant="outline" className="h-11 px-7 text-[14px] rounded-xl border-white/[0.1] text-neutral-400 hover:text-white">
+                <Button variant="outline" className="h-11 px-7 text-[14px] rounded-xl border-white/[0.12] bg-black/30 backdrop-blur-sm text-neutral-400 hover:text-white">
                   Sign in
                 </Button>
               </Link>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <WorkflowHero />
-            </motion.div>
-
-            <motion.div
               initial={{ opacity: 0 }}
               animate={heroInView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.6, delay: 0.9 }}
-              className="flex items-center justify-center gap-6 mt-8 flex-wrap"
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex items-center justify-center gap-6 flex-wrap"
             >
               {['No credit card required', 'AES-256 encrypted', 'Self-hostable'].map((item, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[12px] text-neutral-600">
@@ -676,10 +726,10 @@ export default function Landing() {
             />
             <Feature
               flip
-              eyebrow="AI-powered builder"
-              headline={'Tell Brian what\nyou need.'}
-              body="Brian, our built-in AI agent, translates plain English into ready-to-run workflows. Describe the automation and watch the canvas build itself — then deploy in one click."
-              visual={<BrianDemo />}
+              eyebrow="Headless browser automation"
+              headline={'Scrape any site.\nStructure any data.'}
+              body="Blinkbox runs a full Chromium instance in the cloud. Extract competitor pricing, monitor news, scrape authenticated portals — anything a browser can see, your workflow can consume."
+              visual={<ScraperDemo />}
             />
             <Feature
               eyebrow="Flat pricing"
