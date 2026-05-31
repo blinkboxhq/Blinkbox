@@ -785,7 +785,7 @@ export default function Landing() {
             <LightningBg hue={230} speed={1.4} intensity={0.3} size={2} />
           </div>
           {/* Dark overlay */}
-          <div className="absolute inset-0 pointer-events-none bg-black/80" />
+          <div className="absolute inset-0 pointer-events-none bg-black/55" />
 
           <div className="relative z-10 w-full flex items-center" style={{ minHeight: '100vh' }}>
 
@@ -868,7 +868,7 @@ export default function Landing() {
               animate={heroInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="absolute top-0 bottom-0 flex items-center"
-              style={{ left: '42vw', right: '-4vw' }}
+              style={{ left: '46vw', right: '-2vw' }}
             >
               {/* Right edge fade */}
               <div className="absolute inset-y-0 right-0 w-40 z-10 pointer-events-none"
@@ -882,7 +882,7 @@ export default function Landing() {
               <img
                 src={heroScreenshot}
                 alt="Blinkbox workflow canvas"
-                className="w-full block opacity-90"
+                className="w-full block opacity-90 rounded-xl"
                 style={{ objectFit: 'cover', objectPosition: 'top left' }}
               />
             </motion.div>
