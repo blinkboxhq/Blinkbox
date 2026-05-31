@@ -660,13 +660,13 @@ function FeaturesSection() {
 
   return (
     <section ref={sectionRef} style={{ height: `${FEATURES.length * 80}vh` }} className="relative">
-      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+      <div className="sticky top-0 h-screen flex items-center">
         <div className="w-full max-w-6xl mx-auto px-8 grid grid-cols-2 gap-16 items-center">
 
           {/* Left: text */}
           <div className="flex flex-col">
             {/* Step pills */}
-            <div className="flex items-center gap-3 mb-10">
+            <div className="flex items-center gap-3 mb-8">
               {FEATURES.map((f, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div
@@ -717,11 +717,10 @@ function FeaturesSection() {
                 animate={{ opacity: 1, rotateY: 0, scale: 1 }}
                 exit={{ opacity: 0, rotateY: 15, scale: 0.92 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                style={{ perspective: '800px', transformStyle: 'preserve-3d' }}
-                className="w-full aspect-square max-w-[420px] rounded-3xl overflow-hidden"
+                style={{ perspective: '800px', transformStyle: 'preserve-3d', width: '100%', maxWidth: 420, height: 360 }}
               >
-                <div className="w-full h-full relative"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', backdropFilter: 'blur(20px)' }}>
+                <div className="relative rounded-3xl overflow-hidden w-full h-full"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
                   {/* Top-left accent line */}
                   <div className="absolute top-0 left-8 right-8 h-px"
                     style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
