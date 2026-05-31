@@ -28,6 +28,7 @@ import imgPostgres from '../../assets/postgresql.svg';
 import imgAnthropic from '../../assets/anthropic.svg';
 import imgGemini from '../../assets/gemini-color.svg';
 import logo from '../../assets/logo.svg';
+import heroScreenshot from '../../assets/logos/landingpage-hero-screenshot.png';
 
 // ─── Error boundary ───────────────────────────────────────────────────────────
 class SilentBoundary extends Component {
@@ -692,43 +693,36 @@ export default function Landing() {
         <Header />
 
         {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* 3D perspective grid — deepest layer */}
-          <div className="absolute inset-0 pointer-events-none">
-            <GridCanvas3D />
-          </div>
-
-          {/* Full-bleed ambient glow */}
+        <section className="relative pt-28 pb-0 overflow-hidden">
+          {/* Radial glow behind text */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(139,92,246,0.08) 0%, transparent 60%)' }} />
+            style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
 
-          {/* 3D graph fills the whole viewport, text sits on top */}
-          <div className="absolute inset-0">
-            <NodeGraph3D />
-          </div>
-
-          {/* Text overlay — vertically centered in upper third */}
-          <div ref={heroRef} className="relative z-10 flex flex-col items-center justify-center text-center px-6 pt-32 pb-20" style={{ minHeight: '100vh' }}>
+          <div className="relative z-10 max-w-5xl mx-auto px-6">
+            {/* Badge */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-black/40 backdrop-blur-sm mb-10"
+              ref={heroRef}
+              initial={{ opacity: 0, y: 12, filter: 'blur(12px)' }}
+              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex justify-center mb-8"
             >
-              <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-              <span className="text-[11px] text-neutral-400 font-medium">Now in public beta — free to start</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] backdrop-blur-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                <span className="text-[11px] text-neutral-400 font-medium">Now in public beta — free to start</span>
+              </div>
             </motion.div>
 
+            {/* Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl sm:text-6xl lg:text-[82px] font-bold leading-[1.0] tracking-[-0.04em] mb-6 max-w-3xl"
-              style={{ textShadow: '0 0 80px rgba(0,0,0,0.9)' }}
+              initial={{ opacity: 0, y: 20, filter: 'blur(12px)' }}
+              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 0.75, delay: 0.07, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center text-5xl sm:text-6xl lg:text-[72px] font-bold leading-[1.05] tracking-[-0.03em] mb-6 max-w-4xl mx-auto"
             >
               Build workflows<br />
               <span style={{
-                background: 'linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.45) 100%)',
+                background: 'linear-gradient(90deg, #fff 30%, rgba(255,255,255,0.4) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
@@ -736,40 +730,44 @@ export default function Landing() {
               </span>
             </motion.h1>
 
+            {/* Subline */}
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.18 }}
-              className="text-[17px] text-neutral-400 leading-relaxed max-w-lg mx-auto mb-10"
-              style={{ textShadow: '0 2px 20px rgba(0,0,0,1)' }}
+              initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center text-[17px] text-neutral-400 leading-relaxed max-w-xl mx-auto mb-10"
             >
               250+ integrations, AI agents, and logic routing —
               on a flat plan that never charges per task.
             </motion.p>
 
+            {/* CTAs */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.26 }}
-              className="flex items-center justify-center gap-3 mb-8"
+              initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
+              animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center justify-center gap-3 mb-5"
             >
-              <Link to="/register">
-                <Button className="h-11 px-7 text-[14px] rounded-xl gap-2 shadow-[0_0_40px_rgba(139,92,246,0.3)]">
-                  Start for free <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
+              <div className="bg-white/[0.06] rounded-[14px] border border-white/[0.1] p-0.5">
+                <Link to="/register">
+                  <Button className="h-10 px-6 text-[14px] rounded-xl gap-2">
+                    Start for free <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
               <Link to="/login">
-                <Button variant="outline" className="h-11 px-7 text-[14px] rounded-xl border-white/[0.12] bg-black/30 backdrop-blur-sm text-neutral-400 hover:text-white">
+                <Button variant="ghost" className="h-10 px-6 text-[14px] rounded-xl text-neutral-400 hover:text-white">
                   Sign in
                 </Button>
               </Link>
             </motion.div>
 
+            {/* Trust strip */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={heroInView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex items-center justify-center gap-6 flex-wrap"
+              transition={{ duration: 0.5, delay: 0.38 }}
+              className="flex items-center justify-center gap-6 flex-wrap mb-14"
             >
               {['No credit card required', 'AES-256 encrypted', 'Self-hostable'].map((item, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[12px] text-neutral-600">
@@ -779,6 +777,37 @@ export default function Landing() {
               ))}
             </motion.div>
           </div>
+
+          {/* Screenshot card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: 'blur(12px)' }}
+            animate={heroInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+            transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="relative px-4 sm:px-6 md:px-10 max-w-6xl mx-auto"
+          >
+            {/* Bottom fade overlay */}
+            <div className="absolute inset-x-0 bottom-0 h-40 z-10 pointer-events-none"
+              style={{ background: 'linear-gradient(to bottom, transparent 0%, #080808 100%)' }} />
+            {/* Frame card */}
+            <div className="relative rounded-2xl border border-white/[0.08] bg-[#0d0d0d] p-2 shadow-2xl shadow-black/60"
+              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.7), 0 0 120px rgba(139,92,246,0.07)' }}>
+              {/* Browser chrome strip */}
+              <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/[0.05] mb-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+                <div className="flex-1 mx-4 h-5 rounded-md bg-white/[0.04] border border-white/[0.05] flex items-center justify-center">
+                  <span className="text-[10px] text-neutral-700">app.blinkbox.co.in</span>
+                </div>
+              </div>
+              <img
+                src={heroScreenshot}
+                alt="Blinkbox workflow canvas"
+                className="w-full rounded-xl block"
+                style={{ aspectRatio: '16/10', objectFit: 'cover', objectPosition: 'top left' }}
+              />
+            </div>
+          </motion.div>
         </section>
 
         {/* ── STATS ────────────────────────────────────────────────────── */}
