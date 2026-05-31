@@ -462,7 +462,7 @@ function Header() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4">
       <motion.nav
-        className="flex items-center justify-between gap-6 px-4 py-2 rounded-full border border-white/[0.08]"
+        className="flex items-center justify-between gap-6 px-5 py-2.5 rounded-xl border border-white/[0.08]"
         animate={{
           backgroundColor: scrolled ? 'rgba(12,12,12,0.92)' : 'rgba(12,12,12,0.7)',
           backdropFilter: 'blur(20px)',
@@ -487,7 +487,7 @@ function Header() {
           <div className="w-px h-4 bg-white/[0.1] mx-1" />
           <Link to="/login" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</Link>
           <Link to="/register">
-            <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-full">
+            <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-lg">
               Sign up
             </button>
           </Link>
