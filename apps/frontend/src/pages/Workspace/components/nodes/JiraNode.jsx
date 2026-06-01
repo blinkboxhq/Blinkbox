@@ -31,9 +31,7 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Jira Domain</label>
-        <input value={config.domain || ""} onChange={(e) => updateConfig("domain", e.target.value)}
-          placeholder="mycompany.atlassian.net"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#2684FF]/40" />
+        <SmartVariableInput value={config.domain || ""} onChange={(v) => updateConfig("domain", v)} placeholder="mycompany.atlassian.net" nodeId={nodeId} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -78,9 +76,7 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Issue Type</label>
-            <input value={config.issueType || "Task"} onChange={(e) => updateConfig("issueType", e.target.value)}
-              placeholder="Task"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#2684FF]/40" />
+            <SmartVariableInput value={config.issueType || "Task"} onChange={(v) => updateConfig("issueType", v)} placeholder="Task" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Summary</label>
