@@ -30,12 +30,20 @@ async function getToken(credentialId, workspaceId) {
 
 function handleError(err) {
   if (err.message.startsWith("WhatsApp")) throw err;
-  if (err.response?.status === 401) throw new Error("WhatsApp: Invalid access token.");
+  if (err.response?.status === 401) throw new Error("WhatsApp: Invalid or expired access token.");
   if (err.response?.status === 400) {
     const detail = err.response?.data?.error?.message || err.message;
+    const errorCode = err.response?.data?.error?.code;
+    if (errorCode === 131030) throw new Error("WhatsApp: Recipient phone number is not registered on WhatsApp.");
+    if (errorCode === 131047) throw new Error("WhatsApp: Re-engagement message blocked — user must initiate conversation first.");
+    if (errorCode === 132000) throw new Error(`WhatsApp: Template error — ${detail}`);
     throw new Error(`WhatsApp: Bad request — ${detail}`);
   }
+  if (err.response?.status === 403) throw new Error("WhatsApp: Access denied. Check your Meta app permissions and phone number ID.");
+  if (err.response?.status === 404) throw new Error("WhatsApp: Phone number ID not found. Verify it in Meta Business dashboard.");
   if (err.response?.status === 429) throw new Error("WhatsApp: Rate limit exceeded. Retry later.");
+  if (err.response?.status === 500) throw new Error("WhatsApp: Meta server error (500). Retry later.");
+  if (err.code === "ECONNABORTED") throw new Error("WhatsApp: Request timed out.");
   throw new Error(`WhatsApp failed: ${err.response?.status || err.code} — ${err.message}`);
 }
 
@@ -45,6 +53,13 @@ async function send(phoneNumberId, token, payload) {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     timeout: 15000,
   });
+  if (response.data?.error) {
+    const { message, code } = response.data.error;
+    if (code === 131030) throw new Error("WhatsApp: Recipient phone number is not registered on WhatsApp.");
+    if (code === 131047) throw new Error("WhatsApp: Re-engagement message blocked — user must initiate conversation first.");
+    if (code === 132000) throw new Error(`WhatsApp: Template error — ${message}`);
+    throw new Error(`WhatsApp API error ${code}: ${message}`);
+  }
   return {
     messageId: response.data.messages?.[0]?.id,
     contacts: response.data.contacts,
@@ -160,10 +175,18 @@ async function opMarkRead(config, token) {
   if (!messageId) return { success: false, error: "WhatsApp markRead: 'messageId' is required.", skipped: true };
 
   const url = `https://graph.facebook.com/${API_VERSION}/${phoneNumberId}/messages`;
-  await axios.post(url,
-    { messaging_product: "whatsapp", status: "read", message_id: messageId },
-    { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 10000 },
-  );
+  try {
+    const response = await axios.post(url,
+      { messaging_product: "whatsapp", status: "read", message_id: messageId },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 10000 },
+    );
+    if (response.data?.error) {
+      const { message, code } = response.data.error;
+      throw new Error(`WhatsApp API error ${code}: ${message}`);
+    }
+  } catch (err) {
+    handleError(err);
+  }
   return { ok: true, messageId, status: "read" };
 }
 

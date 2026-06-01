@@ -35,7 +35,11 @@ function handleError(err) {
     throw new Error(`Telegram: Bad request — ${err.response?.data?.description || err.message}`);
   if (err.response?.status === 403)
     throw new Error("Telegram: Bot is not a member of this chat or was blocked.");
+  if (err.response?.status === 404)
+    throw new Error("Telegram: Bot Token is invalid or the API method was not found.");
   if (err.response?.status === 429) throw new Error("Telegram: Rate limit exceeded. Retry later.");
+  if (err.response?.status === 500) throw new Error("Telegram: Telegram server error (500). Retry later.");
+  if (err.code === "ECONNABORTED") throw new Error("Telegram: Request timed out.");
   throw new Error(`Telegram failed: ${err.response?.status || err.code} — ${err.message}`);
 }
 
@@ -58,7 +62,18 @@ async function call(token, method, payload) {
     payload,
     { headers: { "Content-Type": "application/json" }, timeout: 15000 },
   );
-  return response.data;
+  const data = response.data;
+  if (!data.ok) {
+    const code = data.error_code;
+    const desc = data.description || "Unknown error";
+    if (code === 401) throw new Error("Telegram: Invalid Bot Token.");
+    if (code === 400) throw new Error(`Telegram: Bad request — ${desc}`);
+    if (code === 403) throw new Error(`Telegram: Forbidden — ${desc}`);
+    if (code === 404) throw new Error(`Telegram: Not found — ${desc}`);
+    if (code === 429) throw new Error("Telegram: Rate limit exceeded. Retry later.");
+    throw new Error(`Telegram API error ${code}: ${desc}`);
+  }
+  return data;
 }
 
 // ── Handlers ────────────────────────────────────────────────────────────────
