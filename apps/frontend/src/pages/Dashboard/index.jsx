@@ -7,7 +7,6 @@ import {
   Power, Globe, Clock, Mail, Zap, Hash,
   Rss, MessageSquare, GitBranch, ShoppingCart, CreditCard, Database,
   Search, LayoutGrid, List, Plus, Activity,
-  User, Lock, Server, Save,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
@@ -21,6 +20,7 @@ import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
 import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import NodeLibrary from './components/NodeLibrary';
+import Settings from './components/Settings';
 
 const TRIGGER_META = {
   manual:           { label: 'Manual',       Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
@@ -198,16 +198,6 @@ export default function Dashboard() {
   const [executions, setExecutions] = useState([]);
   const [execLoading, setExecLoading] = useState(false);
 
-  // settings
-  const [systemStats, setSystemStats] = useState(null);
-  const [isTogglingPause, setIsTogglingPause] = useState(false);
-  const [profileName, setProfileName] = useState('');
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileMsg, setProfileMsg] = useState('');
-  const [pwCurrent, setPwCurrent] = useState('');
-  const [pwNew, setPwNew] = useState('');
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMsg, setPwMsg] = useState('');
 
   const openMenu = (e, id) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuAnchor(r); setOpenMenuId(openMenuId === id ? null : id); };
   const closeMenu = () => { setOpenMenuId(null); setMenuAnchor(null); };
@@ -268,46 +258,6 @@ export default function Dashboard() {
       .catch(() => {})
       .finally(() => setExecLoading(false));
   }, [user, activeTab]);
-
-  useEffect(() => {
-    if (!user || activeTab !== 'settings') return;
-    setProfileName(user.name || '');
-    api.get('/api/system/stats').then(r => setSystemStats(r.data)).catch(() => {});
-    api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
-  }, [user, activeTab]);
-
-  const handleSaveProfile = async () => {
-    if (!profileName.trim()) return;
-    setProfileSaving(true); setProfileMsg('');
-    try {
-      await api.patch('/api/auth/profile', { name: profileName.trim() });
-      const updated = { ...user, name: profileName.trim() };
-      localStorage.setItem('blinkbox_user', JSON.stringify(updated));
-      setProfileMsg('Saved!');
-    } catch { setProfileMsg('Failed to save.'); }
-    setProfileSaving(false);
-  };
-
-  const handleChangePassword = async () => {
-    if (!pwCurrent || !pwNew) return;
-    setPwSaving(true); setPwMsg('');
-    try {
-      await api.post('/api/auth/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
-      setPwMsg('Password updated!'); setPwCurrent(''); setPwNew('');
-    } catch (e) { setPwMsg(e.response?.data?.message || 'Failed.'); }
-    setPwSaving(false);
-  };
-
-  const handleToggleWorkers = async () => {
-    if (!systemStats || isTogglingPause) return;
-    setIsTogglingPause(true);
-    try {
-      const paused = systemStats.workersPaused;
-      await api.post(paused ? '/api/system/resume' : '/api/system/pause');
-      setSystemStats(s => ({ ...s, workersPaused: !paused }));
-    } catch { toast.error('Failed to toggle workers'); }
-    setIsTogglingPause(false);
-  };
 
   const handleCreate = async (data) => {
     if (isCreating) return;
@@ -447,85 +397,10 @@ export default function Dashboard() {
           </div>
         )}
         {activeTab === 'settings' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6 max-w-[680px]" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
-            <h2 className="text-[15px] font-bold text-white mb-6">Settings</h2>
-
-            {/* Profile */}
-            <section className="mb-6 bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-4 h-4 text-neutral-500" />
-                <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">Profile</h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Name</label>
-                  <input value={profileName} onChange={e => setProfileName(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Email</label>
-                  <input value={user?.email || ''} disabled
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-[13px] text-zinc-600 cursor-not-allowed" />
-                </div>
-                <div className="flex items-center gap-3 pt-1">
-                  <button onClick={handleSaveProfile} disabled={profileSaving}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all disabled:opacity-50">
-                    {profileSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
-                  </button>
-                  {profileMsg && <span className="text-[11px] text-neutral-500">{profileMsg}</span>}
-                </div>
-              </div>
-            </section>
-
-            {/* Password */}
-            <section className="mb-6 bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Lock className="w-4 h-4 text-neutral-500" />
-                <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">Password</h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Current password</label>
-                  <input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">New password</label>
-                  <input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500" />
-                </div>
-                <div className="flex items-center gap-3 pt-1">
-                  <button onClick={handleChangePassword} disabled={pwSaving || !pwCurrent || !pwNew}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all disabled:opacity-50">
-                    {pwSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />} Update
-                  </button>
-                  {pwMsg && <span className="text-[11px] text-neutral-500">{pwMsg}</span>}
-                </div>
-              </div>
-            </section>
-
-            {/* System */}
-            {systemStats && (
-              <section className="bg-[#0c0c0c] border border-[#1a1a1a] rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Server className="w-4 h-4 text-neutral-500" />
-                  <h3 className="text-[13px] font-semibold text-neutral-300 uppercase tracking-wider">System</h3>
-                </div>
-                <div className="space-y-2 text-[12px] text-neutral-500 mb-4">
-                  <div className="flex justify-between"><span>Active executions</span><span className="font-mono text-neutral-400">{systemStats.activeExecutions ?? '—'}</span></div>
-                  <div className="flex justify-between"><span>Workers</span><span className={`font-mono ${systemStats.workersPaused ? 'text-amber-400' : 'text-emerald-400'}`}>{systemStats.workersPaused ? 'Paused' : 'Running'}</span></div>
-                </div>
-                <button onClick={handleToggleWorkers} disabled={isTogglingPause}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold rounded-lg border transition-all disabled:opacity-50 ${
-                    systemStats.workersPaused
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
-                  }`}>
-                  {isTogglingPause ? <Loader2 className="w-3 h-3 animate-spin" /> : <Server className="w-3 h-3" />}
-                  {systemStats.workersPaused ? 'Resume workers' : 'Pause workers'}
-                </button>
-              </section>
-            )}
+          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[640px]">
+              <Settings user={user} />
+            </div>
           </div>
         )}
 
