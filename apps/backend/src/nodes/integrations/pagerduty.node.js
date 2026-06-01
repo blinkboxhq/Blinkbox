@@ -19,6 +19,7 @@ function handleError(err) {
 function client(token) {
   return axios.create({
     baseURL: BASE_URL,
+    timeout: 15000,
     headers: {
       Authorization: `Token token=${token}`,
       Accept: "application/vnd.pagerduty+json;version=2",

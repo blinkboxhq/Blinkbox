@@ -44,11 +44,14 @@ export default {
             members, start = 0, stop = -1, pattern = "*",
             channel, message } = config;
 
+    if (!config.credentialId) {
+      return { success: false, error: "Redis: No credential selected — pick a Redis connection URL credential.", skipped: true };
+    }
     let redis;
     try {
       redis = await getClient(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Redis: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {

@@ -20,8 +20,14 @@ export default {
   async run(config, input, context = {}) {
     const { operation = "listResponses" } = config;
 
-    if (!config.credentialId) return { success: false, error: "Typeform: credential required.", skipped: true };
-    const token = await getOAuthToken(config.credentialId, context.workspaceId, "Typeform");
+    if (!config.credentialId) return { success: false, error: "Typeform: No credential selected.", skipped: true };
+
+    let token;
+    try {
+      token = await getOAuthToken(config.credentialId, context.workspaceId, "Typeform");
+    } catch (e) {
+      return { success: false, error: `Typeform: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     if (!token) return { success: false, error: "Typeform: personal access token is required.", skipped: true };
 
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };

@@ -53,8 +53,13 @@ export default {
     } = config;
 
     if (!searchQuery) return { success: false, error: "Web Search: 'query' is required.", skipped: true };
-    // Vault: resolve + decrypt API key
-    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "Web Search");
+    if (!credentialId) return { success: false, error: "Web Search: No credential selected — pick a Tavily API key credential.", skipped: true };
+    let apiKey;
+    try {
+      apiKey = await getOAuthToken(credentialId, context.workspaceId, "Web Search");
+    } catch (e) {
+      return { success: false, error: `Web Search: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const payload = {
       api_key: apiKey,

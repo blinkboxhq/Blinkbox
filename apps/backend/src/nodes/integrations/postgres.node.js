@@ -22,6 +22,9 @@ function handleError(err) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "query", rowLimit = 1000 } = config;
+    if (!config.credentialId) {
+      return { success: false, error: "PostgreSQL: No credential selected — pick a PostgreSQL connection string credential.", skipped: true };
+    }
     let client;
 
     try {

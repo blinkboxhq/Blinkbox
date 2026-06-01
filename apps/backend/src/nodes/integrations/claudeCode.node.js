@@ -11,7 +11,15 @@ export default {
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 
-    const apiKey = await getOAuthToken(config.credentialId, context.workspaceId, "Anthropic");
+    if (!config.credentialId) {
+      return { success: false, error: "Claude Code: No credential selected — pick an Anthropic API key credential.", skipped: true };
+    }
+    let apiKey;
+    try {
+      apiKey = await getOAuthToken(config.credentialId, context.workspaceId, "Anthropic");
+    } catch (e) {
+      return { success: false, error: `Claude Code: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const userMsg = buildUserMessage(operation, config);
 
