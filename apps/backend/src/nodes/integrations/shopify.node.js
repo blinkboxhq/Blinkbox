@@ -29,8 +29,11 @@ function handleError(err) {
   if (err.message?.startsWith("Shopify")) throw err;
   const status = err.response?.status;
   const msg = err.response?.data?.errors ?? err.message;
-  if (status === 401 || status === 403) throw new Error(`Shopify: Auth failed — ${msg}. Check your access token.`);
-  if (status === 404) throw new Error(`Shopify: Resource not found — ${msg}.`);
+  if (status === 401) throw new Error(`Shopify: Authentication failed — check your Admin API access token.`);
+  if (status === 403) throw new Error(`Shopify: Permission denied — ${JSON.stringify(msg)}. Verify API scopes.`);
+  if (status === 404) throw new Error(`Shopify: Resource not found — ${JSON.stringify(msg)}.`);
+  if (status === 422) throw new Error(`Shopify: Validation error — ${JSON.stringify(msg)}.`);
+  if (status === 429) throw new Error(`Shopify: Rate limit exceeded (Leaky Bucket) — slow down requests.`);
   throw new Error(`Shopify: ${status ?? "Error"} — ${JSON.stringify(msg)}`);
 }
 

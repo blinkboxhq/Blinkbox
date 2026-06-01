@@ -160,11 +160,44 @@ async function opCreateUser(config, client) {
   return data.user;
 }
 
+async function opReplyTicket(config, client) {
+  const id = config.ticketId;
+  if (!id) return { success: false, error: "Zendesk replyTicket: 'ticketId' is required.", skipped: true };
+  const body = config.body || config.comment || "";
+  if (!body) return { success: false, error: "Zendesk replyTicket: reply 'body' is required.", skipped: true };
+
+  const update = {
+    comment: { body, public: config.public !== false },
+  };
+  if (config.status) update.status = config.status;
+
+  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: update }, {
+    auth: client.auth,
+    headers: client.headers,
+    timeout: 10000,
+  });
+  return data.ticket;
+}
+
+async function opCloseTicket(config, client) {
+  const id = config.ticketId;
+  if (!id) return { success: false, error: "Zendesk closeTicket: 'ticketId' is required.", skipped: true };
+
+  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: { status: "closed" } }, {
+    auth: client.auth,
+    headers: client.headers,
+    timeout: 10000,
+  });
+  return data.ticket;
+}
+
 const OPERATIONS = {
   listTickets: opListTickets,
   getTicket: opGetTicket,
   createTicket: opCreateTicket,
   updateTicket: opUpdateTicket,
+  replyTicket: opReplyTicket,
+  closeTicket: opCloseTicket,
   searchTickets: opSearchTickets,
   listUsers: opListUsers,
   createUser: opCreateUser,

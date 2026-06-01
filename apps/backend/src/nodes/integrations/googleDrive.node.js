@@ -31,17 +31,21 @@ function handleError(err) {
   if (err.message?.startsWith("Google Drive")) throw err;
   const status = err.response?.status;
   const msg = err.response?.data?.error?.message ?? err.message;
-  if (status === 401 || status === 403) throw new Error(`Google Drive: Auth failed — ${msg}.`);
-  if (status === 404) throw new Error(`Google Drive: File not found — ${msg}.`);
+  if (status === 401 || status === 403) throw new Error(`Google Drive: Auth failed (${status}) — ${msg}. Re-connect your Google account.`);
+  if (status === 404) throw new Error(`Google Drive: File or folder not found — ${msg}.`);
+  if (status === 400) throw new Error(`Google Drive: Bad request — ${msg}.`);
+  if (status === 403 && msg.includes("storageQuota")) throw new Error("Google Drive: Storage quota exceeded.");
+  if (status === 429) throw new Error("Google Drive: Rate limit exceeded. Reduce request frequency.");
+  if (status >= 500) throw new Error(`Google Drive: Google server error (${status}) — ${msg}. Retry later.`);
   throw new Error(`Google Drive: ${status ?? "Error"} — ${msg}`);
 }
 
 export default {
   async run(config, input, context = {}) {
     const { operation = "listFiles" } = config;
-    const token = await getToken(config.credentialId, context.workspaceId);
 
     try {
+      const token = await getToken(config.credentialId, context.workspaceId);
       switch (operation) {
         case "listFiles": {
           const q = [
@@ -62,7 +66,15 @@ export default {
             headers: h(token), timeout: 15000,
             params: { fields: "id,name,mimeType,size,modifiedTime,webViewLink,parents" },
           });
-          return res.data;
+          return {
+            id: res.data.id,
+            name: res.data.name,
+            mimeType: res.data.mimeType,
+            size: res.data.size,
+            modifiedTime: res.data.modifiedTime,
+            webViewLink: res.data.webViewLink,
+            parents: res.data.parents ?? [],
+          };
         }
 
         case "createFolder": {

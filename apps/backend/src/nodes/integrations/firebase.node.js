@@ -6,6 +6,7 @@
  * Auth: Firebase service account JSON stored in vault
  */
 
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const apps = new Map();
 
@@ -61,11 +62,15 @@ export default {
       userId, email, password, displayName, fcmToken, notification,
     } = config;
 
+    if (!config.credentialId) {
+      return { success: false, error: "Firebase: No credential selected — pick a Firebase service account credential.", skipped: true };
+    }
+
     let firebase;
     try {
       firebase = await getFirebase(config.credentialId, context.workspaceId);
     } catch (err) {
-      handleError(err);
+      return { success: false, error: `Firebase: Could not resolve credential — ${err.message}`, skipped: true };
     }
 
     const { db, auth, messaging } = firebase;

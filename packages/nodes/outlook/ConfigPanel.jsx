@@ -137,6 +137,26 @@ export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
         </div>
       )}
 
+      {op === "getEmail" && (
+        <div>
+          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Message ID</label>
+          <SmartVariableInput value={config.messageId || ""} onChange={(v) => updateConfig("messageId", v)} placeholder="{{ $json.id }}" />
+        </div>
+      )}
+
+      {op === "listEmails" && (
+        <>
+          <div>
+            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Limit (default 20)</label>
+            <SmartVariableInput value={config.limit || ""} onChange={(v) => updateConfig("limit", v)} placeholder="20" />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">OData Filter (optional)</label>
+            <SmartVariableInput value={config.filter || ""} onChange={(v) => updateConfig("filter", v)} placeholder="isRead eq false" />
+          </div>
+        </>
+      )}
+
       {op === "moveEmail" && (
         <>
           <div>
@@ -146,6 +166,22 @@ export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Destination Folder</label>
             <SmartVariableInput value={config.destinationId || ""} onChange={(v) => updateConfig("destinationId", v)} placeholder="Archive or folder ID" />
+          </div>
+        </>
+      )}
+
+      {op === "flagEmail" && (
+        <>
+          <div>
+            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Message ID</label>
+            <SmartVariableInput value={config.messageId || ""} onChange={(v) => updateConfig("messageId", v)} placeholder="{{ $json.id }}" />
+          </div>
+          <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+            <p className="text-[12px] font-semibold text-zinc-300">Flag message</p>
+            <button onClick={() => updateConfig("flagged", config.flagged !== false ? false : true)}
+              className={`w-10 h-5 rounded-full border transition-all relative ${config.flagged !== false ? "bg-[#0078D4] border-blue-400" : "bg-zinc-700 border-zinc-600"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${config.flagged !== false ? "left-5" : "left-0.5"}`} />
+            </button>
           </div>
         </>
       )}

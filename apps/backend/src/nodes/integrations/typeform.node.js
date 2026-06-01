@@ -7,9 +7,12 @@ function handleError(err) {
   if (err.message?.startsWith("Typeform")) throw err;
   const status = err.response?.status;
   const msg = err.response?.data?.description ?? err.response?.data?.message ?? err.message;
-  if (status === 401 || status === 403) throw new Error(`Typeform: Auth failed — check your personal access token.`);
+  if (status === 401) throw new Error(`Typeform: Authentication failed — check your personal access token.`);
+  if (status === 403) throw new Error(`Typeform: Permission denied — ${msg}`);
   if (status === 404) throw new Error(`Typeform: Resource not found — ${msg}`);
   if (status === 400) throw new Error(`Typeform: Bad request — ${msg}`);
+  if (status === 422) throw new Error(`Typeform: Validation error — ${msg}`);
+  if (status === 429) throw new Error(`Typeform: Rate limit exceeded — slow down requests.`);
   throw new Error(`Typeform: ${status ?? "Error"} — ${msg}`);
 }
 

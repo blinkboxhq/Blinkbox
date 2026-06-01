@@ -27,7 +27,13 @@ export default {
     const { operation = "createTask" } = config;
 
     if (!config.credentialId) return { success: false, error: "ClickUp: credential required.", skipped: true };
-    const token = await getOAuthToken(config.credentialId, context.workspaceId, "ClickUp");
+
+    let token;
+    try {
+      token = await getOAuthToken(config.credentialId, context.workspaceId, "ClickUp");
+    } catch (err) {
+      throw new Error(`ClickUp: Failed to resolve credential — ${err.message}`);
+    }
     if (!token) return { success: false, error: "ClickUp: API token is required.", skipped: true };
 
     const headers = { Authorization: token, "Content-Type": "application/json" };

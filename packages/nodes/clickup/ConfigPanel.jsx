@@ -9,6 +9,9 @@ const OPERATIONS = [
   { value: "listTasks",   label: "List Tasks" },
   { value: "addComment",  label: "Add Comment" },
   { value: "createFolder",label: "Create Folder" },
+  { value: "listSpaces",  label: "List Spaces" },
+  { value: "listFolders", label: "List Folders" },
+  { value: "listLists",   label: "List Lists" },
 ];
 
 const PRIORITIES = [
@@ -111,6 +114,27 @@ export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
             <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Q3 Projects" />
           </div>
         </>
+      )}
+
+      {op === "listSpaces" && (
+        <div>
+          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Team / Workspace ID</label>
+          <SmartVariableInput value={config.teamId || ""} onChange={(v) => updateConfig("teamId", v)} placeholder="ClickUp team ID" />
+        </div>
+      )}
+
+      {op === "listFolders" && (
+        <div>
+          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Space ID</label>
+          <SmartVariableInput value={config.spaceId || ""} onChange={(v) => updateConfig("spaceId", v)} placeholder="{{ $json.space.id }}" />
+        </div>
+      )}
+
+      {op === "listLists" && (
+        <div>
+          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Folder ID</label>
+          <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="{{ $json.folder.id }}" />
+        </div>
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}

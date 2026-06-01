@@ -19,7 +19,13 @@ export default {
     const { operation = "createTask" } = config;
 
     if (!config.credentialId) return { success: false, error: "Asana: credential required.", skipped: true };
-    const token = await getOAuthToken(config.credentialId, context.workspaceId, "Asana");
+
+    let token;
+    try {
+      token = await getOAuthToken(config.credentialId, context.workspaceId, "Asana");
+    } catch (err) {
+      throw new Error(`Asana: Failed to resolve credential — ${err.message}`);
+    }
     if (!token) return { success: false, error: "Asana: personal access token is required.", skipped: true };
 
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" };

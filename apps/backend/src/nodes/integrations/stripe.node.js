@@ -32,9 +32,12 @@ function handleError(err) {
   const code = err.response?.data?.error?.code;
   const msg = err.response?.data?.error?.message ?? err.message;
   const status = err.response?.status;
-  if (status === 401) throw new Error("Stripe: Invalid API key.");
+  if (status === 401) throw new Error("Stripe: Invalid API key — check your secret key in the credential vault.");
   if (status === 400) throw new Error(`Stripe: Bad request — ${msg}`);
+  if (status === 402) throw new Error(`Stripe: Payment required / card declined — ${msg}`);
   if (status === 404) throw new Error(`Stripe: Resource not found — ${msg}`);
+  if (status === 422) throw new Error(`Stripe: Unprocessable entity — ${msg}`);
+  if (status === 429) throw new Error(`Stripe: Rate limit exceeded — slow down requests.`);
   throw new Error(`Stripe: ${code ?? status ?? "Error"} — ${msg}`);
 }
 
@@ -102,6 +105,7 @@ export default {
         }
 
         case "createRefund": {
+          if (!config.chargeId && !config.paymentIntentId) return { success: false, error: "Stripe createRefund: 'chargeId' or 'paymentIntentId' is required.", skipped: true };
           const res = await stripeReq("POST", "/refunds", { charge: config.chargeId, payment_intent: config.paymentIntentId, amount: config.amount, reason: config.reason }, apiKey);
           return { id: res.data.id, status: res.data.status, amount: res.data.amount, currency: res.data.currency };
         }

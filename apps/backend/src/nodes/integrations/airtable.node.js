@@ -180,12 +180,12 @@ export default {
     if (!handler)
       throw new Error(`Airtable: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
+    if (!config.credentialId) return { success: false, error: "Airtable: credential required.", skipped: true };
     if (!config.baseId) return { success: false, error: "Airtable: 'baseId' is required — configure this field.", skipped: true };
     if (!config.tableName) return { success: false, error: "Airtable: 'tableName' is required — configure this field.", skipped: true };
 
-    const token = await getToken(config.credentialId, context.workspaceId);
-
     try {
+      const token = await getToken(config.credentialId, context.workspaceId);
       return await handler(config, token);
     } catch (err) {
       handleError(err);

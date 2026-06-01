@@ -1,28 +1,7 @@
-/**
- * NETLIFY NODE
- * Netlify API v1 — builds, deploys, sites, env vars.
- *
- * Operations:
- *   triggerBuild  — Trigger a new build/deploy for a site
- *   listDeploys   — List recent deploys for a site
- *   getDeploy     — Get a single deploy by ID
- *   cancelDeploy  — Cancel a running deploy
- *   lockDeploy    — Lock or unlock a deploy (pin/unpin as published)
- *   listSites     — List all sites in the account
- *   getSite       — Get info for a specific site
- *   updateEnvVar  — Set an environment variable on a site
- *
- * Auth: Netlify Personal Access Token stored in credential vault
- */
-
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API = "https://api.netlify.com/api/v1";
-
-async function getToken(credentialId, workspaceId) {
-  return getOAuthToken(credentialId, workspaceId, "Netlify");
-}
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
@@ -54,7 +33,7 @@ function deployShape(d) {
 
 export default {
   async run(config, input, context = {}) {
-    const { operation = "triggerBuild" } = config;
+    const { operation = "listSites" } = config;
 
     if (!config.credentialId) {
       return { success: false, error: "Netlify: No credential selected — pick a Netlify Personal Access Token credential.", skipped: true };
@@ -62,7 +41,7 @@ export default {
 
     let token;
     try {
-      token = await getToken(config.credentialId, context.workspaceId);
+      token = await getOAuthToken(config.credentialId, context.workspaceId, "Netlify");
     } catch (e) {
       return { success: false, error: `Netlify: Could not resolve credential — ${e.message}`, skipped: true };
     }
@@ -71,10 +50,10 @@ export default {
 
     try {
       switch (operation) {
+        case "triggerDeploy":
         case "triggerBuild": {
           const { siteId } = config;
-          if (!siteId) return { success: false, error: "Netlify triggerBuild: 'siteId' is required.", skipped: true };
-
+          if (!siteId) return { success: false, error: "Netlify triggerDeploy: 'siteId' is required.", skipped: true };
           const res = await axios.post(`${API}/sites/${siteId}/builds`, {}, { headers, timeout: 20000 });
           return { success: true, id: res.data.id, deploy_id: res.data.deploy_id, created_at: res.data.created_at };
         }
@@ -82,23 +61,17 @@ export default {
         case "listDeploys": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify listDeploys: 'siteId' is required.", skipped: true };
-
           const res = await axios.get(`${API}/sites/${siteId}/deploys`, {
             headers,
             params: { per_page: 20 },
             timeout: 15000,
           });
-          return {
-            success: true,
-            count: res.data.length,
-            deploys: res.data.map(deployShape),
-          };
+          return { success: true, count: res.data.length, deploys: res.data.map(deployShape) };
         }
 
         case "getDeploy": {
           const { deployId } = config;
           if (!deployId) return { success: false, error: "Netlify getDeploy: 'deployId' is required.", skipped: true };
-
           const res = await axios.get(`${API}/deploys/${deployId}`, { headers, timeout: 15000 });
           return { success: true, ...deployShape(res.data) };
         }
@@ -106,7 +79,6 @@ export default {
         case "cancelDeploy": {
           const { deployId } = config;
           if (!deployId) return { success: false, error: "Netlify cancelDeploy: 'deployId' is required.", skipped: true };
-
           const res = await axios.post(`${API}/deploys/${deployId}/cancel`, {}, { headers, timeout: 15000 });
           return { success: true, ...deployShape(res.data) };
         }
@@ -114,7 +86,6 @@ export default {
         case "lockDeploy": {
           const { deployId, lockAction } = config;
           if (!deployId) return { success: false, error: "Netlify lockDeploy: 'deployId' is required.", skipped: true };
-
           const action = lockAction === "unlock" ? "unlock" : "lock";
           const res = await axios.post(`${API}/deploys/${deployId}/${action}`, {}, { headers, timeout: 15000 });
           return { success: true, locked: action === "lock", ...deployShape(res.data) };
@@ -142,7 +113,6 @@ export default {
         case "getSite": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify getSite: 'siteId' is required.", skipped: true };
-
           const res = await axios.get(`${API}/sites/${siteId}`, { headers, timeout: 15000 });
           const s = res.data;
           return {
@@ -165,15 +135,18 @@ export default {
           if (value === undefined || value === null || value === "") {
             return { success: false, error: "Netlify updateEnvVar: 'value' is required.", skipped: true };
           }
-
-          const ctx = envContext || "all";
+          const ctx = envContext || "production";
           const body = [{ key, values: [{ value: String(value), context: ctx }] }];
-
-          const res = await axios.patch(`${API}/accounts/${siteId}/env`, body, { headers, timeout: 20000 });
-          if (res.status < 200 || res.status >= 300) {
-            return { success: false, error: `Netlify updateEnvVar: API returned ${res.status}` };
-          }
+          await axios.patch(`${API}/sites/${siteId}/env`, body, { headers, timeout: 20000 });
           return { success: true, key, context: ctx, updated: true };
+        }
+
+        case "deleteEnvVar": {
+          const { siteId, key } = config;
+          if (!siteId) return { success: false, error: "Netlify deleteEnvVar: 'siteId' is required.", skipped: true };
+          if (!key) return { success: false, error: "Netlify deleteEnvVar: 'key' is required.", skipped: true };
+          await axios.delete(`${API}/sites/${siteId}/env/${encodeURIComponent(key)}`, { headers, timeout: 15000 });
+          return { success: true, key, deleted: true };
         }
 
         default:

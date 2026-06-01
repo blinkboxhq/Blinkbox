@@ -25,13 +25,14 @@ async function getToken(credentialId, workspaceId) {
 function handleError(err) {
   if (err.message.startsWith("Gmail")) throw err;
   const status = err.response?.status;
-  if (status === 401 || status === 403) throw new Error("Gmail: Invalid or expired token. Re-connect your Google account.");
-  if (status === 404) throw new Error("Gmail: Message not found.");
-  if (status === 400) {
-    const msg = err.response?.data?.error?.message || "Bad request";
-    throw new Error(`Gmail: ${msg}`);
-  }
-  throw new Error(`Gmail failed: ${status || err.code} — ${err.message}`);
+  const apiMsg = err.response?.data?.error?.message || err.message;
+  if (status === 401 || status === 403) throw new Error(`Gmail: Auth failed (${status}) — ${apiMsg}. Re-connect your Google account.`);
+  if (status === 404) throw new Error(`Gmail: Message or resource not found — ${apiMsg}`);
+  if (status === 400) throw new Error(`Gmail: Bad request — ${apiMsg}`);
+  if (status === 429) throw new Error("Gmail: Rate limit exceeded. Slow down requests or enable exponential backoff.");
+  if (status === 422) throw new Error(`Gmail: Unprocessable request — ${apiMsg}`);
+  if (status >= 500) throw new Error(`Gmail: Google server error (${status}) — ${apiMsg}. Retry later.`);
+  throw new Error(`Gmail: ${status || err.code || "Error"} — ${apiMsg}`);
 }
 
 function auth(token) {
@@ -196,8 +197,8 @@ export default {
     if (!handler)
       throw new Error(`Gmail: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const token = await getToken(config.credentialId, context.workspaceId);
     try {
+      const token = await getToken(config.credentialId, context.workspaceId);
       return await handler(config, token);
     } catch (err) {
       handleError(err);

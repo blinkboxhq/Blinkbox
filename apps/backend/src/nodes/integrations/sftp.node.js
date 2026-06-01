@@ -1,13 +1,33 @@
-/**
- * SFTP NODE — Secure file transfer operations.
- * Uses the ssh2-sftp-client npm package if available, otherwise returns
- * a clear error message asking the user to install it.
- */
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
+
 export default {
   async run(config, input, context = {}) {
     const OP_ALIAS = { upload: "uploadFile", download: "downloadFile", list: "listFiles", delete: "deleteFile", mkdir: "makeDirectory" };
     const operation = OP_ALIAS[config.operation] || config.operation || "listFiles";
-    const host = config.host || input.host || "";
+
+    // Resolve credentials — credential stores "host:port:username:password" or JSON
+    let host = config.host || input.host || "";
+    let username = config.username || input.username || "";
+    let password = config.password || input.password || "";
+    let privateKey = config.privateKey;
+
+    if (config.credentialId && context.workspaceId) {
+      try {
+        const raw = await getOAuthToken(config.credentialId, context.workspaceId, "SFTP");
+        try {
+          const parsed = JSON.parse(raw);
+          host = parsed.host || host;
+          username = parsed.username || username;
+          password = parsed.password || password;
+          if (parsed.privateKey) privateKey = parsed.privateKey;
+        } catch {
+          // If not JSON, treat as "host:username:password"
+          const parts = raw.split(":");
+          if (parts.length >= 3) { host = parts[0]; username = parts[1]; password = parts.slice(2).join(":"); }
+        }
+      } catch { /* fall through to raw config */ }
+    }
+
     if (!host) return { success: false, error: "SFTP: 'host' is required.", skipped: true };
 
     let SftpClient;
@@ -17,9 +37,9 @@ export default {
     const sftp = new SftpClient();
     const connConfig = {
       host,
-      port: config.port || 22,
-      username: config.username || input.username || "",
-      ...(config.privateKey ? { privateKey: config.privateKey } : { password: config.password || input.password || "" }),
+      port: parseInt(config.port) || 22,
+      username,
+      ...(privateKey ? { privateKey } : { password }),
     };
 
     try {

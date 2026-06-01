@@ -30,18 +30,22 @@ function handleError(err) {
   if (err.message?.startsWith("Google Calendar")) throw err;
   const status = err.response?.status;
   const msg = err.response?.data?.error?.message ?? err.message;
-  if (status === 401 || status === 403) throw new Error(`Google Calendar: Auth failed — ${msg}. Re-connect your Google account.`);
+  if (status === 401 || status === 403) throw new Error(`Google Calendar: Auth failed (${status}) — ${msg}. Re-connect your Google account.`);
   if (status === 404) throw new Error(`Google Calendar: Event or calendar not found — ${msg}`);
+  if (status === 400) throw new Error(`Google Calendar: Bad request — ${msg}`);
+  if (status === 409) throw new Error(`Google Calendar: Conflict — ${msg}`);
+  if (status === 429) throw new Error("Google Calendar: Rate limit exceeded. Reduce request frequency.");
+  if (status >= 500) throw new Error(`Google Calendar: Google server error (${status}) — ${msg}. Retry later.`);
   throw new Error(`Google Calendar: ${status ?? "Error"} — ${msg}`);
 }
 
 export default {
   async run(config, input, context = {}) {
     const { operation = "listEvents", calendarId = "primary" } = config;
-    const token = await getToken(config.credentialId, context.workspaceId);
-    const h = authHeaders(token);
 
     try {
+      const token = await getToken(config.credentialId, context.workspaceId);
+      const h = authHeaders(token);
       switch (operation) {
         case "listCalendars": {
           const res = await axios.get(`${BASE}/users/me/calendarList`, { headers: h, timeout: 15000 });

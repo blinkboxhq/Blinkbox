@@ -168,11 +168,19 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Moonshot: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    if (!config.credentialId) throw new Error("Moonshot: No credential configured — add a Moonshot API key credential first.");
+
+    let apiKey;
+    try {
+      apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    } catch (err) {
+      handleError(err);
+    }
+
     try {
       return await handler(config, input, apiKey);
     } catch (err) {
-      if (err.message.startsWith("Moonshot")) throw err;
+      if (err.message?.startsWith("Moonshot")) throw err;
       handleError(err);
     }
   },

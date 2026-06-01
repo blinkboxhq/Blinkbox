@@ -28,13 +28,13 @@ async function getToken(credentialId, workspaceId) {
 function handleError(err) {
   if (err.message.startsWith("Google Sheets")) throw err;
   const status = err.response?.status;
-  if (status === 401 || status === 403) throw new Error("Google Sheets: Invalid or expired token. Re-connect your Google account.");
-  if (status === 404) throw new Error("Google Sheets: Spreadsheet not found. Check the spreadsheetId.");
-  if (status === 400) {
-    const msg = err.response?.data?.error?.message || "Bad request";
-    throw new Error(`Google Sheets: ${msg}`);
-  }
-  throw new Error(`Google Sheets failed: ${status || err.code} — ${err.message}`);
+  const apiMsg = err.response?.data?.error?.message || err.message;
+  if (status === 401 || status === 403) throw new Error(`Google Sheets: Auth failed (${status}) — ${apiMsg}. Re-connect your Google account.`);
+  if (status === 404) throw new Error(`Google Sheets: Spreadsheet not found — ${apiMsg}. Check the spreadsheetId.`);
+  if (status === 400) throw new Error(`Google Sheets: Bad request — ${apiMsg}`);
+  if (status === 429) throw new Error("Google Sheets: Rate limit exceeded (quota). Reduce request frequency or enable retry.");
+  if (status >= 500) throw new Error(`Google Sheets: Google server error (${status}) — ${apiMsg}. Retry later.`);
+  throw new Error(`Google Sheets: ${status || err.code || "Error"} — ${apiMsg}`);
 }
 
 function authHeaders(token) {
@@ -139,8 +139,8 @@ export default {
       throw new Error(`Google Sheets: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
     if (!config.spreadsheetId) return { success: false, error: "Google Sheets: 'spreadsheetId' is required.", skipped: true };
 
-    const token = await getToken(config.credentialId, context.workspaceId);
     try {
+      const token = await getToken(config.credentialId, context.workspaceId);
       return await handler(config, token);
     } catch (err) {
       handleError(err);

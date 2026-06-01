@@ -18,19 +18,23 @@ export default {
     const { operation = "createCard" } = config;
 
     if (!config.credentialId) return { success: false, error: "Trello: credential required.", skipped: true };
-    const raw = await getOAuthToken(config.credentialId, context.workspaceId, "Trello");
 
     let apiKey, token;
-    if (raw.includes(":")) {
-      [apiKey, token] = raw.split(":");
-    } else {
-      try {
-        const parsed = JSON.parse(raw);
-        apiKey = parsed.apiKey ?? parsed.key;
-        token = parsed.token;
-      } catch {
-        return { success: false, error: "Trello: credential must be 'apiKey:token' or JSON {apiKey, token}.", skipped: true };
+    try {
+      const raw = await getOAuthToken(config.credentialId, context.workspaceId, "Trello");
+      if (raw.includes(":")) {
+        [apiKey, token] = raw.split(":");
+      } else {
+        try {
+          const parsed = JSON.parse(raw);
+          apiKey = parsed.apiKey ?? parsed.key;
+          token = parsed.token;
+        } catch {
+          return { success: false, error: "Trello: credential must be 'apiKey:token' or JSON {apiKey, token}.", skipped: true };
+        }
       }
+    } catch (err) {
+      throw new Error(`Trello: Failed to resolve credential — ${err.message}`);
     }
 
     if (!apiKey || !token) return { success: false, error: "Trello: both apiKey and token are required.", skipped: true };

@@ -79,9 +79,12 @@ export default {
         provider: "xai",
       };
     } catch (err) {
+      if (err.message?.startsWith("xAI")) throw err;
       if (err.response?.status === 401) throw new Error("xAI: Invalid API key.");
+      if (err.response?.status === 403) throw new Error("xAI: Access forbidden — check your API key permissions.");
       if (err.response?.status === 429) throw new Error("xAI: Rate limit exceeded. Retry later.");
-      throw new Error(`xAI failed: ${err.response?.status || err.code} — ${err.message}`);
+      if (err.response?.status === 400) throw new Error(`xAI: Bad request — ${err.response?.data?.error?.message || err.message}`);
+      throw new Error(`xAI failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
     }
   },
 };

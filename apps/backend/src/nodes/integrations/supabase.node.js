@@ -1,10 +1,4 @@
-/**
- * SUPABASE NODE
- * Operations: select, insert, update, delete, upsert, rpc, getUser
- * Auth: Supabase URL + service_role key stored in vault
- * Credential format (JSON): { "url": "https://xxx.supabase.co", "key": "eyJ..." }
- */
-
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getClient(credentialId, workspaceId) {
   const { createClient } = await import("@supabase/supabase-js");
@@ -28,11 +22,35 @@ function handleError(err) {
   throw new Error(`Supabase: ${msg}`);
 }
 
+function applyFilter(q, column, operator, value) {
+  if (!column || value === undefined || value === "") return q;
+  const op = operator || "eq";
+  switch (op) {
+    case "eq":          return q.eq(column, value);
+    case "neq":         return q.neq(column, value);
+    case "gt":          return q.gt(column, value);
+    case "gte":         return q.gte(column, value);
+    case "lt":          return q.lt(column, value);
+    case "lte":         return q.lte(column, value);
+    case "like":        return q.like(column, value);
+    case "ilike":       return q.ilike(column, value);
+    case "is":          return q.is(column, value === "null" ? null : value);
+    case "in":          { let arr = value; if (typeof arr === "string") { try { arr = JSON.parse(arr); } catch { arr = [value]; } } return q.in(column, arr); }
+    case "contains":    return q.contains(column, value);
+    case "containedBy": return q.containedBy(column, value);
+    default:            return q.eq(column, value);
+  }
+}
+
 export default {
   async run(config, input, context = {}) {
-    const { operation = "select", table, column = "*", filter, filterValue,
-            data, conflictColumns, rpcFunction, rpcParams, limit = 100,
-            orderBy, orderAsc = true } = config;
+    const {
+      operation = "select", table, column = "*",
+      filter, filterValue, filterOperator,
+      filterColumn2, filterValue2, filterOperator2,
+      data, conflictColumns, rpcFunction, rpcParams, limit = 100,
+      orderBy, orderAsc = true,
+    } = config;
 
     let supabase;
     try {
@@ -60,7 +78,8 @@ export default {
 
       if (operation === "select") {
         let q = supabase.from(table).select(column || "*").limit(Number(limit));
-        if (filter && filterValue !== undefined) q = q.eq(filter, filterValue);
+        q = applyFilter(q, filter, filterOperator, filterValue);
+        q = applyFilter(q, filterColumn2, filterOperator2, filterValue2);
         if (orderBy) q = q.order(orderBy, { ascending: orderAsc !== false });
         const { data: rows, error } = await q;
         if (error) throw error;
@@ -79,7 +98,9 @@ export default {
         if (!filter || filterValue === undefined) return { success: false, error: "Supabase update: 'filter' (column) and 'filterValue' are required — configure this field.", skipped: true };
         let payload = data;
         if (typeof payload === "string") { try { payload = JSON.parse(payload); } catch {} }
-        const { data: result, error } = await supabase.from(table).update(payload).eq(filter, filterValue).select();
+        let uq = supabase.from(table).update(payload);
+        uq = applyFilter(uq, filter, filterOperator, filterValue);
+        const { data: result, error } = await uq.select();
         if (error) throw error;
         return { updated: result, count: result?.length ?? 0, table };
       }
@@ -96,7 +117,9 @@ export default {
 
       if (operation === "delete") {
         if (!filter || filterValue === undefined) return { success: false, error: "Supabase delete: 'filter' (column) and 'filterValue' are required — configure this field.", skipped: true };
-        const { data: result, error } = await supabase.from(table).delete().eq(filter, filterValue).select();
+        let dq = supabase.from(table).delete();
+        dq = applyFilter(dq, filter, filterOperator, filterValue);
+        const { data: result, error } = await dq.select();
         if (error) throw error;
         return { deleted: result, count: result?.length ?? 0, table };
       }

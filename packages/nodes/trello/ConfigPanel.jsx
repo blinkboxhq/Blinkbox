@@ -10,6 +10,8 @@ const OPERATIONS = [
   { value: "addLabel",     label: "Add Label" },
   { value: "getCard",      label: "Get Card" },
   { value: "listCards",    label: "List Cards in List" },
+  { value: "listBoards",   label: "List My Boards" },
+  { value: "listLists",    label: "List Lists in Board" },
 ];
 
 export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
@@ -45,6 +47,13 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">List ID</label>
           <SmartVariableInput nodeId={nodeId} value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Trello list ID" />
+        </div>
+      )}
+
+      {op === "listLists" && (
+        <div>
+          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Board ID</label>
+          <SmartVariableInput nodeId={nodeId} value={config.boardId || ""} onChange={(v) => updateConfig("boardId", v)} placeholder="{{ $json.board.id }}" />
         </div>
       )}
 

@@ -78,9 +78,12 @@ export default {
         provider: "deepseek",
       };
     } catch (err) {
+      if (err.message?.startsWith("DeepSeek")) throw err;
       if (err.response?.status === 401) throw new Error("DeepSeek: Invalid API key.");
+      if (err.response?.status === 403) throw new Error("DeepSeek: Access forbidden — check your API key permissions.");
       if (err.response?.status === 429) throw new Error("DeepSeek: Rate limit exceeded. Retry later.");
-      throw new Error(`DeepSeek failed: ${err.response?.status || err.code} — ${err.message}`);
+      if (err.response?.status === 400) throw new Error(`DeepSeek: Bad request — ${err.response?.data?.error?.message || err.message}`);
+      throw new Error(`DeepSeek failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
     }
   },
 };

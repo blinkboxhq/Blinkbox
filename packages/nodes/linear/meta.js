@@ -23,6 +23,8 @@ export default {
       { value: "3", label: "Medium" },
       { value: "4", label: "Low" },
     ], show: { operation: ["createIssue","updateIssue"] } },
+    { name: "stateId", label: "State ID (optional)", type: "string", smart: true, placeholder: "Linear state UUID", show: { operation: ["createIssue","updateIssue"] } },
+    { name: "assigneeId", label: "Assignee ID (optional)", type: "string", smart: true, placeholder: "Linear user UUID", show: { operation: ["createIssue","updateIssue"] } },
     { name: "body", label: "Comment", type: "string", smart: true, multiline: true, show: { operation: "createComment" } },
     { name: "limit", label: "Limit", type: "number", default: 25, show: { operation: "listIssues" } },
   ],

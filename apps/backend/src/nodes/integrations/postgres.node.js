@@ -1,24 +1,4 @@
-/**
- * POSTGRES NODE
- * Execute raw SQL queries against a PostgreSQL database.
- *
- * Operations:
- *   query     — Run any SQL query, return rows (SELECT)
- *   execute   — Run INSERT/UPDATE/DELETE, return affected rows count
- *   batch     — Execute multiple statements in a transaction
- *
- * Auth: Connection string stored in vault (postgresql://user:pass@host:5432/db)
- *       OR individual fields: host, port, database, user, password
- *
- * Config:
- *   credentialId  — Vault ref holding the connection string
- *   sql           — SQL to execute (supports $1, $2 parameterized queries)
- *   params        — Array of parameter values for $1, $2, etc. (optional)
- *   operation     — "query" (default) | "execute" | "batch"
- *   statements    — Array of SQL strings for "batch" mode
- *   rowLimit      — Max rows returned (default: 1000)
- */
-
+import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 async function getClient(credentialId, workspaceId) {
   const { default: pg } = await import("pg");
@@ -52,11 +32,16 @@ export default {
         if (!statements.length) return { success: false, error: "PostgreSQL batch: 'statements' array is required.", skipped: true };
         await client.query("BEGIN");
         const results = [];
-        for (const stmt of statements) {
-          const res = await client.query(typeof stmt === "string" ? stmt : stmt.sql, stmt.params ?? []);
-          results.push({ rowCount: res.rowCount, command: res.command });
+        try {
+          for (const stmt of statements) {
+            const res = await client.query(typeof stmt === "string" ? stmt : stmt.sql, stmt.params ?? []);
+            results.push({ rowCount: res.rowCount, command: res.command });
+          }
+          await client.query("COMMIT");
+        } catch (txErr) {
+          await client.query("ROLLBACK").catch(() => {});
+          throw txErr;
         }
-        await client.query("COMMIT");
         return { results, statementCount: results.length };
       }
 

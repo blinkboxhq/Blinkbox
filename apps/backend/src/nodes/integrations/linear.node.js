@@ -44,7 +44,15 @@ function handleError(err) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "listIssues" } = config;
-    const apiKey = await getKey(config.credentialId, context.workspaceId);
+
+    if (!config.credentialId) return { success: false, error: "Linear: credential required.", skipped: true };
+
+    let apiKey;
+    try {
+      apiKey = await getKey(config.credentialId, context.workspaceId);
+    } catch (err) {
+      throw new Error(`Linear: Failed to resolve credential — ${err.message}`);
+    }
 
     try {
       switch (operation) {

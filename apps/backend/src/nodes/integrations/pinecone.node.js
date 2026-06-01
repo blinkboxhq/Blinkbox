@@ -1,13 +1,14 @@
-/**
- * PINECONE NODE
- * Operations: upsert, query, delete, fetchById
- */
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
+import { assertSafeUrl } from "../../utils/ssrf.js";
 
 async function getApiKey(credentialId, workspaceId) {
-  const __accessToken = await getOAuthToken(credentialId, workspaceId, "Pinecone");
-  return __accessToken;
+  return getOAuthToken(credentialId, workspaceId, "Pinecone");
+}
+
+function assertIndexHost(host) {
+  if (!host) throw new Error("Pinecone: 'indexHost' is required.");
+  assertSafeUrl(host);
 }
 
 function handleError(err) {
@@ -27,7 +28,7 @@ async function opUpsert(config, apiKey) {
   if (!Array.isArray(vectors) || vectors.length === 0) throw new Error("Pinecone upsert: 'vectors' must be a non-empty array.");
 
   const host = config.indexHost;
-  if (!host) return { success: false, error: "Pinecone: 'indexHost' is required.", skipped: true };
+  assertIndexHost(host);
 
   const body = { vectors };
   if (config.namespace) body.namespace = config.namespace;
