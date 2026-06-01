@@ -36,6 +36,33 @@ export default {
         const { data } = await axios.put(`${BASE}/issues/${id}/`, { status: "resolved" }, { headers, timeout: 10000 });
         return { id, status: data.status, resolved: true };
       }
+      case "ignoreIssue": {
+        const id = config.issueId || input.issueId;
+        if (!id) return { success: false, error: "Sentry ignoreIssue: 'issueId' required.", skipped: true };
+        const { data } = await axios.put(`${BASE}/issues/${id}/`, { status: "ignored" }, { headers, timeout: 10000 });
+        return { id, status: data.status, ignored: true };
+      }
+      case "assignIssue": {
+        const id = config.issueId || input.issueId;
+        const assignee = config.assignee || input.assignee;
+        if (!id) return { success: false, error: "Sentry assignIssue: 'issueId' required.", skipped: true };
+        if (!assignee) return { success: false, error: "Sentry assignIssue: 'assignee' (username or email) required.", skipped: true };
+        const { data } = await axios.put(`${BASE}/issues/${id}/`, { assignedTo: assignee }, { headers, timeout: 10000 });
+        return { id, assignedTo: data.assignedTo };
+      }
+      case "listEvents": {
+        const id = config.issueId || input.issueId;
+        if (!id) return { success: false, error: "Sentry listEvents: 'issueId' required.", skipped: true };
+        const { data } = await axios.get(`${BASE}/issues/${id}/events/?limit=${config.limit || 25}`, { headers, timeout: 15000 });
+        return { events: data, count: data.length };
+      }
+      case "createProject": {
+        if (!org) return { success: false, error: "Sentry createProject: 'organization' slug required.", skipped: true };
+        const team = config.team || input.team;
+        if (!team) return { success: false, error: "Sentry createProject: 'team' slug required.", skipped: true };
+        const { data } = await axios.post(`${BASE}/teams/${org}/${team}/projects/`, { name: config.name || "New Project", platform: config.platform || "javascript" }, { headers, timeout: 10000 });
+        return { id: data.id, slug: data.slug, name: data.name, platform: data.platform };
+      }
       case "listProjects": {
         if (!org) return { success: false, error: "Sentry listProjects: 'organization' slug required.", skipped: true };
         const { data } = await axios.get(`${BASE}/organizations/${org}/projects/`, { headers, timeout: 10000 });
