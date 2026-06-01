@@ -44,14 +44,14 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
       {["createCard","moveCard","listCards"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">List ID</label>
-          <SmartVariableInput value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Trello list ID" />
+          <SmartVariableInput nodeId={nodeId} value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Trello list ID" />
         </div>
       )}
 
       {["updateCard","moveCard","archiveCard","addComment","addLabel","getCard"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Card ID</label>
-          <SmartVariableInput value={config.cardId || ""} onChange={(v) => updateConfig("cardId", v)} placeholder="{{ $json.card.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.cardId || ""} onChange={(v) => updateConfig("cardId", v)} placeholder="{{ $json.card.id }}" />
         </div>
       )}
 
@@ -59,15 +59,15 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Card Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="New task: {{ $json.title }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="New task: {{ $json.title }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Description (optional)</label>
-            <SmartVariableInput value={config.desc || ""} onChange={(v) => updateConfig("desc", v)} placeholder="Card description..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.desc || ""} onChange={(v) => updateConfig("desc", v)} placeholder="Card description..." multiline />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Due Date (optional)</label>
-            <SmartVariableInput value={config.due || ""} onChange={(v) => updateConfig("due", v)} placeholder="{{ $json.dueDate }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.due || ""} onChange={(v) => updateConfig("due", v)} placeholder="{{ $json.dueDate }}" />
           </div>
         </>
       )}
@@ -75,7 +75,7 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
       {op === "addComment" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Comment Text</label>
-          <SmartVariableInput value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="Comment added via Blinkbox: {{ $json.note }}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="Comment added via Blinkbox: {{ $json.note }}" multiline />
         </div>
       )}
 
@@ -95,7 +95,7 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Label Name (optional)</label>
-            <SmartVariableInput value={config.labelName || ""} onChange={(v) => updateConfig("labelName", v)} placeholder="Priority" />
+            <SmartVariableInput nodeId={nodeId} value={config.labelName || ""} onChange={(v) => updateConfig("labelName", v)} placeholder="Priority" />
           </div>
         </>
       )}

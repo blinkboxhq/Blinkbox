@@ -10,6 +10,8 @@ const OPERATIONS = [
   { id: "rpc",     label: "RPC" },
 ];
 
+const FILTER_OPS = ["eq","neq","gt","gte","lt","lte","like","ilike","is","in","contains","containedBy"];
+
 export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes, edges }) {
   const op = config.operation || "select";
   const needsTable    = op !== "rpc";
@@ -26,13 +28,11 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         <p className="text-[10px] text-zinc-500 mt-0.5">Postgres + Auth + Storage — hosted</p>
       </div>
 
-      {/* Credential */}
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential</label>
         <CredentialPicker value={config.credentialId || ""} onChange={v => updateConfig("credentialId", v)} type="Supabase" />
       </div>
 
-      {/* Operation */}
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
         <div className="flex gap-1.5 flex-wrap">
@@ -47,7 +47,6 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       </div>
 
-      {/* Table */}
       {needsTable && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Table</label>
@@ -56,7 +55,6 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       )}
 
-      {/* Select columns */}
       {isSelect && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Columns</label>
@@ -65,23 +63,38 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       )}
 
-      {/* Filter (eq) */}
       {needsFilter && (
-        <div className="grid grid-cols-2 gap-2">
+        <>
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter Column</label>
-            <SmartVariableInput value={config.filter || ""} onChange={v => updateConfig("filter", v)}
-              placeholder="e.g. id" nodeId={nodeId} nodes={nodes} edges={edges} />
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter 1</label>
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
+              <SmartVariableInput value={config.filter || ""} onChange={v => updateConfig("filter", v)}
+                placeholder="column" nodeId={nodeId} nodes={nodes} edges={edges} />
+              <select value={config.filterOperator || "eq"} onChange={e => updateConfig("filterOperator", e.target.value)}
+                className="bg-[#0a0a0a] border border-[#222] rounded-lg px-2 py-2 text-[10px] text-zinc-300 font-mono focus:outline-none focus:border-emerald-500/40 shrink-0">
+                {FILTER_OPS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <SmartVariableInput value={config.filterValue || ""} onChange={v => updateConfig("filterValue", v)}
+                placeholder="value" nodeId={nodeId} nodes={nodes} edges={edges} />
+            </div>
           </div>
+
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter Value</label>
-            <SmartVariableInput value={config.filterValue || ""} onChange={v => updateConfig("filterValue", v)}
-              placeholder="e.g. {{trigger.id}}" nodeId={nodeId} nodes={nodes} edges={edges} />
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter 2 (optional)</label>
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
+              <SmartVariableInput value={config.filterColumn2 || ""} onChange={v => updateConfig("filterColumn2", v)}
+                placeholder="column" nodeId={nodeId} nodes={nodes} edges={edges} />
+              <select value={config.filterOperator2 || "eq"} onChange={e => updateConfig("filterOperator2", e.target.value)}
+                className="bg-[#0a0a0a] border border-[#222] rounded-lg px-2 py-2 text-[10px] text-zinc-300 font-mono focus:outline-none focus:border-emerald-500/40 shrink-0">
+                {FILTER_OPS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <SmartVariableInput value={config.filterValue2 || ""} onChange={v => updateConfig("filterValue2", v)}
+                placeholder="value" nodeId={nodeId} nodes={nodes} edges={edges} />
+            </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Order + limit for select */}
       {isSelect && (
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col gap-2">
@@ -98,7 +111,6 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       )}
 
-      {/* Data payload */}
       {needsData && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Data (JSON)</label>
@@ -108,7 +120,6 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       )}
 
-      {/* Upsert conflict columns */}
       {needsConflict && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">On Conflict (column)</label>
@@ -117,7 +128,6 @@ export default function SupabaseNode({ config = {}, updateConfig, nodeId, nodes,
         </div>
       )}
 
-      {/* RPC */}
       {isRpc && (
         <>
           <div className="flex flex-col gap-2">

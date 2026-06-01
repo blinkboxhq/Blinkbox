@@ -44,7 +44,7 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
       {["updateTask","completeTask","getTask","addComment"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Task GID</label>
-          <SmartVariableInput value={config.taskGid || ""} onChange={(v) => updateConfig("taskGid", v)} placeholder="{{ $json.gid }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.taskGid || ""} onChange={(v) => updateConfig("taskGid", v)} placeholder="{{ $json.gid }}" />
         </div>
       )}
 
@@ -52,25 +52,25 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Task Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Follow up with {{ $json.contact }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Follow up with {{ $json.contact }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Notes (optional)</label>
-            <SmartVariableInput value={config.notes || ""} onChange={(v) => updateConfig("notes", v)} placeholder="Additional context..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.notes || ""} onChange={(v) => updateConfig("notes", v)} placeholder="Additional context..." multiline />
           </div>
           {op === "createTask" && (
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Project GID</label>
-              <SmartVariableInput value={config.projectGid || ""} onChange={(v) => updateConfig("projectGid", v)} placeholder="Project GID from Asana URL" />
+              <SmartVariableInput nodeId={nodeId} value={config.projectGid || ""} onChange={(v) => updateConfig("projectGid", v)} placeholder="Project GID from Asana URL" />
             </div>
           )}
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Due Date (YYYY-MM-DD)</label>
-            <SmartVariableInput value={config.dueOn || ""} onChange={(v) => updateConfig("dueOn", v)} placeholder="{{ $json.deadline }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.dueOn || ""} onChange={(v) => updateConfig("dueOn", v)} placeholder="{{ $json.deadline }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Assignee (GID or email)</label>
-            <SmartVariableInput value={config.assignee || ""} onChange={(v) => updateConfig("assignee", v)} placeholder="me or {{ $json.assigneeEmail }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.assignee || ""} onChange={(v) => updateConfig("assignee", v)} placeholder="me or {{ $json.assigneeEmail }}" />
           </div>
         </>
       )}
@@ -78,14 +78,14 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
       {op === "listTasks" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Project GID</label>
-          <SmartVariableInput value={config.projectGid || ""} onChange={(v) => updateConfig("projectGid", v)} placeholder="Project GID" />
+          <SmartVariableInput nodeId={nodeId} value={config.projectGid || ""} onChange={(v) => updateConfig("projectGid", v)} placeholder="Project GID" />
         </div>
       )}
 
       {op === "addComment" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Comment Text</label>
-          <SmartVariableInput value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="{{ $json.note }}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="{{ $json.note }}" multiline />
         </div>
       )}
 
@@ -93,11 +93,11 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Project Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Q3 Campaign" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Q3 Campaign" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Team GID</label>
-            <SmartVariableInput value={config.teamGid || ""} onChange={(v) => updateConfig("teamGid", v)} placeholder="Team GID" />
+            <SmartVariableInput nodeId={nodeId} value={config.teamGid || ""} onChange={(v) => updateConfig("teamGid", v)} placeholder="Team GID" />
           </div>
         </>
       )}
