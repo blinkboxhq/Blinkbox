@@ -46,7 +46,7 @@ export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
       {["resolveIncident","acknowledgeIncident","getIncident","addNote"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Incident ID</label>
-          <SmartVariableInput value={config.incidentId || ""} onChange={(v) => updateConfig("incidentId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.incidentId || ""} onChange={(v) => updateConfig("incidentId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 
@@ -54,11 +54,11 @@ export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Production DB is down — {{ $json.service }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Production DB is down — {{ $json.service }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Service ID</label>
-            <SmartVariableInput value={config.serviceId || ""} onChange={(v) => updateConfig("serviceId", v)} placeholder="PagerDuty service ID" />
+            <SmartVariableInput nodeId={nodeId} value={config.serviceId || ""} onChange={(v) => updateConfig("serviceId", v)} placeholder="PagerDuty service ID" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Urgency</label>
@@ -84,7 +84,7 @@ export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Body (optional)</label>
-            <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Error: {{ $json.error }}\nServer: {{ $json.host }}" multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Error: {{ $json.error }}\nServer: {{ $json.host }}" multiline />
           </div>
         </>
       )}
@@ -92,7 +92,7 @@ export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
       {op === "addNote" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Note</label>
-          <SmartVariableInput value={config.content || ""} onChange={(v) => updateConfig("content", v)} placeholder="Root cause: {{ $json.cause }}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.content || ""} onChange={(v) => updateConfig("content", v)} placeholder="Root cause: {{ $json.cause }}" multiline />
         </div>
       )}
 
@@ -111,7 +111,7 @@ export default function PagerDutyNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Limit</label>
-            <SmartVariableInput value={config.limit || "25"} onChange={(v) => updateConfig("limit", v)} placeholder="25" />
+            <SmartVariableInput nodeId={nodeId} value={config.limit || "25"} onChange={(v) => updateConfig("limit", v)} placeholder="25" />
           </div>
         </>
       )}

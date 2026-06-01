@@ -107,11 +107,12 @@ export default function MongoDBNode({ config = {}, updateConfig, nodeId, nodes, 
               placeholder='{"$set": {"status": "active"}}' multiline rows={3}
               nodeId={nodeId} nodes={nodes} edges={edges} />
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="upsert" checked={config.upsert === true}
-              onChange={e => updateConfig("upsert", e.target.checked)}
-              className="rounded border-zinc-700" />
-            <label htmlFor="upsert" className="text-xs text-zinc-400">Upsert (insert if not found)</label>
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Upsert (insert if not found)</label>
+            <button onClick={() => updateConfig("upsert", !config.upsert)}
+              className={`relative w-10 h-5 rounded-full transition-all shrink-0 ${config.upsert ? "bg-green-500" : "bg-zinc-700"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${config.upsert ? "left-5" : "left-0.5"}`} />
+            </button>
           </div>
         </>
       )}

@@ -46,13 +46,13 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Store URL</label>
-        <SmartVariableInput value={config.storeUrl || ""} onChange={(v) => updateConfig("storeUrl", v)} placeholder="https://mystore.com" />
+        <SmartVariableInput nodeId={nodeId} value={config.storeUrl || ""} onChange={(v) => updateConfig("storeUrl", v)} placeholder="https://mystore.com" />
       </div>
 
       {["getOrder","updateOrder"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Order ID</label>
-          <SmartVariableInput value={config.orderId || ""} onChange={(v) => updateConfig("orderId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.orderId || ""} onChange={(v) => updateConfig("orderId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 
@@ -85,7 +85,7 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Limit</label>
-            <SmartVariableInput value={config.limit || "20"} onChange={(v) => updateConfig("limit", v)} placeholder="20" />
+            <SmartVariableInput nodeId={nodeId} value={config.limit || "20"} onChange={(v) => updateConfig("limit", v)} placeholder="20" />
           </div>
         </>
       )}
@@ -95,24 +95,24 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
           {op === "updateProduct" && (
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Product ID</label>
-              <SmartVariableInput value={config.productId || ""} onChange={(v) => updateConfig("productId", v)} placeholder="{{ $json.id }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.productId || ""} onChange={(v) => updateConfig("productId", v)} placeholder="{{ $json.id }}" />
             </div>
           )}
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Product Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Regular Price</label>
-            <SmartVariableInput value={config.regularPrice || ""} onChange={(v) => updateConfig("regularPrice", v)} placeholder="49.99" />
+            <SmartVariableInput nodeId={nodeId} value={config.regularPrice || ""} onChange={(v) => updateConfig("regularPrice", v)} placeholder="49.99" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Description</label>
-            <SmartVariableInput value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="Product description..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="Product description..." multiline />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Stock Quantity</label>
-            <SmartVariableInput value={config.stockQuantity || ""} onChange={(v) => updateConfig("stockQuantity", v)} placeholder="100" />
+            <SmartVariableInput nodeId={nodeId} value={config.stockQuantity || ""} onChange={(v) => updateConfig("stockQuantity", v)} placeholder="100" />
           </div>
         </>
       )}
@@ -121,7 +121,7 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Coupon Code</label>
-            <SmartVariableInput value={config.code || ""} onChange={(v) => updateConfig("code", v)} placeholder="SUMMER20" />
+            <SmartVariableInput nodeId={nodeId} value={config.code || ""} onChange={(v) => updateConfig("code", v)} placeholder="SUMMER20" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Discount Type</label>
@@ -136,11 +136,11 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Amount</label>
-            <SmartVariableInput value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="20" />
+            <SmartVariableInput nodeId={nodeId} value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="20" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Expiry Date (YYYY-MM-DD)</label>
-            <SmartVariableInput value={config.dateExpires || ""} onChange={(v) => updateConfig("dateExpires", v)} placeholder="2024-12-31" />
+            <SmartVariableInput nodeId={nodeId} value={config.dateExpires || ""} onChange={(v) => updateConfig("dateExpires", v)} placeholder="2024-12-31" />
           </div>
         </>
       )}

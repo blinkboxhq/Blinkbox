@@ -44,14 +44,14 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
       {!["listCampaigns","createCampaign","listLists"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Audience (List) ID</label>
-          <SmartVariableInput value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Mailchimp audience ID" />
+          <SmartVariableInput nodeId={nodeId} value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Mailchimp audience ID" />
         </div>
       )}
 
       {(op === "addSubscriber" || op === "getSubscriber" || op === "removeSubscriber" || op === "addTag") && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Email Address</label>
-          <SmartVariableInput value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
         </div>
       )}
 
@@ -60,11 +60,11 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">First Name</label>
-              <SmartVariableInput value={config.firstName || ""} onChange={(v) => updateConfig("firstName", v)} placeholder="{{ $json.firstName }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.firstName || ""} onChange={(v) => updateConfig("firstName", v)} placeholder="{{ $json.firstName }}" />
             </div>
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Last Name</label>
-              <SmartVariableInput value={config.lastName || ""} onChange={(v) => updateConfig("lastName", v)} placeholder="{{ $json.lastName }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.lastName || ""} onChange={(v) => updateConfig("lastName", v)} placeholder="{{ $json.lastName }}" />
             </div>
           </div>
           <div>
@@ -80,7 +80,7 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Tags (comma-sep, optional)</label>
-            <SmartVariableInput value={config.tags || ""} onChange={(v) => updateConfig("tags", v)} placeholder="vip,new-user" />
+            <SmartVariableInput nodeId={nodeId} value={config.tags || ""} onChange={(v) => updateConfig("tags", v)} placeholder="vip,new-user" />
           </div>
           <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <p className="text-[12px] font-semibold text-zinc-300">Update if exists</p>
@@ -95,14 +95,14 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
       {op === "addTag" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Tag Name</label>
-          <SmartVariableInput value={config.tagName || ""} onChange={(v) => updateConfig("tagName", v)} placeholder="premium-user" />
+          <SmartVariableInput nodeId={nodeId} value={config.tagName || ""} onChange={(v) => updateConfig("tagName", v)} placeholder="premium-user" />
         </div>
       )}
 
       {op === "sendCampaign" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Campaign ID</label>
-          <SmartVariableInput value={config.campaignId || ""} onChange={(v) => updateConfig("campaignId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.campaignId || ""} onChange={(v) => updateConfig("campaignId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 

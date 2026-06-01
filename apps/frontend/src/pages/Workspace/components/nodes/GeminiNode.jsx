@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Image, FileText, PenLine, ChevronDown,
+  MessageSquare, Image, FileText, PenLine,
 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
@@ -50,19 +50,26 @@ function Field({ label, children }) {
 
 function Select({ value, onChange, options }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 pr-8 text-xs text-white font-semibold focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer appearance-none"
-      >
-        {options.map((o) => (
-          <option key={typeof o === 'string' ? o : o.value} value={typeof o === 'string' ? o : o.value}>
-            {typeof o === 'string' ? o : o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const val = typeof o === 'string' ? o : o.value;
+        const lbl = typeof o === 'string' ? o : o.label;
+        const active = value === val;
+        return (
+          <button
+            key={val}
+            type="button"
+            onClick={() => onChange(val)}
+            className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150 ${
+              active
+                ? 'bg-blue-500/10 border-blue-500/30 text-blue-300'
+                : 'bg-[#0d0d0d] border-[#222] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+            }`}
+          >
+            {lbl}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -103,7 +110,7 @@ function OperationPicker({ value, onChange }) {
 
 // ── Per-operation config fields ────────────────────────────────────────────
 
-function MessageFields({ config, updateConfig }) {
+function MessageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
@@ -117,29 +124,29 @@ function MessageFields({ config, updateConfig }) {
         />
       </Field>
       <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Classify the following items by category..." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Classify the following items by category..." multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function AnalyzeImageFields({ config, updateConfig }) {
+function AnalyzeImageFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
         <Select value={config.model || 'gemini-2.0-flash'} onChange={(v) => updateConfig('model', v)} options={MODELS_CHAT} />
       </Field>
       <Field label="Image URL">
-        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" nodeId={nodeId} />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function AnalyzeDocumentFields({ config, updateConfig }) {
+function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
   return (
     <>
       <Field label="Model">
@@ -153,19 +160,19 @@ function AnalyzeDocumentFields({ config, updateConfig }) {
         />
       </Field>
       <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline nodeId={nodeId} />
       </Field>
       <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline />
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline nodeId={nodeId} />
       </Field>
     </>
   );
 }
 
-function GeneratePromptFields({ config, updateConfig }) {
+function GeneratePromptFields({ config, updateConfig, nodeId }) {
   return (
     <Field label="Task description">
-      <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Extract invoice line items as JSON..." multiline />
+      <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Extract invoice line items as JSON..." multiline nodeId={nodeId} />
     </Field>
   );
 }
@@ -187,7 +194,7 @@ export default function GeminiNode({ config = {}, updateConfig, nodeId }) {
     <div className="flex flex-col gap-5 w-full">
       <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
       <div className="border-t border-[#222]" />
-      <OpFields config={config} updateConfig={updateConfig} />
+      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

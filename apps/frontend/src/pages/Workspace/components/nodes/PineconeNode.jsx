@@ -1,5 +1,6 @@
 import { Cpu } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 const OPERATIONS = [
   { id: "upsert", label: "Upsert Vectors" },
@@ -8,7 +9,7 @@ const OPERATIONS = [
   { id: "fetchById", label: "Fetch by ID" },
 ];
 
-export default function PineconeNode({ config = {}, updateConfig, nodeId }) {
+export default function PineconeNode({ config = {}, updateConfig, nodeId, nodes, edges }) {
   const operation = config.operation || "query";
 
   return (
@@ -25,43 +26,34 @@ export default function PineconeNode({ config = {}, updateConfig, nodeId }) {
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential (API Key)</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="Pinecone credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-green-500/40"
-        />
+        <CredentialPicker value={config.credentialId || ""} onChange={v => updateConfig("credentialId", v)} type="Pinecone" />
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Index Host URL</label>
-        <input
-          value={config.indexHost || ""}
-          onChange={(e) => updateConfig("indexHost", e.target.value)}
+        <SmartVariableInput value={config.indexHost || ""} onChange={v => updateConfig("indexHost", v)}
           placeholder="https://my-index-abc123.svc.us-east1.pinecone.io"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-green-500/40"
-        />
+          nodeId={nodeId} nodes={nodes} edges={edges} />
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <select
-          value={operation}
-          onChange={(e) => updateConfig("operation", e.target.value)}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-green-500/40"
-        >
-          {OPERATIONS.map((op) => <option key={op.id} value={op.id}>{op.label}</option>)}
-        </select>
+        <div className="flex gap-1.5 flex-wrap">
+          {OPERATIONS.map((op) => (
+            <button key={op.id} onClick={() => updateConfig("operation", op.id)}
+              className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
+                operation === op.id ? "bg-green-500/10 border-green-400/40 text-green-300"
+                                   : "bg-[#0a0a0a] border-[#222] text-zinc-500 hover:border-[#333]"}`}>
+              {op.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Namespace (optional)</label>
-        <input
-          value={config.namespace || ""}
-          onChange={(e) => updateConfig("namespace", e.target.value)}
-          placeholder="default"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-green-500/40"
-        />
+        <SmartVariableInput value={config.namespace || ""} onChange={v => updateConfig("namespace", v)}
+          placeholder="default" nodeId={nodeId} nodes={nodes} edges={edges} />
       </div>
 
       {operation === "upsert" && (
@@ -71,7 +63,7 @@ export default function PineconeNode({ config = {}, updateConfig, nodeId }) {
             value={config.vectors || ""}
             onChange={(v) => updateConfig("vectors", v)}
             placeholder='{{upstream.vectors}} or [{"id":"v1","values":[0.1,0.2,...],"metadata":{}}]'
-            nodeId={nodeId}
+            nodeId={nodeId} nodes={nodes} edges={edges}
           />
         </div>
       )}
@@ -84,7 +76,7 @@ export default function PineconeNode({ config = {}, updateConfig, nodeId }) {
               value={config.vector || ""}
               onChange={(v) => updateConfig("vector", v)}
               placeholder="{{upstream.embedding}} — array of numbers"
-              nodeId={nodeId}
+              nodeId={nodeId} nodes={nodes} edges={edges}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -106,7 +98,7 @@ export default function PineconeNode({ config = {}, updateConfig, nodeId }) {
             value={config.ids || ""}
             onChange={(v) => updateConfig("ids", v)}
             placeholder='["id1", "id2"]'
-            nodeId={nodeId}
+            nodeId={nodeId} nodes={nodes} edges={edges}
           />
         </div>
       )}

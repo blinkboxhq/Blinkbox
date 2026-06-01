@@ -47,11 +47,11 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Metric Name</label>
-            <SmartVariableInput value={config.metricName || ""} onChange={(v) => updateConfig("metricName", v)} placeholder="app.request.count" />
+            <SmartVariableInput nodeId={nodeId} value={config.metricName || ""} onChange={(v) => updateConfig("metricName", v)} placeholder="app.request.count" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Value</label>
-            <SmartVariableInput value={config.value || ""} onChange={(v) => updateConfig("value", v)} placeholder="{{ $json.count }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.value || ""} onChange={(v) => updateConfig("value", v)} placeholder="{{ $json.count }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Type</label>
@@ -66,7 +66,7 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Tags (key:value, comma-sep)</label>
-            <SmartVariableInput value={config.tags || ""} onChange={(v) => updateConfig("tags", v)} placeholder="env:production,service:api" />
+            <SmartVariableInput nodeId={nodeId} value={config.tags || ""} onChange={(v) => updateConfig("tags", v)} placeholder="env:production,service:api" />
           </div>
         </>
       )}
@@ -75,11 +75,11 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Event Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Deployment completed: {{ $json.version }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Deployment completed: {{ $json.version }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Event Text</label>
-            <SmartVariableInput value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="Deployed {{ $json.service }} to production" multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="Deployed {{ $json.service }} to production" multiline />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Alert Type</label>
@@ -99,7 +99,7 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Monitor Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="API Error Rate > 5%" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="API Error Rate > 5%" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Monitor Type</label>
@@ -114,11 +114,11 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Query</label>
-            <SmartVariableInput value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder="avg(last_5m):avg:system.cpu.user{*} > 90" />
+            <SmartVariableInput nodeId={nodeId} value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder="avg(last_5m):avg:system.cpu.user{*} > 90" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Notification Message</label>
-            <SmartVariableInput value={config.message || ""} onChange={(v) => updateConfig("message", v)} placeholder="High CPU on {{host.name}} @pagerduty-oncall" multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.message || ""} onChange={(v) => updateConfig("message", v)} placeholder="High CPU on {{host.name}} @pagerduty-oncall" multiline />
           </div>
         </>
       )}
@@ -127,11 +127,11 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Monitor ID</label>
-            <SmartVariableInput value={config.monitorId || ""} onChange={(v) => updateConfig("monitorId", v)} placeholder="{{ $json.monitorId }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.monitorId || ""} onChange={(v) => updateConfig("monitorId", v)} placeholder="{{ $json.monitorId }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Mute Until (ISO datetime)</label>
-            <SmartVariableInput value={config.end || ""} onChange={(v) => updateConfig("end", v)} placeholder="2024-01-01T08:00:00" />
+            <SmartVariableInput nodeId={nodeId} value={config.end || ""} onChange={(v) => updateConfig("end", v)} placeholder="2024-01-01T08:00:00" />
           </div>
         </>
       )}
@@ -140,16 +140,16 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Query</label>
-            <SmartVariableInput value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder="avg:system.cpu.user{env:production}" />
+            <SmartVariableInput nodeId={nodeId} value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder="avg:system.cpu.user{env:production}" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">From (epoch)</label>
-              <SmartVariableInput value={config.from || ""} onChange={(v) => updateConfig("from", v)} placeholder="{{ $json.start }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.from || ""} onChange={(v) => updateConfig("from", v)} placeholder="{{ $json.start }}" />
             </div>
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">To (epoch)</label>
-              <SmartVariableInput value={config.to || ""} onChange={(v) => updateConfig("to", v)} placeholder="{{ $json.end }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.to || ""} onChange={(v) => updateConfig("to", v)} placeholder="{{ $json.end }}" />
             </div>
           </div>
         </>
@@ -159,15 +159,15 @@ export default function DatadogNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Message</label>
-            <SmartVariableInput value={config.message || ""} onChange={(v) => updateConfig("message", v)} placeholder="{{ $json.logLine }}" multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.message || ""} onChange={(v) => updateConfig("message", v)} placeholder="{{ $json.logLine }}" multiline />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Service</label>
-            <SmartVariableInput value={config.service || ""} onChange={(v) => updateConfig("service", v)} placeholder="my-api" />
+            <SmartVariableInput nodeId={nodeId} value={config.service || ""} onChange={(v) => updateConfig("service", v)} placeholder="my-api" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Tags</label>
-            <SmartVariableInput value={config.ddtags || ""} onChange={(v) => updateConfig("ddtags", v)} placeholder="env:prod,version:1.2.3" />
+            <SmartVariableInput nodeId={nodeId} value={config.ddtags || ""} onChange={(v) => updateConfig("ddtags", v)} placeholder="env:prod,version:1.2.3" />
           </div>
         </>
       )}

@@ -43,13 +43,13 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Project ID or namespace/name</label>
-        <SmartVariableInput value={config.project || ""} onChange={(v) => updateConfig("project", v)} placeholder="acme/my-project or 12345" />
+        <SmartVariableInput nodeId={nodeId} value={config.project || ""} onChange={(v) => updateConfig("project", v)} placeholder="acme/my-project or 12345" />
       </div>
 
       {["createIssue","updateIssue","commentIssue"].includes(op) && op !== "createIssue" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Issue IID</label>
-          <SmartVariableInput value={config.issueIid || ""} onChange={(v) => updateConfig("issueIid", v)} placeholder="{{ $json.iid }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.issueIid || ""} onChange={(v) => updateConfig("issueIid", v)} placeholder="{{ $json.iid }}" />
         </div>
       )}
 
@@ -57,11 +57,11 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Issue title" />
+            <SmartVariableInput nodeId={nodeId} value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Issue title" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Description</label>
-            <SmartVariableInput value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="Describe the issue..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="Describe the issue..." multiline />
           </div>
         </>
       )}
@@ -69,7 +69,7 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
       {op === "commentIssue" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Comment</label>
-          <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thanks for the report, fixed in {{ $json.commit }}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thanks for the report, fixed in {{ $json.commit }}" multiline />
         </div>
       )}
 
@@ -77,16 +77,16 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="feat: my new feature" />
+            <SmartVariableInput nodeId={nodeId} value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="feat: my new feature" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Source Branch</label>
-              <SmartVariableInput value={config.sourceBranch || ""} onChange={(v) => updateConfig("sourceBranch", v)} placeholder="feature/my-branch" />
+              <SmartVariableInput nodeId={nodeId} value={config.sourceBranch || ""} onChange={(v) => updateConfig("sourceBranch", v)} placeholder="feature/my-branch" />
             </div>
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Target Branch</label>
-              <SmartVariableInput value={config.targetBranch || "main"} onChange={(v) => updateConfig("targetBranch", v)} placeholder="main" />
+              <SmartVariableInput nodeId={nodeId} value={config.targetBranch || "main"} onChange={(v) => updateConfig("targetBranch", v)} placeholder="main" />
             </div>
           </div>
         </>
@@ -96,11 +96,11 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Ref (branch/tag)</label>
-            <SmartVariableInput value={config.ref || "main"} onChange={(v) => updateConfig("ref", v)} placeholder="main" />
+            <SmartVariableInput nodeId={nodeId} value={config.ref || "main"} onChange={(v) => updateConfig("ref", v)} placeholder="main" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Variables (JSON object, optional)</label>
-            <SmartVariableInput value={config.variables || ""} onChange={(v) => updateConfig("variables", v)} placeholder='{"ENV": "production"}' />
+            <SmartVariableInput nodeId={nodeId} value={config.variables || ""} onChange={(v) => updateConfig("variables", v)} placeholder='{"ENV": "production"}' />
           </div>
         </>
       )}

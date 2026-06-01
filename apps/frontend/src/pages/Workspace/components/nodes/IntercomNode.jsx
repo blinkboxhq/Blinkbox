@@ -44,7 +44,7 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
       {["updateContact","getContact","sendMessage","addTag"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Contact ID</label>
-          <SmartVariableInput value={config.contactId || ""} onChange={(v) => updateConfig("contactId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.contactId || ""} onChange={(v) => updateConfig("contactId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 
@@ -52,11 +52,11 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Email</label>
-            <SmartVariableInput value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Role</label>
@@ -71,7 +71,7 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Custom Attributes (JSON, optional)</label>
-            <SmartVariableInput value={config.customAttributes || ""} onChange={(v) => updateConfig("customAttributes", v)} placeholder='{"plan":"pro","company":"Acme"}' />
+            <SmartVariableInput nodeId={nodeId} value={config.customAttributes || ""} onChange={(v) => updateConfig("customAttributes", v)} placeholder='{"plan":"pro","company":"Acme"}' />
           </div>
         </>
       )}
@@ -80,7 +80,7 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Message</label>
-            <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Hi {{ $json.name }}, we noticed..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Hi {{ $json.name }}, we noticed..." multiline />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Message Type</label>
@@ -100,11 +100,11 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Conversation ID</label>
-            <SmartVariableInput value={config.conversationId || ""} onChange={(v) => updateConfig("conversationId", v)} placeholder="{{ $json.conversationId }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.conversationId || ""} onChange={(v) => updateConfig("conversationId", v)} placeholder="{{ $json.conversationId }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Reply Body</label>
-            <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thanks for reaching out..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thanks for reaching out..." multiline />
           </div>
         </>
       )}
@@ -112,7 +112,7 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
       {op === "addTag" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Tag Name</label>
-          <SmartVariableInput value={config.tagName || ""} onChange={(v) => updateConfig("tagName", v)} placeholder="vip-customer" />
+          <SmartVariableInput nodeId={nodeId} value={config.tagName || ""} onChange={(v) => updateConfig("tagName", v)} placeholder="vip-customer" />
         </div>
       )}
 
@@ -120,15 +120,15 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Event Name</label>
-            <SmartVariableInput value={config.eventName || ""} onChange={(v) => updateConfig("eventName", v)} placeholder="completed-onboarding" />
+            <SmartVariableInput nodeId={nodeId} value={config.eventName || ""} onChange={(v) => updateConfig("eventName", v)} placeholder="completed-onboarding" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">User ID or Email</label>
-            <SmartVariableInput value={config.userId || ""} onChange={(v) => updateConfig("userId", v)} placeholder="{{ $json.email }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.userId || ""} onChange={(v) => updateConfig("userId", v)} placeholder="{{ $json.email }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Metadata (JSON, optional)</label>
-            <SmartVariableInput value={config.metadata || ""} onChange={(v) => updateConfig("metadata", v)} placeholder='{"plan":"pro","items":3}' />
+            <SmartVariableInput nodeId={nodeId} value={config.metadata || ""} onChange={(v) => updateConfig("metadata", v)} placeholder='{"plan":"pro","items":3}' />
           </div>
         </>
       )}

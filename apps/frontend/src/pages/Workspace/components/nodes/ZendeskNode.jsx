@@ -46,13 +46,13 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Subdomain</label>
-        <SmartVariableInput value={config.subdomain || ""} onChange={(v) => updateConfig("subdomain", v)} placeholder="mycompany (from mycompany.zendesk.com)" />
+        <SmartVariableInput nodeId={nodeId} value={config.subdomain || ""} onChange={(v) => updateConfig("subdomain", v)} placeholder="mycompany (from mycompany.zendesk.com)" />
       </div>
 
       {["updateTicket","getTicket","replyTicket","closeTicket"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Ticket ID</label>
-          <SmartVariableInput value={config.ticketId || ""} onChange={(v) => updateConfig("ticketId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.ticketId || ""} onChange={(v) => updateConfig("ticketId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 
@@ -62,15 +62,15 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
             <>
               <div>
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Subject</label>
-                <SmartVariableInput value={config.subject || ""} onChange={(v) => updateConfig("subject", v)} placeholder="{{ $json.subject }}" />
+                <SmartVariableInput nodeId={nodeId} value={config.subject || ""} onChange={(v) => updateConfig("subject", v)} placeholder="{{ $json.subject }}" />
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Body</label>
-                <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="{{ $json.message }}" multiline />
+                <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="{{ $json.message }}" multiline />
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Requester Email</label>
-                <SmartVariableInput value={config.requesterEmail || ""} onChange={(v) => updateConfig("requesterEmail", v)} placeholder="{{ $json.email }}" />
+                <SmartVariableInput nodeId={nodeId} value={config.requesterEmail || ""} onChange={(v) => updateConfig("requesterEmail", v)} placeholder="{{ $json.email }}" />
               </div>
             </>
           )}
@@ -106,7 +106,7 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Reply Body</label>
-            <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thank you for contacting us, {{ $json.name }}..." multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Thank you for contacting us, {{ $json.name }}..." multiline />
           </div>
           <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <p className="text-[12px] font-semibold text-zinc-300">Public reply</p>
@@ -122,11 +122,11 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="{{ $json.name }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Email</label>
-            <SmartVariableInput value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{ $json.email }}" />
           </div>
         </>
       )}
@@ -134,7 +134,7 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
       {op === "searchTickets" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Search Query</label>
-          <SmartVariableInput value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder='status:open requester:"{{ $json.email }}"' />
+          <SmartVariableInput nodeId={nodeId} value={config.query || ""} onChange={(v) => updateConfig("query", v)} placeholder='status:open requester:"{{ $json.email }}"' />
         </div>
       )}
 

@@ -28,17 +28,20 @@ export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <select
-          value={operation}
-          onChange={(e) => updateConfig("operation", e.target.value)}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500/40"
-        >
-          <option value="createMeeting">Create Meeting</option>
-          <option value="getMeeting">Get Meeting</option>
-          <option value="listMeetings">List Meetings</option>
-          <option value="updateMeeting">Update Meeting</option>
-          <option value="deleteMeeting">Delete Meeting</option>
-        </select>
+        <div className="grid grid-cols-2 gap-1.5">
+          {[
+            { value: "createMeeting", label: "Create Meeting" },
+            { value: "getMeeting",    label: "Get Meeting" },
+            { value: "listMeetings",  label: "List Meetings" },
+            { value: "updateMeeting", label: "Update Meeting" },
+            { value: "deleteMeeting", label: "Delete Meeting" },
+          ].map((o) => (
+            <button key={o.value} onClick={() => updateConfig("operation", o.value)}
+              className={`py-2 rounded-lg border text-xs font-bold transition-all ${operation === o.value ? "bg-blue-500/10 border-blue-500/40 text-blue-400" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {(operation === "getMeeting" || operation === "deleteMeeting" || operation === "updateMeeting") && (

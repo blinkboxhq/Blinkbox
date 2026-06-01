@@ -64,7 +64,7 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
       {["getIssue", "updateIssue", "transitionIssue", "addComment"].includes(op) && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Issue Key</label>
-          <SmartVariableInput value={config.issueKey || ""} onChange={(v) => updateConfig("issueKey", v)} placeholder="PROJ-123" />
+          <SmartVariableInput value={config.issueKey || ""} onChange={(v) => updateConfig("issueKey", v)} placeholder="PROJ-123" nodeId={nodeId} />
         </div>
       )}
 
@@ -72,7 +72,7 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Project Key</label>
-            <SmartVariableInput value={config.project || ""} onChange={(v) => updateConfig("project", v)} placeholder="PROJ" />
+            <SmartVariableInput value={config.project || ""} onChange={(v) => updateConfig("project", v)} placeholder="PROJ" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Issue Type</label>
@@ -80,11 +80,11 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Summary</label>
-            <SmartVariableInput value={config.summary || ""} onChange={(v) => updateConfig("summary", v)} placeholder="{{n1.title}}" />
+            <SmartVariableInput value={config.summary || ""} onChange={(v) => updateConfig("summary", v)} placeholder="{{n1.title}}" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Description</label>
-            <SmartVariableInput value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="{{n1.body}}" multiline />
+            <SmartVariableInput value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="{{n1.body}}" multiline nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Priority</label>
@@ -103,14 +103,14 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
       {op === "addComment" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Comment</label>
-          <SmartVariableInput value={config.comment || ""} onChange={(v) => updateConfig("comment", v)} placeholder="{{n1.message}}" multiline />
+          <SmartVariableInput value={config.comment || ""} onChange={(v) => updateConfig("comment", v)} placeholder="{{n1.message}}" multiline nodeId={nodeId} />
         </div>
       )}
 
       {op === "transitionIssue" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Transition ID</label>
-          <SmartVariableInput value={config.transitionId || ""} onChange={(v) => updateConfig("transitionId", v)} placeholder="21" />
+          <SmartVariableInput value={config.transitionId || ""} onChange={(v) => updateConfig("transitionId", v)} placeholder="21" nodeId={nodeId} />
           <p className="text-[10px] text-zinc-600">Get transition IDs from GET /rest/api/3/issue/PROJ-1/transitions</p>
         </div>
       )}

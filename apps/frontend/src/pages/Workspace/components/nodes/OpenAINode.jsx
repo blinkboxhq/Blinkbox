@@ -1,6 +1,6 @@
 import {
   Sparkles, MessageSquare, Image, Mic, FileText,
-  ShieldCheck, Wand2, PenLine, ChevronDown,
+  ShieldCheck, Wand2, PenLine,
 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
@@ -74,21 +74,28 @@ function Field({ label, children }) {
   );
 }
 
-function Select({ value, onChange, options, accent = ACCENT }) {
+function Select({ value, onChange, options }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 pr-8 text-xs text-white font-semibold focus:outline-none focus:border-${accent}-500/50 transition-colors cursor-pointer appearance-none`}
-      >
-        {options.map((o) => (
-          <option key={typeof o === 'string' ? o : o.value} value={typeof o === 'string' ? o : o.value}>
-            {typeof o === 'string' ? o : o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const val = typeof o === 'string' ? o : o.value;
+        const lbl = typeof o === 'string' ? o : o.label;
+        const active = value === val;
+        return (
+          <button
+            key={val}
+            type="button"
+            onClick={() => onChange(val)}
+            className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150 ${
+              active
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-[#0d0d0d] border-[#222] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+            }`}
+          >
+            {lbl}
+          </button>
+        );
+      })}
     </div>
   );
 }

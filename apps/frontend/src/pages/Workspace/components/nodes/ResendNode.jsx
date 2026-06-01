@@ -1,5 +1,6 @@
+import { Send } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
-import CredentialPicker from "../CredentialPicker";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 export default function ResendNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "sendEmail";

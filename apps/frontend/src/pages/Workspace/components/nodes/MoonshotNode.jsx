@@ -1,4 +1,4 @@
-import { Settings2, MessageSquare, Image, FileText, Wand2, ChevronDown } from 'lucide-react';
+import { Settings2, MessageSquare, Image, FileText, Wand2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
@@ -83,22 +83,23 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
         {/* Model selector */}
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Model</span>
-          <div className="relative">
-            <select
-              value={model}
-              onChange={e => updateConfig('model', e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-semibold focus:outline-none transition-colors cursor-pointer appearance-none pr-8"
-              style={{ focusBorderColor: ACCENT }}
-            >
-              {MODELS.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="flex flex-col gap-1">
+            {MODELS.map(m => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => updateConfig('model', m.value)}
+                className="flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all duration-150"
+                style={model === m.value
+                  ? { background: ACCENT_LIGHT, border: `1px solid ${ACCENT_BORDER}`, color: ACCENT }
+                  : { background: '#111', border: '1px solid #333', color: '#71717a' }
+                }
+              >
+                <span className="text-[11px] font-semibold">{m.label}</span>
+                <span className="text-[10px] opacity-70">{m.ctx}</span>
+              </button>
+            ))}
           </div>
-          {selectedModel && (
-            <span className="text-[10px] text-zinc-600 pl-1">{selectedModel.ctx}</span>
-          )}
         </div>
 
         {/* Output format — only for message op */}
@@ -157,6 +158,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
             value={config.imageUrl || ''}
             onChange={val => updateConfig('imageUrl', val)}
             placeholder="https://example.com/image.jpg"
+            nodeId={nodeId}
           />
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mt-1">
             <MessageSquare className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Question / Instruction
@@ -166,6 +168,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
             onChange={val => updateConfig('prompt', val)}
             placeholder="Describe this image..."
             multiline
+            nodeId={nodeId}
           />
         </div>
       ) : operation === 'analyzeDocument' ? (
@@ -178,6 +181,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
             onChange={val => updateConfig('documentText', val)}
             placeholder="Paste document text or use {{ $json.text }}"
             multiline
+            nodeId={nodeId}
           />
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mt-1">
             <MessageSquare className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Question / Task
@@ -187,6 +191,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
             onChange={val => updateConfig('prompt', val)}
             placeholder="Summarize this document..."
             multiline
+            nodeId={nodeId}
           />
         </div>
       ) : (
@@ -204,6 +209,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
               : 'What should Kimi do with the input data?'
             }
             multiline
+            nodeId={nodeId}
           />
         </div>
       )}

@@ -35,28 +35,43 @@ export default function DeepSeekNode({ config = {}, updateConfig, nodeId }) {
           <Settings2 className="w-4 h-4 text-[#4D9BF8]" />
           <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Config</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-zinc-500 w-16">Model</span>
-          <select
-            value={config.model || 'deepseek-chat'}
-            onChange={(e) => updateConfig('model', e.target.value)}
-            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#4D9BF8]/50 transition-colors cursor-pointer appearance-none"
-          >
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Model</span>
+          <div className="flex flex-wrap gap-1.5">
             {MODELS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => updateConfig('model', m.value)}
+                className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150 ${
+                  (config.model || 'deepseek-chat') === m.value
+                    ? 'bg-[#4D9BF8]/10 border-[#4D9BF8]/30 text-[#4D9BF8]'
+                    : 'bg-[#111] border-[#333] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                }`}
+              >
+                {m.label}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-zinc-500 w-16">Output</span>
-          <select
-            value={config.outputFormat || 'text'}
-            onChange={(e) => updateConfig('outputFormat', e.target.value)}
-            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#4D9BF8]/50 transition-colors cursor-pointer appearance-none"
-          >
-            <option value="text">Raw Text</option>
-            <option value="json">Structured JSON</option>
-          </select>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Output</span>
+          <div className="flex gap-1.5">
+            {[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }].map((fmt) => (
+              <button
+                key={fmt.value}
+                type="button"
+                onClick={() => updateConfig('outputFormat', fmt.value)}
+                className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150 ${
+                  (config.outputFormat || 'text') === fmt.value
+                    ? 'bg-[#4D9BF8]/10 border-[#4D9BF8]/30 text-[#4D9BF8]'
+                    : 'bg-[#111] border-[#333] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                }`}
+              >
+                {fmt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -70,6 +85,7 @@ export default function DeepSeekNode({ config = {}, updateConfig, nodeId }) {
           onChange={(val) => updateConfig('prompt', val)}
           placeholder="e.g. Reason through this step by step..."
           multiline
+          nodeId={nodeId}
         />
       </div>
 

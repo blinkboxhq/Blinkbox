@@ -43,7 +43,7 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
       {["listEvents","cancelEvent","listInvitees"].includes(op) && op !== "listEventTypes" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">{op === "listEvents" ? "Organization URI (blank = all)" : "Event URI"}</label>
-          <SmartVariableInput value={config.eventUri || ""} onChange={(v) => updateConfig("eventUri", v)} placeholder="{{ $json.uri }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.eventUri || ""} onChange={(v) => updateConfig("eventUri", v)} placeholder="{{ $json.uri }}" />
         </div>
       )}
 
@@ -63,16 +63,16 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Min Start (ISO)</label>
-              <SmartVariableInput value={config.minStartTime || ""} onChange={(v) => updateConfig("minStartTime", v)} placeholder="{{ $json.from }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.minStartTime || ""} onChange={(v) => updateConfig("minStartTime", v)} placeholder="{{ $json.from }}" />
             </div>
             <div>
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Max Start (ISO)</label>
-              <SmartVariableInput value={config.maxStartTime || ""} onChange={(v) => updateConfig("maxStartTime", v)} placeholder="{{ $json.to }}" />
+              <SmartVariableInput nodeId={nodeId} value={config.maxStartTime || ""} onChange={(v) => updateConfig("maxStartTime", v)} placeholder="{{ $json.to }}" />
             </div>
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Count</label>
-            <SmartVariableInput value={config.count || "20"} onChange={(v) => updateConfig("count", v)} placeholder="20" />
+            <SmartVariableInput nodeId={nodeId} value={config.count || "20"} onChange={(v) => updateConfig("count", v)} placeholder="20" />
           </div>
         </>
       )}
@@ -80,14 +80,14 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
       {op === "cancelEvent" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Cancel Reason</label>
-          <SmartVariableInput value={config.reason || ""} onChange={(v) => updateConfig("reason", v)} placeholder="Meeting rescheduled" />
+          <SmartVariableInput nodeId={nodeId} value={config.reason || ""} onChange={(v) => updateConfig("reason", v)} placeholder="Meeting rescheduled" />
         </div>
       )}
 
       {op === "getInvitee" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Invitee UUID</label>
-          <SmartVariableInput value={config.inviteeUuid || ""} onChange={(v) => updateConfig("inviteeUuid", v)} placeholder="{{ $json.uuid }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.inviteeUuid || ""} onChange={(v) => updateConfig("inviteeUuid", v)} placeholder="{{ $json.uuid }}" />
         </div>
       )}
 
@@ -95,7 +95,7 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Callback URL</label>
-            <SmartVariableInput value={config.url || ""} onChange={(v) => updateConfig("url", v)} placeholder="https://my-app.com/webhooks/calendly" />
+            <SmartVariableInput nodeId={nodeId} value={config.url || ""} onChange={(v) => updateConfig("url", v)} placeholder="https://my-app.com/webhooks/calendly" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Events to Subscribe</label>

@@ -42,7 +42,7 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
       {["getForm","listResponses","getResponse","deleteResponse","createForm"].includes(op) && op !== "createForm" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Form ID</label>
-          <SmartVariableInput value={config.formId || ""} onChange={(v) => updateConfig("formId", v)} placeholder="abc123XYZ" />
+          <SmartVariableInput nodeId={nodeId} value={config.formId || ""} onChange={(v) => updateConfig("formId", v)} placeholder="abc123XYZ" />
         </div>
       )}
 
@@ -50,17 +50,17 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Page Size</label>
-            <SmartVariableInput value={config.pageSize || "25"} onChange={(v) => updateConfig("pageSize", v)} placeholder="25" />
+            <SmartVariableInput nodeId={nodeId} value={config.pageSize || "25"} onChange={(v) => updateConfig("pageSize", v)} placeholder="25" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Since (ISO date, optional)</label>
-            <SmartVariableInput value={config.since || ""} onChange={(v) => updateConfig("since", v)} placeholder="2024-01-01T00:00:00Z" />
+            <SmartVariableInput nodeId={nodeId} value={config.since || ""} onChange={(v) => updateConfig("since", v)} placeholder="2024-01-01T00:00:00Z" />
           </div>
           <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <p className="text-[12px] font-semibold text-zinc-300">Include Hidden Fields</p>
             <button onClick={() => updateConfig("includeHidden", !config.includeHidden)}
-              className={`w-10 h-5 rounded-full border transition-all relative ${config.includeHidden ? "bg-white border-zinc-300" : "bg-zinc-700 border-zinc-600"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${config.includeHidden ? "left-5 bg-zinc-900" : "left-0.5 bg-white"}`} />
+              className={`w-10 h-5 rounded-full border transition-all relative ${config.includeHidden ? "bg-zinc-600 border-zinc-500" : "bg-zinc-700 border-zinc-600"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${config.includeHidden ? "left-5" : "left-0.5"}`} />
             </button>
           </div>
         </>
@@ -69,7 +69,7 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
       {op === "getResponse" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Response Token</label>
-          <SmartVariableInput value={config.responseToken || ""} onChange={(v) => updateConfig("responseToken", v)} placeholder="{{ $json.token }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.responseToken || ""} onChange={(v) => updateConfig("responseToken", v)} placeholder="{{ $json.token }}" />
         </div>
       )}
 
@@ -77,11 +77,11 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Form Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Customer Feedback Survey" />
+            <SmartVariableInput nodeId={nodeId} value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Customer Feedback Survey" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Fields (JSON array)</label>
-            <SmartVariableInput value={config.fields || ""} onChange={(v) => updateConfig("fields", v)} placeholder='[{"type":"short_text","title":"Your name"}]' multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.fields || ""} onChange={(v) => updateConfig("fields", v)} placeholder='[{"type":"short_text","title":"Your name"}]' multiline />
           </div>
         </>
       )}

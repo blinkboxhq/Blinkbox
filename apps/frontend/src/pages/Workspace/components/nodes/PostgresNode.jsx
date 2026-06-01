@@ -2,7 +2,7 @@ import { Database } from 'lucide-react';
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
-export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
+export default function PostgresNode({ config = {}, updateConfig, nodeId, nodes, edges }) {
   const op = config.operation || "query";
 
   return (
@@ -15,6 +15,13 @@ export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
           <span className="text-sm font-bold text-[#5B9BD5]">PostgreSQL</span>
           <span className="text-[10px] text-zinc-500">Execute raw SQL queries</span>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential</label>
+        <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
+          type="PostgreSQL" />
+        <p className="text-[10px] text-zinc-600">Store as: postgresql://user:pass@host:5432/dbname</p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -42,7 +49,7 @@ export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
               onChange={(v) => updateConfig("sql", v)}
               placeholder={op === "query" ? "SELECT * FROM users WHERE id = $1" : "UPDATE users SET name = $1 WHERE id = $2"}
               multiline
-              nodeId={nodeId}
+              nodeId={nodeId} nodes={nodes} edges={edges}
             />
             <p className="text-[10px] text-zinc-600">Use $1, $2, ... for parameterized queries</p>
           </div>
@@ -53,7 +60,7 @@ export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
               value={typeof config.params === "string" ? config.params : (config.params ? JSON.stringify(config.params) : "")}
               onChange={(v) => updateConfig("params", v)}
               placeholder='["{{n1.userId}}"]'
-              nodeId={nodeId}
+              nodeId={nodeId} nodes={nodes} edges={edges}
             />
           </div>
 
@@ -76,15 +83,12 @@ export default function PostgresNode({ config = {}, updateConfig, nodeId }) {
             onChange={(v) => updateConfig("statements", v)}
             placeholder='["INSERT INTO logs (msg) VALUES ($1)", "UPDATE counters SET n = n + 1"]'
             multiline
-            nodeId={nodeId}
+            nodeId={nodeId} nodes={nodes} edges={edges}
           />
           <p className="text-[10px] text-zinc-600">Array of SQL strings or {"{ sql, params }"} objects. All run in one transaction.</p>
         </div>
       )}
 
-      <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="blue" label="PostgreSQL Connection String" placeholder="Select Postgres credential..." />
-      <p className="text-[10px] text-zinc-600 -mt-3">Store as: postgresql://user:pass@host:5432/dbname</p>
     </div>
   );
 }

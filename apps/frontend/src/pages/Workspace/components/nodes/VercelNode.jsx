@@ -44,14 +44,14 @@ export default function VercelNode({ config = {}, updateConfig, nodeId }) {
       {["listDeployments","triggerDeploy","listDomains","addDomain","getEnvVars"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Project Name or ID</label>
-          <SmartVariableInput value={config.projectId || ""} onChange={(v) => updateConfig("projectId", v)} placeholder="my-next-app" />
+          <SmartVariableInput nodeId={nodeId} value={config.projectId || ""} onChange={(v) => updateConfig("projectId", v)} placeholder="my-next-app" />
         </div>
       )}
 
       {["getDeployment","cancelDeploy"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Deployment ID</label>
-          <SmartVariableInput value={config.deploymentId || ""} onChange={(v) => updateConfig("deploymentId", v)} placeholder="dpl_{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.deploymentId || ""} onChange={(v) => updateConfig("deploymentId", v)} placeholder="dpl_{{ $json.id }}" />
         </div>
       )}
 
@@ -59,7 +59,7 @@ export default function VercelNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Git Branch</label>
-            <SmartVariableInput value={config.branch || "main"} onChange={(v) => updateConfig("branch", v)} placeholder="main" />
+            <SmartVariableInput nodeId={nodeId} value={config.branch || "main"} onChange={(v) => updateConfig("branch", v)} placeholder="main" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Target Environment</label>
@@ -90,7 +90,7 @@ export default function VercelNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Limit</label>
-            <SmartVariableInput value={config.limit || "10"} onChange={(v) => updateConfig("limit", v)} placeholder="10" />
+            <SmartVariableInput nodeId={nodeId} value={config.limit || "10"} onChange={(v) => updateConfig("limit", v)} placeholder="10" />
           </div>
         </>
       )}
@@ -98,7 +98,7 @@ export default function VercelNode({ config = {}, updateConfig, nodeId }) {
       {op === "addDomain" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Domain Name</label>
-          <SmartVariableInput value={config.domain || ""} onChange={(v) => updateConfig("domain", v)} placeholder="app.mycompany.com" />
+          <SmartVariableInput nodeId={nodeId} value={config.domain || ""} onChange={(v) => updateConfig("domain", v)} placeholder="app.mycompany.com" />
         </div>
       )}
 

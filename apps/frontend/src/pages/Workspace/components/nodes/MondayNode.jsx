@@ -45,14 +45,14 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
       {["createItem","listItems","createBoard"].indexOf(op) === -1 && op !== "createBoard" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Item ID</label>
-          <SmartVariableInput value={config.itemId || ""} onChange={(v) => updateConfig("itemId", v)} placeholder="{{ $json.id }}" />
+          <SmartVariableInput nodeId={nodeId} value={config.itemId || ""} onChange={(v) => updateConfig("itemId", v)} placeholder="{{ $json.id }}" />
         </div>
       )}
 
       {["createItem","listItems"].includes(op) && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Board ID</label>
-          <SmartVariableInput value={config.boardId || ""} onChange={(v) => updateConfig("boardId", v)} placeholder="Monday board ID" />
+          <SmartVariableInput nodeId={nodeId} value={config.boardId || ""} onChange={(v) => updateConfig("boardId", v)} placeholder="Monday board ID" />
         </div>
       )}
 
@@ -60,11 +60,11 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Item Name</label>
-            <SmartVariableInput value={config.itemName || ""} onChange={(v) => updateConfig("itemName", v)} placeholder="{{ $json.name }}" />
+            <SmartVariableInput nodeId={nodeId} value={config.itemName || ""} onChange={(v) => updateConfig("itemName", v)} placeholder="{{ $json.name }}" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Column Values (JSON)</label>
-            <SmartVariableInput value={config.columnValues || ""} onChange={(v) => updateConfig("columnValues", v)} placeholder='{"status":{"label":"Done"},"date4":{"date":"2024-01-01"}}' multiline />
+            <SmartVariableInput nodeId={nodeId} value={config.columnValues || ""} onChange={(v) => updateConfig("columnValues", v)} placeholder='{"status":{"label":"Done"},"date4":{"date":"2024-01-01"}}' multiline />
           </div>
         </>
       )}
@@ -73,11 +73,11 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Column ID</label>
-            <SmartVariableInput value={config.columnId || ""} onChange={(v) => updateConfig("columnId", v)} placeholder="status" />
+            <SmartVariableInput nodeId={nodeId} value={config.columnId || ""} onChange={(v) => updateConfig("columnId", v)} placeholder="status" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Value (JSON)</label>
-            <SmartVariableInput value={config.value || ""} onChange={(v) => updateConfig("value", v)} placeholder='{"label":"Done"}' />
+            <SmartVariableInput nodeId={nodeId} value={config.value || ""} onChange={(v) => updateConfig("value", v)} placeholder='{"label":"Done"}' />
           </div>
         </>
       )}
@@ -85,7 +85,7 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
       {op === "createUpdate" && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Update Body</label>
-          <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Status update: {{ $json.message }}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="Status update: {{ $json.message }}" multiline />
         </div>
       )}
 
@@ -93,7 +93,7 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Board Name</label>
-            <SmartVariableInput value={config.boardName || ""} onChange={(v) => updateConfig("boardName", v)} placeholder="Q3 Roadmap" />
+            <SmartVariableInput nodeId={nodeId} value={config.boardName || ""} onChange={(v) => updateConfig("boardName", v)} placeholder="Q3 Roadmap" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Board Kind</label>
