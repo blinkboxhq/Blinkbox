@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import WorkspaceUsage from "../../models/workspaceUsage.model.js";
 import User from "../../models/user.model.js";
 import { getNodeCost } from "../../infra/credit.engine.js";
+import { sendProWelcomeEmail, sendProEndingSoonEmail } from "../../infra/email.service.js";
 import {
   STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET,
@@ -88,8 +89,42 @@ export async function createPortalSession(req, res) {
       return res.status(400).json({ message: "No active subscription found." });
     }
 
+    // If they have an active subscription, mark it to cancel at period end
+    // rather than immediately, so they keep Pro access until the cycle ends.
+    if (user.stripeSubscriptionId) {
+      const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      if (sub.status === "active" && !sub.cancel_at_period_end) {
+        // Charge an invoice item for credits already used this cycle
+        const usage = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
+        const creditsUsed = usage?.creditsUsed || 0;
+        const proLimit    = WorkspaceUsage.PLAN_LIMITS.pro;
+        if (creditsUsed > 0) {
+          const fractionUsed  = Math.min(1, creditsUsed / proLimit);
+          // $29/month prorated by credit consumption — billed in cents
+          const chargeAmount  = Math.round(fractionUsed * 2900);
+          if (chargeAmount > 0) {
+            await stripe.invoiceItems.create({
+              customer:    user.stripeCustomerId,
+              amount:      chargeAmount,
+              currency:    "usd",
+              description: `Blinkbox Pro — ${creditsUsed.toLocaleString()} credits used (${Math.round(fractionUsed * 100)}% of plan)`,
+            });
+            // Immediately invoice so the charge runs now
+            await stripe.invoices.create({
+              customer:          user.stripeCustomerId,
+              auto_advance:      true,
+              collection_method: "charge_automatically",
+            });
+          }
+        }
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        });
+      }
+    }
+
     const session = await stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
+      customer:   user.stripeCustomerId,
       return_url: `${FRONTEND_URL}/dashboard`,
     });
 
@@ -115,50 +150,72 @@ export async function handleWebhook(req, res) {
   }
 
   try {
+    // ── New subscription ─────────────────────────────────────────────────────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
-      const userId = session.metadata?.userId;
+      const userId  = session.metadata?.userId;
       if (!userId) return res.json({ received: true });
 
-      await User.findByIdAndUpdate(userId, { stripeSubscriptionId: session.subscription });
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { stripeSubscriptionId: session.subscription },
+        { new: true },
+      );
       await WorkspaceUsage.findOneAndUpdate(
         { workspaceId: userId },
         { plan: "pro", monthlyLimit: WorkspaceUsage.PLAN_LIMITS.pro },
         { upsert: true },
       );
+
+      // Welcome email
+      if (user) {
+        sendProWelcomeEmail(user).catch(e =>
+          console.error("[Billing] welcome email failed:", e.message)
+        );
+      }
     }
 
+    // ── Subscription updated (e.g. cancel_at_period_end flipped) ────────────
+    if (event.type === "customer.subscription.updated") {
+      const sub  = event.data.object;
+      const prev = event.data.previous_attributes || {};
+
+      // Only act when cancel_at_period_end just became true (user just cancelled)
+      if (sub.cancel_at_period_end && prev.cancel_at_period_end === false) {
+        const user = await User.findOne({ stripeCustomerId: sub.customer });
+        if (user) {
+          const periodEnd = new Date(sub.current_period_end * 1000);
+          sendProEndingSoonEmail(user, periodEnd).catch(e =>
+            console.error("[Billing] ending-soon email failed:", e.message)
+          );
+        }
+      }
+    }
+
+    // ── Subscription fully expired (period ended after cancel_at_period_end) ─
     if (event.type === "customer.subscription.deleted") {
-      const sub = event.data.object;
+      const sub  = event.data.object;
       const user = await User.findOne({ stripeCustomerId: sub.customer });
       if (user) {
         await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: null });
 
-        // Prorate credits: fraction of Pro period actually used × Pro limit
-        const periodStart = sub.current_period_start * 1000;
-        const periodEnd   = sub.current_period_end   * 1000;
-        const now         = Date.now();
-        const fractionUsed = Math.min(1, (now - periodStart) / (periodEnd - periodStart));
+        // Prorate credits by fraction of Pro period actually used
+        const periodStart  = sub.current_period_start * 1000;
+        const periodEnd    = sub.current_period_end   * 1000;
+        const fractionUsed = Math.min(1, (Date.now() - periodStart) / (periodEnd - periodStart));
         const proratedCap  = Math.floor(fractionUsed * WorkspaceUsage.PLAN_LIMITS.pro);
 
-        const usage = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
-        // Cap credits to prorated allowance — never go below what's already spent
-        const cappedCredits = usage
-          ? Math.min(usage.creditsUsed, proratedCap)
-          : 0;
+        const usage         = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
+        const cappedCredits = usage ? Math.min(usage.creditsUsed, proratedCap) : 0;
 
         await WorkspaceUsage.findOneAndUpdate(
           { workspaceId: user._id.toString() },
-          {
-            plan: "free",
-            monthlyLimit: proratedCap,   // enforces cap for rest of cycle
-            creditsUsed: cappedCredits,
-          },
+          { plan: "free", monthlyLimit: proratedCap, creditsUsed: cappedCredits },
           { upsert: true },
         );
 
         console.log(
-          `[Billing] Sub cancelled for user ${user._id}: ${Math.round(fractionUsed * 100)}% of period used → proratedCap=${proratedCap}, creditsUsed capped at ${cappedCredits}`,
+          `[Billing] Sub expired for user ${user._id}: ${Math.round(fractionUsed * 100)}% used → cap=${proratedCap}, creditsUsed=${cappedCredits}`,
         );
       }
     }

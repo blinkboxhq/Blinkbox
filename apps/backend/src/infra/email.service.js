@@ -390,3 +390,80 @@ export async function sendLoginAlertEmail(user, { ip, userAgent }) {
   const { subject, html } = buildLoginAlertEmail({ name: user.name, ip, userAgent, time });
   await send({ to: user.email, subject, html });
 }
+
+// ─── Pro billing emails ───────────────────────────────────────────────────────
+
+export async function sendProWelcomeEmail(user) {
+  const n      = user.name.split(" ")[0];
+  const appUrl = process.env.VITE_APP_URL || "https://blinkbox.net";
+
+  const bodyHtml = `
+    <div style="${P} 44px">
+      ${label("You're on Pro")}
+      ${heading(`Welcome to Pro, ${n}.`)}
+      ${body("Your subscription is active. Every Pro feature is unlocked — unlimited executions, unlimited workflows, AI agents, and priority support.")}
+      ${btn(`${appUrl}/dashboard`, "Open my workspace")}
+      ${divider}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px;border-collapse:collapse">
+        ${[
+          ["Unlimited runs",       "No monthly execution cap. Run as much as you need."],
+          ["AI agent builder",     "Chain LLM calls with memory, tools, and branching."],
+          ["Headless scraping",    "Full Puppeteer browser — scrape any site, any login."],
+          ["Priority support",     "Reach us directly — we'll respond within 24 hours."],
+        ].map(([t, d]) => `
+          <tr>
+            <td style="padding:12px 0;border-bottom:1px solid ${BDR};vertical-align:top;font-size:13px;font-weight:600;color:#555555;font-family:${FONT};width:130px;white-space:nowrap">${t}</td>
+            <td style="padding:12px 0 12px 20px;border-bottom:1px solid ${BDR};vertical-align:top;font-size:13px;color:#3a3a3a;line-height:1.5;font-family:${FONT}">${d}</td>
+          </tr>`).join("")}
+      </table>
+      ${note("Manage or cancel your subscription anytime from your dashboard settings.")}
+    </div>`;
+
+  await send({
+    to:      user.email,
+    subject: "You're now on Blinkbox Pro",
+    html:    layout({
+      preheader: `Pro is active, ${n}. Unlimited executions, AI agents, and priority support are yours.`,
+      subject:   "You're now on Blinkbox Pro",
+      body:      bodyHtml,
+    }),
+  });
+}
+
+export async function sendProEndingSoonEmail(user, periodEnd) {
+  const n      = user.name.split(" ")[0];
+  const appUrl = process.env.VITE_APP_URL || "https://blinkbox.net";
+  const endStr = periodEnd.toLocaleDateString("en-US", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+
+  const bodyHtml = `
+    <div style="${P} 44px">
+      ${label("Subscription ending")}
+      ${heading(`Your Pro plan ends on ${endStr}, ${n}.`)}
+      ${body("You cancelled your Pro subscription. You'll keep full Pro access until the end of your current billing period, then your workspace will drop back to the free tier.")}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px;border-collapse:collapse">
+        <tr>
+          <td style="padding:12px 0;border-bottom:1px solid ${BDR};font-size:12px;font-weight:600;color:#3a3a3a;font-family:${FONT};white-space:nowrap">Access ends</td>
+          <td style="padding:12px 0 12px 20px;border-bottom:1px solid ${BDR};font-size:12px;color:#555555;font-family:${FONT}">${endStr}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0;border-bottom:1px solid ${BDR};font-size:12px;font-weight:600;color:#3a3a3a;font-family:${FONT};white-space:nowrap">After that</td>
+          <td style="padding:12px 0 12px 20px;border-bottom:1px solid ${BDR};font-size:12px;color:#555555;font-family:${FONT}">Free tier — 5,000 executions/month, 10 active workflows</td>
+        </tr>
+      </table>
+      ${btn(`${appUrl}/upgrade`, "Reactivate Pro")}
+      ${divider}
+      ${note("Changed your mind? Reactivate before ${endStr} and you won't miss a beat.")}
+    </div>`;
+
+  await send({
+    to:      user.email,
+    subject: `Your Blinkbox Pro plan ends on ${endStr}`,
+    html:    layout({
+      preheader: `Pro access until ${endStr} — after that you'll move to the free tier.`,
+      subject:   "Your Pro plan is ending",
+      body:      bodyHtml,
+    }),
+  });
+}
