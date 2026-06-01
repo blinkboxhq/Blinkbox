@@ -17,6 +17,7 @@ async function getToken(config, workspaceId) {
 
 export default {
   async run(config, input, context = {}) {
+    try {
     const operation = config.operation || "listPosts";
     const token = await getToken(config, context.workspaceId);
     const headers = token ? { Authorization: `Bearer ${token}`, "User-Agent": "BlinkBox/1.0" } : { "User-Agent": "BlinkBox/1.0" };
@@ -62,6 +63,13 @@ export default {
       }
       default:
         return { success: false, error: `Reddit: Unknown operation "${operation}".`, skipped: true };
+    }
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 401 || status === 403) throw new Error(`[reddit] Unauthorized — check OAuth credentials.`);
+      if (status === 429) throw new Error(`[reddit] Rate limited — add a Delay node.`);
+      if (status === 404) throw new Error(`[reddit] Not found — check subreddit/post ID.`);
+      throw new Error(`[reddit] ${err.message}`);
     }
   },
 };

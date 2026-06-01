@@ -1,5 +1,6 @@
 import { MessageSquare, Layout, FileText, PlusCircle, Trash2 } from "lucide-react";
 import SmartVariableInput from "@/components/ui/SmartVariableInput";
+import CredentialPicker from "@/components/ui/CredentialPicker";
 
 function DiscordIcon({ className }) {
   return (
@@ -62,16 +63,16 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
-      {/* Webhook URL — all ops */}
+      {/* Credential (Webhook URL stored as credential) */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Webhook URL</label>
-        <SmartVariableInput
-          value={config.webhookUrl || ""}
-          onChange={(val) => updateConfig("webhookUrl", val)}
-          placeholder="https://discord.com/api/webhooks/..."
-          nodeId={nodeId}
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Discord Webhook Credential</label>
+        <CredentialPicker
+          value={config.credentialId || ""}
+          onChange={(val) => updateConfig("credentialId", val)}
+          accentColor="#5865F2"
+          placeholder="Select Discord webhook credential…"
         />
-        <p className="text-[10px] text-zinc-600">Server Settings → Integrations → Webhooks → New Webhook</p>
+        <p className="text-[10px] text-zinc-600">Create a credential with your Webhook URL — Server Settings → Integrations → Webhooks</p>
       </div>
 
       {/* Bot name (all ops) */}

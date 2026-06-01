@@ -154,11 +154,17 @@ export default {
     if (!handler)
       throw new Error(`Discord: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    // Allow forwarding attachments from previous node output (standalone canvas use)
-    let resolvedConfig = config;
+    // Resolve webhook URL from credential or direct config
+    let resolvedConfig = { ...config };
+    if (config.credentialId && context.getCredential) {
+      const cred = await context.getCredential(config.credentialId);
+      // Credential value is the webhook URL stored as the "token" or "url" field
+      resolvedConfig.webhookUrl = cred?.token || cred?.url || cred?.webhookUrl || cred?.value || config.webhookUrl;
+    }
+
     if (operation === "sendFile" && typeof config.attachmentIndex === "number" && !config._inlineAttachment) {
       const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
-      if (att) resolvedConfig = { ...config, _inlineAttachment: att };
+      if (att) resolvedConfig = { ...resolvedConfig, _inlineAttachment: att };
     }
 
     try {

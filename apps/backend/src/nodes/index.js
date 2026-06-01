@@ -434,6 +434,8 @@ export const nodeRegistry = {
   text_to_speech: textToSpeech,
   rss: rss,
   rss_feed_generator: rss,
+  rss_feed:           rss,
+  port_monitor:       networkNodes.port_monitor,
 
   // New integrations
   s3: s3,
@@ -465,6 +467,22 @@ export const nodeRegistry = {
   instagram: instagram,
   ocr: ocr,
 
+  // ── Public API nodes ──────────────────────────────────────────────────────
+  stock_price:         publicApiNodes.stock_price,
+  crypto_price:        publicApiNodes.crypto_price,
+  currency_exchange:   publicApiNodes.currency_exchange,
+  hacker_news:         publicApiNodes.hackernews,
+  product_hunt:        publicApiNodes.producthunt,
+  drug_lookup:         publicApiNodes.drug_lookup,
+  clinical_trials:     publicApiNodes.clinical_trials,
+  weather:             publicApiNodes.weather,
+  twitch:              publicApiNodes.twitch_stream_status,
+  virustotal:          publicApiNodes.virustotal,
+
+  // ── Social nodes ──────────────────────────────────────────────────────────
+  mastodon:            socialNodes.mastodon,
+  twitter_post:        socialNodes.twitter_post,
+
   // ── Utility nodes ──────────────────────────────────────────────────────────
   regex_match:         utilityNodes.regex_match,
   math_expression:     utilityNodes.math_expression,
@@ -487,6 +505,7 @@ export const nodeRegistry = {
 
   // ── Dev tools nodes ────────────────────────────────────────────────────────
   graphql_request:     devToolNodes.graphql_request,
+  graphql:             devToolNodes.graphql_request,
   gitlab:              devToolNodes.gitlab,
   azure_devops:        devToolNodes.azure_devops,
   github_issue:        devToolNodes.github_issue,
