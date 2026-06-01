@@ -252,7 +252,15 @@ export default {
     if (!handler)
       throw new Error(`Telegram: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "Telegram: No credential selected — pick a Telegram Bot Token credential.", skipped: true };
+    }
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Telegram: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const resolvedConfig = { ...config };
 

@@ -48,10 +48,15 @@ export default {
     const operation = config.operation || "createContact";
 
     if (!config.credentialId) {
-      return { success: false, error: "Intercom: credential required.", skipped: true };
+      return { success: false, error: "Intercom: No credential selected — pick an Intercom Access Token credential.", skipped: true };
     }
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Intercom: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     const api = client(token);
 
     try {

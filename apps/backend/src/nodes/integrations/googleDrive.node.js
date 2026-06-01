@@ -44,8 +44,16 @@ export default {
   async run(config, input, context = {}) {
     const { operation = "listFiles" } = config;
 
+    if (!config.credentialId) return { success: false, error: "Google Drive: No credential selected.", skipped: true };
+
+    let token;
     try {
-      const token = await getToken(config.credentialId, context.workspaceId);
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Google Drive: Could not resolve credential — ${e.message}`, skipped: true };
+    }
+
+    try {
       switch (operation) {
         case "listFiles": {
           const q = [

@@ -40,7 +40,15 @@ export default {
     const { operation = "searchIssues", domain } = config;
     if (!domain) return { success: false, error: "Jira: 'domain' is required (e.g. mycompany.atlassian.net) — configure this field.", skipped: true };
 
-    const base64Auth = await getAuth(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "Jira: No credential selected — pick a Jira API token credential.", skipped: true };
+    }
+    let base64Auth;
+    try {
+      base64Auth = await getAuth(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Jira: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     const headers = { Authorization: `Basic ${base64Auth}`, "Content-Type": "application/json", Accept: "application/json" };
     const BASE = `https://${domain}/rest/api/3`;
 

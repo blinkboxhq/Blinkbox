@@ -11,6 +11,18 @@ import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API_URL = "https://api.x.ai/v1/chat/completions";
 
+function handleError(err) {
+  if (err.message?.startsWith("xAI")) throw err;
+  if (err.response?.status === 401) throw new Error("xAI: Invalid API key.");
+  if (err.response?.status === 403) throw new Error("xAI: Access forbidden — check your API key permissions.");
+  if (err.response?.status === 404) throw new Error("xAI: Resource not found — check the model name.");
+  if (err.response?.status === 422) throw new Error(`xAI: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 429) throw new Error("xAI: Rate limit exceeded. Retry later.");
+  if (err.response?.status === 400) throw new Error(`xAI: Bad request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status >= 500) throw new Error(`xAI: Server error (${err.response.status}) — try again later.`);
+  throw new Error(`xAI failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
+}
+
 export default {
   async run(config, input, context = {}) {
     const {
@@ -22,8 +34,15 @@ export default {
       maxTokens = 2000,
     } = config;
 
+    if (!credentialId) return { success: false, error: "xAI: No credential selected.", skipped: true };
     if (!prompt) return { success: false, error: "xAI: 'prompt' is required.", skipped: true };
-    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "xAI");
+
+    let apiKey;
+    try {
+      apiKey = await getOAuthToken(credentialId, context.workspaceId, "xAI");
+    } catch (e) {
+      return { success: false, error: `xAI: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const inputSummary =
       typeof input === "string"
@@ -55,7 +74,7 @@ export default {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
-          timeout: 120000,
+          timeout: 30000,
           maxContentLength: 10 * 1024 * 1024,
         },
       );
@@ -79,12 +98,7 @@ export default {
         provider: "xai",
       };
     } catch (err) {
-      if (err.message?.startsWith("xAI")) throw err;
-      if (err.response?.status === 401) throw new Error("xAI: Invalid API key.");
-      if (err.response?.status === 403) throw new Error("xAI: Access forbidden — check your API key permissions.");
-      if (err.response?.status === 429) throw new Error("xAI: Rate limit exceeded. Retry later.");
-      if (err.response?.status === 400) throw new Error(`xAI: Bad request — ${err.response?.data?.error?.message || err.message}`);
-      throw new Error(`xAI failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
+      handleError(err);
     }
   },
 };

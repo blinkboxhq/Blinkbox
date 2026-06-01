@@ -49,7 +49,9 @@ function handleError(err) {
   if (status === 403) throw new Error(`OneDrive: Insufficient permissions — ${msg}. Ensure Files.ReadWrite Graph scope is granted.`);
   if (status === 404) throw new Error(`OneDrive: File or folder not found — ${msg}`);
   if (status === 409) throw new Error(`OneDrive: Conflict — ${msg}. The item may already exist.`);
+  if (status === 422) throw new Error(`OneDrive: Unprocessable request (422) — ${msg}.`);
   if (status === 429) throw new Error(`OneDrive: Rate limit exceeded. Retry after a short delay.`);
+  if (status >= 500) throw new Error(`OneDrive: Server error (${status}) — ${msg}. Retry later.`);
   throw new Error(`OneDrive: ${status ?? "Network"} error — ${msg}`);
 }
 

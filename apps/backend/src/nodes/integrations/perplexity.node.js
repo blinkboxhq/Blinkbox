@@ -11,6 +11,18 @@ import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
 const API_URL = "https://api.perplexity.ai/chat/completions";
 
+function handleError(err) {
+  if (err.message?.startsWith("Perplexity")) throw err;
+  if (err.response?.status === 401) throw new Error("Perplexity: Invalid API key.");
+  if (err.response?.status === 403) throw new Error("Perplexity: Access forbidden — check your API key permissions.");
+  if (err.response?.status === 404) throw new Error("Perplexity: Resource not found — check the model name.");
+  if (err.response?.status === 422) throw new Error(`Perplexity: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 429) throw new Error("Perplexity: Rate limit exceeded. Retry later.");
+  if (err.response?.status === 400) throw new Error(`Perplexity: Bad request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status >= 500) throw new Error(`Perplexity: Server error (${err.response.status}) — try again later.`);
+  throw new Error(`Perplexity failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
+}
+
 export default {
   async run(config, input, context = {}) {
     const {
@@ -22,8 +34,15 @@ export default {
       maxTokens = 2000,
     } = config;
 
+    if (!credentialId) return { success: false, error: "Perplexity: No credential selected.", skipped: true };
     if (!prompt) return { success: false, error: "Perplexity: 'prompt' is required.", skipped: true };
-    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "Perplexity");
+
+    let apiKey;
+    try {
+      apiKey = await getOAuthToken(credentialId, context.workspaceId, "Perplexity");
+    } catch (e) {
+      return { success: false, error: `Perplexity: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const inputSummary =
       typeof input === "string"
@@ -54,7 +73,7 @@ export default {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
-          timeout: 120000,
+          timeout: 30000,
           maxContentLength: 10 * 1024 * 1024,
         },
       );
@@ -78,9 +97,7 @@ export default {
         provider: "perplexity",
       };
     } catch (err) {
-      if (err.response?.status === 401) throw new Error("Perplexity: Invalid API key.");
-      if (err.response?.status === 429) throw new Error("Perplexity: Rate limit exceeded. Retry later.");
-      throw new Error(`Perplexity failed: ${err.response?.status || err.code} — ${err.message}`);
+      handleError(err);
     }
   },
 };

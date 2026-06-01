@@ -110,6 +110,7 @@ function handleError(err) {
   if (status === 409 || awsCode === "BucketAlreadyExists") {
     throw new Error(`S3: Conflict — ${awsMsg}.`);
   }
+  if (status === 422) throw new Error(`S3: Unprocessable request (422) — ${awsMsg}.`);
   if (status === 429) throw new Error("S3: Too many requests — slow down or increase retry delay.");
   if (status >= 500) throw new Error(`S3: Server error (${status}) — ${awsMsg}. Retry later.`);
   throw new Error(`S3: ${awsCode || status || "Error"} — ${awsMsg}`);
@@ -120,17 +121,27 @@ export default {
     const OP_ALIAS = { upload: "putObject", download: "getObject", delete: "deleteObject", list: "listObjects", presign: "generatePresignedUrl" };
     const operation = OP_ALIAS[config.operation] || config.operation || "listObjects";
     const bucket = config.bucket || input?.bucket || "";
-    const region = config.region || "us-east-1";
+    let region = config.region || "us-east-1";
 
     let accessKey = config.accessKeyId;
     let secretKey = config.secretAccessKey;
 
+    if (!config.credentialId && !accessKey) {
+      return { success: false, error: "S3: No credential selected.", skipped: true };
+    }
+
     if (config.credentialId) {
-      const raw = await getOAuthToken(config.credentialId, context.workspaceId, "S3");
+      let raw;
+      try {
+        raw = await getOAuthToken(config.credentialId, context.workspaceId, "S3");
+      } catch (e) {
+        return { success: false, error: `S3: Could not resolve credential — ${e.message}`, skipped: true };
+      }
       try {
         const j = JSON.parse(raw);
         accessKey = j.accessKeyId;
         secretKey = j.secretAccessKey;
+        if (j.region && !config.region) region = j.region;
       } catch {
         accessKey = raw;
       }

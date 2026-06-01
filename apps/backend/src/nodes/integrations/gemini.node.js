@@ -51,10 +51,14 @@ async function getApiKey(credentialId, workspaceId) {
 }
 
 function handleError(err) {
-  if (err.message.startsWith("Gemini")) throw err;
+  if (err.message?.startsWith("Gemini")) throw err;
   if (err.response?.status === 400) throw new Error(`Gemini: Bad request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 401) throw new Error("Gemini: Invalid API key. Check your credential in the Vault.");
   if (err.response?.status === 403) throw new Error("Gemini: Invalid API key or access denied.");
+  if (err.response?.status === 404) throw new Error(`Gemini: Resource not found — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 422) throw new Error(`Gemini: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
   if (err.response?.status === 429) throw new Error("Gemini: Rate limit exceeded. Retry later.");
+  if (err.response?.status >= 500) throw new Error(`Gemini: Server error (${err.response.status}) — try again later.`);
   throw new Error(`Gemini failed: ${err.response?.status || err.code} — ${err.message}`);
 }
 
@@ -235,7 +239,14 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Gemini: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    if (!config.credentialId) return { success: false, error: "Gemini: No credential selected.", skipped: true };
+
+    let apiKey;
+    try {
+      apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Gemini: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
       return await handler(config, input, apiKey);

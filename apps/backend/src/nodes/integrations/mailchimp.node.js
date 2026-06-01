@@ -168,13 +168,13 @@ export default {
       throw new Error(`Mailchimp: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
     if (!config.credentialId)
-      throw new Error("Mailchimp: No credential configured — add a Mailchimp API key first.");
+      return { success: false, error: "Mailchimp: No credential selected — pick a Mailchimp API key credential.", skipped: true };
 
     let apiKey;
     try {
       apiKey = await getApiKey(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Mailchimp: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     let client;

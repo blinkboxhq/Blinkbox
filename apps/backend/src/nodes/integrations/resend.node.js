@@ -80,11 +80,15 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Resend: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
+    if (!config.credentialId) {
+      return { success: false, error: "Resend: No credential selected — pick a Resend API key credential.", skipped: true };
+    }
+
     let apiKey;
     try {
       apiKey = await getApiKey(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Resend: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {

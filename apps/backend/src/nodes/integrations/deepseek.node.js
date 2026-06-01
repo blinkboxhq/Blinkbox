@@ -22,8 +22,15 @@ export default {
       maxTokens = 2000,
     } = config;
 
+    if (!credentialId) return { success: false, error: "DeepSeek: No credential selected.", skipped: true };
     if (!prompt) return { success: false, error: "DeepSeek: 'prompt' is required.", skipped: true };
-    const apiKey = await getOAuthToken(credentialId, context.workspaceId, "DeepSeek");
+
+    let apiKey;
+    try {
+      apiKey = await getOAuthToken(credentialId, context.workspaceId, "DeepSeek");
+    } catch (e) {
+      return { success: false, error: `DeepSeek: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const inputSummary =
       typeof input === "string"
@@ -79,10 +86,13 @@ export default {
       };
     } catch (err) {
       if (err.message?.startsWith("DeepSeek")) throw err;
+      if (err.response?.status === 400) throw new Error(`DeepSeek: Bad request — ${err.response?.data?.error?.message || err.message}`);
       if (err.response?.status === 401) throw new Error("DeepSeek: Invalid API key.");
       if (err.response?.status === 403) throw new Error("DeepSeek: Access forbidden — check your API key permissions.");
+      if (err.response?.status === 404) throw new Error(`DeepSeek: Resource not found — ${err.response?.data?.error?.message || err.message}`);
+      if (err.response?.status === 422) throw new Error(`DeepSeek: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
       if (err.response?.status === 429) throw new Error("DeepSeek: Rate limit exceeded. Retry later.");
-      if (err.response?.status === 400) throw new Error(`DeepSeek: Bad request — ${err.response?.data?.error?.message || err.message}`);
+      if (err.response?.status >= 500) throw new Error(`DeepSeek: Server error (${err.response.status}) — try again later.`);
       throw new Error(`DeepSeek failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
     }
   },

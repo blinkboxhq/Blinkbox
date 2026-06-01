@@ -38,6 +38,7 @@ function handleError(err) {
   if (status === 404) throw new Error(`Stripe: Resource not found — ${msg}`);
   if (status === 422) throw new Error(`Stripe: Unprocessable entity — ${msg}`);
   if (status === 429) throw new Error(`Stripe: Rate limit exceeded — slow down requests.`);
+  if (status >= 500) throw new Error(`Stripe: Server error (${status}) — ${msg}. Try again later.`);
   throw new Error(`Stripe: ${code ?? status ?? "Error"} — ${msg}`);
 }
 
@@ -66,7 +67,17 @@ function stripeReq(method, path, data, apiKey) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "listCustomers" } = config;
-    const apiKey = await getKey(config.credentialId, context.workspaceId);
+
+    if (!config.credentialId) {
+      return { success: false, error: "Stripe: No credential selected.", skipped: true };
+    }
+
+    let apiKey;
+    try {
+      apiKey = await getKey(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Stripe: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
       switch (operation) {

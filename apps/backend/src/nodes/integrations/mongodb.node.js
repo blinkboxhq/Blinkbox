@@ -54,11 +54,15 @@ export default {
 
     if (!collection) return { success: false, error: "MongoDB: 'collection' is required.", skipped: true };
 
+    if (!config.credentialId) {
+      return { success: false, error: "MongoDB: No credential selected — pick a MongoDB connection string credential.", skipped: true };
+    }
+
     let conn;
     try {
       conn = await getDb(config.credentialId, context.workspaceId, database);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `MongoDB: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     const col = conn.collection(collection);

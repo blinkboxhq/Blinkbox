@@ -26,7 +26,7 @@ async function getToken(credentialId, workspaceId) {
 }
 
 function handleError(err) {
-  if (err.message.startsWith("Google Sheets")) throw err;
+  if (err.message?.startsWith("Google Sheets")) throw err;
   const status = err.response?.status;
   const apiMsg = err.response?.data?.error?.message || err.message;
   if (status === 401 || status === 403) throw new Error(`Google Sheets: Auth failed (${status}) — ${apiMsg}. Re-connect your Google account.`);
@@ -138,9 +138,16 @@ export default {
     if (!handler)
       throw new Error(`Google Sheets: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
     if (!config.spreadsheetId) return { success: false, error: "Google Sheets: 'spreadsheetId' is required.", skipped: true };
+    if (!config.credentialId) return { success: false, error: "Google Sheets: No credential selected.", skipped: true };
+
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Google Sheets: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
-      const token = await getToken(config.credentialId, context.workspaceId);
       return await handler(config, token);
     } catch (err) {
       handleError(err);

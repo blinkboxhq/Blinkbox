@@ -17,6 +17,7 @@ function handleError(err) {
   if (status === 400) throw new Error(`Pipedrive: Bad request — ${msg}.`);
   if (status === 422) throw new Error(`Pipedrive: Validation error — ${msg}.`);
   if (status === 429) throw new Error(`Pipedrive: Rate limit exceeded — slow down requests.`);
+  if (status >= 500) throw new Error(`Pipedrive: Server error (${status}) — ${msg}. Try again later.`);
   throw new Error(`Pipedrive: ${status ?? "Error"} — ${msg}`);
 }
 
@@ -25,10 +26,15 @@ export default {
     const operation = config.operation || "createDeal";
 
     if (!config.credentialId) {
-      return { success: false, error: "Pipedrive: credential required.", skipped: true };
+      return { success: false, error: "Pipedrive: No credential selected.", skipped: true };
     }
 
-    const apiToken = await getToken(config.credentialId, context.workspaceId);
+    let apiToken;
+    try {
+      apiToken = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Pipedrive: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     const api = axios.create({
       baseURL: BASE_URL,

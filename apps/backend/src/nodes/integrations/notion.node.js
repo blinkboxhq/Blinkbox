@@ -158,7 +158,15 @@ export default {
     if (!handler)
       throw new Error(`Notion: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "Notion: No credential selected — pick a Notion Integration Token credential.", skipped: true };
+    }
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Notion: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     try {
       return await handler(config, token);
     } catch (err) {

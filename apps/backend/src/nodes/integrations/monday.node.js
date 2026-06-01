@@ -53,10 +53,15 @@ export default {
     const operation = config.operation || "createItem";
 
     if (!config.credentialId) {
-      return { success: false, error: "Monday: credential required.", skipped: true };
+      return { success: false, error: "Monday: No credential selected — pick a Monday.com API token credential.", skipped: true };
     }
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Monday: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
       switch (operation) {

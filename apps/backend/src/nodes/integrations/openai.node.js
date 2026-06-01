@@ -64,8 +64,13 @@ async function getApiKey(credentialId, workspaceId) {
 }
 
 function handleError(err, provider = "OpenAI") {
+  if (err.message?.startsWith("OpenAI")) throw err;
   if (err.response?.status === 401) throw new Error(`${provider}: Invalid API key.`);
-  if (err.response?.status === 429) throw new Error(`${provider}: Rate limit exceeded. Retry later.`);
+  if (err.response?.status === 403) throw new Error(`${provider}: Access forbidden — check your API key permissions.`);
+  if (err.response?.status === 404) throw new Error(`${provider}: Resource not found — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 422) throw new Error(`${provider}: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 429) throw new Error(`${provider}: Quota exceeded — check your billing at platform.openai.com`);
+  if (err.response?.status >= 500) throw new Error(`${provider}: Server error (${err.response.status}) — try again later.`);
   if (err.response?.status === 400) throw new Error(`${provider}: Bad request — ${err.response?.data?.error?.message || err.message}`);
   throw new Error(`${provider} failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
 }
@@ -327,12 +332,18 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`OpenAI: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    if (!config.credentialId) return { success: false, error: "OpenAI: No credential selected.", skipped: true };
+
+    let apiKey;
+    try {
+      apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `OpenAI: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
       return await handler(config, input, apiKey);
     } catch (err) {
-      if (err.message.startsWith("OpenAI")) throw err; // already classified
       handleError(err, "OpenAI");
     }
   },

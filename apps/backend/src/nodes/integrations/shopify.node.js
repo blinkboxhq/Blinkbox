@@ -42,7 +42,15 @@ export default {
     const { operation = "listProducts", shop } = config;
     if (!shop) return { success: false, error: "Shopify: 'shop' (e.g. mystore.myshopify.com) is required.", skipped: true };
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "Shopify: No credential selected — pick a Shopify Admin API token credential.", skipped: true };
+    }
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Shopify: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     const BASE = `https://${shop}/admin/api/2024-04`;
     const headers = { "X-Shopify-Access-Token": token, "Content-Type": "application/json" };
 

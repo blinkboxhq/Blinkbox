@@ -43,8 +43,16 @@ export default {
   async run(config, input, context = {}) {
     const { operation = "listEvents", calendarId = "primary" } = config;
 
+    if (!config.credentialId) return { success: false, error: "Google Calendar: No credential selected.", skipped: true };
+
+    let token;
     try {
-      const token = await getToken(config.credentialId, context.workspaceId);
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Google Calendar: Could not resolve credential — ${e.message}`, skipped: true };
+    }
+
+    try {
       const h = authHeaders(token);
       switch (operation) {
         case "listCalendars": {

@@ -45,7 +45,15 @@ export default {
     if (!owner) return { success: false, error: "GitHub: 'owner' (GitHub username or org) is required — configure this field.", skipped: true };
     if (!repo) return { success: false, error: "GitHub: 'repo' is required — configure this field.", skipped: true };
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "GitHub: No credential selected — pick a GitHub Personal Access Token credential.", skipped: true };
+    }
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `GitHub: Could not resolve credential — ${e.message}`, skipped: true };
+    }
     const h = headers(token);
 
     try {

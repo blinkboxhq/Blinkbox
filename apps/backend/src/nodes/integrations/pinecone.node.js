@@ -100,11 +100,15 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Pinecone: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
+    if (!config.credentialId) {
+      return { success: false, error: "Pinecone: No credential selected — pick a Pinecone API key credential.", skipped: true };
+    }
+
     let apiKey;
     try {
       apiKey = await getApiKey(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Pinecone: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {

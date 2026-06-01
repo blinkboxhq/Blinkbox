@@ -53,13 +53,16 @@ async function getApiKey(credentialId, workspaceId) {
 }
 
 function handleError(err) {
-  if (err.message.startsWith("Anthropic")) throw err;
+  if (err.message?.startsWith("Anthropic")) throw err;
   if (err.response?.status === 401) throw new Error("Anthropic: Invalid API key. Check your credential in the Vault.");
-  if (err.response?.status === 429) throw new Error("Anthropic: Rate limit exceeded. Retry later.");
+  if (err.response?.status === 403) throw new Error("Anthropic: Access forbidden — check your API key permissions.");
   if (err.response?.status === 404) {
     const model = err.config?.data ? JSON.parse(err.config.data)?.model : "unknown";
     throw new Error(`Anthropic: Model "${model}" not found. Try: claude-sonnet-4-20250514, claude-haiku-4-5-20251001.`);
   }
+  if (err.response?.status === 422) throw new Error(`Anthropic: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
+  if (err.response?.status === 429) throw new Error("Anthropic: Rate limit exceeded. Retry later.");
+  if (err.response?.status >= 500) throw new Error(`Anthropic: Server error (${err.response.status}) — try again later.`);
   throw new Error(`Anthropic failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
 }
 
@@ -220,7 +223,14 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Anthropic: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    if (!config.credentialId) return { success: false, error: "Anthropic: No credential selected.", skipped: true };
+
+    let apiKey;
+    try {
+      apiKey = await getApiKey(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Anthropic: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     try {
       return await handler(config, input, apiKey);

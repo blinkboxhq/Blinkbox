@@ -288,7 +288,16 @@ export default {
       return opPostMessage(config, null);
     }
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId) {
+      return { success: false, error: "Slack: No credential selected — pick a Slack Bot Token credential.", skipped: true };
+    }
+
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Slack: Could not resolve credential — ${e.message}`, skipped: true };
+    }
 
     // Allow forwarding attachments from previous node output (standalone canvas use)
     let resolvedConfig = config;

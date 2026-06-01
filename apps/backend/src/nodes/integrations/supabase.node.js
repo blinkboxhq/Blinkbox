@@ -52,11 +52,15 @@ export default {
       orderBy, orderAsc = true,
     } = config;
 
+    if (!config.credentialId) {
+      return { success: false, error: "Supabase: No credential selected — pick a Supabase credential.", skipped: true };
+    }
+
     let supabase;
     try {
       supabase = await getClient(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Supabase: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {

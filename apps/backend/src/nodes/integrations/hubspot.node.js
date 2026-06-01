@@ -39,6 +39,7 @@ function handleError(err) {
   if (status === 400) throw new Error(`HubSpot: Bad request — ${msg}.`);
   if (status === 409) throw new Error(`HubSpot: Conflict — ${msg}. A contact with this email may already exist.`);
   if (status === 429) throw new Error(`HubSpot: Rate limit exceeded — slow down requests.`);
+  if (status >= 500) throw new Error(`HubSpot: Server error (${status}) — ${msg}. Try again later.`);
   throw new Error(`HubSpot: ${status ?? "Error"} — ${msg}`);
 }
 
@@ -57,10 +58,16 @@ export default {
     const { operation = "createContact" } = config;
 
     if (!config.credentialId) {
-      return { success: false, error: "HubSpot: credential required.", skipped: true };
+      return { success: false, error: "HubSpot: No credential selected.", skipped: true };
     }
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `HubSpot: Could not resolve credential — ${e.message}`, skipped: true };
+    }
+
     const h = headers(token);
 
     try {
