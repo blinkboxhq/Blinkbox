@@ -119,7 +119,16 @@ export default {
     if (!handler)
       throw new Error(`Twilio: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const creds = await getCreds(config.credentialId, context.workspaceId);
+    if (!config.credentialId)
+      throw new Error("Twilio: No credential configured — add your Twilio Account SID:AuthToken to the Vault.");
+
+    let creds;
+    try {
+      creds = await getCreds(config.credentialId, context.workspaceId);
+    } catch (err) {
+      handleError(err);
+    }
+
     try {
       return await handler(config, creds);
     } catch (err) {

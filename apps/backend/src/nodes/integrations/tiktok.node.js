@@ -142,11 +142,29 @@ async function opGetVideo(config, token) {
   return data.data?.videos?.[0] || data;
 }
 
+async function opSearchVideos(config, token) {
+  if (!config.query) return { success: false, error: "TikTok searchVideos: 'query' is required.", skipped: true };
+  const { data } = await axios.post(
+    `${BASE}/video/search/`,
+    {
+      query: config.query,
+      max_count: Number(config.limit) || 20,
+      fields: [
+        "id", "title", "video_description", "create_time",
+        "like_count", "comment_count", "share_count", "view_count", "embed_link",
+      ],
+    },
+    { headers: makeHeaders(token), timeout: 15000 },
+  );
+  return { videos: data.data?.videos || [], cursor: data.data?.cursor };
+}
+
 const OPERATIONS = {
   publishVideo: opPublishVideo,
   getUserInfo: opGetUserInfo,
   listVideos: opListVideos,
   getVideo: opGetVideo,
+  searchVideos: opSearchVideos,
 };
 
 export default {

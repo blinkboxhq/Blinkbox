@@ -66,22 +66,6 @@ async function opUploadVideo(config, token) {
     throw new Error(`YouTube uploadVideo: Failed to fetch video from URL — ${err.message}`);
   }
 
-  const { data: uploadMeta } = await axios.post(
-    `${UPLOAD_API}?uploadType=resumable&part=snippet,status`,
-    metadata,
-    {
-      headers: {
-        ...authHeaders(token),
-        "Content-Type": "application/json",
-        "X-Upload-Content-Type": "video/*",
-        "X-Upload-Content-Length": String(videoBuffer.length),
-      },
-      timeout: 20000,
-    },
-  );
-
-  const uploadUrl = uploadMeta.headers?.location || (uploadMeta.kind ? null : null);
-
   const initRes = await axios.post(
     `${UPLOAD_API}?uploadType=resumable&part=snippet,status`,
     metadata,
@@ -103,6 +87,7 @@ async function opUploadVideo(config, token) {
 
   const uploadRes = await axios.put(resumableUrl, videoBuffer, {
     headers: {
+      ...authHeaders(token),
       "Content-Type": "video/*",
       "Content-Length": String(videoBuffer.length),
     },

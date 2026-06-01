@@ -144,7 +144,16 @@ export default {
     if (!handler)
       throw new Error(`SendGrid: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    const token = await getToken(config.credentialId, context.workspaceId);
+    if (!config.credentialId)
+      throw new Error("SendGrid: No credential configured — add your SendGrid API key to the Vault.");
+
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (err) {
+      handleError(err);
+    }
+
     try {
       return await handler(config, token);
     } catch (err) {

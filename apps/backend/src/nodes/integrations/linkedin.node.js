@@ -99,11 +99,12 @@ async function opSharePost(config, token) {
   };
 
   if (type === "article") {
-    if (!config.linkUrl) return { success: false, error: "LinkedIn sharePost (article): 'linkUrl' is required.", skipped: true };
+    const linkUrl = config.linkUrl || config.url;
+    if (!linkUrl) return { success: false, error: "LinkedIn sharePost (article): 'url' (article URL) is required.", skipped: true };
     shareContent.shareMediaCategory = "ARTICLE";
     shareContent.media = [{
       status: "READY",
-      originalUrl: config.linkUrl,
+      originalUrl: linkUrl,
       ...(config.title ? { title: { text: config.title } } : {}),
       ...(config.description ? { description: { text: config.description } } : {}),
     }];
@@ -211,15 +212,16 @@ async function opGetCompany(config, token) {
 }
 
 async function opGetConnections(config, token) {
-  const count = parseInt(config.limit) || 50;
+  const count = Math.min(parseInt(config.limit) || 50, 500);
   const { data } = await axios.get(
-    `${BASE}/connections?q=viewer&start=0&count=${count}`,
+    `${BASE}/connections?q=viewer&start=0&count=${count}&projection=(elements*(id,firstName,lastName,headline))`,
     { headers: headers(token), timeout: 15000 },
   );
   const connections = (data.elements || []).map((el) => ({
     id: el.id,
-    firstName: el.firstName?.localized?.en_US || "",
-    lastName: el.lastName?.localized?.en_US || "",
+    firstName: el.firstName?.localized?.en_US || Object.values(el.firstName?.localized || {})[0] || "",
+    lastName: el.lastName?.localized?.en_US || Object.values(el.lastName?.localized || {})[0] || "",
+    headline: el.headline?.localized?.en_US || Object.values(el.headline?.localized || {})[0] || "",
   }));
   return { connections, total: data.paging?.total ?? connections.length };
 }

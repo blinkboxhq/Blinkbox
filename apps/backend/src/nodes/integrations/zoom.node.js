@@ -12,10 +12,15 @@ async function getToken(credentialId, workspaceId) {
 }
 
 function handleError(err) {
-  if (err.response?.status === 401) throw new Error("Zoom: Invalid or expired token.");
-  if (err.response?.status === 404) throw new Error("Zoom: Meeting not found.");
-  if (err.response?.status === 400) throw new Error(`Zoom: Bad request — ${err.response?.data?.message || err.message}`);
-  throw new Error(`Zoom failed: ${err.response?.status || err.code} — ${err.message}`);
+  if (err.message.startsWith("Zoom")) throw err;
+  const status = err.response?.status;
+  const msg = err.response?.data?.message || err.message;
+  if (status === 401) throw new Error("Zoom: OAuth token is invalid or expired — re-authenticate.");
+  if (status === 403) throw new Error(`Zoom: Permission denied — ${msg}. Ensure the Zoom app has the required scopes (meeting:write, meeting:read).`);
+  if (status === 404) throw new Error("Zoom: Meeting not found.");
+  if (status === 400) throw new Error(`Zoom: Bad request — ${msg}`);
+  if (status === 429) throw new Error("Zoom: Rate limit exceeded. Retry later.");
+  throw new Error(`Zoom failed: ${status || err.code} — ${err.message}`);
 }
 
 function headers(token) {
