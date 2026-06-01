@@ -25,10 +25,15 @@ async function getApiKey(credentialId, workspaceId) {
 }
 
 function handleError(err) {
-  if (err.response?.status === 401) throw new Error("Moonshot: Invalid API key.");
-  if (err.response?.status === 429) throw new Error("Moonshot: Rate limit exceeded. Retry later.");
-  if (err.response?.status === 400) throw new Error(`Moonshot: Bad request — ${err.response?.data?.error?.message || err.message}`);
-  throw new Error(`Moonshot failed: ${err.response?.status || err.code} — ${err.response?.data?.error?.message || err.message}`);
+  if (err.message?.startsWith("Moonshot")) throw err;
+  const status = err.response?.status;
+  const detail = err.response?.data?.error?.message || err.message;
+  if (status === 401) throw new Error("Moonshot: Invalid API key.");
+  if (status === 403) throw new Error(`Moonshot: Access denied — ${detail}`);
+  if (status === 429) throw new Error("Moonshot: Rate limit exceeded. Retry later.");
+  if (status === 400) throw new Error(`Moonshot: Bad request — ${detail}`);
+  if (status >= 500) throw new Error(`Moonshot: Server error (${status}) — ${detail}`);
+  throw new Error(`Moonshot: ${status || err.code || "Error"} — ${detail}`);
 }
 
 function inputSummary(input) {
@@ -168,19 +173,18 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`Moonshot: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
-    if (!config.credentialId) throw new Error("Moonshot: No credential configured — add a Moonshot API key credential first.");
+    if (!config.credentialId) return { success: false, error: "Moonshot: No credential selected.", skipped: true };
 
     let apiKey;
     try {
       apiKey = await getApiKey(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `Moonshot: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {
       return await handler(config, input, apiKey);
     } catch (err) {
-      if (err.message?.startsWith("Moonshot")) throw err;
       handleError(err);
     }
   },

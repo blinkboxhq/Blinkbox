@@ -23,18 +23,23 @@ function headers(apiKey) {
 }
 
 function handleError(err) {
-  if (err.response?.status === 401) throw new Error("OpenAI Assistants: Invalid API key.");
-  if (err.response?.status === 404) throw new Error("OpenAI Assistants: Thread or assistant not found.");
-  if (err.response?.status === 429) throw new Error("OpenAI Assistants: Rate limit exceeded.");
-  const msg = err.response?.data?.error?.message || err.message;
-  throw new Error(`OpenAI Assistants failed: ${msg}`);
+  if (err.message?.startsWith("OpenAI Assistants")) throw err;
+  const status = err.response?.status;
+  const detail = err.response?.data?.error?.message || err.message;
+  if (status === 401) throw new Error("OpenAI Assistants: Invalid API key.");
+  if (status === 403) throw new Error(`OpenAI Assistants: Access denied — ${detail}`);
+  if (status === 404) throw new Error("OpenAI Assistants: Thread or assistant not found.");
+  if (status === 422) throw new Error(`OpenAI Assistants: Unprocessable request — ${detail}`);
+  if (status === 429) throw new Error("OpenAI Assistants: Rate limit exceeded.");
+  if (status >= 500) throw new Error(`OpenAI Assistants: Server error (${status}) — ${detail}`);
+  throw new Error(`OpenAI Assistants: ${status ?? "Error"} — ${detail}`);
 }
 
 async function waitForRun(threadId, runId, apiKey, timeoutMs = 60000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     await new Promise((r) => setTimeout(r, 1500));
-    const res = await axios.get(`${BASE}/threads/${threadId}/runs/${runId}`, { headers: headers(apiKey) });
+    const res = await axios.get(`${BASE}/threads/${threadId}/runs/${runId}`, { headers: headers(apiKey), timeout: 10000 });
     const status = res.data.status;
     if (status === "completed") return res.data;
     if (["failed", "cancelled", "expired"].includes(status)) {
@@ -144,11 +149,13 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler) throw new Error(`OpenAI Assistants: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
+    if (!config.credentialId) return { success: false, error: "OpenAI Assistants: No credential selected.", skipped: true };
+
     let apiKey;
     try {
       apiKey = await getApiKey(config.credentialId, context.workspaceId);
-    } catch (err) {
-      handleError(err);
+    } catch (e) {
+      return { success: false, error: `OpenAI Assistants: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
     try {

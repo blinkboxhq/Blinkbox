@@ -37,7 +37,16 @@ function handleError(err) {
 export default {
   async run(config, input, context = {}) {
     const { operation = "postTweet" } = config;
-    const token = await getToken(config.credentialId, context.workspaceId);
+
+    if (!config.credentialId) return { success: false, error: "Twitter: No credential selected.", skipped: true };
+
+    let token;
+    try {
+      token = await getToken(config.credentialId, context.workspaceId);
+    } catch (e) {
+      return { success: false, error: `Twitter: Could not resolve credential — ${e.message}`, skipped: true };
+    }
+
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
     try {

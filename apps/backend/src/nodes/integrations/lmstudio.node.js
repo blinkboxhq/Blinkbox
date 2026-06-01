@@ -26,10 +26,11 @@ export default {
       const text = res.data.choices?.[0]?.message?.content || "";
       return buildOutput(text, model, res.data.usage?.total_tokens ?? null, operation, "lmstudio");
     } catch (err) {
+      if (err.message?.startsWith("LM Studio")) throw err;
       if (err.code === "ECONNREFUSED") throw new Error(`LM Studio: Cannot connect to ${baseUrl}. Is LM Studio running with the server enabled?`);
       if (err.code === "ETIMEDOUT" || err.code === "ECONNRESET") throw new Error(`LM Studio: Connection to ${baseUrl} timed out or was reset.`);
       const detail = err.response?.data?.error?.message || err.response?.data?.error || err.message;
-      throw new Error(`LM Studio failed: ${detail}`);
+      throw new Error(`LM Studio: ${err.response?.status ?? "Error"} — ${detail}`);
     }
   },
 };

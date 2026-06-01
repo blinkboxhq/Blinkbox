@@ -1,4 +1,5 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../CredentialPicker";
 
 export default function ResendNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "sendEmail";
@@ -15,15 +16,13 @@ export default function ResendNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential (API Key)</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="Resend credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-orange-500/40"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ""}
+        onChange={(v) => updateConfig("credentialId", v)}
+        serviceType="Resend"
+        label="Resend API Key"
+        nodeId={nodeId}
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>

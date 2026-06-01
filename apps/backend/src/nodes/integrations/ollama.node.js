@@ -25,8 +25,11 @@ export default {
       const text = res.data.choices?.[0]?.message?.content || "";
       return buildOutput(text, model, null, operation, "ollama");
     } catch (err) {
+      if (err.message?.startsWith("Ollama")) throw err;
       if (err.code === "ECONNREFUSED") throw new Error(`Ollama: Cannot connect to ${baseUrl}. Is Ollama running?`);
-      throw new Error(`Ollama failed: ${err.response?.data?.error || err.message}`);
+      if (err.code === "ETIMEDOUT" || err.code === "ECONNRESET") throw new Error(`Ollama: Connection to ${baseUrl} timed out or was reset.`);
+      const detail = err.response?.data?.error || err.message;
+      throw new Error(`Ollama: ${err.response?.status ?? "Error"} — ${detail}`);
     }
   },
 };
