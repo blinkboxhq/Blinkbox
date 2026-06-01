@@ -133,9 +133,32 @@ export async function handleWebhook(req, res) {
       const user = await User.findOne({ stripeCustomerId: sub.customer });
       if (user) {
         await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: null });
+
+        // Prorate credits: fraction of Pro period actually used × Pro limit
+        const periodStart = sub.current_period_start * 1000;
+        const periodEnd   = sub.current_period_end   * 1000;
+        const now         = Date.now();
+        const fractionUsed = Math.min(1, (now - periodStart) / (periodEnd - periodStart));
+        const proratedCap  = Math.floor(fractionUsed * WorkspaceUsage.PLAN_LIMITS.pro);
+
+        const usage = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
+        // Cap credits to prorated allowance — never go below what's already spent
+        const cappedCredits = usage
+          ? Math.min(usage.creditsUsed, proratedCap)
+          : 0;
+
         await WorkspaceUsage.findOneAndUpdate(
           { workspaceId: user._id.toString() },
-          { plan: "free", monthlyLimit: WorkspaceUsage.PLAN_LIMITS.free },
+          {
+            plan: "free",
+            monthlyLimit: proratedCap,   // enforces cap for rest of cycle
+            creditsUsed: cappedCredits,
+          },
+          { upsert: true },
+        );
+
+        console.log(
+          `[Billing] Sub cancelled for user ${user._id}: ${Math.round(fractionUsed * 100)}% of period used → proratedCap=${proratedCap}, creditsUsed capped at ${cappedCredits}`,
         );
       }
     }
