@@ -17,6 +17,7 @@ export default {
     const BASE = "https://sentry.io/api/0";
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
+    try {
     switch (operation) {
       case "listIssues": {
         if (!org) return { success: false, error: "Sentry listIssues: 'organization' slug required.", skipped: true };
@@ -84,6 +85,15 @@ export default {
       }
       default:
         return { success: false, error: `Sentry: Unknown operation "${operation}".`, skipped: true };
+    }
+    } catch (err) {
+      const status = err.response?.status;
+      const msg = err.response?.data?.detail || err.response?.data?.error || err.message;
+      if (status === 401 || status === 403) throw new Error(`Sentry: Auth failed (${status}) — check your API token and org slug.`);
+      if (status === 404) throw new Error(`Sentry: Not found — check organization/issue ID.`);
+      if (status === 429) throw new Error(`Sentry: Rate limit exceeded. Add a Delay node.`);
+      if (err.message.startsWith("Sentry")) throw err;
+      throw new Error(`Sentry: ${status || "Error"} — ${msg}`);
     }
   },
 };
