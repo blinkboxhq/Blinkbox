@@ -43,7 +43,7 @@ export default {
   async run(config, input, context = {}) {
     const { operation = "listIssues", owner, repo } = config;
     if (!owner) return { success: false, error: "GitHub: 'owner' (GitHub username or org) is required — configure this field.", skipped: true };
-    if (!repo && operation !== "getRepo") return { success: false, error: "GitHub: 'repo' is required — configure this field.", skipped: true };
+    if (!repo) return { success: false, error: "GitHub: 'repo' is required — configure this field.", skipped: true };
 
     const token = await getToken(config.credentialId, context.workspaceId);
     const h = headers(token);
