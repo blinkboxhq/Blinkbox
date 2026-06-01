@@ -18,15 +18,13 @@ export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="Zoom OAuth credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ""}
+        onChange={(v) => updateConfig("credentialId", v)}
+        serviceType="Zoom"
+        label="Zoom OAuth"
+        nodeId={nodeId}
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>

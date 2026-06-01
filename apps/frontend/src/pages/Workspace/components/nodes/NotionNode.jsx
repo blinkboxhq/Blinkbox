@@ -125,9 +125,14 @@ export default function NotionNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Page Size</label>
-            <input type="number" min={1} max={100} value={config.pageSize || 10}
-              onChange={(e) => updateConfig('pageSize', Number(e.target.value))}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/20 transition-colors" />
+            <div className="flex gap-1.5">
+              {[10, 25, 50, 100].map((n) => (
+                <button key={n} onClick={() => updateConfig('pageSize', n)}
+                  className={`flex-1 py-2 rounded-lg border text-xs font-bold transition-all ${(config.pageSize || 10) === n ? 'bg-white/10 border-white/30 text-white' : 'bg-[#0a0a0a] border-[#222] text-zinc-500 hover:border-[#333]'}`}>
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}

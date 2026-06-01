@@ -62,11 +62,11 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
       {/* Phone Number ID */}
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Phone Number ID</label>
-        <input
+        <SmartVariableInput
           value={config.phoneNumberId || ''}
-          onChange={(e) => updateConfig('phoneNumberId', e.target.value)}
+          onChange={(val) => updateConfig('phoneNumberId', val)}
           placeholder="From Meta Business dashboard"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#25D366]/40 transition-colors"
+          nodeId={nodeId}
         />
       </div>
 
@@ -78,6 +78,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
             value={config.to || ''}
             onChange={(val) => updateConfig('to', val)}
             placeholder="14155551234 (no + or spaces)"
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -91,6 +92,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
             onChange={(val) => updateConfig('text', val)}
             placeholder="Hello {{trigger.data.name}}!"
             multiline
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -100,11 +102,11 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Image URL</label>
-            <SmartVariableInput value={config.imageUrl || ''} onChange={(val) => updateConfig('imageUrl', val)} placeholder="https://example.com/image.jpg" />
+            <SmartVariableInput value={config.imageUrl || ''} onChange={(val) => updateConfig('imageUrl', val)} placeholder="https://example.com/image.jpg" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Caption <span className="text-zinc-700">(optional)</span></label>
-            <SmartVariableInput value={config.caption || ''} onChange={(val) => updateConfig('caption', val)} placeholder="Check this out!" />
+            <SmartVariableInput value={config.caption || ''} onChange={(val) => updateConfig('caption', val)} placeholder="Check this out!" nodeId={nodeId} />
           </div>
         </>
       )}
@@ -114,12 +116,11 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Document URL</label>
-            <SmartVariableInput value={config.documentUrl || ''} onChange={(val) => updateConfig('documentUrl', val)} placeholder="https://example.com/file.pdf" />
+            <SmartVariableInput value={config.documentUrl || ''} onChange={(val) => updateConfig('documentUrl', val)} placeholder="https://example.com/file.pdf" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filename <span className="text-zinc-700">(optional)</span></label>
-            <input value={config.filename || ''} onChange={(e) => updateConfig('filename', e.target.value)} placeholder="report.pdf"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#25D366]/40 transition-colors" />
+            <SmartVariableInput value={config.filename || ''} onChange={(val) => updateConfig('filename', val)} placeholder="report.pdf" nodeId={nodeId} />
           </div>
         </>
       )}
@@ -128,7 +129,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'sendAudio' && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Audio URL</label>
-          <SmartVariableInput value={config.audioUrl || ''} onChange={(val) => updateConfig('audioUrl', val)} placeholder="https://example.com/audio.mp3" />
+          <SmartVariableInput value={config.audioUrl || ''} onChange={(val) => updateConfig('audioUrl', val)} placeholder="https://example.com/audio.mp3" nodeId={nodeId} />
         </div>
       )}
 
@@ -138,16 +139,16 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
           <div className="flex gap-3">
             <div className="flex flex-col gap-2 flex-1">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Latitude</label>
-              <SmartVariableInput value={config.latitude || ''} onChange={(val) => updateConfig('latitude', val)} placeholder="37.7749" />
+              <SmartVariableInput value={config.latitude || ''} onChange={(val) => updateConfig('latitude', val)} placeholder="37.7749" nodeId={nodeId} />
             </div>
             <div className="flex flex-col gap-2 flex-1">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Longitude</label>
-              <SmartVariableInput value={config.longitude || ''} onChange={(val) => updateConfig('longitude', val)} placeholder="-122.4194" />
+              <SmartVariableInput value={config.longitude || ''} onChange={(val) => updateConfig('longitude', val)} placeholder="-122.4194" nodeId={nodeId} />
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Location Name <span className="text-zinc-700">(optional)</span></label>
-            <SmartVariableInput value={config.locationName || ''} onChange={(val) => updateConfig('locationName', val)} placeholder="Our Office" />
+            <SmartVariableInput value={config.locationName || ''} onChange={(val) => updateConfig('locationName', val)} placeholder="Our Office" nodeId={nodeId} />
           </div>
         </>
       )}
@@ -157,13 +158,11 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Template Name</label>
-            <input value={config.templateName || ''} onChange={(e) => updateConfig('templateName', e.target.value)} placeholder="hello_world"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#25D366]/40 transition-colors" />
+            <SmartVariableInput value={config.templateName || ''} onChange={(val) => updateConfig('templateName', val)} placeholder="hello_world" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Language Code</label>
-            <input value={config.templateLang || 'en_US'} onChange={(e) => updateConfig('templateLang', e.target.value)} placeholder="en_US"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#25D366]/40 transition-colors" />
+            <SmartVariableInput value={config.templateLang || 'en_US'} onChange={(val) => updateConfig('templateLang', val)} placeholder="en_US" nodeId={nodeId} />
           </div>
         </>
       )}
@@ -172,7 +171,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'markRead' && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Message ID</label>
-          <SmartVariableInput value={config.messageId || ''} onChange={(val) => updateConfig('messageId', val)} placeholder="{{trigger.data.message.id}}" />
+          <SmartVariableInput value={config.messageId || ''} onChange={(val) => updateConfig('messageId', val)} placeholder="{{trigger.data.message.id}}" nodeId={nodeId} />
         </div>
       )}
 

@@ -55,15 +55,15 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-zinc-500 w-16 shrink-0">Base ID</span>
-          <input type="text" value={config.baseId || ''} onChange={(e) => updateConfig('baseId', e.target.value)}
-            placeholder="appXXXXXXXXXXXXXX"
-            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-yellow-300 font-mono focus:outline-none focus:border-yellow-500/50 transition-colors" />
+          <div className="flex-1">
+            <SmartVariableInput nodeId={nodeId} value={config.baseId || ''} onChange={(val) => updateConfig('baseId', val)} placeholder="appXXXXXXXXXXXXXX" />
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-zinc-500 w-16 shrink-0">Table</span>
-          <input type="text" value={config.tableName || ''} onChange={(e) => updateConfig('tableName', e.target.value)}
-            placeholder="Table name or ID"
-            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-500/50 transition-colors" />
+          <div className="flex-1">
+            <SmartVariableInput nodeId={nodeId} value={config.tableName || ''} onChange={(val) => updateConfig('tableName', val)} placeholder="Table name or ID" />
+          </div>
         </div>
       </div>
 
@@ -131,9 +131,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter Formula <span className="text-zinc-700">(optional)</span></label>
-            <input type="text" value={config.filterFormula || ''} onChange={(e) => updateConfig('filterFormula', e.target.value)}
-              placeholder='{Status} = "Active"'
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-yellow-500/50 transition-colors shadow-inner" />
+            <SmartVariableInput nodeId={nodeId} value={config.filterFormula || ''} onChange={(val) => updateConfig('filterFormula', val)} placeholder='{Status} = "Active"' />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Records</label>
@@ -142,9 +140,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">View <span className="text-zinc-700">(optional)</span></label>
-            <input type="text" value={config.view || ''} onChange={(e) => updateConfig('view', e.target.value)}
-              placeholder="Grid view"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-yellow-500/50 transition-colors" />
+            <SmartVariableInput nodeId={nodeId} value={config.view || ''} onChange={(val) => updateConfig('view', val)} placeholder="Grid view" />
           </div>
         </>
       )}
@@ -154,9 +150,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Field</label>
-            <input type="text" value={config.searchField || ''} onChange={(e) => updateConfig('searchField', e.target.value)}
-              placeholder="Email"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-500/50 transition-colors" />
+            <SmartVariableInput nodeId={nodeId} value={config.searchField || ''} onChange={(val) => updateConfig('searchField', val)} placeholder="Email" />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Value</label>

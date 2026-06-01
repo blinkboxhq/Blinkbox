@@ -127,14 +127,14 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Recurring Interval (optional)</label>
-            <select value={config.interval || ""} onChange={(e) => updateConfig("interval", e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#635BFF]/40">
-              <option value="">One-time</option>
-              <option value="day">Daily</option>
-              <option value="week">Weekly</option>
-              <option value="month">Monthly</option>
-              <option value="year">Yearly</option>
-            </select>
+            <div className="flex gap-1.5">
+              {[["", "One-time"], ["day", "Daily"], ["week", "Weekly"], ["month", "Monthly"], ["year", "Yearly"]].map(([val, label]) => (
+                <button key={val} onClick={() => updateConfig("interval", val)}
+                  className={`flex-1 py-2 rounded-lg border text-[9px] font-bold transition-all ${(config.interval || "") === val ? "bg-[#635BFF]/10 border-[#635BFF]/40 text-[#635BFF]" : "bg-[#0a0a0a] border-[#222] text-zinc-500 hover:border-[#333]"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}

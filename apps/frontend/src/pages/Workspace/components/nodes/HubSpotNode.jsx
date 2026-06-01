@@ -46,14 +46,14 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
       {["createContact", "getContact", "updateContact", "searchContacts"].includes(op) && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Email</label>
-          <SmartVariableInput value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{n1.email}}" />
+          <SmartVariableInput nodeId={nodeId} value={config.email || ""} onChange={(v) => updateConfig("email", v)} placeholder="{{n1.email}}" />
         </div>
       )}
 
       {["updateContact", "getContact"].includes(op) && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Contact ID (or use email above)</label>
-          <SmartVariableInput value={config.contactId || ""} onChange={(v) => updateConfig("contactId", v)} placeholder="{{n1.id}}" />
+          <SmartVariableInput nodeId={nodeId} value={config.contactId || ""} onChange={(v) => updateConfig("contactId", v)} placeholder="{{n1.id}}" />
         </div>
       )}
 
@@ -62,16 +62,16 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">First Name</label>
-              <SmartVariableInput value={config.firstName || ""} onChange={(v) => updateConfig("firstName", v)} placeholder="{{n1.firstName}}" />
+              <SmartVariableInput nodeId={nodeId} value={config.firstName || ""} onChange={(v) => updateConfig("firstName", v)} placeholder="{{n1.firstName}}" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Last Name</label>
-              <SmartVariableInput value={config.lastName || ""} onChange={(v) => updateConfig("lastName", v)} placeholder="{{n1.lastName}}" />
+              <SmartVariableInput nodeId={nodeId} value={config.lastName || ""} onChange={(v) => updateConfig("lastName", v)} placeholder="{{n1.lastName}}" />
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Company</label>
-            <SmartVariableInput value={config.company || ""} onChange={(v) => updateConfig("company", v)} placeholder="Acme Corp" />
+            <SmartVariableInput nodeId={nodeId} value={config.company || ""} onChange={(v) => updateConfig("company", v)} placeholder="Acme Corp" />
           </div>
         </>
       )}
@@ -80,16 +80,16 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Deal Name</label>
-            <SmartVariableInput value={config.dealName || ""} onChange={(v) => updateConfig("dealName", v)} placeholder="{{n1.company}} - Enterprise" />
+            <SmartVariableInput nodeId={nodeId} value={config.dealName || ""} onChange={(v) => updateConfig("dealName", v)} placeholder="{{n1.company}} - Enterprise" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Amount ($)</label>
-              <SmartVariableInput value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="50000" />
+              <SmartVariableInput nodeId={nodeId} value={config.amount || ""} onChange={(v) => updateConfig("amount", v)} placeholder="50000" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Close Date (YYYY-MM-DD)</label>
-              <SmartVariableInput value={config.closeDate || ""} onChange={(v) => updateConfig("closeDate", v)} placeholder="2024-12-31" />
+              <SmartVariableInput nodeId={nodeId} value={config.closeDate || ""} onChange={(v) => updateConfig("closeDate", v)} placeholder="2024-12-31" />
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -109,14 +109,14 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
       {op === "getDeal" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Deal ID</label>
-          <SmartVariableInput value={config.dealId || ""} onChange={(v) => updateConfig("dealId", v)} placeholder="{{n1.id}}" />
+          <SmartVariableInput nodeId={nodeId} value={config.dealId || ""} onChange={(v) => updateConfig("dealId", v)} placeholder="{{n1.id}}" />
         </div>
       )}
 
       {op === "createNote" && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Note Body</label>
-          <SmartVariableInput value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="{{n1.callSummary}}" multiline />
+          <SmartVariableInput nodeId={nodeId} value={config.body || ""} onChange={(v) => updateConfig("body", v)} placeholder="{{n1.callSummary}}" multiline />
         </div>
       )}
 

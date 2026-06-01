@@ -61,6 +61,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
           value={config.chatId || ''}
           onChange={(val) => updateConfig('chatId', val)}
           placeholder="e.g. -1001234567890 or @channelname"
+          nodeId={nodeId}
         />
       </div>
 
@@ -74,6 +75,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               onChange={(val) => updateConfig('text', val)}
               placeholder="Type your message... supports MarkdownV2"
               multiline
+              nodeId={nodeId}
             />
           </div>
           <div className="flex gap-3">
@@ -117,6 +119,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               value={config.photoUrl || ''}
               onChange={(val) => updateConfig('photoUrl', val)}
               placeholder="https://example.com/image.jpg"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -126,6 +129,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               onChange={(val) => updateConfig('caption', val)}
               placeholder="Photo caption..."
               multiline
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -140,6 +144,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               value={config.documentUrl || ''}
               onChange={(val) => updateConfig('documentUrl', val)}
               placeholder="https://example.com/file.pdf"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -148,6 +153,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               value={config.caption || ''}
               onChange={(val) => updateConfig('caption', val)}
               placeholder="Document caption..."
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -162,16 +168,17 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               value={config.question || ''}
               onChange={(val) => updateConfig('question', val)}
               placeholder="What do you think?"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Options <span className="text-zinc-700">(one per line, min 2)</span></label>
-            <textarea
+            <SmartVariableInput
               value={Array.isArray(config.options) ? config.options.join('\n') : (config.options || '')}
-              onChange={(e) => updateConfig('options', e.target.value.split('\n').filter(Boolean))}
+              onChange={(val) => updateConfig('options', typeof val === 'string' ? val.split('\n').filter(Boolean) : val)}
               placeholder={"Yes\nNo\nMaybe"}
-              rows={4}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500/50 transition-colors resize-none"
+              multiline
+              nodeId={nodeId}
             />
           </div>
           <div className="flex gap-3">
@@ -207,6 +214,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
             value={config.messageId || ''}
             onChange={(val) => updateConfig('messageId', val)}
             placeholder="e.g. 123456"
+            nodeId={nodeId}
           />
         </div>
       )}
@@ -218,6 +226,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
             onChange={(val) => updateConfig('text', val)}
             placeholder="Updated message text..."
             multiline
+            nodeId={nodeId}
           />
         </div>
       )}
