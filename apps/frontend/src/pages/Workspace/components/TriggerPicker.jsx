@@ -1,18 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, X, Plus, ArrowLeft, ChevronRight, Zap, AppWindow } from "lucide-react";
+import { Search, X, Plus, ArrowLeft, ChevronRight, Zap, AppWindow, Server } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { playNodeLand } from "../../../lib/sounds";
+
+// Core triggers — shown flat at the top, no category drill-down
+const CORE_KEYS = ["manual", "cron", "webhook", "chat", "error"];
 
 const TRIGGER_CATEGORIES = [
   {
     id: "events",
     label: "Events",
-    icon: Zap,
-    description: "Built-in workflow & system triggers",
+    icon: Server,
+    description: "Infrastructure, monitoring & system triggers",
     keys: [
-      "manual", "cron", "webhook", "email", "imap", "rss", "database",
-      "http_monitor", "port_monitor", "dns", "ssl", "error", "chat",
+      "imap", "rss", "database",
+      "http_monitor", "port_monitor", "dns", "ssl",
       "price_alert", "ssh", "docker", "virustotal",
     ],
   },
@@ -36,6 +39,7 @@ const TRIGGER_CATEGORIES = [
 ];
 
 const ALL_TRIGGERS = Object.entries(TRIGGER_VARIANTS).map(([key, v]) => ({ id: key, ...v }));
+const CORE_TRIGGERS = CORE_KEYS.map((k) => ALL_TRIGGERS.find((t) => t.id === k)).filter(Boolean);
 
 export default function TriggerPicker() {
   const [page, setPage]       = useState("home");
@@ -74,7 +78,7 @@ export default function TriggerPicker() {
   const visibleTriggers = query
     ? ALL_TRIGGERS.filter((t) => t.label.toLowerCase().includes(query) || t.backendType?.includes(query))
     : page === "home"
-    ? null
+    ? CORE_TRIGGERS
     : baseTriggers;
 
   useEffect(() => { setFocusIdx(0); }, [search, page]);
@@ -174,27 +178,37 @@ export default function TriggerPicker() {
               ))
             )
           ) : page === "home" ? (
-            /* Category home */
-            TRIGGER_CATEGORIES.map((cat) => {
-              const CatIcon = cat.icon;
-              const count = cat.keys.filter((k) => TRIGGER_VARIANTS[k]).length;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setPage(cat.id)}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors text-left group"
-                >
-                  <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                    <CatIcon size={18} strokeWidth={1.8} className="text-white/60 group-hover:text-white/90 transition-colors" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-white leading-tight">{cat.label}</div>
-                    <div className="text-[11px] text-white/35 mt-0.5">{cat.description}</div>
-                  </div>
-                  <ChevronRight size={13} className="text-white/25 shrink-0 group-hover:text-white/50 transition-colors" />
-                </button>
-              );
-            })
+            <>
+              {/* Core triggers — flat, no drill-down */}
+              {CORE_TRIGGERS.map((t, i) => (
+                <TriggerRow key={t.id} trigger={t} focused={i === focusIdx} onHover={() => setFocusIdx(i)} onSelect={() => commit(t)} />
+              ))}
+
+              {/* Divider */}
+              <div className="mx-3 my-2 border-t border-white/[0.06]" />
+
+              {/* Category drill-downs */}
+              {TRIGGER_CATEGORIES.map((cat) => {
+                const CatIcon = cat.icon;
+                const count = cat.keys.filter((k) => TRIGGER_VARIANTS[k]).length;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setPage(cat.id)}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors text-left group"
+                  >
+                    <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                      <CatIcon size={18} strokeWidth={1.8} className="text-white/60 group-hover:text-white/90 transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-white leading-tight">{cat.label}</div>
+                      <div className="text-[11px] text-white/35 mt-0.5">{cat.description} · {count}</div>
+                    </div>
+                    <ChevronRight size={13} className="text-white/25 shrink-0 group-hover:text-white/50 transition-colors" />
+                  </button>
+                );
+              })}
+            </>
           ) : (
             /* Trigger list for category */
             baseTriggers.map((t, i) => (
