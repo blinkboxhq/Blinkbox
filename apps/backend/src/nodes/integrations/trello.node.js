@@ -1,3 +1,22 @@
+/**
+ * TRELLO NODE
+ *
+ * Operations:
+ *   createCard  — Create a card in a list
+ *   updateCard  — Update card fields
+ *   getCard     — Get a card by ID
+ *   listCards   — List all cards in a list
+ *   createList  — Create a new list on a board
+ *   moveCard    — Move a card to a different list
+ *   addComment  — Add a comment to a card
+ *   addLabel    — Add a label to a card
+ *   archiveCard — Archive (close) a card
+ *   listBoards  — List boards for the authenticated member
+ *   listLists   — List all lists on a board
+ *
+ * Auth: Trello API key + token — stored as "apiKey:token" or JSON {apiKey, token}
+ */
+
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 
@@ -114,6 +133,15 @@ export default {
           if (!config.boardId) return { success: false, error: "Trello listLists: 'boardId' is required.", skipped: true };
           const res = await axios.get(`${BASE}/boards/${config.boardId}/lists`, { params: { ...auth }, timeout: 15000 });
           return { lists: res.data.map((l) => ({ id: l.id, name: l.name, closed: l.closed })), count: res.data.length };
+        }
+
+        case "createList": {
+          if (!config.boardId || !config.name) return { success: false, error: "Trello createList: 'boardId' and 'name' are required.", skipped: true };
+          const params = { ...auth, idBoard: config.boardId, name: config.name };
+          if (config.position) params.pos = config.position;
+          const res = await axios.post(`${BASE}/lists`, null, { params, timeout: 15000 });
+          const l = res.data;
+          return { id: l.id, name: l.name, idBoard: l.idBoard, closed: l.closed };
         }
 
         default:

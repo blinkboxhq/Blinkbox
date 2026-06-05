@@ -2,12 +2,14 @@
  * NOTION NODE
  *
  * Operations:
- *   createPage     — Create a new page in a database or as a child (default)
- *   updatePage     — Update page properties
- *   queryDatabase  — Query a database with filters/sorts
- *   getPage        — Retrieve a page by ID
- *   appendBlock    — Append blocks to a page
- *   searchPages    — Search pages/databases by title
+ *   createPage      — Create a new page in a database or as a child (default)
+ *   updatePage      — Update page properties
+ *   queryDatabase   — Query a database with filters/sorts
+ *   getPage         — Retrieve a page by ID
+ *   appendBlock     — Append blocks to a page
+ *   searchPages     — Search pages/databases by title
+ *   deletePage      — Archive (soft-delete) a page by ID
+ *   createDatabase  — Create a new database as a child of a page
  *
  * Auth: Notion Internal Integration Token (Bearer)
  */
@@ -142,6 +144,32 @@ async function opSearchPages(config, token) {
   };
 }
 
+async function opDeletePage(config, token) {
+  if (!config.pageId) return { success: false, error: "Notion deletePage: 'pageId' is required — configure this field.", skipped: true };
+  const response = await axios.patch(`${BASE}/pages/${stripId(config.pageId)}`, { archived: true }, { headers: headers(token), timeout: 15000 });
+  return { pageId: response.data.id, archived: response.data.archived, deleted: true };
+}
+
+async function opCreateDatabase(config, token) {
+  if (!config.parentId) return { success: false, error: "Notion createDatabase: 'parentId' (parent page ID) is required — configure this field.", skipped: true };
+  if (!config.title) return { success: false, error: "Notion createDatabase: 'title' is required — configure this field.", skipped: true };
+
+  const properties = typeof config.properties === "string"
+    ? (() => { try { return JSON.parse(config.properties); } catch { throw new Error("Notion createDatabase: 'properties' must be valid JSON."); } })()
+    : (config.properties || { Name: { title: {} } });
+
+  const body = {
+    parent: { type: "page_id", page_id: stripId(config.parentId) },
+    title: [{ type: "text", text: { content: config.title } }],
+    properties,
+  };
+  if (config.description) body.description = [{ type: "text", text: { content: config.description } }];
+  if (config.isInline !== undefined) body.is_inline = config.isInline;
+
+  const response = await axios.post(`${BASE}/databases`, body, { headers: headers(token), timeout: 15000 });
+  return { databaseId: response.data.id, url: response.data.url, title: config.title, created: true };
+}
+
 const OPERATIONS = {
   createPage: opCreatePage,
   updatePage: opUpdatePage,
@@ -149,6 +177,8 @@ const OPERATIONS = {
   getPage: opGetPage,
   appendBlock: opAppendBlock,
   searchPages: opSearchPages,
+  deletePage: opDeletePage,
+  createDatabase: opCreateDatabase,
 };
 
 export default {
