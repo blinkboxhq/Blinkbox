@@ -78,6 +78,7 @@ export default function App() {
             <Route path="/workspace/:id" element={<RequireAuth><Workspace /></RequireAuth>} />
             <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/policy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/product" element={<Product />} />
             <Route path="/integrations" element={<Integrations />} />

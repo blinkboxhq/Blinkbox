@@ -924,7 +924,7 @@ function Footer() {
             {[
               { header: 'Product',   links: [{ label: 'Features', href: '/product' }, { label: 'Integrations', href: '/integrations' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: 'https://blinkbox.net/login' }] },
               { header: 'Resources', links: [{ label: 'Docs', href: '/docs' }, { label: 'Blog', href: 'https://blinkbox.net/login' }, { label: 'Templates', href: 'https://blinkbox.net/login' }, { label: 'Status', href: 'https://blinkbox.net/login' }] },
-              { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:blinkbox.co.in@gmail.com' }] },
+              { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/policy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:blinkbox.co.in@gmail.com' }] },
             ].map(col => (
               <div key={col.header}>
                 <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">{col.header}</p>
@@ -942,7 +942,7 @@ function Footer() {
         <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
           <p className="text-[12px] text-neutral-700">© 2025 Blinkbox. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <a href="/privacy" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Privacy Policy</a>
+            <a href="/policy" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Privacy Policy</a>
             <a href="/terms" className="text-[12px] text-neutral-700 hover:text-neutral-400 transition-colors">Terms of Service</a>
           </div>
         </div>
