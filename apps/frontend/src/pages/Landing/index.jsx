@@ -858,6 +858,105 @@ function PricingSection() {
   );
 }
 
+// ─── Google Services ──────────────────────────────────────────────────────────
+function GoogleServicesSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.15 });
+
+  const services = [
+    {
+      name: 'Gmail',
+      color: '#EA4335',
+      description: 'Send emails, read and parse incoming messages, trigger workflows on new mail, and auto-reply based on conditions you set.',
+    },
+    {
+      name: 'Google Calendar',
+      color: '#4285F4',
+      description: 'Create, update, and delete calendar events automatically. Trigger workflows when meetings are scheduled, rescheduled, or cancelled.',
+    },
+    {
+      name: 'Google Drive',
+      color: '#34A853',
+      description: 'Upload, download, move, and organize files. Trigger automations when files are added or modified in specific folders.',
+    },
+    {
+      name: 'Google Sheets',
+      color: '#0F9D58',
+      description: 'Read rows, append data, update cells, and build live dashboards — no code. Sync any external data source directly into your spreadsheets.',
+    },
+    {
+      name: 'Google Docs',
+      color: '#4285F4',
+      description: 'Create documents from templates, append content, and extract text programmatically as part of larger automated workflows.',
+    },
+    {
+      name: 'Google Forms',
+      color: '#7B1FA2',
+      description: 'Trigger workflows the moment a form is submitted. Route responses, notify team members, and store data wherever you need it.',
+    },
+  ];
+
+  return (
+    <section ref={ref} id="google-services" className="py-20 px-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-12"
+        >
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mb-3">Google Workspace</p>
+          <h2 className="text-[34px] font-bold text-white tracking-tight leading-tight mb-4">
+            What Blinkbox does with<br />your Google account
+          </h2>
+          <p className="text-[15px] text-neutral-500 max-w-2xl leading-relaxed">
+            Blinkbox is a workflow automation platform. When you connect your Google account via OAuth, Blinkbox
+            acts on your behalf — reading, writing, and triggering actions in Google services — only for the
+            automations you explicitly configure. Your data is never sold or shared. Access is scoped to exactly
+            what each workflow requires.
+          </p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {services.map((svc, i) => (
+            <motion.div
+              key={svc.name}
+              initial={{ opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-2xl p-5 border"
+              style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                  style={{ background: svc.color + '22', border: `1px solid ${svc.color}40` }}>
+                  <span style={{ color: svc.color }}>{svc.name[0]}</span>
+                </div>
+                <span className="text-[13px] font-semibold text-white">{svc.name}</span>
+              </div>
+              <p className="text-[12px] text-neutral-500 leading-relaxed">{svc.description}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-[12px] text-neutral-700 mt-8"
+        >
+          Blinkbox's use of Google user data complies with the{' '}
+          <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer"
+            className="text-neutral-500 hover:text-white underline transition-colors">
+            Google API Services User Data Policy
+          </a>
+          , including the Limited Use requirements.
+        </motion.p>
+      </div>
+    </section>
+  );
+}
+
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
@@ -1012,6 +1111,9 @@ export default function Landing() {
 
         {/* ── PRICING ──────────────────────────────────────────────────── */}
         <PricingSection />
+
+        {/* ── GOOGLE SERVICES ──────────────────────────────────────────── */}
+        <GoogleServicesSection />
 
         {/* ── FAQ ──────────────────────────────────────────────────────── */}
         <FaqSection />
