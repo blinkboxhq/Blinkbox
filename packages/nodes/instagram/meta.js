@@ -1,20 +1,57 @@
 export default {
   backendType: "instagram",
   label: "Instagram",
-  description: "Read posts, media and user data via Meta Graph API",
+  description: "Read posts, media and user data via Meta Graph API.",
   fields: [
-    { name: "credentialId", label: "Instagram OAuth Credential", type: "credential", accentColor: "pink", placeholder: "Select Instagram credential…" },
-    { name: "operation", label: "Operation", type: "options", cols: 2, default: "getUserMedia", options: [
-      { value: "getUserMedia", label: "Get User Media" },
-      { value: "getUserInfo",  label: "Get User Info" },
-      { value: "getMedia",     label: "Get Single Media" },
-      { value: "createPost",   label: "Create Post" },
-      { value: "getComments",  label: "Get Comments" },
-    ]},
-    { name: "mediaId", label: "Media ID", type: "string", smart: true, placeholder: "{{upstream.id}}", show: { operation: ["getMedia","getComments"] } },
-    { name: "userId", label: "User ID", type: "string", smart: true, placeholder: "{{upstream.userId}}", show: { operation: "createPost" } },
-    { name: "imageUrl", label: "Image URL", type: "string", smart: true, placeholder: "https://example.com/image.jpg", show: { operation: "createPost" } },
-    { name: "caption", label: "Caption", type: "string", smart: true, placeholder: "Post caption...", show: { operation: "createPost" } },
-    { name: "limit", label: "Limit", type: "string", smart: true, placeholder: "20", show: { operation: ["getUserMedia","getComments"] } },
+    { name: "credentialId", type: "credential", label: "Instagram Credential", accentColor: "#E1306C" },
+    { type: "notice", level: "warning", text: "Requires Instagram Business or Creator account connected via Facebook" },
+    {
+      name: "operation", type: "options", label: "Operation", cols: 2, default: "getUserInfo",
+      options: [
+        { value: "getUserInfo",  label: "Get User Info" },
+        { value: "getUserMedia", label: "Get User Media" },
+        { value: "getMedia",     label: "Get Media" },
+        { value: "createPost",   label: "Create Post" },
+        { value: "getComments",  label: "Get Comments" },
+      ],
+    },
+
+    {
+      name: "fields", type: "multiOptions", label: "Fields", default: ["id", "username", "followers_count"],
+      options: [
+        { value: "id",                  label: "ID" },
+        { value: "username",            label: "Username" },
+        { value: "name",                label: "Name" },
+        { value: "biography",           label: "Biography" },
+        { value: "followers_count",     label: "Followers Count" },
+        { value: "following_count",     label: "Following Count" },
+        { value: "media_count",         label: "Media Count" },
+        { value: "profile_picture_url", label: "Profile Picture URL" },
+        { value: "website",             label: "Website" },
+      ],
+      show: { operation: "getUserInfo" },
+    },
+
+    {
+      name: "fields", type: "multiOptions", label: "Fields", default: ["id", "caption", "media_url", "timestamp"],
+      options: [
+        { value: "id",             label: "ID" },
+        { value: "caption",        label: "Caption" },
+        { value: "media_type",     label: "Media Type" },
+        { value: "media_url",      label: "Media URL" },
+        { value: "timestamp",      label: "Timestamp" },
+        { value: "like_count",     label: "Like Count" },
+        { value: "comments_count", label: "Comments Count" },
+      ],
+      show: { operation: "getUserMedia" },
+    },
+    { name: "limit", type: "number", label: "Limit", default: 12, show: { operation: "getUserMedia" } },
+
+    { name: "mediaId", type: "string", label: "Media ID", smart: true, show: { operation: ["getMedia", "getComments"] } },
+    { name: "limit", type: "number", label: "Limit", default: 20, show: { operation: "getComments" } },
+
+    { name: "imageUrl", type: "string", label: "Image URL", smart: true, placeholder: "Publicly accessible image URL", show: { operation: "createPost" } },
+    { name: "caption", type: "string", label: "Caption", smart: true, multiline: true, optional: true, show: { operation: "createPost" } },
   ],
+  outputs: ["user", "media", "mediaId", "post", "comments"],
 };

@@ -1,24 +1,29 @@
 export default {
   backendType: "elevenlabs",
   label: "ElevenLabs",
-  description: "Text to speech with ultra-realistic voices",
+  description: "Generate ultra-realistic speech, list voices, and stream audio via ElevenLabs API.",
   fields: [
-    { name: "credentialId", label: "ElevenLabs API Key", type: "credential", accentColor: "violet", placeholder: "Select ElevenLabs credential…" },
-    { name: "operation", label: "Operation", type: "options", cols: 2, default: "textToSpeech", options: [
-      { value: "textToSpeech", label: "Text to Speech" },
-      { value: "listVoices",   label: "List Voices" },
-    ]},
-    { name: "text", label: "Text", type: "string", smart: true, placeholder: "{{upstream.message}}", show: { operation: "textToSpeech" } },
-    { name: "voiceId", label: "Voice ID", type: "string", smart: false, mono: true, default: "21m00Tcm4TlvDq8ikWAM", placeholder: "21m00Tcm4TlvDq8ikWAM (Rachel)", show: { operation: "textToSpeech" } },
-    { name: "model", label: "Model", type: "options", cols: 1, default: "eleven_monolingual_v1", options: [
-      { value: "eleven_monolingual_v1", label: "Monolingual v1 (English)" },
-      { value: "eleven_multilingual_v2", label: "Multilingual v2" },
-      { value: "eleven_turbo_v2", label: "Turbo v2 (fast)" },
-    ], show: { operation: "textToSpeech" } },
-    { type: "row", show: { operation: "textToSpeech" }, fields: [
-      { name: "stability", label: "Stability (0–1)", type: "number", default: 0.5, min: 0, max: 1, step: 0.05 },
-      { name: "similarityBoost", label: "Similarity (0–1)", type: "number", default: 0.75, min: 0, max: 1, step: 0.05 },
-    ]},
+    { name: "credentialId", type: "credential", label: "ElevenLabs Credential", accentColor: "#000000" },
+    {
+      name: "operation", type: "options", label: "Operation", cols: 2, default: "textToSpeech",
+      options: [
+        { value: "textToSpeech", label: "Text to Speech" },
+        { value: "listVoices",   label: "List Voices" },
+        { value: "getVoice",     label: "Get Voice" },
+        { value: "streamSpeech", label: "Stream Speech" },
+      ],
+    },
+
+    { name: "text", type: "string", label: "Text", smart: true, multiline: true, show: { operation: ["textToSpeech", "streamSpeech"] } },
+    { name: "voiceId", type: "string", label: "Voice ID", smart: true, default: "21m00Tcm4TlvDq8ikWAM", placeholder: "21m00Tcm4TlvDq8ikWAM", show: { operation: ["textToSpeech", "getVoice", "streamSpeech"] } },
+    {
+      name: "modelId", type: "string", label: "Model ID", smart: true, optional: true, default: "eleven_monolingual_v1",
+      show: { operation: ["textToSpeech", "streamSpeech"] },
+    },
+    { name: "stability", type: "number", label: "Stability (0–1)", default: 0.5, min: 0, max: 1, step: 0.01, show: { operation: "textToSpeech" } },
+    { name: "similarityBoost", type: "number", label: "Similarity Boost (0–1)", default: 0.75, min: 0, max: 1, step: 0.01, show: { operation: "textToSpeech" } },
+    { name: "style", type: "number", label: "Style (0–1)", default: 0, min: 0, max: 1, step: 0.01, show: { operation: "textToSpeech" } },
+    { name: "useSpeakerBoost", type: "boolean", label: "Use Speaker Boost", default: true, show: { operation: "textToSpeech" } },
   ],
-  outputs: ["audioBase64", "fileName", "voiceId"],
+  outputs: ["audioUrl", "audioBase64", "voices", "voice", "characterCount"],
 };
