@@ -160,6 +160,23 @@ async function opCreateUser(config, client) {
   return data.user;
 }
 
+async function opAssignTicket(config, client) {
+  const id = config.ticketId;
+  if (!id) return { success: false, error: "Zendesk assignTicket: 'ticketId' is required.", skipped: true };
+  const assigneeId = config.assigneeId;
+  if (!assigneeId) return { success: false, error: "Zendesk assignTicket: 'assigneeId' is required.", skipped: true };
+  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: { assignee_id: parseInt(assigneeId) } }, {
+    auth: client.auth,
+    headers: client.headers,
+    timeout: 10000,
+  });
+  return data.ticket;
+}
+
+async function opAddComment(config, client) {
+  return opReplyTicket(config, client);
+}
+
 async function opReplyTicket(config, client) {
   const id = config.ticketId;
   if (!id) return { success: false, error: "Zendesk replyTicket: 'ticketId' is required.", skipped: true };
@@ -197,7 +214,9 @@ const OPERATIONS = {
   createTicket: opCreateTicket,
   updateTicket: opUpdateTicket,
   replyTicket: opReplyTicket,
+  addComment: opAddComment,
   closeTicket: opCloseTicket,
+  assignTicket: opAssignTicket,
   searchTickets: opSearchTickets,
   listUsers: opListUsers,
   createUser: opCreateUser,

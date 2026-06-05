@@ -94,6 +94,7 @@ export default {
           return { success: true, ...deployShape(res.data) };
         }
 
+        case "createDeployment":
         case "triggerDeploy": {
           const { projectId, branch, target } = config;
           if (!projectId) return { success: false, error: "Vercel triggerDeploy: 'projectId' is required.", skipped: true };
@@ -139,6 +140,23 @@ export default {
               updatedAt: p.updatedAt,
               latestDeploymentUrl: p.latestDeployments?.[0]?.url ? `https://${p.latestDeployments[0].url}` : undefined,
             })),
+          };
+        }
+
+        case "getProject": {
+          const { projectId } = config;
+          if (!projectId) return { success: false, error: "Vercel getProject: 'projectId' is required.", skipped: true };
+          const res = await axios.get(`${API}/v9/projects/${projectId}`, { headers, params: teamParam, timeout: 15000 });
+          const p = res.data;
+          return {
+            success: true,
+            id: p.id,
+            name: p.name,
+            framework: p.framework,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+            link: p.link,
+            latestDeploymentUrl: p.latestDeployments?.[0]?.url ? `https://${p.latestDeployments[0].url}` : undefined,
           };
         }
 

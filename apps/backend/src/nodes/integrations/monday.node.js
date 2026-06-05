@@ -193,6 +193,29 @@ export default {
           return { success: true, ...result.create_board };
         }
 
+        case "createColumn": {
+          if (!config.boardId) return { success: false, error: "Monday createColumn: boardId required.", skipped: true };
+          if (!config.title) return { success: false, error: "Monday createColumn: title required.", skipped: true };
+          const colType = config.columnType || "text";
+          const result = await gql(token, `
+            mutation($boardId: ID!, $title: String!, $type: ColumnType!) {
+              create_column(board_id: $boardId, title: $title, column_type: $type) { id title type }
+            }
+          `, { boardId: String(config.boardId), title: config.title, type: colType });
+          return { success: true, ...result.create_column };
+        }
+
+        case "moveItemToGroup": {
+          if (!config.itemId) return { success: false, error: "Monday moveItemToGroup: itemId required.", skipped: true };
+          if (!config.groupId) return { success: false, error: "Monday moveItemToGroup: groupId required.", skipped: true };
+          const result = await gql(token, `
+            mutation($itemId: ID!, $groupId: String!) {
+              move_item_to_group(item_id: $itemId, group_id: $groupId) { id name group { id title } }
+            }
+          `, { itemId: String(config.itemId), groupId: config.groupId });
+          return { success: true, ...result.move_item_to_group };
+        }
+
         case "getMe": {
           const result = await gql(token, `query { me { id name email } }`);
           return { success: true, ...result.me };

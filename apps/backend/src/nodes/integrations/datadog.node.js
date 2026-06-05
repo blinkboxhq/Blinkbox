@@ -48,6 +48,7 @@ export default {
 
     try {
       switch (operation) {
+        case "getMetrics":
         case "queryMetrics": {
           const now = Math.floor(Date.now() / 1000);
           if (!config.query) return { success: false, error: "Datadog queryMetrics: 'query' is required.", skipped: true };
@@ -124,6 +125,13 @@ export default {
             timeout: 15000,
           });
           return { success: true, monitors: data, count: data.length };
+        }
+
+        case "getMonitor": {
+          const id = config.monitorId || input?.monitorId;
+          if (!id) return { success: false, error: "Datadog getMonitor: 'monitorId' is required.", skipped: true };
+          const { data } = await axios.get(`${BASE}/monitor/${id}`, { headers, timeout: 15000 });
+          return { success: true, id: data.id, name: data.name, type: data.type, status: data.overall_state, query: data.query };
         }
 
         case "muteMonitor": {

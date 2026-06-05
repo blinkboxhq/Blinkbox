@@ -159,6 +159,7 @@ export default {
           return { success: true, ...data };
         }
 
+        case "replyToConversation":
         case "replyConversation": {
           if (!config.conversationId) return { success: false, error: "Intercom replyConversation: conversationId required.", skipped: true };
           if (!config.body) return { success: false, error: "Intercom replyConversation: body required.", skipped: true };
@@ -190,6 +191,7 @@ export default {
           return { success: true, id: data.id, state: "closed" };
         }
 
+        case "tagContact":
         case "addTag": {
           if (!config.contactId) return { success: false, error: "Intercom addTag: contactId required.", skipped: true };
           if (!config.tagName) return { success: false, error: "Intercom addTag: tagName required.", skipped: true };

@@ -122,6 +122,32 @@ export default {
           return { lists: (res.data.lists ?? []).map((l) => ({ id: l.id, name: l.name })), count: res.data.lists?.length ?? 0 };
         }
 
+        case "createList": {
+          if (!config.folderId || !config.name) return { success: false, error: "ClickUp createList: 'folderId' and 'name' are required.", skipped: true };
+          const body = { name: config.name };
+          if (config.content) body.content = config.content;
+          if (config.status) body.status = config.status;
+          const res = await axios.post(`${BASE}/folder/${config.folderId}/list`, body, { headers, timeout: 15000 });
+          const l = res.data;
+          return { id: l.id, name: l.name, orderindex: l.orderindex, folder: l.folder?.name };
+        }
+
+        case "getList": {
+          if (!config.listId) return { success: false, error: "ClickUp getList: 'listId' is required.", skipped: true };
+          const res = await axios.get(`${BASE}/list/${config.listId}`, { headers, timeout: 15000 });
+          const l = res.data;
+          return { id: l.id, name: l.name, orderindex: l.orderindex, content: l.content, status: l.status, folder: l.folder?.name, space: l.space?.name };
+        }
+
+        case "createSpace": {
+          if (!config.teamId || !config.name) return { success: false, error: "ClickUp createSpace: 'teamId' and 'name' are required.", skipped: true };
+          const body = { name: config.name };
+          if (config.multipleAssignees !== undefined) body.multiple_assignees = Boolean(config.multipleAssignees);
+          const res = await axios.post(`${BASE}/team/${config.teamId}/space`, body, { headers, timeout: 15000 });
+          const s = res.data;
+          return { id: s.id, name: s.name, teamId: config.teamId };
+        }
+
         default:
           throw new Error(`ClickUp: Unknown operation "${operation}".`);
       }

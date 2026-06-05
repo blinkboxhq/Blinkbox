@@ -77,6 +77,20 @@ export default {
           return { success: true, ...data.incident };
         }
 
+        case "updateIncident": {
+          if (!config.incidentId) return { success: false, error: "PagerDuty updateIncident: 'incidentId' is required.", skipped: true };
+          const update = { type: "incident" };
+          if (config.title) update.title = config.title;
+          if (config.status) update.status = config.status;
+          if (config.urgency) update.urgency = config.urgency;
+          if (config.body) update.body = { type: "incident_body", details: config.body };
+          if (!Object.keys(update).filter((k) => k !== "type").length) {
+            return { success: false, error: "PagerDuty updateIncident: provide at least one field to update (title, status, urgency, body).", skipped: true };
+          }
+          const { data } = await api.put(`/incidents/${config.incidentId}`, { incident: update });
+          return { success: true, ...data.incident };
+        }
+
         case "resolveIncident": {
           if (!config.incidentId) return { success: false, error: "PagerDuty resolveIncident: 'incidentId' is required.", skipped: true };
           const { data } = await api.put(`/incidents/${config.incidentId}`, {

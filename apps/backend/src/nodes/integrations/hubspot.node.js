@@ -165,6 +165,43 @@ export default {
           return { updated: true, dealId: config.dealId };
         }
 
+        case "associateObjects": {
+          const { fromType, fromId, toType, toId, associationTypeId } = config;
+          if (!fromType || !fromId || !toType || !toId) return { success: false, error: "HubSpot associateObjects: fromType, fromId, toType, toId are required.", skipped: true };
+          await axios.put(
+            `${BASE}/crm/v3/objects/${fromType}/${fromId}/associations/${toType}/${toId}/${associationTypeId || "contact_to_deal"}`,
+            {},
+            { headers: h, timeout: 15000 }
+          );
+          return { associated: true, from: `${fromType}/${fromId}`, to: `${toType}/${toId}` };
+        }
+
+        case "listContacts": {
+          const params = { limit: Math.min(Number(config.limit ?? 20), 100), properties: "email,firstname,lastname,phone,company,hubspot_owner_id" };
+          if (config.after) params.after = config.after;
+          const res = await axios.get(`${BASE}/crm/v3/objects/contacts`, { headers: h, timeout: 15000, params });
+          return {
+            contacts: res.data.results?.map((c) => ({ id: c.id, ...c.properties })) ?? [],
+            total: res.data.total,
+            paging: res.data.paging,
+          };
+        }
+
+        case "createCompany": {
+          if (!config.companyName) return { success: false, error: "HubSpot createCompany: companyName is required.", skipped: true };
+          const properties = { name: config.companyName };
+          if (config.domain) properties.domain = config.domain;
+          if (config.phone) properties.phone = config.phone;
+          if (config.city) properties.city = config.city;
+          if (config.country) properties.country = config.country;
+          if (config.industry) properties.industry = config.industry;
+          if (config.website) properties.website = config.website;
+          Object.assign(properties, parseExtra(config.extraProperties, "createCompany extraProperties"));
+          const res = await axios.post(`${BASE}/crm/v3/objects/companies`, { properties }, { headers: h, timeout: 15000 });
+          return { id: res.data.id, name: res.data.properties?.name, domain: res.data.properties?.domain, createdAt: res.data.createdAt };
+        }
+
+        case "addNote":
         case "createNote": {
           if (!config.body) return { success: false, error: "HubSpot createNote: body is required.", skipped: true };
           const properties = { hs_note_body: config.body, hs_timestamp: new Date().toISOString() };
@@ -175,17 +212,6 @@ export default {
           if (associations.length) payload.associations = associations;
           const res = await axios.post(`${BASE}/crm/v3/objects/notes`, payload, { headers: h, timeout: 15000 });
           return { id: res.data.id, createdAt: res.data.createdAt };
-        }
-
-        case "associateObjects": {
-          const { fromType, fromId, toType, toId, associationTypeId } = config;
-          if (!fromType || !fromId || !toType || !toId) return { success: false, error: "HubSpot associateObjects: fromType, fromId, toType, toId are required.", skipped: true };
-          await axios.put(
-            `${BASE}/crm/v3/objects/${fromType}/${fromId}/associations/${toType}/${toId}/${associationTypeId || "contact_to_deal"}`,
-            {},
-            { headers: h, timeout: 15000 }
-          );
-          return { associated: true, from: `${fromType}/${fromId}`, to: `${toType}/${toId}` };
         }
 
         case "listOwners": {

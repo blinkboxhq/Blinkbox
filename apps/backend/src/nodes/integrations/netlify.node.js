@@ -128,6 +128,28 @@ export default {
           };
         }
 
+        case "createDeploy": {
+          const { siteId } = config;
+          if (!siteId) return { success: false, error: "Netlify createDeploy: 'siteId' is required.", skipped: true };
+          const body = {};
+          if (config.branch) body.branch = config.branch;
+          if (config.message) body.title = config.message;
+          const res = await axios.post(`${API}/sites/${siteId}/deploys`, body, { headers, timeout: 20000 });
+          return { success: true, ...deployShape(res.data) };
+        }
+
+        case "listFunctions": {
+          const { siteId } = config;
+          if (!siteId) return { success: false, error: "Netlify listFunctions: 'siteId' is required.", skipped: true };
+          const res = await axios.get(`${API}/sites/${siteId}/functions`, { headers, timeout: 15000 });
+          const fns = Array.isArray(res.data) ? res.data : res.data.functions ?? [];
+          return {
+            success: true,
+            count: fns.length,
+            functions: fns.map((f) => ({ id: f.id, name: f.name, log_type: f.log_type })),
+          };
+        }
+
         case "updateEnvVar": {
           const { siteId, key, value, context: envContext } = config;
           if (!siteId) return { success: false, error: "Netlify updateEnvVar: 'siteId' is required.", skipped: true };

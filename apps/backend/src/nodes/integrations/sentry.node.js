@@ -69,6 +69,27 @@ export default {
         const { data } = await axios.get(`${BASE}/organizations/${org}/projects/`, { headers, timeout: 10000 });
         return { projects: data, count: data.length };
       }
+      case "updateIssue": {
+        const id = config.issueId || input.issueId;
+        if (!id) return { success: false, error: "Sentry updateIssue: 'issueId' required.", skipped: true };
+        const update = {};
+        if (config.status) update.status = config.status;
+        if (config.assignedTo) update.assignedTo = config.assignedTo;
+        if (config.hasSeen !== undefined) update.hasSeen = Boolean(config.hasSeen);
+        if (!Object.keys(update).length) return { success: false, error: "Sentry updateIssue: provide at least one field to update (status, assignedTo, hasSeen).", skipped: true };
+        const { data } = await axios.put(`${BASE}/issues/${id}/`, update, { headers, timeout: 10000 });
+        return { id, status: data.status, assignedTo: data.assignedTo };
+      }
+      case "createRelease": {
+        if (!org) return { success: false, error: "Sentry createRelease: 'organization' slug required.", skipped: true };
+        if (!config.version) return { success: false, error: "Sentry createRelease: 'version' required.", skipped: true };
+        const body = { version: config.version };
+        if (config.ref) body.ref = config.ref;
+        if (config.url) body.url = config.url;
+        if (config.projects) body.projects = String(config.projects).split(",").map((p) => p.trim()).filter(Boolean);
+        const { data } = await axios.post(`${BASE}/organizations/${org}/releases/`, body, { headers, timeout: 10000 });
+        return { version: data.version, url: data.url, dateCreated: data.dateCreated, projects: data.projects };
+      }
       case "listOrganizations": {
         const { data } = await axios.get(`${BASE}/organizations/`, { headers, timeout: 10000 });
         return { organizations: data, count: data.length };
