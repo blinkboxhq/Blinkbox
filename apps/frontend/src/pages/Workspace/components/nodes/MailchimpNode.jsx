@@ -121,19 +121,19 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Audience ID</label>
-            <SmartVariableInput value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Mailchimp audience ID" />
+            <SmartVariableInput nodeId={nodeId} value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="Mailchimp audience ID" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Subject Line</label>
-            <SmartVariableInput value={config.subjectLine || ""} onChange={(v) => updateConfig("subjectLine", v)} placeholder="Your {{ $json.month }} newsletter is here!" />
+            <SmartVariableInput nodeId={nodeId} value={config.subjectLine || ""} onChange={(v) => updateConfig("subjectLine", v)} placeholder="Your {{ $json.month }} newsletter is here!" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">From Name</label>
-            <SmartVariableInput value={config.fromName || ""} onChange={(v) => updateConfig("fromName", v)} placeholder="My Company" />
+            <SmartVariableInput nodeId={nodeId} value={config.fromName || ""} onChange={(v) => updateConfig("fromName", v)} placeholder="My Company" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Reply-To Email</label>
-            <SmartVariableInput value={config.replyTo || ""} onChange={(v) => updateConfig("replyTo", v)} placeholder="hello@mycompany.com" />
+            <SmartVariableInput nodeId={nodeId} value={config.replyTo || ""} onChange={(v) => updateConfig("replyTo", v)} placeholder="hello@mycompany.com" />
           </div>
         </>
       )}

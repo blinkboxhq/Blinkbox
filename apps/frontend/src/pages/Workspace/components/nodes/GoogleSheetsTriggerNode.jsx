@@ -15,11 +15,11 @@ export default function GoogleSheetsTriggerNode({ config = {}, updateConfig, nod
       <div className="p-3 flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Spreadsheet ID</label>
-          <SmartVariableInput value={config.spreadsheetId || ''} onChange={(v) => updateConfig?.('spreadsheetId', v)} placeholder="From URL: /spreadsheets/d/…/edit" />
+          <SmartVariableInput value={config.spreadsheetId || ''} onChange={(v) => updateConfig?.('spreadsheetId', v)} placeholder="From URL: /spreadsheets/d/…/edit" nodeId={nodeId} />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Sheet / Range</label>
-          <SmartVariableInput value={config.range || 'Sheet1'} onChange={(v) => updateConfig?.('range', v)} placeholder="Sheet1 or Sheet1!A:Z" />
+          <SmartVariableInput value={config.range || 'Sheet1'} onChange={(v) => updateConfig?.('range', v)} placeholder="Sheet1 or Sheet1!A:Z" nodeId={nodeId} />
         </div>
         <div className="flex flex-col gap-1">
           <CredentialPicker
@@ -40,10 +40,17 @@ export default function GoogleSheetsTriggerNode({ config = {}, updateConfig, nod
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Poll interval</label>
-          <select value={config.pollIntervalMinutes || '5'} onChange={(e) => updateConfig?.('pollIntervalMinutes', e.target.value)}
-            className="w-full bg-[#111] border border-[#222] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-200 outline-none">
-            {INTERVALS.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
-          </select>
+          <div className="grid grid-cols-2 gap-1.5">
+            {INTERVALS.map((i) => {
+              const active = (config.pollIntervalMinutes || '5') === i.value;
+              return (
+                <button key={i.value} onClick={() => updateConfig?.('pollIntervalMinutes', i.value)}
+                  className={`py-1.5 rounded-lg border text-[10px] font-bold transition-all ${active ? 'bg-[#34A853]/10 border-[#34A853]/40 text-[#34A853]' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'}`}>
+                  {i.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="p-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
           <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest block mb-0.5">Available as</span>

@@ -36,7 +36,7 @@ export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Calendar ID</label>
-        <SmartVariableInput value={config.calendarId || "primary"} onChange={(v) => updateConfig("calendarId", v)} placeholder="primary" />
+        <SmartVariableInput value={config.calendarId || "primary"} onChange={(v) => updateConfig("calendarId", v)} placeholder="primary" nodeId={nodeId} />
         <p className="text-[10px] text-zinc-600">"primary" for the default calendar, or a specific calendar ID</p>
       </div>
 
@@ -56,11 +56,11 @@ export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">From (ISO datetime)</label>
-            <SmartVariableInput value={config.timeMin || ""} onChange={(v) => updateConfig("timeMin", v)} placeholder="{{$now}}  (blank = now)" />
+            <SmartVariableInput value={config.timeMin || ""} onChange={(v) => updateConfig("timeMin", v)} placeholder="{{$now}}  (blank = now)" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">To (ISO datetime, optional)</label>
-            <SmartVariableInput value={config.timeMax || ""} onChange={(v) => updateConfig("timeMax", v)} placeholder="2024-12-31T23:59:59Z" />
+            <SmartVariableInput value={config.timeMax || ""} onChange={(v) => updateConfig("timeMax", v)} placeholder="2024-12-31T23:59:59Z" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Results</label>
@@ -73,7 +73,7 @@ export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }
       {["getEvent", "updateEvent", "deleteEvent"].includes(op) && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Event ID</label>
-          <SmartVariableInput value={config.eventId || ""} onChange={(v) => updateConfig("eventId", v)} placeholder="{{n1.id}}" />
+          <SmartVariableInput value={config.eventId || ""} onChange={(v) => updateConfig("eventId", v)} placeholder="{{n1.id}}" nodeId={nodeId} />
         </div>
       )}
 
@@ -81,26 +81,25 @@ export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Title</label>
-            <SmartVariableInput value={config.summary || ""} onChange={(v) => updateConfig("summary", v)} placeholder="Team standup" />
+            <SmartVariableInput value={config.summary || ""} onChange={(v) => updateConfig("summary", v)} placeholder="Team standup" nodeId={nodeId} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Start Time (ISO)</label>
-              <SmartVariableInput value={config.startTime || ""} onChange={(v) => updateConfig("startTime", v)} placeholder="2024-06-01T10:00:00" />
+              <SmartVariableInput value={config.startTime || ""} onChange={(v) => updateConfig("startTime", v)} placeholder="2024-06-01T10:00:00" nodeId={nodeId} />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">End Time (ISO)</label>
-              <SmartVariableInput value={config.endTime || ""} onChange={(v) => updateConfig("endTime", v)} placeholder="2024-06-01T11:00:00" />
+              <SmartVariableInput value={config.endTime || ""} onChange={(v) => updateConfig("endTime", v)} placeholder="2024-06-01T11:00:00" nodeId={nodeId} />
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Attendees (comma-separated emails)</label>
-            <SmartVariableInput value={config.attendees || ""} onChange={(v) => updateConfig("attendees", v)} placeholder="alice@example.com, bob@example.com" />
+            <SmartVariableInput value={config.attendees || ""} onChange={(v) => updateConfig("attendees", v)} placeholder="alice@example.com, bob@example.com" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Timezone</label>
-            <input value={config.timeZone || "UTC"} onChange={(e) => updateConfig("timeZone", e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#4285F4]/40" />
+            <SmartVariableInput value={config.timeZone || "UTC"} onChange={(v) => updateConfig("timeZone", v)} placeholder="UTC" nodeId={nodeId} />
           </div>
         </>
       )}

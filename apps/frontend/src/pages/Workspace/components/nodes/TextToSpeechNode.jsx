@@ -52,7 +52,7 @@ export default function TextToSpeechNode({ config = {}, updateConfig, nodeId }) 
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Text</label>
-        <SmartVariableInput value={text} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline />
+        <SmartVariableInput value={text} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </div>
 
       <div>
@@ -87,10 +87,14 @@ export default function TextToSpeechNode({ config = {}, updateConfig, nodeId }) 
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Voice</label>
-        <select value={voice} onChange={(e) => updateConfig('voice', e.target.value)}
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-          {availableVoices.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
-        </select>
+        <div className="grid grid-cols-2 gap-1.5">
+          {availableVoices.map((v) => (
+            <button key={v.value} onClick={() => updateConfig('voice', v.value)}
+              className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${voice === v.value ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+              {v.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -101,13 +105,14 @@ export default function TextToSpeechNode({ config = {}, updateConfig, nodeId }) 
         </div>
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Format</label>
-          <select value={format} onChange={(e) => updateConfig('format', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-            <option value="mp3">MP3</option>
-            <option value="wav">WAV</option>
-            <option value="opus">Opus</option>
-            <option value="aac">AAC</option>
-          </select>
+          <div className="grid grid-cols-2 gap-1.5">
+            {['mp3', 'wav', 'opus', 'aac'].map((f) => (
+              <button key={f} onClick={() => updateConfig('format', f)}
+                className={`py-1.5 uppercase rounded-lg text-[10px] font-bold border transition-all ${format === f ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

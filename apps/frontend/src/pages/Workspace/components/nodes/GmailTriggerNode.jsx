@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import imgGmail from '../../../../assets/gmail.png';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const POLL_INTERVALS = [
   { value: '*/1 * * * *',  label: 'Every minute' },
@@ -51,13 +52,17 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Poll Interval</label>
-              <select value={config.pollInterval || '*/5 * * * *'}
-                onChange={(e) => updateConfig?.('pollInterval', e.target.value)}
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#EA4335]/50 transition-colors cursor-pointer">
-                {POLL_INTERVALS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+              <div className="grid grid-cols-2 gap-1.5">
+                {POLL_INTERVALS.map(({ value, label }) => {
+                  const active = (config.pollInterval || '*/5 * * * *') === value;
+                  return (
+                    <button key={value} onClick={() => updateConfig?.('pollInterval', value)}
+                      className={`py-1.5 rounded-lg border text-[10px] font-bold transition-all ${active ? 'bg-[#EA4335]/10 border-[#EA4335]/40 text-[#EA4335]' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'}`}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-2.5 bg-[#111] border border-[#1e1e1e] rounded-lg">
@@ -81,11 +86,7 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
           <>
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Gmail Search Query</label>
-              <input value={config.query || ''}
-                onChange={(e) => updateConfig?.('query', e.target.value)}
-                placeholder="is:unread label:inbox"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#EA4335]/50 transition-colors"
-              />
+              <SmartVariableInput value={config.query || ''} onChange={(v) => updateConfig?.('query', v)} placeholder="is:unread label:inbox" nodeId={nodeId} />
               <p className="text-[9px] text-zinc-600">Standard Gmail search operators: <span className="font-mono text-zinc-500">from: to: subject: label: has:attachment</span></p>
             </div>
 
@@ -99,11 +100,7 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Label Filter</label>
-              <input value={config.labelFilter || ''}
-                onChange={(e) => updateConfig?.('labelFilter', e.target.value)}
-                placeholder="INBOX, UNREAD (comma-separated)"
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none focus:border-[#EA4335]/50 transition-colors"
-              />
+              <SmartVariableInput value={config.labelFilter || ''} onChange={(v) => updateConfig?.('labelFilter', v)} placeholder="INBOX, UNREAD (comma-separated)" nodeId={nodeId} />
             </div>
           </>
         )}

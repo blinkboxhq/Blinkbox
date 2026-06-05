@@ -39,7 +39,7 @@ export default function OcrNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Image URL or Base64</label>
-        <SmartVariableInput value={imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="{{ $json.imageUrl }}" />
+        <SmartVariableInput value={imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="{{ $json.imageUrl }}" nodeId={nodeId} />
       </div>
 
       <div>
@@ -79,10 +79,14 @@ export default function OcrNode({ config = {}, updateConfig, nodeId }) {
       {provider === 'tesseract' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Language</label>
-          <select value={language} onChange={(e) => updateConfig('language', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-            {LANGUAGES_OCR.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-          </select>
+          <div className="grid grid-cols-3 gap-1.5">
+            {LANGUAGES_OCR.map((l) => (
+              <button key={l.value} onClick={() => updateConfig('language', l.value)}
+                className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${language === l.value ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                {l.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

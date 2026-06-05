@@ -3,6 +3,11 @@ import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const REGIONS = ['us-east-1','us-west-2','eu-west-1','eu-central-1','ap-south-1','ap-southeast-1','ap-northeast-1','sa-east-1'];
+const ACL_OPTIONS = [
+  { value: 'private',           label: 'Private' },
+  { value: 'public-read',       label: 'Public Read' },
+  { value: 'authenticated-read', label: 'Auth Read' },
+];
 
 export default function S3Node({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation ?? 'upload';
@@ -51,21 +56,25 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
       <div className="flex gap-2">
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Bucket</label>
-          <SmartVariableInput value={bucket} onChange={(v) => updateConfig('bucket', v)} placeholder="my-bucket" />
+          <SmartVariableInput value={bucket} onChange={(v) => updateConfig('bucket', v)} placeholder="my-bucket" nodeId={nodeId} />
         </div>
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Region</label>
-          <select value={region} onChange={(e) => updateConfig('region', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-[12px] text-zinc-200 focus:outline-none cursor-pointer">
-            {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <div className="flex flex-col gap-1">
+            {REGIONS.map((r) => (
+              <button key={r} onClick={() => updateConfig('region', r)}
+                className={`py-1 px-2 rounded-lg text-[10px] font-bold border transition-all text-left ${region === r ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                {r}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {operation !== 'list' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Object Key (path)</label>
-          <SmartVariableInput value={key} onChange={(v) => updateConfig('key', v)} placeholder="uploads/{{ $json.filename }}" />
+          <SmartVariableInput value={key} onChange={(v) => updateConfig('key', v)} placeholder="uploads/{{ $json.filename }}" nodeId={nodeId} />
         </div>
       )}
 
@@ -73,22 +82,23 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
         <>
           <div>
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">File Content or URL</label>
-            <SmartVariableInput value={content} onChange={(v) => updateConfig('content', v)} placeholder="{{ $json.fileContent }}" multiline />
+            <SmartVariableInput value={content} onChange={(v) => updateConfig('content', v)} placeholder="{{ $json.fileContent }}" multiline nodeId={nodeId} />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Content-Type</label>
-              <input value={contentType} onChange={(e) => updateConfig('contentType', e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[12px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500" />
+              <SmartVariableInput value={contentType} onChange={(v) => updateConfig('contentType', v)} placeholder="application/octet-stream" nodeId={nodeId} />
             </div>
             <div className="flex-1">
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">ACL</label>
-              <select value={acl} onChange={(e) => updateConfig('acl', e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-[12px] text-zinc-200 focus:outline-none cursor-pointer">
-                <option value="private">private</option>
-                <option value="public-read">public-read</option>
-                <option value="authenticated-read">auth-read</option>
-              </select>
+              <div className="flex flex-col gap-1">
+                {ACL_OPTIONS.map((a) => (
+                  <button key={a.value} onClick={() => updateConfig('acl', a.value)}
+                    className={`py-1 rounded-lg text-[10px] font-bold border transition-all ${acl === a.value ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </>
@@ -112,8 +122,7 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
         />
         <div className="mt-2">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Custom Endpoint (S3-compatible, optional)</label>
-          <input value={endpoint} onChange={(e) => updateConfig('endpoint', e.target.value)} placeholder="https://s3.example.com"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500" />
+          <SmartVariableInput value={endpoint} onChange={(v) => updateConfig('endpoint', v)} placeholder="https://s3.example.com" nodeId={nodeId} />
           <p className="text-[10px] text-zinc-600 mt-1">Works with MinIO, Cloudflare R2, DigitalOcean Spaces</p>
         </div>
       </div>

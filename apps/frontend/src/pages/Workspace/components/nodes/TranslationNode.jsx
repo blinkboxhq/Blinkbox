@@ -38,24 +38,32 @@ export default function TranslationNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Input Text</label>
-        <SmartVariableInput value={text} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline />
+        <SmartVariableInput value={text} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </div>
 
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-start">
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">From</label>
-          <select value={from} onChange={(e) => updateConfig('from', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-            {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
+          <div className="flex flex-col gap-1">
+            {LANGUAGES.map((l) => (
+              <button key={l} onClick={() => updateConfig('from', l)}
+                className={`w-full py-1 px-2 rounded-lg text-[10px] font-bold border text-left transition-all ${from === l ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="text-zinc-600 text-xl pb-2">→</div>
+        <div className="text-zinc-600 text-xl pt-7">→</div>
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">To</label>
-          <select value={to} onChange={(e) => updateConfig('to', e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-            {LANGUAGES.filter((l) => l !== 'Auto Detect').map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
+          <div className="flex flex-col gap-1">
+            {LANGUAGES.filter((l) => l !== 'Auto Detect').map((l) => (
+              <button key={l} onClick={() => updateConfig('to', l)}
+                className={`w-full py-1 px-2 rounded-lg text-[10px] font-bold border text-left transition-all ${to === l ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

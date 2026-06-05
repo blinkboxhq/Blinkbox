@@ -67,19 +67,20 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
                 onChange={(val) => { try { updateConfig('recipients', JSON.parse(val)); } catch { updateConfig('recipients', val); }}}
                 placeholder='[{"email":"a@b.com","name":"Alice"},{"email":"c@d.com"}]'
                 multiline
+                nodeId={nodeId}
               />
             ) : (
-              <SmartVariableInput value={config.to || ''} onChange={(val) => updateConfig('to', val)} placeholder="{{trigger.data.email}}" />
+              <SmartVariableInput value={config.to || ''} onChange={(val) => updateConfig('to', val)} placeholder="{{trigger.data.email}}" nodeId={nodeId} />
             )}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">From</label>
-            <SmartVariableInput value={config.from || ''} onChange={(val) => updateConfig('from', val)} placeholder="Your Name <noreply@yourapp.com>" />
+            <SmartVariableInput value={config.from || ''} onChange={(val) => updateConfig('from', val)} placeholder="Your Name <noreply@yourapp.com>" nodeId={nodeId} />
           </div>
           {operation !== 'sendTemplate' && (
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Subject</label>
-              <SmartVariableInput value={config.subject || ''} onChange={(val) => updateConfig('subject', val)} placeholder="Welcome to {{trigger.data.company}}!" />
+              <SmartVariableInput value={config.subject || ''} onChange={(val) => updateConfig('subject', val)} placeholder="Welcome to {{trigger.data.company}}!" nodeId={nodeId} />
             </div>
           )}
         </>
@@ -89,7 +90,7 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'sendEmail' && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Body</label>
-          <SmartVariableInput value={config.body || ''} onChange={(val) => updateConfig('body', val)} placeholder="Hello {{trigger.data.name}}, ..." multiline />
+          <SmartVariableInput value={config.body || ''} onChange={(val) => updateConfig('body', val)} placeholder="Hello {{trigger.data.name}}, ..." multiline nodeId={nodeId} />
         </div>
       )}
 
@@ -98,8 +99,7 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Template ID</label>
-            <input value={config.templateId || ''} onChange={(e) => updateConfig('templateId', e.target.value)} placeholder="d-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#1A82E2]/40 transition-colors" />
+            <SmartVariableInput value={config.templateId || ''} onChange={(val) => updateConfig('templateId', val)} placeholder="d-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Dynamic Data (JSON)</label>
@@ -108,6 +108,7 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
               onChange={(val) => { try { updateConfig('dynamicData', JSON.parse(val)); } catch { updateConfig('dynamicData', val); }}}
               placeholder='{"name": "{{trigger.data.name}}", "plan": "Pro"}'
               multiline
+              nodeId={nodeId}
             />
           </div>
         </>
@@ -118,22 +119,21 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Email</label>
-            <SmartVariableInput value={config.email || ''} onChange={(val) => updateConfig('email', val)} placeholder="{{trigger.data.email}}" />
+            <SmartVariableInput value={config.email || ''} onChange={(val) => updateConfig('email', val)} placeholder="{{trigger.data.email}}" nodeId={nodeId} />
           </div>
           <div className="flex gap-3">
             <div className="flex flex-col gap-2 flex-1">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">First Name</label>
-              <SmartVariableInput value={config.firstName || ''} onChange={(val) => updateConfig('firstName', val)} placeholder="{{trigger.data.firstName}}" />
+              <SmartVariableInput value={config.firstName || ''} onChange={(val) => updateConfig('firstName', val)} placeholder="{{trigger.data.firstName}}" nodeId={nodeId} />
             </div>
             <div className="flex flex-col gap-2 flex-1">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Last Name</label>
-              <SmartVariableInput value={config.lastName || ''} onChange={(val) => updateConfig('lastName', val)} placeholder="{{trigger.data.lastName}}" />
+              <SmartVariableInput value={config.lastName || ''} onChange={(val) => updateConfig('lastName', val)} placeholder="{{trigger.data.lastName}}" nodeId={nodeId} />
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">List ID <span className="text-zinc-700">(optional)</span></label>
-            <input value={config.listIds || ''} onChange={(e) => updateConfig('listIds', e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#1A82E2]/40 transition-colors" />
+            <SmartVariableInput value={config.listIds || ''} onChange={(val) => updateConfig('listIds', val)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" nodeId={nodeId} />
           </div>
         </>
       )}

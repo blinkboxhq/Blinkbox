@@ -8,7 +8,6 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
   const port = config.port ?? 22;
   const username = config.username ?? '';
   const authType = config.authType ?? 'password'; // password | key
-  const password = config.password ?? '';
   const privateKey = config.privateKey ?? '';
   const remotePath = config.remotePath ?? '';
   const localPath = config.localPath ?? '';
@@ -49,7 +48,7 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex gap-2">
         <div className="flex-[3]">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Host</label>
-          <SmartVariableInput value={host} onChange={(v) => updateConfig('host', v)} placeholder="sftp.example.com" />
+          <SmartVariableInput value={host} onChange={(v) => updateConfig('host', v)} placeholder="sftp.example.com" nodeId={nodeId} />
         </div>
         <div className="flex-1">
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Port</label>
@@ -60,7 +59,7 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Username</label>
-        <SmartVariableInput value={username} onChange={(v) => updateConfig('username', v)} placeholder="{{ $creds.username }}" />
+        <SmartVariableInput value={username} onChange={(v) => updateConfig('username', v)} placeholder="{{ $creds.username }}" nodeId={nodeId} />
       </div>
 
       <div>
@@ -77,41 +76,38 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
 
       {authType === 'password' ? (
         <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Password</label>
           <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
-        label="SFTP Credential"
-        placeholder="Select SFTP Credential..."
-      />
+            value={config.credentialId || ''}
+            onChange={(id) => updateConfig('credentialId', id)}
+            accentColor="zinc"
+            label="SFTP Credential"
+            placeholder="Select SFTP Credential..."
+          />
         </div>
       ) : (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Private Key (PEM)</label>
-          <textarea value={privateKey} onChange={(e) => updateConfig('privateKey', e.target.value)} rows={3}
-            placeholder="-----BEGIN RSA PRIVATE KEY-----"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[11px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500 resize-none" />
+          <SmartVariableInput value={privateKey} onChange={(v) => updateConfig('privateKey', v)}
+            placeholder="-----BEGIN RSA PRIVATE KEY-----" multiline nodeId={nodeId} />
         </div>
       )}
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Remote Path</label>
-        <SmartVariableInput value={remotePath} onChange={(v) => updateConfig('remotePath', v)} placeholder="/home/user/files/{{ $json.filename }}" />
+        <SmartVariableInput value={remotePath} onChange={(v) => updateConfig('remotePath', v)} placeholder="/home/user/files/{{ $json.filename }}" nodeId={nodeId} />
       </div>
 
       {operation === 'upload' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">File Content or URL</label>
-          <SmartVariableInput value={content} onChange={(v) => updateConfig('content', v)} placeholder="{{ $json.fileContent }}" multiline />
+          <SmartVariableInput value={content} onChange={(v) => updateConfig('content', v)} placeholder="{{ $json.fileContent }}" multiline nodeId={nodeId} />
         </div>
       )}
 
       {operation === 'download' && (
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Save to Output Field</label>
-          <input value={localPath} onChange={(e) => updateConfig('localPath', e.target.value)} placeholder="fileContent"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500" />
+          <SmartVariableInput value={localPath} onChange={(v) => updateConfig('localPath', v)} placeholder="fileContent" nodeId={nodeId} />
         </div>
       )}
 

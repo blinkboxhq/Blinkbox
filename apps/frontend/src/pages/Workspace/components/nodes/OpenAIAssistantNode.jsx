@@ -1,4 +1,12 @@
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
+import CredentialPicker from "../../../../components/ui/CredentialPicker";
+
+const OPERATIONS = [
+  { value: "addMessageAndRun", label: "Send & Run" },
+  { value: "createThread",     label: "Create Thread" },
+  { value: "listMessages",     label: "List Messages" },
+  { value: "deleteThread",     label: "Delete Thread" },
+];
 
 export default function OpenAIAssistantNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "addMessageAndRun";
@@ -12,39 +20,35 @@ export default function OpenAIAssistantNode({ config = {}, updateConfig, nodeId 
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Credential</label>
-        <input
-          value={config.credentialId || ""}
-          onChange={(e) => updateConfig("credentialId", e.target.value)}
-          placeholder="OpenAI credential ID"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#10A37F]/40"
-        />
-      </div>
+      <CredentialPicker
+        value={config.credentialId || ""}
+        onChange={(id) => updateConfig("credentialId", id)}
+        accentColor="green"
+        label="OpenAI API Key"
+        placeholder="Select OpenAI credential..."
+      />
 
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <select
-          value={operation}
-          onChange={(e) => updateConfig("operation", e.target.value)}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#10A37F]/40"
-        >
-          <option value="addMessageAndRun">Send Message & Run</option>
-          <option value="createThread">Create Thread</option>
-          <option value="listMessages">List Messages</option>
-          <option value="deleteThread">Delete Thread</option>
-        </select>
+        <div className="grid grid-cols-2 gap-1.5">
+          {OPERATIONS.map((o) => (
+            <button key={o.value} onClick={() => updateConfig("operation", o.value)}
+              className={`py-2 rounded-lg border text-xs font-bold transition-all ${operation === o.value ? "bg-[#10A37F]/10 border-[#10A37F]/40 text-[#10A37F]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {(operation === "addMessageAndRun") && (
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Assistant ID</label>
-            <input
+            <SmartVariableInput
               value={config.assistantId || ""}
-              onChange={(e) => updateConfig("assistantId", e.target.value)}
+              onChange={(v) => updateConfig("assistantId", v)}
               placeholder="asst_abc123..."
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#10A37F]/40"
+              nodeId={nodeId}
             />
           </div>
           <div className="flex flex-col gap-2">

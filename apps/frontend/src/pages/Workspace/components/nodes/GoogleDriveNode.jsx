@@ -52,7 +52,7 @@ export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
         <>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Folder ID (optional)</label>
-            <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="root" />
+            <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="root" nodeId={nodeId} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Limit</label>
@@ -94,7 +94,7 @@ export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Folder ID (optional)</label>
-            <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="root" />
+            <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="root" nodeId={nodeId} />
           </div>
         </>
       )}

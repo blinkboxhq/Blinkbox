@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const OBJECT_TYPES = [
   { value: 'contacts', label: 'Contacts' },
@@ -72,13 +73,17 @@ export default function HubSpotTriggerNode({ config = {}, updateConfig, nodeId }
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Poll Interval</label>
-              <select value={config.pollInterval || '*/5 * * * *'}
-                onChange={(e) => updateConfig?.('pollInterval', e.target.value)}
-                className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF7A59]/50 transition-colors cursor-pointer">
-                {POLL_INTERVALS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+              <div className="grid grid-cols-2 gap-1.5">
+                {POLL_INTERVALS.map(({ value, label }) => {
+                  const active = (config.pollInterval || '*/5 * * * *') === value;
+                  return (
+                    <button key={value} onClick={() => updateConfig?.('pollInterval', value)}
+                      className={`py-1.5 rounded-lg border text-[10px] font-bold transition-all ${active ? 'bg-[#FF7A59]/10 border-[#FF7A59]/40 text-[#FF7A59]' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'}`}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-2.5 bg-[#111] border border-[#1e1e1e] rounded-lg">

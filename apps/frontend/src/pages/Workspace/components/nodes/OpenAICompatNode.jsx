@@ -10,7 +10,10 @@ import CredentialPicker from '../../../../components/ui/CredentialPicker';
  *   makeOpenAICompatNode({ label, accent, subtitle, models, defaultModel })
  */
 export default function makeOpenAICompatNode({ label, accent, subtitle, models, defaultModel }) {
-  return function OpenAICompatNodePanel({ config = {}, updateConfig }) {
+  return function OpenAICompatNodePanel({ config = {}, updateConfig, nodeId }) {
+    const selectedModel = config.model || defaultModel;
+    const outputFormat = config.outputFormat || 'text';
+
     return (
       <div className="flex flex-col gap-5 w-full">
         {/* Header */}
@@ -24,34 +27,33 @@ export default function makeOpenAICompatNode({ label, accent, subtitle, models, 
           </div>
         </div>
 
-        {/* Model Config */}
+        {/* Model */}
         <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl shadow-inner">
           <div className="flex items-center gap-2 pb-3 border-b border-[#222]">
             <Settings2 className={`w-4 h-4 text-${accent}-500`} />
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Config</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-zinc-500 w-16">Model</span>
-            <select
-              value={config.model || defaultModel}
-              onChange={(e) => updateConfig('model', e.target.value)}
-              className={`flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-${accent}-500/50 transition-colors cursor-pointer appearance-none`}
-            >
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Model</span>
+            <div className="flex flex-col gap-1.5">
               {models.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+                <button key={m.value} onClick={() => updateConfig('model', m.value)}
+                  className={`w-full py-2 px-3 rounded-lg border text-xs font-bold text-left transition-all ${selectedModel === m.value ? `bg-${accent}-500/10 border-${accent}-500/40 text-${accent}-400` : 'bg-[#111] border-[#333] text-zinc-400 hover:border-[#444]'}`}>
+                  {m.label}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-zinc-500 w-16">Output</span>
-            <select
-              value={config.outputFormat || 'text'}
-              onChange={(e) => updateConfig('outputFormat', e.target.value)}
-              className={`flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-${accent}-500/50 transition-colors cursor-pointer appearance-none`}
-            >
-              <option value="text">Raw Text</option>
-              <option value="json">Structured JSON</option>
-            </select>
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Output Format</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }].map((o) => (
+                <button key={o.value} onClick={() => updateConfig('outputFormat', o.value)}
+                  className={`py-2 rounded-lg border text-xs font-bold transition-all ${outputFormat === o.value ? `bg-${accent}-500/10 border-${accent}-500/40 text-${accent}-400` : 'bg-[#111] border-[#333] text-zinc-400 hover:border-[#444]'}`}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -65,6 +67,7 @@ export default function makeOpenAICompatNode({ label, accent, subtitle, models, 
             onChange={(val) => updateConfig('prompt', val)}
             placeholder={`e.g. Summarize this data using ${label}...`}
             multiline
+            nodeId={nodeId}
           />
         </div>
 

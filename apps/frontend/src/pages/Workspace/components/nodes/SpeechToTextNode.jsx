@@ -26,7 +26,7 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Audio URL or Base64</label>
-        <SmartVariableInput value={audioUrl} onChange={(v) => updateConfig('audioUrl', v)} placeholder="{{ $json.audioUrl }}" />
+        <SmartVariableInput value={audioUrl} onChange={(v) => updateConfig('audioUrl', v)} placeholder="{{ $json.audioUrl }}" nodeId={nodeId} />
       </div>
 
       <div>
@@ -61,8 +61,7 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
 
       <div>
         <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Language</label>
-        <input value={language} onChange={(e) => updateConfig('language', e.target.value)} placeholder="en, hi, fr, de..."
-          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 font-mono focus:outline-none focus:border-zinc-500" />
+        <SmartVariableInput value={language} onChange={(v) => updateConfig('language', v)} placeholder="en, hi, fr, de..." nodeId={nodeId} />
         <p className="text-[10px] text-zinc-600 mt-1">ISO 639-1 code. Leave blank for auto-detect.</p>
       </div>
 
