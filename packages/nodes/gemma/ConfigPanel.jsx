@@ -115,6 +115,15 @@ export default function GemmaNimNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="blue"
+        credentialType="NvidiaNim"
+        label="NVIDIA NIM API Key"
+        placeholder="Select NVIDIA NIM credential…"
+      />
+
       <div className="border-t border-[#1a1a1a]" />
 
       <Field label="Operation">
@@ -169,15 +178,6 @@ export default function GemmaNimNode({ config = {}, updateConfig, nodeId }) {
         </Field>
       )}
 
-      <div className="border-t border-[#1a1a1a]" />
-
-      <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="blue"
-        label="NVIDIA NIM API Key"
-        placeholder="Select NVIDIA NIM credential…"
-      />
     </div>
   );
 }

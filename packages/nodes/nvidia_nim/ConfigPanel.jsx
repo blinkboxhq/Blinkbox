@@ -156,6 +156,15 @@ export default function NvidiaNimNode({ config = {}, updateConfig, nodeId }) {
         </div>
       </div>
 
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="green"
+        credentialType="NvidiaNim"
+        label="NVIDIA NIM API Key"
+        placeholder="Select NVIDIA NIM credential…"
+      />
+
       <div className="border-t border-[#1a1a1a]" />
 
       {/* Operation */}
@@ -233,16 +242,6 @@ export default function NvidiaNimNode({ config = {}, updateConfig, nodeId }) {
         </Field>
       )}
 
-      <div className="border-t border-[#1a1a1a]" />
-
-      <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="green"
-        credentialType="NvidiaNim"
-        label="NVIDIA NIM API Key"
-        placeholder="Select NVIDIA NIM credential…"
-      />
     </div>
   );
 }
