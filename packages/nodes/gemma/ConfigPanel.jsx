@@ -1,183 +1,157 @@
-import { MessageSquare, Code2, Image, Cpu, Mic, Zap } from 'lucide-react';
+import { MessageSquare, Code2, Image, ChevronDown } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 
 const OPERATIONS = [
-  { value: 'chat',    label: 'Chat',            icon: MessageSquare, description: 'Prompt any Gemma model via NVIDIA NIM' },
-  { value: 'vision',  label: 'Vision',          icon: Image,         description: 'Analyze images (Gemma 4, Gemma 3 27B, Gemma 3n)' },
-  { value: 'code',    label: 'Code',            icon: Code2,         description: 'Code generation & completion (CodeGemma)' },
+  { value: 'chat',   label: 'Chat',   icon: MessageSquare },
+  { value: 'vision', label: 'Vision', icon: Image         },
+  { value: 'code',   label: 'Code',   icon: Code2         },
 ];
 
-const MODELS_CHAT = [
-  { value: 'google/gemma-4-31b-it',    label: 'Gemma 4 31B ✦',           note: '256K ctx · multimodal' },
-  { value: 'google/gemma-3-27b-it',    label: 'Gemma 3 27B',             note: '128K ctx · vision' },
-  { value: 'google/gemma-3n-e4b-it',   label: 'Gemma 3n E4B (edge)',     note: 'img+audio+video' },
-  { value: 'google/gemma-3n-e2b-it',   label: 'Gemma 3n E2B (edge)',     note: 'img+audio+video · fast' },
-  { value: 'google/gemma-3-1b-it',     label: 'Gemma 3 1B',              note: 'ultra-lightweight' },
-  { value: 'google/gemma-2-27b-it',    label: 'Gemma 2 27B',             note: 'text-only' },
-  { value: 'google/gemma-2-9b-it',     label: 'Gemma 2 9B',              note: 'text-only' },
-  { value: 'google/gemma-2-2b-it',     label: 'Gemma 2 2B',              note: 'text-only · fast' },
-  { value: 'google/gemma-7b',          label: 'Gemma 1 7B',              note: 'pretrained' },
-];
+const MODELS = {
+  chat: [
+    { value: 'google/gemma-4-31b-it',   label: 'Gemma 4 31B ✦ (256K, multimodal)' },
+    { value: 'google/gemma-3-12b-it',   label: 'Gemma 3 12B' },
+    { value: 'google/gemma-3-4b-it',    label: 'Gemma 3 4B (fast)' },
+    { value: 'google/gemma-3n-e4b-it',  label: 'Gemma 3n E4B (edge)' },
+    { value: 'google/gemma-3n-e2b-it',  label: 'Gemma 3n E2B (edge, fast)' },
+    { value: 'google/gemma-2-2b-it',    label: 'Gemma 2 2B (ultra-fast)' },
+  ],
+  vision: [
+    { value: 'google/gemma-4-31b-it',   label: 'Gemma 4 31B ✦ (image + video)' },
+    { value: 'google/gemma-3n-e4b-it',  label: 'Gemma 3n E4B (img + audio + video)' },
+    { value: 'google/gemma-3n-e2b-it',  label: 'Gemma 3n E2B (edge)' },
+  ],
+  code: [
+    { value: 'google/codegemma-1.1-7b', label: 'CodeGemma 1.1 7B ✦' },
+    { value: 'google/codegemma-7b',     label: 'CodeGemma 7B' },
+    { value: 'google/gemma-4-31b-it',   label: 'Gemma 4 31B (general + code)' },
+    { value: 'google/gemma-3-12b-it',   label: 'Gemma 3 12B' },
+  ],
+};
 
-const MODELS_VISION = [
-  { value: 'google/gemma-4-31b-it',    label: 'Gemma 4 31B ✦',           note: '256K ctx · text+image+video' },
-  { value: 'google/gemma-3-27b-it',    label: 'Gemma 3 27B',             note: '128K ctx · image' },
-  { value: 'google/gemma-3n-e4b-it',   label: 'Gemma 3n E4B',            note: 'img+video+audio' },
-  { value: 'google/gemma-3n-e2b-it',   label: 'Gemma 3n E2B',            note: 'img+video+audio · edge' },
-];
-
-const MODELS_CODE = [
-  { value: 'google/codegemma-1.1-7b',  label: 'CodeGemma 1.1 7B ✦',     note: 'code chat + instruct' },
-  { value: 'google/codegemma-7b',      label: 'CodeGemma 7B',            note: 'code completion' },
-  { value: 'google/gemma-4-31b-it',    label: 'Gemma 4 31B',             note: 'general + code · 256K' },
-  { value: 'google/gemma-3-27b-it',    label: 'Gemma 3 27B',             note: 'general + code' },
-];
-
-function modelsForOp(op) {
-  if (op === 'vision') return MODELS_VISION;
-  if (op === 'code')   return MODELS_CODE;
-  return MODELS_CHAT;
-}
-
-function Field({ label, children }) {
+function Select({ value, onChange, options }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
-      {children}
+    <div className="relative">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full appearance-none bg-[#0d0d0f] border border-zinc-800 rounded-lg px-3 py-2 pr-8 text-[12px] text-zinc-100 focus:outline-none focus:border-zinc-600 cursor-pointer"
+      >
+        {options.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
     </div>
   );
 }
-
-function OperationPicker({ value, onChange }) {
-  return (
-    <div className="flex gap-1.5">
-      {OPERATIONS.map((op) => {
-        const Icon = op.icon;
-        const active = value === op.value;
-        return (
-          <button key={op.value} type="button" onClick={() => onChange(op.value)}
-            className={`flex-1 flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-xl border text-center transition-all duration-150 ${
-              active
-                ? 'bg-blue-500/10 border-blue-500/30 text-blue-300'
-                : 'bg-[#0d0d0d] border-[#222] text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
-            }`}
-          >
-            <Icon size={15} strokeWidth={1.75} className={active ? 'text-blue-400' : 'text-zinc-600'} />
-            <span className="text-[11px] font-semibold leading-tight">{op.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ModelPicker({ value, onChange, models }) {
-  return (
-    <div className="flex flex-col gap-1">
-      {models.map((m) => {
-        const active = value === m.value;
-        return (
-          <button key={m.value} type="button" onClick={() => onChange(m.value)}
-            className={`flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all duration-150 ${
-              active
-                ? 'bg-blue-500/10 border-blue-500/30'
-                : 'bg-[#0d0d0d] border-[#222] hover:border-zinc-700'
-            }`}
-          >
-            <span className={`text-[12px] font-medium ${active ? 'text-blue-300' : 'text-zinc-300'}`}>{m.label}</span>
-            <span className="text-[10px] text-zinc-600 shrink-0 ml-2">{m.note}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-const VISION_MODELS = new Set(['google/gemma-4-31b-it', 'google/gemma-3-27b-it', 'google/gemma-3n-e4b-it', 'google/gemma-3n-e2b-it']);
 
 export default function GemmaNimNode({ config = {}, updateConfig, nodeId }) {
-  const operation   = config.operation || 'chat';
-  const models      = modelsForOp(operation);
-  const model       = config.model || models[0].value;
-  const isVisionOp  = operation === 'vision';
-  const canVision   = VISION_MODELS.has(model);
+  const operation = config.operation || 'chat';
+  const models = MODELS[operation] || MODELS.chat;
+  const currentModel = config.model || models[0].value;
+
+  function setOperation(op) {
+    updateConfig('operation', op);
+    updateConfig('model', MODELS[op][0].value);
+  }
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <div className="flex items-center gap-3 pb-1">
+    <div className="flex flex-col gap-0 w-full">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-[#1a1a1a]">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-500/10 border border-blue-500/20">
-          <Zap size={15} className="text-blue-400" />
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#4285F4" opacity="0.15"/>
+            <path d="M12 4C7.6 4 4 7.6 4 12s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 3c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 11.2c-2.5 0-4.7-1.3-6-3.2.03-2 4-3.1 6-3.1s5.97 1.1 6 3.1c-1.3 1.9-3.5 3.2-6 3.2z" fill="#4285F4"/>
+          </svg>
         </div>
         <div>
-          <div className="text-[14px] font-bold text-white leading-tight">Google Gemma</div>
-          <div className="text-[11px] text-zinc-500">via NVIDIA NIM</div>
+          <div className="text-[13px] font-bold text-white leading-tight">Google Gemma</div>
+          <div className="text-[10px] text-zinc-500">via NVIDIA NIM</div>
         </div>
       </div>
 
-      <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="blue"
-        credentialType="NvidiaNim"
-        label="NVIDIA NIM API Key"
-        placeholder="Select NVIDIA NIM credential…"
-      />
+      {/* Credential */}
+      <div className="px-4 py-3 border-b border-[#1a1a1a]">
+        <CredentialPicker
+          value={config.credentialId || ''}
+          onChange={(id) => updateConfig('credentialId', id)}
+          accentColor="blue"
+          credentialType="NvidiaNim"
+          label="API Key"
+          placeholder="Select NVIDIA NIM credential…"
+        />
+      </div>
 
-      <div className="border-t border-[#1a1a1a]" />
+      {/* Operation tabs */}
+      <div className="px-4 py-3 border-b border-[#1a1a1a]">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Operation</span>
+        <div className="flex gap-1">
+          {OPERATIONS.map(op => {
+            const Icon = op.icon;
+            const active = operation === op.value;
+            return (
+              <button key={op.value} type="button" onClick={() => setOperation(op.value)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150"
+                style={active
+                  ? { background: 'rgba(66,133,244,0.12)', borderColor: 'rgba(66,133,244,0.35)', color: '#93bbfc' }
+                  : { background: 'transparent', borderColor: '#262626', color: '#71717a' }}>
+                <Icon className="w-3 h-3 shrink-0" strokeWidth={2} />
+                {op.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      <Field label="Operation">
-        <OperationPicker value={operation} onChange={(v) => {
-          updateConfig('operation', v);
-          updateConfig('model', modelsForOp(v)[0].value);
-        }} />
-      </Field>
+      {/* Model */}
+      <div className="px-4 py-3 border-b border-[#1a1a1a]">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Model</span>
+        <Select
+          value={currentModel}
+          onChange={v => updateConfig('model', v)}
+          options={models}
+        />
+      </div>
 
-      <Field label="Model">
-        <ModelPicker value={model} onChange={(v) => updateConfig('model', v)} models={models} />
-      </Field>
-
-      <div className="border-t border-[#1a1a1a]" />
-
-      {isVisionOp && (
-        <Field label="Image URL">
+      {/* Input fields */}
+      {operation === 'vision' && (
+        <div className="px-4 py-3 border-b border-[#1a1a1a]">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Image URL</span>
           <SmartVariableInput
             value={config.imageUrl || ''}
-            onChange={(v) => updateConfig('imageUrl', v)}
+            onChange={v => updateConfig('imageUrl', v)}
             placeholder="https://… or {{$node.imageUrl}}"
             nodeId={nodeId}
           />
-        </Field>
-      )}
-
-      {!canVision && isVisionOp && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] px-3 py-2 rounded-lg">
-          Selected model does not support vision. Choose Gemma 4, Gemma 3 27B, or Gemma 3n.
         </div>
       )}
 
-      <Field label={isVisionOp ? 'Question / Prompt' : 'Prompt'}>
+      <div className="px-4 py-3 border-b border-[#1a1a1a]">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">
+          {operation === 'vision' ? 'Question' : 'Prompt'}
+        </span>
         <SmartVariableInput
           value={config.prompt || ''}
-          onChange={(v) => updateConfig('prompt', v)}
-          placeholder={isVisionOp ? 'Describe this image in detail.' : 'Enter your prompt…'}
+          onChange={v => updateConfig('prompt', v)}
+          placeholder={operation === 'vision' ? 'Describe this image…' : 'Enter your prompt…'}
           multiline
           nodeId={nodeId}
         />
-      </Field>
+      </div>
 
-      {operation !== 'vision' && (
-        <Field label="Max tokens">
-          <input
-            type="number"
-            value={config.maxTokens || 1024}
-            onChange={(e) => updateConfig('maxTokens', parseInt(e.target.value) || 1024)}
-            min={64} max={8192}
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500 w-full"
-          />
-        </Field>
-      )}
-
+      <div className="px-4 py-3">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Max Tokens</span>
+        <input
+          type="number"
+          value={config.maxTokens || 1024}
+          onChange={e => updateConfig('maxTokens', parseInt(e.target.value) || 1024)}
+          min={64} max={8192}
+          className="w-full bg-[#0d0d0f] border border-zinc-800 rounded-lg px-3 py-2 text-[12px] text-zinc-100 focus:outline-none focus:border-zinc-600"
+        />
+      </div>
     </div>
   );
 }
