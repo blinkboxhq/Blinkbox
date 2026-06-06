@@ -24,7 +24,7 @@ const TOOL_SUBCATEGORIES = [
 ];
 
 const AGENT_CATEGORIES = [
-  { id: "chat_model",   label: "Chat Model",   icon: Brain,   slotId: "llm",         nodes: ["agent_openai","agent_anthropic","agent_gemini","agent_perplexity","agent_xai","agent_deepseek","agent_moonshot","agent_groq","agent_ollama","agent_lmstudio"] },
+  { id: "chat_model",   label: "Chat Model",   icon: Brain,   slotId: "llm",         nodes: ["agent_openai","agent_anthropic","agent_gemini","agent_perplexity","agent_xai","agent_deepseek","agent_moonshot","agent_groq","agent_nvidia_nim","agent_gemma","agent_ollama","agent_lmstudio"] },
   { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory_window","agent_memory_redis","agent_memory_mongodb","agent_memory_postgres","agent_memory_pinecone","agent_memory_supabase","agent_memory_zep"] },
   { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        subCategories: TOOL_SUBCATEGORIES },
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["agent_integration_slack","agent_integration_gmail","agent_integration_discord","agent_integration_telegram","agent_integration_notion","agent_integration_airtable","agent_integration_google_sheets","agent_integration_google_calendar","agent_integration_google_drive","agent_integration_outlook","agent_integration_github","agent_integration_linear","agent_integration_hubspot","agent_integration_jira","agent_integration_asana","agent_integration_stripe","agent_integration_shopify","agent_integration_clickup","agent_integration_twilio","agent_integration_mongodb","agent_integration_postgres","agent_integration_redis"] },
