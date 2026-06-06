@@ -114,7 +114,7 @@ const DEFAULT_MODELS = {
   ollama:   "llama3",
   lmstudio: "local-model",
   groq: "llama-3.3-70b-versatile",
-  nvidia_nim: "meta/llama-3.3-70b-instruct",
+  nvidia_nim: "nvidia/nemotron-3-ultra-550b-a55b",
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
