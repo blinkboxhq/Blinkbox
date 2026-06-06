@@ -109,33 +109,33 @@ export default function TriggerPicker() {
         className="fixed top-14 right-0 bottom-0 z-50 flex flex-col bg-neutral-950 border-l border-white/[0.12]"
         style={{ width: "clamp(300px, 28vw, 420px)" }}
       >
-        {/* Search — flush top */}
-        <div className="flex items-center border-b border-white/[0.08] shrink-0">
+        {/* Search bar */}
+        <div className="px-3 py-3 border-b border-white/[0.08] shrink-0 flex items-center gap-2">
           {page !== "home" && (
             <button onClick={() => { setPage("home"); setSearch(""); }}
-              className="flex items-center justify-center w-12 h-14 text-neutral-500 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
-              <ArrowLeft size={17} />
+              className="flex items-center justify-center w-8 h-8 text-neutral-500 hover:text-white transition-colors shrink-0">
+              <ArrowLeft size={15} />
             </button>
           )}
-          <div className="flex-1 flex items-center gap-3 h-14 px-4">
-            <Search size={15} className="text-neutral-600 shrink-0" />
+          <div className="flex-1 flex items-center gap-2.5 px-3 h-9 rounded-lg border border-white/[0.1] bg-white/[0.06] backdrop-blur-md focus-within:border-white/[0.22] focus-within:bg-white/[0.09] transition-all">
+            <Search size={13} className="text-neutral-500 shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={search}
               onChange={(e) => { setSearch(e.target.value); if (page !== "home") setPage("home"); }}
               placeholder={currentCat ? `Search in ${currentCat.label}…` : "Search triggers…"}
-              className="flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-600 font-medium"
+              className="flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-neutral-600 font-medium"
             />
             {search && (
               <button onClick={() => setSearch("")} className="text-neutral-600 hover:text-white transition-colors">
-                <X size={13} />
+                <X size={12} />
               </button>
             )}
           </div>
           <button onClick={close}
-            className="flex items-center justify-center w-12 h-14 text-neutral-600 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
-            <X size={15} />
+            className="flex items-center justify-center w-8 h-8 text-neutral-600 hover:text-white transition-colors shrink-0">
+            <X size={14} />
           </button>
         </div>
 
@@ -177,8 +177,10 @@ export default function TriggerPicker() {
                 const CatIcon = cat.icon;
                 return (
                   <button key={cat.id} onClick={() => setPage(cat.id)}
-                    className="flex items-center gap-4 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group border-b border-white/[0.05] last:border-0">
-                    <CatIcon size={22} strokeWidth={1.6} style={{ color: cat.accent }} className="shrink-0" />
+                    className="relative flex items-center gap-4 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group">
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: cat.accent }} />
+                    <CatIcon size={21} strokeWidth={1.6} className="shrink-0 text-white/70 group-hover:text-white transition-colors" />
                     <div className="flex-1 min-w-0">
                       <div className="text-[14px] font-semibold text-white leading-tight">{cat.label}</div>
                       <div className="text-[11px] text-neutral-600 mt-0.5">{cat.description} · {count}</div>
