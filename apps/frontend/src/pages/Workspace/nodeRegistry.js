@@ -463,6 +463,7 @@ export const NodeRegistry = {
     colorClass: "text-blue-400",
     accentColor: "59,130,246",
     logoUrl: imgWebhookTrigger,
+    imgFilter: "invert(1)",
     ConfigPanel: WebhookTriggerNode,
     category: "trigger",
   },

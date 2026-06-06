@@ -150,6 +150,7 @@ export const TRIGGER_VARIANTS = {
     backendType: "webhook",
     icon: Webhook,
     logoUrl: imgWebhook,
+    imgFilter: "invert(1)",
     label: "On Webhook Call",
     colorClass: "text-blue-400",
     accentColor: "59,130,246",
