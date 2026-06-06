@@ -219,11 +219,11 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group border-b border-white/[0.04] last:border-0 relative ${
+      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group relative ${
         focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
       }`}
     >
-      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity bg-white/30" />
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity bg-white/40" />
       <div className="w-5 h-5 shrink-0 flex items-center justify-center">
         {trigger.logoUrl ? (
           <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain"

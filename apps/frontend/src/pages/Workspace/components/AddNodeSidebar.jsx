@@ -254,10 +254,10 @@ export default function AddNodeSidebar() {
               const cc = CAT_COLORS[c.id];
               return (
                 <button key={c.id} onClick={() => setCatPage(c.id)}
-                  className="relative flex items-center gap-4 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group">
+                  className="relative flex items-center gap-4 w-full pl-5 pr-4 py-4 hover:bg-white/[0.04] transition-colors text-left group">
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: cc?.accent }} />
-                  <CatIcon size={21} strokeWidth={1.6} className="shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                  <CatIcon size={20} strokeWidth={1.6} className="shrink-0 text-neutral-400 group-hover:text-white transition-colors" />
                   <div className="flex-1 min-w-0">
                     <div className="text-[14px] font-semibold text-white leading-tight">{c.label}</div>
                     <div className="text-[11px] text-neutral-600 mt-0.5">{count} nodes</div>
@@ -300,17 +300,18 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group border-b border-white/[0.04] last:border-0 relative ${
+      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group relative ${
         selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
       }`}
     >
-      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity bg-white/30" />
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ background: cc?.accent || "rgba(255,255,255,0.3)" }} />
       <div className="w-5 h-5 shrink-0 flex items-center justify-center">
         {nodeDef.logoUrl ? (
           <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-5 h-5 object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon size={20} strokeWidth={1.7} style={{ color: cc?.accent || "rgba(255,255,255,0.45)" }} />
+          <Icon size={20} strokeWidth={1.7} className="text-neutral-500 group-hover:text-neutral-200 transition-colors" />
         )}
       </div>
       <div className="flex-1 min-w-0">
