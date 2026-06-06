@@ -13,8 +13,6 @@ const TRIGGER_CATEGORIES = [
     icon: Server,
     description: "Infrastructure, monitoring & system triggers",
     accent: "#34d399",
-    bg: "rgba(52,211,153,0.08)",
-    border: "rgba(52,211,153,0.2)",
     keys: [
       "imap", "rss", "database",
       "http_monitor", "port_monitor", "dns", "ssl",
@@ -27,8 +25,6 @@ const TRIGGER_CATEGORIES = [
     icon: AppWindow,
     description: "SaaS & platform integrations",
     accent: "#38bdf8",
-    bg: "rgba(56,189,248,0.08)",
-    border: "rgba(56,189,248,0.2)",
     keys: [
       "slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams",
       "github", "github_issue", "gitlab", "stripe", "shopify", "notion", "airtable",
@@ -108,54 +104,46 @@ export default function TriggerPicker() {
 
   return (
     <>
-      {/* backdrop */}
       <div className="fixed inset-0 z-40" onClick={close} />
-
-      {/* Sidebar panel */}
       <div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-[#0e0e10] border-l border-white/[0.07] shadow-2xl"
+        className="fixed top-14 right-0 bottom-0 z-50 flex flex-col bg-neutral-950 border-l border-white/[0.12]"
         style={{ width: "clamp(300px, 28vw, 420px)" }}
       >
-        {/* Search bar — flush at top, full width, zero margin */}
-        <div className="flex items-center border-b border-white/[0.07] shrink-0">
+        {/* Search — flush top */}
+        <div className="flex items-center border-b border-white/[0.08] shrink-0">
           {page !== "home" && (
-            <button
-              onClick={() => { setPage("home"); setSearch(""); }}
-              className="flex items-center justify-center w-12 h-14 text-white/40 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0"
-            >
-              <ArrowLeft size={18} />
+            <button onClick={() => { setPage("home"); setSearch(""); }}
+              className="flex items-center justify-center w-12 h-14 text-neutral-500 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
+              <ArrowLeft size={17} />
             </button>
           )}
           <div className="flex-1 flex items-center gap-3 h-14 px-4">
-            <Search size={16} className="text-white/30 shrink-0" />
+            <Search size={15} className="text-neutral-600 shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={search}
               onChange={(e) => { setSearch(e.target.value); if (page !== "home") setPage("home"); }}
               placeholder={currentCat ? `Search in ${currentCat.label}…` : "Search triggers…"}
-              className="flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-white/25 font-medium"
+              className="flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-600 font-medium"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="text-white/25 hover:text-white transition-colors">
-                <X size={14} />
+              <button onClick={() => setSearch("")} className="text-neutral-600 hover:text-white transition-colors">
+                <X size={13} />
               </button>
             )}
           </div>
-          <button
-            onClick={close}
-            className="flex items-center justify-center w-12 h-14 text-white/30 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0"
-          >
-            <X size={16} />
+          <button onClick={close}
+            className="flex items-center justify-center w-12 h-14 text-neutral-600 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
+            <X size={15} />
           </button>
         </div>
 
-        {/* Category accent bar */}
+        {/* Category label strip */}
         {currentCat && !query && (
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.05] shrink-0"
-            style={{ background: currentCat.bg }}>
-            <currentCat.icon size={16} style={{ color: currentCat.accent }} />
-            <span className="text-[12px] font-bold uppercase tracking-widest" style={{ color: currentCat.accent }}>
+          <div className="flex items-center gap-2.5 px-5 py-2.5 border-b border-white/[0.06] shrink-0">
+            <currentCat.icon size={13} style={{ color: currentCat.accent }} />
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: currentCat.accent }}>
               {currentCat.label}
             </span>
           </div>
@@ -163,12 +151,11 @@ export default function TriggerPicker() {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
-
           {query ? (
             visibleTriggers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Search size={28} className="text-white/15" />
-                <p className="text-[13px] text-white/30">No triggers match "{search}"</p>
+                <Search size={24} className="text-neutral-700" />
+                <p className="text-[12px] text-neutral-600">No triggers match "{search}"</p>
               </div>
             ) : (
               visibleTriggers.map((t, i) => (
@@ -178,31 +165,25 @@ export default function TriggerPicker() {
             )
           ) : page === "home" ? (
             <>
-              {/* Core triggers flat */}
               {CORE_TRIGGERS.map((t, i) => (
                 <TriggerRow key={t.id} trigger={t} focused={i === focusIdx}
                   onHover={() => setFocusIdx(i)} onSelect={() => commit(t)} />
               ))}
 
-              {/* Divider */}
-              <div className="my-1 border-t border-white/[0.05]" />
+              <div className="border-t border-white/[0.05] my-1" />
 
-              {/* Category drill-downs */}
               {TRIGGER_CATEGORIES.map((cat) => {
                 const count = cat.keys.filter((k) => TRIGGER_VARIANTS[k]).length;
                 const CatIcon = cat.icon;
                 return (
                   <button key={cat.id} onClick={() => setPage(cat.id)}
-                    className="flex items-center gap-4 w-full px-4 py-4 hover:bg-white/[0.04] transition-colors text-left group border-b border-white/[0.04] last:border-0">
-                    <div className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
-                      style={{ background: cat.bg, border: `1px solid ${cat.border}` }}>
-                      <CatIcon size={20} strokeWidth={1.8} style={{ color: cat.accent }} />
-                    </div>
+                    className="flex items-center gap-4 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group border-b border-white/[0.05] last:border-0">
+                    <CatIcon size={22} strokeWidth={1.6} style={{ color: cat.accent }} className="shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-semibold text-white leading-tight">{cat.label}</div>
-                      <div className="text-[12px] text-white/30 mt-0.5">{cat.description} · {count}</div>
+                      <div className="text-[14px] font-semibold text-white leading-tight">{cat.label}</div>
+                      <div className="text-[11px] text-neutral-600 mt-0.5">{cat.description} · {count}</div>
                     </div>
-                    <ChevronRight size={15} className="text-white/20 shrink-0 group-hover:text-white/60 transition-colors" />
+                    <ChevronRight size={14} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
                   </button>
                 );
               })}
@@ -216,10 +197,10 @@ export default function TriggerPicker() {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 px-4 py-3 border-t border-white/[0.05] flex items-center gap-3">
-          <Zap size={12} className="text-white/20" />
-          <span className="text-[11px] text-white/20">{ALL_TRIGGERS.length} triggers available</span>
-          <span className="text-[10px] text-white/15 ml-auto">ESC {page !== "home" ? "back" : "close"}</span>
+        <div className="shrink-0 px-5 py-3 border-t border-white/[0.06] flex items-center gap-2">
+          <Zap size={11} className="text-neutral-700" />
+          <span className="text-[11px] text-neutral-700">{ALL_TRIGGERS.length} triggers</span>
+          <span className="text-[10px] text-neutral-800 ml-auto">ESC {page !== "home" ? "back" : "close"}</span>
         </div>
       </div>
     </>
@@ -236,22 +217,22 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full px-4 py-3.5 transition-all duration-100 text-left group border-b border-white/[0.04] last:border-0 ${
-        focused ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"
+      className={`flex items-center gap-4 w-full px-5 py-3.5 transition-colors text-left group border-b border-white/[0.04] last:border-0 ${
+        focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
       }`}
     >
-      <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+      <div className="w-5 h-5 shrink-0 flex items-center justify-center">
         {trigger.logoUrl ? (
-          <img src={trigger.logoUrl} alt={trigger.label} className="w-7 h-7 object-contain"
+          <img src={trigger.logoUrl} alt={trigger.label} className="w-5 h-5 object-contain"
             style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
         ) : (
-          <Icon size={22} strokeWidth={1.8} className="text-white/60" />
+          <Icon size={20} strokeWidth={1.7} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-white leading-tight">{trigger.label}</div>
+        <div className="text-[13px] font-semibold text-white leading-tight">{trigger.label}</div>
         {trigger.description && (
-          <div className="text-[12px] text-white/35 mt-0.5 truncate">{trigger.description}</div>
+          <div className="text-[11px] text-neutral-600 mt-0.5 truncate">{trigger.description}</div>
         )}
       </div>
     </button>
