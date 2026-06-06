@@ -122,7 +122,6 @@ import imgProductHunt    from "@triggers/producthunt/logo.svg";
 import imgIntercom       from "@triggers/intercom/logo.svg";
 import imgWooCommerce    from "@triggers/woocommerce/logo.svg";
 import imgVirusTotal     from "@triggers/virustotal/logo.svg";
-import imgManual        from "@triggers/manual/logo.svg";
 import imgWebhook       from "@triggers/webhook/logo.png";
 import imgImap          from "@triggers/imap/logo.svg";
 import imgErrorTrigger  from "@triggers/error_trigger/logo.svg";
@@ -132,7 +131,6 @@ export const TRIGGER_VARIANTS = {
   manual: {
     backendType: "manual",
     icon: MousePointerClick,
-    logoUrl: imgManual,
     label: "Trigger Manually",
     colorClass: "text-green-400",
     accentColor: "34,197,94",

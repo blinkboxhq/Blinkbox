@@ -218,7 +218,6 @@ import imgLinkedIn from "@nodes/linkedin/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
-import imgManualTrigger from "@triggers/manual/logo.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
 import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
@@ -453,7 +452,6 @@ export const NodeRegistry = {
     icon: MousePointerClick,
     colorClass: "text-green-400",
     accentColor: "34,197,94",
-    logoUrl: imgManualTrigger,
     ConfigPanel: TriggerNode,
     category: "trigger",
   },
