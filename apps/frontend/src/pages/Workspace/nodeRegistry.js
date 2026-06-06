@@ -220,7 +220,6 @@ import imgKimi from "@nodes/moonshot/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgManualTrigger from "@triggers/manual/logo.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
-import imgCronTrigger from "@triggers/cron/logo.svg";
 import imgFormTrigger from "@triggers/form/logo.png";
 import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
 import imgImap from "@triggers/imap/logo.svg";
@@ -479,7 +478,6 @@ export const NodeRegistry = {
     icon: Clock,
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
-    logoUrl: imgCronTrigger,
     ConfigPanel: ScheduleTriggerNode,
     category: "trigger",
   },

@@ -123,7 +123,6 @@ import imgIntercom       from "@triggers/intercom/logo.svg";
 import imgWooCommerce    from "@triggers/woocommerce/logo.svg";
 import imgVirusTotal     from "@triggers/virustotal/logo.svg";
 import imgManual        from "@triggers/manual/logo.svg";
-import imgCron          from "@triggers/cron/logo.svg";
 import imgWebhook       from "@triggers/webhook/logo.png";
 import imgImap          from "@triggers/imap/logo.svg";
 import imgErrorTrigger  from "@triggers/error_trigger/logo.svg";
@@ -142,7 +141,6 @@ export const TRIGGER_VARIANTS = {
   cron: {
     backendType: "cron_trigger",
     icon: Clock,
-    logoUrl: imgCron,
     label: "On a Schedule",
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
