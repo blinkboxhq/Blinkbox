@@ -125,7 +125,6 @@ import imgVirusTotal     from "@triggers/virustotal/logo.svg";
 import imgManual        from "@triggers/manual/logo.svg";
 import imgCron          from "@triggers/cron/logo.svg";
 import imgWebhook       from "@triggers/webhook/logo.png";
-import imgChat          from "@triggers/chat/logo.svg";
 import imgImap          from "@triggers/imap/logo.svg";
 import imgErrorTrigger  from "@triggers/error_trigger/logo.svg";
 import imgHttpMonitor   from "@triggers/http_monitor/logo.svg";
@@ -161,7 +160,6 @@ export const TRIGGER_VARIANTS = {
   chat: {
     backendType: "chat_trigger",
     icon: MessageSquare,
-    logoUrl: imgChat,
     label: "On Chat Message",
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
