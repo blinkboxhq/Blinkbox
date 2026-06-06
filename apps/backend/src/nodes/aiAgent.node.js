@@ -92,6 +92,7 @@ const ENDPOINTS = {
   groq: "https://api.groq.com/openai/v1/chat/completions",
   nvidia_nim: "https://integrate.api.nvidia.com/v1/chat/completions",
   gemma:      "https://integrate.api.nvidia.com/v1/chat/completions",
+  moonshot:   "https://api.moonshot.cn/v1/chat/completions",
   fireworks: "https://api.fireworks.ai/inference/v1/chat/completions",
   cerebras: "https://api.cerebras.ai/v1/chat/completions",
   ollama:   "http://127.0.0.1:11434/v1/chat/completions",
@@ -117,6 +118,7 @@ const DEFAULT_MODELS = {
   groq: "llama-3.3-70b-versatile",
   nvidia_nim: "nvidia/nemotron-3-ultra-550b-a55b",
   gemma:      "google/gemma-4-31b-it",
+  moonshot:   "moonshot-v1-8k",
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
@@ -354,6 +356,10 @@ const agentNode = {
       agent_openai: "openai", agent_anthropic: "anthropic", agent_gemini: "gemini",
       agent_xai: "xai", agent_deepseek: "deepseek", agent_groq: "groq",
       agent_perplexity: "perplexity", agent_ollama: "ollama", agent_lmstudio: "lmstudio",
+      agent_nvidia_nim: "nvidia_nim", agent_gemma: "gemma",
+      agent_moonshot: "moonshot", agent_novita: "novita", agent_deepinfra: "deepinfra",
+      agent_hyperbolic: "hyperbolic", agent_fireworks: "fireworks", agent_cerebras: "cerebras",
+      agent_together: "together", agent_openrouter: "openrouter",
     };
     const _llm = _chatModel?.config || _chatModel;
     const _derivedProvider = _chatModel?.backendType ? BACKENDTYPE_TO_PROVIDER[_chatModel.backendType] : null;
@@ -390,6 +396,7 @@ const agentNode = {
       groq:        "GROQ_API_KEY",
       nvidia_nim:  "NVIDIA_NIM_API_KEY",
       gemma:       "NVIDIA_NIM_API_KEY",
+      moonshot:    "MOONSHOT_API_KEY",
       novita:      "NOVITA_API_KEY",
       deepinfra:   "DEEPINFRA_API_KEY",
       hyperbolic:  "HYPERBOLIC_API_KEY",
