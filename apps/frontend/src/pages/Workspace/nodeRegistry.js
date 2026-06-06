@@ -146,6 +146,7 @@ import imgDeepSeek from "@nodes/deepseek/logo.svg";
 import imgGrok from "../../assets/grok-color.svg";
 import imgGroq from "../../assets/groq.svg";
 import imgNvidiaNim from "@nodes/nvidia_nim/logo.svg";
+import imgGemmaNim from "@nodes/gemma/logo.svg";
 import imgOllama from "../../assets/ollama.svg";
 import imgLmStudio from "../../assets/lmstudio.svg";
 import imgRedis from "@nodes/redis/logo.svg";
@@ -280,6 +281,7 @@ import WebSearchNode from "@nodes/web_search/ConfigPanel.jsx";
 import makeOpenAICompatNode from "@nodes/openai_compat/ConfigPanel.jsx";
 import DeepSeekNode from "@nodes/deepseek/ConfigPanel.jsx";
 import NvidiaNimNode from "@nodes/nvidia_nim/ConfigPanel.jsx";
+import GemmaNimNode from "@nodes/gemma/ConfigPanel.jsx";
 import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
@@ -701,6 +703,16 @@ export const NodeRegistry = {
     ConfigPanel: NvidiaNimNode,
     category: "ai",
   },
+  gemma: {
+    label: "Google Gemma",
+    icon: Brain,
+    colorClass: "text-[#4285F4]",
+    accentColor: "66,133,244",
+    logoUrl: imgGemmaNim,
+    description: "Gemma 4, Gemma 3, Gemma 3n, Gemma 2 & CodeGemma via NVIDIA NIM",
+    ConfigPanel: GemmaNimNode,
+    category: "ai",
+  },
   moonshot: {
     label: "Kimi",
     icon: Brain,
@@ -952,6 +964,36 @@ export const NodeRegistry = {
         "moonshotai/kimi-k2-instruct",
       ],
       color: "#76B900",
+    }),
+  },
+  agent_gemma: {
+    label: "Google Gemma",
+    icon: Brain,
+    logoUrl: imgGemmaNim,
+    colorClass: "text-[#4285F4]",
+    accentColor: "66,133,244",
+    category: "ai",
+    agentOnly: true,
+    description: "Gemma 4 & Gemma 3 models via NVIDIA NIM powering the AI Agent",
+    defaultModel: "google/gemma-4-31b-it",
+    models: [
+      { value: "google/gemma-4-31b-it",   label: "Gemma 4 31B ✦" },
+      { value: "google/gemma-3-27b-it",   label: "Gemma 3 27B" },
+      { value: "google/gemma-3n-e4b-it",  label: "Gemma 3n E4B (edge)" },
+      { value: "google/gemma-2-27b-it",   label: "Gemma 2 27B" },
+      { value: "google/gemma-3-1b-it",    label: "Gemma 3 1B (fast)" },
+    ],
+    ConfigPanel: makeAgentModelPanel({
+      label: "Google Gemma",
+      credentialType: "NvidiaNim",
+      models: [
+        "google/gemma-4-31b-it",
+        "google/gemma-3-27b-it",
+        "google/gemma-3n-e4b-it",
+        "google/gemma-2-27b-it",
+        "google/gemma-3-1b-it",
+      ],
+      color: "#4285F4",
     }),
   },
   agent_ollama: {
