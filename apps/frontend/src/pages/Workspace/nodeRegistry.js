@@ -485,7 +485,7 @@ export const NodeRegistry = {
   },
   chat_trigger: {
     label: "Chat Trigger",
-    icon: MessageSquarePlus,
+    icon: MessageSquare,
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
     ConfigPanel: ChatTriggerNode,
