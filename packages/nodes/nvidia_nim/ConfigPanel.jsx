@@ -238,7 +238,8 @@ export default function NvidiaNimNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="lime"
+        accentColor="green"
+        credentialType="NvidiaNim"
         label="NVIDIA NIM API Key"
         placeholder="Select NVIDIA NIM credential…"
       />
