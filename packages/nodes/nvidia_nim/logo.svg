@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- NVIDIA green background -->
+  <rect width="32" height="32" rx="5" fill="#76B900"/>
+  <!-- NIM wordmark in white -->
+  <text x="16" y="20" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-size="9" font-weight="900" fill="white" letter-spacing="1">NIM</text>
+  <!-- NVIDIA eye icon (simplified) -->
+  <path d="M7 11.5 C7 8.5 10 6 13.5 6 L16 6 C16 6 12 7.5 12 11.5 C12 14 13.5 15.5 16 15.5 L16 17 C16 17 7 16.5 7 11.5Z" fill="white" opacity="0.9"/>
+  <path d="M25 11.5 C25 8.5 22 6 18.5 6 L16 6 C16 6 20 7.5 20 11.5 C20 14 18.5 15.5 16 15.5 L16 17 C16 17 25 16.5 25 11.5Z" fill="white" opacity="0.9"/>
+  <circle cx="16" cy="11.5" r="2.5" fill="#76B900"/>
+</svg>

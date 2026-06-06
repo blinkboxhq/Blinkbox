@@ -124,6 +124,7 @@ import xai                 from "./integrations/xai.node.js";
 import deepseek            from "./integrations/deepseek.node.js";
 import moonshot            from "./integrations/moonshot.node.js";
 import groq               from "./integrations/groq.node.js";
+import nvidiaNim          from "./integrations/nvidiaNim.node.js";
 import ollama             from "./integrations/ollama.node.js";
 import lmstudio           from "./integrations/lmstudio.node.js";
 import claudeCode         from "./integrations/claudeCode.node.js";
@@ -345,6 +346,7 @@ export const nodeRegistry = {
   deepseek:         deepseek,
   moonshot:         moonshot,
   groq:             groq,
+  nvidia_nim:       nvidiaNim,
   ollama:           ollama,
   lm_studio:        lmstudio,
   claude_code:      claudeCode,
@@ -461,6 +463,7 @@ export const nodeRegistry = {
   agent_perplexity:       perplexity,
   agent_xai:              xai,
   agent_groq:             groq,
+  agent_nvidia_nim:       nvidiaNim,
   agent_ollama:           agentOllamaNode,
   agent_lmstudio:         agentLmStudioNode,
   agent_llm:              openai,

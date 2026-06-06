@@ -145,6 +145,7 @@ import imgPerplexity from "../../assets/perplexity-color.svg";
 import imgDeepSeek from "@nodes/deepseek/logo.svg";
 import imgGrok from "../../assets/grok-color.svg";
 import imgGroq from "../../assets/groq.svg";
+import imgNvidiaNim from "@nodes/nvidia_nim/logo.svg";
 import imgOllama from "../../assets/ollama.svg";
 import imgLmStudio from "../../assets/lmstudio.svg";
 import imgRedis from "@nodes/redis/logo.svg";
@@ -278,6 +279,7 @@ import AirtableNode from "@nodes/airtable/ConfigPanel.jsx";
 import WebSearchNode from "@nodes/web_search/ConfigPanel.jsx";
 import makeOpenAICompatNode from "@nodes/openai_compat/ConfigPanel.jsx";
 import DeepSeekNode from "@nodes/deepseek/ConfigPanel.jsx";
+import NvidiaNimNode from "@nodes/nvidia_nim/ConfigPanel.jsx";
 import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
@@ -689,6 +691,16 @@ export const NodeRegistry = {
     ConfigPanel: DeepSeekNode,
     category: "ai",
   },
+  nvidia_nim: {
+    label: "NVIDIA NIM",
+    icon: Cpu,
+    colorClass: "text-[#76B900]",
+    accentColor: "118,185,0",
+    logoUrl: imgNvidiaNim,
+    description: "NVIDIA Inference Microservices — Llama, Nemotron, vision & embedding models",
+    ConfigPanel: NvidiaNimNode,
+    category: "ai",
+  },
   moonshot: {
     label: "Kimi",
     icon: Brain,
@@ -906,6 +918,35 @@ export const NodeRegistry = {
         "mixtral-8x7b-32768",
       ],
       color: "#F97316",
+    }),
+  },
+  agent_nvidia_nim: {
+    label: "NVIDIA NIM",
+    icon: Cpu,
+    logoUrl: imgNvidiaNim,
+    colorClass: "text-[#76B900]",
+    accentColor: "118,185,0",
+    category: "ai",
+    agentOnly: true,
+    description: "NVIDIA-hosted Llama, Nemotron & Mistral models powering the AI Agent",
+    defaultModel: "meta/llama-3.3-70b-instruct",
+    models: [
+      { value: "meta/llama-3.3-70b-instruct",           label: "Llama 3.3 70B Instruct" },
+      { value: "meta/llama-3.1-405b-instruct",          label: "Llama 3.1 405B Instruct" },
+      { value: "nvidia/llama-3.1-nemotron-70b-instruct",label: "Nemotron 70B" },
+      { value: "mistralai/mistral-large-2-instruct",    label: "Mistral Large 2" },
+      { value: "meta/llama-3.1-8b-instruct",            label: "Llama 3.1 8B (fast)" },
+    ],
+    ConfigPanel: makeAgentModelPanel({
+      label: "NVIDIA NIM",
+      credentialType: "NvidiaNim",
+      models: [
+        "meta/llama-3.3-70b-instruct",
+        "meta/llama-3.1-405b-instruct",
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "mistralai/mistral-large-2-instruct",
+      ],
+      color: "#76B900",
     }),
   },
   agent_ollama: {
