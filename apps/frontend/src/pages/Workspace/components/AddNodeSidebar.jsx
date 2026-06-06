@@ -300,10 +300,11 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full px-5 py-3.5 transition-colors text-left group border-b border-white/[0.04] last:border-0 ${
+      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group border-b border-white/[0.04] last:border-0 relative ${
         selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
       }`}
     >
+      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity bg-white/30" />
       <div className="w-5 h-5 shrink-0 flex items-center justify-center">
         {nodeDef.logoUrl ? (
           <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-5 h-5 object-contain"
