@@ -221,7 +221,6 @@ import imgMCP from "../../assets/mcp.svg";
 import imgManualTrigger from "@triggers/manual/logo.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgCronTrigger from "@triggers/cron/logo.svg";
-import imgChatTrigger from "@triggers/chat/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
 import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
 import imgImap from "@triggers/imap/logo.svg";
@@ -489,7 +488,6 @@ export const NodeRegistry = {
     icon: MessageSquarePlus,
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
-    logoUrl: imgChatTrigger,
     ConfigPanel: ChatTriggerNode,
     category: "trigger",
   },
