@@ -296,7 +296,21 @@ export default function CredentialPicker({
           <div
             ref={dropdownRef}
             className="fixed z-[9999] bg-[#111] border border-[#333] rounded-lg shadow-2xl overflow-hidden flex flex-col"
-            style={{ top: dropdownRect.bottom + 4, left: dropdownRect.left, width: dropdownRect.width, maxHeight: 256 }}
+            style={(() => {
+              const maxH = 256;
+              const spaceBelow = window.innerHeight - dropdownRect.bottom - 8;
+              const spaceAbove = dropdownRect.top - 8;
+              const flipUp = spaceBelow < maxH && spaceAbove > spaceBelow;
+              const h = Math.min(maxH, flipUp ? spaceAbove : spaceBelow);
+              return {
+                left: dropdownRect.left,
+                width: dropdownRect.width,
+                maxHeight: h,
+                ...(flipUp
+                  ? { bottom: window.innerHeight - dropdownRect.top + 4 }
+                  : { top: dropdownRect.bottom + 4 }),
+              };
+            })()}
           >
             {/* Search */}
             {credentials.length > 3 && (
