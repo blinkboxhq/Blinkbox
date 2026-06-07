@@ -265,6 +265,7 @@ import OllamaConfigPanel from "@nodes/agent_ollama/ConfigPanel.jsx";
 import LmStudioConfigPanel from "@nodes/agent_lmstudio/ConfigPanel.jsx";
 import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
+import VirtualComputerPanel from "@nodes/virtual_computer/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
 import SetFieldsNode from "@nodes/set_fields/ConfigPanel.jsx";
 import CodeNode from "@nodes/code/ConfigPanel.jsx";
@@ -1305,10 +1306,7 @@ export const NodeRegistry = {
     category: "ai",
     agentOnly: true,
     description: "Control a full browser-based virtual computer",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Virtual Computer",
-      description: "Use the built-in VM for browser automation",
-    }),
+    ConfigPanel: VirtualComputerPanel,
   },
 
   // ── Agent Tools — Browser & Web (6) ─────────────────────────────────────────
