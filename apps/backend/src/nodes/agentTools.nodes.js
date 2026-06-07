@@ -20,6 +20,14 @@ import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
 
+// Agents (and humans) routinely omit the protocol — "google.com" instead of
+// "https://google.com" — which makes `new URL()` throw before navigation
+// even starts. Default bare host/path strings to https://.
+function normalizeUrl(rawUrl) {
+  const trimmed = (rawUrl || "").trim();
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 function assertSafeUrl(rawUrl) {
   let parsed;
   try { parsed = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
@@ -640,10 +648,15 @@ export const tool_virtual_computer = {
     ["action"]
   ),
   async run(config, args, ctx) {
-    if (args.url) assertSafeUrl(args.url);
+    let dispatchArgs = args;
+    if (args.url) {
+      const normalizedUrl = normalizeUrl(args.url);
+      assertSafeUrl(normalizedUrl);
+      dispatchArgs = { ...args, url: normalizedUrl };
+    }
     const sid = args.sessionId || ctx?.executionId || `_vc_${Date.now()}`;
     const wid = ctx?.workspaceId || "default";
-    return _vcDispatch(sid, wid, args.action, args);
+    return _vcDispatch(sid, wid, args.action, dispatchArgs);
   },
 };
 
