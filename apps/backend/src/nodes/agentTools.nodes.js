@@ -13,6 +13,7 @@
 import axios from "axios";
 import crypto from "crypto";
 import { execute as containerExecute, executeCustom as containerExecuteCustom } from "../infra/container.pool.js";
+import { dispatchAction as _vcDispatch } from "./VirtualComputer.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import fs from "fs/promises";
