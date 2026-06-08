@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Monitor, Play, Square, Loader2, MousePointerClick, Camera, Type, Globe } from "lucide-react";
+import useWorkspaceStore from "@/store/workspaceStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -34,10 +35,18 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
   const [log, setLog] = useState([]);             // recent actions
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
-  const sessionId = `vc_node_${nodeId}`;
+
+  // The agent's tool_virtual_computer keys its browser session by the live
+  // execution's ID (ctx.executionId) — NOT by node ID. To actually watch the
+  // agent's real browser (not a disconnected, empty session) we must connect
+  // using that same ID, and only while a run is actually in flight.
+  const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
+  const executionId = useWorkspaceStore((s) => s.liveExecutionState?._id);
+  const canWatch = Boolean(isExecutionLive && executionId);
+  const sessionId = executionId;
 
   function connect() {
-    if (socketRef.current) return;
+    if (socketRef.current || !sessionId) return;
     setConnecting(true);
     setError(null);
 
@@ -116,6 +125,12 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
     socketRef.current = null;
   }, []);
 
+  // The agent's browser session lives only as long as its execution does —
+  // once the run ends, drop the viewer rather than show a stale last frame.
+  useEffect(() => {
+    if (!isExecutionLive && socketRef.current) disconnect();
+  }, [isExecutionLive]);
+
   return (
     <div className="flex flex-col gap-4 p-4 bg-[#0d0d0f] min-h-full">
 
@@ -127,7 +142,11 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
         <div className="min-w-0">
           <p className="text-[13px] font-bold text-zinc-100">Virtual Computer</p>
           <p className="text-[10px] text-zinc-500 mt-0.5 truncate">
-            {connected ? "Live — agent's browser, in real time" : "Watch the agent control a real browser"}
+            {connected
+              ? "Live — agent's browser, in real time"
+              : canWatch
+                ? "A run is in progress — watch the agent's browser live"
+                : "Run this workflow to watch the agent's browser live"}
           </p>
         </div>
         <span className={`ml-auto w-2 h-2 rounded-full shrink-0 ${connected ? "bg-emerald-400" : connecting ? "bg-amber-400 animate-pulse" : "bg-zinc-700"}`} />
@@ -161,10 +180,15 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
               <Camera className="w-5 h-5" />
               <p className="text-[11px]">Waiting for first frame…</p>
             </div>
+          ) : canWatch ? (
+            <div className="flex flex-col items-center gap-2 text-zinc-600">
+              <Monitor className="w-6 h-6" strokeWidth={1.5} />
+              <p className="text-[11px]">Connect to watch this run live</p>
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-2 text-zinc-600">
               <Monitor className="w-6 h-6" strokeWidth={1.5} />
-              <p className="text-[11px]">Connect to watch this tool run live</p>
+              <p className="text-[11px]">No run in progress — start the workflow to watch live</p>
             </div>
           )}
 
@@ -185,11 +209,12 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
         {!connected ? (
           <button
             onClick={connect}
-            disabled={connecting}
+            disabled={connecting || !canWatch}
+            title={canWatch ? undefined : "No execution is currently running"}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 text-[12px] font-semibold hover:bg-violet-500/15 transition-all duration-150 disabled:opacity-50"
           >
             {connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            {connecting ? "Connecting…" : "Watch Live"}
+            {connecting ? "Connecting…" : canWatch ? "Watch Live" : "No Run In Progress"}
           </button>
         ) : (
           <button
@@ -234,8 +259,8 @@ export default function VirtualComputerPanel({ config = {}, nodeId }) {
       {/* Info banner */}
       <div className="bg-zinc-900 border border-zinc-800 text-zinc-500 text-[11px] px-3 py-2 rounded-lg leading-relaxed">
         This tool gives the agent a real, stealth-enabled browser it controls like a human — clicking,
-        typing, and scrolling with natural movement. Connect above to watch it work in real time while
-        the workflow runs, or any time after to inspect the live session.
+        typing, and scrolling with natural movement. While a workflow run is in progress, connect above
+        to watch the agent's browser live — the session ends with the run.
       </div>
     </div>
   );
