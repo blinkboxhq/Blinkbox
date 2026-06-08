@@ -39,6 +39,7 @@ const SESSION_TTL_MS       = 30 * 60_000;
 const DEFAULT_TIMEOUT      = 30_000;
 const NAV_TIMEOUT          = 60_000;
 const ACTION_RETRIES       = 3;
+const RENDER_SETTLE_MS     = 4_000;  // max wait for SPA hydration after navigation
 const RATE_LIMIT_RPM       = 100;
 const SCREENSHOT_QUALITY   = 80;     // JPEG, keeps sizes small (~50-100KB)
 
@@ -297,6 +298,14 @@ class VCSession {
   openUrl(url, waitUntil = "networkidle2") {
     return this._run(() => this._exec(async () => {
       await this._page.goto(url, { waitUntil, timeout: NAV_TIMEOUT });
+      // SPAs (React/Vue/etc.) often finish "networkidle" before their JS has
+      // mounted and painted — capturing right away yields an empty root div.
+      // Poll briefly for visible body content so screenshots/get_html reflect
+      // the rendered page, not the pre-hydration shell.
+      await this._page.waitForFunction(
+        () => document.body && document.body.innerText.trim().length > 0,
+        { timeout: RENDER_SETTLE_MS }
+      ).catch(() => {});
     }));
   }
 
