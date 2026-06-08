@@ -1496,8 +1496,9 @@ const PLATFORM_TOOL_SPECS = {
       properties: {
         operation: { type: "string", enum: ["listFiles", "getFile", "uploadText", "downloadText", "createFolder", "deleteFile", "moveFile", "shareFile"], description: "Operation to perform" },
         folderId: { type: "string", description: "Folder ID to list or upload into (omit for root)" },
+        parentId: { type: "string", description: "Parent folder ID for createFolder (omit to create at root)" },
         fileId: { type: "string", description: "File ID (for getFile/downloadText/deleteFile/moveFile/shareFile)" },
-        fileName: { type: "string", description: "File name (for uploadText/createFolder)" },
+        name: { type: "string", description: "File or folder name (for uploadText/createFolder)" },
         content: { type: "string", description: "Text content to upload (for uploadText)" },
         mimeType: { type: "string", description: "MIME type for uploadText (e.g. 'text/plain', 'text/csv')" },
         targetFolderId: { type: "string", description: "Destination folder ID for moveFile" },
