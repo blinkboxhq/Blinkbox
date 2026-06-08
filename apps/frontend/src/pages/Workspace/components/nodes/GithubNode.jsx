@@ -1,6 +1,6 @@
 import {
   GitBranch, GitPullRequest, GitMerge, AlertCircle,
-  Tag, MessageSquare, Star, BookOpen, List, Search,
+  Tag, MessageSquare, Star, BookOpen, List, Search, FilePlus,
 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
@@ -12,6 +12,7 @@ const OPERATIONS = [
   { value: 'createComment', label: 'Add Comment',        icon: MessageSquare },
   { value: 'listPRs',       label: 'List Pull Requests', icon: GitPullRequest },
   { value: 'createPR',      label: 'Create PR',          icon: GitBranch },
+  { value: 'createFile',    label: 'Create / Update File', icon: FilePlus },
   { value: 'mergePR',       label: 'Merge PR',           icon: GitMerge },
   { value: 'getRepo',       label: 'Get Repo Info',      icon: BookOpen },
   { value: 'createRelease', label: 'Create Release',     icon: Tag },
@@ -203,6 +204,49 @@ export default function GithubNode({ config = {}, updateConfig, nodeId }) {
                 placeholder="main"
               />
             </div>
+          </div>
+        </>
+      )}
+
+      {/* Create / update file */}
+      {op === 'createFile' && (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">File Path</span>
+            <SmartVariableInput
+              nodeId={nodeId}
+              value={config.path || ''}
+              onChange={(v) => updateConfig('path', v)}
+              placeholder="docs/notes.md"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">File Content</span>
+            <SmartVariableInput
+              nodeId={nodeId}
+              value={config.content || ''}
+              onChange={(v) => updateConfig('content', v)}
+              placeholder="{{n1.output}}"
+              multiline
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Commit Message</span>
+            <SmartVariableInput
+              nodeId={nodeId}
+              value={config.commitMessage || ''}
+              onChange={(v) => updateConfig('commitMessage', v)}
+              placeholder="docs: add notes"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Branch (optional)</span>
+            <SmartVariableInput
+              nodeId={nodeId}
+              value={config.branch || ''}
+              onChange={(v) => updateConfig('branch', v)}
+              placeholder="main"
+            />
           </div>
         </>
       )}

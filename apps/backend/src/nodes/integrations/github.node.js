@@ -8,6 +8,7 @@
  *   listIssues     — List issues for a repo
  *   createComment  — Add a comment to an issue or PR
  *   createPR       — Open a pull request
+ *   createFile     — Create or update a file in a repo (commits directly to a branch)
  *   mergePR        — Merge a pull request
  *   getRepo        — Get repository metadata
  *   listPRs        — List pull requests
@@ -95,6 +96,34 @@ export default {
           if (!title || !head) return { success: false, error: "GitHub createPR: 'title' and 'head' branch are required.", skipped: true };
           const res = await axios.post(`${BASE}/repos/${owner}/${repo}/pulls`, { title, body: prBody, head, base }, { headers: h, timeout: 15000 });
           return { number: res.data.number, url: res.data.html_url, title: res.data.title, state: res.data.state };
+        }
+
+        case "createFile": {
+          const { path, content, commitMessage, branch } = config;
+          if (!path) return { success: false, error: "GitHub createFile: 'path' is required — e.g. 'docs/notes.md'.", skipped: true };
+          if (content === undefined || content === null) return { success: false, error: "GitHub createFile: 'content' is required.", skipped: true };
+          if (!commitMessage) return { success: false, error: "GitHub createFile: 'commitMessage' is required.", skipped: true };
+
+          // The Contents API updates a file when given its current blob sha, and
+          // creates it when sha is omitted — look up any existing file first so
+          // both create and update work through the same operation.
+          let sha;
+          try {
+            const existing = await axios.get(`${BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+              headers: h, timeout: 15000, params: branch ? { ref: branch } : undefined,
+            });
+            sha = existing.data.sha;
+          } catch (e) {
+            if (e.response?.status !== 404) throw e;
+          }
+
+          const res = await axios.put(`${BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+            message: commitMessage,
+            content: Buffer.from(String(content), "utf-8").toString("base64"),
+            branch,
+            sha,
+          }, { headers: h, timeout: 15000 });
+          return { path: res.data.content?.path, sha: res.data.content?.sha, url: res.data.content?.html_url, commitSha: res.data.commit?.sha, updated: Boolean(sha) };
         }
 
         case "mergePR": {
