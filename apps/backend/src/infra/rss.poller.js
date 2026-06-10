@@ -11,6 +11,7 @@
  */
 
 import { Queue, Worker } from "bullmq";
+import Parser from "rss-parser";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
@@ -23,68 +24,45 @@ const SEEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 let rssQueue = null;
 let rssWorker = null;
 
-// ── Minimal RSS/Atom parser (no external dep) ─────────────────────────────────
-
-function extractText(xml, tag) {
-  const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
-  if (!m) return "";
-  // Strip CDATA wrappers
-  return m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
+// ── Sanitize XML namespace names (media:content → media_content) ──────────────
+function sanitizeXmlName(name) {
+  return name.replace(/[^a-zA-Z0-9_]/g, "_");
 }
 
-function parseItems(xml) {
-  // Support both RSS <item> and Atom <entry>
-  const itemTag = xml.includes("<entry") ? "entry" : "item";
-  const itemRe = new RegExp(`<${itemTag}[\\s>]([\\s\\S]*?)<\\/${itemTag}>`, "gi");
-  const items = [];
-  let m;
-  while ((m = itemRe.exec(xml)) !== null) {
-    const chunk = m[1];
-    // Atom uses <id> for guid, RSS uses <guid>
-    const guid =
-      extractText(chunk, "guid") ||
-      extractText(chunk, "id") ||
-      extractText(chunk, "link");
+const rssParser = new Parser({
+  timeout: 15000,
+  headers: {
+    "User-Agent": "BlinkBox-RSS-Poller/1.0",
+    Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+  },
+  xml2js: {
+    tagNameProcessors: [sanitizeXmlName],
+    attrNameProcessors: [sanitizeXmlName],
+  },
+  customFields: {
+    item: ["media_content", "media_thumbnail", "enclosure", "dc_creator", "content_encoded"],
+  },
+});
 
-    // Atom uses <updated> for pubDate
-    const pubDate =
-      extractText(chunk, "pubDate") ||
-      extractText(chunk, "published") ||
-      extractText(chunk, "updated");
-
-    // Atom uses <summary> or <content> for description
-    const description =
-      extractText(chunk, "description") ||
-      extractText(chunk, "summary") ||
-      extractText(chunk, "content");
-
-    items.push({
-      title: extractText(chunk, "title"),
-      link: extractText(chunk, "link"),
-      description,
-      pubDate,
-      author: extractText(chunk, "author") || extractText(chunk, "dc:creator"),
-      guid,
-      content: extractText(chunk, "content:encoded") || extractText(chunk, "content"),
-    });
-  }
-  return items;
-}
-
-async function fetchFeed(url) {
+async function parseFeed(url) {
   assertSafeUrl(url);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "BlinkBox-RSS-Poller/1.0" },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timer);
-  }
+  return rssParser.parseURL(url);
+}
+
+function normalizeItem(item) {
+  return {
+    title:       item.title        ?? "",
+    link:        item.link         ?? item.guid ?? "",
+    guid:        item.guid         ?? item.link ?? item.title ?? "",
+    description: item.contentSnippet ?? item.content ?? item.summary ?? "",
+    content:     item.content_encoded ?? item.content ?? "",
+    pubDate:     item.isoDate      ?? item.pubDate ?? item.updated ?? null,
+    isoDate:     item.isoDate      ?? null,
+    author:      item.creator      ?? item.dc_creator ?? item.author ?? "",
+    categories:  item.categories   ?? [],
+    enclosure:   item.enclosure    ?? item.media_content ?? null,
+    thumbnail:   item.media_thumbnail?._?.url ?? item.media_content?._?.url ?? null,
+  };
 }
 
 // ── Poller logic ──────────────────────────────────────────────────────────────
@@ -113,16 +91,16 @@ export async function pollFeed(automationId, feedUrl, onlyNew) {
   }
 
   try {
-    let xml;
+    let feed;
     try {
-      xml = await fetchFeed(feedUrl);
+      feed = await parseFeed(feedUrl);
     } catch (err) {
-      console.warn(`[RSS] Failed to fetch feed for ${automationId}: ${err.message}`);
+      console.warn(`[RSS] Failed to fetch/parse feed for ${automationId}: ${err.message}`);
       return;
     }
 
-    const items = parseItems(xml);
-    if (!items.length) return;
+    const rawItems = feed.items ?? [];
+    if (!rawItems.length) return;
 
     const { executeAutomation } = await import(
       "../modules/automation/automation.executor.js"
@@ -131,19 +109,29 @@ export async function pollFeed(automationId, feedUrl, onlyNew) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    for (const item of items) {
+    const feedMeta = {
+      title:       feed.title       ?? "",
+      description: feed.description ?? "",
+      link:        feed.link        ?? feedUrl,
+      language:    feed.language    ?? "",
+    };
+
+    for (const rawItem of rawItems) {
+      const item = normalizeItem(rawItem);
       const guid = item.guid || item.link || item.title;
       if (!guid) continue;
 
       if (onlyNew) {
-        // SADD is atomic: only the first worker to call it for this guid claims it.
-        // Return value 1 means we added it (claimed); 0 means already seen.
         const claimed = await claimIfUnseen(seenKey, guid, SEEN_TTL_SECONDS);
         if (!claimed) continue;
       }
 
       try {
-        await executeAutomation(automation, { item, feedUrl }, { workspaceId: automation.workspaceId, idempotencyKey: `rss:${automation._id}:${guid}` });
+        await executeAutomation(
+          automation,
+          { ...item, feed: feedMeta, feedUrl },
+          { workspaceId: automation.workspaceId, idempotencyKey: `rss:${automation._id}:${guid}` },
+        );
         console.log(`[RSS] Fired automation "${automation.name}" for item: "${item.title}"`);
       } catch (err) {
         console.error(`[RSS] Failed to fire automation "${automation.name}":`, err.message);

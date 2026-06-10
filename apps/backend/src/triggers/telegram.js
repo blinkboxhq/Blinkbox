@@ -1,18 +1,55 @@
 import axios from "axios";
+import crypto from "crypto";
 import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 export default {
   async run(config, input, context = {}) {
     const body = input?.body ?? input;
-    const msg  = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
+    const headers = input?.headers ?? {};
 
+    // ── Secret token verification (timing-safe, like n8n v1.2+) ─────────────
+    if (config?.telegramSecretToken) {
+      try {
+        const secret = await getOAuthToken(config.telegramSecretToken, context.workspaceId, "Telegram").catch(() => config.telegramSecretToken);
+        const provided = headers["x-telegram-bot-api-secret-token"] ?? "";
+        const secretBuf = Buffer.from(String(secret));
+        const providedBuf = Buffer.from(String(provided));
+        if (
+          secretBuf.byteLength !== providedBuf.byteLength ||
+          !crypto.timingSafeEqual(secretBuf, providedBuf)
+        ) {
+          throw new Error("[telegram_trigger] Invalid secret token");
+        }
+      } catch (err) {
+        if (err.message.includes("Invalid secret token")) throw err;
+        console.warn("[telegram_trigger] Secret token check error:", err.message);
+      }
+    }
+
+    const msg = body?.message ?? body?.edited_message ?? body?.channel_post ?? {};
+
+    // ── Chat ID / User ID filtering (like n8n v1.2) ───────────────────────────
+    if (config?.allowedChatIds) {
+      const allowed = String(config.allowedChatIds).split(",").map((s) => s.trim()).filter(Boolean);
+      if (allowed.length > 0 && !allowed.includes(String(msg?.chat?.id ?? ""))) {
+        return null;
+      }
+    }
+
+    if (config?.allowedUserIds) {
+      const allowed = String(config.allowedUserIds).split(",").map((s) => s.trim()).filter(Boolean);
+      if (allowed.length > 0 && !allowed.includes(String(msg?.from?.id ?? ""))) {
+        return null;
+      }
+    }
+
+    // ── Media resolution ──────────────────────────────────────────────────────
     let mediaFileId   = null;
     let mediaMimeType = "application/octet-stream";
     let mediaName     = "file";
     let mediaType     = null;
 
     if (Array.isArray(msg.photo) && msg.photo.length > 0) {
-      // Pick second-to-last (medium quality) — avoids huge images that hit LLM vision limits
       const idx  = msg.photo.length >= 3 ? msg.photo.length - 2 : msg.photo.length >= 2 ? 1 : 0;
       const best = msg.photo[idx];
       mediaFileId = best.file_id; mediaMimeType = "image/jpeg"; mediaName = "photo.jpg"; mediaType = "photo";

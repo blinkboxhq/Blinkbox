@@ -122,7 +122,7 @@ function LightningBg({ hue = 230, speed = 1.6, intensity = 0.55, size = 2 }) {
 }
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
-const TYPEWRITER_WORDS = ['Shopify orders', 'lead follow-ups', 'invoice sending', 'support tickets', 'data syncing', 'report building'];
+const TYPEWRITER_WORDS = ['anything', 'Shopify orders', 'lead generation', 'data pipelines', 'support tickets', 'AI workflows'];
 
 function Typewriter() {
   const [wordIdx, setWordIdx] = useState(0);
@@ -204,8 +204,7 @@ function HeroSection({ heroRef, heroInView }) {
             className="font-bold leading-[1.05] tracking-[-0.03em] mb-4 text-white"
             style={{ fontSize: 'clamp(40px, 5vw, 68px)' }}
           >
-            Automate your<br />
-            <Typewriter /><br />
+            Automate <Typewriter /><br />
             <span className="text-white">in minutes.</span>
           </motion.h1>
 
@@ -217,8 +216,7 @@ function HeroSection({ heroRef, heroInView }) {
             className="text-[16px] leading-relaxed mb-10"
             style={{ color: '#71717a', maxWidth: 420 }}
           >
-            Every hour spent on manual work is an hour your rivals spend on growth.
-            Blinkbox runs it for you — silently, 24/7, zero code.
+            Every hour spent on manual work is an hour your rivals spend on growth. Blinkbox chains your APIs, databases, and AI agents together visually — running silently, 24/7.
           </motion.p>
 
           {/* CTAs */}

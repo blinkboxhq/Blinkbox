@@ -351,6 +351,11 @@ export async function processCursor({ executionId, cursorId }) {
         NODE_TIMEOUT_MS,
       );
 
+      // Trigger filter signal — null means "ignore this event, stop execution silently"
+      if (rawOutput === null && node.id === automation.entryNodeId) {
+        return; // abort without error; webhook already returned 200
+      }
+
       // Handle custom Delay/Sleep requests from nodes
       if (rawOutput && rawOutput.__delay) {
         nodeDelayUntil = new Date(rawOutput.resumeAfter);

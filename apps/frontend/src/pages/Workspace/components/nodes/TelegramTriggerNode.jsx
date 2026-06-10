@@ -86,8 +86,30 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, nodeId 
               accentColor="zinc"
               label="Secret Token (optional)"
               placeholder="Select secret token for request verification..."
-              hint="BlinkBox verifies the X-Telegram-Bot-Api-Secret-Token header."
+              hint="BlinkBox verifies the X-Telegram-Bot-Api-Secret-Token header using timing-safe comparison."
             />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Restrict to Chat IDs</label>
+              <input
+                value={config.allowedChatIds || ''}
+                onChange={(e) => updateConfig?.('allowedChatIds', e.target.value)}
+                placeholder="e.g. -100123456, 987654321"
+                className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+              />
+              <p className="text-[9px] text-zinc-600">Comma-separated chat IDs. Leave empty to allow all chats.</p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Restrict to User IDs</label>
+              <input
+                value={config.allowedUserIds || ''}
+                onChange={(e) => updateConfig?.('allowedUserIds', e.target.value)}
+                placeholder="e.g. 123456789, 987654321"
+                className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+              />
+              <p className="text-[9px] text-zinc-600">Comma-separated user IDs. Leave empty to allow all users.</p>
+            </div>
 
             <div className="p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               <p className="text-[9px] text-zinc-600 leading-relaxed">

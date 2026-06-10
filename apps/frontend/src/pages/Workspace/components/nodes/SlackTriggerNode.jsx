@@ -88,6 +88,19 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
               />
             </div>
 
+            <div className="flex items-center justify-between p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+              <div>
+                <p className="text-[10px] font-semibold text-zinc-300">Resolve IDs</p>
+                <p className="text-[9px] text-zinc-600">Resolve user/channel IDs to real names via Slack API</p>
+              </div>
+              <button
+                onClick={() => updateConfig?.('resolveIds', !config.resolveIds)}
+                className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${config.resolveIds ? 'bg-[#E01E5A]' : 'bg-zinc-700'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${config.resolveIds ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+
             <div className="p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               <p className="text-[9px] text-zinc-600 leading-relaxed">
                 BlinkBox auto-responds to Slack URL verification challenges — no extra setup needed.
@@ -128,17 +141,20 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
             </div>
             <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               {[
-                ['$trigger.body.event.type', 'Event type (e.g. "message", "app_mention")'],
-                ['$trigger.body.event.text', 'Message text content'],
-                ['$trigger.body.event.user', 'User ID who triggered the event'],
-                ['$trigger.body.event.channel', 'Channel ID where event occurred'],
-                ['$trigger.body.event.ts', 'Event timestamp (use for threading)'],
-                ['$trigger.body.event.thread_ts', 'Thread timestamp (for thread replies)'],
-                ['$trigger.body.team_id', 'Slack workspace team ID'],
-                ['$trigger.body.event.files', 'Attached files array (if any)'],
+                ['text', 'Message text content'],
+                ['user', 'User ID who triggered the event'],
+                ['channel', 'Channel ID where event occurred'],
+                ['eventType', 'Event type ("message", "app_mention", etc.)'],
+                ['ts', 'Timestamp — use as message ID for threading'],
+                ['threadTs', 'Thread timestamp if in a thread'],
+                ['teamId', 'Slack workspace team ID'],
+                ['resolvedUser.name', 'Username (when Resolve IDs is on)'],
+                ['resolvedUser.realName', 'Full name (when Resolve IDs is on)'],
+                ['resolvedChannel.name', 'Channel name (when Resolve IDs is on)'],
+                ['hasMedia', 'true if files were attached'],
               ].map(([key, desc]) => (
                 <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#E01E5A] shrink-0">{key}</span>
+                  <span className="text-[10px] font-mono text-[#E01E5A] shrink-0">{`{{ nodeId.${key} }}`}</span>
                   <span className="text-[9px] text-zinc-600">{desc}</span>
                 </div>
               ))}

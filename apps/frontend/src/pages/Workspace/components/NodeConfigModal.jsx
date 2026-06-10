@@ -51,8 +51,33 @@ function Divider({ onMouseDown }) {
   );
 }
 
+// ── Flatten a value to a display string ──────────────────────────────────────
+function formatValue(v) {
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") return v.length > 60 ? v.slice(0, 60) + "…" : v;
+  if (Array.isArray(v)) return `[${v.length} items]`;
+  if (typeof v === "object") return "{…}";
+  return String(v);
+}
+
+function flattenKeys(obj, prefix = "", depth = 0) {
+  if (!obj || typeof obj !== "object" || depth > 2) return [];
+  const out = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.startsWith("_")) continue;
+    const path = prefix ? `${prefix}.${k}` : k;
+    out.push({ key: k, path, value: v });
+    if (v && typeof v === "object" && !Array.isArray(v) && depth < 1) {
+      out.push(...flattenKeys(v, path, depth + 1));
+    }
+  }
+  return out;
+}
+
 // ── Panel 1: Input ────────────────────────────────────────────────────────────
-function InputPanel({ canvasNodes, currentNodeId }) {
+function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
   const [expanded, setExpanded] = useState(null);
   const [copied, setCopied]    = useState(null);
   const [dragging, setDragging] = useState(null);
@@ -67,10 +92,9 @@ function InputPanel({ canvasNodes, currentNodeId }) {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
-      {/* Panel header — fixed height matches others */}
       <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-neutral-200">Input</p>
-        <p className="text-[10px] text-neutral-600 mt-0.5">Click a node to see its output variables</p>
+        <p className="text-[10px] text-neutral-600 mt-0.5">Drag a field into any input, or click to copy</p>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
@@ -86,13 +110,30 @@ function InputPanel({ canvasNodes, currentNodeId }) {
 
           const slug = (n.data.config?.customLabel || def?.label || n.data.backendType || "node")
             .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+
+          // Prefer live run output; fall back to DEFAULT_SCHEMAS
+          const liveOutput = allRunOutputs[n.id];
+          const hasLiveData = liveOutput && typeof liveOutput === "object";
           const schema = DEFAULT_SCHEMAS[n.data.backendType];
-          const vars = schema
-            ? Object.entries(schema).filter(([k]) => !k.startsWith("_")).map(([k]) => ({ key: k, ref: `{{${slug}.${k}}}` }))
-            : [
-                { key: "output",  ref: `{{${slug}.output}}`  },
-                { key: "success", ref: `{{${slug}.success}}` },
-              ];
+
+          let vars;
+          if (hasLiveData) {
+            vars = flattenKeys(liveOutput).map(({ path, value }) => ({
+              key: path,
+              ref: `{{${slug}.${path}}}`,
+              value: formatValue(value),
+              isLive: true,
+            }));
+          } else if (schema) {
+            vars = Object.entries(schema)
+              .filter(([k]) => !k.startsWith("_"))
+              .map(([k]) => ({ key: k, ref: `{{${slug}.${k}}}`, value: null, isLive: false }));
+          } else {
+            vars = [
+              { key: "output",  ref: `{{${slug}.output}}`,  value: null, isLive: false },
+              { key: "success", ref: `{{${slug}.success}}`, value: null, isLive: false },
+            ];
+          }
 
           return (
             <div key={n.id}>
@@ -108,13 +149,18 @@ function InputPanel({ canvasNodes, currentNodeId }) {
                       : <div className="w-4 h-4 rounded bg-neutral-700" />
                   }
                 </div>
-                <span className="flex-1 text-[13px] font-medium text-neutral-300 group-hover:text-neutral-100 truncate transition-colors">{name}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[13px] font-medium text-neutral-300 group-hover:text-neutral-100 truncate transition-colors block">{name}</span>
+                  {hasLiveData && (
+                    <span className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider">live data</span>
+                  )}
+                </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-neutral-600 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isOpen && (
                 <div className="px-4 pb-2 flex flex-col gap-0.5">
-                  {vars.map(({ key, ref }) => {
+                  {vars.map(({ key, ref, value, isLive }) => {
                     const isCopied = copied === ref;
                     const isDraggingThis = dragging === ref;
                     return (
@@ -132,8 +178,12 @@ function InputPanel({ canvasNodes, currentNodeId }) {
                       >
                         <GripVertical className="w-3 h-3 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors cursor-grab" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200 transition-colors block">{key}</span>
-                          <span className="text-[10px] text-neutral-700 font-mono truncate block">{ref}</span>
+                          <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200 transition-colors block truncate">{key}</span>
+                          {isLive && value !== null ? (
+                            <span className="text-[10px] text-emerald-400/80 font-mono truncate block">{value}</span>
+                          ) : (
+                            <span className="text-[10px] text-neutral-700 font-mono truncate block">{ref}</span>
+                          )}
                         </div>
                         {isCopied
                           ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -385,6 +435,7 @@ export default function NodeConfigModal() {
   const updateNodeConfig  = useWorkspaceStore((s) => s.updateNodeConfig);
   const renameNode        = useWorkspaceStore((s) => s.renameNode);
   const lastOutput        = useWorkspaceStore((s) => s.lastRunOutputs?.[s.selectedNodeId] ?? null);
+  const allRunOutputs     = useWorkspaceStore((s) => s.lastRunOutputs ?? {});
   const nodeStatus        = useWorkspaceStore((s) => s.nodeStatuses?.[s.selectedNodeId] ?? null);
 
   const node       = nodes.find((n) => n.id === selectedNodeId) ?? null;
@@ -486,7 +537,7 @@ export default function NodeConfigModal() {
           {/* Three resizable panels */}
           <div ref={containerRef} className="flex-1 flex flex-row overflow-hidden select-none">
             <div style={{ width: `${pw[0]}%` }} className="overflow-hidden">
-              <InputPanel canvasNodes={nodes} currentNodeId={selectedNodeId} />
+              <InputPanel canvasNodes={nodes} currentNodeId={selectedNodeId} allRunOutputs={allRunOutputs} />
             </div>
 
             <Divider onMouseDown={(e) => startDrag(0, e)} />
