@@ -220,7 +220,7 @@ import * as devtoolNodes  from "./devtools/index.js";
 import * as socialNodes   from "./social/index.js";
 import * as aiNodes       from "./ai/index.js";
 
-export const nodeRegistry = {
+const rawNodeRegistry = {
   // ── Triggers ──────────────────────────────────────────────────────────────
   manual:                   manualTrigger,
   webhook:                  webhookTrigger,
@@ -492,3 +492,47 @@ export const nodeRegistry = {
   // ── Agent tool nodes (tool_*) ─────────────────────────────────────────────
   ...Object.fromEntries(Object.entries(agentToolNodes).map(([k, v]) => [k, v])),
 };
+
+// ── Registry hardening layer ──────────────────────────────────────────────────
+// Every handler is wrapped once at load: config is stripped of prototype-
+// pollution keys, and thrown errors are re-issued as clean Errors (node-name
+// prefixed, no axios internals / auth headers leaking into execution logs).
+// Results pass through untouched — null (trigger-filter skip) and sentinel
+// keys (__delay, __loopFanOut, __conditionResult) are engine signals.
+
+const POLLUTION_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function sanitizeConfig(value, depth = 0) {
+  if (depth > 20 || value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((v) => sanitizeConfig(v, depth + 1));
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) return value;
+  const clean = {};
+  for (const key of Object.keys(value)) {
+    if (POLLUTION_KEYS.has(key)) continue;
+    clean[key] = sanitizeConfig(value[key], depth + 1);
+  }
+  return clean;
+}
+
+function hardenNode(name, node) {
+  if (!node || typeof node.run !== "function") return node;
+  const originalRun = node.run;
+  return {
+    ...node,
+    async run(config, input, context) {
+      const safeConfig = sanitizeConfig(config && typeof config === "object" ? config : {});
+      try {
+        return await originalRun.call(node, safeConfig, input, context);
+      } catch (err) {
+        const msg = err?.message || String(err);
+        const prefixed = msg.toLowerCase().includes(name.toLowerCase()) ? msg : `[${name}] ${msg}`;
+        throw new Error(prefixed, { cause: err });
+      }
+    },
+  };
+}
+
+export const nodeRegistry = Object.fromEntries(
+  Object.entries(rawNodeRegistry).map(([name, node]) => [name, hardenNode(name, node)]),
+);

@@ -51,6 +51,7 @@ import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
 import { BRIAN_ANTHROPIC_MODEL } from "../modules/brian/brian.registry.js";
+import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
 
 // Platform integration nodes — imported for autonomous tool use
 import _slackNode    from "./integrations/slack.node.js";
@@ -250,6 +251,94 @@ const BUILTIN_TOOLS = {
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
+// SAFE MATH EVALUATOR
+// ═════════════════════════════════════════════════════════════════════════════
+// Recursive-descent parser for arithmetic. It NEVER evaluates arbitrary code
+// (no new Function / eval), so no expression can escape into the JS runtime —
+// it only understands numbers, + - * / % ^, parentheses, and a fixed set of
+// math functions/constants. Anything else throws.
+const MATH_FUNCS = {
+  sqrt: Math.sqrt, abs: Math.abs, floor: Math.floor, ceil: Math.ceil,
+  round: Math.round, sin: Math.sin, cos: Math.cos, tan: Math.tan,
+  asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  log: Math.log10, log10: Math.log10, ln: Math.log, log2: Math.log2,
+  exp: Math.exp, sign: Math.sign, trunc: Math.trunc, cbrt: Math.cbrt,
+  pow: Math.pow, min: Math.min, max: Math.max, atan2: Math.atan2,
+};
+const MATH_CONSTS = { pi: Math.PI, e: Math.E, tau: Math.PI * 2 };
+
+function evalMathExpression(input) {
+  // Normalise: "20% of 50" → "(20/100)*50", "^" → "**" handled in parser.
+  const src = input.replace(/(\d+(?:\.\d+)?)\s*%\s*of\s+/gi, "($1/100)*");
+  const tokens = [];
+  const re = /\s*([A-Za-z_]\w*|\d+\.?\d*|\.\d+|\*\*|[-+*/%(),^])/g;
+  let m, last = 0;
+  while ((m = re.exec(src)) !== null) {
+    if (m.index !== last) throw new Error(`Unexpected character at ${last}`);
+    tokens.push(m[1]);
+    last = re.lastIndex;
+  }
+  if (last !== src.length) throw new Error("Invalid characters in expression");
+
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+
+  // Grammar (lowest → highest precedence): expr → term (('+'|'-') term)*
+  function parseExpr() {
+    let v = parseTerm();
+    while (peek() === "+" || peek() === "-") v = next() === "+" ? v + parseTerm() : v - parseTerm();
+    return v;
+  }
+  function parseTerm() {
+    let v = parseFactor();
+    while (peek() === "*" || peek() === "/" || peek() === "%") {
+      const op = next();
+      const r = parseFactor();
+      v = op === "*" ? v * r : op === "/" ? v / r : v % r;
+    }
+    return v;
+  }
+  function parseFactor() {
+    if (peek() === "+") { next(); return parseFactor(); }
+    if (peek() === "-") { next(); return -parseFactor(); }
+    let v = parsePower();
+    return v;
+  }
+  function parsePower() {
+    const base = parsePrimary();
+    if (peek() === "^" || peek() === "**") { next(); return Math.pow(base, parseFactor()); }
+    return base;
+  }
+  function parsePrimary() {
+    const t = next();
+    if (t === undefined) throw new Error("Unexpected end of expression");
+    if (t === "(") { const v = parseExpr(); if (next() !== ")") throw new Error("Missing )"); return v; }
+    if (/^[A-Za-z_]/.test(t)) {
+      const name = t.toLowerCase();
+      if (peek() === "(") {
+        next();
+        const args = [];
+        if (peek() !== ")") { args.push(parseExpr()); while (peek() === ",") { next(); args.push(parseExpr()); } }
+        if (next() !== ")") throw new Error("Missing ) after function args");
+        const fn = MATH_FUNCS[name];
+        if (!fn) throw new Error(`Unknown function "${name}"`);
+        return fn(...args);
+      }
+      if (name in MATH_CONSTS) return MATH_CONSTS[name];
+      throw new Error(`Unknown identifier "${name}"`);
+    }
+    const num = Number(t);
+    if (Number.isNaN(num)) throw new Error(`Unexpected token "${t}"`);
+    return num;
+  }
+
+  const result = parseExpr();
+  if (pos !== tokens.length) throw new Error(`Unexpected token "${peek()}"`);
+  return result;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // ReAct SYSTEM PROMPT
 // ═════════════════════════════════════════════════════════════════════════════
 // A single, focused prompt that enforces the Think → Act → Observe cycle.
@@ -281,14 +370,16 @@ const REACT_SYSTEM_PROMPT =
   `  10. Quality > Speed: a complete, accurate answer is worth the extra iteration.\n` +
   `\n` +
   `## Browser / Virtual Computer Rules (STRICT — follow exactly)\n` +
-  `  - EVERY action returns a screenshot. You MUST look at it before deciding the next action. Never skip this.\n` +
-  `  - Browser state persists — do NOT re-navigate between calls.\n` +
-  `  - FOR FORMS: Use fill_field (label=, value=) — it finds the field automatically. Do NOT guess x,y for inputs.\n` +
-  `  - Coordinate workflow (non-form clicks): screenshot → read the x,y pixel position from the image → left_click at those exact coords.\n` +
-  `  - Full form workflow: open_url → screenshot → fill_field for each field → left_click submit button (from screenshot coords) → screenshot → confirm.\n` +
-  `  - If fill_field fails: use get_html to find the actual selector, then left_click that element's coordinates from a fresh screenshot.\n` +
+  `  - The RELIABLE loop is: open_url → read_page → click_index / click_text / fill_field → read_page → repeat. This needs NO pixel guessing.\n` +
+  `  - read_page returns a NUMBERED list of every clickable element with its text and exact coordinates, e.g. [3] button "Sign in" @ (640,420). Read it, then click_index with index=3 (or click_text with the visible label).\n` +
+  `  - FOR FORMS: use fill_field (label=, value=) — it finds the field by its label automatically. Do NOT guess x,y for inputs.\n` +
+  `  - Call read_page again whenever the page changes (after a click, navigation, or load) — the index goes stale otherwise.\n` +
+  `  - Use screenshot to SEE the page (verify state, read errors, spot a CAPTCHA). Every action also returns a screenshot — look at it before the next step.\n` +
+  `  - Raw coordinate clicks (left_click x,y) are a FALLBACK only — use them when an element is not in the read_page index. The viewport is a fixed 1280×800, so screenshot pixels map 1:1 to click coordinates.\n` +
+  `  - Browser state persists across calls — do NOT re-navigate between steps unless you intend to.\n` +
+  `  - New tabs/popups are followed automatically. If a result includes a "dialog" field, a confirm/alert fired and was auto-accepted — account for it.\n` +
   `  - If the page shows a CAPTCHA, login wall, or anti-bot page: stop immediately and report it.\n` +
-  `  - NEVER claim you filled a field or clicked a button unless a tool call confirms it. The screenshot is your proof.\n` +
+  `  - NEVER claim you filled a field or clicked a button unless the tool result confirms it. The screenshot and success field are your proof.\n` +
   `\n` +
   `## Tool Strategy\n` +
   `  - For research: search broadly first, then drill into the most relevant result\n` +
@@ -418,11 +509,10 @@ const agentNode = {
       }
     }
 
-    // Local providers support configurable base URL from the satellite node config.
-    if (LOCAL_PROVIDERS.has(provider) && _llm?.baseUrl) {
-      const customBase = _llm.baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
-      ENDPOINTS[provider] = `${customBase}/v1/chat/completions`;
-    }
+    // Local providers support a configurable base URL from the satellite node
+    // config. Pass it per-call (see callProvider) — do NOT mutate ENDPOINTS,
+    // which is shared across all concurrent executions.
+    const providerBaseUrl = LOCAL_PROVIDERS.has(provider) ? _llm?.baseUrl : undefined;
 
     // ── Conversation Memory — load from Redis ─────────────────────
     const memKey = conversationMemoryEnabled && memorySessionId
@@ -600,6 +690,7 @@ const agentNode = {
           messages,
           temperature: 0.1,
           maxTokens: 2048,
+          baseUrl: providerBaseUrl,
         });
         messages.length = 0;
         messages.push(...summarizeResult.messages);
@@ -616,6 +707,7 @@ const agentNode = {
         temperature,
         maxTokens,
         tools: formattedTools,
+        baseUrl: providerBaseUrl,
       });
 
       totalTokens += response.tokensUsed;
@@ -836,29 +928,7 @@ async function assembleTools({
           if (!expr) return { error: "Empty expression" };
           if (expr.length > 500) return { error: "Expression too long" };
 
-          const processed = expr
-            .replace(/(\d+)\s*%\s*of\s*/i, (_, n) => `(${n}/100) * `)
-            .replace(/\bsqrt\b/g, "Math.sqrt")
-            .replace(/\babs\b/g, "Math.abs")
-            .replace(/\bpi\b/gi, "Math.PI")
-            .replace(/\be\b/g, "Math.E")
-            .replace(/\bfloor\b/g, "Math.floor")
-            .replace(/\bceil\b/g, "Math.ceil")
-            .replace(/\bround\b/g, "Math.round")
-            .replace(/\bpow\b/g, "Math.pow")
-            .replace(/\bsin\b/g, "Math.sin")
-            .replace(/\bcos\b/g, "Math.cos")
-            .replace(/\btan\b/g, "Math.tan")
-            .replace(/\blog\b/g, "Math.log10")
-            .replace(/\bln\b/g, "Math.log")
-            .replace(/\^/g, "**");
-
-          if (/[^0-9+\-*/().,%\s\w]/.test(processed.replace(/Math\.\w+/g, ""))) {
-            return { error: "Invalid expression — only mathematical operations allowed" };
-          }
-
-          const fn = new Function(`"use strict"; return (${processed})`);
-          const result = fn();
+          const result = evalMathExpression(expr);
 
           if (typeof result !== "number" || !isFinite(result)) {
             return { error: "Result is not a finite number", expression: expr };
@@ -927,9 +997,8 @@ async function assembleTools({
           const url = String(args.url || "").trim();
           if (!url) return { error: "URL is required" };
 
-          const blocked = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|::1|fd[0-9a-f]{2}:)/i;
-          const urlHost = new URL(url).hostname;
-          if (blocked.test(urlHost)) return { error: "Cannot access private/internal network addresses" };
+          try { await assertSafeUrlResolved(url); }
+          catch (e) { return { error: e.message }; }
 
           const method = (args.method || "GET").toUpperCase();
           const timeout = Math.min((args.timeout || 15) * 1000, 60000);
@@ -941,6 +1010,8 @@ async function assembleTools({
             data: args.body,
             timeout,
             maxContentLength: 1024 * 1024,
+            maxRedirects: 5,
+            beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
             validateStatus: () => true,
           });
 
@@ -980,45 +1051,56 @@ async function assembleTools({
     tools.push({
       ...BUILTIN_TOOLS.execute_js,
       execute: async (args) => {
+        let isolate;
         try {
           const code = String(args.code || "").trim();
           if (!code) return { error: "Code is required" };
           if (code.length > 10000) return { error: "Code too long (max 10000 characters)" };
 
           const timeout = Math.min(args.timeout || 5000, 30000);
-          const wrappedCode = `(async function() { ${code} })()`;
 
-          const resultPromise = Promise.resolve().then(() => {
-            const fn = new Function(
-              "require", "module", "exports", "process", "__filename", "__dirname",
-              `"use strict";\nreturn ${wrappedCode}`
-            );
-            return fn(undefined, undefined, undefined, undefined, undefined, undefined);
-          });
+          let ivm;
+          try {
+            ivm = (await import("isolated-vm")).default;
+          } catch {
+            return { success: false, error: "Sandbox unavailable (isolated-vm not installed)" };
+          }
 
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error(`Code execution timed out after ${timeout}ms`)),
-              timeout
-            )
-          );
+          // Real V8 isolate: no Node globals, no require/process/fs, hard memory
+          // cap and a hard timeout the engine enforces (not a racing Promise that
+          // can't actually stop runaway synchronous code).
+          isolate = new ivm.Isolate({ memoryLimit: 64 });
+          const context = await isolate.createContext();
+          await context.global.set("input", new ivm.ExternalCopy(args.input || {}).copyInto());
 
-          const result = await Promise.race([resultPromise, timeoutPromise]);
-          const output = result === undefined ? null : result;
-          const outputStr = typeof output === "string" ? output : JSON.stringify(output, null, 2);
+          const script = await isolate.compileScript(`
+            (function () {
+              let __r;
+              try { __r = (function () { ${code} })(); }
+              catch (e) { return JSON.stringify({ __error: e && e.message ? e.message : String(e) }); }
+              try { return JSON.stringify(__r === undefined ? null : __r); }
+              catch { return JSON.stringify(String(__r)); }
+            })()
+          `);
+          const raw = await script.run(context, { timeout });
+          const parsed = JSON.parse(raw || "null");
 
+          if (parsed && typeof parsed === "object" && "__error" in parsed) {
+            return { success: false, error: parsed.__error, hint: "Check your code syntax and logic. Use 'return' to return a value." };
+          }
+
+          const outputStr = typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2);
           return {
             success: true,
-            result: output,
+            result: parsed,
             output: outputStr?.slice(0, 5000),
             truncated: (outputStr?.length ?? 0) > 5000,
           };
         } catch (err) {
-          return {
-            success: false,
-            error: err.message,
-            hint: "Check your code syntax and logic. Use 'return' to return a value.",
-          };
+          const msg = /timed out/i.test(err.message) ? `Code execution timed out` : err.message;
+          return { success: false, error: msg, hint: "Check your code syntax and logic. Use 'return' to return a value." };
+        } finally {
+          try { isolate?.dispose(); } catch {}
         }
       },
     });
@@ -1683,6 +1765,49 @@ async function executeToolCall(toolCall, tools) {
 // PROVIDER DISPATCH
 // ═════════════════════════════════════════════════════════════════════════════
 
+// Per-call endpoint resolution. Local providers (ollama/lmstudio) can override
+// the base URL from their satellite node config — but we must NEVER mutate the
+// shared ENDPOINTS map to do it (that leaks one run's custom host into every
+// other concurrent execution). Compute and pass the endpoint per call instead.
+function resolveEndpoint(provider, baseUrl) {
+  if (baseUrl && (provider === "ollama" || provider === "lmstudio")) {
+    const base = baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
+    return `${base}/v1/chat/completions`;
+  }
+  return ENDPOINTS[provider] || ENDPOINTS.openai;
+}
+
+// Transient-failure retry: 429 + 5xx + network resets are retried with
+// exponential backoff and jitter, honouring a Retry-After header when present.
+// 4xx (other than 429) and auth errors are NOT retried — they won't fix
+// themselves and would just burn the iteration budget.
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504, 529]);
+const PROVIDER_MAX_RETRIES = 3;
+
+function isRetryable(err) {
+  const status = err.response?.status;
+  if (status && RETRYABLE_STATUS.has(status)) return true;
+  return ["ECONNABORTED", "ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "ENOTFOUND", "ECONNREFUSED"].includes(err.code);
+}
+
+async function withProviderRetry(fn) {
+  let lastErr;
+  for (let attempt = 0; attempt <= PROVIDER_MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === PROVIDER_MAX_RETRIES || !isRetryable(err)) throw err;
+      const retryAfter = Number(err.response?.headers?.["retry-after"]);
+      const wait = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 30_000)
+        : Math.min(1_000 * 2 ** attempt, 16_000) + Math.floor(Math.random() * 400);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
+
 async function callProvider({
   provider,
   apiKey,
@@ -1692,6 +1817,7 @@ async function callProvider({
   temperature,
   maxTokens,
   tools,
+  baseUrl,
 }) {
   if (provider === "anthropic") {
     return callAnthropic(apiKey, model, system, messages, temperature, maxTokens, tools);
@@ -1701,7 +1827,7 @@ async function callProvider({
   }
 
   // All other providers use OpenAI-compatible API
-  const endpoint = ENDPOINTS[provider] || ENDPOINTS.openai;
+  const endpoint = resolveEndpoint(provider, baseUrl);
   const label =
     provider.charAt(0).toUpperCase() + provider.slice(1).replace(/([A-Z])/g, " $1");
   return callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, endpoint, label);
@@ -1726,14 +1852,14 @@ async function callOpenAICompat(
   }
 
   try {
-    const response = await axios.post(endpoint, body, {
+    const response = await withProviderRetry(() => axios.post(endpoint, body, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
-    });
+    }));
 
     const choice = response.data.choices?.[0];
     const msg = choice?.message;
@@ -1774,7 +1900,7 @@ async function callAnthropic(
   }
 
   try {
-    const response = await axios.post(ENDPOINTS.anthropic, body, {
+    const response = await withProviderRetry(() => axios.post(ENDPOINTS.anthropic, body, {
       headers: {
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
@@ -1782,7 +1908,7 @@ async function callAnthropic(
       },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
-    });
+    }));
 
     const data = response.data;
     let text = "";
@@ -1867,11 +1993,11 @@ async function callGemini(
   }
 
   try {
-    const response = await axios.post(endpoint, body, {
+    const response = await withProviderRetry(() => axios.post(endpoint, body, {
       headers: { "Content-Type": "application/json" },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
-    });
+    }));
 
     const candidate = response.data.candidates?.[0];
     const parts = candidate?.content?.parts || [];
@@ -2257,6 +2383,7 @@ async function summarizeScratchpad({
   messages,
   temperature,
   maxTokens,
+  baseUrl,
 }) {
   // Keep the first user message (original goal/prompt)
   const firstUserIdx = messages.findIndex((m) => m.role === "user");
@@ -2328,6 +2455,7 @@ async function summarizeScratchpad({
       temperature,
       maxTokens,
       tools: null,
+      baseUrl,
     });
 
     const summaryText =
@@ -2392,10 +2520,10 @@ agentNode._think = async function ({
   const provider = nodeConfig.provider || "openai";
   const resolvedModel =
     nodeConfig.customModel?.trim() || nodeConfig.model || DEFAULT_MODELS[provider];
-  if ((provider === "ollama" || provider === "lmstudio") && nodeConfig.baseUrl) {
-    const base = nodeConfig.baseUrl.replace(/\/$/, "").replace(/\/v1\/chat\/completions$/, "").replace(/\/v1$/, "");
-    ENDPOINTS[provider] = `${base}/v1/chat/completions`;
-  }
+  // Per-call base URL for local providers — passed to callProvider, never
+  // mutated into the shared ENDPOINTS map (would leak across executions).
+  const providerBaseUrl =
+    (provider === "ollama" || provider === "lmstudio") ? nodeConfig.baseUrl : undefined;
 
   // ── Resolve credentials ─────────────────────────────────────────
   const cred = await resolveCredential(
@@ -2487,6 +2615,7 @@ agentNode._think = async function ({
     temperature: nodeConfig.temperature ?? 0.3,
     maxTokens: nodeConfig.maxTokens ?? 8192,
     tools: formattedTools,
+    baseUrl: providerBaseUrl,
   });
 
   // ── Append assistant response to messages ─────────────────────────
@@ -2579,6 +2708,9 @@ agentNode._summarize = async function ({
   );
   const apiKey = decrypt(cred.encryptedData, cred.iv, cred.authTag);
 
+  const providerBaseUrl =
+    (provider === "ollama" || provider === "lmstudio") ? nodeConfig.baseUrl : undefined;
+
   const result = await summarizeScratchpad({
     provider,
     apiKey,
@@ -2587,6 +2719,7 @@ agentNode._summarize = async function ({
     messages,
     temperature: 0.1,
     maxTokens: 2048,
+    baseUrl: providerBaseUrl,
   });
 
   return result;

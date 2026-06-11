@@ -19,6 +19,7 @@ import { promisify } from "util";
 import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
+import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
 
 // Agents (and humans) routinely omit the protocol — "google.com" instead of
 // "https://google.com" — which makes `new URL()` throw before navigation
@@ -28,20 +29,12 @@ function normalizeUrl(rawUrl) {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
-function assertSafeUrl(rawUrl) {
-  let parsed;
-  try { parsed = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = parsed.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./,
-    /^fc00:/i, /^fe80:/i, /^fd[0-9a-f]{2}:/i, /^0\b/,
-  ];
-  if (blocked.some((re) => re.test(h)))
-    throw new Error(`Requests to internal addresses are not allowed (${h})`);
-  if (!["http:", "https:"].includes(parsed.protocol))
-    throw new Error(`Only http/https protocols are allowed`);
+// Normalise + full SSRF guard (protocol, blocklist, DNS resolution) in one step.
+// Returns the normalised URL so callers use exactly what was validated.
+async function safeUrl(rawUrl) {
+  const u = normalizeUrl(rawUrl);
+  await assertSafeUrlResolved(u);
+  return u;
 }
 
 const execAsync = promisify(exec);
@@ -194,13 +187,16 @@ export const tool_http_request = {
     ["url"]
   ),
   async run(config, args) {
+    const url = await safeUrl(args.url);
     const resp = await axios({
       method: args.method || "GET",
-      url: args.url,
+      url,
       headers: args.headers || {},
       params: args.params,
       data: args.body,
       timeout: 30000,
+      maxRedirects: 5,
+      beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
     });
     return { status: resp.status, headers: resp.headers, data: resp.data };
   },
@@ -217,8 +213,11 @@ export const tool_scraper = {
     ["url"]
   ),
   async run(config, args) {
-    const resp = await axios.get(args.url, {
+    const url = await safeUrl(args.url);
+    const resp = await axios.get(url, {
       timeout: 20000,
+      maxRedirects: 5,
+      beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
       headers: { "User-Agent": "Mozilla/5.0 (compatible; Blinkbox/1.0)" },
     });
     let html = resp.data;
@@ -229,7 +228,7 @@ export const tool_scraper = {
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 5000);
-    return { url: args.url, text, length: text.length };
+    return { url, text, length: text.length };
   },
 };
 
@@ -341,9 +340,12 @@ export const tool_webhook = {
     ["url", "payload"]
   ),
   async run(config, args) {
-    const resp = await axios.post(args.url, args.payload, {
+    const url = await safeUrl(args.url);
+    const resp = await axios.post(url, args.payload, {
       headers: { "Content-Type": "application/json", ...(args.headers || {}) },
       timeout: 15000,
+      maxRedirects: 5,
+      beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
     });
     return { status: resp.status, data: resp.data };
   },
@@ -594,55 +596,68 @@ export const tool_virtual_computer = {
     "tool_virtual_computer",
     `Full 1280×800 browser you control like a human. Powered by Puppeteer.
 
-━━ MANDATORY WORKFLOW ━━
-1. screenshot — ALWAYS start here. Look at the image before every action.
-2. Identify the element: read its EXACT pixel coordinates from the screenshot.
-3. Act with real coordinates or label — never invent positions.
-4. screenshot again — confirm the result before continuing.
-5. Repeat until done. Screenshots are your proof. Guessing is forbidden.
+━━ THE RELIABLE WORKFLOW (use this — it does not require guessing pixels) ━━
+1. open_url — go to the page.
+2. read_page — returns a NUMBERED list of every clickable element with its
+   text and exact center coordinates, e.g.  [3] button "Sign in" @ (640,420).
+3. click_index with index=3 — clicks element [3] precisely. No pixel math.
+   Or click_text with text="Sign in" to click by visible label.
+4. To fill forms: fill_field with label + value (finds the field by its label).
+5. read_page again after the page changes, then continue.
+6. Use screenshot any time you need to SEE the page (errors, captchas, layout).
 
-━━ COORDINATE ACTIONS (use pixel x,y from screenshot) ━━
-- screenshot          — capture the screen (do this constantly)
-- open_url            — navigate to a URL; waits for page to settle
-- left_click          — left-click at (x, y)
+Prefer read_page → click_index/click_text/fill_field. Fall back to raw x,y
+coordinate clicks ONLY when an element isn't in the read_page index. The viewport
+is a fixed 1280×800, so coordinates from a screenshot map 1:1 to clicks.
+
+━━ READING THE PAGE ━━
+- read_page           — numbered index of clickable elements + coordinates (DO THIS FIRST)
+- get_text            — all visible text on the page (or a CSS selector)
+- get_html            — raw HTML (use when you need a specific CSS selector)
+- screenshot          — capture the screen as an image to look at
+- evaluate            — run JavaScript in the page; returns the result
+
+━━ CLICKING ━━
+- click_index         — click element N from the last read_page (index=N). MOST RELIABLE.
+- click_text          — click the element whose visible text matches (text="...")
+- left_click          — click at raw pixel (x, y) — fallback only
 - right_click         — right-click at (x, y)
 - double_click        — double-click at (x, y)
 - mouse_move          — move cursor to (x, y)
-- scroll              — scroll at (x, y), direction up/down, amount 1-20
-
-━━ KEYBOARD ACTIONS ━━
-- type                — type text at current focus (click the field first!)
-- key                 — press a key: Return, Tab, Escape, BackSpace, ctrl+a, ctrl+v, ctrl+l, etc.
-
-━━ SMART FORM ACTIONS (no coordinates needed) ━━
-- fill_field          — find a form field by its label/placeholder/name and fill it in one step
-                        e.g. label="Email", value="user@example.com"
-                        PREFERRED for forms — more reliable than click+type
-
-━━ PAGE READING ACTIONS ━━
-- get_text            — get all visible text from the page (or a CSS selector)
-- get_html            — get the raw HTML (use to find selectors when stuck)
-- evaluate            — run JavaScript in the page; returns result as text
-
-━━ ADVANCED ━━
-- wait_for_selector   — wait until a CSS selector appears (ms timeout, default 5000)
 - hover               — hover over a CSS selector
+
+━━ TYPING & FORMS ━━
+- fill_field          — find a field by label/placeholder/name and fill it (label + value). PREFERRED.
+- type                — type text at the current focus (click/click_index a field first)
+- key                 — press a key: Enter, Tab, Escape, Backspace, Delete, ctrl+a, ctrl+c, ctrl+v, cmd+a, etc.
 - select_dropdown     — choose an option from a <select> by CSS selector + value
+- upload_file         — set a file path on a file <input> (selector + filePath)
+
+━━ NAVIGATION & FLOW ━━
+- scroll              — scroll the page, direction up/down, amount 1-20
+- wait_for_selector   — wait until a CSS selector appears (ms timeout)
+- wait                — pause for ms milliseconds
 - navigate            — browser navigation: "back", "forward", "reload"
-- close               — destroy this browser session`,
+- close               — destroy this browser session
+
+Note: new tabs/popups are followed automatically. If a confirm/alert dialog
+fires, it is auto-accepted and reported back to you in the result's "dialog" field.`,
     {
       action:    { type: "string",  description: "Action name (see list above). Required." },
       sessionId: { type: "string",  description: "Optional. Omit to share the session across the whole workflow run." },
       url:       { type: "string",  description: "URL to navigate to (open_url)" },
-      x:         { type: "number",  description: "Pixel X coordinate" },
-      y:         { type: "number",  description: "Pixel Y coordinate" },
-      text:      { type: "string",  description: "Text to type (type), JS to run (evaluate/run_command), or key name (key)" },
-      key:       { type: "string",  description: "Key name: Return, Tab, Escape, BackSpace, ctrl+a, ctrl+v, ctrl+l, ctrl+r, etc." },
+      index:     { type: "number",  description: "Element number from the last read_page (click_index action)" },
+      x:         { type: "number",  description: "Pixel X coordinate (raw coordinate actions / fallback)" },
+      y:         { type: "number",  description: "Pixel Y coordinate (raw coordinate actions / fallback)" },
+      text:      { type: "string",  description: "Text to type (type), text to click (click_text), JS to run (evaluate), or key name (key)" },
+      key:       { type: "string",  description: "Key name: Enter, Tab, Escape, Backspace, Delete, ctrl+a, ctrl+v, cmd+a, ctrl+shift+k, etc." },
       direction: { type: "string",  description: "Scroll direction: 'up' or 'down'" },
       amount:    { type: "number",  description: "Scroll steps 1-20 (default 3)" },
       label:     { type: "string",  description: "Field label/placeholder/name for fill_field action" },
+      query:     { type: "string",  description: "Text to match for click_text action" },
       value:     { type: "string",  description: "Value to fill into the field (fill_field action)" },
       selector:  { type: "string",  description: "CSS selector for get_html, get_text, hover, select_dropdown, wait_for_selector" },
+      filePath:  { type: "string",  description: "Path to a file for upload_file action" },
       ms:        { type: "number",  description: "Milliseconds to wait (wait action) or timeout for wait_for_selector" },
     },
     ["action"]
@@ -650,9 +665,7 @@ export const tool_virtual_computer = {
   async run(config, args, ctx) {
     let dispatchArgs = args;
     if (args.url) {
-      const normalizedUrl = normalizeUrl(args.url);
-      assertSafeUrl(normalizedUrl);
-      dispatchArgs = { ...args, url: normalizedUrl };
+      dispatchArgs = { ...args, url: await safeUrl(args.url) };
     }
     const sid = args.sessionId || ctx?.executionId || `_vc_${Date.now()}`;
     const wid = ctx?.workspaceId || "default";
@@ -834,10 +847,16 @@ export const tool_mcp_client = {
     ["serverUrl", "toolName"]
   ),
   async run(config, args) {
+    const base = (await safeUrl(args.serverUrl)).replace(/\/$/, "");
     const resp = await axios.post(
-      `${args.serverUrl}/tools/call`,
+      `${base}/tools/call`,
       { name: args.toolName, arguments: args.arguments || {} },
-      { headers: { "Content-Type": "application/json" }, timeout: 30000 }
+      {
+        headers: { "Content-Type": "application/json" },
+        timeout: 30000,
+        maxRedirects: 5,
+        beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
+      }
     );
     return resp.data;
   },
