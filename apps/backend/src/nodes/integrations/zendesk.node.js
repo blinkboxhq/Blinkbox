@@ -66,7 +66,7 @@ async function opListTickets(config, client) {
 async function opGetTicket(config, client) {
   const id = config.ticketId;
   if (!id) return { success: false, error: "Zendesk getTicket: 'ticketId' is required.", skipped: true };
-  const { data } = await axios.get(`${client.base}/tickets/${id}.json`, {
+  const { data } = await axios.get(`${client.base}/tickets/${encodeURIComponent(id)}.json`, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -108,7 +108,7 @@ async function opUpdateTicket(config, client) {
   if (config.tags) update.tags = String(config.tags).split(",").map((t) => t.trim()).filter(Boolean);
   if (!Object.keys(update).length) return { success: false, error: "Zendesk updateTicket: provide at least one field to update.", skipped: true };
 
-  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: update }, {
+  const { data } = await axios.put(`${client.base}/tickets/${encodeURIComponent(id)}.json`, { ticket: update }, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -165,7 +165,7 @@ async function opAssignTicket(config, client) {
   if (!id) return { success: false, error: "Zendesk assignTicket: 'ticketId' is required.", skipped: true };
   const assigneeId = config.assigneeId;
   if (!assigneeId) return { success: false, error: "Zendesk assignTicket: 'assigneeId' is required.", skipped: true };
-  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: { assignee_id: parseInt(assigneeId) } }, {
+  const { data } = await axios.put(`${client.base}/tickets/${encodeURIComponent(id)}.json`, { ticket: { assignee_id: parseInt(assigneeId) } }, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -188,7 +188,7 @@ async function opReplyTicket(config, client) {
   };
   if (config.status) update.status = config.status;
 
-  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: update }, {
+  const { data } = await axios.put(`${client.base}/tickets/${encodeURIComponent(id)}.json`, { ticket: update }, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -200,7 +200,7 @@ async function opCloseTicket(config, client) {
   const id = config.ticketId;
   if (!id) return { success: false, error: "Zendesk closeTicket: 'ticketId' is required.", skipped: true };
 
-  const { data } = await axios.put(`${client.base}/tickets/${id}.json`, { ticket: { status: "closed" } }, {
+  const { data } = await axios.put(`${client.base}/tickets/${encodeURIComponent(id)}.json`, { ticket: { status: "closed" } }, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,

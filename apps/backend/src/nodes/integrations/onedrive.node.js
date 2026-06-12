@@ -55,12 +55,15 @@ function handleError(err) {
   throw new Error(`OneDrive: ${status ?? "Network"} error — ${msg}`);
 }
 
+function encodePath(p) {
+  return String(p).replace(/^\//, "").split("/").map(encodeURIComponent).join("/");
+}
+
 function itemUrl(pathOrId) {
   if (/^[A-Z0-9!_]{10,}$/i.test(pathOrId) && !pathOrId.startsWith("/")) {
     return `${GRAPH}/me/drive/items/${pathOrId}`;
   }
-  const clean = pathOrId.replace(/^\//, "");
-  return `${GRAPH}/me/drive/root:/${clean}`;
+  return `${GRAPH}/me/drive/root:/${encodePath(pathOrId)}`;
 }
 
 export default {
@@ -88,8 +91,7 @@ export default {
           if (!content) return { success: false, error: "OneDrive uploadFile: 'content' is required.", skipped: true };
 
           const conflictBehavior = overwrite ? "replace" : "fail";
-          const clean = path.replace(/^\//, "");
-          const uploadUrl = `${GRAPH}/me/drive/root:/${clean}:/content?@microsoft.graph.conflictBehavior=${conflictBehavior}`;
+          const uploadUrl = `${GRAPH}/me/drive/root:/${encodePath(path)}:/content?@microsoft.graph.conflictBehavior=${conflictBehavior}`;
 
           let fileBuffer;
           if (/^https?:\/\//i.test(content)) {
@@ -138,7 +140,7 @@ export default {
         case "listFiles": {
           const { folderPath } = config;
           const url = folderPath
-            ? `${GRAPH}/me/drive/root:/${folderPath.replace(/^\//, "")}:/children`
+            ? `${GRAPH}/me/drive/root:/${encodePath(folderPath)}:/children`
             : `${GRAPH}/me/drive/root/children`;
 
           const res = await axios.get(url, { headers, params: { $top: 100 }, timeout: 15000 });
@@ -173,7 +175,7 @@ export default {
           const folderName = parts.pop();
           const parentPath = parts.join("/");
           const parentUrl = parentPath
-            ? `${GRAPH}/me/drive/root:/${parentPath}:/children`
+            ? `${GRAPH}/me/drive/root:/${encodePath(parentPath)}:/children`
             : `${GRAPH}/me/drive/root/children`;
 
           const res = await axios.post(
@@ -190,7 +192,7 @@ export default {
           if (!destPath) return { success: false, error: "OneDrive moveFile: 'destPath' (destination folder path) is required.", skipped: true };
 
           const sourceBase = itemUrl(sourcePath);
-          const destMetaUrl = `${GRAPH}/me/drive/root:/${destPath.replace(/^\//, "")}`;
+          const destMetaUrl = `${GRAPH}/me/drive/root:/${encodePath(destPath)}`;
           const destMeta = await axios.get(destMetaUrl, { headers, timeout: 15000 });
 
           const patchBody = { parentReference: { id: destMeta.data.id } };

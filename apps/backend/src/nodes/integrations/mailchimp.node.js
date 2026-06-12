@@ -64,7 +64,7 @@ async function opListCampaigns(config, client) {
 async function opGetCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp getCampaign: 'campaignId' is required.", skipped: true };
-  const { data } = await axios.get(`${client.base}/campaigns/${id}`, {
+  const { data } = await axios.get(`${client.base}/campaigns/${encodeURIComponent(id)}`, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -75,7 +75,7 @@ async function opGetCampaign(config, client) {
 async function opSendCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp sendCampaign: 'campaignId' is required.", skipped: true };
-  await axios.post(`${client.base}/campaigns/${id}/actions/send`, {}, {
+  await axios.post(`${client.base}/campaigns/${encodeURIComponent(id)}/actions/send`, {}, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -98,7 +98,7 @@ async function opListSubscribers(config, client) {
     count: String(parseInt(config.limit) || 50),
     status: config.memberStatus || "subscribed",
   });
-  const { data } = await axios.get(`${client.base}/lists/${listId}/members?${params}`, {
+  const { data } = await axios.get(`${client.base}/lists/${encodeURIComponent(listId)}/members?${params}`, {
     auth: client.auth,
     headers: client.headers,
     timeout: 15000,
@@ -120,7 +120,7 @@ async function opAddSubscriber(config, client) {
   if (config.firstName) body.merge_fields.FNAME = config.firstName;
   if (config.lastName) body.merge_fields.LNAME = config.lastName;
 
-  const { data } = await axios.post(`${client.base}/lists/${listId}/members`, body, {
+  const { data } = await axios.post(`${client.base}/lists/${encodeURIComponent(listId)}/members`, body, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,
@@ -142,7 +142,7 @@ async function opUpdateSubscriber(config, client) {
   if (config.lastName) merge.LNAME = config.lastName;
   if (Object.keys(merge).length) body.merge_fields = merge;
 
-  const { data } = await axios.patch(`${client.base}/lists/${listId}/members/${hash}`, body, {
+  const { data } = await axios.patch(`${client.base}/lists/${encodeURIComponent(listId)}/members/${hash}`, body, {
     auth: client.auth,
     headers: client.headers,
     timeout: 10000,

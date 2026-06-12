@@ -66,7 +66,7 @@ export default {
 
         case "getProduct": {
           if (!config.productId) return { success: false, error: "Shopify getProduct: 'productId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/products/${config.productId}.json`, { headers, timeout: 15000 });
+          const res = await axios.get(`${BASE}/products/${encodeURIComponent(config.productId)}.json`, { headers, timeout: 15000 });
           const p = res.data.product;
           return { id: p.id, title: p.title, status: p.status, vendor: p.vendor, body: p.body_html, variants: p.variants?.map((v) => ({ id: v.id, title: v.title, price: v.price, sku: v.sku, inventory: v.inventory_quantity })) ?? [] };
         }
@@ -85,7 +85,7 @@ export default {
           if (config.title) product.title = config.title;
           if (config.description) product.body_html = config.description;
           if (config.status) product.status = config.status;
-          const res = await axios.put(`${BASE}/products/${config.productId}.json`, { product }, { headers, timeout: 15000 });
+          const res = await axios.put(`${BASE}/products/${encodeURIComponent(config.productId)}.json`, { product }, { headers, timeout: 15000 });
           return { id: res.data.product.id, updated: true };
         }
 
@@ -99,7 +99,7 @@ export default {
 
         case "getOrder": {
           if (!config.orderId) return { success: false, error: "Shopify getOrder: 'orderId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/orders/${config.orderId}.json`, { headers, timeout: 15000 });
+          const res = await axios.get(`${BASE}/orders/${encodeURIComponent(config.orderId)}.json`, { headers, timeout: 15000 });
           const o = res.data.order;
           return { id: o.id, name: o.name, email: o.email, total: o.total_price, currency: o.currency, lineItems: o.line_items?.map((l) => ({ title: l.title, quantity: l.quantity, price: l.price })) ?? [], shippingAddress: o.shipping_address };
         }
@@ -109,7 +109,7 @@ export default {
           const order = {};
           if (config.note) order.note = config.note;
           if (config.tags) order.tags = config.tags;
-          await axios.put(`${BASE}/orders/${config.orderId}.json`, { order }, { headers, timeout: 15000 });
+          await axios.put(`${BASE}/orders/${encodeURIComponent(config.orderId)}.json`, { order }, { headers, timeout: 15000 });
           return { updated: true, orderId: config.orderId };
         }
 
@@ -126,7 +126,7 @@ export default {
             return { customers: res.data.customers ?? [], count: res.data.customers?.length ?? 0 };
           }
           if (!config.customerId) return { success: false, error: "Shopify getCustomer: 'customerId' or 'email' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/customers/${config.customerId}.json`, { headers, timeout: 15000 });
+          const res = await axios.get(`${BASE}/customers/${encodeURIComponent(config.customerId)}.json`, { headers, timeout: 15000 });
           const c = res.data.customer;
           return { id: c.id, email: c.email, firstName: c.first_name, lastName: c.last_name, ordersCount: c.orders_count, totalSpent: c.total_spent };
         }

@@ -1,4 +1,7 @@
+import { installHttpHardening } from "../utils/httpHardening.js";
 import * as agentToolNodes from "./agentTools.nodes.js";
+
+installHttpHardening();
 
 // Triggers
 import cronTrigger            from "./cronTrigger.node.js";

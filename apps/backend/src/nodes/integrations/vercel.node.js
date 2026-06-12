@@ -90,7 +90,7 @@ export default {
           const { deploymentId } = config;
           if (!deploymentId) return { success: false, error: "Vercel getDeployment: 'deploymentId' is required.", skipped: true };
 
-          const res = await axios.get(`${API}/v13/deployments/${deploymentId}`, { headers, params: teamParam, timeout: 15000 });
+          const res = await axios.get(`${API}/v13/deployments/${encodeURIComponent(deploymentId)}`, { headers, params: teamParam, timeout: 15000 });
           return { success: true, ...deployShape(res.data) };
         }
 
@@ -121,7 +121,7 @@ export default {
           if (!deploymentId) return { success: false, error: "Vercel cancelDeploy: 'deploymentId' is required.", skipped: true };
 
           const res = await axios.patch(
-            `${API}/v12/deployments/${deploymentId}/cancel`,
+            `${API}/v12/deployments/${encodeURIComponent(deploymentId)}/cancel`,
             {},
             { headers, params: teamParam, timeout: 15000 }
           );
@@ -146,7 +146,7 @@ export default {
         case "getProject": {
           const { projectId } = config;
           if (!projectId) return { success: false, error: "Vercel getProject: 'projectId' is required.", skipped: true };
-          const res = await axios.get(`${API}/v9/projects/${projectId}`, { headers, params: teamParam, timeout: 15000 });
+          const res = await axios.get(`${API}/v9/projects/${encodeURIComponent(projectId)}`, { headers, params: teamParam, timeout: 15000 });
           const p = res.data;
           return {
             success: true,
@@ -164,7 +164,7 @@ export default {
           const { projectId } = config;
           if (!projectId) return { success: false, error: "Vercel listDomains: 'projectId' is required.", skipped: true };
 
-          const res = await axios.get(`${API}/v9/projects/${projectId}/domains`, {
+          const res = await axios.get(`${API}/v9/projects/${encodeURIComponent(projectId)}/domains`, {
             headers,
             params: teamParam,
             timeout: 15000,
@@ -188,7 +188,7 @@ export default {
           if (!domain) return { success: false, error: "Vercel addDomain: 'domain' is required.", skipped: true };
 
           const res = await axios.post(
-            `${API}/v10/projects/${projectId}/domains`,
+            `${API}/v10/projects/${encodeURIComponent(projectId)}/domains`,
             { name: domain },
             { headers, params: teamParam, timeout: 15000 }
           );
@@ -199,7 +199,7 @@ export default {
           const { projectId } = config;
           if (!projectId) return { success: false, error: "Vercel getEnvVars: 'projectId' is required.", skipped: true };
 
-          const res = await axios.get(`${API}/v9/projects/${projectId}/env`, {
+          const res = await axios.get(`${API}/v9/projects/${encodeURIComponent(projectId)}/env`, {
             headers,
             params: teamParam,
             timeout: 15000,

@@ -64,13 +64,13 @@ export default {
       switch (operation) {
         case "listCards": {
           if (!config.listId) return { success: false, error: "Trello listCards: 'listId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/lists/${config.listId}/cards`, { params: { ...auth }, timeout: 15000 });
+          const res = await axios.get(`${BASE}/lists/${encodeURIComponent(config.listId)}/cards`, { params: { ...auth }, timeout: 15000 });
           return { cards: res.data.map((c) => ({ id: c.id, name: c.name, url: c.url, shortUrl: c.shortUrl, idList: c.idList, due: c.due })), count: res.data.length };
         }
 
         case "getCard": {
           if (!config.cardId) return { success: false, error: "Trello getCard: 'cardId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/cards/${config.cardId}`, { params: { ...auth }, timeout: 15000 });
+          const res = await axios.get(`${BASE}/cards/${encodeURIComponent(config.cardId)}`, { params: { ...auth }, timeout: 15000 });
           const c = res.data;
           return { id: c.id, name: c.name, desc: c.desc, url: c.url, shortUrl: c.shortUrl, idList: c.idList, due: c.due, closed: c.closed };
         }
@@ -91,27 +91,27 @@ export default {
           if (config.name) params.name = config.name;
           if (config.desc !== undefined) params.desc = config.desc;
           if (config.due) params.due = config.due;
-          const res = await axios.put(`${BASE}/cards/${config.cardId}`, null, { params, timeout: 15000 });
+          const res = await axios.put(`${BASE}/cards/${encodeURIComponent(config.cardId)}`, null, { params, timeout: 15000 });
           const c = res.data;
           return { id: c.id, name: c.name, url: c.url, shortUrl: c.shortUrl, idList: c.idList };
         }
 
         case "moveCard": {
           if (!config.cardId || !config.listId) return { success: false, error: "Trello moveCard: 'cardId' and 'listId' are required.", skipped: true };
-          const res = await axios.put(`${BASE}/cards/${config.cardId}`, null, { params: { ...auth, idList: config.listId }, timeout: 15000 });
+          const res = await axios.put(`${BASE}/cards/${encodeURIComponent(config.cardId)}`, null, { params: { ...auth, idList: config.listId }, timeout: 15000 });
           const c = res.data;
           return { id: c.id, name: c.name, idList: c.idList, url: c.url, shortUrl: c.shortUrl };
         }
 
         case "archiveCard": {
           if (!config.cardId) return { success: false, error: "Trello archiveCard: 'cardId' is required.", skipped: true };
-          const res = await axios.put(`${BASE}/cards/${config.cardId}`, null, { params: { ...auth, closed: true }, timeout: 15000 });
+          const res = await axios.put(`${BASE}/cards/${encodeURIComponent(config.cardId)}`, null, { params: { ...auth, closed: true }, timeout: 15000 });
           return { id: res.data.id, name: res.data.name, closed: res.data.closed };
         }
 
         case "addComment": {
           if (!config.cardId || !config.text) return { success: false, error: "Trello addComment: 'cardId' and 'text' are required.", skipped: true };
-          const res = await axios.post(`${BASE}/cards/${config.cardId}/actions/comments`, null, { params: { ...auth, text: config.text }, timeout: 15000 });
+          const res = await axios.post(`${BASE}/cards/${encodeURIComponent(config.cardId)}/actions/comments`, null, { params: { ...auth, text: config.text }, timeout: 15000 });
           return { id: res.data.id, text: res.data.data?.text, date: res.data.date };
         }
 
@@ -120,7 +120,7 @@ export default {
           const params = { ...auth };
           if (config.labelColor) params.color = config.labelColor;
           if (config.labelName) params.name = config.labelName;
-          const res = await axios.post(`${BASE}/cards/${config.cardId}/labels`, null, { params, timeout: 15000 });
+          const res = await axios.post(`${BASE}/cards/${encodeURIComponent(config.cardId)}/labels`, null, { params, timeout: 15000 });
           return { id: res.data.id, color: res.data.color, name: res.data.name };
         }
 
@@ -131,7 +131,7 @@ export default {
 
         case "listLists": {
           if (!config.boardId) return { success: false, error: "Trello listLists: 'boardId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/boards/${config.boardId}/lists`, { params: { ...auth }, timeout: 15000 });
+          const res = await axios.get(`${BASE}/boards/${encodeURIComponent(config.boardId)}/lists`, { params: { ...auth }, timeout: 15000 });
           return { lists: res.data.map((l) => ({ id: l.id, name: l.name, closed: l.closed })), count: res.data.length };
         }
 

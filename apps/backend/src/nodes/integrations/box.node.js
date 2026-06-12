@@ -102,8 +102,8 @@ export default {
           const { fileId } = config;
           if (!fileId) return { success: false, error: "Box downloadFile: 'fileId' is required.", skipped: true };
 
-          const metaRes = await axios.get(`${API}/files/${fileId}`, { headers, timeout: 15000 });
-          const dlRes = await axios.get(`${API}/files/${fileId}/content`, {
+          const metaRes = await axios.get(`${API}/files/${encodeURIComponent(fileId)}`, { headers, timeout: 15000 });
+          const dlRes = await axios.get(`${API}/files/${encodeURIComponent(fileId)}/content`, {
             headers: { Authorization: `Bearer ${token}` },
             responseType: "arraybuffer",
             timeout: 60000,
@@ -124,7 +124,7 @@ export default {
         case "listFiles": {
           const { folderId, limit } = config;
           const id = folderId || "0";
-          const res = await axios.get(`${API}/folders/${id}/items`, {
+          const res = await axios.get(`${API}/folders/${encodeURIComponent(id)}/items`, {
             headers,
             params: { limit: Number(limit || 100), fields: "id,name,type,size,created_at,modified_at,content_modified_at" },
             timeout: 15000,
@@ -149,7 +149,7 @@ export default {
           if (!fileId) return { success: false, error: "Box deleteFile: 'fileId' is required.", skipped: true };
 
           const type = itemType === "folder" ? "folders" : "files";
-          await axios.delete(`${API}/${type}/${fileId}`, { headers, timeout: 15000 });
+          await axios.delete(`${API}/${type}/${encodeURIComponent(fileId)}`, { headers, timeout: 15000 });
           return { success: true, deleted: fileId };
         }
 
@@ -180,7 +180,7 @@ export default {
           const body = { parent: { id: destFolderId } };
           if (newName) body.name = newName;
 
-          const res = await axios.put(`${API}/${type}/${fileId}`, body, { headers, timeout: 20000 });
+          const res = await axios.put(`${API}/${type}/${encodeURIComponent(fileId)}`, body, { headers, timeout: 20000 });
           return {
             success: true,
             id: res.data.id,
@@ -199,7 +199,7 @@ export default {
           if (unsharedAt) sharedLink.unshared_at = unsharedAt;
 
           const res = await axios.put(
-            `${API}/${type}/${fileId}`,
+            `${API}/${type}/${encodeURIComponent(fileId)}`,
             { shared_link: sharedLink },
             { headers, timeout: 15000 }
           );
@@ -218,7 +218,7 @@ export default {
           if (!fileId) return { success: false, error: "Box getFileInfo: 'fileId' is required.", skipped: true };
 
           const type = itemType === "folder" ? "folders" : "files";
-          const res = await axios.get(`${API}/${type}/${fileId}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${API}/${type}/${encodeURIComponent(fileId)}`, { headers, timeout: 15000 });
 
           return {
             success: true,

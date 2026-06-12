@@ -91,7 +91,11 @@ async function callLLM(apiKey, provider, model, screenshot, domSnapshot, goal, h
     const raw = response.data.content[0].text;
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error("Browser Agent: LLM returned no JSON action.");
-    return JSON.parse(match[0]);
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      throw new Error("Browser Agent: LLM returned malformed JSON action.");
+    }
   } else {
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
@@ -112,7 +116,11 @@ async function callLLM(apiKey, provider, model, screenshot, domSnapshot, goal, h
       },
       { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 30000 },
     );
-    return JSON.parse(response.data.choices[0].message.content);
+    try {
+      return JSON.parse(response.data.choices[0].message.content);
+    } catch {
+      throw new Error("Browser Agent: LLM returned malformed JSON action.");
+    }
   }
 }
 

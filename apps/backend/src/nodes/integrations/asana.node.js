@@ -61,21 +61,21 @@ export default {
           if (config.notes !== undefined) body.data.notes = config.notes;
           if (config.dueOn) body.data.due_on = config.dueOn;
           if (config.assignee) body.data.assignee = config.assignee;
-          const res = await axios.put(`${BASE}/tasks/${config.taskGid}`, body, { headers, timeout: 15000 });
+          const res = await axios.put(`${BASE}/tasks/${encodeURIComponent(config.taskGid)}`, body, { headers, timeout: 15000 });
           const t = res.data.data;
           return { gid: t.gid, name: t.name, permalink_url: t.permalink_url, completed: t.completed, due_on: t.due_on };
         }
 
         case "completeTask": {
           if (!config.taskGid) return { success: false, error: "Asana completeTask: 'taskGid' is required.", skipped: true };
-          const res = await axios.put(`${BASE}/tasks/${config.taskGid}`, { data: { completed: true } }, { headers, timeout: 15000 });
+          const res = await axios.put(`${BASE}/tasks/${encodeURIComponent(config.taskGid)}`, { data: { completed: true } }, { headers, timeout: 15000 });
           const t = res.data.data;
           return { gid: t.gid, name: t.name, completed: t.completed };
         }
 
         case "getTask": {
           if (!config.taskGid) return { success: false, error: "Asana getTask: 'taskGid' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/tasks/${config.taskGid}`, {
+          const res = await axios.get(`${BASE}/tasks/${encodeURIComponent(config.taskGid)}`, {
             headers,
             params: { opt_fields: "gid,name,completed,due_on,notes,permalink_url,assignee.name,projects.name" },
             timeout: 15000,
@@ -86,7 +86,7 @@ export default {
 
         case "addComment": {
           if (!config.taskGid || !config.text) return { success: false, error: "Asana addComment: 'taskGid' and 'text' are required.", skipped: true };
-          const res = await axios.post(`${BASE}/tasks/${config.taskGid}/stories`, { data: { text: config.text } }, { headers, timeout: 15000 });
+          const res = await axios.post(`${BASE}/tasks/${encodeURIComponent(config.taskGid)}/stories`, { data: { text: config.text } }, { headers, timeout: 15000 });
           const s = res.data.data;
           return { gid: s.gid, text: s.text, created_at: s.created_at };
         }

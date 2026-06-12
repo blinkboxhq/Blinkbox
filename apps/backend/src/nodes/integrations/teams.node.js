@@ -64,7 +64,7 @@ export default {
           if (!content) return { success: false, error: "Teams sendMessage: 'content' is required.", skipped: true };
 
           const res = await axios.post(
-            `${GRAPH}/teams/${teamId}/channels/${channelId}/messages`,
+            `${GRAPH}/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages`,
             { body: { contentType: "text", content } },
             { headers, timeout: 20000 }
           );
@@ -85,7 +85,7 @@ export default {
           }
 
           const res = await axios.post(
-            `${GRAPH}/teams/${teamId}/channels/${channelId}/messages`,
+            `${GRAPH}/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages`,
             {
               body: { contentType: "html", content: "<attachment id=\"1\"></attachment>" },
               attachments: [
@@ -109,7 +109,7 @@ export default {
           if (!content) return { success: false, error: "Teams replyMessage: 'content' is required.", skipped: true };
 
           const res = await axios.post(
-            `${GRAPH}/teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`,
+            `${GRAPH}/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages/${encodeURIComponent(messageId)}/replies`,
             { body: { contentType: "text", content } },
             { headers, timeout: 20000 }
           );
@@ -127,7 +127,7 @@ export default {
           };
           if (description) body.description = description;
 
-          const res = await axios.post(`${GRAPH}/teams/${teamId}/channels`, body, { headers, timeout: 20000 });
+          const res = await axios.post(`${GRAPH}/teams/${encodeURIComponent(teamId)}/channels`, body, { headers, timeout: 20000 });
           return { success: true, id: res.data.id, displayName: res.data.displayName, webUrl: res.data.webUrl };
         }
 
@@ -135,7 +135,7 @@ export default {
           const { teamId } = config;
           if (!teamId) return { success: false, error: "Teams listChannels: 'teamId' is required.", skipped: true };
 
-          const res = await axios.get(`${GRAPH}/teams/${teamId}/channels`, { headers, timeout: 15000 });
+          const res = await axios.get(`${GRAPH}/teams/${encodeURIComponent(teamId)}/channels`, { headers, timeout: 15000 });
           return {
             success: true,
             count: res.data.value.length,

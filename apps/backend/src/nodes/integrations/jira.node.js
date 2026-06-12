@@ -73,7 +73,7 @@ export default {
 
         case "getIssue": {
           if (!config.issueKey) return { success: false, error: "Jira getIssue: 'issueKey' (e.g. PROJ-123) is required — configure this field.", skipped: true };
-          const res = await axios.get(`${BASE}/issue/${config.issueKey}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${BASE}/issue/${encodeURIComponent(config.issueKey)}`, { headers, timeout: 15000 });
           const f = res.data.fields;
           return { id: res.data.id, key: res.data.key, summary: f.summary, status: f.status?.name, assignee: f.assignee?.displayName, priority: f.priority?.name, url: `https://${domain}/browse/${res.data.key}` };
         }
@@ -85,20 +85,20 @@ export default {
           if (config.assignee) fields.assignee = { id: config.assignee };
           if (config.priority) fields.priority = { name: config.priority };
           if (config.description) fields.description = { type: "doc", version: 1, content: [{ type: "paragraph", content: [{ type: "text", text: config.description }] }] };
-          await axios.put(`${BASE}/issue/${config.issueKey}`, { fields }, { headers, timeout: 15000 });
+          await axios.put(`${BASE}/issue/${encodeURIComponent(config.issueKey)}`, { fields }, { headers, timeout: 15000 });
           return { updated: true, issueKey: config.issueKey };
         }
 
         case "transitionIssue": {
           if (!config.issueKey || !config.transitionId) return { success: false, error: "Jira transitionIssue: 'issueKey' and 'transitionId' are required — configure this field.", skipped: true };
-          await axios.post(`${BASE}/issue/${config.issueKey}/transitions`, { transition: { id: config.transitionId } }, { headers, timeout: 15000 });
+          await axios.post(`${BASE}/issue/${encodeURIComponent(config.issueKey)}/transitions`, { transition: { id: config.transitionId } }, { headers, timeout: 15000 });
           return { transitioned: true, issueKey: config.issueKey };
         }
 
         case "addComment": {
           if (!config.issueKey || !config.comment) return { success: false, error: "Jira addComment: 'issueKey' and 'comment' are required — configure this field.", skipped: true };
           const body = { body: { type: "doc", version: 1, content: [{ type: "paragraph", content: [{ type: "text", text: config.comment }] }] } };
-          const res = await axios.post(`${BASE}/issue/${config.issueKey}/comment`, body, { headers, timeout: 15000 });
+          const res = await axios.post(`${BASE}/issue/${encodeURIComponent(config.issueKey)}/comment`, body, { headers, timeout: 15000 });
           return { id: res.data.id, created: res.data.created };
         }
 

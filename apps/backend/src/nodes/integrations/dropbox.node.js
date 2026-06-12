@@ -109,7 +109,8 @@ export default {
             timeout: 60000,
           });
 
-          const meta = JSON.parse(res.headers["dropbox-api-result"] || "{}");
+          let meta = {};
+          try { meta = JSON.parse(res.headers["dropbox-api-result"] || "{}"); } catch { /* keep empty meta */ }
           const base64 = Buffer.from(res.data).toString("base64");
 
           return {

@@ -88,14 +88,14 @@ export default {
           if (!config.objectType) return { success: false, error: "Salesforce createRecord: 'objectType' is required (e.g. Contact, Account).", skipped: true };
           const fields = parseFields(config.fields, "createRecord fields");
           if (!Object.keys(fields).length) return { success: false, error: "Salesforce createRecord: 'fields' (JSON object) is required.", skipped: true };
-          const { data } = await axios.post(`${base}/sobjects/${config.objectType}`, fields, { headers: h, timeout: 15000 });
+          const { data } = await axios.post(`${base}/sobjects/${encodeURIComponent(config.objectType)}`, fields, { headers: h, timeout: 15000 });
           return { success: true, id: data.id, created: data.success };
         }
 
         case "getRecord": {
           if (!config.objectType || !config.recordId) return { success: false, error: "Salesforce getRecord: 'objectType' and 'recordId' are required.", skipped: true };
           const params = config.fields ? { fields: config.fields } : {};
-          const { data } = await axios.get(`${base}/sobjects/${config.objectType}/${config.recordId}`, { headers: h, timeout: 15000, params });
+          const { data } = await axios.get(`${base}/sobjects/${encodeURIComponent(config.objectType)}/${encodeURIComponent(config.recordId)}`, { headers: h, timeout: 15000, params });
           return { success: true, ...data };
         }
 
@@ -103,13 +103,13 @@ export default {
           if (!config.objectType || !config.recordId) return { success: false, error: "Salesforce updateRecord: 'objectType' and 'recordId' are required.", skipped: true };
           const fields = parseFields(config.fields, "updateRecord fields");
           if (!Object.keys(fields).length) return { success: false, error: "Salesforce updateRecord: 'fields' (JSON object) is required.", skipped: true };
-          await axios.patch(`${base}/sobjects/${config.objectType}/${config.recordId}`, fields, { headers: h, timeout: 15000 });
+          await axios.patch(`${base}/sobjects/${encodeURIComponent(config.objectType)}/${encodeURIComponent(config.recordId)}`, fields, { headers: h, timeout: 15000 });
           return { success: true, updated: true, recordId: config.recordId };
         }
 
         case "deleteRecord": {
           if (!config.objectType || !config.recordId) return { success: false, error: "Salesforce deleteRecord: 'objectType' and 'recordId' are required.", skipped: true };
-          await axios.delete(`${base}/sobjects/${config.objectType}/${config.recordId}`, { headers: h, timeout: 15000 });
+          await axios.delete(`${base}/sobjects/${encodeURIComponent(config.objectType)}/${encodeURIComponent(config.recordId)}`, { headers: h, timeout: 15000 });
           return { success: true, deleted: true, recordId: config.recordId };
         }
 
@@ -128,7 +128,7 @@ export default {
         case "upsertRecord": {
           if (!config.objectType || !config.externalIdField || !config.externalId) return { success: false, error: "Salesforce upsertRecord: 'objectType', 'externalIdField', and 'externalId' are required.", skipped: true };
           const fields = parseFields(config.fields, "upsertRecord fields");
-          const { data } = await axios.patch(`${base}/sobjects/${config.objectType}/${config.externalIdField}/${config.externalId}`, fields, { headers: h, timeout: 15000 });
+          const { data } = await axios.patch(`${base}/sobjects/${encodeURIComponent(config.objectType)}/${encodeURIComponent(config.externalIdField)}/${encodeURIComponent(config.externalId)}`, fields, { headers: h, timeout: 15000 });
           return { success: true, id: data?.id, created: data?.created ?? null };
         }
 
@@ -140,7 +140,7 @@ export default {
 
         case "describeObject": {
           if (!config.objectType) return { success: false, error: "Salesforce describeObject: 'objectType' is required.", skipped: true };
-          const { data } = await axios.get(`${base}/sobjects/${config.objectType}/describe`, { headers: h, timeout: 20000 });
+          const { data } = await axios.get(`${base}/sobjects/${encodeURIComponent(config.objectType)}/describe`, { headers: h, timeout: 20000 });
           const fields = data.fields?.map((f) => ({ name: f.name, label: f.label, type: f.type, required: !f.nillable && !f.defaultedOnCreate })) ?? [];
           return { success: true, name: data.name, label: data.label, fields, fieldCount: fields.length };
         }

@@ -67,7 +67,7 @@ export default {
 
         case "deleteTweet": {
           if (!config.tweetId) return { success: false, error: "Twitter deleteTweet: 'tweetId' is required — configure this field.", skipped: true };
-          const res = await axios.delete(`${BASE}/tweets/${config.tweetId}`, { headers, timeout: 15000 });
+          const res = await axios.delete(`${BASE}/tweets/${encodeURIComponent(config.tweetId)}`, { headers, timeout: 15000 });
           return { deleted: res.data.data?.deleted ?? true, tweetId: config.tweetId };
         }
 
@@ -82,7 +82,7 @@ export default {
 
         case "getUserTweets": {
           if (!config.userId) return { success: false, error: "Twitter getUserTweets: 'userId' is required — configure this field.", skipped: true };
-          const res = await axios.get(`${BASE}/users/${config.userId}/tweets`, {
+          const res = await axios.get(`${BASE}/users/${encodeURIComponent(config.userId)}/tweets`, {
             headers, timeout: 15000,
             params: { max_results: Math.min(Math.max(5, Number(config.limit ?? 10)), 100), "tweet.fields": "created_at,public_metrics", exclude: "retweets,replies" },
           });
@@ -91,7 +91,7 @@ export default {
 
         case "getUser": {
           if (!config.username) return { success: false, error: "Twitter getUser: 'username' is required — configure this field.", skipped: true };
-          const res = await axios.get(`${BASE}/users/by/username/${config.username}`, {
+          const res = await axios.get(`${BASE}/users/by/username/${encodeURIComponent(config.username)}`, {
             headers, timeout: 15000,
             params: { "user.fields": "id,name,username,description,public_metrics,profile_image_url" },
           });
@@ -101,7 +101,7 @@ export default {
 
         case "likeTweet": {
           if (!config.userId || !config.tweetId) return { success: false, error: "Twitter likeTweet: 'userId' and 'tweetId' are required — configure this field.", skipped: true };
-          const res = await axios.post(`${BASE}/users/${config.userId}/likes`, { tweet_id: config.tweetId }, { headers, timeout: 15000 });
+          const res = await axios.post(`${BASE}/users/${encodeURIComponent(config.userId)}/likes`, { tweet_id: config.tweetId }, { headers, timeout: 15000 });
           return { liked: res.data.data?.liked ?? true };
         }
 

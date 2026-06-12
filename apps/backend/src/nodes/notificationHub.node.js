@@ -107,7 +107,7 @@ async function sendSms(ch, message, workspaceId) {
   if (!accountSid || !authToken) throw new Error("SMS: credential must be 'accountSid:authToken'");
 
   await axios.post(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`,
     new URLSearchParams({ To: to, From: from, Body: message }).toString(),
     { auth: { username: accountSid, password: authToken }, headers: { "Content-Type": "application/x-www-form-urlencoded" }, timeout: 15000 },
   );

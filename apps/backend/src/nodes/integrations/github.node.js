@@ -62,7 +62,7 @@ export default {
         case "createIssue": {
           const { title, body, labels, assignees } = config;
           if (!title) return { success: false, error: "GitHub createIssue: 'title' is required — configure this field.", skipped: true };
-          const res = await axios.post(`${BASE}/repos/${owner}/${repo}/issues`, {
+          const res = await axios.post(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`, {
             title, body,
             labels: labels ? String(labels).split(",").map((l) => l.trim()) : undefined,
             assignees: assignees ? String(assignees).split(",").map((a) => a.trim()) : undefined,
@@ -72,12 +72,12 @@ export default {
 
         case "getIssue": {
           if (!config.issueNumber) return { success: false, error: "GitHub getIssue: 'issueNumber' is required — configure this field.", skipped: true };
-          const res = await axios.get(`${BASE}/repos/${owner}/${repo}/issues/${config.issueNumber}`, { headers: h, timeout: 15000 });
+          const res = await axios.get(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(config.issueNumber)}`, { headers: h, timeout: 15000 });
           return { number: res.data.number, title: res.data.title, body: res.data.body, state: res.data.state, url: res.data.html_url, author: res.data.user?.login, labels: res.data.labels?.map((l) => l.name) };
         }
 
         case "listIssues": {
-          const res = await axios.get(`${BASE}/repos/${owner}/${repo}/issues`, {
+          const res = await axios.get(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`, {
             headers: h, timeout: 15000,
             params: { state: config.state ?? "open", per_page: Math.min(Number(config.limit ?? 30), 100), labels: config.labels },
           });
@@ -87,14 +87,14 @@ export default {
         case "createComment": {
           if (!config.issueNumber) return { success: false, error: "GitHub createComment: 'issueNumber' is required — configure this field.", skipped: true };
           if (!config.body) return { success: false, error: "GitHub createComment: 'body' is required — configure this field.", skipped: true };
-          const res = await axios.post(`${BASE}/repos/${owner}/${repo}/issues/${config.issueNumber}/comments`, { body: config.body }, { headers: h, timeout: 15000 });
+          const res = await axios.post(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(config.issueNumber)}/comments`, { body: config.body }, { headers: h, timeout: 15000 });
           return { id: res.data.id, url: res.data.html_url, body: res.data.body };
         }
 
         case "createPR": {
           const { title, body: prBody, head, base = "main" } = config;
           if (!title || !head) return { success: false, error: "GitHub createPR: 'title' and 'head' branch are required.", skipped: true };
-          const res = await axios.post(`${BASE}/repos/${owner}/${repo}/pulls`, { title, body: prBody, head, base }, { headers: h, timeout: 15000 });
+          const res = await axios.post(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`, { title, body: prBody, head, base }, { headers: h, timeout: 15000 });
           return { number: res.data.number, url: res.data.html_url, title: res.data.title, state: res.data.state };
         }
 
@@ -109,7 +109,7 @@ export default {
           // both create and update work through the same operation.
           let sha;
           try {
-            const existing = await axios.get(`${BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+            const existing = await axios.get(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`, {
               headers: h, timeout: 15000, params: branch ? { ref: branch } : undefined,
             });
             sha = existing.data.sha;
@@ -117,7 +117,7 @@ export default {
             if (e.response?.status !== 404) throw e;
           }
 
-          const res = await axios.put(`${BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+          const res = await axios.put(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`, {
             message: commitMessage,
             content: Buffer.from(String(content), "utf-8").toString("base64"),
             branch,
@@ -128,7 +128,7 @@ export default {
 
         case "mergePR": {
           if (!config.prNumber) return { success: false, error: "GitHub mergePR: 'prNumber' is required.", skipped: true };
-          const res = await axios.put(`${BASE}/repos/${owner}/${repo}/pulls/${config.prNumber}/merge`, {
+          const res = await axios.put(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${encodeURIComponent(config.prNumber)}/merge`, {
             commit_title: config.commitTitle,
             merge_method: config.mergeMethod ?? "merge",
           }, { headers: h, timeout: 15000 });
@@ -136,7 +136,7 @@ export default {
         }
 
         case "listPRs": {
-          const res = await axios.get(`${BASE}/repos/${owner}/${repo}/pulls`, {
+          const res = await axios.get(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`, {
             headers: h, timeout: 15000,
             params: { state: config.state ?? "open", per_page: Math.min(Number(config.limit ?? 30), 100) },
           });
@@ -144,14 +144,14 @@ export default {
         }
 
         case "getRepo": {
-          const res = await axios.get(`${BASE}/repos/${owner}/${repo}`, { headers: h, timeout: 15000 });
+          const res = await axios.get(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers: h, timeout: 15000 });
           return { name: res.data.name, fullName: res.data.full_name, description: res.data.description, stars: res.data.stargazers_count, forks: res.data.forks_count, url: res.data.html_url, defaultBranch: res.data.default_branch };
         }
 
         case "createRelease": {
           const { tagName, name: relName, body: relBody, draft = false, prerelease = false } = config;
           if (!tagName) return { success: false, error: "GitHub createRelease: 'tagName' is required.", skipped: true };
-          const res = await axios.post(`${BASE}/repos/${owner}/${repo}/releases`, { tag_name: tagName, name: relName ?? tagName, body: relBody, draft, prerelease }, { headers: h, timeout: 15000 });
+          const res = await axios.post(`${BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases`, { tag_name: tagName, name: relName ?? tagName, body: relBody, draft, prerelease }, { headers: h, timeout: 15000 });
           return { id: res.data.id, url: res.data.html_url, tagName: res.data.tag_name, name: res.data.name };
         }
 

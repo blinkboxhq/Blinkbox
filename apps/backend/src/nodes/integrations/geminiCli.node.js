@@ -25,7 +25,7 @@ export default {
 
     try {
       const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
         {
           system_instruction: { parts: [{ text: SYSTEM_PROMPTS.gemini_cli }] },
           contents: [{ role: "user", parts: [{ text: userMsg }] }],

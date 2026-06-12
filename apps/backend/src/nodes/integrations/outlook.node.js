@@ -89,7 +89,7 @@ export default {
           if (!to) return { success: false, error: "Outlook replyEmail: 'to' is required.", skipped: true };
 
           await axios.post(
-            `${GRAPH}/me/messages/${messageId}/reply`,
+            `${GRAPH}/me/messages/${encodeURIComponent(messageId)}/reply`,
             {
               message: {
                 toRecipients: buildRecipients(to),
@@ -105,7 +105,7 @@ export default {
           const { messageId } = config;
           if (!messageId) return { success: false, error: "Outlook getEmail: 'messageId' is required.", skipped: true };
 
-          const res = await axios.get(`${GRAPH}/me/messages/${messageId}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${GRAPH}/me/messages/${encodeURIComponent(messageId)}`, { headers, timeout: 15000 });
           const m = res.data;
           return {
             success: true,
@@ -207,7 +207,7 @@ export default {
           if (!destinationId) return { success: false, error: "Outlook moveEmail: 'destinationId' (folder ID or well-known name) is required.", skipped: true };
 
           const res = await axios.post(
-            `${GRAPH}/me/messages/${messageId}/move`,
+            `${GRAPH}/me/messages/${encodeURIComponent(messageId)}/move`,
             { destinationId },
             { headers, timeout: 15000 }
           );
@@ -219,7 +219,7 @@ export default {
           if (!messageId) return { success: false, error: "Outlook flagEmail: 'messageId' is required.", skipped: true };
           const flagged = config.flagged !== false;
           const res = await axios.patch(
-            `${GRAPH}/me/messages/${messageId}`,
+            `${GRAPH}/me/messages/${encodeURIComponent(messageId)}`,
             { flag: { flagStatus: flagged ? "flagged" : "notFlagged" } },
             { headers, timeout: 15000 }
           );

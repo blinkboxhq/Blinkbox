@@ -44,7 +44,7 @@ async function opSendSms(config, { accountSid, authToken }) {
   if (!config.from) return { success: false, error: "Twilio sendSms: 'from' (Twilio phone number) is required.", skipped: true };
   if (!config.body) return { success: false, error: "Twilio sendSms: 'body' (message text) is required.", skipped: true };
 
-  const url = `${BASE}/Accounts/${accountSid}/Messages.json`;
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
   const response = await axios.post(url, encodeForm({
     To: config.to,
     From: config.from,
@@ -70,7 +70,7 @@ async function opMakeCall(config, { accountSid, authToken }) {
   if (!config.url) return { success: false, error: "Twilio makeCall: 'url' (TwiML URL) is required.", skipped: true };
   if (!/^https?:\/\//i.test(config.url)) throw new Error("Twilio makeCall: 'url' must be a valid https:// URL.");
 
-  const callUrl = `${BASE}/Accounts/${accountSid}/Calls.json`;
+  const callUrl = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls.json`;
   const response = await axios.post(callUrl, encodeForm({
     To: config.to,
     From: config.from,

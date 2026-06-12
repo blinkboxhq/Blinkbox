@@ -24,7 +24,7 @@ async function opTextToSpeech(config, apiKey) {
   const model = config.model || "eleven_monolingual_v1";
 
   const res = await axios.post(
-    `${BASE}/text-to-speech/${voiceId}`,
+    `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}`,
     {
       text: config.text,
       model_id: model,

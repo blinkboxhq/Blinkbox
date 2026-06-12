@@ -41,7 +41,7 @@ export default {
 
         case "getForm": {
           if (!config.formId) return { success: false, error: "Typeform getForm: 'formId' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/forms/${config.formId}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${BASE}/forms/${encodeURIComponent(config.formId)}`, { headers, timeout: 15000 });
           return res.data;
         }
 
@@ -50,7 +50,7 @@ export default {
           const params = { page_size: Math.min(Number(config.pageSize ?? 25), 1000) };
           if (config.since) params.since = config.since;
           if (config.includeHidden) params.fields = "hidden";
-          const res = await axios.get(`${BASE}/forms/${config.formId}/responses`, { headers, params, timeout: 20000 });
+          const res = await axios.get(`${BASE}/forms/${encodeURIComponent(config.formId)}/responses`, { headers, params, timeout: 20000 });
           return {
             items: res.data.items ?? [],
             total_items: res.data.total_items ?? 0,
@@ -61,7 +61,7 @@ export default {
         case "getResponse": {
           if (!config.formId) return { success: false, error: "Typeform getResponse: 'formId' is required.", skipped: true };
           if (!config.responseToken) return { success: false, error: "Typeform getResponse: 'responseToken' is required.", skipped: true };
-          const res = await axios.get(`${BASE}/forms/${config.formId}/responses`, {
+          const res = await axios.get(`${BASE}/forms/${encodeURIComponent(config.formId)}/responses`, {
             headers,
             params: { included_tokens: config.responseToken },
             timeout: 15000,
@@ -88,7 +88,7 @@ export default {
         case "deleteResponse": {
           if (!config.formId) return { success: false, error: "Typeform deleteResponse: 'formId' is required.", skipped: true };
           if (!config.responseToken) return { success: false, error: "Typeform deleteResponse: 'responseToken' is required.", skipped: true };
-          await axios.delete(`${BASE}/forms/${config.formId}/responses`, {
+          await axios.delete(`${BASE}/forms/${encodeURIComponent(config.formId)}/responses`, {
             headers,
             params: { included_tokens: config.responseToken },
             timeout: 15000,

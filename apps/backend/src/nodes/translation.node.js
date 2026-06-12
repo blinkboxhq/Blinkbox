@@ -19,7 +19,7 @@ export default {
     if (provider === "google") {
       if (!apiKey) return { success: false, error: "Translation (Google): API key required.", skipped: true };
       const { data } = await axios.post(
-        `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+        `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(apiKey)}`,
         { q: text, target, format: "text" }, { timeout: 15000 }
       );
       const result = data.data.translations[0];

@@ -48,7 +48,7 @@ function handleError(err) {
 }
 
 async function send(phoneNumberId, token, payload) {
-  const url = `https://graph.facebook.com/${API_VERSION}/${phoneNumberId}/messages`;
+  const url = `https://graph.facebook.com/${API_VERSION}/${encodeURIComponent(phoneNumberId)}/messages`;
   const response = await axios.post(url, payload, {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     timeout: 15000,
@@ -174,7 +174,7 @@ async function opMarkRead(config, token) {
   if (!phoneNumberId) return { success: false, error: "WhatsApp markRead: 'phoneNumberId' is required.", skipped: true };
   if (!messageId) return { success: false, error: "WhatsApp markRead: 'messageId' is required.", skipped: true };
 
-  const url = `https://graph.facebook.com/${API_VERSION}/${phoneNumberId}/messages`;
+  const url = `https://graph.facebook.com/${API_VERSION}/${encodeURIComponent(phoneNumberId)}/messages`;
   try {
     const response = await axios.post(url,
       { messaging_product: "whatsapp", status: "read", message_id: messageId },
@@ -211,7 +211,7 @@ async function uploadMedia(phoneNumberId, token, attachment) {
   form.append("type", mimeType);
   form.append("messaging_product", "whatsapp");
   const { data } = await axios.post(
-    `https://graph.facebook.com/v21.0/${phoneNumberId}/media`,
+    `https://graph.facebook.com/v21.0/${encodeURIComponent(phoneNumberId)}/media`,
     form,
     { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 }
   );

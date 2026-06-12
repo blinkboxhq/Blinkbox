@@ -62,13 +62,13 @@ async function opSendBatch(config, apiKey) {
 
 async function opGetEmail(config, apiKey) {
   if (!config.emailId) return { success: false, error: "Resend getEmail: 'emailId' is required — configure this field.", skipped: true };
-  const res = await axios.get(`${BASE}/emails/${config.emailId}`, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.get(`${BASE}/emails/${encodeURIComponent(config.emailId)}`, { headers: headers(apiKey), timeout: 10000 });
   return res.data;
 }
 
 async function opCancelEmail(config, apiKey) {
   if (!config.emailId) return { success: false, error: "Resend cancelEmail: 'emailId' is required — configure this field.", skipped: true };
-  const res = await axios.post(`${BASE}/emails/${config.emailId}/cancel`, {}, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.post(`${BASE}/emails/${encodeURIComponent(config.emailId)}/cancel`, {}, { headers: headers(apiKey), timeout: 10000 });
   return { cancelled: true, ...res.data };
 }
 

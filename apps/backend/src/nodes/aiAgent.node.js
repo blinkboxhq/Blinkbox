@@ -1859,6 +1859,7 @@ async function callOpenAICompat(
       },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
+      __bbSkipHardening: true,
     }));
 
     const choice = response.data.choices?.[0];
@@ -1908,6 +1909,7 @@ async function callAnthropic(
       },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
+      __bbSkipHardening: true,
     }));
 
     const data = response.data;
@@ -1997,6 +1999,7 @@ async function callGemini(
       headers: { "Content-Type": "application/json" },
       timeout: REQUEST_TIMEOUT_MS,
       maxContentLength: 10 * 1024 * 1024,
+      __bbSkipHardening: true,
     }));
 
     const candidate = response.data.candidates?.[0];

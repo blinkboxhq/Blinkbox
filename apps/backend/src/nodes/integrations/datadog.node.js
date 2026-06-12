@@ -130,7 +130,7 @@ export default {
         case "getMonitor": {
           const id = config.monitorId || input?.monitorId;
           if (!id) return { success: false, error: "Datadog getMonitor: 'monitorId' is required.", skipped: true };
-          const { data } = await axios.get(`${BASE}/monitor/${id}`, { headers, timeout: 15000 });
+          const { data } = await axios.get(`${BASE}/monitor/${encodeURIComponent(id)}`, { headers, timeout: 15000 });
           return { success: true, id: data.id, name: data.name, type: data.type, status: data.overall_state, query: data.query };
         }
 
@@ -139,7 +139,7 @@ export default {
           if (!id) return { success: false, error: "Datadog muteMonitor: 'monitorId' is required.", skipped: true };
           const body = {};
           if (config.end) body.end = config.end;
-          await axios.post(`${BASE}/monitor/${id}/mute`, body, { headers, timeout: 10000 });
+          await axios.post(`${BASE}/monitor/${encodeURIComponent(id)}/mute`, body, { headers, timeout: 10000 });
           return { success: true, monitorId: id, muted: true };
         }
 

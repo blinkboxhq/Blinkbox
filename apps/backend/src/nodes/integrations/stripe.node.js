@@ -88,7 +88,7 @@ export default {
 
         case "getCustomer": {
           if (!config.customerId) return { success: false, error: "Stripe getCustomer: 'customerId' is required — configure this field.", skipped: true };
-          const res = await stripeReq("GET", `/customers/${config.customerId}`, null, apiKey);
+          const res = await stripeReq("GET", `/customers/${encodeURIComponent(config.customerId)}`, null, apiKey);
           return { id: res.data.id, email: res.data.email, name: res.data.name, balance: res.data.balance, currency: res.data.currency };
         }
 
@@ -106,7 +106,7 @@ export default {
 
         case "getPaymentIntent": {
           if (!config.paymentIntentId) return { success: false, error: "Stripe getPaymentIntent: 'paymentIntentId' is required — configure this field.", skipped: true };
-          const res = await stripeReq("GET", `/payment_intents/${config.paymentIntentId}`, null, apiKey);
+          const res = await stripeReq("GET", `/payment_intents/${encodeURIComponent(config.paymentIntentId)}`, null, apiKey);
           return { id: res.data.id, status: res.data.status, amount: res.data.amount, currency: res.data.currency, customer: res.data.customer };
         }
 

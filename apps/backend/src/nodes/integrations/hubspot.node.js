@@ -98,7 +98,7 @@ export default {
             if (!contact) return { found: false };
             return { id: contact.id, ...contact.properties, found: true };
           }
-          const res = await axios.get(`${BASE}/crm/v3/objects/contacts/${config.contactId}`, { headers: h, timeout: 15000, params: { properties: props } });
+          const res = await axios.get(`${BASE}/crm/v3/objects/contacts/${encodeURIComponent(config.contactId)}`, { headers: h, timeout: 15000, params: { properties: props } });
           return { id: res.data.id, ...res.data.properties };
         }
 
@@ -113,13 +113,13 @@ export default {
           if (config.website) properties.website = config.website;
           if (config.jobTitle) properties.jobtitle = config.jobTitle;
           Object.assign(properties, parseExtra(config.extraProperties, "updateContact extraProperties"));
-          await axios.patch(`${BASE}/crm/v3/objects/contacts/${config.contactId}`, { properties }, { headers: h, timeout: 15000 });
+          await axios.patch(`${BASE}/crm/v3/objects/contacts/${encodeURIComponent(config.contactId)}`, { properties }, { headers: h, timeout: 15000 });
           return { updated: true, contactId: config.contactId };
         }
 
         case "deleteContact": {
           if (!config.contactId) return { success: false, error: "HubSpot deleteContact: contactId is required.", skipped: true };
-          await axios.delete(`${BASE}/crm/v3/objects/contacts/${config.contactId}`, { headers: h, timeout: 15000 });
+          await axios.delete(`${BASE}/crm/v3/objects/contacts/${encodeURIComponent(config.contactId)}`, { headers: h, timeout: 15000 });
           return { deleted: true, contactId: config.contactId };
         }
 
@@ -149,7 +149,7 @@ export default {
 
         case "getDeal": {
           if (!config.dealId) return { success: false, error: "HubSpot getDeal: dealId is required.", skipped: true };
-          const res = await axios.get(`${BASE}/crm/v3/objects/deals/${config.dealId}`, { headers: h, timeout: 15000, params: { properties: "dealname,amount,dealstage,closedate,hubspot_owner_id,pipeline" } });
+          const res = await axios.get(`${BASE}/crm/v3/objects/deals/${encodeURIComponent(config.dealId)}`, { headers: h, timeout: 15000, params: { properties: "dealname,amount,dealstage,closedate,hubspot_owner_id,pipeline" } });
           return { id: res.data.id, ...res.data.properties };
         }
 
@@ -161,7 +161,7 @@ export default {
           if (config.stage) properties.dealstage = config.stage;
           if (config.closeDate) properties.closedate = config.closeDate;
           if (config.ownerId) properties.hubspot_owner_id = String(config.ownerId);
-          await axios.patch(`${BASE}/crm/v3/objects/deals/${config.dealId}`, { properties }, { headers: h, timeout: 15000 });
+          await axios.patch(`${BASE}/crm/v3/objects/deals/${encodeURIComponent(config.dealId)}`, { properties }, { headers: h, timeout: 15000 });
           return { updated: true, dealId: config.dealId };
         }
 
@@ -169,7 +169,7 @@ export default {
           const { fromType, fromId, toType, toId, associationTypeId } = config;
           if (!fromType || !fromId || !toType || !toId) return { success: false, error: "HubSpot associateObjects: fromType, fromId, toType, toId are required.", skipped: true };
           await axios.put(
-            `${BASE}/crm/v3/objects/${fromType}/${fromId}/associations/${toType}/${toId}/${associationTypeId || "contact_to_deal"}`,
+            `${BASE}/crm/v3/objects/${encodeURIComponent(fromType)}/${encodeURIComponent(fromId)}/associations/${encodeURIComponent(toType)}/${encodeURIComponent(toId)}/${encodeURIComponent(associationTypeId || "contact_to_deal")}`,
             {},
             { headers: h, timeout: 15000 }
           );

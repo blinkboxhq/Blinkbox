@@ -65,7 +65,7 @@ export default {
           const sub = config.subreddit || input.subreddit || "popular";
           const sort = config.sort || "hot";
           const limit = config.limit || 25;
-          const { data } = await axios.get(`${BASE}/r/${sub}/${sort}.json?limit=${limit}`, { headers, timeout: 10000 });
+          const { data } = await axios.get(`${BASE}/r/${encodeURIComponent(sub)}/${encodeURIComponent(sort)}.json?limit=${encodeURIComponent(limit)}`, { headers, timeout: 10000 });
           const posts = data.data.children.map((c) => ({
             id: c.data.id,
             title: c.data.title,
@@ -82,7 +82,7 @@ export default {
         case "getPost": {
           const id = config.postId || input.postId;
           if (!id) return { success: false, error: "Reddit getPost: 'postId' required.", skipped: true };
-          const { data } = await axios.get(`${BASE}/comments/${id}.json`, { headers, timeout: 10000 });
+          const { data } = await axios.get(`${BASE}/comments/${encodeURIComponent(id)}.json`, { headers, timeout: 10000 });
           const p = data[0].data.children[0].data;
           const comments = data[1].data.children.map((c) => ({
             author: c.data.author,
@@ -114,7 +114,7 @@ export default {
           const q = config.query || input.query || "";
           if (!q) return { success: false, error: "Reddit search: 'query' required.", skipped: true };
           const { data } = await axios.get(
-            `${BASE}/search.json?q=${encodeURIComponent(q)}&limit=${config.limit || 25}&sort=${config.sort || "relevance"}`,
+            `${BASE}/search.json?q=${encodeURIComponent(q)}&limit=${encodeURIComponent(config.limit || 25)}&sort=${encodeURIComponent(config.sort || "relevance")}`,
             { headers, timeout: 10000 }
           );
           const results = data.data.children.map((c) => ({

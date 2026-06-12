@@ -71,7 +71,7 @@ async function opUpdatePage(config, token) {
   const properties = typeof config.properties === "string" ? (() => { try { return JSON.parse(config.properties); } catch { throw new Error("Notion updatePage: 'properties' must be valid JSON."); } })() : (config.properties || {});
   const body = { properties };
   if (config.archived !== undefined) body.archived = config.archived;
-  const response = await axios.patch(`${BASE}/pages/${stripId(config.pageId)}`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.patch(`${BASE}/pages/${encodeURIComponent(stripId(config.pageId))}`, body, { headers: headers(token), timeout: 15000 });
   return { pageId: response.data.id, url: response.data.url, updated: true };
 }
 
@@ -83,7 +83,7 @@ async function opQueryDatabase(config, token) {
   if (config.pageSize) body.page_size = Math.min(Number(config.pageSize) || 10, 100);
   if (config.startCursor) body.start_cursor = config.startCursor;
 
-  const response = await axios.post(`${BASE}/databases/${stripId(config.databaseId)}/query`, body, {
+  const response = await axios.post(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}/query`, body, {
     headers: headers(token), timeout: 20000,
   });
   return {
@@ -96,7 +96,7 @@ async function opQueryDatabase(config, token) {
 
 async function opGetPage(config, token) {
   if (!config.pageId) return { success: false, error: "Notion getPage: 'pageId' is required — configure this field.", skipped: true };
-  const response = await axios.get(`${BASE}/pages/${stripId(config.pageId)}`, { headers: headers(token), timeout: 15000 });
+  const response = await axios.get(`${BASE}/pages/${encodeURIComponent(stripId(config.pageId))}`, { headers: headers(token), timeout: 15000 });
   const page = response.data;
   // Extract plain title if present
   const titleProp = Object.values(page.properties || {}).find((p) => p.type === "title");
@@ -120,7 +120,7 @@ async function opAppendBlock(config, token) {
     }));
   }
 
-  const response = await axios.patch(`${BASE}/blocks/${stripId(config.pageId)}/children`, { children }, {
+  const response = await axios.patch(`${BASE}/blocks/${encodeURIComponent(stripId(config.pageId))}/children`, { children }, {
     headers: headers(token), timeout: 15000,
   });
   return { appended: response.data.results?.length || 0, blockIds: (response.data.results || []).map((b) => b.id) };
@@ -146,7 +146,7 @@ async function opSearchPages(config, token) {
 
 async function opDeletePage(config, token) {
   if (!config.pageId) return { success: false, error: "Notion deletePage: 'pageId' is required — configure this field.", skipped: true };
-  const response = await axios.patch(`${BASE}/pages/${stripId(config.pageId)}`, { archived: true }, { headers: headers(token), timeout: 15000 });
+  const response = await axios.patch(`${BASE}/pages/${encodeURIComponent(stripId(config.pageId))}`, { archived: true }, { headers: headers(token), timeout: 15000 });
   return { pageId: response.data.id, archived: response.data.archived, deleted: true };
 }
 

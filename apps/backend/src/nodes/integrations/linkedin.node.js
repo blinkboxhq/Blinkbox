@@ -198,7 +198,7 @@ async function opGetCompany(config, token) {
   const id = config.companyId;
   if (!id) return { success: false, error: "LinkedIn getCompany: 'companyId' is required.", skipped: true };
   const { data } = await axios.get(
-    `${BASE}/organizations/${id}?projection=(id,name,vanityName,description,websiteUrl,logoV2)`,
+    `${BASE}/organizations/${encodeURIComponent(id)}?projection=(id,name,vanityName,description,websiteUrl,logoV2)`,
     { headers: headers(token), timeout: 10000 },
   );
   const name = data.name?.localized?.en_US || Object.values(data.name?.localized || {})[0] || "";

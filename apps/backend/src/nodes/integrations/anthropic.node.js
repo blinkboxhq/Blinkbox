@@ -57,7 +57,8 @@ function handleError(err) {
   if (err.response?.status === 401) throw new Error("Anthropic: Invalid API key. Check your credential in the Vault.");
   if (err.response?.status === 403) throw new Error("Anthropic: Access forbidden — check your API key permissions.");
   if (err.response?.status === 404) {
-    const model = err.config?.data ? JSON.parse(err.config.data)?.model : "unknown";
+    let model = "unknown";
+    try { model = JSON.parse(err.config?.data || "{}")?.model || "unknown"; } catch { /* keep unknown */ }
     throw new Error(`Anthropic: Model "${model}" not found. Try: claude-sonnet-4-20250514, claude-haiku-4-5-20251001.`);
   }
   if (err.response?.status === 422) throw new Error(`Anthropic: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);

@@ -58,7 +58,7 @@ async function opGetUserMedia(config, token) {
 
 async function opGetMedia(config, token) {
   if (!config.mediaId) return { success: false, error: "Instagram getMedia: 'mediaId' is required.", skipped: true };
-  const { data } = await axios.get(`${BASE}/${config.mediaId}`, {
+  const { data } = await axios.get(`${BASE}/${encodeURIComponent(config.mediaId)}`, {
     params: {
       access_token: token,
       fields: "id,caption,media_type,media_url,timestamp,like_count,comments_count,permalink",
@@ -75,7 +75,7 @@ async function opCreatePost(config, token) {
   const caption = config.caption || "";
 
   const { data: container } = await axios.post(
-    `${BASE}/${config.userId}/media`,
+    `${BASE}/${encodeURIComponent(config.userId)}/media`,
     null,
     {
       params: { access_token: token, image_url: config.imageUrl, caption },
@@ -86,7 +86,7 @@ async function opCreatePost(config, token) {
   if (!container.id) throw new Error("Instagram createPost: Failed to create media container — no ID returned.");
 
   const { data: published } = await axios.post(
-    `${BASE}/${config.userId}/media_publish`,
+    `${BASE}/${encodeURIComponent(config.userId)}/media_publish`,
     null,
     {
       params: { access_token: token, creation_id: container.id },
@@ -99,7 +99,7 @@ async function opCreatePost(config, token) {
 
 async function opGetComments(config, token) {
   if (!config.mediaId) return { success: false, error: "Instagram getComments: 'mediaId' is required.", skipped: true };
-  const { data } = await axios.get(`${BASE}/${config.mediaId}/comments`, {
+  const { data } = await axios.get(`${BASE}/${encodeURIComponent(config.mediaId)}/comments`, {
     params: {
       access_token: token,
       fields: "id,text,timestamp,username",

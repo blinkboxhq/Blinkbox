@@ -54,14 +54,14 @@ export default {
         case "triggerBuild": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify triggerDeploy: 'siteId' is required.", skipped: true };
-          const res = await axios.post(`${API}/sites/${siteId}/builds`, {}, { headers, timeout: 20000 });
+          const res = await axios.post(`${API}/sites/${encodeURIComponent(siteId)}/builds`, {}, { headers, timeout: 20000 });
           return { success: true, id: res.data.id, deploy_id: res.data.deploy_id, created_at: res.data.created_at };
         }
 
         case "listDeploys": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify listDeploys: 'siteId' is required.", skipped: true };
-          const res = await axios.get(`${API}/sites/${siteId}/deploys`, {
+          const res = await axios.get(`${API}/sites/${encodeURIComponent(siteId)}/deploys`, {
             headers,
             params: { per_page: 20 },
             timeout: 15000,
@@ -72,14 +72,14 @@ export default {
         case "getDeploy": {
           const { deployId } = config;
           if (!deployId) return { success: false, error: "Netlify getDeploy: 'deployId' is required.", skipped: true };
-          const res = await axios.get(`${API}/deploys/${deployId}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${API}/deploys/${encodeURIComponent(deployId)}`, { headers, timeout: 15000 });
           return { success: true, ...deployShape(res.data) };
         }
 
         case "cancelDeploy": {
           const { deployId } = config;
           if (!deployId) return { success: false, error: "Netlify cancelDeploy: 'deployId' is required.", skipped: true };
-          const res = await axios.post(`${API}/deploys/${deployId}/cancel`, {}, { headers, timeout: 15000 });
+          const res = await axios.post(`${API}/deploys/${encodeURIComponent(deployId)}/cancel`, {}, { headers, timeout: 15000 });
           return { success: true, ...deployShape(res.data) };
         }
 
@@ -87,7 +87,7 @@ export default {
           const { deployId, lockAction } = config;
           if (!deployId) return { success: false, error: "Netlify lockDeploy: 'deployId' is required.", skipped: true };
           const action = lockAction === "unlock" ? "unlock" : "lock";
-          const res = await axios.post(`${API}/deploys/${deployId}/${action}`, {}, { headers, timeout: 15000 });
+          const res = await axios.post(`${API}/deploys/${encodeURIComponent(deployId)}/${action}`, {}, { headers, timeout: 15000 });
           return { success: true, locked: action === "lock", ...deployShape(res.data) };
         }
 
@@ -113,7 +113,7 @@ export default {
         case "getSite": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify getSite: 'siteId' is required.", skipped: true };
-          const res = await axios.get(`${API}/sites/${siteId}`, { headers, timeout: 15000 });
+          const res = await axios.get(`${API}/sites/${encodeURIComponent(siteId)}`, { headers, timeout: 15000 });
           const s = res.data;
           return {
             success: true,
@@ -134,14 +134,14 @@ export default {
           const body = {};
           if (config.branch) body.branch = config.branch;
           if (config.message) body.title = config.message;
-          const res = await axios.post(`${API}/sites/${siteId}/deploys`, body, { headers, timeout: 20000 });
+          const res = await axios.post(`${API}/sites/${encodeURIComponent(siteId)}/deploys`, body, { headers, timeout: 20000 });
           return { success: true, ...deployShape(res.data) };
         }
 
         case "listFunctions": {
           const { siteId } = config;
           if (!siteId) return { success: false, error: "Netlify listFunctions: 'siteId' is required.", skipped: true };
-          const res = await axios.get(`${API}/sites/${siteId}/functions`, { headers, timeout: 15000 });
+          const res = await axios.get(`${API}/sites/${encodeURIComponent(siteId)}/functions`, { headers, timeout: 15000 });
           const fns = Array.isArray(res.data) ? res.data : res.data.functions ?? [];
           return {
             success: true,
@@ -159,7 +159,7 @@ export default {
           }
           const ctx = envContext || "production";
           const body = [{ key, values: [{ value: String(value), context: ctx }] }];
-          await axios.patch(`${API}/sites/${siteId}/env`, body, { headers, timeout: 20000 });
+          await axios.patch(`${API}/sites/${encodeURIComponent(siteId)}/env`, body, { headers, timeout: 20000 });
           return { success: true, key, context: ctx, updated: true };
         }
 
@@ -167,7 +167,7 @@ export default {
           const { siteId, key } = config;
           if (!siteId) return { success: false, error: "Netlify deleteEnvVar: 'siteId' is required.", skipped: true };
           if (!key) return { success: false, error: "Netlify deleteEnvVar: 'key' is required.", skipped: true };
-          await axios.delete(`${API}/sites/${siteId}/env/${encodeURIComponent(key)}`, { headers, timeout: 15000 });
+          await axios.delete(`${API}/sites/${encodeURIComponent(siteId)}/env/${encodeURIComponent(key)}`, { headers, timeout: 15000 });
           return { success: true, key, deleted: true };
         }
 

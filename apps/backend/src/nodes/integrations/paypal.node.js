@@ -102,13 +102,13 @@ export default {
 
         case "getOrder": {
           if (!config.orderId) return { success: false, error: "PayPal getOrder: 'orderId' is required.", skipped: true };
-          const { data } = await axios.get(`${BASE}/v2/checkout/orders/${config.orderId}`, { headers: h, timeout: 15000 });
+          const { data } = await axios.get(`${BASE}/v2/checkout/orders/${encodeURIComponent(config.orderId)}`, { headers: h, timeout: 15000 });
           return { success: true, id: data.id, status: data.status, intent: data.intent, purchaseUnits: data.purchase_units };
         }
 
         case "captureOrder": {
           if (!config.orderId) return { success: false, error: "PayPal captureOrder: 'orderId' is required.", skipped: true };
-          const { data } = await axios.post(`${BASE}/v2/checkout/orders/${config.orderId}/capture`, {}, { headers: h, timeout: 15000 });
+          const { data } = await axios.post(`${BASE}/v2/checkout/orders/${encodeURIComponent(config.orderId)}/capture`, {}, { headers: h, timeout: 15000 });
           const capture = data.purchase_units?.[0]?.payments?.captures?.[0];
           return { success: true, id: data.id, status: data.status, captureId: capture?.id, amount: capture?.amount?.value, currency: capture?.amount?.currency_code };
         }
@@ -157,7 +157,7 @@ export default {
           const body = {};
           if (config.amount && config.currency) body.amount = { currency_code: config.currency.toUpperCase(), value: String(config.amount) };
           if (config.note) body.note_to_payer = config.note;
-          const { data } = await axios.post(`${BASE}/v2/payments/captures/${config.captureId}/refund`, body, { headers: h, timeout: 15000 });
+          const { data } = await axios.post(`${BASE}/v2/payments/captures/${encodeURIComponent(config.captureId)}/refund`, body, { headers: h, timeout: 15000 });
           return { success: true, id: data.id, status: data.status, amount: data.amount };
         }
 

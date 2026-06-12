@@ -19,7 +19,7 @@ export default {
     if (provider === "elevenlabs") {
       const voiceId = config.voiceId || "pNInz6obpgDQGcFmaJgB"; // default: Adam
       const { data } = await axios.post(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`,
         { text, model_id: config.model || "eleven_multilingual_v2", voice_settings: { stability: config.stability || 0.5, similarity_boost: config.similarityBoost || 0.75 } },
         { headers: { "xi-api-key": apiKey, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 60000 }
       );
