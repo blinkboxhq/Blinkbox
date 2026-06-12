@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Form Playground</title></head>
+<body style="font-family:sans-serif;padding:40px">
+  <h1>Order form</h1>
+  <form id="order">
+    <div><label for="name">Full name</label><br><input id="name" name="name" type="text"></div>
+    <div><label for="email">Email address</label><br><input id="email" name="email" type="text"></div>
+    <div><label for="country">Country</label><br>
+      <select id="country" name="country">
+        <option value="us">United States</option>
+        <option value="in">India</option>
+        <option value="de">Germany</option>
+      </select>
+    </div>
+    <button id="submit" type="button">Submit order</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    document.getElementById("submit").addEventListener("click", () => {
+      const n = document.getElementById("name").value;
+      const e = document.getElementById("email").value;
+      const c = document.getElementById("country").value;
+      document.getElementById("result").textContent = "Submitted: " + n + " <" + e + "> from " + c;
+    });
+  </script>
+</body>
+</html>

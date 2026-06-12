@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Keys</title></head>
+<body style="font-family:sans-serif;padding:40px">
+  <h1>Key capture</h1>
+  <input id="capture" type="text" placeholder="Focus me">
+  <ul id="log"></ul>
+  <script>
+    document.getElementById("capture").addEventListener("keydown", (e) => {
+      const parts = [];
+      if (e.ctrlKey) parts.push("Control");
+      if (e.shiftKey) parts.push("Shift");
+      if (e.altKey) parts.push("Alt");
+      if (e.metaKey) parts.push("Meta");
+      if (!["Control", "Shift", "Alt", "Meta"].includes(e.key)) {
+        parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+      }
+      if (!parts.length) return;
+      const li = document.createElement("li");
+      li.textContent = parts.join("+");
+      document.getElementById("log").appendChild(li);
+      e.preventDefault();
+    });
+  </script>
+</body>
+</html>

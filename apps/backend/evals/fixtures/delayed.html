@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Delayed Render</title></head>
+<body style="font-family:sans-serif;padding:40px">
+  <h1>Loading area</h1>
+  <p id="placeholder">Content arrives late…</p>
+  <script>
+    setTimeout(() => {
+      const d = document.createElement("div");
+      d.id = "late";
+      d.textContent = "Late content";
+      document.body.appendChild(d);
+    }, 1200);
+  </script>
+</body>
+</html>
