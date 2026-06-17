@@ -216,7 +216,7 @@ function HeroSection({ heroRef, heroInView }) {
             className="text-[16px] leading-relaxed mb-10"
             style={{ color: '#71717a', maxWidth: 420 }}
           >
-            Every hour spent on manual work is an hour your rivals spend on growth. Blinkbox chains your APIs, databases, and AI agents together visually — running silently, 24/7.
+            Blinkbox is a workflow automation platform. Visually connect your apps — Gmail, Google Drive, Calendar, Sheets, and 250+ more — to chain your APIs, databases, and AI agents together, running silently 24/7. <a href="#google-services" className="text-neutral-300 underline hover:text-white transition-colors">See what we do with your Google data</a> or read our <a href="/privacy" className="text-neutral-300 underline hover:text-white transition-colors">Privacy Policy</a>.
           </motion.p>
 
           {/* CTAs */}
