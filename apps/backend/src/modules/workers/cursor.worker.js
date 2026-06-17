@@ -7,7 +7,7 @@
  * Architecture:
  *   - concurrency: 4 (same as old NUM_CONCURRENT)
  *   - stalledInterval: 30s (detects stuck jobs)
- *   - lockDuration: 90s (must exceed NODE_TIMEOUT_MS of 60s)
+ *   - lockDuration: 90s — BullMQ auto-renews while the job runs, so unlimited-time nodes (aiAgent) stay safe
  *   - Failed jobs are moved to dead-letter queue for operator inspection
  */
 
@@ -42,7 +42,7 @@ export async function startCursorWorker() {
       concurrency: NUM_CONCURRENT,
       stalledInterval: 30000,   // Check for stalled jobs every 30s
       maxStalledCount: 2,       // Re-attempt stalled jobs up to 2 times
-      lockDuration: 90000,      // 90s lock per job (exceeds NODE_TIMEOUT_MS of 60s)
+      lockDuration: 90000,      // Auto-renewed by BullMQ while the job runs — does NOT cap node runtime
     },
   );
 

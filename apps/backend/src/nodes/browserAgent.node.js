@@ -125,6 +125,7 @@ async function callLLM(apiKey, provider, model, screenshot, domSnapshot, goal, h
 }
 
 export default {
+  timeoutMs: 600_000,
   async run(config, input, context = {}) {
     const {
       operation = "navigate",

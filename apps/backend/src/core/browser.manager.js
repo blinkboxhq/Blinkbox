@@ -9,7 +9,7 @@
  *   - CONCURRENCY_CONTEXT: Each task gets its own browser context (isolated cookies/storage)
  *   - maxConcurrency: 4 simultaneous pages
  *   - retryLimit: 1 (auto-retry failed tasks once)
- *   - timeout: 60s per task (matches NODE_TIMEOUT_MS)
+ *   - timeout: 10 min per task (matches browserAgent.timeoutMs — long ai_goal runs)
  *   - Stealth plugin defeats basic bot detection
  */
 
@@ -54,7 +54,7 @@ class BrowserClusterManager {
             "--disable-gpu",
           ],
         },
-        timeout: 60000,
+        timeout: 600_000,
         retryLimit: 1,
         monitor: false,
       });

@@ -127,7 +127,7 @@ const DEFAULT_MODELS = {
 
 const MAX_INPUT_BYTES = 30_000;
 const MAX_ITERATIONS_CEILING = 15;
-const REQUEST_TIMEOUT_MS = 120_000;
+const REQUEST_TIMEOUT_MS = 600_000;
 const MAX_TOOL_OUTPUT_BYTES = 15_000;
 const TOOL_TIMEOUT_MS = 30_000;
 const MAX_MEMORY_MESSAGES = 200;
@@ -407,6 +407,8 @@ const REACT_SYSTEM_PROMPT =
 // ═════════════════════════════════════════════════════════════════════════════
 
 const agentNode = {
+  // Unlimited executor timeout — runtime is bounded by MAX_ITERATIONS_CEILING × REQUEST_TIMEOUT_MS
+  timeoutMs: 0,
   async run(config, input, context = {}) {
     const {
       provider: _configProvider = "openai",

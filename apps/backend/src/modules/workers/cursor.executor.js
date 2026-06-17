@@ -17,6 +17,8 @@ import toolRegistry from "../../nodes/agentTools.registry.js";
 import { dispatchErrorTriggers } from "../../infra/error.trigger.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
+// Must stay well under the resumer's STALE_MS (90s) or long-running nodes get re-enqueued mid-flight
+const HEARTBEAT_MS = 30 * 1000;
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
 const MAX_CURSORS_PER_EXECUTION = 500;
@@ -203,6 +205,15 @@ export async function processCursor({ executionId, cursorId }) {
   let dynamicContext = {};
   let resolvedInput = null;
 
+  // Heartbeat keeps lockedAt fresh so the resumer never re-enqueues a live long-running node
+  const nodeHeartbeat = setInterval(() => {
+    Execution.updateOne(
+      { _id: executionId },
+      { $set: { "cursors.$[c].lockedAt": new Date() } },
+      { arrayFilters: [{ "c._id": cursorId, "c.status": "running" }] },
+    ).catch(() => {});
+  }, HEARTBEAT_MS);
+
   try {
     await emitExecutionEvent(execution._id, {
       type: "node_started",
@@ -330,7 +341,8 @@ export async function processCursor({ executionId, cursorId }) {
     // Store what went into this node for diagnostics
     resolvedInput = inputItems[0]?.json || {};
 
-    // KERNEL EXECUTION: Run node with timeout guard
+    // KERNEL EXECUTION: Run node with timeout guard (handler.timeoutMs overrides; 0 = unlimited, heartbeat keeps the cursor alive)
+    const nodeTimeoutMs = handler.timeoutMs !== undefined ? handler.timeoutMs : NODE_TIMEOUT_MS;
     for (let i = 0; i < inputItems.length; i++) {
       const item = inputItems[i];
 
@@ -348,7 +360,7 @@ export async function processCursor({ executionId, cursorId }) {
 
       let rawOutput = await withTimeout(
         handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
-        NODE_TIMEOUT_MS,
+        nodeTimeoutMs,
       );
 
       // Trigger filter signal — null means "ignore this event, stop execution silently"
@@ -385,6 +397,8 @@ export async function processCursor({ executionId, cursorId }) {
   } catch (err) {
     errorClassification = classifyError(err, node.type, node.data);
     executionError = errorClassification.message;
+  } finally {
+    clearInterval(nodeHeartbeat);
   }
 
   // ATOMIC MERGE GATE: Prevent parallel race conditions via Redis
@@ -737,6 +751,7 @@ async function routeEdges(
 
 // ── Timeout wrapper ───────────────────────────────────────────────────────────
 const withTimeout = (promise, ms) => {
+  if (!ms || ms <= 0) return promise;
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(
