@@ -16,6 +16,8 @@ import oauthRoutes from "../modules/credentials/oauth.routes.js";
 import billingRoutes from "../modules/billing/billing.routes.js";
 import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
+import mcpRoutes from "../modules/mcp/mcp.routes.js";
+import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
@@ -119,6 +121,8 @@ app.use("/api/oauth", oauthRoutes);
 app.use("/api/billing", billingRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/keys", apiKeyRoutes);
+app.use("/api/mcp", mcpRoutes);
 app.use("/api/vc", vcRouter);
 app.use("/api/ollama", ollamaRoutes);
 
