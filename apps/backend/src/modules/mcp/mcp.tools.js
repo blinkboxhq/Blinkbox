@@ -85,19 +85,24 @@ function flowToWorkflow(flow, name) {
   };
 }
 
-// ── Raw-API escape hatch guards ───────────────────────────────────────────────
-// The catch-all tool lets the model reach any of Blinkbox's own REST routes the
-// user owns, but never anything that could (a) leave the platform (SSRF), (b)
-// move money or escalate privilege, or (c) leak/forge credentials and keys.
-const RAW_ALLOWED_METHODS = new Set(["GET", "POST", "PATCH", "PUT"]);
+// ── Universal-API guards ──────────────────────────────────────────────────────
+// blinkbox_api gives the connected model full control of Blinkbox: any REST
+// route, any method, run as the user. Three safety layers keep "do anything"
+// from meaning "do anything to anyone":
+//   1. SSRF — only relative same-origin API paths; no external URLs or traversal.
+//   2. Privilege/money — a small block-list of areas the connector must never
+//      touch (auth, admin, oauth, billing, key/connector self-management).
+//   3. Destructive intent — DELETE and other destructive verbs require an
+//      explicit confirm:true, so a vague or injected instruction can't wipe data.
+const ALL_METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE"]);
 
-// Route prefixes the escape hatch must never touch. Destructive deletes go
-// through the named delete_* tools; these prefixes are blocked outright.
-const RAW_BLOCKED_PREFIXES = [
-  "auth",      // login / register / token issuance
+// Areas off-limits to the connector — privilege escalation, real money, or the
+// connector acting on its own auth. Everything else in the app is fully open.
+const BLOCKED_PREFIXES = [
+  "auth",      // login / register / password reset / token issuance
   "admin",     // privileged admin surface (requireAdmin)
-  "oauth",     // OAuth authorize/callback + token exchange
-  "billing",   // payments / subscription mutations
+  "oauth",     // OAuth authorize/callback — token exchange
+  "billing",   // checkout / portal / webhook — moves real money
   "keys",      // minting/revoking MCP API keys (connector self-management)
   "mcp",       // the connector talking to itself
 ];
@@ -113,13 +118,13 @@ function normalizeApiPath(raw) {
   p = p.replace(/^\/?api\//, "/").replace(/^\/+/, "/");
   if (!p.startsWith("/")) p = "/" + p;
   const segment = p.split(/[/?]/).filter(Boolean)[0] || "";
-  if (RAW_BLOCKED_PREFIXES.includes(segment.toLowerCase())) {
+  if (BLOCKED_PREFIXES.includes(segment.toLowerCase())) {
     throw new Error(
-      `The '${segment}' area is off-limits to the connector for safety. ` +
-        `Use the named tools for automations/credentials; auth, admin, billing, oauth and key management are blocked.`,
+      `The '${segment}' area is off-limits to the connector for safety ` +
+        `(auth, admin, billing, oauth and key management are blocked). Everything else is allowed.`,
     );
   }
-  return p;
+  return { path: p, segment };
 }
 
 export const TOOLS = [
@@ -389,28 +394,32 @@ export const TOOLS = [
     },
   },
   {
-    name: "call_blinkbox_api",
+    name: "blinkbox_api",
     description:
-      "Escape hatch: call any Blinkbox REST endpoint the user owns, for actions the named tools above don't cover (e.g. analytics, profile, workspace members, feedback, credential testing). " +
-      "Prefer a named tool when one fits. Pass a relative API path (e.g. '/analytics/summary', '/profile', '/automation/<id>'), an HTTP method, and an optional JSON body. " +
-      "Allowed methods: GET, POST, PATCH, PUT. DELETE is blocked — use delete_automation for deletes. " +
-      "The auth, admin, billing, oauth, keys and mcp areas are off-limits. Everything runs as the user, scoped to their own workspace.",
+      "Full control of Blinkbox: call ANY Blinkbox REST endpoint the user owns, with any HTTP method. Use this for anything the named tools above don't already do — analytics, profile, workspace members/invites, credentials, versions, feedback, duplicating/updating workflows, resuming/retrying/cancelling runs, and more. " +
+      "Discover routes by reading what the app does; pass a relative API path (e.g. '/analytics/overview', '/profile', '/automation/<id>/duplicate'), the HTTP method, and an optional JSON body. " +
+      "Methods: GET, POST, PATCH, PUT, DELETE. Anything destructive (DELETE, or POST/PUT/PATCH to a route that removes/cancels/overwrites) requires confirm:true — set it only when the user clearly asked to delete or replace something. " +
+      "Off-limits for safety: auth, admin, billing, oauth, and API-key/connector management. Everything runs as the user, scoped to their own workspace, through every normal validation.",
     inputSchema: {
       type: "object",
       properties: {
         method: {
           type: "string",
-          enum: ["GET", "POST", "PATCH", "PUT"],
+          enum: ["GET", "POST", "PATCH", "PUT", "DELETE"],
           description: "HTTP method",
         },
         path: {
           type: "string",
-          description: "Relative Blinkbox API path, e.g. '/analytics/summary' or '/automation/<id>'. Never a full URL.",
+          description: "Relative Blinkbox API path, e.g. '/analytics/overview' or '/automation/<id>'. Never a full URL.",
         },
         body: {
           type: "object",
           description: "Optional JSON request body for POST/PATCH/PUT.",
           additionalProperties: true,
+        },
+        confirm: {
+          type: "boolean",
+          description: "Set true to authorize a destructive call (DELETE, or a route that removes/cancels/overwrites). Required for those; ignored otherwise.",
         },
       },
       required: ["method", "path"],
@@ -418,13 +427,21 @@ export const TOOLS = [
     },
     handler: async (args, api) => {
       const method = String(args.method || "").toUpperCase();
-      if (!RAW_ALLOWED_METHODS.has(method)) {
-        if (method === "DELETE") {
-          throw new Error("DELETE is blocked here. Use the delete_automation tool for deletions.");
-        }
-        throw new Error(`Method ${method || "(none)"} is not allowed. Use GET, POST, PATCH or PUT.`);
+      if (!ALL_METHODS.has(method)) {
+        throw new Error(`Method ${method || "(none)"} is not a valid HTTP method.`);
       }
-      const path = normalizeApiPath(args.path);
+      const { path } = normalizeApiPath(args.path);
+
+      // Destructive-intent gate: DELETE is always destructive; mutating verbs are
+      // treated as destructive when the path itself names a removal/overwrite.
+      const destructivePath = /\/(delete|remove|cancel|reset|restore|kill)\b|\/collaborators\/|\/reject\b/i.test(path);
+      const isDestructive = method === "DELETE" || (method !== "GET" && destructivePath);
+      if (isDestructive && args.confirm !== true) {
+        throw new Error(
+          `This is a destructive ${method} on ${path}. Re-call with confirm:true only if the user clearly wants to delete/replace/cancel this.`,
+        );
+      }
+
       const hasBody = method !== "GET" && args.body && typeof args.body === "object";
       const res = await api.request({
         method,
