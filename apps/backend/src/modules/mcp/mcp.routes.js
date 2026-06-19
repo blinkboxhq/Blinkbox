@@ -30,11 +30,21 @@ async function postHandler(req, res) {
 }
 
 function getHandler(req, res) {
-  // This server is stateless request/response — it never opens a server→client stream.
+  // Streamable-HTTP clients (ChatGPT/Claude connectors) validate the endpoint by
+  // opening a GET with `Accept: text/event-stream` and expecting an SSE stream.
+  // We carry no server→client messages, so we hold an idle keep-alive stream:
+  // this satisfies the handshake while all JSON-RPC still rides over POST.
   if ((req.headers.accept || "").includes("text/event-stream")) {
-    return res
-      .status(405)
-      .json({ error: "This MCP server uses request/response. POST JSON-RPC to this URL." });
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    res.write(": connected\n\n");
+    const keepAlive = setInterval(() => res.write(": ping\n\n"), 25000);
+    req.on("close", () => clearInterval(keepAlive));
+    return;
   }
   res.json(SERVER_INFO);
 }
