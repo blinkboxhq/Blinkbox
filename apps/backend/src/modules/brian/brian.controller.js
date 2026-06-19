@@ -780,17 +780,22 @@ export async function brianChatStream(req, res) {
     return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
   }
 
+  // Carries the actual upstream cause so a total failure reports which provider
+  // broke and why, instead of the opaque "AI provider error" that hid it before.
+  let streamLastError = null;
+
   if (ANTHROPIC_API_KEY) {
     try {
       return await callAnthropicStream(ANTHROPIC_API_KEY, messages, canvasNodes, canvasEdges, credContext, res);
     } catch (err) {
       const s = err.status || err.response?.status;
       console.warn("[Brian/stream] Anthropic failed:", s, err.message);
+      streamLastError = { provider: "Anthropic", status: s, message: err.message };
       if (s === 401 || s === 403) {
         return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
       }
       if (!GROQ_API_KEY && !GOOGLE_AI_KEY) {
-        return res.status(500).json({ message: "AI provider error. Please try again." });
+        return res.status(502).json({ message: `Anthropic error${s ? ` (${s})` : ""}: ${err.message}` });
       }
     }
   }
@@ -820,7 +825,10 @@ export async function brianChatStream(req, res) {
     ];
     try {
       const raw     = await callGroq(GROQ_API_KEY, GROQ_MODEL, payload)
-                        .catch(() => callGroq(GROQ_API_KEY, GROQ_FAST, payload));
+                        .catch((primary) => {
+                          console.warn("[Brian/stream] Groq primary model failed:", primary.response?.status, primary.message);
+                          return callGroq(GROQ_API_KEY, GROQ_FAST, payload);
+                        });
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch {
@@ -832,9 +840,11 @@ export async function brianChatStream(req, res) {
       sendEvent({ type: "done" });
       return res.end();
     } catch (err) {
-      console.warn("[Brian/stream] Groq failed:", err.response?.status, err.message);
+      const status = err.response?.status;
+      console.warn("[Brian/stream] Groq failed:", status, err.message);
+      streamLastError = { provider: "Groq", status, message: err.message };
       if (!GOOGLE_AI_KEY) {
-        sendEvent({ type: "error", message: "AI provider error. Please try again." });
+        sendEvent({ type: "error", message: `Groq error${status ? ` (${status})` : ""}: ${err.message}` });
         return res.end();
       }
     }
@@ -855,10 +865,15 @@ export async function brianChatStream(req, res) {
       return res.end();
     } catch (err) {
       console.error("[Brian/stream] all providers failed:", err.message);
-      sendEvent({ type: "error", message: "AI provider error. Please try again." });
-      return res.end();
+      streamLastError = { provider: "Gemini", status: err.status, message: err.message };
     }
   }
+
+  const streamDetail = streamLastError
+    ? `${streamLastError.provider} error${streamLastError.status ? ` (${streamLastError.status})` : ""}: ${streamLastError.message}`
+    : "No AI provider produced a response.";
+  sendEvent({ type: "error", message: streamDetail });
+  return res.end();
 }
 
 // ── Non-streaming route handler (kept for compatibility) ──────────────────────
@@ -900,14 +915,21 @@ export async function brianChat(req, res) {
     return res.status(503).json({ message: "Set ANTHROPIC_API_KEY in Railway to activate Brian." });
   }
 
+  // Carries the actual upstream cause so a total failure reports which provider
+  // broke and why, instead of the opaque "AI provider error" that hid it before.
+  let lastError = null;
+
   if (ANTHROPIC_API_KEY) {
     try {
       return res.json(await callAnthropic(ANTHROPIC_API_KEY, messages, canvasNodes, canvasEdges, credContext));
     } catch (err) {
       const status = err.status || err.response?.status;
       console.warn("[Brian] Anthropic failed:", status, err.message);
+      lastError = { provider: "Anthropic", status, message: err.message };
       if (status === 401 || status === 403) return res.status(503).json({ message: "ANTHROPIC_API_KEY is invalid." });
-      if (!GROQ_API_KEY && !GOOGLE_AI_KEY) return res.status(500).json({ message: "AI provider error. Please try again." });
+      if (!GROQ_API_KEY && !GOOGLE_AI_KEY) {
+        return res.status(502).json({ message: `Anthropic error${status ? ` (${status})` : ""}: ${err.message}` });
+      }
     }
   }
 
@@ -929,14 +951,21 @@ export async function brianChat(req, res) {
     ];
     try {
       const raw     = await callGroq(GROQ_API_KEY, GROQ_MODEL, payload)
-                        .catch(() => callGroq(GROQ_API_KEY, GROQ_FAST, payload));
+                        .catch((primary) => {
+                          console.warn("[Brian] Groq primary model failed:", primary.response?.status, primary.message);
+                          return callGroq(GROQ_API_KEY, GROQ_FAST, payload);
+                        });
       const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch { return res.json({ text: raw, flow: null }); }
       return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
     } catch (err) {
-      console.warn("[Brian] Groq failed:", err.response?.status, err.message);
-      if (!GOOGLE_AI_KEY) return res.status(500).json({ message: "AI provider error. Please try again." });
+      const status = err.response?.status;
+      console.warn("[Brian] Groq failed:", status, err.message);
+      lastError = { provider: "Groq", status, message: err.message };
+      if (!GOOGLE_AI_KEY) {
+        return res.status(502).json({ message: `Groq error${status ? ` (${status})` : ""}: ${err.message}` });
+      }
     }
   }
 
@@ -949,7 +978,12 @@ export async function brianChat(req, res) {
       return res.json({ text: parsed.text || "", flow: normalizeFlow(parsed, userText) });
     } catch (err) {
       console.error("[Brian] all providers failed:", err.message);
-      return res.status(500).json({ message: "AI provider error. Please try again." });
+      lastError = { provider: "Gemini", status: err.status, message: err.message };
     }
   }
+
+  const detail = lastError
+    ? `${lastError.provider} error${lastError.status ? ` (${lastError.status})` : ""}: ${lastError.message}`
+    : "No AI provider produced a response.";
+  return res.status(502).json({ message: detail });
 }
