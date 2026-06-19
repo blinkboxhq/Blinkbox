@@ -85,6 +85,43 @@ function flowToWorkflow(flow, name) {
   };
 }
 
+// ── Raw-API escape hatch guards ───────────────────────────────────────────────
+// The catch-all tool lets the model reach any of Blinkbox's own REST routes the
+// user owns, but never anything that could (a) leave the platform (SSRF), (b)
+// move money or escalate privilege, or (c) leak/forge credentials and keys.
+const RAW_ALLOWED_METHODS = new Set(["GET", "POST", "PATCH", "PUT"]);
+
+// Route prefixes the escape hatch must never touch. Destructive deletes go
+// through the named delete_* tools; these prefixes are blocked outright.
+const RAW_BLOCKED_PREFIXES = [
+  "auth",      // login / register / token issuance
+  "admin",     // privileged admin surface (requireAdmin)
+  "oauth",     // OAuth authorize/callback + token exchange
+  "billing",   // payments / subscription mutations
+  "keys",      // minting/revoking MCP API keys (connector self-management)
+  "mcp",       // the connector talking to itself
+];
+
+function normalizeApiPath(raw) {
+  if (!raw || typeof raw !== "string") throw new Error("path is required.");
+  let p = raw.trim();
+  // Reject anything that isn't a same-origin relative API path — closes SSRF.
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(p) || p.startsWith("//")) {
+    throw new Error("path must be a relative Blinkbox API path like '/automation', not a full URL.");
+  }
+  if (p.includes("..")) throw new Error("path traversal is not allowed.");
+  p = p.replace(/^\/?api\//, "/").replace(/^\/+/, "/");
+  if (!p.startsWith("/")) p = "/" + p;
+  const segment = p.split(/[/?]/).filter(Boolean)[0] || "";
+  if (RAW_BLOCKED_PREFIXES.includes(segment.toLowerCase())) {
+    throw new Error(
+      `The '${segment}' area is off-limits to the connector for safety. ` +
+        `Use the named tools for automations/credentials; auth, admin, billing, oauth and key management are blocked.`,
+    );
+  }
+  return p;
+}
+
 export const TOOLS = [
   {
     name: "list_automations",
@@ -349,6 +386,55 @@ export const TOOLS = [
             : `\n⚠️ Created but couldn't activate yet: ${act.data?.message || act.data?.error || "validation failed"}. Open it in the builder to finish setup.`;
       }
       return out;
+    },
+  },
+  {
+    name: "call_blinkbox_api",
+    description:
+      "Escape hatch: call any Blinkbox REST endpoint the user owns, for actions the named tools above don't cover (e.g. analytics, profile, workspace members, feedback, credential testing). " +
+      "Prefer a named tool when one fits. Pass a relative API path (e.g. '/analytics/summary', '/profile', '/automation/<id>'), an HTTP method, and an optional JSON body. " +
+      "Allowed methods: GET, POST, PATCH, PUT. DELETE is blocked — use delete_automation for deletes. " +
+      "The auth, admin, billing, oauth, keys and mcp areas are off-limits. Everything runs as the user, scoped to their own workspace.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        method: {
+          type: "string",
+          enum: ["GET", "POST", "PATCH", "PUT"],
+          description: "HTTP method",
+        },
+        path: {
+          type: "string",
+          description: "Relative Blinkbox API path, e.g. '/analytics/summary' or '/automation/<id>'. Never a full URL.",
+        },
+        body: {
+          type: "object",
+          description: "Optional JSON request body for POST/PATCH/PUT.",
+          additionalProperties: true,
+        },
+      },
+      required: ["method", "path"],
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      const method = String(args.method || "").toUpperCase();
+      if (!RAW_ALLOWED_METHODS.has(method)) {
+        if (method === "DELETE") {
+          throw new Error("DELETE is blocked here. Use the delete_automation tool for deletions.");
+        }
+        throw new Error(`Method ${method || "(none)"} is not allowed. Use GET, POST, PATCH or PUT.`);
+      }
+      const path = normalizeApiPath(args.path);
+      const hasBody = method !== "GET" && args.body && typeof args.body === "object";
+      const res = await api.request({
+        method,
+        url: path,
+        data: hasBody ? args.body : undefined,
+      });
+      const data = pick(res);
+      const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      // Keep responses bounded so a huge list can't blow the model's context.
+      return text.length > 12000 ? text.slice(0, 12000) + "\n…(truncated)" : text;
     },
   },
 ];
