@@ -31,7 +31,16 @@ app.use(helmet({
   contentSecurityPolicy: false, // API-only; no HTML served here
   crossOriginEmbedderPolicy: false,
 }));
-app.use(compression());
+app.use(
+  compression({
+    // Never compress the MCP endpoint — its SSE responses must stream unbuffered,
+    // and gzip buffering is a classic cause of connectors hanging on "connecting".
+    filter: (req, res) => {
+      if (req.path.startsWith("/api/mcp")) return false;
+      return compression.filter(req, res);
+    },
+  }),
+);
 
 // 1. Clean up the origins array to destroy hidden spaces, quotes, and slashes
 const rawOrigins =
