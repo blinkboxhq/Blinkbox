@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles, Plug } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
@@ -9,6 +9,7 @@ const NAV_TOP = [
   { key: 'analytics', icon: BarChart2, label: 'Analytics' },
   { key: 'logs',      icon: Activity, label: 'History' },
   { key: 'vault',     icon: Key,      label: 'Credentials' },
+  { key: 'mcp',       icon: Plug,     label: 'Connect to Chat' },
 ];
 
 const NAV_BOTTOM = [

@@ -21,6 +21,7 @@ import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
 import NodeLibrary from './components/NodeLibrary';
 import Settings from './components/Settings';
+import ConnectMCP from './components/ConnectMCP';
 
 const TRIGGER_META = {
   manual:           { label: 'Manual',       Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
@@ -394,6 +395,13 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+        {activeTab === 'mcp' && (
+          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[1000px] mx-auto">
+              <ConnectMCP />
+            </div>
           </div>
         )}
         {activeTab === 'settings' && (
