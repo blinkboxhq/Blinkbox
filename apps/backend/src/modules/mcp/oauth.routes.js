@@ -59,11 +59,16 @@ function sha256base64url(input) {
 }
 
 // ── RFC 9728: Protected Resource Metadata ─────────────────────────────────────
-// Claude probes this (root and path-suffixed forms) to discover the auth server.
+// Claude probes this after a 401 on the MCP endpoint, at the path-suffixed form
+// /.well-known/oauth-protected-resource/api/mcp/<key>. The suffix IS the MCP
+// path, so we echo it back as the `resource` — that carries the key forward into
+// /oauth/authorize, which is the only place the key survives the OAuth dance.
 function protectedResourceMetadata(req, res) {
   const base = baseUrl(req);
+  const suffix = req.path.replace(/^\/\.well-known\/oauth-protected-resource/, "");
+  const resource = suffix && suffix !== "/" ? `${base}${suffix}` : base;
   res.json({
-    resource: base,
+    resource,
     authorization_servers: [base],
     bearer_methods_supported: ["header"],
   });
