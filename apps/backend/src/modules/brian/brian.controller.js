@@ -642,7 +642,7 @@ async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [
   const lastMsg  = messages[messages.length - 1];
   const userText = String(lastMsg?.content || lastMsg?.text || "").trim();
 
-  const response = await client.messages.create({
+  const stream = client.messages.stream({
     model:       ANTHROPIC_MODEL,
     max_tokens:  32000,
     system:      buildSystemPrompt(canvasNodes, canvasEdges, credContext),
@@ -650,6 +650,7 @@ async function callAnthropic(apiKey, messages, canvasNodes = [], canvasEdges = [
     tools:       [WORKFLOW_TOOL, ASK_USER_TOOL],
     tool_choice: { type: "auto" },
   });
+  const response = await stream.finalMessage();
 
   const thinkingBlock = response.content.find(b => b.type === "thinking");
   const thinking      = thinkingBlock?.thinking || null;
