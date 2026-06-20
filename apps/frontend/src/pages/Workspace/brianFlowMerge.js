@@ -164,24 +164,51 @@ export function mergeBrianFlow(existingNodes = [], existingEdges = [], flow = {}
     } : incoming);
   }
 
-  const edgeMap = new Map();
-  const idMap = new Map();
-  for (const edge of existingEdges || []) {
-    edgeMap.set(brianEdgeKey(edge), edge);
-    if (edge.id) idMap.set(edge.id, brianEdgeKey(edge));
-  }
-  for (const edge of repairedFlow.edges || []) {
-    const key = brianEdgeKey(edge);
-    const oldKey = edge.id ? idMap.get(edge.id) : null;
-    if (oldKey) edgeMap.delete(oldKey);
-    edgeMap.set(key, edge);
-    if (edge.id) idMap.set(edge.id, key);
+  // Collapse to a single trigger after merging. Merging by id alone lets a
+  // canvas trigger and an incoming trigger with a different id both survive,
+  // which is how stray/manual triggers pile up. Keep the first real trigger
+  // (or the first trigger if none are real) and drop the rest, remapping any
+  // edges off the dropped triggers onto the survivor.
+  let mergedNodes = Array.from(nodeMap.values());
+  const isManualBt = (n) => (backendType(n) || "manual") === "manual";
+  const triggers = mergedNodes.filter(isTrigger);
+  const triggerRemap = new Map();
+  if (triggers.length > 1) {
+    const keep = triggers.find((n) => !isManualBt(n)) || triggers[0];
+    for (const t of triggers) if (t.id !== keep.id) triggerRemap.set(t.id, keep.id);
+    mergedNodes = mergedNodes.filter((n) => !triggerRemap.has(n.id));
   }
 
-  return {
-    nodes: Array.from(nodeMap.values()),
-    edges: Array.from(edgeMap.values()),
+  const edgeMap = new Map();
+  const idMap = new Map();
+  const remapEdge = (edge) => {
+    if (!triggerRemap.size) return edge;
+    const source = triggerRemap.get(edge.source);
+    const target = triggerRemap.get(edge.target);
+    if (!source && !target) return edge;
+    return { ...edge, source: source || edge.source, target: target || edge.target };
   };
+  for (const edge of existingEdges || []) {
+    const e = remapEdge(edge);
+    edgeMap.set(brianEdgeKey(e), e);
+    if (e.id) idMap.set(e.id, brianEdgeKey(e));
+  }
+  for (const edge of repairedFlow.edges || []) {
+    const e = remapEdge(edge);
+    const key = brianEdgeKey(e);
+    const oldKey = e.id ? idMap.get(e.id) : null;
+    if (oldKey) edgeMap.delete(oldKey);
+    edgeMap.set(key, e);
+    if (e.id) idMap.set(e.id, key);
+  }
+
+  // A trigger may never be an edge target; drop any self-loops created by remap.
+  const keptIds = new Set(mergedNodes.map((n) => n.id));
+  const edges = Array.from(edgeMap.values()).filter(
+    (e) => e.source !== e.target && keptIds.has(e.source) && keptIds.has(e.target),
+  );
+
+  return { nodes: mergedNodes, edges };
 }
 
 export { visualRepairBrianFlow };

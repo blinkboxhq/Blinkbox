@@ -223,10 +223,22 @@ export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
   ({ nodes, edges } = upgradeLinearServicesToAgent(nodes, edges, userText));
 
   const hasAiAgent = nodes.some((n) => n.backendType === "ai_agent");
-  const hasRealTrigger = nodes.some((n) => n.backendType && n.backendType !== "manual" && TRIGGER_BT.has(n.backendType));
+  const isTriggerNode = (n) => TRIGGER_BT.has(n.backendType || "") || n.nodeType === "trigger";
+  const isManual = (n) => (n.backendType || "manual") === "manual";
+
+  // Keep at most ONE trigger, and prefer a real trigger over a bare `manual`.
+  // Without this, an LLM that prepends a `manual` trigger to every flow (against
+  // the system prompt) leaves stray manual triggers that pile up on the canvas.
+  const realTrigger = nodes.find((n) => isTriggerNode(n) && !isManual(n));
+  let triggerKept = false;
   const sanitizedNodes = nodes.filter((n) => {
-    if (n.backendType === "manual" && hasAiAgent) return false;
-    if (n.backendType === "manual" && hasRealTrigger) return false;
+    if (!isTriggerNode(n)) return true;
+    // Drop every manual trigger when a real trigger or an AI agent is present —
+    // the agent flow injects its own chat_trigger below.
+    if (isManual(n) && (realTrigger || hasAiAgent)) return false;
+    // Collapse duplicate triggers down to the first survivor.
+    if (triggerKept) return false;
+    triggerKept = true;
     return true;
   });
 
