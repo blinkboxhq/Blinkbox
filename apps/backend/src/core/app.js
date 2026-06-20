@@ -17,6 +17,7 @@ import billingRoutes from "../modules/billing/billing.routes.js";
 import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
 import mcpRoutes from "../modules/mcp/mcp.routes.js";
+import mcpOauthRoutes from "../modules/mcp/oauth.routes.js";
 import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
@@ -65,6 +66,23 @@ const mcpCors = cors({
 });
 app.use("/api/mcp", mcpCors);
 app.options(/^\/api\/mcp(\/.*)?$/, mcpCors);
+
+// The OAuth discovery + flow endpoints (served at root) are fetched by the same
+// browser connectors, so they need the same permissive CORS.
+const MCP_OAUTH_PATH_RE = /^\/(\.well-known\/(oauth-|openid-)|oauth\/)/;
+app.use((req, res, next) => {
+  if (MCP_OAUTH_PATH_RE.test(req.path)) return mcpCors(req, res, next);
+  next();
+});
+app.options(/^\/oauth\/.*/, mcpCors);
+
+// Body parser for the OAuth token/register endpoints, which arrive as JSON or
+// application/x-www-form-urlencoded. Mounted here so they parse before the
+// global parsers (and before the strict app CORS) — the OAuth router itself is
+// mounted after parsing is configured, just below.
+app.use(MCP_OAUTH_PATH_RE, express.json({ limit: "64kb" }));
+app.use(MCP_OAUTH_PATH_RE, express.urlencoded({ extended: true, limit: "64kb" }));
+app.use("/", mcpOauthRoutes);
 
 // 1. Clean up the origins array to destroy hidden spaces, quotes, and slashes
 const rawOrigins =
