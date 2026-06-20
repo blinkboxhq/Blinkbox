@@ -42,6 +42,30 @@ app.use(
   }),
 );
 
+// ── MCP CORS ──────────────────────────────────────────────────────────────────
+// Chat connectors (Claude, ChatGPT) add a server from the browser, so the
+// preflight + request carry an Origin of claude.ai / openai.com that the strict
+// app CORS below would reject — the connector then shows "Couldn't connect to
+// the server." This layer is scoped to /api/mcp only: it reflects known chat
+// origins, exposes the Streamable-HTTP session header so the browser SDK can
+// read it, and allows the MCP protocol-version + auth headers on preflight.
+const MCP_ORIGIN_RE =
+  /^https:\/\/([a-z0-9-]+\.)*(claude\.ai|claude\.com|anthropic\.com|chatgpt\.com|openai\.com|chat\.com|x\.ai|grok\.com)$/i;
+
+const mcpCors = cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    callback(null, MCP_ORIGIN_RE.test(origin.trim().replace(/\/$/, "")));
+  },
+  methods: ["GET", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Mcp-Session-Id", "MCP-Protocol-Version", "Accept"],
+  exposedHeaders: ["Mcp-Session-Id"],
+  credentials: true,
+  maxAge: 86400,
+});
+app.use("/api/mcp", mcpCors);
+app.options(/^\/api\/mcp(\/.*)?$/, mcpCors);
+
 // 1. Clean up the origins array to destroy hidden spaces, quotes, and slashes
 const rawOrigins =
   process.env.CORS_ORIGINS ||
