@@ -6,12 +6,10 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { OAuth2Client } from "google-auth-library";
-import { JWT_SECRET, GOOGLE_CLIENT_ID } from "../../config/env.js";
+import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
 import { hashApiKey } from "./apiKey.middleware.js";
-
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 /**
  * Interactive OAuth for chat connectors (Claude.ai web, ChatGPT, etc).
@@ -170,39 +168,20 @@ function consentPage({ params, error, googleClientId }) {
   const errBanner = error
     ? `<div class="err">${alertIcon}<span>${esc(error)}</span></div>`
     : "";
-  const gParams = ["redirect_uri", "state", "code_challenge", "code_challenge_method", "client_id", "scope", "resource"]
-    .map((k) => `<input type="hidden" name="${k}" value="${esc(params[k])}" />`)
-    .join("");
+  // Redirect-based Google flow (no iframes): a plain link to /oauth/google/start
+  // carries the MCP OAuth params as query, then bounces to accounts.google.com.
+  // GIS's button/transform iframes are blocked inside Claude's OAuth popup, so an
+  // anchor + full-page navigation is the only thing that survives there.
+  const gStart = new URLSearchParams();
+  ["redirect_uri", "state", "code_challenge", "code_challenge_method"].forEach((k) => {
+    if (params[k] != null && params[k] !== "") gStart.set(k, String(params[k]));
+  });
+  const googleLogo = `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.85 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.67-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.67 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>`;
   const googleBlock = googleClientId
     ? `<div class="div"><span>or</span></div>
-    <form method="POST" action="/oauth/authorize/google" id="gform">
-      ${gParams}
-      <input type="hidden" name="credential" id="gcred" />
-    </form>
-    <div id="gbtn"></div>`
+    <a class="gbtn" href="/oauth/google/start?${esc(gStart.toString())}">${googleLogo}<span>Continue with Google</span></a>`
     : `<div class="div"><span>Scoped &amp; revocable</span></div>`;
-  // Programmatic init instead of the g_id_onload auto-render: the HTML auto-scan
-  // spins up a /gsi/transform iframe that hangs inside Claude's OAuth popup. We
-  // initialize + renderButton manually once the (async) GSI script is loaded,
-  // and disable FedCM prompts so nothing tries to display outside the button.
-  const googleScript = googleClientId
-    ? `<script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>
-    function bbGoogle(r){document.getElementById('gcred').value=r.credential;document.getElementById('gform').submit();}
-    (function(){
-      var tries=0;
-      function go(){
-        if(window.google&&google.accounts&&google.accounts.id){
-          google.accounts.id.initialize({client_id:'${esc(googleClientId)}',callback:bbGoogle,use_fedcm_for_prompt:false,auto_select:false});
-          google.accounts.id.renderButton(document.getElementById('gbtn'),{type:'standard',theme:'filled_black',text:'continue_with',shape:'rectangular',size:'large',logo_alignment:'center',width:332});
-          return;
-        }
-        if(tries++<100)setTimeout(go,50);
-      }
-      go();
-    })();
-  </script>`
-    : "";
+  const googleScript = "";
   const mailIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
   const lockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   const arrowIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
@@ -242,7 +221,9 @@ function consentPage({ params, error, googleClientId }) {
   .div { position: relative; margin: 20px 0; text-align: center; }
   .div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid #171717; }
   .div span { position: relative; background: #000; padding: 0 12px; font-size: 11px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
-  #gbtn { display: flex; justify-content: center; color-scheme: light; min-height: 44px; }
+  .gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #131314; border: 1px solid #2e2e2e; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; color: #e3e3e3; text-decoration: none; transition: background 0.2s, border-color 0.2s; }
+  .gbtn:hover { background: #1c1c1d; border-color: #404040; }
+  .gbtn svg { flex-shrink: 0; }
   .foot { font-size: 11px; color: #2e2e2e; text-align: center; margin-top: 28px; line-height: 1.6; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes slideSwitch { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
@@ -362,29 +343,87 @@ async function issueCodeAndRedirect(res, user, params, onError) {
   return res.redirect(302, u.toString());
 }
 
-// ── Authorize via Google (POST) — verify GIS credential, mint key, issue code ──
-router.post("/oauth/authorize/google", async (req, res) => {
-  const body = req.body || {};
-  const { redirect_uri, state, code_challenge, code_challenge_method, credential } = body;
+// The redirect URI Google bounces back to — must be registered in the Google
+// Cloud Console for this client. Derived from the public host so prod and any
+// preview env each resolve to their own callback.
+function googleRedirectUri(req) {
+  return `${baseUrl(req)}/oauth/google/callback`;
+}
 
+// ── Google sign-in: start (GET) — full-page redirect to Google ────────────────
+// No iframes: GIS's button/transform iframes are blocked in Claude's popup, so
+// we send the browser straight to accounts.google.com. The MCP OAuth params ride
+// through Google's own `state`, signed so the callback can trust them.
+router.get("/oauth/google/start", (req, res) => {
+  const { redirect_uri, state, code_challenge, code_challenge_method } = req.query;
   if (!redirect_uri) {
     return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
   }
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    res.set("Content-Type", "text/html; charset=utf-8");
+    return res.status(503).send(
+      consentPage({
+        params: req.query,
+        error: "Google sign-in isn't configured. Use your email and password.",
+        googleClientId: null,
+      }),
+    );
+  }
+
+  const gState = jwt.sign(
+    {
+      ru: String(redirect_uri),
+      st: state ? String(state) : null,
+      cc: code_challenge ? String(code_challenge) : null,
+      ccm: code_challenge_method ? String(code_challenge_method) : null,
+      t: "mcp_google_state",
+    },
+    JWT_SECRET,
+    { expiresIn: "10m" },
+  );
+
+  const client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, googleRedirectUri(req));
+  const url = client.generateAuthUrl({
+    access_type: "online",
+    prompt: "select_account",
+    scope: ["openid", "email", "profile"],
+    state: gState,
+  });
+  return res.redirect(302, url);
+});
+
+// ── Google sign-in: callback (GET) — exchange code, mint key, issue MCP code ──
+router.get("/oauth/google/callback", async (req, res) => {
+  const { code, state: gState, error: gError } = req.query;
+
+  // Decode the signed state to recover the original MCP OAuth params first, so a
+  // failure can re-render the consent page instead of dead-ending.
+  let st;
+  try {
+    st = jwt.verify(String(gState || ""), JWT_SECRET);
+    if (st.t !== "mcp_google_state") throw new Error("bad state");
+  } catch {
+    return res.status(400).json({ error: "invalid_request", error_description: "Google sign-in expired. Start again." });
+  }
+  const params = { redirect_uri: st.ru, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm };
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.status(401).send(consentPage({ params: body, error, googleClientId: GOOGLE_CLIENT_ID }));
+    res.status(401).send(consentPage({ params, error, googleClientId: GOOGLE_CLIENT_ID }));
   };
 
-  if (!GOOGLE_CLIENT_ID) {
+  if (gError) return reRender("Google sign-in was cancelled. Try again or use your email and password.");
+  if (!code) return reRender("Google sign-in failed. Please try again.");
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return reRender("Google sign-in isn't configured. Use your email and password.");
   }
-  if (!credential) {
-    return reRender("Google sign-in failed. Please try again.");
-  }
 
+  // Exchange the code server-side (uses the client secret — never leaves here)
+  // and verify the returned id_token.
   let payload;
   try {
-    const ticket = await googleClient.verifyIdToken({ idToken: String(credential), audience: GOOGLE_CLIENT_ID });
+    const client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, googleRedirectUri(req));
+    const { tokens } = await client.getToken(String(code));
+    const ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: GOOGLE_CLIENT_ID });
     payload = ticket.getPayload();
   } catch {
     return reRender("Could not verify your Google identity. Please try again.");
@@ -426,7 +465,7 @@ router.post("/oauth/authorize/google", async (req, res) => {
     }
   }
 
-  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method }, reRender);
+  return issueCodeAndRedirect(res, user, params, reRender);
 });
 
 // ── Token ─────────────────────────────────────────────────────────────────────
