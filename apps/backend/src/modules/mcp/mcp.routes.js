@@ -45,19 +45,39 @@ function buildServer(userId) {
   return server;
 }
 
+// In-memory ring of the last 30 /api/mcp requests so we can inspect what each
+// chat client actually sends without relying on the platform log view. Read it
+// at GET /api/mcp-debug/recent. Temporary — remove once the Claude 405 is fixed.
+const RECENT = [];
+function record(entry) {
+  RECENT.push(entry);
+  if (RECENT.length > 30) RECENT.shift();
+}
+export function recentMcpRequests() {
+  return RECENT.slice().reverse();
+}
+
 // Stateless Streamable-HTTP: one transport per request, no session store. Strict
 // connectors (ChatGPT/Claude) get correct SSE framing; lenient ones get JSON —
 // the transport decides from the request's Accept header.
 async function handle(req, res) {
-  console.error("[mcp transport] IN", {
+  const ua = String(req.headers["user-agent"] || "");
+  const client = /node|claude|anthropic/i.test(ua) ? "claude?" : /openai|chatgpt|python/i.test(ua) ? "chatgpt?" : ua.slice(0, 40);
+  const entry = {
+    at: new Date().toISOString(),
     method: req.method,
-    accept: req.headers["accept"],
-    ct: req.headers["content-type"],
+    path: req.originalUrl,
+    accept: req.headers["accept"] || null,
     sid: req.headers["mcp-session-id"] || null,
     proto: req.headers["mcp-protocol-version"] || null,
-    body: req.method === "POST" ? req.body?.method || "(no .method)" : undefined,
+    client,
+    rpc: req.method === "POST" ? req.body?.method || null : null,
+    status: null,
+  };
+  res.on("finish", () => {
+    entry.status = res.statusCode;
   });
-  res.on("finish", () => console.error("[mcp transport] OUT", { method: req.method, status: res.statusCode }));
+  record(entry);
   const server = buildServer(req.user.id);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on("close", () => {
@@ -85,6 +105,13 @@ async function handle(req, res) {
 // messages. That stream sitting open with no events is correct, not a hang —
 // answering the GET with 405 makes Claude's relay treat the server as dead and
 // show "Couldn't connect." So GET goes to the SDK transport like POST/DELETE.
+// Temporary, unauthenticated read of the recent-request ring (no secrets in it).
+// Lets us see exactly what method/status each chat client got, bypassing the
+// platform log view. Remove once the Claude 405 is diagnosed.
+router.get("/_recent", (_req, res) => {
+  res.json({ count: RECENT.length, requests: recentMcpRequests() });
+});
+
 router.post("/", verifyMcpAuth, handle);
 router.post("/:token", verifyMcpAuth, handle);
 router.get("/", verifyMcpAuth, handle);
