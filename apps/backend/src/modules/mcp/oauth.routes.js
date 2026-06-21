@@ -179,12 +179,29 @@ function consentPage({ params, error, googleClientId }) {
       ${gParams}
       <input type="hidden" name="credential" id="gcred" />
     </form>
-    <div id="g_id_onload" data-client_id="${esc(googleClientId)}" data-callback="bbGoogle" data-auto_prompt="false"></div>
-    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-shape="rectangular" data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="332"></div>`
+    <div id="gbtn"></div>`
     : `<div class="div"><span>Scoped &amp; revocable</span></div>`;
+  // Programmatic init instead of the g_id_onload auto-render: the HTML auto-scan
+  // spins up a /gsi/transform iframe that hangs inside Claude's OAuth popup. We
+  // initialize + renderButton manually once the (async) GSI script is loaded,
+  // and disable FedCM prompts so nothing tries to display outside the button.
   const googleScript = googleClientId
     ? `<script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>function bbGoogle(r){document.getElementById('gcred').value=r.credential;document.getElementById('gform').submit();}</script>`
+  <script>
+    function bbGoogle(r){document.getElementById('gcred').value=r.credential;document.getElementById('gform').submit();}
+    (function(){
+      var tries=0;
+      function go(){
+        if(window.google&&google.accounts&&google.accounts.id){
+          google.accounts.id.initialize({client_id:'${esc(googleClientId)}',callback:bbGoogle,use_fedcm_for_prompt:false,auto_select:false});
+          google.accounts.id.renderButton(document.getElementById('gbtn'),{type:'standard',theme:'filled_black',text:'continue_with',shape:'rectangular',size:'large',logo_alignment:'center',width:332});
+          return;
+        }
+        if(tries++<100)setTimeout(go,50);
+      }
+      go();
+    })();
+  </script>`
     : "";
   const mailIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
   const lockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
@@ -225,7 +242,7 @@ function consentPage({ params, error, googleClientId }) {
   .div { position: relative; margin: 20px 0; text-align: center; }
   .div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid #171717; }
   .div span { position: relative; background: #000; padding: 0 12px; font-size: 11px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
-  .g_id_signin { display: flex; justify-content: center; color-scheme: light; }
+  #gbtn { display: flex; justify-content: center; color-scheme: light; min-height: 44px; }
   .foot { font-size: 11px; color: #2e2e2e; text-align: center; margin-top: 28px; line-height: 1.6; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes slideSwitch { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
