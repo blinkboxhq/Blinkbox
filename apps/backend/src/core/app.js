@@ -151,6 +151,7 @@ app.get("/health", async (_req, res) => {
   res.status(healthy ? 200 : 503).json({
     status: healthy ? "ok" : "degraded",
     uptime: Math.floor(process.uptime()),
+    commit: (process.env.RAILWAY_GIT_COMMIT_SHA || "unknown").slice(0, 7),
     ...checks,
   });
 });
