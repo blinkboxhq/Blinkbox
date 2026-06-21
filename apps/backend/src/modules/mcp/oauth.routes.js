@@ -317,8 +317,9 @@ async function issueCodeAndRedirect(res, user, params, onError) {
   let rawKey;
   try {
     rawKey = await mintKeyForUser(user._id, `Claude connector — ${today}`);
-  } catch {
-    return onError("Could not create a connection key. Please try again.");
+  } catch (e) {
+    console.error("[mcp issueCode] mint key failed:", e?.message || e);
+    return onError(`Could not create a connection key. (debug: ${e?.message || "unknown"})`);
   }
 
   const code = jwt.sign(
@@ -425,8 +426,10 @@ router.get("/oauth/google/callback", async (req, res) => {
     const { tokens } = await client.getToken(String(code));
     const ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: GOOGLE_CLIENT_ID });
     payload = ticket.getPayload();
-  } catch {
-    return reRender("Could not verify your Google identity. Please try again.");
+  } catch (e) {
+    console.error("[mcp google callback] verify failed:", e?.response?.data || e?.message || e);
+    const detail = e?.response?.data?.error_description || e?.response?.data?.error || e?.message || "unknown";
+    return reRender(`Could not verify your Google identity. (debug: ${detail})`);
   }
 
   const email = payload?.email;
@@ -460,8 +463,9 @@ router.get("/oauth/google/callback", async (req, res) => {
         role: "user",
         emailVerified: true,
       });
-    } catch {
-      return reRender("Could not create your account. Please try again.");
+    } catch (e) {
+      console.error("[mcp google callback] user create failed:", e?.message || e);
+      return reRender(`Could not create your account. (debug: ${e?.message || "unknown"})`);
     }
   }
 
