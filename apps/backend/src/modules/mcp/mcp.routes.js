@@ -68,12 +68,29 @@ async function handle(req, res) {
 }
 
 // Single MCP endpoint. The API key rides in the Authorization header
-// (POST /api/mcp) or directly in the URL path (POST /api/mcp/<key>). The SDK
-// handles GET (server→client stream) and DELETE (session teardown) too.
+// (POST /api/mcp) or directly in the URL path (POST /api/mcp/<key>).
+//
+// We run a STATELESS transport (sessionIdGenerator: undefined), so there is no
+// server→client stream to open. But the SDK still accepts a standalone GET and
+// holds an empty text/event-stream open forever, sending nothing. Claude's
+// connector opens that GET to validate the server, waits for an event that never
+// comes, times out, and shows "Couldn't connect to the server." Per the
+// Streamable-HTTP spec a server that doesn't offer server-initiated SSE MUST
+// answer the standalone GET with 405, which tells the client to use POST-only.
+// Auth still runs first so an unauthenticated GET keeps emitting the OAuth 401.
+function methodNotAllowed(_req, res) {
+  res.set("Allow", "POST, DELETE");
+  return res.status(405).json({
+    jsonrpc: "2.0",
+    id: null,
+    error: { code: -32000, message: "Method Not Allowed: this MCP server is POST-only." },
+  });
+}
+
 router.post("/", verifyMcpAuth, handle);
 router.post("/:token", verifyMcpAuth, handle);
-router.get("/", verifyMcpAuth, handle);
-router.get("/:token", verifyMcpAuth, handle);
+router.get("/", verifyMcpAuth, methodNotAllowed);
+router.get("/:token", verifyMcpAuth, methodNotAllowed);
 router.delete("/", verifyMcpAuth, handle);
 router.delete("/:token", verifyMcpAuth, handle);
 
