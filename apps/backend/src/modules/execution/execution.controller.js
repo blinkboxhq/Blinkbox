@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Execution from "../../models/execution.model.js";
 import Automation from "../../models/automation.model.js";
 import ExecutionLog from "../../models/executionLog.model.js";
@@ -125,6 +126,8 @@ export async function startExecution(req, res) {
  * GET EXECUTION BY ID
  */
 export async function getExecutionById(req, res) {
+  if (!mongoose.isValidObjectId(req.params.executionId))
+    return res.status(404).json({ success: false, error: "Not found" });
   const execution = await Execution.findOne({
     _id: req.params.executionId,
     workspaceId: req.user.id,

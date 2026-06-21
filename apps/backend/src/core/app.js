@@ -108,7 +108,13 @@ app.use(
       // 3. Clean the incoming origin string just to be safe
       const cleanOrigin = origin.trim().replace(/\/$/, "");
 
-      if (ALLOWED_ORIGINS.includes(cleanOrigin)) {
+      // Chat connectors (Claude, ChatGPT) call from their own origins. The
+      // scoped mcpCors layer above already reflects them for /api/mcp and the
+      // OAuth well-knowns, but their relay also touches sibling paths that fall
+      // through to this strict layer — which then stripped the allow-origin
+      // header and logged "[CORS Blocked] claude.ai", breaking the connector.
+      // Honour the same known chat origins here so no MCP request is rejected.
+      if (ALLOWED_ORIGINS.includes(cleanOrigin) || MCP_ORIGIN_RE.test(cleanOrigin)) {
         callback(null, true);
       } else {
         // 4. Log the exact mismatch to Railway console so we can see the culprit
