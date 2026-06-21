@@ -57,12 +57,13 @@ export function recentMcpRequests() {
   return RECENT.slice().reverse();
 }
 
-// Stateless Streamable-HTTP: one transport per request, no session store. Strict
-// connectors (ChatGPT/Claude) get correct SSE framing; lenient ones get JSON —
-// the transport decides from the request's Accept header.
-async function handle(req, res) {
+// Record every /api/mcp hit BEFORE auth runs, so failed-auth requests (401) are
+// captured too — those never reach handle(). Auth header presence is logged, not
+// the key itself. Temporary diagnostic.
+function recordHit(req, res, next) {
   const ua = String(req.headers["user-agent"] || "");
   const client = /node|claude|anthropic/i.test(ua) ? "claude?" : /openai|chatgpt|python/i.test(ua) ? "chatgpt?" : ua.slice(0, 40);
+  const auth = req.headers["authorization"];
   const entry = {
     at: new Date().toISOString(),
     method: req.method,
@@ -71,6 +72,7 @@ async function handle(req, res) {
     sid: req.headers["mcp-session-id"] || null,
     proto: req.headers["mcp-protocol-version"] || null,
     client,
+    auth: auth ? `${String(auth).slice(0, 10)}…(${String(auth).length})` : req.params?.token ? "url-token" : req.query?.key ? "query-key" : "none",
     rpc: req.method === "POST" ? req.body?.method || null : null,
     status: null,
   };
@@ -78,6 +80,13 @@ async function handle(req, res) {
     entry.status = res.statusCode;
   });
   record(entry);
+  next();
+}
+
+// Stateless Streamable-HTTP: one transport per request, no session store. Strict
+// connectors (ChatGPT/Claude) get correct SSE framing; lenient ones get JSON —
+// the transport decides from the request's Accept header.
+async function handle(req, res) {
   const server = buildServer(req.user.id);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on("close", () => {
@@ -112,11 +121,11 @@ router.get("/_recent", (_req, res) => {
   res.json({ count: RECENT.length, requests: recentMcpRequests() });
 });
 
-router.post("/", verifyMcpAuth, handle);
-router.post("/:token", verifyMcpAuth, handle);
-router.get("/", verifyMcpAuth, handle);
-router.get("/:token", verifyMcpAuth, handle);
-router.delete("/", verifyMcpAuth, handle);
-router.delete("/:token", verifyMcpAuth, handle);
+router.post("/", recordHit, verifyMcpAuth, handle);
+router.post("/:token", recordHit, verifyMcpAuth, handle);
+router.get("/", recordHit, verifyMcpAuth, handle);
+router.get("/:token", recordHit, verifyMcpAuth, handle);
+router.delete("/", recordHit, verifyMcpAuth, handle);
+router.delete("/:token", recordHit, verifyMcpAuth, handle);
 
 export default router;
