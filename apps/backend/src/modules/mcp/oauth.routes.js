@@ -10,6 +10,7 @@ import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
 import { hashApiKey } from "./apiKey.middleware.js";
+import { record } from "./mcp.routes.js";
 
 /**
  * Interactive OAuth for chat connectors (Claude.ai web, ChatGPT, etc).
@@ -35,6 +36,25 @@ import { hashApiKey } from "./apiKey.middleware.js";
  */
 
 const router = Router();
+
+// Temporary: trace every OAuth-route hit into the same ring the /api/mcp endpoint
+// uses, so the full login → token → reconnect sequence is visible at
+// GET /api/mcp/_recent. Remove once the Claude connection is fixed.
+router.use((req, res, next) => {
+  const entry = {
+    at: new Date().toISOString(),
+    method: req.method,
+    path: req.originalUrl.split("?")[0],
+    client: "oauth",
+    rpc: req.path.replace(/^\//, ""),
+    status: null,
+  };
+  res.on("finish", () => {
+    entry.status = res.statusCode;
+  });
+  record(entry);
+  next();
+});
 
 // Logo served from disk once, cached in memory — the consent page mirrors the web
 // app's login screen, which renders this same asset. apps/backend/public/logo.svg

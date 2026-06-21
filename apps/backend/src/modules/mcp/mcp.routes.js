@@ -49,7 +49,7 @@ function buildServer(userId) {
 // chat client actually sends without relying on the platform log view. Read it
 // at GET /api/mcp-debug/recent. Temporary — remove once the Claude 405 is fixed.
 const RECENT = [];
-function record(entry) {
+export function record(entry) {
   RECENT.push(entry);
   if (RECENT.length > 30) RECENT.shift();
 }
