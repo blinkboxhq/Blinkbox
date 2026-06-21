@@ -77,11 +77,18 @@ app.use((req, res, next) => {
 app.options(/^\/oauth\/.*/, mcpCors);
 
 // Body parser for the OAuth token/register endpoints, which arrive as JSON or
-// application/x-www-form-urlencoded. Mounted here so they parse before the
-// global parsers (and before the strict app CORS) — the OAuth router itself is
-// mounted after parsing is configured, just below.
-app.use(MCP_OAUTH_PATH_RE, express.json({ limit: "64kb" }));
-app.use(MCP_OAUTH_PATH_RE, express.urlencoded({ extended: true, limit: "64kb" }));
+// application/x-www-form-urlencoded. A RegExp mount path (app.use(re, parser))
+// does not reliably fire in Express 4 — it silently left req.body empty, so
+// Claude's dynamic client registration came back with no client_name/redirect_uris
+// and Claude rejected the connector before ever reaching /oauth/authorize. Gate
+// with a function instead (same pattern as the CORS layer above) so the parser
+// runs for every OAuth path. Mounted before the global parsers and strict CORS.
+const oauthJson = express.json({ limit: "64kb" });
+const oauthForm = express.urlencoded({ extended: true, limit: "64kb" });
+app.use((req, res, next) => {
+  if (!MCP_OAUTH_PATH_RE.test(req.path)) return next();
+  oauthJson(req, res, (err) => (err ? next(err) : oauthForm(req, res, next)));
+});
 app.use("/", mcpOauthRoutes);
 
 // 1. Clean up the origins array to destroy hidden spaces, quotes, and slashes
