@@ -147,34 +147,39 @@ function consentPage({ params, error }) {
 <title>Connect to Blinkbox</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a0a; color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .card { width: 100%; max-width: 380px; background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 28px; }
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .dot { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #8b5cf6, #ec4899); }
-  .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
-  .sub { font-size: 12px; color: #a1a1aa; margin: 14px 0 20px; line-height: 1.5; }
-  .sub b { color: #e4e4e7; font-weight: 600; }
-  label { display: block; font-size: 11px; font-weight: 600; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  input[type=email], input[type=password] { width: 100%; background: #0f0f11; border: 1px solid #3f3f46; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #fafafa; margin-bottom: 14px; outline: none; }
-  input:focus { border-color: #8b5cf6; }
-  button { width: 100%; border: none; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .allow { background: #8b5cf6; color: white; }
-  .allow:hover { background: #7c3aed; }
-  .err { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); color: #fb7185; font-size: 12px; padding: 9px 12px; border-radius: 9px; margin-bottom: 16px; }
-  .foot { font-size: 10px; color: #52525b; text-align: center; margin-top: 16px; line-height: 1.5; }
+  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; -webkit-font-smoothing: antialiased; }
+  .card { width: 100%; max-width: 380px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .mark { width: 28px; height: 28px; border-radius: 8px; background: #fff; position: relative; flex-shrink: 0; }
+  .mark::after { content: ""; position: absolute; inset: 9px; border-radius: 3px; background: #000; }
+  .brand h1 { font-size: 20px; font-weight: 900; letter-spacing: 0.05em; }
+  .head { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .sub { font-size: 14px; color: #525252; margin-bottom: 24px; line-height: 1.5; }
+  .sub b { color: #d4d4d4; font-weight: 600; }
+  label { display: block; font-size: 11px; font-weight: 500; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  input[type=email], input[type=password] { width: 100%; background: #0a0a0a; border: 1px solid #171717; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #fff; margin-bottom: 14px; outline: none; transition: border-color 0.2s; }
+  input::placeholder { color: #404040; }
+  input:focus { border-color: #525252; }
+  button { width: 100%; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .allow { background: #fff; color: #000; margin-top: 6px; }
+  .allow:hover { background: #f5f5f5; }
+  .allow:active { transform: scale(0.98); }
+  .err { background: #0a0a0a; border: 1px solid #171717; color: #f87171; font-size: 14px; padding: 10px 12px; border-radius: 8px; margin-bottom: 20px; }
+  .foot { font-size: 11px; color: #404040; text-align: center; margin-top: 20px; line-height: 1.6; }
 </style>
 </head>
 <body>
   <div class="card">
-    <div class="brand"><div class="dot"></div><h1>Blinkbox</h1></div>
-    <p class="sub">Sign in to let <b>Claude</b> access your Blinkbox workspace — list, run, and build automations on your behalf.</p>
+    <div class="brand"><div class="mark"></div><h1>Blinkbox</h1></div>
+    <h2 class="head">Connect to Claude</h2>
+    <p class="sub">Sign in to let <b>Claude</b> access your workspace — list, run, and build automations on your behalf.</p>
     ${errBanner}
     <form method="POST" action="/oauth/authorize">
       ${hidden}
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="email" required autofocus />
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus />
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required />
+      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required />
       <button class="allow" type="submit" name="decision" value="allow">Sign in &amp; Allow</button>
     </form>
     <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
