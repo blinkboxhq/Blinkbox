@@ -540,10 +540,15 @@ router.post("/oauth/token", async (req, res) => {
   }
 
   // The access token IS the bb_live_ key — verifyMcpAuth already accepts it as a
-  // Bearer token, so no MCP-side change is needed.
+  // Bearer token, so no MCP-side change is needed. expires_in is required by
+  // strict clients (Claude's web relay): without it they treat the token as
+  // already-expired and never present it on the MCP session, so the connection
+  // silently fails after a successful token exchange. The key itself is
+  // long-lived (revocable in the dashboard), so we advertise a one-year window.
   return res.json({
     access_token: claims.k,
     token_type: "Bearer",
+    expires_in: 31536000,
     scope: "mcp",
   });
 });
