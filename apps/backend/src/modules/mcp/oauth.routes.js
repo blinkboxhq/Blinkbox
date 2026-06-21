@@ -341,6 +341,7 @@ async function issueCodeAndRedirect(res, user, params, onError) {
   }
   u.searchParams.set("code", code);
   if (state) u.searchParams.set("state", String(state));
+  console.error("[mcp issueCode] redirecting back to client", { host: u.host, path: u.pathname, hasState: !!state });
   return res.redirect(302, u.toString());
 }
 
@@ -396,6 +397,7 @@ router.get("/oauth/google/start", (req, res) => {
 // ── Google sign-in: callback (GET) — exchange code, mint key, issue MCP code ──
 router.get("/oauth/google/callback", async (req, res) => {
   const { code, state: gState, error: gError } = req.query;
+  console.error("[mcp google callback] HIT", { hasCode: !!code, hasState: !!gState, gError: gError || null });
 
   // Decode the signed state to recover the original MCP OAuth params first, so a
   // failure can re-render the consent page instead of dead-ending.
@@ -403,7 +405,8 @@ router.get("/oauth/google/callback", async (req, res) => {
   try {
     st = jwt.verify(String(gState || ""), JWT_SECRET);
     if (st.t !== "mcp_google_state") throw new Error("bad state");
-  } catch {
+  } catch (e) {
+    console.error("[mcp google callback] state verify failed:", e?.message || e);
     return res.status(400).json({ error: "invalid_request", error_description: "Google sign-in expired. Start again." });
   }
   const params = { redirect_uri: st.ru, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm };
