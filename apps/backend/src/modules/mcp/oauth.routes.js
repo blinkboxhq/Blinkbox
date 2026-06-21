@@ -37,10 +37,14 @@ import { record } from "./mcp.routes.js";
 
 const router = Router();
 
-// Temporary: trace every OAuth-route hit into the same ring the /api/mcp endpoint
+// Temporary: trace OAuth/discovery hits into the same ring the /api/mcp endpoint
 // uses, so the full login → token → reconnect sequence is visible at
-// GET /api/mcp/_recent. Remove once the Claude connection is fixed.
+// GET /api/mcp/_recent. Scoped to connector paths only — this router is mounted
+// at "/", so without the filter the dashboard's own traffic floods the ring.
+// Remove once the Claude connection is fixed.
+const TRACE_RE = /^\/(oauth\/|\.well-known\/)/;
 router.use((req, res, next) => {
+  if (!TRACE_RE.test(req.path)) return next();
   const entry = {
     at: new Date().toISOString(),
     method: req.method,

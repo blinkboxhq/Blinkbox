@@ -51,7 +51,7 @@ function buildServer(userId) {
 const RECENT = [];
 export function record(entry) {
   RECENT.push(entry);
-  if (RECENT.length > 30) RECENT.shift();
+  if (RECENT.length > 60) RECENT.shift();
 }
 export function recentMcpRequests() {
   return RECENT.slice().reverse();
