@@ -2,6 +2,9 @@ import { Router } from "express";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { JWT_SECRET } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
@@ -31,6 +34,30 @@ import { hashApiKey } from "./apiKey.middleware.js";
  */
 
 const router = Router();
+
+// Logo served from disk once, cached in memory — the consent page mirrors the web
+// app's login screen, which renders this same asset. apps/backend/public/logo.svg
+// is four dirs up from this module (mcp → modules → src → backend).
+const __dir = path.dirname(fileURLToPath(import.meta.url));
+let _logoSvg = null;
+function logoSvg() {
+  if (_logoSvg === null) {
+    try {
+      _logoSvg = fs.readFileSync(path.resolve(__dir, "../../../public/logo.svg"), "utf8");
+    } catch {
+      _logoSvg = "";
+    }
+  }
+  return _logoSvg;
+}
+
+router.get("/oauth/logo.svg", (_req, res) => {
+  const svg = logoSvg();
+  if (!svg) return res.status(404).end();
+  res.set("Content-Type", "image/svg+xml; charset=utf-8");
+  res.set("Cache-Control", "public, max-age=86400, immutable");
+  res.send(svg);
+});
 
 // Public host the client actually called (api.blinkbox.net), not an internal
 // Railway hostname — the issuer/endpoints must match what the client dialed.
@@ -136,9 +163,13 @@ function consentPage({ params, error }) {
   const hidden = ["redirect_uri", "state", "code_challenge", "code_challenge_method", "client_id", "scope", "resource"]
     .map((k) => `<input type="hidden" name="${k}" value="${esc(params[k])}" />`)
     .join("");
+  const alertIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
   const errBanner = error
-    ? `<div class="err">${esc(error)}</div>`
+    ? `<div class="err">${alertIcon}<span>${esc(error)}</span></div>`
     : "";
+  const mailIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const lockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+  const arrowIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -147,41 +178,60 @@ function consentPage({ params, error }) {
 <title>Connect to Blinkbox</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; -webkit-font-smoothing: antialiased; }
-  .card { width: 100%; max-width: 380px; }
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-  .mark { width: 28px; height: 28px; border-radius: 8px; background: #fff; position: relative; flex-shrink: 0; }
-  .mark::after { content: ""; position: absolute; inset: 9px; border-radius: 3px; background: #000; }
-  .brand h1 { font-size: 20px; font-weight: 900; letter-spacing: 0.05em; }
-  .head { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  body { background: #000; color: #fff; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; -webkit-font-smoothing: antialiased; }
+  .wrap { width: 100%; max-width: 380px; }
+  .brand { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 40px; animation: fadeUp 0.7s ease-out; }
+  .logo { position: relative; width: 64px; height: 64px; margin-bottom: 32px; }
+  .logo .ring { position: absolute; inset: 0; border-radius: 9999px; background: rgba(255,255,255,0.1); animation: pulse-ring 3s ease-out infinite; }
+  .logo img { position: relative; width: 64px; height: 64px; object-fit: contain; animation: float 6s ease-in-out infinite; }
+  .brand h1 { font-size: 30px; font-weight: 900; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .brand .tag { font-size: 11px; letter-spacing: 0.3em; color: #525252; text-transform: uppercase; }
+  .head { font-size: 22px; font-weight: 700; margin-bottom: 4px; animation: slideSwitch 0.3s ease-out; }
   .sub { font-size: 14px; color: #525252; margin-bottom: 24px; line-height: 1.5; }
   .sub b { color: #d4d4d4; font-weight: 600; }
   label { display: block; font-size: 11px; font-weight: 500; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  input[type=email], input[type=password] { width: 100%; background: #0a0a0a; border: 1px solid #171717; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #fff; margin-bottom: 14px; outline: none; transition: border-color 0.2s; }
-  input::placeholder { color: #404040; }
-  input:focus { border-color: #525252; }
-  button { width: 100%; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
-  .allow { background: #fff; color: #000; margin-top: 6px; }
+  .field { position: relative; margin-bottom: 14px; }
+  .field svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #404040; transition: color 0.2s; pointer-events: none; }
+  .field:focus-within svg { color: #fff; }
+  .field input { width: 100%; background: #0a0a0a; border: 1px solid #171717; border-radius: 8px; padding: 10px 12px 10px 36px; font-size: 14px; color: #fff; outline: none; transition: border-color 0.2s; }
+  .field input::placeholder { color: #404040; }
+  .field input:focus { border-color: #525252; }
+  button { width: 100%; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  button svg { width: 16px; height: 16px; }
+  .allow { background: #fff; color: #000; margin-top: 8px; }
   .allow:hover { background: #f5f5f5; }
   .allow:active { transform: scale(0.98); }
-  .err { background: #0a0a0a; border: 1px solid #171717; color: #f87171; font-size: 14px; padding: 10px 12px; border-radius: 8px; margin-bottom: 20px; }
-  .foot { font-size: 11px; color: #404040; text-align: center; margin-top: 20px; line-height: 1.6; }
+  .err { background: #0a0a0a; border: 1px solid #171717; color: #f87171; font-size: 14px; padding: 10px 12px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; animation: fadeUp 0.2s ease-out; }
+  .err svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+  .div { position: relative; margin: 20px 0; text-align: center; }
+  .div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid #171717; }
+  .div span { position: relative; background: #000; padding: 0 12px; font-size: 11px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
+  .foot { font-size: 11px; color: #2e2e2e; text-align: center; margin-top: 28px; line-height: 1.6; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideSwitch { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.15; } 100% { transform: scale(2.5); opacity: 0; } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand"><div class="mark"></div><h1>Blinkbox</h1></div>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo"><div class="ring"></div><img src="/oauth/logo.svg" alt="Blinkbox" /></div>
+      <h1>Blinkbox</h1>
+      <div class="tag">Automation Engine</div>
+    </div>
     <h2 class="head">Connect to Claude</h2>
     <p class="sub">Sign in to let <b>Claude</b> access your workspace — list, run, and build automations on your behalf.</p>
     ${errBanner}
     <form method="POST" action="/oauth/authorize">
       ${hidden}
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus />
+      <div class="field">${mailIcon}<input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus /></div>
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required />
-      <button class="allow" type="submit" name="decision" value="allow">Sign in &amp; Allow</button>
+      <div class="field">${lockIcon}<input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required /></div>
+      <button class="allow" type="submit" name="decision" value="allow">Sign In &amp; Allow ${arrowIcon}</button>
     </form>
+    <div class="div"><span>Scoped &amp; revocable</span></div>
     <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
   </div>
 </body>
