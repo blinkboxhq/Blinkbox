@@ -49,6 +49,15 @@ function buildServer(userId) {
 // connectors (ChatGPT/Claude) get correct SSE framing; lenient ones get JSON —
 // the transport decides from the request's Accept header.
 async function handle(req, res) {
+  console.error("[mcp transport] IN", {
+    method: req.method,
+    accept: req.headers["accept"],
+    ct: req.headers["content-type"],
+    sid: req.headers["mcp-session-id"] || null,
+    proto: req.headers["mcp-protocol-version"] || null,
+    body: req.method === "POST" ? req.body?.method || "(no .method)" : undefined,
+  });
+  res.on("finish", () => console.error("[mcp transport] OUT", { method: req.method, status: res.statusCode }));
   const server = buildServer(req.user.id);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on("close", () => {
