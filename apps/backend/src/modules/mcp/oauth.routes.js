@@ -1,76 +1,90 @@
 import { Router } from "express";
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
+import User from "../../models/user.model.js";
 import { hashApiKey } from "./apiKey.middleware.js";
 
 /**
- * Auto-approve OAuth shim for chat connectors (Claude.ai).
+ * Interactive OAuth for chat connectors (Claude.ai web, ChatGPT, etc).
  *
- * Claude's browser connector only speaks OAuth 2.0 — it cannot use a raw
- * bearer/URL key. So we expose the minimum OAuth surface it probes (RFC 9728
- * protected-resource metadata, RFC 8414 auth-server metadata, dynamic client
- * registration, authorize, token) and make every step succeed automatically
- * using the bb_live_ key already baked into the connector URL.
+ * The connector URL is now CLEAN — https://api.blinkbox.net/api/mcp, no key in
+ * the path. We speak standard authorization_code + PKCE the same way Higgsfield
+ * does, because that is the branch every MCP client is built and tested against:
  *
- * Flow (no UI, no consent screen):
- *   1. Claude reads /.well-known/* → learns this host is its own auth server.
- *   2. Claude POSTs /oauth/register → gets a throwaway client_id.
- *   3. Claude GETs /oauth/authorize?resource=<mcp-url-with-key>&...
- *      → we pull the key out of `resource`, validate it, mint a 5-min signed
- *        auth code bound to that key + the PKCE challenge, and 302 straight
- *        back to Claude's redirect_uri. No login page.
- *   4. Claude POSTs /oauth/token with the code + PKCE verifier
- *      → we return the bb_live_ key itself as the access_token.
- *   5. Claude calls the MCP endpoint with `Authorization: Bearer bb_live_...`,
- *      which verifyMcpAuth already accepts — so no MCP-side changes needed.
+ *   1. Client 401s on /api/mcp, reads /.well-known/oauth-protected-resource
+ *      → learns this host is its own auth server (stable `resource`, no key).
+ *   2. Client POSTs /oauth/register → throwaway client_id.
+ *   3. Client opens /oauth/authorize in a popup. We render a real Blinkbox
+ *      login + "Allow Claude to access your workspace" consent screen.
+ *   4. User signs in and clicks Allow → we mint a fresh, labeled bb_live_ key
+ *      bound to that user, sign a 5-min auth code carrying it + the PKCE
+ *      challenge, and 302 back to the client's redirect_uri.
+ *   5. Client POSTs /oauth/token with the code + PKCE verifier → we return the
+ *      bb_live_ key as the access_token. verifyMcpAuth already accepts it.
  *
- * ChatGPT/Grok (server-side, key in URL) never touch any of this.
+ * Each connection gets its OWN key (labeled "Claude (web) — <date>"), so a user
+ * can revoke one connector without breaking the others, and no permanent key is
+ * ever pasted into a URL.
  */
 
 const router = Router();
 
-// Public host Claude actually connected to (api.blinkbox.net), not an internal
-// Railway hostname — the issuer/endpoints must match what the client called.
+// Public host the client actually called (api.blinkbox.net), not an internal
+// Railway hostname — the issuer/endpoints must match what the client dialed.
 function baseUrl(req) {
   const proto = (req.headers["x-forwarded-proto"] || req.protocol || "https").split(",")[0].trim();
   const host = req.headers["x-forwarded-host"] || req.get("host");
   return `${proto}://${host}`;
 }
 
-// Pull the bb_ key out of an MCP connector URL or resource string.
-// Accepts the full URL (.../api/mcp/bb_live_xxx) or a bare key.
-function extractKeyFromResource(resource) {
-  if (!resource) return null;
-  const str = String(resource);
-  const m = str.match(/bb_[A-Za-z0-9_]+/);
-  return m ? m[0] : null;
-}
-
-async function keyIsValid(rawKey) {
-  if (!rawKey || !rawKey.startsWith("bb_")) return false;
-  const record = await ApiKey.findOne({ hashedKey: hashApiKey(rawKey), revoked: false });
-  return Boolean(record);
+// The single, stable resource every connector authenticates against.
+function mcpResource(req) {
+  return `${baseUrl(req)}/api/mcp`;
 }
 
 function sha256base64url(input) {
   return crypto.createHash("sha256").update(input).digest("base64url");
 }
 
+// Mint a fresh MCP key bound to a user — same shape as the dashboard key route,
+// but labeled so the user can see which connector it belongs to.
+async function mintKeyForUser(userId, label) {
+  const raw = "bb_live_" + crypto.randomBytes(24).toString("hex");
+  await ApiKey.create({
+    userId: String(userId),
+    hashedKey: hashApiKey(raw),
+    prefix: raw.slice(0, 16),
+    label: label.slice(0, 100),
+  });
+  return raw;
+}
+
 // ── RFC 9728: Protected Resource Metadata ─────────────────────────────────────
-// Claude probes this after a 401 on the MCP endpoint, at the path-suffixed form
-// /.well-known/oauth-protected-resource/api/mcp/<key>. The suffix IS the MCP
-// path, so we echo it back as the `resource` — that carries the key forward into
-// /oauth/authorize, which is the only place the key survives the OAuth dance.
+// Stable resource (no key suffix) + auth_hints that nudge Claude into the
+// authorization_code_pkce branch, mirroring Higgsfield's connector.
 function protectedResourceMetadata(req, res) {
   const base = baseUrl(req);
-  const suffix = req.path.replace(/^\/\.well-known\/oauth-protected-resource/, "");
-  const resource = suffix && suffix !== "/" ? `${base}${suffix}` : base;
   res.json({
-    resource,
+    resource: mcpResource(req),
     authorization_servers: [base],
+    scopes_supported: ["mcp"],
     bearer_methods_supported: ["header"],
+    blinkbox_auth_hints: {
+      selection: "client_capability_based",
+      options: [
+        {
+          flow: "authorization_code_pkce",
+          authorization_server: base,
+          potential_clients: ["anthropic", "claude", "claude-ai", "claude-code", "openai", "chatgpt"],
+          use_when:
+            "Client can complete an OAuth authorization-code redirect using one of its registered redirect mechanisms.",
+          requires: ["authorization_endpoint", "token_endpoint", "redirect_uri_receiver", "pkce"],
+        },
+      ],
+    },
   });
 }
 router.get("/.well-known/oauth-protected-resource", protectedResourceMetadata);
@@ -85,6 +99,7 @@ function authServerMetadata(req, res) {
     token_endpoint: `${base}/oauth/token`,
     registration_endpoint: `${base}/oauth/register`,
     response_types_supported: ["code"],
+    response_modes_supported: ["query"],
     grant_types_supported: ["authorization_code"],
     code_challenge_methods_supported: ["S256", "plain"],
     token_endpoint_auth_methods_supported: ["none"],
@@ -93,13 +108,9 @@ function authServerMetadata(req, res) {
 }
 router.get("/.well-known/oauth-authorization-server", authServerMetadata);
 router.get(/^\/\.well-known\/oauth-authorization-server\/.*/, authServerMetadata);
-// Some clients also probe the OpenID config path.
 router.get("/.well-known/openid-configuration", authServerMetadata);
 
 // ── Dynamic Client Registration (RFC 7591) ────────────────────────────────────
-// Accept any registration. Public client (PKCE), so no secret is issued.
-// This endpoint failing was the "Couldn't register with blinkbox's sign-in
-// service" error.
 router.post("/oauth/register", (req, res) => {
   const body = req.body || {};
   res.status(201).json({
@@ -113,44 +124,121 @@ router.post("/oauth/register", (req, res) => {
   });
 });
 
-// ── Authorize ─────────────────────────────────────────────────────────────────
-// No consent UI: validate the key from `resource`, mint an auth code, redirect
-// straight back to the client.
-router.get("/oauth/authorize", async (req, res) => {
-  const {
-    redirect_uri,
-    state,
-    code_challenge,
-    code_challenge_method,
-    resource,
-  } = req.query;
+// ── Consent page ──────────────────────────────────────────────────────────────
+// Self-contained dark-mode login + Allow screen. The OAuth params ride through
+// as hidden fields so the POST can rebuild the redirect. `error` shows a failed
+// login inline without losing the flow.
+function consentPage({ params, error }) {
+  const esc = (s) =>
+    String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
+    );
+  const hidden = ["redirect_uri", "state", "code_challenge", "code_challenge_method", "client_id", "scope", "resource"]
+    .map((k) => `<input type="hidden" name="${k}" value="${esc(params[k])}" />`)
+    .join("");
+  const errBanner = error
+    ? `<div class="err">${esc(error)}</div>`
+    : "";
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Connect to Blinkbox</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .card { width: 100%; max-width: 380px; background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 28px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+  .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { font-size: 12px; color: #a1a1aa; margin: 14px 0 20px; line-height: 1.5; }
+  .sub b { color: #e4e4e7; font-weight: 600; }
+  label { display: block; font-size: 11px; font-weight: 600; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  input[type=email], input[type=password] { width: 100%; background: #0f0f11; border: 1px solid #3f3f46; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #fafafa; margin-bottom: 14px; outline: none; }
+  input:focus { border-color: #8b5cf6; }
+  button { width: 100%; border: none; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .allow { background: #8b5cf6; color: white; }
+  .allow:hover { background: #7c3aed; }
+  .err { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); color: #fb7185; font-size: 12px; padding: 9px 12px; border-radius: 9px; margin-bottom: 16px; }
+  .foot { font-size: 10px; color: #52525b; text-align: center; margin-top: 16px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><div class="dot"></div><h1>Blinkbox</h1></div>
+    <p class="sub">Sign in to let <b>Claude</b> access your Blinkbox workspace — list, run, and build automations on your behalf.</p>
+    ${errBanner}
+    <form method="POST" action="/oauth/authorize">
+      ${hidden}
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required autofocus />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+      <button class="allow" type="submit" name="decision" value="allow">Sign in &amp; Allow</button>
+    </form>
+    <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
+  </div>
+</body>
+</html>`;
+}
+
+// ── Authorize (GET) — render the login + consent screen ───────────────────────
+router.get("/oauth/authorize", (req, res) => {
+  const { redirect_uri } = req.query;
+  if (!redirect_uri) {
+    return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
+  }
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.send(consentPage({ params: req.query, error: null }));
+});
+
+// ── Authorize (POST) — authenticate, mint key, issue code ─────────────────────
+router.post("/oauth/authorize", async (req, res) => {
+  const body = req.body || {};
+  const { redirect_uri, state, code_challenge, code_challenge_method, email, password } = body;
 
   if (!redirect_uri) {
     return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
   }
 
-  // The key rides in `resource` (the MCP connector URL). Fall back to scanning
-  // any query value in case a client puts it elsewhere.
-  const rawKey =
-    extractKeyFromResource(resource) ||
-    extractKeyFromResource(Object.values(req.query).join(" "));
-
-  const redirectErr = (code, desc) => {
-    const u = new URL(String(redirect_uri));
-    u.searchParams.set("error", code);
-    if (desc) u.searchParams.set("error_description", desc);
-    if (state) u.searchParams.set("state", String(state));
-    return res.redirect(302, u.toString());
+  const reRender = (error) => {
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.status(401).send(consentPage({ params: body, error }));
   };
 
-  if (!rawKey) {
-    return redirectErr(
-      "invalid_request",
-      "No Blinkbox API key found in the connector URL. The URL must look like https://<host>/api/mcp/bb_live_xxx",
-    );
+  if (!email || !password) {
+    return reRender("Enter your email and password.");
   }
-  if (!(await keyIsValid(rawKey))) {
-    return redirectErr("access_denied", "Invalid or revoked Blinkbox API key.");
+
+  // Authenticate against the same User store as the web app.
+  let user;
+  try {
+    user = await User.findOne({ email: String(email).toLowerCase().trim() });
+  } catch {
+    return reRender("Something went wrong. Please try again.");
+  }
+  if (!user) {
+    return reRender("Invalid email or password.");
+  }
+  if (!user.password) {
+    return reRender("This account uses Google sign-in. Create a password in Blinkbox settings to connect Claude.");
+  }
+  const ok = await bcrypt.compare(String(password), user.password);
+  if (!ok) {
+    return reRender("Invalid email or password.");
+  }
+  if (!user.emailVerified) {
+    return reRender("Please verify your email at blinkbox.net before connecting.");
+  }
+
+  // Mint a fresh, labeled key bound to this user for this connection.
+  const today = new Date().toISOString().slice(0, 10);
+  let rawKey;
+  try {
+    rawKey = await mintKeyForUser(user._id, `Claude connector — ${today}`);
+  } catch {
+    return reRender("Could not create a connection key. Please try again.");
   }
 
   // 5-minute auth code binding the key to the PKCE challenge.
@@ -165,7 +253,12 @@ router.get("/oauth/authorize", async (req, res) => {
     { expiresIn: "5m" },
   );
 
-  const u = new URL(String(redirect_uri));
+  let u;
+  try {
+    u = new URL(String(redirect_uri));
+  } catch {
+    return res.status(400).json({ error: "invalid_request", error_description: "invalid redirect_uri" });
+  }
   u.searchParams.set("code", code);
   if (state) u.searchParams.set("state", String(state));
   return res.redirect(302, u.toString());
@@ -207,9 +300,12 @@ router.post("/oauth/token", async (req, res) => {
     }
   }
 
-  // Re-check the key is still live at exchange time.
-  if (!(await keyIsValid(claims.k))) {
-    return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
+  // Confirm the minted key is still live (not revoked between authorize and now).
+  try {
+    const record = await ApiKey.findOne({ hashedKey: hashApiKey(claims.k), revoked: false });
+    if (!record) return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
+  } catch {
+    return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
   }
 
   // The access token IS the bb_live_ key — verifyMcpAuth already accepts it as a
