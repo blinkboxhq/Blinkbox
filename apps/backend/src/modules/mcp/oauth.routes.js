@@ -5,10 +5,13 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { JWT_SECRET } from "../../config/env.js";
+import { OAuth2Client } from "google-auth-library";
+import { JWT_SECRET, GOOGLE_CLIENT_ID } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
 import { hashApiKey } from "./apiKey.middleware.js";
+
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 /**
  * Interactive OAuth for chat connectors (Claude.ai web, ChatGPT, etc).
@@ -155,7 +158,7 @@ router.post("/oauth/register", (req, res) => {
 // Self-contained dark-mode login + Allow screen. The OAuth params ride through
 // as hidden fields so the POST can rebuild the redirect. `error` shows a failed
 // login inline without losing the flow.
-function consentPage({ params, error }) {
+function consentPage({ params, error, googleClientId }) {
   const esc = (s) =>
     String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
@@ -166,6 +169,22 @@ function consentPage({ params, error }) {
   const alertIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
   const errBanner = error
     ? `<div class="err">${alertIcon}<span>${esc(error)}</span></div>`
+    : "";
+  const gParams = ["redirect_uri", "state", "code_challenge", "code_challenge_method", "client_id", "scope", "resource"]
+    .map((k) => `<input type="hidden" name="${k}" value="${esc(params[k])}" />`)
+    .join("");
+  const googleBlock = googleClientId
+    ? `<div class="div"><span>or</span></div>
+    <form method="POST" action="/oauth/authorize/google" id="gform">
+      ${gParams}
+      <input type="hidden" name="credential" id="gcred" />
+    </form>
+    <div id="g_id_onload" data-client_id="${esc(googleClientId)}" data-callback="bbGoogle" data-auto_prompt="false"></div>
+    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-shape="rectangular" data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="332"></div>`
+    : `<div class="div"><span>Scoped &amp; revocable</span></div>`;
+  const googleScript = googleClientId
+    ? `<script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>function bbGoogle(r){document.getElementById('gcred').value=r.credential;document.getElementById('gform').submit();}</script>`
     : "";
   const mailIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
   const lockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
@@ -206,6 +225,7 @@ function consentPage({ params, error }) {
   .div { position: relative; margin: 20px 0; text-align: center; }
   .div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid #171717; }
   .div span { position: relative; background: #000; padding: 0 12px; font-size: 11px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
+  .g_id_signin { display: flex; justify-content: center; color-scheme: light; }
   .foot { font-size: 11px; color: #2e2e2e; text-align: center; margin-top: 28px; line-height: 1.6; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes slideSwitch { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
@@ -231,9 +251,10 @@ function consentPage({ params, error }) {
       <div class="field">${lockIcon}<input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required /></div>
       <button class="allow" type="submit" name="decision" value="allow">Sign In &amp; Allow ${arrowIcon}</button>
     </form>
-    <div class="div"><span>Scoped &amp; revocable</span></div>
+    ${googleBlock}
     <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
   </div>
+  ${googleScript}
 </body>
 </html>`;
 }
@@ -245,7 +266,7 @@ router.get("/oauth/authorize", (req, res) => {
     return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
   }
   res.set("Content-Type", "text/html; charset=utf-8");
-  res.send(consentPage({ params: req.query, error: null }));
+  res.send(consentPage({ params: req.query, error: null, googleClientId: GOOGLE_CLIENT_ID }));
 });
 
 // ── Authorize (POST) — authenticate, mint key, issue code ─────────────────────
@@ -259,7 +280,7 @@ router.post("/oauth/authorize", async (req, res) => {
 
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.status(401).send(consentPage({ params: body, error }));
+    res.status(401).send(consentPage({ params: body, error, googleClientId: GOOGLE_CLIENT_ID }));
   };
 
   if (!email || !password) {
@@ -287,16 +308,21 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Please verify your email at blinkbox.net before connecting.");
   }
 
-  // Mint a fresh, labeled key bound to this user for this connection.
+  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method }, reRender);
+});
+
+// Shared tail for both password and Google sign-in: mint a per-connection key,
+// sign a 5-min PKCE-bound auth code, 302 back to the client's redirect_uri.
+async function issueCodeAndRedirect(res, user, params, onError) {
+  const { redirect_uri, state, code_challenge, code_challenge_method } = params;
   const today = new Date().toISOString().slice(0, 10);
   let rawKey;
   try {
     rawKey = await mintKeyForUser(user._id, `Claude connector — ${today}`);
   } catch {
-    return reRender("Could not create a connection key. Please try again.");
+    return onError("Could not create a connection key. Please try again.");
   }
 
-  // 5-minute auth code binding the key to the PKCE challenge.
   const code = jwt.sign(
     {
       k: rawKey,
@@ -317,6 +343,73 @@ router.post("/oauth/authorize", async (req, res) => {
   u.searchParams.set("code", code);
   if (state) u.searchParams.set("state", String(state));
   return res.redirect(302, u.toString());
+}
+
+// ── Authorize via Google (POST) — verify GIS credential, mint key, issue code ──
+router.post("/oauth/authorize/google", async (req, res) => {
+  const body = req.body || {};
+  const { redirect_uri, state, code_challenge, code_challenge_method, credential } = body;
+
+  if (!redirect_uri) {
+    return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
+  }
+  const reRender = (error) => {
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.status(401).send(consentPage({ params: body, error, googleClientId: GOOGLE_CLIENT_ID }));
+  };
+
+  if (!GOOGLE_CLIENT_ID) {
+    return reRender("Google sign-in isn't configured. Use your email and password.");
+  }
+  if (!credential) {
+    return reRender("Google sign-in failed. Please try again.");
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken: String(credential), audience: GOOGLE_CLIENT_ID });
+    payload = ticket.getPayload();
+  } catch {
+    return reRender("Could not verify your Google identity. Please try again.");
+  }
+
+  const email = payload?.email;
+  const googleId = payload?.sub;
+  if (!email || !googleId) {
+    return reRender("Google did not return an email. Please try again.");
+  }
+
+  // Match the web app: an existing password account with this email that hasn't
+  // linked Google must sign in with their password first.
+  let user;
+  try {
+    user = await User.findOne({ email: String(email).toLowerCase().trim() });
+  } catch {
+    return reRender("Something went wrong. Please try again.");
+  }
+  if (user && !user.googleId) {
+    return reRender("This email already has a password account. Sign in with your password instead.");
+  }
+  if (user && user.googleId !== googleId) {
+    return reRender("Google account mismatch. Please try again.");
+  }
+  if (!user) {
+    try {
+      user = await User.create({
+        name: payload.name || payload.given_name || email.split("@")[0],
+        email,
+        authProvider: "google",
+        googleId,
+        picture: payload.picture || "",
+        role: "user",
+        emailVerified: true,
+      });
+    } catch {
+      return reRender("Could not create your account. Please try again.");
+    }
+  }
+
+  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method }, reRender);
 });
 
 // ── Token ─────────────────────────────────────────────────────────────────────
