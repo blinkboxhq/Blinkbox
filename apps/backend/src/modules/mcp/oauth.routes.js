@@ -45,12 +45,17 @@ const router = Router();
 const TRACE_RE = /^\/(oauth\/|\.well-known\/)/;
 router.use((req, res, next) => {
   if (!TRACE_RE.test(req.path)) return next();
+  const b = req.body || {};
+  const q = req.query || {};
   const entry = {
     at: new Date().toISOString(),
     method: req.method,
     path: req.originalUrl.split("?")[0],
     client: "oauth",
     rpc: req.path.replace(/^\//, ""),
+    scope: b.scope || q.scope || null,
+    grant_types: b.grant_types || b.grant_type || null,
+    response_type: b.response_type || q.response_type || null,
     status: null,
   };
   res.on("finish", () => {
@@ -152,10 +157,10 @@ function authServerMetadata(req, res) {
     registration_endpoint: `${base}/oauth/register`,
     response_types_supported: ["code"],
     response_modes_supported: ["query"],
-    grant_types_supported: ["authorization_code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256", "plain"],
     token_endpoint_auth_methods_supported: ["none"],
-    scopes_supported: ["mcp"],
+    scopes_supported: ["mcp", "offline_access"],
   });
 }
 router.get("/.well-known/oauth-authorization-server", authServerMetadata);
@@ -169,7 +174,7 @@ router.post("/oauth/register", (req, res) => {
     client_id: `mcp-${crypto.randomBytes(8).toString("hex")}`,
     client_id_issued_at: Math.floor(Date.now() / 1000),
     token_endpoint_auth_method: "none",
-    grant_types: ["authorization_code"],
+    grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
     redirect_uris: Array.isArray(body.redirect_uris) ? body.redirect_uris : [],
     client_name: body.client_name || "MCP Client",
@@ -499,17 +504,69 @@ router.get("/oauth/google/callback", async (req, res) => {
   return issueCodeAndRedirect(res, user, params, reRender);
 });
 
+// Build the standard token response. The access token IS the bb_live_ key —
+// verifyMcpAuth already accepts it as a Bearer token. We also issue a
+// refresh_token: strict connectors (Claude's web relay) treat a connector grant
+// without one as incomplete and abort before opening the MCP session, even after
+// a 200 token exchange. The refresh token is a signed pointer back to the key;
+// exchanging it re-validates the key and returns it again. The key is long-lived
+// and revocable in the dashboard, so we advertise a one-year access window.
+function tokenResponse(rawKey) {
+  const refreshToken = jwt.sign(
+    { k: rawKey, t: "mcp_refresh" },
+    JWT_SECRET,
+    { expiresIn: "365d" },
+  );
+  return {
+    access_token: rawKey,
+    token_type: "Bearer",
+    expires_in: 31536000,
+    refresh_token: refreshToken,
+    scope: "mcp",
+  };
+}
+
+async function keyIsLive(rawKey) {
+  const record = await ApiKey.findOne({ hashedKey: hashApiKey(rawKey), revoked: false });
+  return !!record;
+}
+
 // ── Token ─────────────────────────────────────────────────────────────────────
-// Exchange the auth code (+ PKCE verifier) for the API key as the access token.
+// Exchange the auth code (+ PKCE verifier) for the API key, or refresh.
 router.post("/oauth/token", async (req, res) => {
   const body = req.body || {};
   const grantType = body.grant_type;
-  const code = body.code;
-  const codeVerifier = body.code_verifier;
+
+  // Refresh grant: re-issue the same key if it's still live.
+  if (grantType === "refresh_token") {
+    const rt = body.refresh_token;
+    if (!rt) {
+      return res.status(400).json({ error: "invalid_request", error_description: "refresh_token required" });
+    }
+    let rc;
+    try {
+      rc = jwt.verify(String(rt), JWT_SECRET);
+    } catch {
+      return res.status(400).json({ error: "invalid_grant", error_description: "refresh_token expired or invalid" });
+    }
+    if (rc.t !== "mcp_refresh") {
+      return res.status(400).json({ error: "invalid_grant" });
+    }
+    try {
+      if (!(await keyIsLive(rc.k))) {
+        return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
+      }
+    } catch {
+      return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
+    }
+    return res.json(tokenResponse(rc.k));
+  }
 
   if (grantType !== "authorization_code") {
     return res.status(400).json({ error: "unsupported_grant_type" });
   }
+  const code = body.code;
+  const codeVerifier = body.code_verifier;
   if (!code) {
     return res.status(400).json({ error: "invalid_request", error_description: "code required" });
   }
@@ -537,24 +594,14 @@ router.post("/oauth/token", async (req, res) => {
 
   // Confirm the minted key is still live (not revoked between authorize and now).
   try {
-    const record = await ApiKey.findOne({ hashedKey: hashApiKey(claims.k), revoked: false });
-    if (!record) return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
+    if (!(await keyIsLive(claims.k))) {
+      return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
+    }
   } catch {
     return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
   }
 
-  // The access token IS the bb_live_ key — verifyMcpAuth already accepts it as a
-  // Bearer token, so no MCP-side change is needed. expires_in is required by
-  // strict clients (Claude's web relay): without it they treat the token as
-  // already-expired and never present it on the MCP session, so the connection
-  // silently fails after a successful token exchange. The key itself is
-  // long-lived (revocable in the dashboard), so we advertise a one-year window.
-  return res.json({
-    access_token: claims.k,
-    token_type: "Bearer",
-    expires_in: 31536000,
-    scope: "mcp",
-  });
+  return res.json(tokenResponse(claims.k));
 });
 
 export default router;
