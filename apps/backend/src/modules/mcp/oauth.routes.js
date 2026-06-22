@@ -163,7 +163,7 @@ function authServerMetadata(req, res) {
     response_types_supported: ["code"],
     response_modes_supported: ["query"],
     grant_types_supported: ["authorization_code", "refresh_token"],
-    code_challenge_methods_supported: ["S256", "plain"],
+    code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
     scopes_supported: ["mcp", "offline_access"],
     authorization_response_iss_parameter_supported: true,
@@ -562,6 +562,11 @@ async function keyIsLive(rawKey) {
 // ── Token ─────────────────────────────────────────────────────────────────────
 // Exchange the auth code (+ PKCE verifier) for the API key, or refresh.
 router.post("/oauth/token", async (req, res) => {
+  // RFC 6749 §5.1: token responses MUST NOT be cached. Strict connectors
+  // (claude.ai's relay) treat a token delivered without no-store as untrusted
+  // and decline to attach it to subsequent MCP requests.
+  res.set("Cache-Control", "no-store");
+  res.set("Pragma", "no-cache");
   const body = req.body || {};
   const grantType = body.grant_type;
 
