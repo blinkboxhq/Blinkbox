@@ -56,6 +56,11 @@ router.use((req, res, next) => {
     scope: b.scope || q.scope || null,
     grant_types: b.grant_types || b.grant_type || null,
     response_type: b.response_type || q.response_type || null,
+    resource: b.resource || q.resource || null,
+    redirect_uri: b.redirect_uri || q.redirect_uri || null,
+    client_id: b.client_id || q.client_id || null,
+    has_pkce: !!(b.code_challenge || q.code_challenge),
+    has_verifier: !!(b.code_verifier || q.code_verifier),
     status: null,
   };
   res.on("finish", () => {
