@@ -165,7 +165,8 @@ function authServerMetadata(req, res) {
     grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256", "plain"],
     token_endpoint_auth_methods_supported: ["none"],
-    scopes_supported: ["mcp", "offline_access"],
+    scopes_supported: ["mcp"],
+    authorization_response_iss_parameter_supported: true,
   });
 }
 router.get("/.well-known/oauth-authorization-server", authServerMetadata);
@@ -340,12 +341,15 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Please verify your email at blinkbox.net before connecting.");
   }
 
-  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method, scope }, reRender);
+  return issueCodeAndRedirect(req, res, user, { redirect_uri, state, code_challenge, code_challenge_method, scope }, reRender);
 });
 
 // Shared tail for both password and Google sign-in: mint a per-connection key,
 // sign a 5-min PKCE-bound auth code, 302 back to the client's redirect_uri.
-async function issueCodeAndRedirect(res, user, params, onError) {
+// `iss` (RFC 9207) is appended so the connector's recorded-issuer check passes;
+// without it, strict clients (Claude/ChatGPT) discard the freshly issued token
+// and loop the whole OAuth flow with a new client_id instead of calling /api/mcp.
+async function issueCodeAndRedirect(req, res, user, params, onError) {
   const { redirect_uri, state, code_challenge, code_challenge_method, scope } = params;
   const today = new Date().toISOString().slice(0, 10);
   let rawKey;
@@ -376,6 +380,7 @@ async function issueCodeAndRedirect(res, user, params, onError) {
   }
   u.searchParams.set("code", code);
   if (state) u.searchParams.set("state", String(state));
+  u.searchParams.set("iss", baseUrl(req));
   console.error("[mcp issueCode] redirecting back to client", { host: u.host, path: u.pathname, hasState: !!state });
   return res.redirect(302, u.toString());
 }
@@ -508,7 +513,7 @@ router.get("/oauth/google/callback", async (req, res) => {
     }
   }
 
-  return issueCodeAndRedirect(res, user, params, reRender);
+  return issueCodeAndRedirect(req, res, user, params, reRender);
 });
 
 // Scopes we actually grant. Claude registers and authorizes with
