@@ -202,7 +202,7 @@ function consentPage({ params, error, googleClientId }) {
   // GIS's button/transform iframes are blocked inside Claude's OAuth popup, so an
   // anchor + full-page navigation is the only thing that survives there.
   const gStart = new URLSearchParams();
-  ["redirect_uri", "state", "code_challenge", "code_challenge_method"].forEach((k) => {
+  ["redirect_uri", "state", "code_challenge", "code_challenge_method", "scope"].forEach((k) => {
     if (params[k] != null && params[k] !== "") gStart.set(k, String(params[k]));
   });
   const googleLogo = `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.85 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.67-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.67 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>`;
@@ -299,7 +299,7 @@ router.get("/oauth/authorize", (req, res) => {
 // ── Authorize (POST) — authenticate, mint key, issue code ─────────────────────
 router.post("/oauth/authorize", async (req, res) => {
   const body = req.body || {};
-  const { redirect_uri, state, code_challenge, code_challenge_method, email, password } = body;
+  const { redirect_uri, state, code_challenge, code_challenge_method, scope, email, password } = body;
 
   if (!redirect_uri) {
     return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
@@ -335,13 +335,13 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Please verify your email at blinkbox.net before connecting.");
   }
 
-  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method }, reRender);
+  return issueCodeAndRedirect(res, user, { redirect_uri, state, code_challenge, code_challenge_method, scope }, reRender);
 });
 
 // Shared tail for both password and Google sign-in: mint a per-connection key,
 // sign a 5-min PKCE-bound auth code, 302 back to the client's redirect_uri.
 async function issueCodeAndRedirect(res, user, params, onError) {
-  const { redirect_uri, state, code_challenge, code_challenge_method } = params;
+  const { redirect_uri, state, code_challenge, code_challenge_method, scope } = params;
   const today = new Date().toISOString().slice(0, 10);
   let rawKey;
   try {
@@ -356,6 +356,7 @@ async function issueCodeAndRedirect(res, user, params, onError) {
       k: rawKey,
       cc: code_challenge || null,
       ccm: (code_challenge_method || "plain").toLowerCase(),
+      sc: scope || null,
       t: "mcp_oauth_code",
     },
     JWT_SECRET,
@@ -386,7 +387,7 @@ function googleRedirectUri(req) {
 // we send the browser straight to accounts.google.com. The MCP OAuth params ride
 // through Google's own `state`, signed so the callback can trust them.
 router.get("/oauth/google/start", (req, res) => {
-  const { redirect_uri, state, code_challenge, code_challenge_method } = req.query;
+  const { redirect_uri, state, code_challenge, code_challenge_method, scope } = req.query;
   if (!redirect_uri) {
     return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
   }
@@ -407,6 +408,7 @@ router.get("/oauth/google/start", (req, res) => {
       st: state ? String(state) : null,
       cc: code_challenge ? String(code_challenge) : null,
       ccm: code_challenge_method ? String(code_challenge_method) : null,
+      sc: scope ? String(scope) : null,
       t: "mcp_google_state",
     },
     JWT_SECRET,
@@ -438,7 +440,7 @@ router.get("/oauth/google/callback", async (req, res) => {
     console.error("[mcp google callback] state verify failed:", e?.message || e);
     return res.status(400).json({ error: "invalid_request", error_description: "Google sign-in expired. Start again." });
   }
-  const params = { redirect_uri: st.ru, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm };
+  const params = { redirect_uri: st.ru, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm, scope: st.sc };
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
     res.status(401).send(consentPage({ params, error, googleClientId: GOOGLE_CLIENT_ID }));
@@ -504,6 +506,22 @@ router.get("/oauth/google/callback", async (req, res) => {
   return issueCodeAndRedirect(res, user, params, reRender);
 });
 
+// Scopes we actually grant. Claude registers and authorizes with
+// "mcp offline_access" — it needs offline_access acknowledged in the granted
+// scope to consider the connector grant complete, otherwise it aborts before
+// opening the MCP session even after a 200 token exchange. We always satisfy
+// offline_access (a refresh_token is issued below), so we echo back exactly the
+// requested scopes that we support rather than a hardcoded "mcp".
+const SUPPORTED_SCOPES = new Set(["mcp", "offline_access"]);
+function grantScope(requested) {
+  const granted = String(requested || "")
+    .split(/\s+/)
+    .filter((s) => SUPPORTED_SCOPES.has(s));
+  if (!granted.includes("mcp")) granted.unshift("mcp");
+  if (!granted.includes("offline_access")) granted.push("offline_access");
+  return granted.join(" ");
+}
+
 // Build the standard token response. The access token IS the bb_live_ key —
 // verifyMcpAuth already accepts it as a Bearer token. We also issue a
 // refresh_token: strict connectors (Claude's web relay) treat a connector grant
@@ -511,7 +529,7 @@ router.get("/oauth/google/callback", async (req, res) => {
 // a 200 token exchange. The refresh token is a signed pointer back to the key;
 // exchanging it re-validates the key and returns it again. The key is long-lived
 // and revocable in the dashboard, so we advertise a one-year access window.
-function tokenResponse(rawKey) {
+function tokenResponse(rawKey, scope) {
   const refreshToken = jwt.sign(
     { k: rawKey, t: "mcp_refresh" },
     JWT_SECRET,
@@ -522,7 +540,7 @@ function tokenResponse(rawKey) {
     token_type: "Bearer",
     expires_in: 31536000,
     refresh_token: refreshToken,
-    scope: "mcp",
+    scope: grantScope(scope),
   };
 }
 
@@ -559,7 +577,7 @@ router.post("/oauth/token", async (req, res) => {
     } catch {
       return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
     }
-    return res.json(tokenResponse(rc.k));
+    return res.json(tokenResponse(rc.k, body.scope));
   }
 
   if (grantType !== "authorization_code") {
@@ -601,7 +619,7 @@ router.post("/oauth/token", async (req, res) => {
     return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
   }
 
-  return res.json(tokenResponse(claims.k));
+  return res.json(tokenResponse(claims.k, claims.sc));
 });
 
 export default router;
