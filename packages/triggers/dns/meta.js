@@ -1,0 +1,1 @@
+export default { label: "On DNS Record Change", description: "Fires when a DNS record changes", category: "triggers", colorClass: "text-sky-400", accentColor: "56,189,248", backendType: "dns_trigger" };

@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+body {
+  background-color: #000000;
+  color: #e5e5e5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
+.react-flow__background {
+  background-color: #0d0d0f !important;
+}
+
+.react-flow__minimap {
+  background-color: #0a0a0a !important;
+  border: 1px solid #1a1a1a !important;
+  border-radius: 8px !important;
+}
+
+.react-flow__controls {
+  border: 1px solid #27272a !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: none !important;
+}
+
+.react-flow__controls-button {
+  background-color: #18181b !important;
+  border-bottom: 1px solid #27272a !important;
+  fill: #71717a !important;
+  transition: all 0.2s ease;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #27272a !important;
+  fill: #e4e4e7 !important;
+}
+
+.react-flow__edge-path {
+  transition: stroke 0.3s ease, stroke-opacity 0.3s ease, stroke-width 0.2s ease;
+}
+
+.react-flow__connection-line {
+  stroke: #3f3f46 !important;
+  stroke-width: 5 !important;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* ── Edge hover action buttons ─────────────────────────────────────────────── */
+.react-flow__edge:hover .edge-action-buttons,
+.react-flow__edge.selected .edge-action-buttons {
+  opacity: 1 !important;
+}
+
+/* ── Handle hover glow ────────────────────────────────────────────────────── */
+.react-flow__handle:hover {
+  background-color: #71717a !important;
+  box-shadow: 0 0 6px rgba(113, 113, 122, 0.4);
+}
+
+/* ── NodeToolbar reset ─────────────────────────────────────────────────────── */
+.react-flow__node-toolbar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+
+/* ── Edge flow animation ───────────────────────────────────────────────────── */
+@keyframes edgeFlow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -26; }
+}
+
+/* Completed edge: green flash then fade back to idle */
+@keyframes edgeFadeToIdle {
+  0%   { stroke: #10b981; filter: drop-shadow(0 0 6px rgba(16,185,129,0.8)); stroke-width: 5; }
+  40%  { stroke: #10b981; filter: drop-shadow(0 0 3px rgba(16,185,129,0.4)); }
+  100% { stroke: #3f3f46; filter: none; stroke-width: 5; }
+}
+
+/* ── Node hover shimmer ──────────────────────────────────────────────────── */
+@keyframes nodeShimmer {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ── Handle pulse on connection drag ─────────────────────────────────────── */
+.react-flow__handle.connecting {
+  animation: handlePulse 0.8s ease-in-out infinite;
+}
+
+@keyframes handlePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(228, 228, 231, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(228, 228, 231, 0.1);
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* ── Sidebar invisible scrollbar (show on hover) ────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 0px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 2px;
+}
+.sidebar-scroll {
+  scrollbar-width: none;
+}
+.sidebar-scroll:hover {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
+/* ── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #fff;
+}
+
+/* ── Scroll Reveal ─────────────────────────────────────────────────────────── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-on-scroll[data-delay="1"] {
+  transition-delay: 0.1s;
+}
+
+.reveal-on-scroll[data-delay="2"] {
+  transition-delay: 0.2s;
+}
+
+.reveal-on-scroll[data-delay="3"] {
+  transition-delay: 0.3s;
+}
+
+.reveal-on-scroll[data-delay="4"] {
+  transition-delay: 0.4s;
+}
+
+.reveal-on-scroll[data-delay="5"] {
+  transition-delay: 0.5s;
+}
+
+/* ── Live Grid Background ─────────────────────────────────────────────────── */
+.live-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridFlow 20s linear infinite;
+}
+
+/* ── Animated Gradient Text ────────────────────────────────────────────────── */
+.gradient-text-animated {
+  background-size: 200% 200%;
+  animation: textShimmer 3s ease-in-out infinite;
+}
+
+/* ── Floating Orb ─────────────────────────────────────────────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────────────────── */
+.marquee-track {
+  display: flex;
+  gap: 3rem;
+  width: max-content;
+}
+
+/* ── Smooth Scroll ────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Node spinning border (live execution) ────────────────────────────────── */
+@keyframes bb-spin-conic {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.bb-spin-border {
+  animation: bb-spin-conic 1.2s linear infinite;
+}
+.bb-spin-border-slow {
+  animation: bb-spin-conic 2s linear infinite;
+}

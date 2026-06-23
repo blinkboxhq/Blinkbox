@@ -1,0 +1,1 @@
+export default { label: "On Database Row", description: "Fires when a new database row is inserted", category: "triggers", colorClass: "text-emerald-400", accentColor: "52,211,153", backendType: "db_trigger" };

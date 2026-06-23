@@ -1,0 +1,15 @@
+export {
+  screenshot,
+  openUrl,
+  leftClick,
+  rightClick,
+  doubleClick,
+  mouseMove,
+  typeText,
+  pressKey,
+  scroll,
+  runCommand,
+  closeSession,
+  sessionInfo,
+  dispatchAction,
+} from "../nodes/VirtualComputer.js";

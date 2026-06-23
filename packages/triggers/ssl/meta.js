@@ -1,0 +1,1 @@
+export default { label: "On SSL Cert Expiry", description: "Fires when an SSL certificate is about to expire", category: "triggers", colorClass: "text-green-400", accentColor: "74,222,128", backendType: "ssl_trigger" };

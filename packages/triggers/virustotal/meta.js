@@ -1,0 +1,1 @@
+export default { label: "On VirusTotal Scan", description: "Fires when a VirusTotal analysis completes", category: "triggers", colorClass: "text-[#394EFF]", accentColor: "57,78,255", backendType: "virustotal_trigger" };

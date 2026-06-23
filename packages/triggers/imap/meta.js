@@ -1,0 +1,1 @@
+export default { label: "On Email in Inbox", description: "Fires when a new email arrives via IMAP", category: "triggers", colorClass: "text-cyan-400", accentColor: "34,211,238", backendType: "imap_trigger" };

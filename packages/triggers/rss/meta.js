@@ -1,0 +1,1 @@
+export default { label: "On RSS / Atom Update", description: "Fires when a new item appears in an RSS feed", category: "triggers", colorClass: "text-orange-400", accentColor: "249,115,22", backendType: "rss_trigger" };

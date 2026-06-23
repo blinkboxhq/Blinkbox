@@ -1,0 +1,1 @@
+export default { label: "On Google Drive Event", description: "Fires on Google Drive file create/update", category: "triggers", colorClass: "text-[#4285F4]", accentColor: "66,133,244", backendType: "google_drive_trigger" };

@@ -1,0 +1,1 @@
+export default { label: "On Google Forms Response", description: "Fires on new Google Forms response", category: "triggers", colorClass: "text-[#673AB7]", accentColor: "103,58,183", backendType: "google_forms_trigger" };

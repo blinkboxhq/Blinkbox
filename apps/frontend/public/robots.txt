@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://blinkbox.net/sitemap.xml

@@ -1,0 +1,1 @@
+export default { label: "On Pipedrive Event", description: "Fires on Pipedrive deal or contact events", category: "triggers", colorClass: "text-[#F55137]", accentColor: "245,81,55", backendType: "pipedrive_trigger" };

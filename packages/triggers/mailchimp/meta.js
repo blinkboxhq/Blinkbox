@@ -1,0 +1,1 @@
+export default { label: "On Mailchimp Event", description: "Fires on Mailchimp subscribe/unsubscribe", category: "triggers", colorClass: "text-[#FFE01B]", accentColor: "255,224,27", backendType: "mailchimp_trigger" };

@@ -1,0 +1,1 @@
+export default { label: "On Telegram Message", description: "Fires when a Telegram bot receives a message", category: "triggers", colorClass: "text-[#26A5E4]", accentColor: "38,165,228", backendType: "telegram_trigger" };

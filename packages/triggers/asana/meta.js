@@ -1,0 +1,1 @@
+export default { label: "On Asana Task", description: "Fires on Asana task create/update", category: "triggers", colorClass: "text-[#F06A6A]", accentColor: "240,106,106", backendType: "asana_trigger" };

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/logo.svg" />
+    <title>Blinkbox — AI-native automation platform</title>
+    <meta name="description" content="Build automations in minutes. Describe what you need to Brian AI and watch it wire the full workflow — no code required. 250+ integrations, headless scraping, AI agents." />
+    <meta name="theme-color" content="#0a0a0b" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://blinkbox.net/" />
+    <meta property="og:title" content="Blinkbox — AI-native automation platform" />
+    <meta property="og:description" content="Build automations in minutes. Describe what you need to Brian AI and watch it wire the full workflow — no code required. 250+ integrations, headless scraping, AI agents." />
+    <meta property="og:image" content="https://blinkbox.net/og-image.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Blinkbox — AI-native automation platform" />
+    <meta name="twitter:description" content="Build automations in minutes. Describe what you need to Brian AI and watch it wire the full workflow — no code required. 250+ integrations, headless scraping, AI agents." />
+    <meta name="twitter:image" content="https://blinkbox.net/og-image.png" />
+
+    <script type="text/javascript">
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash,
+          );
+        }
+      })(window.location);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

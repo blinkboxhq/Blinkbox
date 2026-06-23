@@ -1,0 +1,85 @@
+import { useState } from 'react';
+import { Info } from 'lucide-react';
+import logo from './logo.svg';
+
+export default function AzureDevOpsTriggerNode({ config = {}, updateConfig }) {
+  const [tab, setTab] = useState('setup');
+  const accent = '#0078D4';
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
+        <div className="p-1 bg-[#222] rounded-md border border-[#333]">
+          <img src={logo} className="w-3 h-3 object-contain" alt="Azure DevOps" />
+        </div>
+        <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Azure DevOps</span>
+        <div className="ml-auto">
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border"
+            style={{ color: accent, background: accent + '18', borderColor: accent + '33' }}>TRIGGER</span>
+        </div>
+      </div>
+
+      <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
+        {['setup', 'options', 'payload'].map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${tab === t ? 'border-b-2' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+            style={tab === t ? { color: accent, borderColor: accent } : {}}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className="p-3 flex flex-col gap-3">
+        {tab === 'setup' && (
+          <>
+            <div className="p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+              <p className="text-[9px] text-zinc-400 leading-relaxed">
+                In Azure DevOps → Project Settings → Service hooks, create a webhook pointing to your BlinkBox webhook URL.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Organization</label>
+              <input value={config.organization || ''} onChange={e => updateConfig?.('organization', e.target.value)}
+                placeholder="my-org" className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none transition-colors" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Project</label>
+              <input value={config.project || ''} onChange={e => updateConfig?.('project', e.target.value)}
+                placeholder="my-project" className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 font-mono focus:outline-none transition-colors" />
+            </div>
+          </>
+        )}
+        {tab === 'options' && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Event Type Filter</label>
+            <select value={config.eventType || 'all'} onChange={e => updateConfig?.('eventType', e.target.value)}
+              className="w-full bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none cursor-pointer">
+              <option value="all">All events</option>
+              <option value="build.complete">Build complete</option>
+              <option value="git.push">Git push</option>
+              <option value="workitem.created">Work item created</option>
+              <option value="workitem.updated">Work item updated</option>
+              <option value="ms.vss-code.git-pullrequest-created">PR created</option>
+            </select>
+          </div>
+        )}
+        {tab === 'payload' && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <Info className="w-3 h-3 text-zinc-600" />
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow</span>
+            </div>
+            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+              {[['$trigger.eventType','Event type (e.g. build.complete)'],['$trigger.message','Event message'],['$trigger.resource','Resource object'],['$trigger.createdDate','When the event occurred']].map(([k,d]) => (
+                <div key={k} className="flex items-baseline gap-2">
+                  <span className="text-[10px] font-mono shrink-0" style={{ color: accent }}>{k}</span>
+                  <span className="text-[9px] text-zinc-600">{d}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

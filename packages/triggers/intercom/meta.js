@@ -1,0 +1,1 @@
+export default { label: "On Intercom Event", description: "Fires on Intercom conversation or contact events", category: "triggers", colorClass: "text-[#1F8DED]", accentColor: "31,141,237", backendType: "intercom_trigger" };

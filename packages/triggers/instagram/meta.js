@@ -1,0 +1,1 @@
+export default { label: "On Instagram Event", description: "Fires on Instagram post or message events", category: "triggers", colorClass: "text-[#E4405F]", accentColor: "228,64,95", backendType: "instagram_trigger" };

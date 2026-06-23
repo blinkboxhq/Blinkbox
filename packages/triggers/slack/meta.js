@@ -1,0 +1,1 @@
+export default { label: "On Slack Event", description: "Fires on Slack message or channel events", category: "triggers", colorClass: "text-[#E01E5A]", accentColor: "224,30,90", backendType: "slack_trigger" };

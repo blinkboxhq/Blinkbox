@@ -1,0 +1,1 @@
+export default { label: "On Linear Event", description: "Fires on Linear issue create/update", category: "triggers", colorClass: "text-[#5E6AD2]", accentColor: "94,106,210", backendType: "linear_trigger" };

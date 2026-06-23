@@ -1,0 +1,1 @@
+export default { label: "On Figma Event", description: "Fires on Figma file comment or update", category: "triggers", colorClass: "text-[#F24E1E]", accentColor: "242,78,30", backendType: "figma_trigger" };

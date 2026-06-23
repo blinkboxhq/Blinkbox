@@ -1,0 +1,1 @@
+export default { label: "On Form Submission", description: "Fires when a BlinkBox form is submitted", category: "triggers", colorClass: "text-violet-400", accentColor: "139,92,246", backendType: "form_trigger" };

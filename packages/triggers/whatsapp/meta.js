@@ -1,0 +1,1 @@
+export default { label: "On WhatsApp Message", description: "Fires when a WhatsApp message is received", category: "triggers", colorClass: "text-[#25D366]", accentColor: "37,211,102", backendType: "whatsapp_trigger" };

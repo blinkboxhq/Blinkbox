@@ -1,0 +1,1 @@
+export default { label: "On Crypto Price Alert", description: "Fires when a cryptocurrency crosses a price threshold", category: "triggers", colorClass: "text-yellow-400", accentColor: "250,204,21", backendType: "price_alert_trigger" };

@@ -1,0 +1,1 @@
+export default { label: "On SharePoint Event", description: "Fires on SharePoint list item events", category: "triggers", colorClass: "text-[#0078D4]", accentColor: "0,120,212", backendType: "sharepoint_trigger" };

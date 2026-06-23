@@ -1,0 +1,30 @@
+export default {
+  backendType: "filter_array",
+  label: "Filter Array",
+  description: "Keep items matching a condition",
+  fields: [
+    { name: "arrayPath", label: "Array Path", type: "string", smart: true, placeholder: "items  (blank = use entire input)", hint: "Dot-path to array in input, e.g. results.data" },
+    { name: "field", label: "Field to Test", type: "string", smart: true, placeholder: "status  (dot-path within each item)" },
+    { name: "operator", label: "Operator", type: "options", cols: 3, default: "equals", options: [
+      { value: "equals",      label: "equals" },
+      { value: "notEquals",   label: "≠ not equals" },
+      { value: "contains",    label: "contains" },
+      { value: "notContains", label: "not contains" },
+      { value: "startsWith",  label: "starts with" },
+      { value: "endsWith",    label: "ends with" },
+      { value: "gt",          label: "> greater" },
+      { value: "gte",         label: ">= gte" },
+      { value: "lt",          label: "< less" },
+      { value: "lte",         label: "<= lte" },
+      { value: "isEmpty",     label: "is empty" },
+      { value: "isNotEmpty",  label: "not empty" },
+      { value: "exists",      label: "exists" },
+      { value: "notExists",   label: "not exists" },
+    ]},
+    { name: "value", label: "Value", type: "string", smart: true, placeholder: "active",
+      show: { operator: ["equals","notEquals","contains","notContains","startsWith","endsWith","gt","gte","lt","lte"] }
+    },
+    { name: "outputKey", label: "Output Key", type: "string", default: "items", mono: true, smart: false },
+  ],
+  outputs: ["items", "filteredCount", "totalCount"],
+};
