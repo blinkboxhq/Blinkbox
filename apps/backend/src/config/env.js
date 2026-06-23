@@ -111,6 +111,10 @@ export const STRIPE_SECRET_KEY       = process.env.STRIPE_SECRET_KEY       || nu
 export const STRIPE_WEBHOOK_SECRET   = process.env.STRIPE_WEBHOOK_SECRET   || null;
 export const STRIPE_PRICE_ID_PRO     = process.env.STRIPE_PRICE_ID_PRO     || null;
 export const FRONTEND_URL            = process.env.FRONTEND_URL             || 'http://localhost:5174';
+// Dedicated MCP host. When a request arrives on this host the MCP server is
+// served at the root (like mcp.higgsfield.ai) and the OAuth resource identifier
+// is the bare origin — the shape every chat connector handles flawlessly.
+export const MCP_HOST                = process.env.MCP_HOST                  || 'mcp.blinkbox.net';
 export const HUBSPOT_API_KEY         = process.env.HUBSPOT_API_KEY         || null;
 export const SHOPIFY_API_KEY         = process.env.SHOPIFY_API_KEY         || null;
 export const SHOPIFY_API_SECRET      = process.env.SHOPIFY_API_SECRET      || null;

@@ -1,7 +1,15 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../config/env.js";
+import { JWT_SECRET, MCP_HOST } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
+
+// True when the request arrived on the dedicated MCP host. There the server is
+// served at the root and the OAuth resource is the bare origin — the exact shape
+// mcp.higgsfield.ai uses, which Claude's relay connects to without issue.
+export function isMcpHost(req) {
+  const host = (req.headers["x-forwarded-host"] || req.get("host") || "").split(":")[0].toLowerCase();
+  return host === String(MCP_HOST).toLowerCase();
+}
 
 export function hashApiKey(rawKey) {
   return crypto.createHash("sha256").update(rawKey).digest("hex");
@@ -30,7 +38,11 @@ function publicBase(req) {
 // RFC 9728 §5.1 / RFC 6750 §3: 401 + WWW-Authenticate with resource_metadata.
 function challenge401(req, res, error, description) {
   const base = publicBase(req);
-  const mcpPath = req.originalUrl.split("?")[0];
+  // On the dedicated MCP host the resource is the bare origin, so its metadata
+  // lives at the ROOT well-known (like higgsfield) — no path suffix. On the
+  // shared api host we keep the path-suffixed form so existing connectors that
+  // dialed /api/mcp still discover the right document.
+  const mcpPath = isMcpHost(req) ? "" : req.originalUrl.split("?")[0];
   const metadataUrl = `${base}/.well-known/oauth-protected-resource${mcpPath}`;
   res.set(
     "WWW-Authenticate",
