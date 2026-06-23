@@ -25,8 +25,19 @@ import { handlePublicWebhook } from "../modules/automation/webhook.controller.js
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
 import { MCP_HOST } from "../config/env.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
 const app = express();
+
+// Read the brand mark once at boot so both api. and mcp. hosts can serve a
+// favicon. These are JSON API hosts with no HTML, so connector cards and
+// browsers fetch /favicon.ico directly — a 404 there is what makes the domain
+// read as untrustworthy. Path is resolved from this module, not cwd.
+const FAVICON_SVG = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "assets", "blinkbox-logo.svg"),
+);
 
 // ── Dedicated MCP host (mcp.blinkbox.net) ─────────────────────────────────────
 // higgsfield's connector works because it serves MCP at the ROOT of a dedicated
@@ -49,6 +60,17 @@ app.use((req, _res, next) => {
   }
   next();
 });
+
+// ── Favicon (served on every host, before auth/CORS) ──────────────────────────
+// The SVG renders at any size, so we answer both /favicon.ico and /favicon.svg
+// with it. Long cache — the brand mark rarely changes.
+function sendFavicon(_req, res) {
+  res.set("Content-Type", "image/svg+xml");
+  res.set("Cache-Control", "public, max-age=604800, immutable");
+  res.send(FAVICON_SVG);
+}
+app.get("/favicon.ico", sendFavicon);
+app.get("/favicon.svg", sendFavicon);
 
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(helmet({
