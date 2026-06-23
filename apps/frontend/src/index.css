@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
+/* One canonical dark scale. Every surface should reference these, not invent its
+   own hex. surface ascends 0→3 (deepest page → most-raised), border ascends with
+   prominence, text descends hi→lo. Keep this list short on purpose. */
+:root {
+  --bb-surface-0: #08080a;  /* page background */
+  --bb-surface-1: #0d0d10;  /* card / panel */
+  --bb-surface-2: #131317;  /* raised card / hover */
+  --bb-surface-3: #1a1a1f;  /* popover / inset */
+
+  --bb-border-subtle: #1c1c20;
+  --bb-border:        #28282e;
+  --bb-border-strong: #3a3a42;
+
+  --bb-text-hi:  #fafafa;
+  --bb-text-mid: #a1a1aa;
+  --bb-text-lo:  #71717a;
+  --bb-text-dim: #52525b;
+
+  --bb-accent:      #8b5cf6;
+  --bb-accent-soft: rgba(139, 92, 246, 0.12);
+}
+
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 body {
   background-color: #000000;
@@ -9,6 +32,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
@@ -239,4 +263,34 @@ html {
 }
 .bb-spin-border-slow {
   animation: bb-spin-conic 2s linear infinite;
+}
+
+/* ── Hero aura (slow breathing radial behind the Brian hero) ──────────────── */
+@keyframes bbAuraBreathe {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.06); }
+}
+.bb-aura {
+  animation: bbAuraBreathe 7s ease-in-out infinite;
+}
+
+/* ── Sheen sweep (premium "coming soon" — a light passes across the surface) ─ */
+@keyframes bbSheen {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.bb-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: bbSheen 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Dashboard card lift on hover (used by workflow grid) ─────────────────── */
+@keyframes bbCardSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

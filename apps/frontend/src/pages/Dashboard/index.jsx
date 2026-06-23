@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import EmptyState from './components/EmptyState';
+import DashboardHero from './components/DashboardHero';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
@@ -421,6 +422,14 @@ export default function Dashboard() {
               <div className="mb-5 px-3 py-2 rounded-xl border border-red-500/15 bg-red-500/5 flex items-center gap-2 text-[12px] text-red-400">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {systemError}
               </div>
+            )}
+
+            {/* Brian builder — full hero when empty, compact composer once workflows exist */}
+            {!workflowsLoading && (
+              <DashboardHero
+                userName={user?.name}
+                compact={workflows.length > 0}
+              />
             )}
 
             {/* Section header */}

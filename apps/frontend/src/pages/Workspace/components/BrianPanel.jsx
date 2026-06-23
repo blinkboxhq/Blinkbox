@@ -610,6 +610,7 @@ export default function BrianPanel({ width, onResizeStart, initialPrompt }) {
 
   useEffect(() => {
     if (!initialPrompt) return;
+    setBrianOpen(true);
     const timer = setTimeout(() => send(initialPrompt), 400);
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line
