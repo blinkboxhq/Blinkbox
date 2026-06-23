@@ -83,10 +83,28 @@ function recordHit(req, res, next) {
   next();
 }
 
+// The StreamableHTTPServerTransport returns 406 Not Acceptable unless the POST's
+// Accept header advertises BOTH application/json and text/event-stream. Claude's
+// web relay (claude.ai/v1/toolbox/shttp/...) opens the session with an Accept of
+// */* (or only one of the two), so the SDK 406'd every initialize and the
+// connector finished OAuth but never opened the MCP session. Normalize Accept to
+// the canonical pair the transport requires before it negotiates — we only ever
+// broaden it to media types we already support, so no client loses anything.
+const MCP_ACCEPT = "application/json, text/event-stream";
+function normalizeAccept(req) {
+  const accept = String(req.headers["accept"] || "").toLowerCase();
+  const hasJson = accept.includes("application/json");
+  const hasSse = accept.includes("text/event-stream");
+  if (!hasJson || !hasSse) {
+    req.headers["accept"] = MCP_ACCEPT;
+  }
+}
+
 // Stateless Streamable-HTTP: one transport per request, no session store. Strict
 // connectors (ChatGPT/Claude) get correct SSE framing; lenient ones get JSON —
 // the transport decides from the request's Accept header.
 async function handle(req, res) {
+  normalizeAccept(req);
   const server = buildServer(req.user.id);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on("close", () => {
