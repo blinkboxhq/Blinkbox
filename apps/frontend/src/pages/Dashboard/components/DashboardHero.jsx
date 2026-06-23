@@ -4,7 +4,7 @@ import {
   ArrowUp, Sparkles, Loader2, RotateCcw, ArrowRight, Square,
   Zap, Mail, Clock, Globe, GitBranch, Database,
 } from 'lucide-react';
-import api from '../../lib/api';
+import api from '../../../lib/api';
 import brianLogo from '../../../assets/brian.webp';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
