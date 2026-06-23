@@ -86,17 +86,33 @@ function recordHit(req, res, next) {
 // The StreamableHTTPServerTransport returns 406 Not Acceptable unless the POST's
 // Accept header advertises BOTH application/json and text/event-stream. Claude's
 // web relay (claude.ai/v1/toolbox/shttp/...) opens the session with an Accept of
-// */* (or only one of the two), so the SDK 406'd every initialize and the
-// connector finished OAuth but never opened the MCP session. Normalize Accept to
-// the canonical pair the transport requires before it negotiates — we only ever
-// broaden it to media types we already support, so no client loses anything.
+// */*, so the SDK 406s every initialize and the connector finishes OAuth but
+// never opens the MCP session.
+//
+// Since SDK 1.29 the Node transport is a thin wrapper that hands the request to
+// Hono's getRequestListener, which builds the Web `Request` (and the `Headers`
+// the 406 check reads) from `req.rawHeaders` — NOT from `req.headers`. So
+// rewriting `req.headers.accept` alone is invisible to the negotiation and the
+// 406 stands. We must rewrite the raw header pair too. Verified against
+// @modelcontextprotocol/sdk@1.29.0: patching only headers → 406, patching
+// rawHeaders → 200. We only ever broaden Accept to media types we already
+// support, so no client loses anything.
 const MCP_ACCEPT = "application/json, text/event-stream";
 function normalizeAccept(req) {
   const accept = String(req.headers["accept"] || "").toLowerCase();
-  const hasJson = accept.includes("application/json");
-  const hasSse = accept.includes("text/event-stream");
-  if (!hasJson || !hasSse) {
-    req.headers["accept"] = MCP_ACCEPT;
+  if (accept.includes("application/json") && accept.includes("text/event-stream")) {
+    return;
+  }
+  req.headers["accept"] = MCP_ACCEPT;
+  if (Array.isArray(req.rawHeaders)) {
+    const next = [];
+    for (let i = 0; i < req.rawHeaders.length; i += 2) {
+      if (String(req.rawHeaders[i]).toLowerCase() !== "accept") {
+        next.push(req.rawHeaders[i], req.rawHeaders[i + 1]);
+      }
+    }
+    next.push("Accept", MCP_ACCEPT);
+    req.rawHeaders = next;
   }
 }
 
