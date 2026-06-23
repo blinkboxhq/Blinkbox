@@ -61,14 +61,24 @@ router.use((req, res, next) => {
     client_id: b.client_id || q.client_id || null,
     has_pkce: !!(b.code_challenge || q.code_challenge),
     has_verifier: !!(b.code_verifier || q.code_verifier),
+    has_refresh: !!(b.refresh_token || q.refresh_token),
+    dbg: null,
     status: null,
   };
+  req._traceEntry = entry;
   res.on("finish", () => {
     entry.status = res.statusCode;
   });
   record(entry);
   next();
 });
+
+// Temporary: let a handler annotate WHY it returned the status it did, written
+// into the same ring entry so GET /api/mcp/_recent shows the exact failure
+// branch. Remove with the rest of the trace once the connector is verified.
+function dbg(req, reason) {
+  if (req._traceEntry) req._traceEntry.dbg = reason;
+}
 
 // Logo served from disk once, cached in memory — the consent page mirrors the web
 // app's login screen, which renders this same asset. apps/backend/public/logo.svg
@@ -574,53 +584,65 @@ router.post("/oauth/token", async (req, res) => {
   if (grantType === "refresh_token") {
     const rt = body.refresh_token;
     if (!rt) {
+      dbg(req, "refresh: no refresh_token in body");
       return res.status(400).json({ error: "invalid_request", error_description: "refresh_token required" });
     }
     let rc;
     try {
       rc = jwt.verify(String(rt), JWT_SECRET);
-    } catch {
+    } catch (e) {
+      dbg(req, `refresh: jwt.verify threw: ${e?.name}:${e?.message}`);
       return res.status(400).json({ error: "invalid_grant", error_description: "refresh_token expired or invalid" });
     }
     if (rc.t !== "mcp_refresh") {
+      dbg(req, `refresh: wrong token type t=${rc.t}`);
       return res.status(400).json({ error: "invalid_grant" });
     }
     try {
       if (!(await keyIsLive(rc.k))) {
+        dbg(req, "refresh: keyIsLive=false (revoked/missing)");
         return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
       }
-    } catch {
+    } catch (e) {
+      dbg(req, `refresh: keyIsLive threw: ${e?.message}`);
       return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
     }
+    dbg(req, "refresh: OK");
     return res.json(tokenResponse(rc.k, body.scope));
   }
 
   if (grantType !== "authorization_code") {
+    dbg(req, `unsupported grant_type=${grantType}`);
     return res.status(400).json({ error: "unsupported_grant_type" });
   }
   const code = body.code;
   const codeVerifier = body.code_verifier;
   if (!code) {
+    dbg(req, "code: no code in body");
     return res.status(400).json({ error: "invalid_request", error_description: "code required" });
   }
 
   let claims;
   try {
     claims = jwt.verify(String(code), JWT_SECRET);
-  } catch {
+  } catch (e) {
+    dbg(req, `code: jwt.verify threw: ${e?.name}:${e?.message}`);
     return res.status(400).json({ error: "invalid_grant", error_description: "code expired or invalid" });
   }
   if (claims.t !== "mcp_oauth_code") {
+    dbg(req, `code: wrong token type t=${claims.t}`);
     return res.status(400).json({ error: "invalid_grant" });
   }
 
   // PKCE verification (only if a challenge was issued at authorize time).
   if (claims.cc) {
     if (!codeVerifier) {
+      dbg(req, "code: PKCE challenge present but no code_verifier sent");
       return res.status(400).json({ error: "invalid_request", error_description: "code_verifier required" });
     }
     const computed = claims.ccm === "s256" ? sha256base64url(String(codeVerifier)) : String(codeVerifier);
     if (computed !== claims.cc) {
+      dbg(req, `code: PKCE mismatch ccm=${claims.ccm}`);
       return res.status(400).json({ error: "invalid_grant", error_description: "PKCE verification failed" });
     }
   }
@@ -628,12 +650,15 @@ router.post("/oauth/token", async (req, res) => {
   // Confirm the minted key is still live (not revoked between authorize and now).
   try {
     if (!(await keyIsLive(claims.k))) {
+      dbg(req, "code: keyIsLive=false");
       return res.status(400).json({ error: "invalid_grant", error_description: "API key revoked." });
     }
-  } catch {
+  } catch (e) {
+    dbg(req, `code: keyIsLive threw: ${e?.message}`);
     return res.status(400).json({ error: "invalid_grant", error_description: "API key check failed." });
   }
 
+  dbg(req, "code: OK");
   return res.json(tokenResponse(claims.k, claims.sc));
 });
 
