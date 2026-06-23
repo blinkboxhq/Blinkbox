@@ -34,10 +34,14 @@ const app = express();
 // Read the brand mark once at boot so both api. and mcp. hosts can serve a
 // favicon. These are JSON API hosts with no HTML, so connector cards and
 // browsers fetch /favicon.ico directly — a 404 there is what makes the domain
-// read as untrustworthy. Path is resolved from this module, not cwd.
-const FAVICON_SVG = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "assets", "blinkbox-logo.svg"),
-);
+// read as untrustworthy. We keep PNG variants too: many clients (including
+// connector preview cards and older browsers) request /favicon.ico and refuse
+// to render an SVG served under that name, so .ico must be a real raster.
+// Paths are resolved from this module, not cwd.
+const ASSET_DIR = join(dirname(fileURLToPath(import.meta.url)), "assets");
+const FAVICON_SVG = readFileSync(join(ASSET_DIR, "blinkbox-logo.svg"));
+const FAVICON_PNG_32 = readFileSync(join(ASSET_DIR, "favicon-32.png"));
+const FAVICON_PNG_180 = readFileSync(join(ASSET_DIR, "favicon-180.png"));
 
 // ── Dedicated MCP host (mcp.blinkbox.net) ─────────────────────────────────────
 // higgsfield's connector works because it serves MCP at the ROOT of a dedicated
@@ -62,15 +66,22 @@ app.use((req, _res, next) => {
 });
 
 // ── Favicon (served on every host, before auth/CORS) ──────────────────────────
-// The SVG renders at any size, so we answer both /favicon.ico and /favicon.svg
-// with it. Long cache — the brand mark rarely changes.
-function sendFavicon(_req, res) {
-  res.set("Content-Type", "image/svg+xml");
-  res.set("Cache-Control", "public, max-age=604800, immutable");
-  res.send(FAVICON_SVG);
+// Long cache — the brand mark rarely changes. .ico is served as a real PNG
+// (clients reject SVG-under-an-.ico-name), .svg stays vector for crisp scaling,
+// and apple-touch-icon covers the iOS/preview-card 180px request.
+function favicon(buf, type) {
+  return (_req, res) => {
+    res.set("Content-Type", type);
+    res.set("Cache-Control", "public, max-age=604800, immutable");
+    res.send(buf);
+  };
 }
-app.get("/favicon.ico", sendFavicon);
-app.get("/favicon.svg", sendFavicon);
+app.get("/favicon.ico", favicon(FAVICON_PNG_32, "image/png"));
+app.get("/favicon-32.png", favicon(FAVICON_PNG_32, "image/png"));
+app.get("/favicon.png", favicon(FAVICON_PNG_180, "image/png"));
+app.get("/apple-touch-icon.png", favicon(FAVICON_PNG_180, "image/png"));
+app.get("/apple-touch-icon-precomposed.png", favicon(FAVICON_PNG_180, "image/png"));
+app.get("/favicon.svg", favicon(FAVICON_SVG, "image/svg+xml"));
 
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(helmet({
