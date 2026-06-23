@@ -23,7 +23,107 @@
 
   --bb-accent:      #8b5cf6;
   --bb-accent-soft: rgba(139, 92, 246, 0.12);
+
+  --bb-radius:    14px;
+  --bb-radius-sm: 10px;
+  --bb-ring:      0 0 0 1px var(--bb-border);
+  --bb-shadow-card: 0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+  --bb-shadow-pop:  0 12px 40px -12px rgba(0,0,0,0.7), 0 0 0 1px var(--bb-border);
 }
+
+/* ── Semantic component layer ─────────────────────────────────────────────────
+   The reusable premium template. Build surfaces from these, not raw hex, so the
+   whole app shares one material. Composable with Tailwind utilities. */
+@layer components {
+  /* Page canvas */
+  .bb-page { background: var(--bb-surface-0); color: var(--bb-text-mid); }
+
+  /* Card: the default raised surface. Lifts on hover. */
+  .bb-card {
+    background: var(--bb-surface-1);
+    border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius);
+    box-shadow: var(--bb-shadow-card);
+    transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+  }
+  .bb-card-hover:hover {
+    background: var(--bb-surface-2);
+    border-color: var(--bb-border);
+    transform: translateY(-1px);
+  }
+
+  /* Inset panel (table shells, code, output blocks) */
+  .bb-panel {
+    background: var(--bb-surface-1);
+    border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius);
+  }
+
+  /* Popover / dropdown / menu */
+  .bb-pop {
+    background: var(--bb-surface-2);
+    border: 1px solid var(--bb-border);
+    border-radius: var(--bb-radius-sm);
+    box-shadow: var(--bb-shadow-pop);
+  }
+
+  /* Inputs */
+  .bb-input {
+    background: var(--bb-surface-1);
+    border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius-sm);
+    color: var(--bb-text-hi);
+    transition: border-color .15s ease;
+  }
+  .bb-input::placeholder { color: var(--bb-text-dim); }
+  .bb-input:focus { outline: none; border-color: var(--bb-border-strong); }
+
+  /* Pills / chips / badges */
+  .bb-pill {
+    background: var(--bb-surface-1);
+    border: 1px solid var(--bb-border-subtle);
+    border-radius: 9999px;
+    color: var(--bb-text-mid);
+  }
+
+  /* Buttons */
+  .bb-btn {
+    border-radius: var(--bb-radius-sm);
+    font-weight: 600;
+    transition: all .15s ease;
+  }
+  .bb-btn:active { transform: scale(.97); }
+  .bb-btn-primary { background: #fafafa; color: #09090b; }
+  .bb-btn-primary:hover { background: #fff; }
+  .bb-btn-accent { background: var(--bb-accent); color: #fff; }
+  .bb-btn-accent:hover { background: #7c4ddb; }
+  .bb-btn-ghost { background: transparent; border: 1px solid var(--bb-border-subtle); color: var(--bb-text-lo); }
+  .bb-btn-ghost:hover { color: var(--bb-text-hi); border-color: var(--bb-border); }
+
+  /* Segmented control track */
+  .bb-seg {
+    background: var(--bb-surface-1);
+    border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius-sm);
+    padding: 2px;
+  }
+  .bb-seg-btn { border-radius: 8px; color: var(--bb-text-lo); transition: all .15s ease; }
+  .bb-seg-btn:hover { color: var(--bb-text-mid); }
+  .bb-seg-btn.is-active { background: rgba(255,255,255,0.08); color: var(--bb-text-hi); }
+
+  /* Section header label */
+  .bb-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--bb-text-dim);
+  }
+
+  /* Hairline divider */
+  .bb-divider { border-color: var(--bb-border-subtle); }
+}
+
+/* Staggered entrance — set --bb-i on each item for index-based delay */
+@keyframes bbRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.bb-rise { animation: bbRise .22s ease-out both; animation-delay: calc(var(--bb-i, 0) * 28ms); }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 body {

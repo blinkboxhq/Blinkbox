@@ -182,6 +182,7 @@ export default function Dashboard() {
 
   const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const heroRef = useRef(null);
   const [workflows, setWorkflows] = useState([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -415,7 +416,7 @@ export default function Dashboard() {
 
         {/* Scrollable workflows area */}
         {activeTab === 'workflows' && (
-        <main className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+        <main className="bb-page flex-1 overflow-y-auto">
           <div className="px-8 py-6 max-w-[1400px] mx-auto" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
 
             {systemError && (
@@ -427,27 +428,28 @@ export default function Dashboard() {
             {/* Brian builder — full hero when empty, compact composer once workflows exist */}
             {!workflowsLoading && (
               <DashboardHero
+                ref={heroRef}
                 userName={user?.name}
                 compact={workflows.length > 0}
               />
             )}
 
             {/* Section header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
                 <h2 className="text-[15px] font-bold text-white tracking-tight">Workflows</h2>
                 {workflows.length > 0 && (
-                  <span className="text-[11px] text-neutral-700 font-mono bg-[#0f0f0f] border border-[#1c1c1c] px-2 py-0.5 rounded-full">
+                  <span className="bb-pill text-[11px] font-mono px-2 py-0.5">
                     {workflows.length}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 {/* Status filter */}
-                <div className="flex items-center bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg p-0.5">
+                <div className="bb-seg flex items-center">
                   {['all', 'active', 'draft'].map(f => (
                     <button key={f} onClick={() => setStatusFilter(f)}
-                      className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${statusFilter === f ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300'}`}>
+                      className={`bb-seg-btn px-3 py-1 text-[11px] font-medium ${statusFilter === f ? 'is-active' : ''}`}>
                       {f.charAt(0).toUpperCase() + f.slice(1)}
                     </button>
                   ))}
@@ -455,26 +457,26 @@ export default function Dashboard() {
 
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-700" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--bb-text-dim)]" />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
-                    className="pl-7 pr-3 py-[5px] bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg text-[11px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-[#2a2a2a] w-[140px] transition-colors" />
+                    className="bb-input pl-7 pr-3 py-[5px] text-[11px] w-[140px]" />
                 </div>
 
                 {/* View toggle */}
-                <div className="flex items-center bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg p-0.5">
+                <div className="bb-seg flex items-center">
                   <button onClick={() => setViewMode('grid')} title="Grid view"
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                    className={`bb-seg-btn p-1.5 ${viewMode === 'grid' ? 'is-active' : ''}`}>
                     <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => setViewMode('list')} title="List view"
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                    className={`bb-seg-btn p-1.5 ${viewMode === 'list' ? 'is-active' : ''}`}>
                     <List className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* New workflow */}
                 <button onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-[6px] bg-white text-black text-[12px] font-semibold rounded-lg hover:bg-neutral-100 transition-all active:scale-[0.97] shrink-0">
+                  className="bb-btn bb-btn-primary flex items-center gap-1.5 px-3.5 py-[6px] text-[12px] shrink-0">
                   <Plus className="w-3.5 h-3.5" /> New workflow
                 </button>
               </div>
@@ -484,38 +486,38 @@ export default function Dashboard() {
             {workflowsLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-[210px] rounded-2xl bg-[#0c0c0c] border border-[#161616] animate-pulse" />
+                  <div key={i} className="bb-card h-[210px] animate-pulse" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
+              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} onPickTemplate={(p) => heroRef.current?.run(p)} />
 
             ) : viewMode === 'list' ? (
               /* ── LIST VIEW ── */
-              <div className="rounded-2xl border border-[#161616] overflow-hidden" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
+              <div className="bb-panel overflow-hidden">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-[#0a0a0a] border-b border-[#161616]">
+                    <tr className="border-b bb-divider" style={{ background: 'var(--bb-surface-0)' }}>
                       <th className="w-10" />
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Name</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Trigger</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Updated</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Team</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Name</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Status</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Trigger</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Updated</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Team</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((wf, i) => (
                       <tr key={wf._id || wf.id} onClick={() => navigate(`/workspace/${wf._id || wf.id}`)}
-                        className="group border-t border-[#111] hover:bg-white/[0.015] cursor-pointer transition-colors"
-                        style={{ animation: `dbSlide 0.12s ease-out ${i * 0.02}s both` }}>
+                        className="bb-rise group border-t bb-divider hover:bg-white/[0.02] cursor-pointer transition-colors"
+                        style={{ '--bb-i': Math.min(i, 12) }}>
                         <td className="pl-4 py-3">
                           <div className="w-2 h-2 rounded-full" style={{ background: TRIGGER_COLOR[wf.trigger] || '#525252' }} />
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
-                          {wf.description && <p className="text-[11px] text-[#3a3a3a] truncate max-w-[260px] mt-0.5">{wf.description}</p>}
+                          {wf.description && <p className="text-[11px] text-[var(--bb-text-dim)] truncate max-w-[260px] mt-0.5">{wf.description}</p>}
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${wf.status === 'active' ? 'text-emerald-400' : 'text-neutral-700'}`}>
@@ -524,7 +526,7 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-4 py-3"><TriggerBadge trigger={wf.trigger || 'manual'} /></td>
-                        <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(wf.updatedAt)}</td>
+                        <td className="px-4 py-3 text-[11px] text-[var(--bb-text-dim)]">{timeAgo(wf.updatedAt)}</td>
                         <td className="px-4 py-3"><CollabAvatarStack collaborators={wf.collaborators || []} /></td>
                         <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                           <button onClick={e => openMenu(e, wf._id || wf.id)}
@@ -550,8 +552,12 @@ export default function Dashboard() {
                   const wfId = wf._id || wf.id;
                   return (
                     <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
-                      className="group relative flex flex-col rounded-2xl border border-[#1a1a1a] bg-[#0c0c0c] hover:border-[#2a2a2a] hover:bg-[#0e0e0e] cursor-pointer transition-all duration-200 overflow-hidden"
-                      style={{ animation: `dbSlide 0.15s ease-out ${Math.min(i, 8) * 0.03}s both` }}>
+                      className="bb-card bb-card-hover bb-rise group relative flex flex-col cursor-pointer overflow-hidden"
+                      style={{ '--bb-i': Math.min(i, 10) }}>
+
+                      {/* Trigger-accent wash on hover */}
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                        style={{ background: `linear-gradient(90deg, transparent, ${accentColor}66, transparent)` }} />
 
                       {/* Canvas thumbnail */}
                       <div className="p-3 pb-2">
@@ -568,17 +574,17 @@ export default function Dashboard() {
                         <div className="flex-1 min-w-0 pr-2">
                           <h3 className="text-[13px] font-semibold text-neutral-200 group-hover:text-white truncate leading-snug">{wf.name}</h3>
                           {wf.description && (
-                            <p className="text-[11px] text-[#383838] mt-0.5 truncate">{wf.description}</p>
+                            <p className="text-[11px] text-[var(--bb-text-dim)] mt-0.5 truncate">{wf.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0 mt-0.5">
                           <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                            isActive ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/[0.08]' : 'text-[#3a3a3a] border-[#1e1e1e]'
+                            isActive ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/[0.08]' : 'text-[var(--bb-text-dim)] border-[var(--bb-border-subtle)]'
                           }`}>
                             {isActive ? 'Active' : 'Draft'}
                           </span>
                           <button onClick={e => openMenu(e, wfId)}
-                            className={`p-1 rounded-md text-[#333] hover:text-neutral-400 hover:bg-white/[0.04] transition-all ${openMenuId === wfId ? 'opacity-100 text-neutral-400' : 'opacity-0 group-hover:opacity-100'}`}>
+                            className={`p-1 rounded-md text-[var(--bb-text-dim)] hover:text-neutral-400 hover:bg-white/[0.04] transition-all ${openMenuId === wfId ? 'opacity-100 text-neutral-400' : 'opacity-0 group-hover:opacity-100'}`}>
                             <MoreHorizontal className="w-3.5 h-3.5" />
                           </button>
                           {openMenuId === wfId && (
@@ -592,17 +598,17 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           {isActive
                             ? <span className="flex items-center gap-1.5 text-[10px] text-emerald-500"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />live</span>
-                            : <span className="flex items-center gap-1.5 text-[10px] text-[#2a2a2a]"><span className="w-1.5 h-1.5 rounded-full bg-[#202020]" />draft</span>
+                            : <span className="flex items-center gap-1.5 text-[10px] text-[var(--bb-text-dim)]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--bb-border)]" />draft</span>
                           }
-                          <span className="text-[#1e1e1e]">·</span>
+                          <span className="text-[var(--bb-border-subtle)]">·</span>
                           <TriggerBadge trigger={wf.trigger || 'manual'} />
                           {wf.nodeCount > 0 && (
-                            <span className="text-[10px] text-[#2a2a2a] font-mono">{wf.nodeCount}n</span>
+                            <span className="text-[10px] text-[var(--bb-text-dim)] font-mono">{wf.nodeCount}n</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           <CollabAvatarStack collaborators={wf.collaborators || []} />
-                          <span className="text-[10px] text-[#2e2e2e]">{timeAgo(wf.updatedAt)}</span>
+                          <span className="text-[10px] text-[var(--bb-text-dim)]">{timeAgo(wf.updatedAt)}</span>
                         </div>
                       </div>
                     </div>
@@ -615,12 +621,12 @@ export default function Dashboard() {
             {pagination && pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 mt-8">
                 <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-neutral-600 hover:text-white border border-[#1e1e1e] rounded-lg hover:bg-[#111] transition-all disabled:opacity-30">
+                  className="bb-btn bb-btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-[11px] disabled:opacity-30">
                   <ChevronLeft className="w-3 h-3" /> Prev
                 </button>
-                <span className="text-[11px] text-neutral-700 font-mono">{pagination.page} / {pagination.totalPages}</span>
+                <span className="text-[11px] text-[var(--bb-text-lo)] font-mono">{pagination.page} / {pagination.totalPages}</span>
                 <button onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={currentPage >= pagination.totalPages}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-neutral-600 hover:text-white border border-[#1e1e1e] rounded-lg hover:bg-[#111] transition-all disabled:opacity-30">
+                  className="bb-btn bb-btn-ghost flex items-center gap-1.5 px-3 py-1.5 text-[11px] disabled:opacity-30">
                   Next <ChevronRight className="w-3 h-3" />
                 </button>
               </div>

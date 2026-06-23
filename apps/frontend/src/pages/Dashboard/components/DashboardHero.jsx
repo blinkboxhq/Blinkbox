@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUp, Sparkles, Loader2, RotateCcw, ArrowRight, Square,
@@ -72,7 +72,7 @@ function ThinkingDots() {
   );
 }
 
-export default function DashboardHero({ userName, compact = false }) {
+const DashboardHero = forwardRef(function DashboardHero({ userName, compact = false }, ref) {
   const navigate = useNavigate();
   const [value, setValue]     = useState('');
   const [phase, setPhase]     = useState('idle'); // idle | streaming | done | error
@@ -157,6 +157,13 @@ export default function DashboardHero({ userName, compact = false }) {
   };
 
   const stop = () => { abortRef.current?.abort(); setPhase('done'); };
+
+  useImperativeHandle(ref, () => ({
+    run: (text) => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      run(text);
+    },
+  }));
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); run(value); }
@@ -363,4 +370,6 @@ export default function DashboardHero({ userName, compact = false }) {
       </div>
     </div>
   );
-}
+});
+
+export default DashboardHero;
