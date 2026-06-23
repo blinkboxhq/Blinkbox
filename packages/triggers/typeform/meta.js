@@ -1,1 +1,0 @@
-export default { label: "On Typeform Submission", description: "Fires when a Typeform is submitted", category: "triggers", colorClass: "text-zinc-300", accentColor: "212,212,216", backendType: "typeform_trigger" };

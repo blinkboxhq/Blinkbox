@@ -1,1 +1,0 @@
-export default { label: "On Webhook Call", description: "Fires when an HTTP POST is received at the webhook URL", category: "triggers", colorClass: "text-blue-400", accentColor: "59,130,246", backendType: "webhook" };

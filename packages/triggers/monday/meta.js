@@ -1,1 +1,0 @@
-export default { label: "On Monday.com Item", description: "Fires when a Monday.com board item changes", category: "triggers", colorClass: "text-[#FF3D57]", accentColor: "255,61,87", backendType: "monday_trigger" };

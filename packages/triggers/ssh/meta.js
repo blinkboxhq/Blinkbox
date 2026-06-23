@@ -1,1 +1,0 @@
-export default { label: "On SSH Command Output", description: "Fires when an SSH command returns output", category: "triggers", colorClass: "text-zinc-300", accentColor: "212,212,216", backendType: "ssh_trigger" };

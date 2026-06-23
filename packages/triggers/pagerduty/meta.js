@@ -1,1 +1,0 @@
-export default { label: "On PagerDuty Alert", description: "Fires on PagerDuty incident create/resolve", category: "triggers", colorClass: "text-[#06AC38]", accentColor: "6,172,56", backendType: "pagerduty_trigger" };

@@ -1,1 +1,0 @@
-export default { label: "On Docker Event", description: "Fires on Docker container events", category: "triggers", colorClass: "text-[#2496ED]", accentColor: "36,150,237", backendType: "docker_trigger" };

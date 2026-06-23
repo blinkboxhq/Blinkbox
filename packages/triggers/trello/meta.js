@@ -1,1 +1,0 @@
-export default { label: "On Trello Card", description: "Fires when a Trello card is created or moved", category: "triggers", colorClass: "text-[#0052CC]", accentColor: "0,82,204", backendType: "trello_trigger" };

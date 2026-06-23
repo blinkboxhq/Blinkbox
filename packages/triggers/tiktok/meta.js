@@ -1,1 +1,0 @@
-export default { label: "On TikTok Event", description: "Fires on TikTok post or comment events", category: "triggers", colorClass: "text-[#FF0050]", accentColor: "255,0,80", backendType: "tiktok_trigger" };

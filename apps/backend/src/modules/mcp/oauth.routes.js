@@ -9,7 +9,7 @@ import { OAuth2Client } from "google-auth-library";
 import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
-import { hashApiKey } from "./apiKey.middleware.js";
+import { hashApiKey, isMcpHost } from "./apiKey.middleware.js";
 import { record } from "./mcp.routes.js";
 
 /**
@@ -112,9 +112,13 @@ function baseUrl(req) {
   return `${proto}://${host}`;
 }
 
-// The single, stable resource every connector authenticates against.
+// The single, stable resource every connector authenticates against. On the
+// dedicated MCP host this is the BARE ORIGIN (https://mcp.blinkbox.net), exactly
+// like higgsfield's https://mcp.higgsfield.ai — the shape Claude's relay
+// connects to cleanly. On the shared api host it stays path-suffixed so older
+// connectors still resolve.
 function mcpResource(req) {
-  return `${baseUrl(req)}/api/mcp`;
+  return isMcpHost(req) ? baseUrl(req) : `${baseUrl(req)}/api/mcp`;
 }
 
 function sha256base64url(input) {

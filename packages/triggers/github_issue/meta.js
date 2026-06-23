@@ -1,1 +1,0 @@
-export default { label: "On GitHub Issue / PR", description: "Fires on GitHub issue or pull request events", category: "triggers", colorClass: "text-zinc-200", accentColor: "244,244,245", backendType: "github_issue_trigger" };

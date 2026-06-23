@@ -1,1 +1,0 @@
-export default { label: "On Stripe Event", description: "Fires on Stripe payment or subscription events", category: "triggers", colorClass: "text-indigo-400", accentColor: "99,102,241", backendType: "stripe_trigger" };

@@ -1,1 +1,0 @@
-export default { label: "On Notion Page", description: "Fires when a Notion page is created or updated", category: "triggers", colorClass: "text-zinc-200", accentColor: "228,228,231", backendType: "notion_trigger" };

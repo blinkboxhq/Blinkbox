@@ -1,1 +1,0 @@
-export default { label: "On YouTube Video", description: "Fires when a new YouTube video is published", category: "triggers", colorClass: "text-red-400", accentColor: "248,113,113", backendType: "youtube_trigger" };

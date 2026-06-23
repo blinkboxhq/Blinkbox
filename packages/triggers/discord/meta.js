@@ -1,1 +1,0 @@
-export default { label: "On Discord Event", description: "Fires on Discord message or server event", category: "triggers", colorClass: "text-[#5865F2]", accentColor: "88,101,242", backendType: "discord_trigger" };

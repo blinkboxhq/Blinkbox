@@ -1,1 +1,0 @@
-export default { label: "On Port State Change", description: "Fires when a TCP port opens or closes", category: "triggers", colorClass: "text-violet-400", accentColor: "167,139,250", backendType: "port_monitor_trigger" };

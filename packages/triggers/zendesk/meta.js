@@ -1,1 +1,0 @@
-export default { label: "On Zendesk Ticket", description: "Fires when a Zendesk ticket is created or updated", category: "triggers", colorClass: "text-[#03363D]", accentColor: "3,54,61", backendType: "zendesk_trigger" };

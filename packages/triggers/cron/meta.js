@@ -1,1 +1,0 @@
-export default { label: "On a Schedule", description: "Run a workflow on a cron schedule", category: "triggers", colorClass: "text-amber-400", accentColor: "251,191,36", backendType: "cron_trigger" };

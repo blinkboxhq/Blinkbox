@@ -1,1 +1,0 @@
-export default { label: "On Sentry Alert", description: "Fires when a Sentry error alert fires", category: "triggers", colorClass: "text-[#362D59]", accentColor: "84,70,138", backendType: "sentry_trigger" };

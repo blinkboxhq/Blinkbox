@@ -1,1 +1,0 @@
-export default { label: "On Outlook Email", description: "Fires when a new Outlook email arrives", category: "triggers", colorClass: "text-[#0078D4]", accentColor: "0,120,212", backendType: "outlook_trigger" };

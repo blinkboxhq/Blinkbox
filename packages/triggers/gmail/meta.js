@@ -1,1 +1,0 @@
-export default { label: "On Gmail Email", description: "Fires when a new email arrives in Gmail", category: "triggers", colorClass: "text-[#EA4335]", accentColor: "234,67,53", backendType: "gmail_trigger" };

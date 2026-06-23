@@ -24,8 +24,31 @@ import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
+import { MCP_HOST } from "../config/env.js";
 
 const app = express();
+
+// ── Dedicated MCP host (mcp.blinkbox.net) ─────────────────────────────────────
+// higgsfield's connector works because it serves MCP at the ROOT of a dedicated
+// subdomain, so its OAuth resource is a bare origin and discovery happens at the
+// root well-known — the shape every chat relay handles without issue. We mirror
+// that: when a request lands on MCP_HOST, the transport lives at the root
+// (`/` and `/mcp`). We reuse the already-tested /api/mcp machinery by rewriting
+// the path, so CORS, the compression exclusion, body parsing, the transport and
+// the rawHeaders Accept fix all apply unchanged. OAuth discovery + flow paths
+// (`/.well-known/*`, `/oauth/*`) are root-served and host-agnostic already, so
+// they pass straight through.
+const MCP_ROOT_RE = /^\/(mcp\/?)?$/; // "/", "/mcp", "/mcp/"
+app.use((req, _res, next) => {
+  const host = (req.headers["x-forwarded-host"] || req.headers.host || "").split(":")[0].toLowerCase();
+  if (host !== String(MCP_HOST).toLowerCase()) return next();
+  const pathOnly = req.url.split("?")[0];
+  const query = req.url.slice(pathOnly.length);
+  if (MCP_ROOT_RE.test(pathOnly)) {
+    req.url = "/api/mcp" + query;
+  }
+  next();
+});
 
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(helmet({

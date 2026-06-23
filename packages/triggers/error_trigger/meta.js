@@ -1,1 +1,0 @@
-export default { label: "On Workflow Error", description: "Fires when another workflow fails", category: "triggers", colorClass: "text-red-400", accentColor: "239,68,68", backendType: "error_trigger" };

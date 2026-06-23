@@ -1,1 +1,0 @@
-export default { label: "On Jira Issue", description: "Fires when a Jira issue is created or updated", category: "triggers", colorClass: "text-[#0052CC]", accentColor: "0,82,204", backendType: "jira_trigger" };

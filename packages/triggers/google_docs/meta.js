@@ -1,1 +1,0 @@
-export default { label: "On Google Docs Edit", description: "Fires when a Google Doc is edited", category: "triggers", colorClass: "text-[#4285F4]", accentColor: "66,133,244", backendType: "google_docs_trigger" };

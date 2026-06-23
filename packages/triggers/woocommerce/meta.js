@@ -1,1 +1,0 @@
-export default { label: "On WooCommerce Order", description: "Fires on WooCommerce order events", category: "triggers", colorClass: "text-[#7F54B3]", accentColor: "127,84,179", backendType: "woocommerce_trigger" };

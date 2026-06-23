@@ -1,1 +1,0 @@
-export default { label: "On Calendly Booking", description: "Fires when a new Calendly event is scheduled", category: "triggers", colorClass: "text-[#006BFF]", accentColor: "0,107,255", backendType: "calendly_trigger" };

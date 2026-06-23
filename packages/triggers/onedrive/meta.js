@@ -1,1 +1,0 @@
-export default { label: "On OneDrive Event", description: "Fires on OneDrive file create/update", category: "triggers", colorClass: "text-[#0078D4]", accentColor: "0,120,212", backendType: "onedrive_trigger" };

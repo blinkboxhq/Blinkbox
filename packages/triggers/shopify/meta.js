@@ -1,1 +1,0 @@
-export default { label: "On Shopify Event", description: "Fires on Shopify order, product, or customer events", category: "triggers", colorClass: "text-[#95BF47]", accentColor: "149,191,71", backendType: "shopify_trigger" };

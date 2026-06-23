@@ -1,1 +1,0 @@
-export default { label: "On Netlify Build", description: "Fires on Netlify deploy success or failure", category: "triggers", colorClass: "text-[#00C7B7]", accentColor: "0,199,183", backendType: "netlify_trigger" };

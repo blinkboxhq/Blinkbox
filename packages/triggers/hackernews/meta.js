@@ -1,1 +1,0 @@
-export default { label: "On Hacker News Post", description: "Fires on new Hacker News story or comment", category: "triggers", colorClass: "text-orange-400", accentColor: "251,146,60", backendType: "hackernews_trigger" };

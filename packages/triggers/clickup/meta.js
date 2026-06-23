@@ -1,1 +1,0 @@
-export default { label: "On ClickUp Task Event", description: "Fires on ClickUp task create/update", category: "triggers", colorClass: "text-[#7B68EE]", accentColor: "123,104,238", backendType: "clickup_trigger" };

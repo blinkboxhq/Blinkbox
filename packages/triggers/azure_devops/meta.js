@@ -1,1 +1,0 @@
-export default { label: "On Azure DevOps Event", description: "Fires on Azure DevOps pipeline/PR events", category: "triggers", colorClass: "text-[#0078D4]", accentColor: "0,120,212", backendType: "azure_devops_trigger" };

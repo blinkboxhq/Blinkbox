@@ -1,1 +1,0 @@
-export default { label: "On GitLab Event", description: "Fires on GitLab pipeline, MR, or push", category: "triggers", colorClass: "text-[#FC6D26]", accentColor: "252,109,38", backendType: "gitlab_trigger" };

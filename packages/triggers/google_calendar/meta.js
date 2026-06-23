@@ -1,1 +1,0 @@
-export default { label: "On Calendar Event", description: "Fires on new or updated Google Calendar events", category: "triggers", colorClass: "text-[#4285F4]", accentColor: "66,133,244", backendType: "google_calendar_trigger" };

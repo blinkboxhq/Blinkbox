@@ -1,1 +1,0 @@
-export default { label: "On Airtable Record", description: "Fires when a new record is created in Airtable", category: "triggers", colorClass: "text-[#F65858]", accentColor: "246,88,88", backendType: "airtable_trigger" };
