@@ -117,11 +117,15 @@ function Header() {
 
 function Hero() {
   return (
-    <section className="h-screen w-full flex flex-col justify-center px-[8vw] max-w-[1400px] mx-auto">
+    <section className="relative h-screen w-full flex flex-col justify-center px-[8vw] max-w-[1400px] mx-auto">
+      <div
+        className="absolute inset-y-0 left-0 w-[60%] pointer-events-none"
+        style={{ background: 'radial-gradient(80% 70% at 0% 50%, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 50%, rgba(5,5,7,0) 100%)' }}
+      />
       <motion.div
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: EASE }}
-        className="inline-flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full mb-8 w-fit"
+        className="relative inline-flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full mb-8 w-fit"
         style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.1)' }}
       >
         <span className="relative flex h-1.5 w-1.5">
@@ -134,7 +138,7 @@ function Hero() {
       <motion.h1
         initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
-        className="font-bold leading-[1.02] tracking-[-0.035em] mb-5 max-w-[14ch]"
+        className="relative font-bold leading-[1.02] tracking-[-0.035em] mb-5 max-w-[14ch]"
         style={{ fontSize: 'clamp(44px, 6.5vw, 92px)' }}
       >
         <span className="text-white">Automate</span><br />
@@ -146,7 +150,7 @@ function Hero() {
       <motion.p
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.18, ease: EASE }}
-        className="text-[17px] leading-relaxed mb-9 text-neutral-400"
+        className="relative text-[17px] leading-relaxed mb-9 text-neutral-400"
         style={{ maxWidth: 480 }}
       >
         Visually connect your apps, APIs, databases and AI agents into workflows that run silently, 24/7. The automation engine built for teams that move fast.
@@ -155,7 +159,7 @@ function Hero() {
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
-        className="flex items-center gap-3"
+        className="relative flex items-center gap-3"
       >
         <a href={LOGIN} target="_blank" rel="noopener noreferrer" className="group">
           <button className="h-12 px-7 text-[15px] font-semibold rounded-xl transition-all duration-200 hover:bg-neutral-200 active:scale-[0.98] inline-flex items-center gap-1.5"
@@ -191,7 +195,14 @@ function Hero() {
 function FeatureSection({ data, align }) {
   return (
     <section className="h-screen w-full flex items-center px-[8vw] max-w-[1400px] mx-auto">
-      <div className={`max-w-[460px] ${align === 'right' ? 'ml-auto text-right' : ''}`}>
+      <div
+        className={`relative max-w-[460px] ${align === 'right' ? 'ml-auto text-right' : ''}`}
+        style={{
+          padding: '2rem',
+          margin: '-2rem',
+          background: `radial-gradient(120% 90% at ${align === 'right' ? '100%' : '0%'} 50%, rgba(5,5,7,0.85) 0%, rgba(5,5,7,0.6) 45%, rgba(5,5,7,0) 100%)`,
+        }}
+      >
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4"
           style={{ background: 'linear-gradient(90deg,#7aa2ff,#9ab4ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           {data.kicker}
@@ -237,7 +248,7 @@ function FinalCta() {
         <a href="/privacy" className="hover:text-neutral-300 transition-colors">Privacy</a>
         <a href="/terms" className="hover:text-neutral-300 transition-colors">Terms</a>
         <a href="mailto:blinkbox.co.in@gmail.com" className="hover:text-neutral-300 transition-colors">Contact</a>
-        <span>&copy; 2025 Blinkbox</span>
+        <span>&copy; {new Date().getFullYear()} Blinkbox</span>
       </div>
     </section>
   );
