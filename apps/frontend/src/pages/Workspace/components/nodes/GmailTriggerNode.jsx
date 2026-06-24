@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Info, RefreshCw } from 'lucide-react';
 import imgGmail from '../../../../assets/gmail.png';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 
 const POLL_INTERVALS = [
   { value: '*/1 * * * *',  label: 'Every minute' },
@@ -46,7 +47,7 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
               oauthProvider="google"
               accentColor="red"
               placeholder="Select Gmail credential…"
-              hint="Uses Gmail's verified metadata scope — click Connect with Google to authorize."
+              hint="Needs gmail.readonly scope — click Connect with Google to authorize."
             />
 
             <div className="flex flex-col gap-1.5">
@@ -84,6 +85,12 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
         {activeTab === 'filter' && (
           <>
             <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Gmail Search Query</label>
+              <SmartVariableInput value={config.query || ''} onChange={(v) => updateConfig?.('query', v)} placeholder="is:unread label:inbox" nodeId={nodeId} />
+              <p className="text-[9px] text-zinc-600">Standard Gmail search operators: <span className="font-mono text-zinc-500">from: to: subject: label: has:attachment</span></p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Max Results per Poll</label>
               <input type="number" min="1" max="50" value={config.maxResults || 10}
                 onChange={(e) => updateConfig?.('maxResults', Number(e.target.value))}
@@ -91,11 +98,9 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
               />
             </div>
 
-            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
-              <Info className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-[9px] text-amber-400/90 leading-relaxed">
-                Server-side Gmail search (from:, subject:, is:unread) isn't available on the verified metadata scope. Filter on <span className="font-mono">$trigger.from</span> / <span className="font-mono">$trigger.subject</span> with a Condition node instead.
-              </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Label Filter</label>
+              <SmartVariableInput value={config.labelFilter || ''} onChange={(v) => updateConfig?.('labelFilter', v)} placeholder="INBOX, UNREAD (comma-separated)" nodeId={nodeId} />
             </div>
           </>
         )}
@@ -114,7 +119,10 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
                 ['$trigger.from', 'Sender email address'],
                 ['$trigger.to', 'Recipient email addresses'],
                 ['$trigger.date', 'Received date (ISO string)'],
-                ['$trigger.snippet', 'Short preview snippet (Gmail-provided)'],
+                ['$trigger.snippet', 'Short preview of message body'],
+                ['$trigger.bodyText', 'Plain text body content'],
+                ['$trigger.bodyHtml', 'HTML body content'],
+                ['$trigger.attachments', 'Array of attachment metadata'],
                 ['$trigger.labels', 'Array of Gmail label IDs'],
               ].map(([key, desc]) => (
                 <div key={key} className="flex items-baseline gap-2">

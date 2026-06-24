@@ -3,13 +3,12 @@
  *
  * Operations:
  *   sendEmail    — Send an email (default)
- *   readEmail    — Get a single email's headers by message ID (metadata only — no body)
- *   listRecent   — List recent message headers (metadata scope: no Gmail q-search)
+ *   readEmail    — Get a single email by message ID
+ *   searchEmails — Search emails (Gmail query syntax)
  *   createDraft  — Create a draft email
  *   replyToEmail — Reply to an existing thread
- *
- * Scope: gmail.send + gmail.metadata (non-restricted). No body, no q-search,
- * no mark-read / trash — those require restricted gmail.readonly / gmail.modify.
+ *   markRead     — Mark message(s) as read
+ *   deleteEmail  — Move to trash
  *
  * Auth: Google OAuth2 credential
  */
@@ -109,11 +108,13 @@ async function opReadEmail(config, token) {
   if (!config.messageId) return { success: false, error: "Gmail readEmail: 'messageId' is required.", skipped: true };
   const response = await axios.get(`${BASE}/messages/${encodeURIComponent(config.messageId)}`, {
     headers: auth(token),
-    params: { format: "metadata", metadataHeaders: ["From", "To", "Subject", "Date"] },
+    params: { format: "full" },
     timeout: 15000,
   });
   const msg = response.data;
   const headers = Object.fromEntries((msg.payload?.headers || []).map((h) => [h.name.toLowerCase(), h.value]));
+  const bodyData = msg.payload?.body?.data || msg.payload?.parts?.[0]?.body?.data || "";
+  const bodyText = bodyData ? Buffer.from(bodyData, "base64").toString("utf-8") : "";
   return {
     messageId: msg.id,
     threadId: msg.threadId,
@@ -121,29 +122,21 @@ async function opReadEmail(config, token) {
     to: headers["to"],
     subject: headers["subject"],
     date: headers["date"],
+    body: bodyText,
     snippet: msg.snippet,
     labelIds: msg.labelIds,
   };
 }
 
-async function opListRecent(config, token) {
+async function opSearchEmails(config, token) {
+  if (!config.query) return { success: false, error: "Gmail searchEmails: 'query' is required (e.g. 'from:user@example.com is:unread').", skipped: true };
   const response = await axios.get(`${BASE}/messages`, {
     headers: auth(token),
-    params: { maxResults: Math.min(config.maxResults || 10, 100) },
+    params: { q: config.query, maxResults: Math.min(config.maxResults || 10, 100) },
     timeout: 15000,
   });
-  const ids = response.data.messages || [];
-  const messages = [];
-  for (const { id } of ids) {
-    const r = await axios.get(`${BASE}/messages/${encodeURIComponent(id)}`, {
-      headers: auth(token),
-      params: { format: "metadata", metadataHeaders: ["From", "Subject", "Date"] },
-      timeout: 15000,
-    });
-    const h = Object.fromEntries((r.data.payload?.headers || []).map((x) => [x.name.toLowerCase(), x.value]));
-    messages.push({ messageId: r.data.id, threadId: r.data.threadId, from: h["from"], subject: h["subject"], date: h["date"], snippet: r.data.snippet, labelIds: r.data.labelIds });
-  }
-  return { messages, total: messages.length };
+  const messages = response.data.messages || [];
+  return { messages, total: response.data.resultSizeEstimate || messages.length };
 }
 
 async function opCreateDraft(config, token) {
@@ -167,12 +160,34 @@ async function opReplyToEmail(config, token) {
   return { messageId: response.data.id, threadId: response.data.threadId };
 }
 
+async function opMarkRead(config, token) {
+  if (!config.messageId) return { success: false, error: "Gmail markRead: 'messageId' is required.", skipped: true };
+  await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/modify`, {
+    removeLabelIds: ["UNREAD"],
+  }, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 10000,
+  });
+  return { messageId: config.messageId, marked: "read" };
+}
+
+async function opDeleteEmail(config, token) {
+  if (!config.messageId) return { success: false, error: "Gmail deleteEmail: 'messageId' is required.", skipped: true };
+  await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/trash`, {}, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 10000,
+  });
+  return { messageId: config.messageId, trashed: true };
+}
+
 const OPERATIONS = {
   sendEmail: opSendEmail,
   readEmail: opReadEmail,
-  listRecent: opListRecent,
+  searchEmails: opSearchEmails,
   createDraft: opCreateDraft,
   replyToEmail: opReplyToEmail,
+  markRead: opMarkRead,
+  deleteEmail: opDeleteEmail,
 };
 
 export default {

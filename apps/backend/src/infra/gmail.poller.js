@@ -38,10 +38,37 @@ async function gmailGet(token, path, params = {}) {
   return res.json();
 }
 
-// Metadata scope only — headers/labels/snippet, no body or attachments.
 function parseMessage(msg) {
   const headers = msg.payload?.headers || [];
   const h = (name) => headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || "";
+
+  // Decode body parts
+  let bodyText = "";
+  let bodyHtml = "";
+
+  const decode = (data) => {
+    try { return Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf-8"); }
+    catch { return ""; }
+  };
+
+  const extractParts = (parts = []) => {
+    for (const part of parts) {
+      if (part.mimeType === "text/plain" && part.body?.data) bodyText = decode(part.body.data);
+      if (part.mimeType === "text/html"  && part.body?.data) bodyHtml = decode(part.body.data);
+      if (part.parts) extractParts(part.parts);
+    }
+  };
+
+  if (msg.payload?.body?.data) {
+    const decoded = decode(msg.payload.body.data);
+    if (msg.payload.mimeType === "text/html") bodyHtml = decoded;
+    else bodyText = decoded;
+  }
+  extractParts(msg.payload?.parts);
+
+  const attachments = (msg.payload?.parts || [])
+    .filter((p) => p.filename && p.body?.attachmentId)
+    .map((p) => ({ filename: p.filename, mimeType: p.mimeType, size: p.body.size, attachmentId: p.body.attachmentId }));
 
   return {
     id: msg.id,
@@ -51,14 +78,14 @@ function parseMessage(msg) {
     to: h("to"),
     date: h("date"),
     snippet: msg.snippet || "",
-    bodyText: "",
-    bodyHtml: "",
+    bodyText,
+    bodyHtml,
     labels: msg.labelIds || [],
-    attachments: [],
+    attachments,
   };
 }
 
-export async function pollGmail(automationId, credentialId, maxResults, onlyNew, workspaceId) {
+export async function pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId) {
   const lockKey = `bb:gmail:lock:${automationId}`;
   const seenKey = `bb:gmail:seen:${automationId}`;
 
@@ -68,10 +95,10 @@ export async function pollGmail(automationId, credentialId, maxResults, onlyNew,
   try {
     const token = await getOAuthToken(credentialId, workspaceId, "Gmail Trigger");
 
-    // gmail.metadata scope rejects the `q` param — list recent and dedup via seenKey.
     const params = {
       maxResults: String(maxResults || 10),
     };
+    if (query) params.q = query;
 
     const listRes = await gmailGet(token, "users/me/messages", params);
     const messages = listRes.messages || [];
@@ -89,10 +116,7 @@ export async function pollGmail(automationId, credentialId, maxResults, onlyNew,
       }
 
       try {
-        const full = await gmailGet(token, `users/me/messages/${id}`, {
-          format: "metadata",
-          metadataHeaders: "From,To,Subject,Date",
-        });
+        const full = await gmailGet(token, `users/me/messages/${id}`, { format: "full" });
         const parsed = parseMessage(full);
         await executeAutomation(automation, parsed, { workspaceId: automation.workspaceId, idempotencyKey: `gmail:${automation._id}:${id}` });
         console.log(`[GmailPoller] Fired for automation "${automation.name}" message: ${id}`);
@@ -116,8 +140,8 @@ export async function startGmailPoller() {
   gmailWorker = new Worker(
     GMAIL_QUEUE,
     async (job) => {
-      const { automationId, credentialId, maxResults, onlyNew, workspaceId } = job.data;
-      await pollGmail(automationId, credentialId, maxResults, onlyNew, workspaceId);
+      const { automationId, credentialId, query, maxResults, onlyNew, workspaceId } = job.data;
+      await pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -141,7 +165,7 @@ export async function syncGmailJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || entryNode?.data || {};
-    const { credentialId, maxResults, onlyNew, pollInterval } = cfg;
+    const { credentialId, query, maxResults, onlyNew, pollInterval } = cfg;
 
     if (!credentialId) {
       console.warn(`[GmailPoller] Automation ${automation._id} has no credentialId, skipping`);
@@ -154,6 +178,7 @@ export async function syncGmailJobs() {
       {
         automationId: automation._id.toString(),
         credentialId,
+        query: query || "is:unread",
         maxResults: maxResults || 10,
         onlyNew: onlyNew !== false,
         workspaceId: automation.workspaceId,
