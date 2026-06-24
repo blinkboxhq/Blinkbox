@@ -2,6 +2,7 @@ import { useMemo, useRef, useSyncExternalStore } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useScroll } from '@react-three/drei';
 import * as THREE from 'three';
+import { ACCENT_HEX, ACCENT_HOT_HEX, ACCENT_LIGHT_HEX, ACCENT_EDGE_HEX } from './accent';
 
 const REDUCE_QUERY = '(prefers-reduced-motion: reduce)';
 function subscribeReduced(cb) {
@@ -20,9 +21,9 @@ function useReducedMotion() {
   );
 }
 
-const ACCENT = new THREE.Color('#5b8cff');
-const ACCENT_HOT = new THREE.Color('#8ab4ff');
-const EDGE = new THREE.Color('#3d5488');
+const ACCENT = new THREE.Color(ACCENT_HEX);
+const ACCENT_HOT = new THREE.Color(ACCENT_HOT_HEX);
+const EDGE = new THREE.Color(ACCENT_EDGE_HEX);
 
 function seededRandom(seed) {
   let s = seed % 2147483647;
@@ -197,7 +198,7 @@ function Scene() {
       <color attach="background" args={['#050507']} />
       <fog attach="fog" args={['#050507', 14, 46]} />
       <ambientLight intensity={0.35} />
-      <pointLight position={[8, 6, 8]} intensity={60} color="#7aa2ff" />
+      <pointLight position={[8, 6, 8]} intensity={60} color={ACCENT_LIGHT_HEX} />
       <pointLight position={[-8, -4, -10]} intensity={40} color="#3b4d80" />
       <group position={groupPos} scale={groupScale}>
         <Nodes clusters={clusters} />

@@ -5,6 +5,7 @@ import { Canvas } from '@react-three/fiber';
 import { ScrollControls, Scroll } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scene } from './Scene3D';
+import { ACCENT_GRADIENT, ACCENT_LIGHT_HEX } from './accent';
 import LandingClassic from './LandingClassic';
 import logo from '../../assets/logo.svg';
 
@@ -204,7 +205,7 @@ function FeatureSection({ data, align }) {
         }}
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4"
-          style={{ background: 'linear-gradient(90deg,#7aa2ff,#9ab4ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          style={{ background: ACCENT_GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           {data.kicker}
         </p>
         <h2 className="text-[clamp(34px,4.5vw,58px)] font-bold text-white tracking-[-0.03em] leading-[1.05] mb-5"
@@ -288,7 +289,7 @@ function StaticHero() {
         <div className="mt-20 grid gap-4 text-left sm:grid-cols-2">
           {SECTIONS.map((s) => (
             <div key={s.kicker} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#7aa2ff]">{s.kicker}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: ACCENT_LIGHT_HEX }}>{s.kicker}</div>
               <div className="mt-1.5 text-[15px] font-medium text-white">{s.title.replace('\n', ' ')}</div>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-400">{s.body}</p>
             </div>
