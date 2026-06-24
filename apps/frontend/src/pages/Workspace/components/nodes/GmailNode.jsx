@@ -1,4 +1,4 @@
-import { Send, Mail, Search, FileText, Reply, BookOpen, Trash2 } from 'lucide-react';
+import { Send, Mail, Inbox, FileText, Reply } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
@@ -13,18 +13,16 @@ function GmailIcon({ className }) {
 
 const OPERATIONS = [
   { value: 'sendEmail',    label: 'Send Email',    icon: Send },
-  { value: 'readEmail',    label: 'Read Email',    icon: Mail },
-  { value: 'searchEmails', label: 'Search Emails', icon: Search },
+  { value: 'readEmail',    label: 'Read Headers',  icon: Mail },
+  { value: 'listRecent',   label: 'List Recent',   icon: Inbox },
   { value: 'createDraft',  label: 'Create Draft',  icon: FileText },
   { value: 'replyToEmail', label: 'Reply',         icon: Reply },
-  { value: 'markRead',     label: 'Mark Read',     icon: BookOpen },
-  { value: 'deleteEmail',  label: 'Delete',        icon: Trash2 },
 ];
 
 export default function GmailNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendEmail';
   const isCompose = ['sendEmail', 'createDraft', 'replyToEmail'].includes(operation);
-  const needsMsgId = ['readEmail', 'markRead', 'deleteEmail'].includes(operation);
+  const needsMsgId = operation === 'readEmail';
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -95,20 +93,14 @@ export default function GmailNode({ config = {}, updateConfig, nodeId }) {
         </div>
       )}
 
-      {/* Search */}
-      {operation === 'searchEmails' && (
-        <>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Query</label>
-            <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder='from:user@example.com is:unread' nodeId={nodeId} />
-            <p className="text-[10px] text-zinc-600">Gmail search syntax — from:, subject:, is:unread, after:2024/01/01, etc.</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Results</label>
-            <input type="number" min={1} max={100} value={config.maxResults || 10} onChange={(e) => updateConfig('maxResults', Number(e.target.value))}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#EA4335]/40 transition-colors" />
-          </div>
-        </>
+      {/* List Recent */}
+      {operation === 'listRecent' && (
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Results</label>
+          <input type="number" min={1} max={100} value={config.maxResults || 10} onChange={(e) => updateConfig('maxResults', Number(e.target.value))}
+            className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#EA4335]/40 transition-colors" />
+          <p className="text-[10px] text-zinc-600">Returns sender, subject &amp; date of recent emails. Body and search filters aren't available on Gmail's verified non-restricted scope.</p>
+        </div>
       )}
 
       {/* Auth */}
