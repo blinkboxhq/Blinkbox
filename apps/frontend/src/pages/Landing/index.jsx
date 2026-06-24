@@ -256,12 +256,52 @@ function FinalCta() {
 
 const PAGES = 6;
 
+function StaticHero() {
+  return (
+    <div className="min-h-dvh bg-[#050507] text-white">
+      <Header />
+      <main className="mx-auto max-w-3xl px-6 pt-40 pb-24 text-center">
+        <img src={logo} alt="Blinkbox" className="mx-auto mb-8 h-10 w-10" />
+        <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+          Automate anything.<br />Built for builders.
+        </h1>
+        <p className="mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-neutral-300">
+          Connect 250+ apps, design workflows on a visual canvas, and drop AI agents
+          into any step — running reliably at any scale.
+        </p>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <a href={LOGIN} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-[14px] font-medium text-black transition-colors duration-150 hover:bg-neutral-200">
+            Start free <ArrowRight className="h-4 w-4" />
+          </a>
+          <Link to="/product"
+            className="inline-flex items-center rounded-lg border border-white/15 px-5 py-2.5 text-[14px] font-medium text-neutral-200 transition-colors duration-150 hover:border-white/30 hover:text-white">
+            See how it works
+          </Link>
+        </div>
+        <div className="mt-20 grid gap-4 text-left sm:grid-cols-2">
+          {SECTIONS.map((s) => (
+            <div key={s.kicker} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#7aa2ff]">{s.kicker}</div>
+              <div className="mt-1.5 text-[15px] font-medium text-white">{s.title.replace('\n', ' ')}</div>
+              <p className="mt-2 text-[13px] leading-relaxed text-neutral-400">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </main>
+      <footer className="border-t border-white/[0.06] py-8 text-center text-[12px] text-neutral-500">
+        &copy; {new Date().getFullYear()} Blinkbox
+      </footer>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [webgl] = useState(webglSupported);
-  if (!webgl) return <LandingClassic />;
+  if (!webgl) return <SilentBoundary fallback={<StaticHero />}><LandingClassic /></SilentBoundary>;
 
   return (
-    <SilentBoundary fallback={<LandingClassic />}>
+    <SilentBoundary fallback={<SilentBoundary fallback={<StaticHero />}><LandingClassic /></SilentBoundary>}>
       <div className="h-screen w-screen bg-[#050507] text-white" style={{ overflow: 'hidden' }}>
         <Header />
         <Canvas
