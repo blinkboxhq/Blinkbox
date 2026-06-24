@@ -42,8 +42,8 @@ function buildGraph() {
     for (let i = 0; i < NODES_PER_CLUSTER; i++) {
       nodes.push({
         pos: new THREE.Vector3(
-          (rng() - 0.5) * 9,
-          (rng() - 0.5) * 6,
+          (rng() - 0.5) * 7,
+          (rng() - 0.5) * 6.5,
           cz + (rng() - 0.5) * 6,
         ),
         scale: 0.18 + rng() * 0.22,
@@ -195,7 +195,7 @@ function Scene() {
       <ambientLight intensity={0.35} />
       <pointLight position={[8, 6, 8]} intensity={60} color="#7aa2ff" />
       <pointLight position={[-8, -4, -10]} intensity={40} color="#3b4d80" />
-      <group position={[3.4, 0.2, 0]}>
+      <group position={[2.7, 0.2, 0]}>
         <Nodes clusters={clusters} />
         <Edges clusters={clusters} />
       </group>

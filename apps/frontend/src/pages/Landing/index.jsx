@@ -275,9 +275,9 @@ export default function Landing() {
               <Scroll html style={{ width: '100%' }}>
                 <Hero />
                 <FeatureSection data={SECTIONS[0]} align="left" />
-                <FeatureSection data={SECTIONS[1]} align="right" />
+                <FeatureSection data={SECTIONS[1]} align="left" />
                 <FeatureSection data={SECTIONS[2]} align="left" />
-                <FeatureSection data={SECTIONS[3]} align="right" />
+                <FeatureSection data={SECTIONS[3]} align="left" />
                 <FinalCta />
               </Scroll>
             </ScrollControls>
