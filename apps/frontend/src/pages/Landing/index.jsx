@@ -222,6 +222,11 @@ function FeatureSection({ data, align }) {
 function FinalCta() {
   return (
     <section className="h-screen w-full flex flex-col items-center justify-center text-center px-6">
+      <div className="relative flex flex-col items-center" style={{
+        padding: '3.5rem 3rem',
+        margin: '-3.5rem -3rem',
+        background: 'radial-gradient(65% 75% at 50% 50%, rgba(5,5,7,0.94) 0%, rgba(5,5,7,0.8) 55%, rgba(5,5,7,0) 100%)',
+      }}>
       <img src={logo} alt="Blinkbox" className="w-12 h-12 mb-7" />
       <h2 className="text-[clamp(36px,5vw,64px)] font-bold text-white tracking-[-0.03em] leading-[1.05] mb-5">
         Stop doing work<br />that shouldn&rsquo;t exist.
@@ -249,6 +254,7 @@ function FinalCta() {
         <a href="/terms" className="hover:text-neutral-300 transition-colors">Terms</a>
         <a href="mailto:blinkbox.co.in@gmail.com" className="hover:text-neutral-300 transition-colors">Contact</a>
         <span>&copy; {new Date().getFullYear()} Blinkbox</span>
+      </div>
       </div>
     </section>
   );
