@@ -119,8 +119,8 @@ function Hero() {
   return (
     <section className="relative h-screen w-full flex flex-col justify-center px-[8vw] max-w-[1400px] mx-auto">
       <div
-        className="absolute inset-y-0 left-0 w-[60%] pointer-events-none"
-        style={{ background: 'radial-gradient(80% 70% at 0% 50%, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 50%, rgba(5,5,7,0) 100%)' }}
+        className="absolute inset-y-0 left-0 w-full md:w-[60%] pointer-events-none"
+        style={{ background: 'radial-gradient(95% 70% at 0% 50%, rgba(5,5,7,0.9) 0%, rgba(5,5,7,0.6) 55%, rgba(5,5,7,0) 100%)' }}
       />
       <motion.div
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}

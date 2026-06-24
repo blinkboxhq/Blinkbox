@@ -188,6 +188,10 @@ function CameraRig() {
 
 function Scene() {
   const clusters = useMemo(() => buildGraph(), []);
+  const { size } = useThree();
+  const portrait = size.width < 820;
+  const groupPos = portrait ? [0.6, 4.4, -3] : [2.7, 0.2, 0];
+  const groupScale = portrait ? 0.78 : 1;
   return (
     <>
       <color attach="background" args={['#050507']} />
@@ -195,7 +199,7 @@ function Scene() {
       <ambientLight intensity={0.35} />
       <pointLight position={[8, 6, 8]} intensity={60} color="#7aa2ff" />
       <pointLight position={[-8, -4, -10]} intensity={40} color="#3b4d80" />
-      <group position={[2.7, 0.2, 0]}>
+      <group position={groupPos} scale={groupScale}>
         <Nodes clusters={clusters} />
         <Edges clusters={clusters} />
       </group>
