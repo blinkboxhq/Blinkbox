@@ -22,7 +22,7 @@ function useReducedMotion() {
 
 const ACCENT = new THREE.Color('#5b8cff');
 const ACCENT_HOT = new THREE.Color('#8ab4ff');
-const EDGE = new THREE.Color('#2a3656');
+const EDGE = new THREE.Color('#3d5488');
 
 function seededRandom(seed) {
   let s = seed % 2147483647;
@@ -133,7 +133,7 @@ function Edges({ clusters }) {
 
   return (
     <lineSegments geometry={geom}>
-      <lineBasicMaterial color={EDGE} transparent opacity={0.5} toneMapped={false} />
+      <lineBasicMaterial color={EDGE} transparent opacity={0.85} toneMapped={false} />
     </lineSegments>
   );
 }
@@ -195,8 +195,10 @@ function Scene() {
       <ambientLight intensity={0.35} />
       <pointLight position={[8, 6, 8]} intensity={60} color="#7aa2ff" />
       <pointLight position={[-8, -4, -10]} intensity={40} color="#3b4d80" />
-      <Nodes clusters={clusters} />
-      <Edges clusters={clusters} />
+      <group position={[3.4, 0.2, 0]}>
+        <Nodes clusters={clusters} />
+        <Edges clusters={clusters} />
+      </group>
       <Particles />
       <CameraRig />
     </>
