@@ -1,7 +1,24 @@
-import { useMemo, useRef } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useMemo, useRef, useSyncExternalStore } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useScroll } from '@react-three/drei';
 import * as THREE from 'three';
+
+const REDUCE_QUERY = '(prefers-reduced-motion: reduce)';
+function subscribeReduced(cb) {
+  if (typeof window === 'undefined' || !window.matchMedia) return () => {};
+  const mq = window.matchMedia(REDUCE_QUERY);
+  mq.addEventListener('change', cb);
+  return () => mq.removeEventListener('change', cb);
+}
+function useReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReduced,
+    () => (typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia(REDUCE_QUERY).matches
+      : false),
+    () => false,
+  );
+}
 
 const ACCENT = new THREE.Color('#5b8cff');
 const ACCENT_HOT = new THREE.Color('#8ab4ff');
@@ -63,9 +80,13 @@ function Nodes({ clusters }) {
     return arr;
   }, [all]);
 
+  const reduced = useReducedMotion();
+  const settled = useRef(false);
+
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
     if (!meshRef.current) return;
+    if (reduced && settled.current) return;
+    const t = reduced ? 0 : clock.elapsedTime;
     all.forEach((n, i) => {
       const float = Math.sin(t * 0.8 + n.phase) * 0.25;
       dummy.position.set(n.pos.x, n.pos.y + float, n.pos.z);
@@ -75,6 +96,7 @@ function Nodes({ clusters }) {
       meshRef.current.setMatrixAt(i, dummy.matrix);
     });
     meshRef.current.instanceMatrix.needsUpdate = true;
+    settled.current = true;
   });
 
   return (
@@ -130,8 +152,9 @@ function Particles() {
     return { positions, count };
   }, []);
 
+  const reduced = useReducedMotion();
   useFrame(({ clock }) => {
-    if (ref.current) ref.current.rotation.y = clock.elapsedTime * 0.012;
+    if (ref.current && !reduced) ref.current.rotation.y = clock.elapsedTime * 0.012;
   });
 
   return (
@@ -144,16 +167,19 @@ function Particles() {
   );
 }
 
-function CameraRig({ clusters }) {
+function CameraRig() {
   const scroll = useScroll();
   const { camera, pointer } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
+  const reduced = useReducedMotion();
 
   useFrame(() => {
     const offset = scroll.offset;
     const z = 10 - offset * (CLUSTER_COUNT - 1) * 14;
-    target.set(pointer.x * 1.6, pointer.y * 1.2, z);
-    camera.position.lerp(target, 0.06);
+    const px = reduced ? 0 : pointer.x * 1.6;
+    const py = reduced ? 0 : pointer.y * 1.2;
+    target.set(px, py, z);
+    camera.position.lerp(target, reduced ? 0.18 : 0.06);
     camera.lookAt(0, 0, z - 12);
   });
 
@@ -172,7 +198,7 @@ function Scene() {
       <Nodes clusters={clusters} />
       <Edges clusters={clusters} />
       <Particles />
-      <CameraRig clusters={clusters} />
+      <CameraRig />
     </>
   );
 }

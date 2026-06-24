@@ -5,7 +5,18 @@ import { Canvas } from '@react-three/fiber';
 import { ScrollControls, Scroll } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scene } from './Scene3D';
+import LandingClassic from './LandingClassic';
 import logo from '../../assets/logo.svg';
+
+function webglSupported() {
+  if (typeof document === 'undefined') return true;
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
 
 class SilentBoundary extends Component {
   constructor(props) { super(props); this.state = { err: false }; }
@@ -234,17 +245,12 @@ function FinalCta() {
 
 const PAGES = 6;
 
-function CanvasFallback() {
-  return (
-    <div className="fixed inset-0 bg-[#050507] flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/40 animate-spin" />
-    </div>
-  );
-}
-
 export default function Landing() {
+  const [webgl] = useState(webglSupported);
+  if (!webgl) return <LandingClassic />;
+
   return (
-    <SilentBoundary fallback={<div className="min-h-screen bg-[#050507]" />}>
+    <SilentBoundary fallback={<LandingClassic />}>
       <div className="h-screen w-screen bg-[#050507] text-white" style={{ overflow: 'hidden' }}>
         <Header />
         <Canvas
