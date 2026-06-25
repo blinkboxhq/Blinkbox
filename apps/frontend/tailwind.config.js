@@ -10,6 +10,15 @@ export default {
           2: "#111111",
           3: "#1a1a1a",
         },
+        accent: {
+          DEFAULT: "#5b8cff",
+          soft: "rgba(91,140,255,0.12)",
+          hot: "#8ab4ff",
+        },
+      },
+      fontFamily: {
+        sans: ["Geist", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        mono: ['"Geist Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
       },
       animation: {
         "fade-in": "fadeIn 0.2s ease-out",
