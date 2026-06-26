@@ -1,14 +1,14 @@
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { assertSafeUrl } from "../../utils/ssrf.js";
+import { assertSafeUrlResolved } from "../../utils/ssrf.js";
 
 async function getApiKey(credentialId, workspaceId) {
   return getOAuthToken(credentialId, workspaceId, "Pinecone");
 }
 
-function assertIndexHost(host) {
+async function assertIndexHost(host) {
   if (!host) throw new Error("Pinecone: 'indexHost' is required.");
-  assertSafeUrl(host);
+  await assertSafeUrlResolved(host);
 }
 
 function handleError(err) {
@@ -28,7 +28,7 @@ async function opUpsert(config, apiKey) {
   if (!Array.isArray(vectors) || vectors.length === 0) throw new Error("Pinecone upsert: 'vectors' must be a non-empty array.");
 
   const host = config.indexHost;
-  assertIndexHost(host);
+  await assertIndexHost(host);
 
   const body = { vectors };
   if (config.namespace) body.namespace = config.namespace;
@@ -40,6 +40,7 @@ async function opUpsert(config, apiKey) {
 async function opQuery(config, apiKey) {
   const host = config.indexHost;
   if (!host) return { success: false, error: "Pinecone: 'indexHost' is required.", skipped: true };
+  await assertSafeUrlResolved(host);
 
   let vector = config.vector;
   if (typeof vector === "string") { try { vector = JSON.parse(vector); } catch { vector = []; } }
@@ -60,6 +61,7 @@ async function opQuery(config, apiKey) {
 async function opDelete(config, apiKey) {
   const host = config.indexHost;
   if (!host) return { success: false, error: "Pinecone: 'indexHost' is required.", skipped: true };
+  await assertSafeUrlResolved(host);
 
   const body = {};
   if (config.deleteAll === true) {
@@ -79,6 +81,7 @@ async function opDelete(config, apiKey) {
 async function opFetchById(config, apiKey) {
   const host = config.indexHost;
   if (!host) return { success: false, error: "Pinecone: 'indexHost' is required.", skipped: true };
+  await assertSafeUrlResolved(host);
 
   let ids = config.ids;
   if (typeof ids === "string") { try { ids = JSON.parse(ids); } catch { ids = [ids]; } }

@@ -27,6 +27,7 @@ import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { storeBinary, isBinaryContentType } from "../infra/binary.store.js";
 import { ALLOW_LOCAL_REQUESTS } from "../config/env.js";
+import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 const MAX_RESPONSE_BYTES = 25 * 1024 * 1024; // 25 MB for binary downloads
 const MAX_TIMEOUT_MS = 60000;
@@ -65,35 +66,30 @@ export default {
 
     if (!url) return { success: false, error: "HTTP Request: 'url' is required — configure this field.", skipped: true };
 
-    // SSRF guard — block internal/cloud-metadata addresses
-    function assertSafeUrl(rawUrl) {
+    // SSRF guard — protocol + hostname blocklist + DNS-resolution check. Resolving
+    // the host catches rebinding (a public domain whose A-record points at
+    // 169.254.169.254 / 127.x) and numeric-host encodings the regex blocklist alone
+    // misses. Centralised in utils/ssrf.js so every outbound node stays in sync.
+    async function guardUrl(rawUrl) {
       let parsed;
       try { parsed = new URL(rawUrl); } catch { throw new Error(`HTTP Request: invalid URL "${rawUrl}"`); }
-
       const hostname = parsed.hostname.toLowerCase();
-
-      const localPatterns = [/^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/];
-      const privatePatterns = [
-        /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-        /^169\.254\./,
-        /^fc00:/i, /^fe80:/i, /^fd[0-9a-f]{2}:/i, /^0\b/,
-      ];
-
-      const isLocal   = localPatterns.some((re) => re.test(hostname));
-      const isPrivate = privatePatterns.some((re) => re.test(hostname));
-
-      if (isLocal && ALLOW_LOCAL_REQUESTS) {
-        // Self-hosted: ALLOW_LOCAL_REQUESTS=true permits localhost/127.x (e.g. LM Studio, Ollama)
-      } else if (isLocal || isPrivate) {
-        throw new Error(`HTTP Request: requests to internal addresses are not allowed (${hostname})`);
+      const isLoopback = /^localhost$/.test(hostname) || /^127\./.test(hostname) || hostname === "::1";
+      // Self-hosted: ALLOW_LOCAL_REQUESTS=true permits loopback only (e.g. LM Studio, Ollama).
+      if (isLoopback && ALLOW_LOCAL_REQUESTS) {
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          throw new Error(`HTTP Request: only http/https protocols are allowed`);
+        }
+        return;
       }
-
-      if (!["http:", "https:"].includes(parsed.protocol)) {
-        throw new Error(`HTTP Request: only http/https protocols are allowed`);
+      try {
+        await assertSafeUrlResolved(rawUrl);
+      } catch (err) {
+        throw new Error(`HTTP Request: ${err.message}`);
       }
     }
 
-    assertSafeUrl(url);
+    await guardUrl(url);
 
     const finalHeaders = { "Content-Type": "application/json", ...headers };
     const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
@@ -143,7 +139,7 @@ export default {
         if (!isRedirect || redirects >= maxFollows) break;
         const location = response.headers.location;
         const nextUrl = new URL(location, currentUrl).toString();
-        assertSafeUrl(nextUrl);
+        await guardUrl(nextUrl);
         currentUrl = nextUrl;
       }
 

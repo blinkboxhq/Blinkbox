@@ -27,6 +27,7 @@ import axios from "axios";
 import { browserCluster } from "../core/browser.manager.js";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
+import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 const JINA_READER_URL = "https://r.jina.ai/";
 
@@ -59,38 +60,13 @@ export default {
 
     if (!source) return { success: false, error: "Web Scraper: 'source' URL is required.", skipped: true };
 
-    // SSRF guard — block internal/cloud-metadata addresses
-    function assertSafeUrl(rawUrl) {
-      let parsed;
-      try { parsed = new URL(rawUrl); } catch { throw new Error(`Web Scraper: invalid URL "${rawUrl}"`); }
-
-      const hostname = parsed.hostname.toLowerCase();
-
-      const blocked = [
-        /^localhost$/,
-        /^127\./,
-        /^0\.0\.0\.0$/,
-        /^::1$/,
-        /^10\./,
-        /^172\.(1[6-9]|2\d|3[01])\./,
-        /^192\.168\./,
-        /^169\.254\./,    // AWS/GCP/Azure metadata
-        /^fc00:/i,        // IPv6 unique local
-        /^fe80:/i,        // IPv6 link-local
-        /^fd[0-9a-f]{2}:/i,
-        /^0\b/,
-      ];
-
-      if (blocked.some((re) => re.test(hostname))) {
-        throw new Error(`Web Scraper: requests to internal addresses are not allowed (${hostname})`);
-      }
-
-      if (!["http:", "https:"].includes(parsed.protocol)) {
-        throw new Error(`Web Scraper: only http/https protocols are allowed`);
-      }
+    // SSRF guard — protocol + hostname blocklist + DNS-resolution check (catches
+    // rebinding and numeric-host encodings). Shared with every outbound node.
+    try {
+      await assertSafeUrlResolved(source);
+    } catch (err) {
+      throw new Error(`Web Scraper: ${err.message}`);
     }
-
-    assertSafeUrl(source);
 
     // ── Jina Reader Engine (fast, no Puppeteer) ────────────────────────────
     if (engine === "reader") {

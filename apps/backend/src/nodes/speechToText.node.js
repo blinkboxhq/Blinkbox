@@ -2,25 +2,13 @@ import axios from "axios";
 import FormData from "form-data";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
-
-function assertSafeUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = u.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
-    /\.internal$/, /\.local$/,
-  ];
-  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
-}
+import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 export default {
   async run(config, input, context = {}) {
     const audioUrl = config.audioUrl || input.audioUrl || input.url || input.fileUrl || "";
     if (!audioUrl) return { success: false, error: "Speech to Text: 'audioUrl' is required.", skipped: true };
-    assertSafeUrl(audioUrl);
+    await assertSafeUrlResolved(audioUrl);
 
     const provider = config.provider || "openai";
     const language = config.language || null;

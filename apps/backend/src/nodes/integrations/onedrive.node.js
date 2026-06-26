@@ -17,19 +17,7 @@
 
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-
-function assertSafeUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = u.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
-    /\.internal$/, /\.local$/,
-  ];
-  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
-}
+import { assertSafeUrlResolved } from "../../utils/ssrf.js";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 
@@ -95,7 +83,7 @@ export default {
 
           let fileBuffer;
           if (/^https?:\/\//i.test(content)) {
-            assertSafeUrl(content);
+            await assertSafeUrlResolved(content);
             const dl = await axios.get(content, { responseType: "arraybuffer", timeout: 30000 });
             fileBuffer = dl.data;
           } else {

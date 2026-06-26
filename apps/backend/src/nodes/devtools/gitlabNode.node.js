@@ -1,18 +1,6 @@
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-
-function assertSafeUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = u.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
-    /\.internal$/, /\.local$/,
-  ];
-  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
-}
+import { assertSafeUrlResolved } from "../../utils/ssrf.js";
 
 export default {
   async run(config, input, context) {
@@ -20,7 +8,7 @@ export default {
     const baseUrl = config.baseUrl || "https://gitlab.com";
     const projectId = config.project || config.projectId || input?.projectId;
     if (!projectId) return { success: false, error: "gitlab: 'project' (ID or namespace/name) is required.", skipped: true };
-    assertSafeUrl(baseUrl);
+    await assertSafeUrlResolved(baseUrl);
 
     const token = await getOAuthToken(config.credentialId, context?.workspaceId, "GitLab");
     const headers = { "PRIVATE-TOKEN": token, "Content-Type": "application/json" };

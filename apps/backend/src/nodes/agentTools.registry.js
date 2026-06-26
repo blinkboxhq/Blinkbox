@@ -27,19 +27,7 @@
 
 import axios from "axios";
 import { redis } from "../infra/redis.client.js";
-
-function assertSafeUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = u.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
-    /\.internal$/, /\.local$/,
-  ];
-  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
-}
+import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // REGISTRY CORE
@@ -200,7 +188,7 @@ register({
       return { error: true, message: "http_request: 'url' is required" };
     }
 
-    try { assertSafeUrl(url); } catch (e) {
+    try { await assertSafeUrlResolved(url); } catch (e) {
       return { error: true, message: `http_request: ${e.message}` };
     }
 
@@ -210,6 +198,8 @@ register({
       headers: { "Content-Type": "application/json", ...(args.headers || {}) },
       timeout: 30_000,
       maxContentLength: 5 * 1024 * 1024,
+      maxRedirects: 5,
+      beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
       validateStatus: () => true,
     };
 
@@ -824,7 +814,7 @@ register({
   },
   execute: async (args, ctx) => {
     if (!args.url) return { error: true, message: "summarize_url: url is required." };
-    try { assertSafeUrl(args.url); } catch (e) {
+    try { await assertSafeUrlResolved(args.url); } catch (e) {
       return { error: true, message: `summarize_url: ${e.message}` };
     }
     try {
@@ -833,6 +823,7 @@ register({
         headers: { "User-Agent": "Mozilla/5.0 (compatible; BlinkBox/1.0)" },
         timeout: 15000,
         maxContentLength: 500000,
+        beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
       });
 
       let text = fetchRes.data;

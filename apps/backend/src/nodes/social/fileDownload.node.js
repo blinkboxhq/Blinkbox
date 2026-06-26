@@ -1,24 +1,12 @@
 import axios from "axios";
-
-function assertSafeUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { throw new Error(`Invalid URL: "${rawUrl}"`); }
-  const h = u.hostname.toLowerCase();
-  const blocked = [
-    /^localhost$/, /^127\./, /^0\.0\.0\.0$/, /^::1$/, /^0:0:0:0:0:0:0:1$/,
-    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
-    /^169\.254\./, /^fc00:/i, /^fe80:/i, /^fd/i,
-    /\.internal$/, /\.local$/,
-  ];
-  if (blocked.some(r => r.test(h))) throw new Error(`SSRF blocked: "${h}" is a private/internal address.`);
-}
+import { assertSafeUrlResolved } from "../../utils/ssrf.js";
 
 export default {
   async run(config, input) {
     const url = config.url || input?.url;
     if (!url) return { success: false, error: "file_download: 'url' is required.", skipped: true };
 
-    assertSafeUrl(url);
+    await assertSafeUrlResolved(url);
     const res = await axios.get(url, {
       responseType: "arraybuffer",
       timeout: parseInt(config.timeout || 60000),
@@ -27,8 +15,8 @@ export default {
     });
     if (res.status >= 301 && res.status <= 308 && res.headers.location) {
       const next = new URL(res.headers.location, url).toString();
-      assertSafeUrl(next);
-      const res2 = await axios.get(next, { responseType: "arraybuffer", timeout: parseInt(config.timeout || 60000), maxContentLength: parseInt(config.maxSizeMb || 50) * 1024 * 1024, maxRedirects: 4 });
+      await assertSafeUrlResolved(next);
+      const res2 = await axios.get(next, { responseType: "arraybuffer", timeout: parseInt(config.timeout || 60000), maxContentLength: parseInt(config.maxSizeMb || 50) * 1024 * 1024, maxRedirects: 0 });
       Object.assign(res, { data: res2.data, headers: res2.headers });
     }
 
