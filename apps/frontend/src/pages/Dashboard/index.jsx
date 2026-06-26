@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
+import UsagePage from './components/UsagePage';
 import EmptyState from './components/EmptyState';
 import DashboardHero from './components/DashboardHero';
 import CreateAutomationBox from './components/CreateAutomationBox';
@@ -399,6 +400,13 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+        {activeTab === 'usage' && (
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[760px]">
+              <UsagePage usage={billingUsage} />
+            </div>
           </div>
         )}
         {activeTab === 'mcp' && (

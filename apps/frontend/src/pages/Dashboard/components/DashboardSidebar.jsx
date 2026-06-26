@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles, Plug } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles, Plug, Gauge } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
@@ -8,6 +8,7 @@ const NAV_TOP = [
   { key: 'nodes',     icon: Layers,   label: 'Nodes' },
   { key: 'analytics', icon: BarChart2, label: 'Analytics' },
   { key: 'logs',      icon: Activity, label: 'History' },
+  { key: 'usage',     icon: Gauge,    label: 'Usage' },
   { key: 'vault',     icon: Key,      label: 'Credentials' },
   { key: 'mcp',       icon: Plug,     label: 'Connect to Chat' },
 ];
@@ -97,22 +98,25 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
 
-        {/* Usage meter */}
+        {/* Usage meter — opens the Usage page */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="bb-panel p-3">
+            <button
+              onClick={() => setActiveTab('usage')}
+              className="bb-panel p-3 w-full text-left transition-colors hover:bg-white/[0.03]"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="bb-eyebrow">Usage</span>
                 <span className="text-[10px] font-mono text-[var(--bb-text-lo)]">{usedPct}%</span>
               </div>
               <div className="w-full rounded-full h-1" style={{ background: 'var(--bb-surface-3)' }}>
                 <div
-                  className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-amber-400' : 'bg-[var(--bb-text-hi)]'}`}
+                  className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-amber-400' : 'bg-[var(--bb-accent)]'}`}
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
               <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
-            </div>
+            </button>
           </div>
         )}
 
