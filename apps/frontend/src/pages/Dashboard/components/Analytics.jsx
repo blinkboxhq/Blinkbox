@@ -139,7 +139,7 @@ export default function Analytics({ user }) {
   const failRate     = total > 0 ? Math.round((failedCount  / total) * 100) : 0;
 
   const rawSlices = [
-    { label: 'Success', count: successCount, pct: successRate, color: '#4d7cff' },
+    { label: 'Success', count: successCount, pct: successRate, color: '#6f97e8' },
     { label: 'Failed',  count: failedCount,  pct: failRate,    color: '#52525b' },
     { label: 'Pending', count: pendingCount, pct: total > 0 ? Math.round((pendingCount / total) * 100) : 0, color: '#3a3a42' },
     ...(otherCount > 0 ? [{ label: 'Other', count: otherCount, pct: total > 0 ? Math.round((otherCount / total) * 100) : 0, color: '#2a2a30' }] : []),

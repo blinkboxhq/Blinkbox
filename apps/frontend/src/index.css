@@ -21,10 +21,10 @@
   --bb-text-lo:  #8a8a94;
   --bb-text-dim: #6b6b76;
 
-  --bb-accent:      #4d7cff;
-  --bb-accent-soft: rgba(77, 124, 255, 0.14);
-  --bb-accent-hot:  #7aa0ff;
-  --bb-accent-ring: rgba(77, 124, 255, 0.40);
+  --bb-accent:      #6f97e8;
+  --bb-accent-soft: rgba(111, 151, 232, 0.14);
+  --bb-accent-hot:  #a9c0ef;
+  --bb-accent-ring: rgba(111, 151, 232, 0.40);
 
   --bb-radius:    14px;
   --bb-radius-sm: 10px;
