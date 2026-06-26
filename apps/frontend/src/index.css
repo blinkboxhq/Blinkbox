@@ -536,11 +536,11 @@ html {
   width: 3px;
   background: radial-gradient(
     200px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.95),
-    rgba(220, 220, 230, 0.5) 45%,
+    rgba(255, 255, 255, 0.65),
+    rgba(210, 210, 220, 0.3) 45%,
     transparent 72%
   );
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.15);
 }
 .bb-edge-bottom::after {
   left: 0;
@@ -549,11 +549,11 @@ html {
   height: 3px;
   background: radial-gradient(
     200px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.95),
-    rgba(220, 220, 230, 0.5) 45%,
+    rgba(255, 255, 255, 0.65),
+    rgba(210, 210, 220, 0.3) 45%,
     transparent 72%
   );
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.15);
 }
 
 /* ── Liquid Glass — global shell material ──────────────────────────────────
