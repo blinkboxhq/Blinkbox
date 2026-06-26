@@ -1,6 +1,7 @@
 import { Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import TopProgressBar from './components/TopProgressBar';
 const Landing      = lazy(() => import('./pages/Landing'));
 const Auth         = lazy(() => import('./pages/auth'));
 const VerifyEmail  = lazy(() => import('./pages/auth/VerifyEmail'));
@@ -67,6 +68,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <TopProgressBar />
         <Toaster theme="dark" position="top-center" richColors expand={false} closeButton duration={5000} />
 <Suspense fallback={<PageLoader />}>
           <Routes>
