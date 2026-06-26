@@ -512,6 +512,15 @@ html {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
+.bb-nav-item::before,
+.bb-hbtn::before {
+  background: radial-gradient(
+    140px circle at var(--gx) var(--gy),
+    rgba(161, 161, 170, 0.85),
+    rgba(161, 161, 170, 0.28) 40%,
+    transparent 70%
+  );
+}
 
 /* ── Liquid Glass — global shell material ──────────────────────────────────
    The chrome (sidebar, header) floats above content as frosted glass. A slow
