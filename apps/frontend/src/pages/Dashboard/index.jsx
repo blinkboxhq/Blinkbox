@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import UsagePage from './components/UsagePage';
+import AmbientBackground from '../../components/AmbientBackground';
 import EmptyState from './components/EmptyState';
 import DashboardHero from './components/DashboardHero';
 import CreateAutomationBox from './components/CreateAutomationBox';
@@ -321,18 +322,20 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex h-screen bg-[#080808] text-white overflow-hidden">
+    <div className="relative flex h-screen bg-[var(--bb-surface-0)] text-white overflow-hidden">
       <style>{`
         @keyframes dbFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes dbSlide  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
+
+      <AmbientBackground />
 
       <OnboardingModal />
       <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
 
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Universal header — matches workspace header exactly */}
         <WorkspaceHeader forceDashboard={true} />

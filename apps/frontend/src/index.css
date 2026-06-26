@@ -37,8 +37,8 @@
    The reusable premium template. Build surfaces from these, not raw hex, so the
    whole app shares one material. Composable with Tailwind utilities. */
 @layer components {
-  /* Page canvas */
-  .bb-page { background: var(--bb-surface-0); color: var(--bb-text-mid); }
+  /* Page canvas — transparent so the ambient dot grid shows through */
+  .bb-page { background: transparent; color: var(--bb-text-mid); }
 
   /* Card: the default raised surface. Lifts on hover. */
   .bb-card {
@@ -426,6 +426,32 @@ html {
 @keyframes bbCardSlide {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Ambient dotted background ──────────────────────────────────────────────
+   A very dim dot grid across the page. A second, brighter dot layer is masked
+   to a soft radial around the cursor (--mx/--my), so dots glow only near the
+   pointer. Fixed and behind all content; pointer-events off. */
+.bb-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  --mx: 50vw;
+  --my: 50vh;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: -13px -13px;
+}
+.bb-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(122, 160, 255, 0.45) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: -13px -13px;
+  -webkit-mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+  mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
 }
 
 /* ── Liquid Glass — global shell material ──────────────────────────────────
