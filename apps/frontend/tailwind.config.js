@@ -5,10 +5,10 @@ export default {
     extend: {
       colors: {
         surface: {
-          0: "#0a0a0d",
-          1: "#141418",
-          2: "#1d1d23",
-          3: "#26262e",
+          0: "#121217",
+          1: "#1a1a20",
+          2: "#24242c",
+          3: "#2e2e38",
         },
         accent: {
           DEFAULT: "#4d7cff",
