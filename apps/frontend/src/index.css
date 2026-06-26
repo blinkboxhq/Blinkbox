@@ -467,65 +467,44 @@ html {
   mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
 }
 
-/* ── Spotlight border — bold border that brightens under the cursor ────────
-   Any element with .bb-glow-border gets a crisp base border plus a masked
-   highlight ring that lights the segment nearest the pointer. Pointer coords
-   (--gx/--gy, element-local px) are set by the global useGlowBorder hook. */
-.bb-glow-border {
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  --gx: -200px;
-  --gy: -200px;
-}
-.bb-glow-border::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .25s ease;
-  background: radial-gradient(
-    140px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.85),
-    rgba(255, 255, 255, 0.25) 40%,
-    transparent 70%
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-.bb-glow-border:hover::before { opacity: 1; }
-
-/* Opt the core surfaces + buttons into the spotlight border globally. */
+/* ── Spotlight border — border brightens by proximity to the cursor ────────
+   Each target gets a masked highlight ring on the border. The global
+   useGlowBorder hook sets, per element: --gi (0→1 intensity, ramps up as the
+   cursor nears within range) and --gx/--gy (the bright spot's local position).
+   Brightness = the cursor circle "getting in range" — closer = brighter. */
+.bb-glow-border,
 .bb-card,
 .bb-panel,
 .bb-btn-ghost,
-.bb-input {
+.bb-input,
+.bb-nav-item,
+.bb-hbtn {
   position: relative;
   --gx: -200px;
   --gy: -200px;
-  border-width: 1px;
+  --gi: 0;
 }
+.bb-glow-border { border: 1px solid rgba(255, 255, 255, 0.12); }
+.bb-glow-border::before,
 .bb-card::before,
 .bb-panel::before,
 .bb-btn-ghost::before,
 .bb-input::before,
-.bb-liquid::before {
+.bb-liquid::before,
+.bb-nav-item::before,
+.bb-hbtn::before {
   content: "";
   position: absolute;
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity .25s ease;
+  opacity: var(--gi);
+  transition: opacity .12s linear;
   background: radial-gradient(
     140px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.85),
-    rgba(255, 255, 255, 0.25) 40%,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.3) 40%,
     transparent 70%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -533,11 +512,6 @@ html {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
-.bb-card:hover::before,
-.bb-panel:hover::before,
-.bb-btn-ghost:hover::before,
-.bb-input:hover::before,
-.bb-liquid:hover::before { opacity: 1; }
 
 /* ── Liquid Glass — global shell material ──────────────────────────────────
    The chrome (sidebar, header) floats above content as frosted glass. A slow
@@ -547,6 +521,7 @@ html {
   position: relative;
   --gx: -200px;
   --gy: -200px;
+  --gi: 0;
   background:
     linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%),
     rgba(18, 18, 20, 0.5);
