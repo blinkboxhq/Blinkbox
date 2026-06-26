@@ -495,17 +495,17 @@ html {
 .bb-hbtn::before {
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: -1.5px;
   border-radius: inherit;
-  padding: 1px;
+  padding: 2px;
   pointer-events: none;
   opacity: var(--gi);
   transition: opacity .12s linear;
   background: radial-gradient(
-    140px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.9),
-    rgba(255, 255, 255, 0.3) 40%,
-    transparent 70%
+    160px circle at var(--gx) var(--gy),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.45) 45%,
+    transparent 72%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -516,10 +516,10 @@ html {
 .bb-nav-item::before,
 .bb-hbtn::before {
   background: radial-gradient(
-    140px circle at var(--gx) var(--gy),
-    rgba(161, 161, 170, 0.85),
-    rgba(161, 161, 170, 0.28) 40%,
-    transparent 70%
+    160px circle at var(--gx) var(--gy),
+    rgba(180, 180, 190, 1),
+    rgba(161, 161, 170, 0.4) 45%,
+    transparent 72%
   );
 }
 
