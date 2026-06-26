@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles, Plug } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
@@ -20,32 +20,23 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showLogout, setShowLogout] = useState(false);
-  const navRef = useRef(null);
-  const [indicator, setIndicator] = useState({ top: 0, height: 0, show: false });
 
   const w = expanded ? 'w-[220px]' : 'w-[56px]';
-
-  useLayoutEffect(() => {
-    const el = navRef.current?.querySelector(`[data-tab="${activeTab}"]`);
-    if (!el) { setIndicator(i => ({ ...i, show: false })); return; }
-    setIndicator({ top: el.offsetTop + 6, height: el.offsetHeight - 12, show: true });
-  }, [activeTab, expanded]);
 
   const NavBtn = ({ item }) => {
     const active = activeTab === item.key;
     return (
       <button
-        data-tab={item.key}
         onClick={() => setActiveTab(item.key)}
         title={!expanded ? item.label : undefined}
-        className={`bb-nav-item group w-full flex items-center gap-2.5 rounded-[10px] transition-colors duration-150 ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
+        className={`bb-nav-item w-full flex items-center gap-2.5 rounded-[10px] ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
           active
             ? 'is-active text-[var(--bb-text-hi)]'
             : 'text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)]'
         }`}
       >
-        <item.icon className="bb-nav-icon w-[18px] h-[18px] shrink-0 relative z-10" strokeWidth={active ? 2 : 1.5} />
-        {expanded && <span className="text-[13px] font-medium truncate relative z-10">{item.label}</span>}
+        <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2 : 1.5} />
+        {expanded && <span className="text-[13px] font-medium truncate">{item.label}</span>}
       </button>
     );
   };
@@ -97,15 +88,9 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         )}
 
         {/* Primary nav */}
-        <nav ref={navRef} className={`relative flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
-          <span
-            className="bb-nav-indicator"
-            style={{ top: indicator.top, height: indicator.height, opacity: indicator.show ? 1 : 0 }}
-          />
+        <nav className={`flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
           {expanded && <p className="bb-eyebrow px-3 mb-2">Platform</p>}
-          {NAV_TOP.map((item, i) => (
-            <div key={item.key} className="bb-rise" style={{ '--bb-i': i }}><NavBtn item={item} /></div>
-          ))}
+          {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
           <div className={`border-t border-white/[0.06] my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
