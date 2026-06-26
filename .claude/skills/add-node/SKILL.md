@@ -8,10 +8,9 @@ You are adding a new node to the Blinkbox automation platform. Follow these step
 
 Ask the user for (if not already provided):
 1. **Node name** (e.g., "Stripe Refund", "PDF Parser")
-2. **Category** — must be one of: `ai`, `ai_tools`, `data`, `transform`, `research`, `flow`, `code`, `integration`, `devtools`, `payments`, `crm`, `social`, `education`, `design`, `social_pub`, `finance`, `gaming`, `automation`
-3. **What it does** — one sentence description
-4. **Config fields** — what options does the user set? (e.g., "amount, currency, reason")
-5. **Does it have a brand logo?** — if yes, what's the app name?
+2. **What it does** — one sentence description
+3. **Config fields** — what options does the user set? (e.g., "amount, currency, reason")
+4. **Does it have a brand logo?** — if yes, what's the app name?
 
 ## Step 2: Create Frontend Config Panel
 
