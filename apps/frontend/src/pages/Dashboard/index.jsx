@@ -16,7 +16,6 @@ import DashboardSidebar from './components/DashboardSidebar';
 import UsagePage from './components/UsagePage';
 import AmbientBackground from '../../components/AmbientBackground';
 import EmptyState from './components/EmptyState';
-import DashboardHero from './components/DashboardHero';
 import CreateAutomationBox from './components/CreateAutomationBox';
 import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
@@ -186,7 +185,6 @@ export default function Dashboard() {
 
   const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const heroRef = useRef(null);
   const [workflows, setWorkflows] = useState([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -286,6 +284,17 @@ export default function Dashboard() {
     try {
       const r = await api.post('/api/automation', { name: data.name.trim(), description: data.description?.trim() || '', trigger: 'manual' });
       if (r.data?.success) { setWorkflows([r.data.automation, ...workflows]); setIsModalOpen(false); navigate(`/workspace/${r.data.automation._id}`); }
+    } catch (e) { setSystemError(e.message || 'Failed.'); }
+    setIsCreating(false);
+  };
+
+  const handlePickTemplate = async (prompt) => {
+    if (isCreating) return;
+    const name = prompt.length > 48 ? `${prompt.slice(0, 45)}…` : prompt;
+    setIsCreating(true); setSystemError(null);
+    try {
+      const r = await api.post('/api/automation', { name, description: '', trigger: 'manual' });
+      if (r.data?.success) navigate(`/workspace/${r.data.automation._id}`, { state: { brianPrompt: prompt } });
     } catch (e) { setSystemError(e.message || 'Failed.'); }
     setIsCreating(false);
   };
@@ -452,15 +461,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Brian builder — full hero when empty, compact composer once workflows exist */}
-            {!workflowsLoading && (
-              <DashboardHero
-                ref={heroRef}
-                userName={user?.name}
-                compact={workflows.length > 0}
-              />
-            )}
-
             {/* Section header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -517,7 +517,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} onPickTemplate={(p) => heroRef.current?.run(p)} />
+              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} onPickTemplate={handlePickTemplate} />
 
             ) : viewMode === 'list' ? (
               /* ── LIST VIEW ── */

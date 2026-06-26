@@ -27,7 +27,7 @@ export default function EmptyState({ onDeploy, isSearch, onPickTemplate }) {
       <div className="flex flex-col items-center text-center mb-9">
         <h3 className="text-[15px] font-semibold text-[var(--bb-text-hi)] mb-2">Start your first automation</h3>
         <p className="text-[12px] text-[var(--bb-text-lo)] max-w-sm mb-6 leading-relaxed">
-          Pick a template and Brian builds it instantly, or start from a blank canvas.
+          Pick a template to get started instantly, or start from a blank canvas.
         </p>
         <button onClick={onDeploy} className="bb-btn bb-btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px]">
           <Plus className="w-3.5 h-3.5" /> Blank workflow
