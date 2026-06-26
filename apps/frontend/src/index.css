@@ -43,7 +43,7 @@
   /* Card: the default raised surface. Lifts on hover. */
   .bb-card {
     background: var(--bb-surface-1);
-    border: 1px solid var(--bb-border-subtle);
+    border: 1.5px solid var(--bb-border-strong);
     border-radius: var(--bb-radius);
     box-shadow: var(--bb-shadow-card);
     transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
@@ -57,7 +57,7 @@
   /* Inset panel (table shells, code, output blocks) */
   .bb-panel {
     background: var(--bb-surface-1);
-    border: 1px solid var(--bb-border-subtle);
+    border: 1.5px solid var(--bb-border-strong);
     border-radius: var(--bb-radius);
   }
 
@@ -537,7 +537,8 @@ html {
     rgba(18, 18, 20, 0.5);
   -webkit-backdrop-filter: blur(30px) saturate(105%);
   backdrop-filter: blur(30px) saturate(105%);
-  border-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--bb-border-strong);
+  border-width: 1.5px;
 }
 
 /* Nav item: a clean rounded pill. Hover and active are the same glass
@@ -545,7 +546,7 @@ html {
 .bb-nav-item {
   position: relative;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1.5px solid var(--bb-border);
   transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .bb-nav-item:hover { background: rgba(255, 255, 255, 0.04); }
