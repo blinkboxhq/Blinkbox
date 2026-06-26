@@ -339,7 +339,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full min-w-0 relative bg-[#0d0d0f]"
+      className="flex-1 h-full min-w-0 relative bg-transparent"
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
@@ -380,7 +380,7 @@ export default function Canvas() {
         panOnScroll
         zoomOnPinch
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} color="#3f3f46" />
+        <Background variant={BackgroundVariant.Dots} gap={28} size={1.5} color="#2a2a30" />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";

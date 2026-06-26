@@ -170,7 +170,7 @@ body {
 
 /* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
 .react-flow__background {
-  background-color: #121217 !important;
+  background-color: transparent !important;
 }
 
 .react-flow__minimap {
@@ -440,16 +440,16 @@ html {
   --mx: 50vw;
   --my: 50vh;
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-position: -6px -6px;
+  background-size: 16px 16px;
+  background-position: -8px -8px;
 }
 .bb-ambient::after {
   content: "";
   position: absolute;
   inset: 0;
   background-image: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-position: -6px -6px;
+  background-size: 16px 16px;
+  background-position: -8px -8px;
   -webkit-mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
   mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
 }
