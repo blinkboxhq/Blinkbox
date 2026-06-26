@@ -535,7 +535,7 @@ html {
   right: -2px;
   width: 3px;
   background: radial-gradient(
-    200px circle at var(--gx) var(--gy),
+    200px circle at center var(--gy),
     rgba(255, 255, 255, 0.45),
     rgba(210, 210, 220, 0.2) 45%,
     transparent 72%
@@ -548,7 +548,7 @@ html {
   bottom: -2px;
   height: 3px;
   background: radial-gradient(
-    200px circle at var(--gx) var(--gy),
+    200px circle at var(--gx) center,
     rgba(255, 255, 255, 0.45),
     rgba(210, 210, 220, 0.2) 45%,
     transparent 72%
