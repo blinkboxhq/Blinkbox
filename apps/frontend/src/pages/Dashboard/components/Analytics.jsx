@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, CheckCircle2, XCircle, Zap, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import ContributionGraph from './ContributionGraph';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -165,7 +166,8 @@ function DonutChart({ slices, total }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-export default function Analytics() {
+export default function Analytics({ user }) {
+  const userName = user?.name || user?.email?.split('@')[0] || 'You';
   const now = new Date();
   const [year, setYear]   = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -253,6 +255,9 @@ export default function Analytics() {
           </button>
         </div>
       </div>
+
+      {/* ── Contribution heatmap ── */}
+      <ContributionGraph userName={userName} />
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">

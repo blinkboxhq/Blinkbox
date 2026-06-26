@@ -6,6 +6,7 @@ import {
   automationHistory,
   nodeStats,
   dailyRunCounts,
+  yearContributions,
 } from "./analytics.service.js";
 
 const router = Router();
@@ -31,6 +32,22 @@ router.get("/daily", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("[Analytics] daily error:", err.message);
     res.status(500).json({ error: "Failed to load daily stats" });
+  }
+});
+
+router.get("/contributions", verifyToken, async (req, res) => {
+  try {
+    const workspaceId = req.user.id;
+    const now = new Date();
+    const year = Math.min(
+      Math.max(Number(req.query.year) || now.getUTCFullYear(), 2020),
+      now.getUTCFullYear()
+    );
+    const data = await yearContributions(workspaceId, year);
+    res.json({ year, ...data });
+  } catch (err) {
+    console.error("[Analytics] contributions error:", err.message);
+    res.status(500).json({ error: "Failed to load contributions" });
   }
 });
 

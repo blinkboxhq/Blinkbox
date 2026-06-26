@@ -198,3 +198,51 @@ export async function dailyRunCounts(workspaceId, days = 7) {
     count: c.count,
   }));
 }
+
+const SUCCESS_STATUSES = new Set(["executed", "completed", "success"]);
+
+/**
+ * Per-day execution counts across a full calendar year, for the
+ * GitHub-style contribution heatmap. Workspace-isolated.
+ */
+export async function yearContributions(workspaceId, year) {
+  const start = new Date(Date.UTC(year, 0, 1));
+  const end = new Date(Date.UTC(year + 1, 0, 1));
+
+  const automations = await Automation.find({ workspaceId }).select("_id").lean();
+  const automationIds = automations.map((a) => a._id.toString());
+  if (automationIds.length === 0) return { days: [], total: 0, max: 0 };
+
+  const rows = await ExecutionLog.aggregate([
+    {
+      $match: {
+        type: "execution_end",
+        automationId: { $in: automationIds },
+        timestamp: { $gte: start, $lt: end },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+          status: "$status",
+        },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const byDate = new Map();
+  for (const r of rows) {
+    const day = byDate.get(r._id.date) || { date: r._id.date, count: 0, success: 0, failed: 0 };
+    day.count += r.count;
+    if (SUCCESS_STATUSES.has(r._id.status)) day.success += r.count;
+    else if (r._id.status === "failed") day.failed += r.count;
+    byDate.set(r._id.date, day);
+  }
+
+  const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const total = days.reduce((s, d) => s + d.count, 0);
+  const max = days.reduce((m, d) => Math.max(m, d.count), 0);
+  return { days, total, max };
+}

@@ -372,7 +372,7 @@ export default function Dashboard() {
         {activeTab === 'analytics' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1400px] mx-auto">
-              <Analytics />
+              <Analytics user={user} />
             </div>
           </div>
         )}
