@@ -460,9 +460,9 @@ html {
    flat panel. Greyscale base; only active states pick up the accent. */
 .bb-liquid {
   position: relative;
-  background: rgba(26, 26, 30, 0.85);
-  -webkit-backdrop-filter: blur(22px) saturate(100%);
-  backdrop-filter: blur(22px) saturate(100%);
+  background: rgba(26, 26, 30, 0.45);
+  -webkit-backdrop-filter: blur(14px) saturate(100%);
+  backdrop-filter: blur(14px) saturate(100%);
   border-color: rgba(255, 255, 255, 0.07);
   isolation: isolate;
 }
