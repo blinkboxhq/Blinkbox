@@ -272,7 +272,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user || activeTab !== 'logs') return;
     setExecLoading(true);
-    api.get('/api/execution/history', { params: { limit: 50 } })
+    api.get('/api/execution/recent', { params: { limit: 100 } })
       .then(r => setExecutions(r.data?.executions || r.data || []))
       .catch(() => {})
       .finally(() => setExecLoading(false));
@@ -385,7 +385,11 @@ export default function Dashboard() {
         )}
         {activeTab === 'logs' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
-            <h2 className="text-[15px] font-bold text-[var(--bb-text-hi)] mb-5">Execution History</h2>
+            <div className="mb-6 max-w-[1400px] mx-auto w-full">
+              <h2 className="text-[18px] font-bold text-[var(--bb-text-hi)] tracking-tight">History</h2>
+              <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">Recent workflow executions</p>
+            </div>
+            <div className="max-w-[1400px] mx-auto w-full">
             {execLoading ? (
               <div className="flex items-center gap-2 text-[var(--bb-text-lo)] text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
             ) : executions.length === 0 ? (
@@ -394,14 +398,14 @@ export default function Dashboard() {
                 <p className="text-[13px] text-[var(--bb-text-lo)]">No executions yet.</p>
               </div>
             ) : (
-              <div className="bb-panel overflow-hidden">
+              <div className="bb-card bb-liquid rounded-2xl overflow-hidden max-w-[1400px]">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-white/[0.02] border-b bb-divider">
-                      <th className="text-left px-4 py-3 bb-eyebrow">Workflow</th>
-                      <th className="text-left px-4 py-3 bb-eyebrow">Status</th>
-                      <th className="text-left px-4 py-3 bb-eyebrow">Started</th>
-                      <th className="text-left px-4 py-3 bb-eyebrow">Duration</th>
+                      <th className="text-left px-5 py-3.5 bb-eyebrow">Workflow</th>
+                      <th className="text-left px-5 py-3.5 bb-eyebrow">Status</th>
+                      <th className="text-left px-5 py-3.5 bb-eyebrow">Started</th>
+                      <th className="text-left px-5 py-3.5 bb-eyebrow">Duration</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -409,16 +413,27 @@ export default function Dashboard() {
                       const dur = ex.completedAt && ex.startedAt
                         ? `${((new Date(ex.completedAt) - new Date(ex.startedAt)) / 1000).toFixed(1)}s`
                         : '—';
+                      const ok = ex.status === 'completed' || ex.status === 'executed';
+                      const failed = ex.status === 'failed';
                       return (
-                        <tr key={ex._id || i} className="border-t bb-divider hover:bg-white/[0.015] transition-colors">
-                          <td className="px-4 py-3 text-[12px] text-[var(--bb-text-mid)] truncate max-w-[260px]">{ex.automationName || ex.automationId || '—'}</td>
-                          <td className="px-4 py-3">
-                            <span className={`text-[11px] font-medium ${ex.status === 'completed' || ex.status === 'executed' ? 'text-emerald-400' : ex.status === 'failed' ? 'text-red-400' : 'text-amber-400'}`}>
+                        <tr key={ex._id || i} className="border-t bb-divider hover:bg-white/[0.025] transition-colors">
+                          <td className="px-5 py-3.5 text-[12px] text-[var(--bb-text-mid)] truncate max-w-[280px]">{ex.automationName || ex.automationId || '—'}</td>
+                          <td className="px-5 py-3.5">
+                            <span
+                              className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                              style={
+                                ok
+                                  ? { color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }
+                                  : failed
+                                  ? { color: '#f87171', background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.22)' }
+                                  : { color: '#f59e0b', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.22)' }
+                              }
+                            >
                               {ex.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-[11px] text-[var(--bb-text-dim)]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
-                          <td className="px-4 py-3 text-[11px] text-[var(--bb-text-dim)] font-mono">{dur}</td>
+                          <td className="px-5 py-3.5 text-[11px] text-[var(--bb-text-dim)]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
+                          <td className="px-5 py-3.5 text-[11px] text-[var(--bb-text-dim)] font-mono">{dur}</td>
                         </tr>
                       );
                     })}
@@ -426,6 +441,7 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
+            </div>
           </div>
         )}
         {activeTab === 'usage' && (

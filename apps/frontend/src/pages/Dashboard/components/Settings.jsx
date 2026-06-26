@@ -10,11 +10,11 @@ import { toast } from 'sonner';
 // ── Section wrapper ────────────────────────────────────────────────────────────
 function Section({ title, description, children }) {
   return (
-    <div className="border-b border-[#141414] pb-8 mb-8 last:border-none last:pb-0 last:mb-0">
+    <div className="border-b border-[var(--bb-border-subtle)] pb-8 mb-8 last:border-none last:pb-0 last:mb-0">
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h3 className="text-[14px] font-semibold text-white">{title}</h3>
-          {description && <p className="text-[12px] text-neutral-600 mt-0.5">{description}</p>}
+          <h3 className="text-[14px] font-semibold text-[var(--bb-text-hi)]">{title}</h3>
+          {description && <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">{description}</p>}
         </div>
       </div>
       {children}
@@ -25,10 +25,10 @@ function Section({ title, description, children }) {
 // ── Field row ─────────────────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
   return (
-    <div className="flex items-start gap-6 py-3.5 border-b border-[#0f0f0f] last:border-none">
+    <div className="flex items-start gap-6 px-4 py-3.5 border-b border-[var(--bb-border-subtle)] last:border-none">
       <div className="w-[180px] shrink-0">
-        <p className="text-[12px] font-medium text-neutral-400">{label}</p>
-        {hint && <p className="text-[11px] text-neutral-700 mt-0.5 leading-snug">{hint}</p>}
+        <p className="text-[12px] font-medium text-[var(--bb-text-mid)]">{label}</p>
+        {hint && <p className="text-[11px] text-[var(--bb-text-dim)] mt-0.5 leading-snug">{hint}</p>}
       </div>
       <div className="flex-1">{children}</div>
     </div>
@@ -44,7 +44,7 @@ function Input({ type = 'text', value, onChange, disabled, placeholder }) {
       onChange={onChange}
       disabled={disabled}
       placeholder={placeholder}
-      className="w-full max-w-[360px] bg-[#0d0d0d] border border-[#1e1e1e] rounded-xl px-3.5 py-2.5 text-[13px] text-white focus:outline-none focus:border-[#333] disabled:opacity-40 disabled:cursor-not-allowed placeholder:text-neutral-700 transition-colors"
+      className="w-full max-w-[360px] bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-xl px-3.5 py-2.5 text-[13px] text-[var(--bb-text-hi)] focus:outline-none focus:border-[var(--bb-accent-ring)] disabled:opacity-40 disabled:cursor-not-allowed placeholder:text-[var(--bb-text-dim)] transition-colors"
     />
   );
 }
@@ -70,7 +70,7 @@ function Avatar({ name, size = 48 }) {
   return (
     <div
       className="rounded-2xl flex items-center justify-center text-white font-bold select-none shrink-0"
-      style={{ width: size, height: size, fontSize: size * 0.35, background: 'linear-gradient(135deg,#232323,#1a1a1a)', border: '1px solid #2a2a2a' }}
+      style={{ width: size, height: size, fontSize: size * 0.35, background: 'linear-gradient(135deg,var(--bb-surface-2),var(--bb-surface-1))', border: '1px solid var(--bb-border)' }}
     >
       {initials}
     </div>
@@ -153,17 +153,17 @@ export default function Settings({ user }) {
 
       {/* Page header */}
       <div className="mb-10">
-        <h2 className="text-[18px] font-bold text-white tracking-tight">Settings</h2>
-        <p className="text-[12px] text-neutral-600 mt-0.5">Manage your account and workspace</p>
+        <h2 className="text-[18px] font-bold text-[var(--bb-text-hi)] tracking-tight">Settings</h2>
+        <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">Manage your account and workspace</p>
       </div>
 
       {/* ── Profile ── */}
       <Section title="Profile" description="Your name and email address">
-        <div className="flex items-center gap-4 mb-6 p-4 rounded-2xl border border-[#141414] bg-[#090909]">
+        <div className="flex items-center gap-4 mb-6 p-4 bb-card bb-liquid rounded-2xl">
           <Avatar name={profileName || user?.name} size={52} />
           <div>
-            <p className="text-[14px] font-semibold text-white">{user?.name || '—'}</p>
-            <p className="text-[12px] text-neutral-600">{user?.email}</p>
+            <p className="text-[14px] font-semibold text-[var(--bb-text-hi)]">{user?.name || '—'}</p>
+            <p className="text-[12px] text-[var(--bb-text-lo)]">{user?.email}</p>
             {user?.role === 'admin' && (
               <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
                 <Shield className="w-2.5 h-2.5" /> Admin
@@ -172,7 +172,7 @@ export default function Settings({ user }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#141414] bg-[#090909] overflow-hidden">
+        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
           <Field label="Display name" hint="Shown to collaborators">
             <Input value={profileName} onChange={e => setProfileName(e.target.value)} />
           </Field>
@@ -185,7 +185,7 @@ export default function Settings({ user }) {
 
       {/* ── Security ── */}
       <Section title="Security" description="Update your password">
-        <div className="rounded-2xl border border-[#141414] bg-[#090909] overflow-hidden">
+        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
           <Field label="Current password">
             <Input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="••••••••" />
           </Field>
@@ -206,12 +206,12 @@ export default function Settings({ user }) {
 
       {/* ── Billing ── */}
       <Section title="Billing" description="Your plan and usage">
-        <div className="rounded-2xl border border-[#141414] bg-[#090909] overflow-hidden mb-4">
-          <div className="p-5 flex items-center justify-between border-b border-[#0f0f0f]">
+        <div className="bb-card bb-liquid rounded-2xl overflow-hidden mb-4">
+          <div className="p-5 flex items-center justify-between border-b border-[var(--bb-border-subtle)]">
             <div>
-              <p className="text-[12px] text-neutral-600 mb-1">Current plan</p>
+              <p className="text-[12px] text-[var(--bb-text-lo)] mb-1">Current plan</p>
               <div className="flex items-center gap-2">
-                <span className="text-[15px] font-bold text-white capitalize">{usage?.plan || 'Free'}</span>
+                <span className="text-[15px] font-bold text-[var(--bb-text-hi)] capitalize">{usage?.plan || 'Free'}</span>
                 {isPro && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }}>Active</span>
                 )}
@@ -232,27 +232,27 @@ export default function Settings({ user }) {
           {usage && !isPro && (
             <div className="p-5">
               <div className="flex items-center justify-between mb-2.5">
-                <p className="text-[12px] text-neutral-600">Credits used this month</p>
-                <p className="text-[12px] font-semibold text-white tabular-nums">
+                <p className="text-[12px] text-[var(--bb-text-lo)]">Credits used this month</p>
+                <p className="text-[12px] font-semibold text-[var(--bb-text-hi)] tabular-nums">
                   {usage.creditsUsed.toLocaleString()} / {usage.monthlyLimit.toLocaleString()}
                 </p>
               </div>
-              <div className="h-[3px] bg-[#111] rounded-full overflow-hidden">
+              <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bb-surface-3)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${creditPct}%`,
-                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : '#fff',
+                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : 'var(--bb-accent)',
                   }}
                 />
               </div>
-              <p className="text-[11px] text-neutral-700 mt-2">{creditPct}% used · resets each billing cycle</p>
+              <p className="text-[11px] text-[var(--bb-text-dim)] mt-2">{creditPct}% used · resets each billing cycle</p>
             </div>
           )}
 
           {usage && isPro && (
             <div className="p-5">
-              <p className="text-[12px] text-neutral-600">Unlimited executions and workflows on your Pro plan.</p>
+              <p className="text-[12px] text-[var(--bb-text-lo)]">Unlimited executions and workflows on your Pro plan.</p>
             </div>
           )}
         </div>
@@ -261,9 +261,9 @@ export default function Settings({ user }) {
       {/* ── System (admin only) ── */}
       {systemStats && (
         <Section title="System" description="Execution engine controls (admin only)">
-          <div className="rounded-2xl border border-[#141414] bg-[#090909] overflow-hidden mb-4">
+          <div className="bb-card bb-liquid rounded-2xl overflow-hidden mb-4">
             <Field label="Active executions">
-              <span className="text-[13px] font-mono text-white">{systemStats.activeExecutions ?? '—'}</span>
+              <span className="text-[13px] font-mono text-[var(--bb-text-hi)]">{systemStats.activeExecutions ?? '—'}</span>
             </Field>
             <Field label="Worker status">
               <span className={`text-[13px] font-semibold ${systemStats.workersPaused ? 'text-amber-400' : 'text-emerald-400'}`}>

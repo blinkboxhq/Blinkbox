@@ -5,7 +5,7 @@ const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', business: 'Bu
 
 function StatCard({ icon: Icon, label, value, sub }) {
   return (
-    <div className="bb-panel p-4 flex flex-col gap-2">
+    <div className="bb-card bb-liquid rounded-2xl p-4 flex flex-col gap-2">
       <div className="flex items-center gap-2 text-[var(--bb-text-lo)]">
         <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
         <span className="bb-eyebrow">{label}</span>
@@ -45,7 +45,7 @@ export default function UsagePage({ usage }) {
       </div>
 
       {/* Primary meter */}
-      <div className="bb-panel p-5">
+      <div className="bb-card bb-liquid rounded-2xl p-5">
         <div className="flex items-baseline justify-between mb-3">
           <span className="bb-eyebrow">Credits used</span>
           <span className="text-[12px] font-mono text-[var(--bb-text-lo)]">{pct}%</span>
@@ -66,7 +66,7 @@ export default function UsagePage({ usage }) {
       </div>
 
       {/* Upgrade — same panel material, accent only on the action */}
-      <div className="bb-panel p-5 flex items-center justify-between gap-4">
+      <div className="bb-card bb-liquid rounded-2xl p-5 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[13px] font-semibold text-[var(--bb-text-hi)]">
             {isPaid ? 'Manage your plan' : 'Need more credits?'}
