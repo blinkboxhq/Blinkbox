@@ -7,24 +7,24 @@
    own hex. surface ascends 0→3 (deepest page → most-raised), border ascends with
    prominence, text descends hi→lo. Keep this list short on purpose. */
 :root {
-  --bb-surface-0: #08080a;  /* page background */
-  --bb-surface-1: #0d0d10;  /* card / panel */
-  --bb-surface-2: #131317;  /* raised card / hover */
-  --bb-surface-3: #1a1a1f;  /* popover / inset */
+  --bb-surface-0: #0a0a0d;  /* page background */
+  --bb-surface-1: #141418;  /* card / panel */
+  --bb-surface-2: #1d1d23;  /* raised card / hover */
+  --bb-surface-3: #26262e;  /* popover / inset */
 
-  --bb-border-subtle: #1c1c20;
-  --bb-border:        #28282e;
-  --bb-border-strong: #3a3a42;
+  --bb-border-subtle: #2a2a30;
+  --bb-border:        #3a3a42;
+  --bb-border-strong: #52525b;
 
   --bb-text-hi:  #fafafa;
-  --bb-text-mid: #a1a1aa;
-  --bb-text-lo:  #71717a;
-  --bb-text-dim: #52525b;
+  --bb-text-mid: #b4b4bd;
+  --bb-text-lo:  #8a8a94;
+  --bb-text-dim: #6b6b76;
 
-  --bb-accent:      #5b8cff;
-  --bb-accent-soft: rgba(91, 140, 255, 0.12);
-  --bb-accent-hot:  #8ab4ff;
-  --bb-accent-ring: rgba(91, 140, 255, 0.35);
+  --bb-accent:      #4d7cff;
+  --bb-accent-soft: rgba(77, 124, 255, 0.14);
+  --bb-accent-hot:  #7aa0ff;
+  --bb-accent-ring: rgba(77, 124, 255, 0.40);
 
   --bb-radius:    14px;
   --bb-radius-sm: 10px;
@@ -170,7 +170,7 @@ body {
 
 /* ── React Flow Overrides (Premium Dark Theme) ─────────────────────────────── */
 .react-flow__background {
-  background-color: #0d0d0f !important;
+  background-color: #0a0a0d !important;
 }
 
 .react-flow__minimap {
@@ -315,7 +315,7 @@ body {
 
 /* ── Selection ─────────────────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(91, 140, 255, 0.30);
+  background: rgba(77, 124, 255, 0.32);
   color: #fff;
 }
 
@@ -426,4 +426,94 @@ html {
 @keyframes bbCardSlide {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Liquid Glass — global shell material ──────────────────────────────────
+   The chrome (sidebar, header) floats above content as frosted glass. A slow
+   highlight drifts across it so it reads as a living liquid surface, not a
+   flat panel. Greyscale base; only active states pick up the accent. */
+.bb-liquid {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.012) 100%),
+    rgba(16, 16, 20, 0.62);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.07);
+  isolation: isolate;
+}
+/* drifting specular highlight — the "liquid" tell */
+.bb-liquid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(77,124,255,0.10), transparent 60%),
+    radial-gradient(80% 50% at 0% 100%, rgba(255,255,255,0.05), transparent 55%);
+  opacity: 0.9;
+  animation: bbLiquidDrift 14s ease-in-out infinite alternate;
+}
+/* top inner hairline so the glass edge catches light */
+.bb-liquid::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+}
+@keyframes bbLiquidDrift {
+  0%   { transform: translate3d(-6%, -4%, 0) scale(1.05); }
+  100% { transform: translate3d(6%, 4%, 0) scale(1.12); }
+}
+
+/* Sliding active indicator — a glowing accent bar that animates between items */
+.bb-nav-indicator {
+  position: absolute;
+  left: 0;
+  width: 2.5px;
+  border-radius: 0 3px 3px 0;
+  background: var(--bb-accent);
+  box-shadow: 0 0 10px 0 var(--bb-accent-ring), 0 0 2px 0 var(--bb-accent);
+  transition: top .32s cubic-bezier(.22,1,.36,1), height .32s cubic-bezier(.22,1,.36,1), opacity .2s ease;
+  pointer-events: none;
+}
+
+/* Nav item: liquid hover fill that wipes in from the left */
+.bb-nav-item { position: relative; overflow: hidden; }
+.bb-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 60%, transparent);
+  opacity: 0;
+  transform: translateX(-12%);
+  transition: opacity .2s ease, transform .25s cubic-bezier(.22,1,.36,1);
+  pointer-events: none;
+}
+.bb-nav-item:hover::before { opacity: 1; transform: translateX(0); }
+.bb-nav-item.is-active::before {
+  opacity: 1;
+  transform: translateX(0);
+  background: linear-gradient(90deg, var(--bb-accent-soft), rgba(255,255,255,0.02) 70%, transparent);
+}
+.bb-nav-item .bb-nav-icon { transition: transform .25s cubic-bezier(.22,1,.36,1); }
+.bb-nav-item:hover .bb-nav-icon { transform: translateX(1px) scale(1.06); }
+
+/* Header sheen — a slow light sweep across the top bar */
+.bb-header-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.05) 50%, transparent 65%);
+  transform: translateX(-130%);
+  animation: bbHeaderSheen 9s ease-in-out infinite;
+}
+@keyframes bbHeaderSheen {
+  0%, 70%, 100% { transform: translateX(-130%); }
+  85% { transform: translateX(130%); }
 }

@@ -130,7 +130,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
 
   return (
     <>
-      <div className="relative w-full h-14 bg-[#08080a]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-white/[0.06] z-50 flex items-center justify-between px-3 shrink-0">
+      <div className="bb-liquid bb-header-sheen relative w-full h-14 border-b z-50 flex items-center justify-between px-3 shrink-0">
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">

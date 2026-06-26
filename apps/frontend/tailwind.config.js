@@ -5,15 +5,15 @@ export default {
     extend: {
       colors: {
         surface: {
-          0: "#000000",
-          1: "#0a0a0a",
-          2: "#111111",
-          3: "#1a1a1a",
+          0: "#0a0a0d",
+          1: "#141418",
+          2: "#1d1d23",
+          3: "#26262e",
         },
         accent: {
-          DEFAULT: "#5b8cff",
-          soft: "rgba(91,140,255,0.12)",
-          hot: "#8ab4ff",
+          DEFAULT: "#4d7cff",
+          soft: "rgba(77,124,255,0.14)",
+          hot: "#7aa0ff",
         },
       },
       fontFamily: {
