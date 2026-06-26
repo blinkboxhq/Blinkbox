@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MoreHorizontal, AlertTriangle, ChevronLeft, ChevronRight,
   Copy, Trash2, Pencil, Check, X, Loader2,
@@ -199,7 +199,21 @@ export default function Dashboard() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [billingUsage, setBillingUsage] = useState(null);
-  const [activeTab, setActiveTab] = useState('workflows');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const TABS = ['workflows', 'nodes', 'analytics', 'logs', 'usage', 'vault', 'mcp', 'settings'];
+  const tabParam = searchParams.get('tab');
+  const activeTab = TABS.includes(tabParam) ? tabParam : 'workflows';
+  const setActiveTab = useCallback((tab) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (tab === 'workflows') next.delete('tab');
+        else next.set('tab', tab);
+        return next;
+      },
+      { replace: false }
+    );
+  }, [setSearchParams]);
 
   // execution logs
   const [executions, setExecutions] = useState([]);
