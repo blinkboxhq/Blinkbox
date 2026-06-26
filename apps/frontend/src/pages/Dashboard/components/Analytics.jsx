@@ -183,9 +183,6 @@ export default function Analytics({ user }) {
         </div>
       </div>
 
-      {/* ── Contribution heatmap ── */}
-      <ContributionGraph userName={userName} />
-
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <StatCard label="Total Runs"   value={total}        sub={`${MONTH_SHORT[month-1]} ${year}`}    icon={TrendingUp}   accent="#a3a3a3" />
@@ -193,6 +190,9 @@ export default function Analytics({ user }) {
         <StatCard label="Failed"       value={failedCount}  sub={`${failRate}% failure rate`}           icon={XCircle}      accent="#f87171" dim={failedCount === 0} />
         <StatCard label="Active Flows" value={activeBoxes}  sub="currently live"                        icon={Zap}          accent="#a3a3a3" dim={activeBoxes === 0} />
       </div>
+
+      {/* ── Contribution heatmap ── */}
+      <ContributionGraph userName={userName} />
 
       {/* ── Bottom row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
