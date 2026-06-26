@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Zap, Sparkles, Plug, Gauge } from 'lucide-react';
+import { Network, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Layers, Plug, Gauge } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
@@ -22,7 +22,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showLogout, setShowLogout] = useState(false);
 
-  const w = expanded ? 'w-[220px]' : 'w-[56px]';
+  const w = expanded ? 'w-[200px]' : 'w-[56px]';
 
   const NavBtn = ({ item }) => {
     const active = activeTab === item.key;
@@ -118,51 +118,6 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
             </button>
           </div>
-        )}
-
-        {/* Upgrade / Pro badge */}
-        {usage && (
-          expanded ? (
-            usage.plan === 'free' || usage.plan === 'starter' ? (
-              <div className="px-3 pb-3">
-                <button
-                  onClick={() => navigate('/upgrade')}
-                  className="bb-btn bb-btn-accent w-full flex items-center justify-center gap-2 h-9 text-[12px]"
-                >
-                  <Zap className="w-3.5 h-3.5 shrink-0" />
-                  Upgrade to Pro
-                </button>
-              </div>
-            ) : (
-              <div className="px-3 pb-3">
-                <button
-                  onClick={() => navigate('/upgrade')}
-                  className="bb-btn bb-btn-ghost w-full flex items-center justify-center gap-2 h-9 text-[12px] text-[var(--bb-accent)]"
-                >
-                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                  Pro · Manage plan
-                </button>
-              </div>
-            )
-          ) : (
-            usage.plan === 'free' || usage.plan === 'starter' ? (
-              <button
-                onClick={() => navigate('/upgrade')}
-                title="Upgrade to Pro"
-                className="bb-btn bb-btn-accent mx-auto mb-2 flex items-center justify-center w-8 h-8 !rounded-[10px]"
-              >
-                <Zap className="w-3.5 h-3.5 shrink-0" />
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/upgrade')}
-                title="Manage Pro plan"
-                className="bb-btn bb-btn-ghost mx-auto mb-2 flex items-center justify-center w-8 h-8 !rounded-[10px] text-[var(--bb-accent)]"
-              >
-                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-              </button>
-            )
-          )
         )}
 
         {/* User */}

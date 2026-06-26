@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const SELECTOR =
-  '.bb-glow-border, .bb-card, .bb-panel, .bb-btn-ghost, .bb-input, .bb-edge-right, .bb-edge-bottom';
+  '.bb-glow-border, .bb-card, .bb-panel, .bb-btn-ghost, .bb-input, .bb-nav-item, .bb-hbtn, .bb-edge-right, .bb-edge-bottom';
 const RANGE = 200;
 
 export default function useGlowBorder() {

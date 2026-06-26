@@ -477,6 +477,8 @@ html {
 .bb-panel,
 .bb-btn-ghost,
 .bb-input,
+.bb-nav-item,
+.bb-hbtn,
 .bb-edge-right,
 .bb-edge-bottom {
   position: relative;
@@ -489,20 +491,22 @@ html {
 .bb-card::before,
 .bb-panel::before,
 .bb-btn-ghost::before,
-.bb-input::before {
+.bb-input::before,
+.bb-nav-item::before,
+.bb-hbtn::before {
   content: "";
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  padding: 1px;
+  padding: 1.5px;
   pointer-events: none;
   opacity: var(--gi);
   transition: opacity .12s linear;
   background: radial-gradient(
-    140px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 0.9),
-    rgba(255, 255, 255, 0.3) 40%,
-    transparent 70%
+    170px circle at var(--gx) var(--gy),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.55) 42%,
+    transparent 72%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
