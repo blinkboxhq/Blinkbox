@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { TrendingUp, CheckCircle2, XCircle, Zap, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { TrendingUp, CheckCircle2, XCircle, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import ContributionGraph from './ContributionGraph';
@@ -10,7 +10,7 @@ const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, icon: Icon, accent = '#fff', dim = false }) {
   return (
-    <div className="flex flex-col p-5 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] gap-3">
+    <div className="flex flex-col bb-card bb-liquid p-5 rounded-2xl gap-3">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest">{label}</span>
         <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${accent}10`, border: `1px solid ${accent}20` }}>
@@ -21,77 +21,6 @@ function StatCard({ label, value, sub, icon: Icon, accent = '#fff', dim = false 
         <p className="text-[28px] font-bold leading-none tabular-nums" style={{ color: dim ? '#333' : '#fff' }}>{value}</p>
         {sub && <p className="text-[11px] text-neutral-700 mt-1.5">{sub}</p>}
       </div>
-    </div>
-  );
-}
-
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-function BarChart({ data }) {
-  const max = Math.max(...data.map((d) => d.count), 1);
-  const [tooltip, setTooltip] = useState(null);
-  const every = Math.ceil(data.length / 7);
-
-  return (
-    <div className="relative select-none">
-      <div className="flex items-end gap-[2px] h-[120px]">
-        {data.map((d, i) => {
-          const h = Math.max(2, Math.round((d.count / max) * 112));
-          const isToday = i === data.length - 1;
-          return (
-            <div
-              key={d.date}
-              className="flex-1 flex flex-col items-center justify-end group/bar cursor-default"
-              onMouseEnter={() => setTooltip({ ...d, i })}
-              onMouseLeave={() => setTooltip(null)}
-            >
-              <div
-                className="w-full rounded-[3px] transition-all duration-100"
-                style={{
-                  height: `${h}px`,
-                  background: d.count === 0
-                    ? '#161616'
-                    : isToday
-                      ? 'rgba(255,255,255,0.9)'
-                      : tooltip?.i === i
-                        ? 'rgba(255,255,255,0.5)'
-                        : 'rgba(255,255,255,0.18)',
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* X labels */}
-      <div className="flex gap-[2px] mt-2.5">
-        {data.map((d, i) => (
-          <div key={d.date} className="flex-1 text-center">
-            {(i % every === 0 || i === data.length - 1) && (
-              <span className="text-[9px] text-neutral-800">{d.day}</span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          className="absolute bottom-full mb-3 pointer-events-none z-20"
-          style={{ left: `${((tooltip.i + 0.5) / data.length) * 100}%`, transform: 'translateX(-50%)' }}
-        >
-          <div className="bg-[#111] border border-[#2a2a2a] rounded-xl px-3 py-2.5 shadow-2xl whitespace-nowrap">
-            <p className="text-[10px] text-neutral-600 mb-1">{tooltip.date}</p>
-            <p className="text-[14px] font-bold text-white">{tooltip.count} <span className="text-[11px] font-normal text-neutral-500">runs</span></p>
-            {tooltip.count > 0 && (
-              <div className="flex gap-3 mt-1">
-                <span className="text-[10px] text-emerald-400">{tooltip.success} ok</span>
-                <span className="text-[10px] text-red-400">{tooltip.failed} fail</span>
-              </div>
-            )}
-          </div>
-          <div className="w-2 h-2 bg-[#111] border-r border-b border-[#2a2a2a] rotate-45 mx-auto -mt-1" />
-        </div>
-      )}
     </div>
   );
 }
@@ -218,8 +147,6 @@ export default function Analytics({ user }) {
 
   const chartSlices = rawSlices.length > 0 ? rawSlices : [{ label: 'No data', count: 1, pct: 100, color: '#1c1c1c' }];
 
-  const peak      = Math.max(...daily.map(d => d.count), 0);
-  const weekTotal = daily.slice(-7).reduce((s, d) => s + d.count, 0);
   const dayMax7   = Math.max(...daily.slice(-7).map(d => d.count), 1);
 
   const Spinner = () => (
@@ -267,39 +194,11 @@ export default function Analytics({ user }) {
         <StatCard label="Active Flows" value={activeBoxes}  sub="currently live"                        icon={Zap}          accent="#a3a3a3" dim={activeBoxes === 0} />
       </div>
 
-      {/* ── Bar chart ── */}
-      <div className="p-5 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] mb-4">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-1">Executions per day</p>
-            <p className="text-[14px] font-semibold text-white">{MONTH_NAMES[month - 1]} {year}</p>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <p className="text-[10px] text-neutral-700 uppercase tracking-wider mb-1">Last 7d</p>
-              <p className="text-[16px] font-bold text-white tabular-nums">{weekTotal}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] text-neutral-700 uppercase tracking-wider mb-1">Peak</p>
-              <p className="text-[16px] font-bold text-white tabular-nums">{peak}</p>
-            </div>
-          </div>
-        </div>
-        {loading ? <Spinner /> : daily.length > 0 ? (
-          <BarChart data={daily} />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-[120px] gap-2">
-            <Activity className="w-6 h-6 text-neutral-800" />
-            <p className="text-[12px] text-neutral-700">No executions this month</p>
-          </div>
-        )}
-      </div>
-
       {/* ── Bottom row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Donut */}
-        <div className="p-5 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a]">
+        <div className="bb-card bb-liquid p-5 rounded-2xl">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-1">Status breakdown</p>
           <p className="text-[14px] font-semibold text-white mb-5">Distribution</p>
           {loading ? <Spinner /> : (
@@ -316,7 +215,7 @@ export default function Analytics({ user }) {
         </div>
 
         {/* Last 7 days table */}
-        <div className="p-5 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a]">
+        <div className="bb-card bb-liquid p-5 rounded-2xl">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-1">Daily breakdown</p>
           <p className="text-[14px] font-semibold text-white mb-5">Last 7 days</p>
           {loading ? <Spinner /> : (
