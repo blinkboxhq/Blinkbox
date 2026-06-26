@@ -57,7 +57,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bb-liquid border-r flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+      <aside className={`${w} bb-liquid bb-edge-right border-r-[1.5px] border-r-[var(--bb-border-strong)] flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
         {/* Header — logo links to dashboard */}
         <div className={`h-14 flex items-center border-b border-white/[0.06] shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (

@@ -43,7 +43,7 @@
   /* Card: the default raised surface. Lifts on hover. */
   .bb-card {
     background: var(--bb-surface-1);
-    border: 1.5px solid var(--bb-border-strong);
+    border: 1px solid var(--bb-border-subtle);
     border-radius: var(--bb-radius);
     box-shadow: var(--bb-shadow-card);
     transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
@@ -57,7 +57,7 @@
   /* Inset panel (table shells, code, output blocks) */
   .bb-panel {
     background: var(--bb-surface-1);
-    border: 1.5px solid var(--bb-border-strong);
+    border: 1px solid var(--bb-border-subtle);
     border-radius: var(--bb-radius);
   }
 
@@ -477,8 +477,8 @@ html {
 .bb-panel,
 .bb-btn-ghost,
 .bb-input,
-.bb-nav-item,
-.bb-hbtn {
+.bb-edge-right,
+.bb-edge-bottom {
   position: relative;
   --gx: -200px;
   --gy: -200px;
@@ -489,36 +489,61 @@ html {
 .bb-card::before,
 .bb-panel::before,
 .bb-btn-ghost::before,
-.bb-input::before,
-.bb-liquid::before,
-.bb-nav-item::before,
-.bb-hbtn::before {
+.bb-input::before {
   content: "";
   position: absolute;
-  inset: -1.5px;
+  inset: -1px;
   border-radius: inherit;
-  padding: 2px;
+  padding: 1px;
   pointer-events: none;
   opacity: var(--gi);
   transition: opacity .12s linear;
   background: radial-gradient(
-    160px circle at var(--gx) var(--gy),
-    rgba(255, 255, 255, 1),
-    rgba(255, 255, 255, 0.45) 45%,
-    transparent 72%
+    140px circle at var(--gx) var(--gy),
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.3) 40%,
+    transparent 70%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
-.bb-liquid::before,
-.bb-nav-item::before,
-.bb-hbtn::before {
+
+/* Chrome dividers — only the two straight inner lines glow near the cursor:
+   the sidebar's right edge and the header's bottom edge. A thin strip sits
+   on that single edge (not the whole panel perimeter) so the outer screen
+   edges and the logo divider stay quiet. */
+.bb-edge-right::after,
+.bb-edge-bottom::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  opacity: var(--gi);
+  transition: opacity .12s linear;
+  z-index: 1;
+}
+.bb-edge-right::after {
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 2px;
   background: radial-gradient(
-    160px circle at var(--gx) var(--gy),
+    180px circle at var(--gx) var(--gy),
     rgba(180, 180, 190, 1),
-    rgba(161, 161, 170, 0.4) 45%,
+    rgba(161, 161, 170, 0.35) 45%,
+    transparent 72%
+  );
+}
+.bb-edge-bottom::after {
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: radial-gradient(
+    180px circle at var(--gx) var(--gy),
+    rgba(180, 180, 190, 1),
+    rgba(161, 161, 170, 0.35) 45%,
     transparent 72%
   );
 }
@@ -537,8 +562,7 @@ html {
     rgba(18, 18, 20, 0.5);
   -webkit-backdrop-filter: blur(30px) saturate(105%);
   backdrop-filter: blur(30px) saturate(105%);
-  border-color: var(--bb-border-strong);
-  border-width: 1.5px;
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Nav item: a clean rounded pill. Hover and active are the same glass
@@ -546,7 +570,7 @@ html {
 .bb-nav-item {
   position: relative;
   background: transparent;
-  border: 1.5px solid var(--bb-border);
+  border: 1px solid transparent;
   transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .bb-nav-item:hover { background: rgba(255, 255, 255, 0.04); }

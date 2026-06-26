@@ -16,8 +16,8 @@ import brianLogo from '../../../assets/brian.webp';
 
 // ── Unified button tokens ─────────────────────────────────────────────────────
 const H = 'h-7';
-const ICON = `bb-hbtn ${H} w-7 flex items-center justify-center rounded-md text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.06] transition-all duration-150 shrink-0 cursor-pointer`;
-const TEXT = `bb-hbtn ${H} flex items-center gap-1.5 px-2.5 rounded-md text-[11px] font-semibold transition-all duration-150 shrink-0 cursor-pointer border`;
+const ICON = `${H} w-7 flex items-center justify-center rounded-md text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.06] transition-all duration-150 shrink-0 cursor-pointer`;
+const TEXT = `${H} flex items-center gap-1.5 px-2.5 rounded-md text-[11px] font-semibold transition-all duration-150 shrink-0 cursor-pointer border`;
 const DIV  = 'w-px h-4 bg-white/[0.08] shrink-0';
 
 function UserBubble({ user, title, onClick, color, pulse = false }) {
@@ -130,7 +130,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
 
   return (
     <>
-      <div className="bb-liquid relative w-full h-14 border-b z-50 flex items-center justify-between px-3 shrink-0">
+      <div className="bb-liquid bb-edge-bottom relative w-full h-14 border-b-[1.5px] border-b-[var(--bb-border-strong)] z-50 flex items-center justify-between px-3 shrink-0">
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">
