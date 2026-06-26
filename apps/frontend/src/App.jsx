@@ -2,6 +2,7 @@ import { Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import TopProgressBar from './components/TopProgressBar';
+import useGlowBorder from './hooks/useGlowBorder';
 const Landing      = lazy(() => import('./pages/Landing'));
 const Auth         = lazy(() => import('./pages/auth'));
 const VerifyEmail  = lazy(() => import('./pages/auth/VerifyEmail'));
@@ -65,6 +66,7 @@ const RequireGuest = ({ children }) => {
 };
 
 export default function App() {
+  useGlowBorder();
   return (
     <ErrorBoundary>
       <BrowserRouter>

@@ -467,6 +467,76 @@ html {
   mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
 }
 
+/* ── Spotlight border — bold border that brightens under the cursor ────────
+   Any element with .bb-glow-border gets a crisp base border plus a masked
+   highlight ring that lights the segment nearest the pointer. Pointer coords
+   (--gx/--gy, element-local px) are set by the global useGlowBorder hook. */
+.bb-glow-border {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  --gx: -200px;
+  --gy: -200px;
+}
+.bb-glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s ease;
+  background: radial-gradient(
+    140px circle at var(--gx) var(--gy),
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.25) 40%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.bb-glow-border:hover::before { opacity: 1; }
+
+/* Opt the core surfaces + buttons into the spotlight border globally. */
+.bb-card,
+.bb-panel,
+.bb-btn-ghost,
+.bb-input {
+  position: relative;
+  --gx: -200px;
+  --gy: -200px;
+  border-width: 1px;
+}
+.bb-card::before,
+.bb-panel::before,
+.bb-btn-ghost::before,
+.bb-input::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s ease;
+  background: radial-gradient(
+    140px circle at var(--gx) var(--gy),
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.25) 40%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.bb-card:hover::before,
+.bb-panel:hover::before,
+.bb-btn-ghost:hover::before,
+.bb-input:hover::before { opacity: 1; }
+
 /* ── Liquid Glass — global shell material ──────────────────────────────────
    The chrome (sidebar, header) floats above content as frosted glass. A slow
    highlight drifts across it so it reads as a living liquid surface, not a
