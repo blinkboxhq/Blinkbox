@@ -1,4 +1,5 @@
 import ExecutionLog from "../../models/executionLog.model.js";
+import Execution from "../../models/execution.model.js";
 import Automation from "../../models/automation.model.js";
 
 /**
@@ -206,25 +207,15 @@ const SUCCESS_STATUSES = new Set(["executed", "completed", "success"]);
  * GitHub-style contribution heatmap. Workspace-isolated.
  */
 export async function yearContributions(workspaceId, year) {
-  const start = new Date(Date.UTC(year, 0, 1));
-  const end = new Date(Date.UTC(year + 1, 0, 1));
+  const start = new Date(year, 0, 1, 0, 0, 0, 0);
+  const end = new Date(year + 1, 0, 1, 0, 0, 0, 0);
 
-  const automations = await Automation.find({ workspaceId }).select("_id").lean();
-  const automationIds = automations.map((a) => a._id.toString());
-  if (automationIds.length === 0) return { days: [], total: 0, max: 0 };
-
-  const rows = await ExecutionLog.aggregate([
-    {
-      $match: {
-        type: "execution_end",
-        automationId: { $in: automationIds },
-        timestamp: { $gte: start, $lt: end },
-      },
-    },
+  const rows = await Execution.aggregate([
+    { $match: { workspaceId, createdAt: { $gte: start, $lt: end } } },
     {
       $group: {
         _id: {
-          date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           status: "$status",
         },
         count: { $sum: 1 },
