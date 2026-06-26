@@ -10,7 +10,7 @@ export default function useGlowBorder() {
       const e = pending;
       if (!e) return;
       const el = e.target.closest?.(
-        '.bb-glow-border, .bb-card, .bb-panel, .bb-btn-ghost, .bb-input'
+        '.bb-glow-border, .bb-card, .bb-panel, .bb-btn-ghost, .bb-input, .bb-liquid'
       );
       if (!el) return;
       const r = el.getBoundingClientRect();

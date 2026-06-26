@@ -512,7 +512,8 @@ html {
 .bb-card::before,
 .bb-panel::before,
 .bb-btn-ghost::before,
-.bb-input::before {
+.bb-input::before,
+.bb-liquid::before {
   content: "";
   position: absolute;
   inset: -1px;
@@ -535,7 +536,8 @@ html {
 .bb-card:hover::before,
 .bb-panel:hover::before,
 .bb-btn-ghost:hover::before,
-.bb-input:hover::before { opacity: 1; }
+.bb-input:hover::before,
+.bb-liquid:hover::before { opacity: 1; }
 
 /* ── Liquid Glass — global shell material ──────────────────────────────────
    The chrome (sidebar, header) floats above content as frosted glass. A slow
@@ -543,6 +545,8 @@ html {
    flat panel. Greyscale base; only active states pick up the accent. */
 .bb-liquid {
   position: relative;
+  --gx: -200px;
+  --gy: -200px;
   background:
     linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%),
     rgba(18, 18, 20, 0.5);
