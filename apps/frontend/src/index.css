@@ -512,6 +512,7 @@ html {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
+.bb-liquid::before,
 .bb-nav-item::before,
 .bb-hbtn::before {
   background: radial-gradient(
