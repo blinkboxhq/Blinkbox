@@ -16,25 +16,25 @@ import brianLogo from '../../../assets/brian.webp';
 
 // ── Unified button tokens ─────────────────────────────────────────────────────
 const H = 'h-7';
-const ICON = `${H} w-7 flex items-center justify-center rounded-md text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.06] transition-all duration-150 shrink-0 cursor-pointer`;
+const ICON = `${H} w-7 flex items-center justify-center rounded-md text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.06] transition-all duration-150 shrink-0 cursor-pointer`;
 const TEXT = `${H} flex items-center gap-1.5 px-2.5 rounded-md text-[11px] font-semibold transition-all duration-150 shrink-0 cursor-pointer border`;
-const DIV  = 'w-px h-4 bg-[#2a2a2a] shrink-0';
+const DIV  = 'w-px h-4 bg-white/[0.08] shrink-0';
 
 function UserBubble({ user, title, onClick, color, pulse = false }) {
   const src = user?.avatar || user?.picture;
   const ring = color ? { outline: `2px solid ${color}`, outlineOffset: 2 } : {};
-  const base = `${H} w-7 rounded-full shrink-0 border-2 border-neutral-950 transition-all duration-200
+  const base = `${H} w-7 rounded-full shrink-0 border-2 border-[var(--bb-surface-0)] transition-all duration-200
     ${onClick ? 'cursor-pointer hover:scale-110' : ''}`;
   return (
     <div className="relative" onClick={onClick} title={title}>
       {src
         ? <img src={src} alt="" referrerPolicy="no-referrer" className={`${base} object-cover`} style={ring} />
-        : <div className={`${base} bg-neutral-700 flex items-center justify-center font-semibold text-[10px] text-neutral-200 uppercase`} style={ring}>
+        : <div className={`${base} flex items-center justify-center font-semibold text-[10px] uppercase`} style={{ ...ring, background: 'var(--bb-surface-3)', color: 'var(--bb-text-mid)' }}>
             {user?.name?.charAt(0) || '?'}
           </div>
       }
       {pulse && (
-        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-neutral-950 animate-pulse" />
+        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[var(--bb-surface-0)] animate-pulse" />
       )}
     </div>
   );
@@ -130,12 +130,12 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
 
   return (
     <>
-      <div className="relative w-full h-14 bg-neutral-950 border-b-2 border-white/15 z-50 flex items-center justify-between px-3 shrink-0">
+      <div className="relative w-full h-14 bg-[#08080a]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-white/[0.06] z-50 flex items-center justify-between px-3 shrink-0">
 
         {/* ── LEFT ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 min-w-0">
           {isDashboard ? (
-            <span className="text-[13px] font-semibold text-neutral-200">Dashboard</span>
+            <span className="text-[13px] font-semibold text-[var(--bb-text-hi)]">Dashboard</span>
           ) : (
             <>
               <button onClick={() => navigate('/dashboard')} title="Back to dashboard" className={ICON}>
@@ -144,16 +144,16 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
               <div className={DIV} />
               <nav className="flex items-center gap-1 text-[11px] min-w-0">
                 <button onClick={() => navigate('/dashboard')}
-                  className="text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">
+                  className="text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] transition-colors shrink-0">
                   Workflows
                 </button>
-                <ChevronDown className="w-3 h-3 text-neutral-700 rotate-[-90deg] shrink-0" />
-                <span className="text-neutral-300 font-medium truncate max-w-[160px]" title={workflowName}>
+                <ChevronDown className="w-3 h-3 text-[var(--bb-text-dim)] rotate-[-90deg] shrink-0" />
+                <span className="text-[var(--bb-text-hi)] font-medium truncate max-w-[160px]" title={workflowName}>
                   {workflowName || 'Untitled'}
                 </span>
               </nav>
               {isSaving && (
-                <div className="flex items-center gap-1 text-[10px] text-neutral-700 shrink-0 ml-1">
+                <div className="flex items-center gap-1 text-[10px] text-[var(--bb-text-dim)] shrink-0 ml-1">
                   <Loader2 className="w-2.5 h-2.5 animate-spin" />
                   <span>Saving</span>
                 </div>
@@ -165,19 +165,19 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
         {/* ── CENTER — panel toggles (workspace only) ───────────── */}
         {!isDashboard && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-900 border border-[#2a2a2a] rounded-lg p-0.5">
+            <div className="pointer-events-auto flex items-center gap-0.5 bb-pop rounded-lg p-0.5">
               {panelToggles.map(({ key, title, active, onClick, icon }) => (
                 key === 'brian' ? (
                   <div key={key} className="relative group">
                     <button
-                      className={`${H} w-7 flex items-center justify-center rounded-md opacity-40 cursor-not-allowed text-neutral-600`}
+                      className={`${H} w-7 flex items-center justify-center rounded-md opacity-40 cursor-not-allowed text-[var(--bb-text-dim)]`}
                       title="Brian AI — Coming soon"
                       disabled
                     >
                       {icon}
                     </button>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                      <div className="bg-[#111] border border-[#2a2a2a] text-[10px] text-neutral-400 font-medium px-2 py-1 rounded-md">
+                      <div className="bb-pop text-[10px] text-[var(--bb-text-mid)] font-medium px-2 py-1">
                         Coming soon
                       </div>
                     </div>
@@ -185,7 +185,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
                 ) : (
                   <button key={key} onClick={onClick} title={title}
                     className={`${H} w-7 flex items-center justify-center rounded-md transition-all duration-150
-                      ${active ? 'bg-white/[0.08] text-white' : 'text-neutral-600 hover:text-neutral-300 hover:bg-white/[0.04]'}`}>
+                      ${active ? 'bg-white/[0.08] text-[var(--bb-text-hi)]' : 'text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.04]'}`}>
                     {icon}
                   </button>
                 )
@@ -213,7 +213,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
                   />
                 ))}
                 {presence.length > 4 && (
-                  <div className={`${H} w-7 rounded-full bg-neutral-800 border-2 border-neutral-950 flex items-center justify-center text-[9px] font-bold text-neutral-500`}>
+                  <div className={`${H} w-7 rounded-full border-2 border-[var(--bb-surface-0)] flex items-center justify-center text-[9px] font-bold text-[var(--bb-text-lo)]`} style={{ background: 'var(--bb-surface-3)' }}>
                     +{presence.length - 4}
                   </div>
                 )}
@@ -227,7 +227,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
           {!isDashboard && (
             <>
               <button onClick={() => setCollabOpen(true)} title="Share & collaborators"
-                className={`${TEXT} bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]`}>
+                className={`${TEXT} bg-[var(--bb-surface-1)] border-[var(--bb-border)] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.04]`}>
                 <Users className="w-3.5 h-3.5" />
                 Share
                 {presence.length > 0 && (
@@ -256,7 +256,7 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
                 className={`${TEXT} disabled:opacity-40 disabled:cursor-not-allowed
                   ${isActive
                     ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-neutral-900 border-[#2a2a2a] text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.04]'}`}
+                    : 'bg-[var(--bb-surface-1)] border-[var(--bb-border)] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.04]'}`}
               >
                 {isActivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
                 {isActive ? 'Active' : 'Activate'}

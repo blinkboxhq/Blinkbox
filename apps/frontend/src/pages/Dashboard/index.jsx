@@ -69,16 +69,18 @@ function CollabAvatarStack({ collaborators = [] }) {
         const src = c.avatar || c.picture;
         return src ? (
           <img key={c.userId || i} src={src} alt={c.name} title={c.name} referrerPolicy="no-referrer"
-            className="w-5 h-5 rounded-full border border-neutral-900 object-cover" />
+            className="w-5 h-5 rounded-full border border-[var(--bb-surface-0)] object-cover" />
         ) : (
           <div key={c.userId || i} title={c.name}
-            className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-700 flex items-center justify-center text-[8px] font-semibold text-neutral-300 uppercase">
+            className="w-5 h-5 rounded-full border border-[var(--bb-surface-0)] flex items-center justify-center text-[8px] font-semibold uppercase"
+            style={{ background: 'var(--bb-surface-3)', color: 'var(--bb-text-mid)' }}>
             {c.name?.charAt(0) || '?'}
           </div>
         );
       })}
       {collaborators.length > 3 && (
-        <div className="w-5 h-5 rounded-full border border-neutral-900 bg-neutral-800 flex items-center justify-center text-[8px] font-semibold text-neutral-500">
+        <div className="w-5 h-5 rounded-full border border-[var(--bb-surface-0)] flex items-center justify-center text-[8px] font-semibold text-[var(--bb-text-lo)]"
+          style={{ background: 'var(--bb-surface-2)' }}>
           +{collaborators.length - 3}
         </div>
       )}
@@ -116,8 +118,8 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
     : { top: 80, right: 16 };
 
   const shell = (children) => createPortal(
-    <div ref={ref} style={{ position: 'fixed', zIndex: 9999, width: menuW, ...pos, fontFamily: 'system-ui, sans-serif', fontSize: 12 }}
-      className="bg-[#111] border border-zinc-800 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+    <div ref={ref} style={{ position: 'fixed', zIndex: 9999, width: menuW, ...pos, fontSize: 12 }}
+      className="bb-glass-strong overflow-hidden"
       onClick={e => e.stopPropagation()}>
       {children}
     </div>,
@@ -126,23 +128,23 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
 
   if (mode === 'rename') return shell(
     <div className="p-2.5">
-      <p className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider px-1 mb-2">Rename</p>
+      <p className="bb-eyebrow px-1 mb-2">Rename</p>
       <div className="flex items-center gap-1.5">
         <input autoFocus value={val} onChange={e => setVal(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && val.trim() && exec(onRename, wf._id || wf.id, val.trim())}
-          className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[12px] text-white focus:outline-none focus:border-neutral-500" />
+          className="bb-input bb-focus-ring flex-1 px-2.5 py-1.5 text-[12px]" />
         <button onClick={() => val.trim() && exec(onRename, wf._id || wf.id, val.trim())} disabled={busy}
-          className="p-1.5 text-neutral-400 hover:text-white disabled:opacity-50"><Check className="w-3.5 h-3.5" /></button>
-        <button onClick={() => setMode('menu')} className="p-1.5 text-neutral-600 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+          className="p-1.5 text-[var(--bb-text-mid)] hover:text-[var(--bb-text-hi)] disabled:opacity-50"><Check className="w-3.5 h-3.5" /></button>
+        <button onClick={() => setMode('menu')} className="p-1.5 text-[var(--bb-text-dim)] hover:text-[var(--bb-text-hi)]"><X className="w-3.5 h-3.5" /></button>
       </div>
     </div>
   );
 
   if (mode === 'confirmDelete') return shell(
     <div className="p-3">
-      <p className="text-[12px] text-neutral-300 mb-3 leading-relaxed">Delete <strong className="text-white">{wf.name}</strong>? This cannot be undone.</p>
+      <p className="text-[12px] text-[var(--bb-text-mid)] mb-3 leading-relaxed">Delete <strong className="text-[var(--bb-text-hi)]">{wf.name}</strong>? This cannot be undone.</p>
       <div className="flex items-center gap-2 justify-end">
-        <button onClick={() => setMode('menu')} className="text-[11px] text-neutral-500 hover:text-white px-2.5 py-1.5 rounded-lg transition-colors">Cancel</button>
+        <button onClick={() => setMode('menu')} className="text-[11px] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] px-2.5 py-1.5 rounded-lg transition-colors">Cancel</button>
         <button onClick={() => exec(onDelete, wf._id || wf.id)} disabled={busy}
           className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/20 disabled:opacity-50 transition-all">
           {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Delete'}
@@ -152,7 +154,7 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
   );
 
   const isActive = wf.status === 'active';
-  const btnCls = 'w-full flex items-center gap-2.5 px-3 py-2 text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors text-left';
+  const btnCls = 'w-full flex items-center gap-2.5 px-3 py-2 text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.04] transition-colors text-left';
   const iconSz = { width: 13, height: 13, flexShrink: 0 };
 
   return shell(
@@ -160,14 +162,14 @@ function ActionMenu({ wf, onDelete, onDuplicate, onRename, onToggleActive, onClo
       <button onClick={() => exec(onToggleActive, wf)} className={btnCls}>
         <Power style={iconSz} /> {isActive ? 'Deactivate' : 'Set Active'}
       </button>
-      <div className="border-t border-zinc-800/60 my-1" />
+      <div className="border-t bb-divider my-1" />
       <button onClick={() => setMode('rename')} className={btnCls}>
         <Pencil style={iconSz} /> Rename
       </button>
       <button onClick={() => exec(onDuplicate, wf._id || wf.id)} disabled={busy} className={`${btnCls} disabled:opacity-40`}>
         {busy ? <Loader2 style={iconSz} className="animate-spin" /> : <Copy style={iconSz} />} Duplicate
       </button>
-      <div className="border-t border-zinc-800/60 my-1" />
+      <div className="border-t bb-divider my-1" />
       <button onClick={() => setMode('confirmDelete')}
         className="w-full flex items-center gap-2.5 px-3 py-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors text-left">
         <Trash2 style={iconSz} /> Delete
@@ -336,43 +338,43 @@ export default function Dashboard() {
 
         {/* ── Non-workflow tabs rendered full-height ── */}
         {activeTab === 'nodes' && (
-          <div className="flex-1 overflow-y-auto" style={{ background: '#080808' }}>
+          <div className="bb-page flex-1 overflow-y-auto">
             <NodeLibrary />
           </div>
         )}
         {activeTab === 'analytics' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1400px] mx-auto">
               <Analytics />
             </div>
           </div>
         )}
         {activeTab === 'vault' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1400px] mx-auto">
               <VaultManager />
             </div>
           </div>
         )}
         {activeTab === 'logs' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
-            <h2 className="text-[15px] font-bold text-white mb-5">Execution History</h2>
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
+            <h2 className="text-[15px] font-bold text-[var(--bb-text-hi)] mb-5">Execution History</h2>
             {execLoading ? (
-              <div className="flex items-center gap-2 text-neutral-600 text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+              <div className="flex items-center gap-2 text-[var(--bb-text-lo)] text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
             ) : executions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Activity className="w-8 h-8 text-neutral-800 mb-3" />
-                <p className="text-[13px] text-neutral-600">No executions yet.</p>
+                <Activity className="w-8 h-8 text-[var(--bb-text-dim)] mb-3" />
+                <p className="text-[13px] text-[var(--bb-text-lo)]">No executions yet.</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-[#161616] overflow-hidden">
+              <div className="bb-panel overflow-hidden">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-[#0a0a0a] border-b border-[#161616]">
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Workflow</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Status</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Started</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#333] uppercase tracking-wider">Duration</th>
+                    <tr className="bg-white/[0.02] border-b bb-divider">
+                      <th className="text-left px-4 py-3 bb-eyebrow">Workflow</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Status</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Started</th>
+                      <th className="text-left px-4 py-3 bb-eyebrow">Duration</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -381,15 +383,15 @@ export default function Dashboard() {
                         ? `${((new Date(ex.completedAt) - new Date(ex.startedAt)) / 1000).toFixed(1)}s`
                         : '—';
                       return (
-                        <tr key={ex._id || i} className="border-t border-[#111] hover:bg-white/[0.015] transition-colors">
-                          <td className="px-4 py-3 text-[12px] text-neutral-400 truncate max-w-[260px]">{ex.automationName || ex.automationId || '—'}</td>
+                        <tr key={ex._id || i} className="border-t bb-divider hover:bg-white/[0.015] transition-colors">
+                          <td className="px-4 py-3 text-[12px] text-[var(--bb-text-mid)] truncate max-w-[260px]">{ex.automationName || ex.automationId || '—'}</td>
                           <td className="px-4 py-3">
                             <span className={`text-[11px] font-medium ${ex.status === 'completed' || ex.status === 'executed' ? 'text-emerald-400' : ex.status === 'failed' ? 'text-red-400' : 'text-amber-400'}`}>
                               {ex.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-[11px] text-[#333]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
-                          <td className="px-4 py-3 text-[11px] text-[#333] font-mono">{dur}</td>
+                          <td className="px-4 py-3 text-[11px] text-[var(--bb-text-dim)]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
+                          <td className="px-4 py-3 text-[11px] text-[var(--bb-text-dim)] font-mono">{dur}</td>
                         </tr>
                       );
                     })}
@@ -400,14 +402,14 @@ export default function Dashboard() {
           </div>
         )}
         {activeTab === 'mcp' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1000px] mx-auto">
               <ConnectMCP />
             </div>
           </div>
         )}
         {activeTab === 'settings' && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: '#080808', animation: 'dbFadeIn 0.2s ease-out' }}>
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[640px]">
               <Settings user={user} />
             </div>

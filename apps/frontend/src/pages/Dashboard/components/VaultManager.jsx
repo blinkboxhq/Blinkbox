@@ -184,8 +184,8 @@ export default function VaultManager() {
           onClick={() => setShowOAuth(v => !v)}
           className="flex items-center gap-2 w-full mb-3 group"
         >
-          <Link2 className="w-3.5 h-3.5 text-violet-400" />
-          <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Connected Apps (OAuth)</span>
+          <Link2 className="w-3.5 h-3.5 text-[var(--bb-text-mid)]" />
+          <span className="text-xs font-bold text-[var(--bb-text-mid)] uppercase tracking-widest">Connected Apps (OAuth)</span>
           {connectedProviders.size > 0 && (
             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">{connectedProviders.size}</span>
           )}

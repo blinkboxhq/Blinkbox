@@ -12,7 +12,7 @@ function UserAvatar({ user, onClick }) {
       <img
         src={src}
         alt=""
-        className="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all"
+        className="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer ring-1 ring-white/10 hover:ring-2 hover:ring-white/25 transition-all"
         referrerPolicy="no-referrer"
         title={`${user?.name || 'Profile'} — click to edit`}
         onClick={onClick}
@@ -22,7 +22,8 @@ function UserAvatar({ user, onClick }) {
   const initial = user?.name?.charAt(0) || '?';
   return (
     <div
-      className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-[10px] font-semibold text-neutral-200 uppercase shrink-0 cursor-pointer hover:ring-2 hover:ring-neutral-500 transition-all"
+      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold uppercase shrink-0 cursor-pointer ring-1 ring-white/10 hover:ring-2 hover:ring-white/25 transition-all"
+      style={{ background: 'var(--bb-surface-3)', color: 'var(--bb-text-mid)' }}
       title={`${user?.name || 'Profile'} — click to edit`}
       onClick={onClick}
     >
@@ -84,7 +85,7 @@ export default function GlobalHeader({ user: userProp }) {
 
   return (
     <>
-    <header className="w-full h-14 bg-neutral-950 border-b-2 border-white/15 flex items-center justify-between px-4 shrink-0 z-50">
+    <header className="w-full h-14 bg-[#08080a]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-white/[0.06] flex items-center justify-between px-4 shrink-0 z-50">
 
       {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
@@ -93,17 +94,17 @@ export default function GlobalHeader({ user: userProp }) {
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="text-neutral-400 hover:text-neutral-200 transition-colors text-sm"
+                className="text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] transition-colors text-sm"
               >
                 Workflows
               </button>
-              <span className="text-neutral-600 text-sm">/</span>
-              <span className="text-neutral-100 font-semibold text-sm truncate max-w-[200px]" title={workflowName}>
+              <span className="text-[var(--bb-text-dim)] text-sm">/</span>
+              <span className="text-[var(--bb-text-hi)] font-semibold text-sm truncate max-w-[200px]" title={workflowName}>
                 {workflowName || 'Untitled'}
               </span>
             </>
           ) : (
-            <span className="text-neutral-100 font-semibold text-sm">Dashboard</span>
+            <span className="text-[var(--bb-text-hi)] font-semibold text-sm">Dashboard</span>
           )}
         </nav>
       </div>
@@ -116,7 +117,7 @@ export default function GlobalHeader({ user: userProp }) {
               onClick={() => saveEngine(id)}
               disabled={isSaving}
               title="Save (Cmd+S)"
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[11px] font-semibold text-neutral-300 hover:text-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bb-btn bb-btn-ghost flex items-center gap-1.5 px-2.5 py-1 text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save
@@ -126,7 +127,7 @@ export default function GlobalHeader({ user: userProp }) {
               onClick={() => runEngine(id)}
               disabled={isRunning || nodeCount === 0}
               title="Run (Cmd+Enter)"
-              className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100 hover:bg-white text-neutral-950 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bb-btn bb-btn-primary flex items-center gap-1.5 px-3 py-1 text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Run

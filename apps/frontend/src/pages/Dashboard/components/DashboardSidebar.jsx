@@ -29,12 +29,15 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
       <button
         onClick={() => setActiveTab(item.key)}
         title={!expanded ? item.label : undefined}
-        className={`w-full flex items-center gap-2.5 rounded-md transition-all duration-150 ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
+        className={`group relative w-full flex items-center gap-2.5 rounded-[10px] transition-all duration-150 ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'} ${
           active
-            ? 'bg-white/[0.07] text-white'
-            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+            ? 'bg-white/[0.06] text-[var(--bb-text-hi)]'
+            : 'text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] hover:bg-white/[0.03]'
         }`}
       >
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] rounded-full bg-[var(--bb-accent)]" />
+        )}
         <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2 : 1.5} />
         {expanded && <span className="text-[13px] font-medium truncate">{item.label}</span>}
       </button>
@@ -45,10 +48,10 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   const UserAvatar = ({ size = 'w-7 h-7', textSize = 'text-[11px]', className = '' }) => {
     if (user?.picture) {
-      return <img src={user.picture} alt="" className={`${size} rounded-full object-cover shrink-0 ${className}`} referrerPolicy="no-referrer" />;
+      return <img src={user.picture} alt="" className={`${size} rounded-full object-cover shrink-0 ring-1 ring-white/10 ${className}`} referrerPolicy="no-referrer" />;
     }
     return (
-      <div className={`${size} rounded-full bg-neutral-800 flex items-center justify-center ${textSize} font-semibold text-neutral-400 uppercase shrink-0 ${className}`}>
+      <div className={`${size} rounded-full flex items-center justify-center ${textSize} font-semibold uppercase shrink-0 ring-1 ring-white/10 ${className}`} style={{ background: 'var(--bb-surface-3)', color: 'var(--bb-text-mid)' }}>
         {user?.name?.charAt(0) || '?'}
       </div>
     );
@@ -56,13 +59,13 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   return (
     <>
-      <aside className={`${w} bg-neutral-950 border-r-2 border-white/15 flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
+      <aside className={`${w} bg-[var(--bb-surface-0)] border-r border-white/[0.06] flex flex-col shrink-0 relative z-20 transition-all duration-200 h-screen`}>
         {/* Header — logo links to dashboard */}
-        <div className={`h-14 flex items-center border-b-2 border-white/15 shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
+        <div className={`h-14 flex items-center border-b border-white/[0.06] shrink-0 ${expanded ? 'px-4 justify-between' : 'justify-center'}`}>
           {expanded ? (
             <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img src={logo} alt="B" className="w-5 h-5 object-contain" />
-              <span className="text-[13px] font-semibold tracking-[0.05em] text-white">Blinkbox</span>
+              <span className="text-[13px] font-semibold tracking-[0.05em] text-[var(--bb-text-hi)]">Blinkbox</span>
             </Link>
           ) : (
             <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
@@ -71,7 +74,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
           )}
           <button
             onClick={() => setExpanded(!expanded)}
-            className={`text-white/50 hover:text-white transition-colors ${expanded ? '' : 'hidden'}`}
+            className={`text-[var(--bb-text-dim)] hover:text-[var(--bb-text-hi)] transition-colors ${expanded ? '' : 'hidden'}`}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -81,7 +84,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {!expanded && (
           <button
             onClick={() => setExpanded(true)}
-            className="mx-auto mt-2 text-white/50 hover:text-white transition-colors"
+            className="mx-auto mt-2 text-[var(--bb-text-dim)] hover:text-[var(--bb-text-hi)] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -89,10 +92,10 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
         {/* Primary nav */}
         <nav className={`flex-1 py-3 space-y-0.5 ${expanded ? 'px-2.5' : 'px-1.5'}`}>
-          {expanded && <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider px-3 mb-2">Platform</p>}
+          {expanded && <p className="bb-eyebrow px-3 mb-2">Platform</p>}
           {NAV_TOP.map((item) => <NavBtn key={item.key} item={item} />)}
 
-          <div className={`border-t-2 border-white/15 my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
+          <div className={`border-t border-white/[0.06] my-3 ${expanded ? 'mx-3' : 'mx-2'}`} />
 
           {NAV_BOTTOM.map((item) => <NavBtn key={item.key} item={item} />)}
         </nav>
@@ -100,18 +103,18 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         {/* Usage meter */}
         {usage && expanded && (
           <div className="px-4 pb-2">
-            <div className="p-3 rounded-lg bg-neutral-900 border border-white/10">
+            <div className="bb-panel p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Usage</span>
-                <span className="text-[10px] text-white/40">{usedPct}%</span>
+                <span className="bb-eyebrow">Usage</span>
+                <span className="text-[10px] font-mono text-[var(--bb-text-lo)]">{usedPct}%</span>
               </div>
-              <div className="w-full bg-neutral-800 rounded-full h-1">
+              <div className="w-full rounded-full h-1" style={{ background: 'var(--bb-surface-3)' }}>
                 <div
-                  className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-yellow-400' : 'bg-white'}`}
+                  className={`h-1 rounded-full transition-all duration-500 ${usedPct > 80 ? 'bg-red-400' : usedPct > 50 ? 'bg-amber-400' : 'bg-[var(--bb-text-hi)]'}`}
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
-              <p className="text-[10px] text-white/30 mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
+              <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
             </div>
           </div>
         )}
@@ -123,8 +126,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               <div className="px-3 pb-3">
                 <button
                   onClick={() => navigate('/upgrade')}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-[12px] font-semibold transition-all duration-200"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: '#fff' }}
+                  className="bb-btn bb-btn-accent w-full flex items-center justify-center gap-2 h-9 text-[12px]"
                 >
                   <Zap className="w-3.5 h-3.5 shrink-0" />
                   Upgrade to Pro
@@ -134,7 +136,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               <div className="px-3 pb-3">
                 <button
                   onClick={() => navigate('/upgrade')}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-violet-500/30 text-[12px] font-semibold text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
+                  className="bb-btn bb-btn-ghost w-full flex items-center justify-center gap-2 h-9 text-[12px] text-[var(--bb-accent)]"
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   Pro · Manage plan
@@ -146,16 +148,15 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               <button
                 onClick={() => navigate('/upgrade')}
                 title="Upgrade to Pro"
-                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
-                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}
+                className="bb-btn bb-btn-accent mx-auto mb-2 flex items-center justify-center w-8 h-8 !rounded-[10px]"
               >
-                <Zap className="w-3.5 h-3.5 text-white shrink-0" />
+                <Zap className="w-3.5 h-3.5 shrink-0" />
               </button>
             ) : (
               <button
                 onClick={() => navigate('/upgrade')}
                 title="Manage Pro plan"
-                className="mx-auto mb-2 flex items-center justify-center w-8 h-8 rounded-lg border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
+                className="bb-btn bb-btn-ghost mx-auto mb-2 flex items-center justify-center w-8 h-8 !rounded-[10px] text-[var(--bb-accent)]"
               >
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
               </button>
@@ -164,15 +165,15 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
         )}
 
         {/* User */}
-        <div className={`border-t-2 border-white/15 ${expanded ? 'p-3' : 'p-2'}`}>
+        <div className={`border-t border-white/[0.06] ${expanded ? 'p-3' : 'p-2'}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-1">
               <UserAvatar />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-neutral-300 truncate">{user?.name}</p>
-                <p className="text-[10px] text-neutral-700 truncate">{user?.email}</p>
+                <p className="text-[12px] font-medium text-[var(--bb-text-mid)] truncate">{user?.name}</p>
+                <p className="text-[10px] text-[var(--bb-text-dim)] truncate">{user?.email}</p>
               </div>
-              <button onClick={() => setShowLogout(true)} className="p-1 text-white/40 hover:text-red-400 rounded transition-colors shrink-0" title="Log out">
+              <button onClick={() => setShowLogout(true)} className="p-1 text-[var(--bb-text-dim)] hover:text-red-400 rounded transition-colors shrink-0" title="Log out">
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -182,7 +183,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               className="w-full flex justify-center"
               title="Log out"
             >
-              <UserAvatar className="hover:ring-2 hover:ring-neutral-700 transition-all" />
+              <UserAvatar className="hover:ring-2 hover:ring-white/20 transition-all" />
             </button>
           )}
         </div>
@@ -191,11 +192,11 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
       {/* Logout modal */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]" style={{ animation: 'dbFadeIn 0.12s ease-out' }}>
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
-            <h3 className="text-[15px] font-semibold text-white mb-1.5">Log out of Blinkbox?</h3>
-            <p className="text-[13px] text-neutral-500 mb-5">You'll need to sign in again to access your workspace.</p>
+          <div className="bb-glass-strong w-full max-w-[340px] p-5 mx-4" style={{ animation: 'dbScaleIn 0.12s ease-out' }}>
+            <h3 className="text-[15px] font-semibold text-[var(--bb-text-hi)] mb-1.5">Log out of Blinkbox?</h3>
+            <p className="text-[13px] text-[var(--bb-text-lo)] mb-5">You'll need to sign in again to access your workspace.</p>
             <div className="flex items-center gap-2.5 justify-end">
-              <button onClick={() => setShowLogout(false)} className="px-3.5 py-1.5 text-[13px] font-medium text-neutral-400 hover:text-white rounded-md transition-colors">Cancel</button>
+              <button onClick={() => setShowLogout(false)} className="px-3.5 py-1.5 text-[13px] font-medium text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] rounded-md transition-colors">Cancel</button>
               <button onClick={onLogout} className="px-3.5 py-1.5 text-[13px] font-medium bg-red-500/10 text-red-400 border border-red-500/20 rounded-md hover:bg-red-500/20 transition-all">Log Out</button>
             </div>
           </div>

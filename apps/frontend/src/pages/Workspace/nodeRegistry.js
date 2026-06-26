@@ -339,6 +339,16 @@ import GenericActionNode from "@nodes/generic_action/ConfigPanel.jsx";
 import AgentIntegrationNode from "@nodes/agent_integration/ConfigPanel.jsx";
 import EmailTriggerNode from "@triggers/imap/ConfigPanel.jsx";
 import ImapTriggerNode from "@triggers/imap/ConfigPanel.jsx";
+import DatabaseTriggerNode from "@triggers/db/ConfigPanel.jsx";
+import DnsTriggerNode from "@triggers/dns/ConfigPanel.jsx";
+import GoogleCalendarTriggerNode from "@triggers/google_calendar/ConfigPanel.jsx";
+import HttpMonitorTriggerNode from "@triggers/http_monitor/ConfigPanel.jsx";
+import PortMonitorTriggerNode from "@triggers/port_monitor/ConfigPanel.jsx";
+import PriceAlertTriggerNode from "@triggers/price_alert/ConfigPanel.jsx";
+import RedditTriggerNode from "@triggers/reddit/ConfigPanel.jsx";
+import RssTriggerNode from "@triggers/rss/ConfigPanel.jsx";
+import SslTriggerNode from "@triggers/ssl/ConfigPanel.jsx";
+import YouTubeTriggerNode from "@triggers/youtube/ConfigPanel.jsx";
 import ErrorTriggerNode from "@triggers/error_trigger/ConfigPanel.jsx";
 // Automators nodes
 import VariableSetGetNode from "@nodes/variable_set_get/ConfigPanel.jsx";
@@ -616,28 +626,28 @@ export const NodeRegistry = {
   // ── Additional trigger node registry entries (for canvas rendering) ──────────
   error_trigger:          { label: "Error Trigger",          icon: AlertTriangle, colorClass: "text-red-400",       accentColor: "239,68,68",    logoUrl: imgErrorTrigger,       category: "trigger", ConfigPanel: ErrorTriggerNode },
   asana_trigger:          { label: "Asana Trigger",          icon: CheckSquare,   colorClass: "text-[#F06A6A]",     accentColor: "240,106,106",  logoUrl: imgAsana,              category: "trigger", ConfigPanel: AsanaTriggerNode },
-  db_trigger:             { label: "Database Trigger",       icon: Database,      colorClass: "text-emerald-400",   accentColor: "52,211,153",   logoUrl: imgDbTrigger,          category: "trigger", ConfigPanel: GenericActionNode },
-  dns_trigger:            { label: "DNS Trigger",            icon: Globe,         colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgDnsTrigger,         category: "trigger", ConfigPanel: GenericActionNode },
+  db_trigger:             { label: "Database Trigger",       icon: Database,      colorClass: "text-emerald-400",   accentColor: "52,211,153",   logoUrl: imgDbTrigger,          category: "trigger", ConfigPanel: DatabaseTriggerNode },
+  dns_trigger:            { label: "DNS Trigger",            icon: Globe,         colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgDnsTrigger,         category: "trigger", ConfigPanel: DnsTriggerNode },
   docker_trigger:         { label: "Docker Trigger",         icon: Box,           colorClass: "text-blue-500",      accentColor: "59,130,246",   logoUrl: imgDocker,             category: "trigger", ConfigPanel: DockerTriggerNode },
   github_issue_trigger:   { label: "GitHub Issue Trigger",   icon: Circle,        colorClass: "text-zinc-200",      accentColor: "244,244,245",  logoUrl: imgGitHubIssueTrigger, category: "trigger", ConfigPanel: GitHubIssueTriggerNode },
   gitlab_trigger:         { label: "GitLab Trigger",         icon: GitBranch,     colorClass: "text-[#FC6D26]",     accentColor: "252,109,38",   logoUrl: imgGitLab,             category: "trigger", ConfigPanel: GitLabTriggerNode },
-  google_calendar_trigger:{ label: "Google Calendar Trigger",icon: Calendar,      colorClass: "text-[#4285F4]",     accentColor: "66,133,244",   logoUrl: imgGoogleCalendar,     category: "trigger", ConfigPanel: GenericActionNode },
+  google_calendar_trigger:{ label: "Google Calendar Trigger",icon: Calendar,      colorClass: "text-[#4285F4]",     accentColor: "66,133,244",   logoUrl: imgGoogleCalendar,     category: "trigger", ConfigPanel: GoogleCalendarTriggerNode },
   google_sheets_trigger:  { label: "Google Sheets Trigger",  icon: FileText,      colorClass: "text-[#34A853]",     accentColor: "52,168,83",    logoUrl: imgGoogleSheets,       category: "trigger", ConfigPanel: GoogleSheetsTriggerNode },
   hackernews_trigger:     { label: "HackerNews Trigger",     icon: TrendingUp,    colorClass: "text-orange-500",    accentColor: "249,115,22",   logoUrl: imgHackerNewsTrigger,  category: "trigger", ConfigPanel: HackerNewsTriggerNode },
-  http_monitor_trigger:   { label: "HTTP Monitor Trigger",   icon: Globe,         colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgHttpMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
-  imap_trigger:           { label: "Email IMAP Trigger",     icon: Mail,          colorClass: "text-cyan-400",      accentColor: "34,211,238",   logoUrl: imgImap,               category: "trigger", ConfigPanel: GenericActionNode },
+  http_monitor_trigger:   { label: "HTTP Monitor Trigger",   icon: Globe,         colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgHttpMonitorTrigger, category: "trigger", ConfigPanel: HttpMonitorTriggerNode },
+  imap_trigger:           { label: "Email IMAP Trigger",     icon: Mail,          colorClass: "text-cyan-400",      accentColor: "34,211,238",   logoUrl: imgImap,               category: "trigger", ConfigPanel: ImapTriggerNode },
   jira_trigger:           { label: "Jira Trigger",           icon: Ticket,        colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgJira,               category: "trigger", ConfigPanel: JiraTriggerNode },
   outlook_trigger:        { label: "Outlook Trigger",        icon: Mail,          colorClass: "text-[#0078D4]",     accentColor: "0,120,212",    logoUrl: imgOutlook,            category: "trigger", ConfigPanel: OutlookTriggerNode },
   pipedrive_trigger:      { label: "Pipedrive Trigger",      icon: TrendingUp,    colorClass: "text-[#272D3B]",     accentColor: "39,45,59",     logoUrl: imgPipedrive,          category: "trigger", ConfigPanel: PipedriveTriggerNode },
-  port_monitor_trigger:   { label: "Port Monitor Trigger",   icon: Server,        colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgPortMonitorTrigger, category: "trigger", ConfigPanel: GenericActionNode },
-  price_alert_trigger:    { label: "Price Alert Trigger",    icon: TrendingUp,    colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgPriceAlertTrigger,  category: "trigger", ConfigPanel: GenericActionNode },
-  reddit_trigger:         { label: "Reddit Trigger",         icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",     logoUrl: imgReddit,             category: "trigger", ConfigPanel: GenericActionNode },
-  rss_trigger:            { label: "RSS Trigger",            icon: Rss,           colorClass: "text-orange-400",    accentColor: "251,146,60",   logoUrl: imgRss,                category: "trigger", ConfigPanel: GenericActionNode },
+  port_monitor_trigger:   { label: "Port Monitor Trigger",   icon: Server,        colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgPortMonitorTrigger, category: "trigger", ConfigPanel: PortMonitorTriggerNode },
+  price_alert_trigger:    { label: "Price Alert Trigger",    icon: TrendingUp,    colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgPriceAlertTrigger,  category: "trigger", ConfigPanel: PriceAlertTriggerNode },
+  reddit_trigger:         { label: "Reddit Trigger",         icon: MessageSquarePlus, colorClass: "text-[#FF4500]", accentColor: "255,69,0",     logoUrl: imgReddit,             category: "trigger", ConfigPanel: RedditTriggerNode },
+  rss_trigger:            { label: "RSS Trigger",            icon: Rss,           colorClass: "text-orange-400",    accentColor: "251,146,60",   logoUrl: imgRss,                category: "trigger", ConfigPanel: RssTriggerNode },
   ssh_trigger:            { label: "SSH Trigger",            icon: Server,        colorClass: "text-zinc-300",      accentColor: "212,212,216",  logoUrl: imgSsh,                category: "trigger", ConfigPanel: SshTriggerNode },
-  ssl_trigger:            { label: "SSL/TLS Trigger",        icon: Shield,        colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgLetsEncrypt,        category: "trigger", ConfigPanel: GenericActionNode },
+  ssl_trigger:            { label: "SSL/TLS Trigger",        icon: Shield,        colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgLetsEncrypt,        category: "trigger", ConfigPanel: SslTriggerNode },
   teams_trigger:          { label: "Microsoft Teams Trigger",icon: Users,         colorClass: "text-[#5059C9]",     accentColor: "80,89,201",    logoUrl: imgTeams,              category: "trigger", ConfigPanel: TeamsTriggerNode },
   trello_trigger:         { label: "Trello Trigger",         icon: LayoutGrid,    colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgTrello,             category: "trigger", ConfigPanel: TrelloTriggerNode },
-  youtube_trigger:        { label: "YouTube Trigger",        icon: Youtube,       colorClass: "text-red-400",       accentColor: "248,113,113",  logoUrl: imgYouTube,            category: "trigger", ConfigPanel: GenericActionNode },
+  youtube_trigger:        { label: "YouTube Trigger",        icon: Youtube,       colorClass: "text-red-400",       accentColor: "248,113,113",  logoUrl: imgYouTube,            category: "trigger", ConfigPanel: YouTubeTriggerNode },
 
   // AI Models
   openai: {

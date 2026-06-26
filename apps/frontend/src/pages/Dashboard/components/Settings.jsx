@@ -213,7 +213,7 @@ export default function Settings({ user }) {
               <div className="flex items-center gap-2">
                 <span className="text-[15px] font-bold text-white capitalize">{usage?.plan || 'Free'}</span>
                 {isPro && (
-                  <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Active</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }}>Active</span>
                 )}
               </div>
             </div>
