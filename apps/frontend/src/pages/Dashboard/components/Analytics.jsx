@@ -139,10 +139,10 @@ export default function Analytics({ user }) {
   const failRate     = total > 0 ? Math.round((failedCount  / total) * 100) : 0;
 
   const rawSlices = [
-    { label: 'Success', count: successCount, pct: successRate, color: '#10b981' },
-    { label: 'Failed',  count: failedCount,  pct: failRate,    color: '#f87171' },
-    { label: 'Pending', count: pendingCount, pct: total > 0 ? Math.round((pendingCount / total) * 100) : 0, color: '#f59e0b' },
-    ...(otherCount > 0 ? [{ label: 'Other', count: otherCount, pct: total > 0 ? Math.round((otherCount / total) * 100) : 0, color: '#2a2a2a' }] : []),
+    { label: 'Success', count: successCount, pct: successRate, color: '#4d7cff' },
+    { label: 'Failed',  count: failedCount,  pct: failRate,    color: '#52525b' },
+    { label: 'Pending', count: pendingCount, pct: total > 0 ? Math.round((pendingCount / total) * 100) : 0, color: '#3a3a42' },
+    ...(otherCount > 0 ? [{ label: 'Other', count: otherCount, pct: total > 0 ? Math.round((otherCount / total) * 100) : 0, color: '#2a2a30' }] : []),
   ].filter(s => s.count > 0);
 
   const chartSlices = rawSlices.length > 0 ? rawSlices : [{ label: 'No data', count: 1, pct: 100, color: '#1c1c1c' }];
@@ -231,7 +231,7 @@ export default function Analytics({ user }) {
                     <div className="flex-1 h-[3px] bg-[#111] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, background: d.failed > 0 ? 'linear-gradient(90deg,#fff,#f87171)' : '#fff' }}
+                        style={{ width: `${pct}%`, background: d.failed > 0 ? 'linear-gradient(90deg,var(--bb-accent),#52525b)' : 'var(--bb-accent)' }}
                       />
                     </div>
                     <span className="text-[12px] font-semibold tabular-nums w-6 text-right shrink-0 text-white">{d.count}</span>
