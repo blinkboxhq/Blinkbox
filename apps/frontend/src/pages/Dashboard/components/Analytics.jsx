@@ -49,7 +49,7 @@ function DonutChart({ slices, total }) {
     <div className="flex items-center gap-8">
       <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
         <svg width={SIZE} height={SIZE} className="-rotate-90">
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#111" strokeWidth={STROKE} />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bb-surface-2)" strokeWidth={STROKE} />
           {arcs.map((arc, i) => (
             <circle
               key={arc.label}
