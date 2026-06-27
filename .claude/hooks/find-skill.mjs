@@ -43,6 +43,10 @@ const ROUTES = [
     skill: 'swarm',
     any: ['sub agent', 'sub-agent', 'subagent', 'sub agents', 'parallel agent', 'fan out', 'fan-out', 'thorough', 'be thorough', 'cross-check', 'cross check', 'double check', 'double-check', 'verify thoroughly', 'maximum accuracy', 'most accurate', 'multiple angle', 'deep dive'],
   },
+  {
+    skill: 'relentless',
+    any: ['relentless', 'go deep', 'leave nothing out', 'leave no stone', 'blow my mind', 'hyper detail', 'hyper-detail', 'maximum effort', 'max effort', 'best you can', 'better than i', 'definitive answer', 'exhaustive', 'no detail spared', 'spare no detail', 'every edge case', 'highest effort'],
+  },
 ];
 
 function readInput() {
