@@ -374,8 +374,9 @@ export default function Canvas() {
         snapToGrid
         snapGrid={[20, 20]}
         minZoom={0.01}
-        panOnDrag={[0, 1]}
-        selectionKeyCode="Shift"
+        panOnDrag={[1]}
+        selectionOnDrag
+        panActivationKeyCode="Space"
         selectionMode="partial"
         panOnScroll
         zoomOnPinch
