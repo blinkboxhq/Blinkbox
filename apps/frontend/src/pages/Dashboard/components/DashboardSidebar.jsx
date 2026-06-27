@@ -10,7 +10,7 @@ const NAV_TOP = [
   { key: 'logs',      icon: Activity, label: 'History' },
   { key: 'usage',     icon: Gauge,    label: 'Usage' },
   { key: 'vault',     icon: Key,      label: 'Credentials' },
-  { key: 'mcp',       icon: Plug,     label: 'Connect to Chat' },
+  { key: 'mcp',       icon: Plug,     label: 'MCP' },
 ];
 
 const NAV_BOTTOM = [
