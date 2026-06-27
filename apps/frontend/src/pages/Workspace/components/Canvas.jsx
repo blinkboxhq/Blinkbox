@@ -30,27 +30,31 @@ function PlaceholderNode() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setTriggerPickerOpen(true)}
-          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl border border-dashed border-zinc-800 hover:border-zinc-600 bg-zinc-950 hover:bg-zinc-900/60 transition-all duration-200 cursor-pointer"
+          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl bg-white/[0.04] backdrop-blur-md ring-1 ring-inset ring-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)] hover:bg-white/[0.07] hover:ring-white/20 transition-all duration-200 cursor-pointer overflow-hidden"
         >
-          <Plus className="w-6 h-6 text-zinc-700 group-hover:text-zinc-300 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
-          <span className="text-[10px] font-semibold text-zinc-700 group-hover:text-zinc-400 transition-colors tracking-wide">Manual</span>
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/15 to-transparent opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
+          <span className="pointer-events-none absolute -inset-x-8 -top-10 h-16 rotate-12 bg-gradient-to-r from-transparent via-white/15 to-transparent blur-md" />
+          <Plus className="relative w-6 h-6 text-zinc-400 group-hover:text-white transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
+          <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-zinc-100 transition-colors tracking-wide">Manual</span>
         </button>
 
         <div className="flex flex-col items-center gap-1">
-          <div className="w-px h-5 bg-zinc-800" />
-          <span className="text-[9px] text-zinc-800 font-bold uppercase tracking-widest">or</span>
-          <div className="w-px h-5 bg-zinc-800" />
+          <div className="w-px h-5 bg-white/10" />
+          <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">or</span>
+          <div className="w-px h-5 bg-white/10" />
         </div>
 
         <button
           onClick={() => setBrianOpen(true)}
-          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl border border-dashed border-zinc-800 hover:border-violet-500/40 bg-zinc-950 hover:bg-violet-950/20 transition-all duration-200 cursor-pointer"
+          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl bg-white/[0.04] backdrop-blur-md ring-1 ring-inset ring-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)] hover:bg-violet-400/[0.08] hover:ring-violet-400/30 transition-all duration-200 cursor-pointer overflow-hidden"
         >
-          <Sparkles className="w-6 h-6 text-zinc-700 group-hover:text-violet-400 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
-          <span className="text-[10px] font-semibold text-zinc-700 group-hover:text-violet-400 transition-colors tracking-wide">Use Brian</span>
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/15 to-transparent opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
+          <span className="pointer-events-none absolute -inset-x-8 -top-10 h-16 rotate-12 bg-gradient-to-r from-transparent via-white/15 to-transparent blur-md" />
+          <Sparkles className="relative w-6 h-6 text-zinc-400 group-hover:text-violet-300 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
+          <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-violet-300 transition-colors tracking-wide">Use Brian</span>
         </button>
       </div>
-      <p className="text-[11px] text-zinc-700 font-medium tracking-wide">Start by adding a trigger</p>
+      <p className="text-[11px] text-zinc-600 font-medium tracking-wide">Start by adding a trigger</p>
     </div>
   );
 }

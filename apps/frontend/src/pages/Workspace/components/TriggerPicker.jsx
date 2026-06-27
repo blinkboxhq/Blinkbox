@@ -61,7 +61,7 @@ export default function TriggerPicker() {
     const existingTriggers = nodes.filter((n) => n.data?.type === "trigger");
     const position = existingTriggers.length > 0
       ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
-      : { x: 400, y: 300 };
+      : { x: -47, y: -47 };
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
     addNode({ id: newId, type: "custom", position, data: { backendType: trigger.backendType, label: trigger.label, type: "trigger", config: { triggerVariant: trigger.id } } });
     playNodeLand();
