@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge } from 'lucide-react';
+import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge, Github } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const NAV_TOP = [
@@ -121,6 +121,20 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
             </button>
           </div>
         )}
+
+        {/* GitHub — permanent external link */}
+        <div className={`${expanded ? 'px-2.5 pb-2' : 'px-1.5 pb-2'}`}>
+          <a
+            href="https://github.com/blinkboxhq/Blinkbox"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={!expanded ? 'GitHub' : undefined}
+            className={`bb-nav-item w-full flex items-center gap-2.5 rounded-[10px] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] ${expanded ? 'px-3 py-2' : 'px-0 py-2 justify-center'}`}
+          >
+            {expanded && <span className="text-[13px] font-medium truncate">GitHub</span>}
+            <Github className="w-[18px] h-[18px] shrink-0 ml-auto" strokeWidth={1.5} />
+          </a>
+        </div>
 
         {/* User */}
         <div className={`border-t border-white/[0.06] ${expanded ? 'p-3' : 'p-2'}`}>
