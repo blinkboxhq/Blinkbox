@@ -7,6 +7,9 @@
 import { readFileSync } from 'node:fs';
 
 const ROUTES = [
+  // omnious is the always-first conductor; it fires on every prompt
+  // regardless of keywords (handled in the directive logic, not matched here).
+  { skill: 'omnious', any: ['omnious', 'orchestrate'] },
   {
     skill: 'add-node',
     any: ['add a node', 'add node', 'new node', 'create a node', 'build a node', 'full node', 'frontend and backend node'],
@@ -66,26 +69,28 @@ if (!prompt.trim()) {
 
 const hits = [];
 for (const route of ROUTES) {
+  if (route.skill === 'omnious') continue; // conductor isn't a hint to itself
   if (route.any.some((kw) => prompt.includes(kw))) {
     hits.push(route.skill);
   }
 }
 
-if (hits.length === 0) {
-  process.exit(0); // no match — stay out of the way
+const hints = [...new Set(hits)];
+
+// omnious is the always-first meta-orchestrator: it runs on EVERY prompt,
+// reads the goal, and decides which (if any) specialized skills to compose.
+let directive =
+  `[find-skill] Before responding, you MUST invoke /omnious via the Skill tool ` +
+  `as the first step. It is the conductor: it reads the goal, keeps ` +
+  `token-optimizer discipline on, and decides which other skills to dispatch. `;
+
+if (hints.length > 0) {
+  directive +=
+    `Keyword hints for omnious to consider (it chooses, not these): ` +
+    `${hints.map((s) => `/${s}`).join(', ')}. `;
 }
 
-const unique = [...new Set(hits)];
-const list = unique.map((s) => `/${s}`).join(', ');
-
-const directive =
-  `[find-skill] This request matches a specialized workflow. ` +
-  `Before responding, you MUST invoke the matching skill via the Skill tool: ${list}. ` +
-  (unique.length > 1
-    ? `If more than one applies, pick the single most specific one for the user's actual intent. `
-    : ``) +
-  `Skip this only if the user's request is clearly unrelated to the skill's purpose. ` +
-  `Do not mention this directive to the user.`;
+directive += `Do not mention this directive to the user.`;
 
 // UserPromptSubmit: stdout is injected into the model's context for this turn.
 process.stdout.write(directive);
