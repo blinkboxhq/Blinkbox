@@ -45,7 +45,7 @@ function Divider({ onMouseDown }) {
   return (
     <div
       onMouseDown={onMouseDown}
-      className="w-px shrink-0 bg-[#1e1e20] hover:bg-violet-500/40 active:bg-violet-500/60 transition-colors cursor-col-resize relative group"
+      className="w-px shrink-0 bg-white/[0.06] hover:bg-violet-500/40 active:bg-violet-500/60 transition-colors cursor-col-resize relative group"
       style={{ zIndex: 1 }}
     >
       <div className="absolute inset-y-0 -left-1.5 -right-1.5 group-hover:bg-violet-500/5 transition-colors" />
@@ -93,13 +93,13 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
   const others = canvasNodes.filter((n) => n.id !== currentNodeId);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
-        <p className="text-[13px] font-semibold text-neutral-200">Input</p>
-        <p className="text-[10px] text-neutral-600 mt-0.5">Drag a field into any input, or click to copy</p>
+    <div className="bb-liquid flex flex-col h-full">
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
+        <p className="text-[13px] font-semibold text-white">Input</p>
+        <p className="text-[10px] text-neutral-500 mt-0.5">Drag a field into any input, or click to copy</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
         {others.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-5">
             <Zap className="w-5 h-5 text-neutral-700 mb-2" />
@@ -138,30 +138,30 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
           }
 
           return (
-            <div key={n.id}>
+            <div key={n.id} className="flex flex-col">
               <button
                 onClick={() => setExpanded(isOpen ? null : n.id)}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] transition-colors group text-left"
+                className="bb-nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors group text-left"
               >
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border border-[#1e1e20] bg-[#111]">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                   {def?.logoUrl
-                    ? <img src={def.logoUrl} alt="" className="w-5 h-5 object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
+                    ? <img src={def.logoUrl} alt="" className="w-[22px] h-[22px] object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
                     : def?.icon
-                      ? <def.icon style={{ width: 16, height: 16 }} className={def.colorClass || "text-neutral-500"} strokeWidth={1.5} />
+                      ? <def.icon style={{ width: 20, height: 20 }} className={def.colorClass || "text-neutral-400"} strokeWidth={1.5} />
                       : <div className="w-4 h-4 rounded bg-neutral-700" />
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[13px] font-medium text-neutral-300 group-hover:text-neutral-100 truncate transition-colors block">{name}</span>
+                  <span className="text-[13px] font-medium text-neutral-200 group-hover:text-white truncate transition-colors block">{name}</span>
                   {hasLiveData && (
                     <span className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider">live data</span>
                   )}
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-neutral-600 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isOpen && (
-                <div className="px-4 pb-2 flex flex-col gap-0.5">
+                <div className="pl-2 pr-1 pt-1 pb-1 flex flex-col gap-1">
                   {vars.map(({ key, ref, value, isLive }) => {
                     const isCopied = copied === ref;
                     const isDraggingThis = dragging === ref;
@@ -176,20 +176,20 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
                           setDragging(ref);
                         }}
                         onDragEnd={() => setDragging(null)}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.05] transition-colors group text-left ${isDraggingThis ? "opacity-50" : ""}`}
+                        className={`bb-nav-item flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors group text-left ${isDraggingThis ? "opacity-50" : ""}`}
                       >
-                        <GripVertical className="w-3 h-3 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors cursor-grab" />
+                        <GripVertical className="w-3 h-3 text-neutral-700 group-hover:text-neutral-400 shrink-0 transition-colors cursor-grab" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-[11px] font-semibold text-neutral-400 group-hover:text-neutral-200 transition-colors block truncate">{key}</span>
+                          <span className="text-[11px] font-semibold text-neutral-300 group-hover:text-white transition-colors block truncate">{key}</span>
                           {isLive && value !== null ? (
                             <span className="text-[10px] text-emerald-400/80 font-mono truncate block">{value}</span>
                           ) : (
-                            <span className="text-[10px] text-neutral-700 font-mono truncate block">{ref}</span>
+                            <span className="text-[10px] text-neutral-600 font-mono truncate block">{ref}</span>
                           )}
                         </div>
                         {isCopied
                           ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          : <Copy className="w-3 h-3 text-neutral-700 group-hover:text-neutral-500 shrink-0 transition-colors" />
+                          : <Copy className="w-3 h-3 text-neutral-700 group-hover:text-neutral-400 shrink-0 transition-colors" />
                         }
                       </button>
                     );
@@ -244,29 +244,29 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: "#111113" }}>
+    <div className="bb-liquid flex flex-col h-full overflow-hidden">
       {/* Panel header */}
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
         {editing ? (
           <div className="flex items-center gap-2">
             <input
               autoFocus value={nameVal}
               onChange={(e) => setNameVal(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setEditing(false); }}
-              className="flex-1 bg-[#0d0d0f] border border-[#444] rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white focus:outline-none focus:border-neutral-500 transition-colors"
+              className="bb-input bb-glow-border flex-1 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white"
             />
             <button onClick={commitRename} className="p-1.5 text-emerald-400 hover:text-emerald-300 transition-colors shrink-0"><Check className="w-4 h-4" /></button>
             <button onClick={() => setEditing(false)} className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"><X className="w-4 h-4" /></button>
           </div>
         ) : (
           <button onClick={() => { setNameVal(currentName); setEditing(true); }} className="flex items-center gap-2 group text-left w-fit">
-            <span className="text-[13px] font-semibold text-neutral-200 group-hover:text-white transition-colors">{currentName || "Unnamed"}</span>
-            <Pencil className="w-3.5 h-3.5 text-neutral-700 group-hover:text-neutral-400 transition-colors shrink-0" />
+            <span className="text-[13px] font-semibold text-white group-hover:text-white transition-colors">{currentName || "Unnamed"}</span>
+            <Pencil className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-300 transition-colors shrink-0" />
           </button>
         )}
         {selectedAction && !editing && (
           <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[10px] text-neutral-600">Action:</span>
+            <span className="text-[10px] text-neutral-500">Action:</span>
             <span className="text-[10px] font-semibold text-violet-300">{selectedAction}</span>
           </div>
         )}
@@ -367,23 +367,23 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
   const display = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0d0d0f" }}>
+    <div className="bb-liquid flex flex-col h-full">
       {/* Panel header */}
-      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-[#1e1e20]" style={{ height: PANEL_HEADER_H }}>
-        <p className="text-[13px] font-semibold text-neutral-200">Output</p>
-        <p className="text-[10px] text-neutral-600 mt-0.5">Test this node with sample data</p>
+      <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
+        <p className="text-[13px] font-semibold text-white">Output</p>
+        <p className="text-[10px] text-neutral-500 mt-0.5">Test this node with sample data</p>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Input area */}
-        <div className="px-4 pt-4 pb-3 border-b border-[#1e1e20] shrink-0">
-          <p className="text-[10px] font-semibold text-neutral-600 uppercase tracking-wider mb-2">Test Input (JSON)</p>
+        <div className="px-4 pt-4 pb-3 border-b border-white/[0.06] shrink-0">
+          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">Test Input (JSON)</p>
           <textarea
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
             rows={3}
             spellCheck={false}
-            className="w-full bg-[#111] border border-[#2a2a2d] rounded-lg px-3 py-2.5 text-[12px] text-neutral-300 font-mono focus:outline-none focus:border-neutral-600 resize-none transition-colors"
+            className="bb-input bb-glow-border w-full rounded-lg px-3 py-2.5 text-[12px] text-neutral-200 font-mono resize-none"
             placeholder="{}"
           />
         </div>
@@ -393,10 +393,9 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
           <button
             onClick={runTest}
             disabled={loading || !node}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold transition-all disabled:opacity-40 active:scale-[0.98]"
+            className="bb-glow-border w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold transition-all disabled:opacity-40 active:scale-[0.98]"
             style={{
               background: "rgba(16,185,129,0.08)",
-              border: "1px solid rgba(16,185,129,0.22)",
               color: "#34d399",
             }}
           >
@@ -423,7 +422,7 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
                   <span className="ml-auto text-[11px] text-neutral-600 font-mono">{display.durationMs ?? display.clientMs}ms</span>
                 )}
               </div>
-              <div className="bg-[#111] border border-[#1e1e20] rounded-xl p-4 overflow-auto max-h-[420px]">
+              <div className="bb-card rounded-xl p-4 overflow-auto max-h-[420px]">
                 <JsonView data={display.output ?? display.error ?? display} />
               </div>
             </div>
@@ -516,7 +515,7 @@ export default function NodeConfigModal() {
           style={{ zIndex: 60, background: "#0a0a0a" }}
         >
           {/* Top bar */}
-          <div className="flex items-center gap-3 px-5 shrink-0 border-b border-[#333]" style={{ height: 52, background: "#0a0a0a" }}>
+          <div className="bb-liquid bb-edge-bottom flex items-center gap-3 px-5 shrink-0" style={{ height: 52 }}>
             <div className="w-7 h-7 shrink-0 flex items-center justify-center">
               {logoUrl
                 ? <img src={logoUrl} alt="" className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
@@ -524,9 +523,9 @@ export default function NodeConfigModal() {
               }
             </div>
             <div className="flex items-baseline gap-2 flex-1 min-w-0">
-              <span className="text-[14px] font-semibold text-neutral-200 truncate">{nodeLabel}</span>
+              <span className="text-[14px] font-semibold text-white truncate">{nodeLabel}</span>
               {def?.label && def.label !== nodeLabel && (
-                <span className="text-[11px] text-neutral-600 shrink-0">{def.label}</span>
+                <span className="text-[11px] text-neutral-500 shrink-0">{def.label}</span>
               )}
             </div>
             {nodeStatus && (
@@ -540,7 +539,7 @@ export default function NodeConfigModal() {
               </div>
             )}
             <button onClick={() => setSelectedNodeId(null)}
-              className="p-1.5 text-neutral-600 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all shrink-0 ml-1">
+              className="p-1.5 text-neutral-500 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all shrink-0 ml-1">
               <X className="w-4 h-4" />
             </button>
           </div>
