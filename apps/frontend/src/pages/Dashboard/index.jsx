@@ -273,7 +273,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user || activeTab !== 'logs') return;
     setExecLoading(true);
-    api.get('/api/execution/recent', { params: { limit: 100 } })
+    api.get('/api/execution/recent', { params: { limit: 100 } })  // backend caps at 100
       .then(r => setExecutions(r.data?.executions || r.data || []))
       .catch(() => {})
       .finally(() => setExecLoading(false));

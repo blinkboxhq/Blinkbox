@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Activity, ChevronDown, CheckCircle2, XCircle, Clock, Workflow } from 'lucide-react';
 
 function timeAgo(d) {
@@ -28,7 +28,7 @@ function duration(ex) {
 
 function statusMeta(status) {
   if (status === 'completed' || status === 'executed') {
-    return { Icon: CheckCircle2, dot: 'var(--bb-accent)', color: 'var(--bb-accent-hot)', label: 'Succeeded' };
+    return { Icon: CheckCircle2, dot: '#22c55e', color: '#4ade80', label: 'Succeeded' };
   }
   if (status === 'failed') {
     return { Icon: XCircle, dot: '#f87171', color: '#f87171', label: 'Failed' };
@@ -54,15 +54,21 @@ function matchesFilter(status, f) {
   return true;
 }
 
+const PAGE_SIZE = 13;
+
 export default function HistoryPanel({ executions = [], loading }) {
   const [filter, setFilter] = useState('all');
   const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   const rows = useMemo(
     () => executions.filter((ex) => matchesFilter(ex.status, filter)),
     [executions, filter],
   );
 
+  useEffect(() => { setVisible(PAGE_SIZE); }, [filter]);
+
+  const shown = rows.slice(0, visible);
   const activeFilter = FILTERS.find((f) => f.id === filter) || FILTERS[0];
 
   return (
@@ -118,7 +124,7 @@ export default function HistoryPanel({ executions = [], loading }) {
             <p className="text-[13px] text-[var(--bb-text-lo)]">No runs match this filter.</p>
           </div>
         ) : (
-          rows.map((ex, i) => {
+          shown.map((ex, i) => {
             const m = statusMeta(ex.status);
             const dur = duration(ex);
             return (
@@ -160,6 +166,20 @@ export default function HistoryPanel({ executions = [], loading }) {
               </div>
             );
           })
+        )}
+
+        {!loading && visible < rows.length && (
+          <div className="flex items-center justify-between px-5 py-3 border-t bb-divider bg-white/[0.02]">
+            <span className="text-[11px] text-[var(--bb-text-dim)] tabular-nums">
+              Showing {shown.length} of {rows.length.toLocaleString()}
+            </span>
+            <button
+              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+              className="text-[12px] font-medium text-[var(--bb-accent-hot)] hover:text-white bb-card rounded-lg px-3 py-1.5 transition-colors"
+            >
+              Load more
+            </button>
+          </div>
         )}
       </div>
     </div>
