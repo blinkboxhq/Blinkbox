@@ -573,6 +573,38 @@ html {
   border-color: rgba(255, 255, 255, 0.05);
 }
 
+/* ── Liquid-glass: always-on glossy material (visible without a cursor) ──
+   A polished top sheen, a soft inner light, and a bright top-edge highlight. */
+.bb-glass {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.015) 18%, transparent 46%),
+    linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 38%, transparent 64%),
+    rgba(22, 22, 24, 0.55);
+  -webkit-backdrop-filter: blur(34px) saturate(135%);
+  backdrop-filter: blur(34px) saturate(135%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.14),
+    inset 0 -18px 40px -28px rgba(255,255,255,0.05),
+    0 28px 64px -30px rgba(0,0,0,0.92);
+}
+.bb-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.05) 32%, transparent 46%);
+}
+.bb-glass::after {
+  content: "";
+  position: absolute;
+  top: -1px; left: 16%; right: 16%; height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+}
+
 /* Nav item: a clean rounded pill. Hover and active are the same glass
    material at different strengths — no gradients, no accent, no sliding bar. */
 .bb-nav-item {

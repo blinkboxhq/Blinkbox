@@ -454,7 +454,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-2">
                 {/* Status filter */}
-                <div className="bb-seg bb-liquid flex items-center">
+                <div className="bb-seg bb-glass flex items-center overflow-hidden">
                   {['all', 'active', 'draft'].map(f => (
                     <button key={f} onClick={() => setStatusFilter(f)}
                       className={`bb-seg-btn px-3 py-1 text-[11px] font-medium ${statusFilter === f ? 'is-active' : ''}`}>
@@ -467,11 +467,11 @@ export default function Dashboard() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--bb-text-dim)]" />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
-                    className="bb-input bb-liquid pl-7 pr-3 py-[5px] text-[11px] w-[140px]" />
+                    className="bb-input bb-glass pl-7 pr-3 py-[5px] text-[11px] w-[140px]" />
                 </div>
 
                 {/* View toggle */}
-                <div className="bb-seg bb-liquid flex items-center">
+                <div className="bb-seg bb-glass flex items-center overflow-hidden">
                   <button onClick={() => setViewMode('grid')} title="Grid view"
                     className={`bb-seg-btn p-1.5 ${viewMode === 'grid' ? 'is-active' : ''}`}>
                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -484,7 +484,7 @@ export default function Dashboard() {
 
                 {/* New workflow */}
                 <button onClick={() => setIsModalOpen(true)}
-                  className="bb-btn bb-liquid flex items-center gap-1.5 px-3.5 py-[6px] text-[12px] text-[var(--bb-text-hi)] shrink-0">
+                  className="bb-btn bb-glass flex items-center gap-1.5 px-3.5 py-[6px] text-[12px] text-[var(--bb-text-hi)] shrink-0 overflow-hidden">
                   <Plus className="w-3.5 h-3.5" /> New workflow
                 </button>
               </div>
@@ -560,7 +560,7 @@ export default function Dashboard() {
                   const wfId = wf._id || wf.id;
                   return (
                     <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
-                      className="bb-card bb-liquid bb-card-hover bb-rise group relative flex flex-col cursor-pointer overflow-hidden"
+                      className="bb-card bb-glass bb-card-hover bb-rise group relative flex flex-col cursor-pointer overflow-hidden"
                       style={{ '--bb-i': Math.min(i, 10) }}>
 
                       {/* Trigger-accent wash on hover */}
