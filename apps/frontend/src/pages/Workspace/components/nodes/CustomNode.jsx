@@ -364,7 +364,7 @@ function SuggestionGhostNode({ data }) {
   const Icon = nodeDef.icon;
   const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
   const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
-  const cardW = 120, cardH = 120;
+  const cardW = 104, cardH = 104;
 
   return (
     <motion.div
@@ -533,7 +533,7 @@ function CustomNode({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 120, cardH = 120;
+    const cardW = 104, cardH = 104;
     const triggerRadius = "28px 8px 8px 28px";
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "4px solid transparent"
@@ -575,8 +575,8 @@ function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 230;
-    const cardH = 120;
+    const cardW = 200;
+    const cardH = 104;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "4px solid transparent"
@@ -641,7 +641,7 @@ function CustomNode({ id, data, selected }) {
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
   if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
-    const d = 68;
+    const d = 58;
     const models = nodeDef.models || [];
     const selectedModel = data.config?.model || nodeDef.defaultModel || "";
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
@@ -723,8 +723,8 @@ function CustomNode({ id, data, selected }) {
   if (data.backendType === "distributor") {
     const workers = data.config?.workers || 3;
     const strategy = data.config?.strategy || "parallel";
-    const cardW = 220;
-    const cardH = Math.max(110, workers * 24 + 30);
+    const cardW = 190;
+    const cardH = Math.max(100, workers * 24 + 24);
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 28 }}>
@@ -769,7 +769,7 @@ function CustomNode({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 120, cardH = 120;
+  const cardW = 104, cardH = 104;
 
   const cardBorderTop = status === "running" ? "4px solid transparent"
     : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
