@@ -56,6 +56,8 @@ function NodeOutputChip({ output }) {
   );
 }
 
+const EDGE_COLOR = "#3f3f46";
+
 // ─── Liquid-glass card surface, shared across all node types ────────────────
 const GLASS_BG =
   "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%), rgba(32,32,32,0.66)";
@@ -224,23 +226,27 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
 
 // ─── Output Handle + Plus Button ──────────────────────────────────────────────
 function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight, handleId = "output" }) {
-  return (
-    <>
+  const top = cardHeight ? cardHeight / 2 : "50%";
+  if (hasConnection) {
+    return (
       <Handle type="source" position={Position.Right} id={handleId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0, ...(cardHeight ? { top: cardHeight / 2, transform: "translate(50%, -50%)" } : {}) }}
+        style={{ backgroundColor: dotColor, boxShadow: statusGlow, top, transform: "translate(50%, -50%)", zIndex: 3 }}
       />
-      {!hasConnection && (
-        <div className="absolute z-10 nodrag flex items-center"
-          style={cardHeight ? { right: -64, top: cardHeight / 2, transform: "translateY(-50%)" } : { right: -64, top: "50%", transform: "translateY(-50%)" }}>
-          <span className="h-[2px] w-9 bg-zinc-700/70 shrink-0" />
-          <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
-            className="w-7 h-7 rounded-lg bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
-            title="Add next step">
-            <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
-          </button>
-        </div>
-      )}
+    );
+  }
+  return (
+    <>
+      <span className="absolute pointer-events-none z-[2]"
+        style={{ right: -5, top, transform: "translate(50%, -50%)", width: 10, height: 10, borderRadius: 9999, background: dotColor, boxShadow: statusGlow, border: "3px solid #1a1a1e" }} />
+      <span className="absolute pointer-events-none z-[1] h-[2px]"
+        style={{ right: -56, top, width: 52, transform: "translateY(-50%)", background: EDGE_COLOR }} />
+      <Handle type="source" position={Position.Right} id={handleId} onClick={e => { e.stopPropagation(); onAdd(e); }}
+        className="!rounded-full !bg-[#18181b] !border-[2.5px] !border-zinc-700/60 flex items-center justify-center hover:!bg-zinc-700 hover:!border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus cursor-pointer touch-none"
+        style={{ right: -68, top, transform: "translate(50%, -50%)", width: 28, height: 28, zIndex: 3 }}
+        title="Add next step or drag to connect">
+        <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
+      </Handle>
     </>
   );
 }
@@ -268,12 +274,12 @@ function AgentInHandle() {
 // ─── Condition dual output handles ───────────────────────────────────────────
 function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
   const plusBtn = (y, handleId) => (
-    <div className="absolute z-10 nodrag flex items-center" style={{ right: -64, top: y, transform: "translateY(-50%)" }}>
-      <span className="h-[2px] w-9 bg-zinc-700/70 shrink-0" />
+    <div className="absolute z-10 nodrag flex items-center pointer-events-none" style={{ right: -68, top: y, transform: "translateY(-50%)" }}>
+      <span className="h-[2px] w-12 shrink-0" style={{ background: EDGE_COLOR }} />
       <button
         onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
         onMouseDown={e => e.stopPropagation()}
-        className="w-7 h-7 rounded-lg bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+        className="pointer-events-auto w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
         title="Add next step">
         <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
       </button>
@@ -284,7 +290,7 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
     <>
       <Handle type="source" position={Position.Right} id={topId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)", opacity: topConnected ? 1 : 0 }} />
+        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)", zIndex: 3 }} />
       {topConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{topLabel}</span>
@@ -294,7 +300,7 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
 
       <Handle type="source" position={Position.Right} id={botId}
         className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)", opacity: botConnected ? 1 : 0 }} />
+        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)", zIndex: 3 }} />
       {botConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{botLabel}</span>

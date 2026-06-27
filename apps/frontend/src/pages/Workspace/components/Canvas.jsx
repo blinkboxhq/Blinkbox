@@ -364,6 +364,7 @@ export default function Canvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
+        connectionLineStyle={{ stroke: EDGE_COLOR, strokeWidth: 3 }}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
           const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
