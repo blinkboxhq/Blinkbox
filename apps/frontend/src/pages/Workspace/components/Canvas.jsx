@@ -12,6 +12,7 @@ import {
   Background,
   BackgroundVariant,
   useReactFlow,
+  useStore,
   MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -92,6 +93,17 @@ export default function Canvas() {
   const reactFlowWrapper = useRef(null);
   const glowRef = useRef(null);
   const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
+
+  const viewport = useStore((s) => s.transform);
+
+  useEffect(() => {
+    const el = glowRef.current;
+    if (!el) return;
+    const [tx, ty, zoom] = viewport;
+    const gap = 16 * zoom;
+    el.style.backgroundSize = `${gap}px ${gap}px`;
+    el.style.backgroundPosition = `${tx + gap / 2}px ${ty + gap / 2}px`;
+  }, [viewport]);
 
   const onCanvasMouseMove = useCallback((e) => {
     const el = glowRef.current;
@@ -365,8 +377,6 @@ export default function Canvas() {
         className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300"
         style={{
           backgroundImage: "radial-gradient(rgba(255,255,255,0.85) 1.2px, transparent 1.6px)",
-          backgroundSize: "16px 16px",
-          backgroundPosition: "0.5px 0.5px",
           WebkitMaskImage:
             "radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 65%)",
           maskImage:
