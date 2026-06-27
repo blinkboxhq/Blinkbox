@@ -44,14 +44,6 @@ const TRIGGER_META = {
   telegram_trigger: { label: 'Telegram',      Icon: MessageSquare, color: 'text-sky-400',      bg: 'bg-sky-500/10' },
 };
 
-const TRIGGER_COLOR = {
-  webhook: '#3b82f6', cron_trigger: '#f59e0b', gmail_trigger: '#ef4444',
-  imap_trigger: '#3b82f6', slack_trigger: '#8b5cf6', discord_trigger: '#6366f1',
-  github_trigger: '#a3a3a3', gitlab_trigger: '#f97316', rss_trigger: '#f97316',
-  shopify_trigger: '#10b981', stripe_trigger: '#8b5cf6', database_trigger: '#06b6d4',
-  telegram_trigger: '#0ea5e9', manual: '#525252',
-};
-
 function TriggerBadge({ trigger }) {
   const meta = TRIGGER_META[trigger] || { label: trigger || 'Manual', Icon: Zap, color: 'text-neutral-500', bg: 'bg-neutral-800/60' };
   const { label, Icon, color, bg } = meta;
@@ -529,7 +521,7 @@ export default function Dashboard() {
                         className="bb-rise group border-t bb-divider hover:bg-white/[0.02] cursor-pointer transition-colors"
                         style={{ '--bb-i': Math.min(i, 12) }}>
                         <td className="pl-4 py-3">
-                          <div className="w-2 h-2 rounded-full" style={{ background: TRIGGER_COLOR[wf.trigger] || '#525252' }} />
+                          <div className="w-2 h-2 rounded-full" style={{ background: '#6f97e8' }} />
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
@@ -563,7 +555,7 @@ export default function Dashboard() {
               /* ── GRID VIEW — 3 columns with canvas thumbnails ── */
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
                 {filtered.map((wf, i) => {
-                  const accentColor = TRIGGER_COLOR[wf.trigger] || '#525252';
+                  const accentColor = '#6f97e8';
                   const isActive = wf.status === 'active';
                   const wfId = wf._id || wf.id;
                   return (

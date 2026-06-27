@@ -17,7 +17,7 @@ const TRIGGER_ICONS = {
   manual:           Zap,
 };
 
-export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = '#525252', lastRunStatus }) {
+export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = '#6f97e8', lastRunStatus }) {
   const TriggerIcon = TRIGGER_ICONS[trigger] || Zap;
   const displayCount = Math.max(2, Math.min(nodeCount || 2, 7));
   const nodeBoxes = Array.from({ length: displayCount });
