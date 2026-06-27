@@ -3,6 +3,13 @@ import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil, Link2, Ch
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 
+import logoGoogle from '../../../assets/credentials/google-color.svg';
+import logoGithub from '../../../assets/credentials/github.svg';
+import logoNotion from '../../../assets/credentials/notion.svg';
+import logoSlack from '../../../assets/credentials/slack-new-logo-logo-svgrepo-com.svg';
+import logoAirtable from '../../../assets/credentials/Airtable--Streamline-Svg-Logos.svg';
+import logoMicrosoft from '../../../assets/credentials/microsoft-color.svg';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const TYPE_LABELS = {
@@ -13,13 +20,15 @@ const TYPE_LABELS = {
 };
 
 const OAUTH_APPS = [
-  { provider: 'google',    label: 'Google',    desc: 'Gmail, Sheets, Drive, Calendar, YouTube', color: '#4285F4', bgColor: '#4285F41a' },
-  { provider: 'slack',     label: 'Slack',     desc: 'Post messages, manage channels',           color: '#E01E5A', bgColor: '#E01E5A1a' },
-  { provider: 'github',    label: 'GitHub',    desc: 'Issues, PRs, repos, webhooks',             color: '#e8eaea', bgColor: '#ffffff1a' },
-  { provider: 'notion',    label: 'Notion',    desc: 'Pages, databases, content',                color: '#e8eaea', bgColor: '#ffffff1a' },
-  { provider: 'airtable',  label: 'Airtable',  desc: 'Bases, tables, records',                   color: '#F82B60', bgColor: '#F82B601a' },
-  { provider: 'microsoft', label: 'Microsoft', desc: 'Teams, Outlook, OneDrive',                 color: '#0078D4', bgColor: '#0078D41a' },
+  { provider: 'google',    label: 'Google',    desc: 'Gmail, Sheets, Drive, Calendar, YouTube', color: '#4285F4', logo: logoGoogle },
+  { provider: 'slack',     label: 'Slack',     desc: 'Post messages, manage channels',           color: '#E01E5A', logo: logoSlack },
+  { provider: 'github',    label: 'GitHub',    desc: 'Issues, PRs, repos, webhooks',             color: '#e8eaea', logo: logoGithub,    invert: true },
+  { provider: 'notion',    label: 'Notion',    desc: 'Pages, databases, content',                color: '#e8eaea', logo: logoNotion,    invert: true },
+  { provider: 'airtable',  label: 'Airtable',  desc: 'Bases, tables, records',                   color: '#F82B60', logo: logoAirtable },
+  { provider: 'microsoft', label: 'Microsoft', desc: 'Teams, Outlook, OneDrive',                 color: '#0078D4', logo: logoMicrosoft },
 ];
+
+const APP_BY_PROVIDER = Object.fromEntries(OAUTH_APPS.map(a => [a.provider, a]));
 
 export default function VaultManager() {
   const [credentials, setCredentials] = useState([]);
@@ -164,15 +173,15 @@ export default function VaultManager() {
   const connectedProviders = new Set(oauthCreds.map(c => c.provider));
 
   return (
-    <div className="animate-fade-in">
+    <div className="max-w-[1100px] mx-auto w-full" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-neutral-100 tracking-tight">Credentials Vault</h2>
-          <p className="text-sm text-neutral-500 mt-1">AES-256-GCM encrypted. Secrets never leave the server.</p>
+          <h2 className="text-[18px] font-bold text-[var(--bb-text-hi)] tracking-tight">Credentials</h2>
+          <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">AES-256-GCM encrypted. Secrets never leave the server.</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-xs font-semibold text-neutral-300 hover:text-white transition-all"
+          className="bb-card flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-[var(--bb-text-mid)] hover:text-[var(--bb-text-hi)] transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Add Credential
         </button>
@@ -182,15 +191,15 @@ export default function VaultManager() {
       <div className="mb-8">
         <button
           onClick={() => setShowOAuth(v => !v)}
-          className="flex items-center gap-2 w-full mb-3 group"
+          className="flex items-center gap-2 w-full mb-4 group"
         >
-          <Link2 className="w-3.5 h-3.5 text-[var(--bb-text-mid)]" />
-          <span className="text-xs font-bold text-[var(--bb-text-mid)] uppercase tracking-widest">Connected Apps (OAuth)</span>
+          <Link2 className="w-3.5 h-3.5 text-[var(--bb-text-lo)]" />
+          <span className="bb-eyebrow">Connected Apps</span>
           {connectedProviders.size > 0 && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">{connectedProviders.size}</span>
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }}>{connectedProviders.size}</span>
           )}
           <div className="ml-auto">
-            {showOAuth ? <ChevronUp className="w-3.5 h-3.5 text-neutral-600" /> : <ChevronDown className="w-3.5 h-3.5 text-neutral-600" />}
+            {showOAuth ? <ChevronUp className="w-3.5 h-3.5 text-[var(--bb-text-dim)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--bb-text-dim)]" />}
           </div>
         </button>
 
@@ -201,28 +210,31 @@ export default function VaultManager() {
               const isConnecting = connectingProvider === app.provider;
               const appCreds = oauthCreds.filter(c => c.provider === app.provider);
               return (
-                <div key={app.provider}
-                  className="flex flex-col gap-2 p-3.5 rounded-xl border transition-all"
-                  style={{
-                    borderColor: connected ? app.color + '30' : '#27272a',
-                    background: connected ? app.bgColor : 'transparent',
-                  }}>
+                <div key={app.provider} className="bb-card bb-liquid rounded-2xl flex flex-col gap-3 p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-[12px] font-bold text-neutral-200">{app.label}</p>
-                      <p className="text-[9px] text-neutral-600 mt-0.5 leading-tight">{app.desc}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={app.logo}
+                        alt={app.label}
+                        className="w-7 h-7 shrink-0 object-contain"
+                        style={app.invert ? { filter: 'brightness(0) invert(1)' } : undefined}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-[var(--bb-text-hi)] truncate">{app.label}</p>
+                        <p className="text-[10px] text-[var(--bb-text-dim)] mt-0.5 leading-tight truncate">{app.desc}</p>
+                      </div>
                     </div>
-                    {connected && <CheckCircle className="w-3.5 h-3.5 shrink-0" style={{ color: app.color }} />}
+                    {connected && <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'var(--bb-accent)' }} />}
                   </div>
                   <button
                     onClick={() => connectOAuth(app.provider)}
                     disabled={isConnecting}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all disabled:opacity-60"
-                    style={{
-                      color: app.color,
-                      borderColor: app.color + '40',
-                      backgroundColor: app.color + '0d',
-                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-60"
+                    style={
+                      connected
+                        ? { color: 'var(--bb-text-mid)', border: '1px solid var(--bb-border)', background: 'var(--bb-surface-1)' }
+                        : { color: 'var(--bb-accent-hot)', border: '1px solid var(--bb-accent-ring)', background: 'var(--bb-accent-soft)' }
+                    }
                   >
                     {isConnecting
                       ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -230,20 +242,6 @@ export default function VaultManager() {
                     }
                     {connected ? 'Add another' : 'Connect'}
                   </button>
-
-                  {appCreds.length > 0 && (
-                    <div className="flex flex-col gap-1 mt-1">
-                      {appCreds.map(c => (
-                        <div key={c._id} className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                          <span className="text-[10px] text-neutral-400 truncate flex-1">{c.name}</span>
-                          <button onClick={() => handleDelete(c._id)} className="text-neutral-700 hover:text-red-400 transition-colors shrink-0">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -251,30 +249,66 @@ export default function VaultManager() {
         )}
       </div>
 
+      {/* Connected OAuth credentials — shown with their provider logo */}
+      {oauthCreds.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bb-divider border-t" />
+            <span className="bb-eyebrow">Connected Accounts</span>
+            <div className="h-px flex-1 bb-divider border-t" />
+          </div>
+          <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
+            {oauthCreds.map((c) => {
+              const app = APP_BY_PROVIDER[c.provider];
+              return (
+                <div key={c._id} className="group flex items-center gap-3.5 px-4 py-3 border-t bb-divider first:border-t-0 hover:bg-white/[0.025] transition-colors">
+                  <img
+                    src={app?.logo}
+                    alt={app?.label || c.provider}
+                    className="w-7 h-7 shrink-0 object-contain"
+                    style={app?.invert ? { filter: 'brightness(0) invert(1)' } : undefined}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[var(--bb-text-hi)] truncate">{c.name}</p>
+                    <p className="text-[10px] text-[var(--bb-text-dim)] mt-0.5">{app?.label || c.provider} · OAuth</p>
+                  </div>
+                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--bb-accent)' }} /> Connected
+                  </span>
+                  <button onClick={() => handleDelete(c._id)} className="shrink-0 p-2 text-[var(--bb-text-dim)] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Disconnect">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-px flex-1 bg-neutral-800" />
-        <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">API Keys & Tokens</span>
-        <div className="h-px flex-1 bg-neutral-800" />
+        <div className="h-px flex-1 bb-divider border-t" />
+        <span className="bb-eyebrow">API Keys &amp; Tokens</span>
+        <div className="h-px flex-1 bb-divider border-t" />
       </div>
 
       {/* Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-8 p-5 bg-neutral-950 border border-neutral-800 rounded-xl animate-slide-up">
+        <form onSubmit={handleCreate} className="bb-card bb-liquid rounded-2xl mb-8 p-5" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Name</label>
+                <label className="bb-eyebrow">Name</label>
                 <input
                   type="text" value={name} onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. OpenAI Production"
-                  className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-neutral-600 transition-colors placeholder-neutral-700"
+                  className="bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-lg px-3 py-2 text-[13px] text-[var(--bb-text-hi)] focus:outline-none focus:border-[var(--bb-accent-ring)] transition-colors placeholder:text-[var(--bb-text-dim)]"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Type</label>
+                <label className="bb-eyebrow">Type</label>
                 <select value={type} onChange={(e) => setType(e.target.value)}
-                  className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-neutral-600 transition-colors cursor-pointer appearance-none">
+                  className="bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-lg px-3 py-2 text-[13px] text-[var(--bb-text-hi)] focus:outline-none focus:border-[var(--bb-accent-ring)] transition-colors cursor-pointer appearance-none">
                   <option value="bearer">Bearer Token</option>
                   <option value="api_key">API Key</option>
                   <option value="basic">Basic Auth</option>
@@ -282,22 +316,22 @@ export default function VaultManager() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Secret</label>
+              <label className="bb-eyebrow">Secret</label>
               <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)}
                 placeholder="sk-••••••••••••••••"
-                className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-neutral-600 transition-colors placeholder-neutral-700"
+                className="bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-lg px-3 py-2 text-[13px] text-[var(--bb-text-hi)] font-mono focus:outline-none focus:border-[var(--bb-accent-ring)] transition-colors placeholder:text-[var(--bb-text-dim)]"
               />
             </div>
-            {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
+            {error && <p className="text-[12px] text-red-400 font-medium">{error}</p>}
             <div className="flex items-center gap-3 justify-end pt-2">
               <button type="button" onClick={() => { setShowForm(false); setError(null); }}
-                className="px-4 py-2 text-xs font-semibold text-neutral-500 hover:text-white transition-colors">
+                className="px-4 py-2 text-[12px] font-semibold text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] transition-colors">
                 Cancel
               </button>
               <button type="submit" disabled={isCreating}
-                className="flex items-center gap-2 px-5 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition-all disabled:opacity-50">
+                className="bb-btn bb-btn-accent flex items-center gap-2 h-9 px-5 text-[12px] disabled:opacity-50">
                 {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
-                Encrypt & Save
+                Encrypt &amp; Save
               </button>
             </div>
           </div>
@@ -306,66 +340,66 @@ export default function VaultManager() {
 
       {/* Manual Credentials List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-neutral-600">
+        <div className="flex items-center justify-center py-16 text-[var(--bb-text-dim)]">
           <Loader2 className="w-5 h-5 animate-spin" />
         </div>
       ) : credentials.filter(c => c.type !== 'oauth').length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 border border-dashed border-neutral-800 rounded-xl text-center">
-          <Key className="w-8 h-8 text-neutral-700 mb-3" />
-          <p className="text-sm text-neutral-500 font-medium">No API keys stored yet.</p>
-          <p className="text-xs text-neutral-600 mt-1">Add API keys and tokens to use in your workflow nodes.</p>
+        <div className="bb-card bb-liquid rounded-2xl flex flex-col items-center justify-center py-12 text-center">
+          <Key className="w-8 h-8 text-[var(--bb-text-dim)] mb-3" />
+          <p className="text-[13px] text-[var(--bb-text-lo)] font-medium">No API keys stored yet.</p>
+          <p className="text-[12px] text-[var(--bb-text-dim)] mt-1">Add API keys and tokens to use in your workflow nodes.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
           {credentials.filter(c => c.type !== 'oauth').map((cred) => (
-            <div key={cred._id} className="flex flex-col bg-neutral-950 border border-neutral-800 rounded-xl group hover:border-neutral-700 transition-colors">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500">
+            <div key={cred._id} className="flex flex-col group border-t bb-divider first:border-t-0">
+              <div className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.025] transition-colors">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--bb-surface-2)', border: '1px solid var(--bb-border)', color: 'var(--bb-text-lo)' }}>
                     <Key className="w-4 h-4" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-neutral-200">{cred.name}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[13px] font-semibold text-[var(--bb-text-hi)] truncate">{cred.name}</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+                      <span className="text-[10px] font-semibold text-[var(--bb-text-dim)] uppercase tracking-wider">
                         {TYPE_LABELS[cred.type] || cred.type}
                       </span>
-                      <span className="text-[10px] text-neutral-600 font-mono select-all">{cred._id}</span>
+                      <span className="text-[10px] text-[var(--bb-text-dim)] font-mono select-all truncate max-w-[200px]">{cred._id}</span>
                       <button onClick={() => handleCopyId(cred._id)}
-                        className="p-0.5 text-neutral-600 hover:text-neutral-300 transition-colors" title="Copy credential ID">
+                        className="p-0.5 text-[var(--bb-text-dim)] hover:text-[var(--bb-text-mid)] transition-colors shrink-0" title="Copy credential ID">
                         {copiedId === cred._id
-                          ? <CheckCheck className="w-3 h-3 text-emerald-400" />
+                          ? <CheckCheck className="w-3 h-3" style={{ color: 'var(--bb-accent)' }} />
                           : <Copy className="w-3 h-3" />}
                       </button>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => { setEditingId(editingId === cred._id ? null : cred._id); setEditSecret(''); setEditError(null); }}
-                    className="p-2 text-neutral-600 hover:text-neutral-300 transition-colors" title="Update secret">
+                    className="p-2 text-[var(--bb-text-dim)] hover:text-[var(--bb-text-mid)] transition-colors" title="Update secret">
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button onClick={() => handleDelete(cred._id)}
-                    className="p-2 text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                    className="p-2 text-[var(--bb-text-dim)] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
               {editingId === cred._id && (
-                <div className="px-4 pb-4 flex flex-col gap-2 border-t border-neutral-800 pt-3">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">New Secret</label>
+                <div className="px-4 pb-4 flex flex-col gap-2 border-t bb-divider pt-3">
+                  <label className="bb-eyebrow">New Secret</label>
                   <div className="flex gap-2">
                     <input type="password" value={editSecret} onChange={(e) => setEditSecret(e.target.value)}
                       placeholder="Paste new token / API key"
-                      className="flex-1 bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-neutral-600 transition-colors placeholder-neutral-700"
+                      className="flex-1 bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-lg px-3 py-2 text-[13px] text-[var(--bb-text-hi)] font-mono focus:outline-none focus:border-[var(--bb-accent-ring)] transition-colors placeholder:text-[var(--bb-text-dim)]"
                     />
                     <button onClick={() => handleUpdate(cred._id)} disabled={isUpdating}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition-all disabled:opacity-50">
+                      className="bb-btn bb-btn-accent flex items-center gap-1.5 h-auto px-4 text-[12px] disabled:opacity-50">
                       {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
                       Save
                     </button>
                   </div>
-                  {editError && <p className="text-xs text-red-400 font-medium">{editError}</p>}
+                  {editError && <p className="text-[12px] text-red-400 font-medium">{editError}</p>}
                 </div>
               )}
             </div>
@@ -374,7 +408,7 @@ export default function VaultManager() {
       )}
 
       {credentials.filter(c => c.type !== 'oauth').length > 0 && (
-        <p className="text-[10px] text-neutral-600 mt-4 text-center">
+        <p className="text-[10px] text-[var(--bb-text-dim)] mt-4 text-center">
           Click the copy icon next to a credential ID to use it in your workflow nodes.
         </p>
       )}
