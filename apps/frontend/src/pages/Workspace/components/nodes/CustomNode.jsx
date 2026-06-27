@@ -227,26 +227,23 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
 // ─── Output Handle + Plus Button ──────────────────────────────────────────────
 function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight, handleId = "output" }) {
   const top = cardHeight ? cardHeight / 2 : "50%";
-  if (hasConnection) {
-    return (
-      <Handle type="source" position={Position.Right} id={handleId}
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: dotColor, boxShadow: statusGlow, top, transform: "translate(50%, -50%)", zIndex: 3 }}
-      />
-    );
-  }
   return (
     <>
-      <span className="absolute pointer-events-none z-[2]"
-        style={{ right: -5, top, transform: "translate(50%, -50%)", width: 10, height: 10, borderRadius: 9999, background: dotColor, boxShadow: statusGlow, border: "3px solid #1a1a1e" }} />
-      <span className="absolute pointer-events-none z-[1] h-[2px]"
-        style={{ right: -56, top, width: 52, transform: "translateY(-50%)", background: EDGE_COLOR }} />
-      <Handle type="source" position={Position.Right} id={handleId} onClick={e => { e.stopPropagation(); onAdd(e); }}
-        className="!rounded-full !bg-[#18181b] !border-[2.5px] !border-zinc-700/60 flex items-center justify-center hover:!bg-zinc-700 hover:!border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus cursor-pointer touch-none"
-        style={{ right: -68, top, transform: "translate(50%, -50%)", width: 28, height: 28, zIndex: 3 }}
-        title="Add next step or drag to connect">
-        <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
-      </Handle>
+      <Handle type="source" position={Position.Right} id={handleId}
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
+        style={{ boxShadow: statusGlow, top, transform: "translate(50%, -50%)", zIndex: 3 }}
+      />
+      {!hasConnection && (
+        <div className="absolute z-10 nodrag flex items-center pointer-events-none"
+          style={{ right: -68, top, transform: "translateY(-50%)" }}>
+          <span className="h-[2px] w-12 shrink-0" style={{ background: EDGE_COLOR }} />
+          <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
+            className="pointer-events-auto w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+            title="Add next step">
+            <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -587,10 +584,10 @@ function CustomNode({ id, data, selected }) {
     const cardH = 104;
     const n = AGENT_BOTTOM_SLOTS.length;
 
-    const cardBorder = status === "running" ? "4px solid transparent"
-      : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
-      : selected ? "3.5px solid rgba(255,255,255,0.55)"
-      : "2.5px solid rgba(255,255,255,0.22)";
+    const cardBorder = status === "running" ? "2px solid transparent"
+      : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
+      : selected ? "1.5px solid rgba(255,255,255,0.65)"
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -661,10 +658,10 @@ function CustomNode({ id, data, selected }) {
       nodeDef.label;
 
     const cardBorder = parentAgentRunning
-      ? "4px solid transparent"
+      ? "2px solid transparent"
       : selected
-      ? "3.5px solid rgba(255,255,255,0.55)"
-      : "2.5px solid rgba(255,255,255,0.22)";
+      ? "1.5px solid rgba(255,255,255,0.65)"
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -745,7 +742,7 @@ function CustomNode({ id, data, selected }) {
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
-            border: selected ? "3.5px solid rgba(255,255,255,0.55)" : "2.5px solid rgba(255,255,255,0.22)",
+            border: selected ? "1.5px solid rgba(255,255,255,0.65)" : "1.5px solid rgba(255,255,255,0.28)",
             boxShadow: GLASS_SHADOW(isHovered, selected) }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -779,12 +776,12 @@ function CustomNode({ id, data, selected }) {
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
   const cardW = 104, cardH = 104;
 
-  const cardBorderTop = status === "running" ? "4px solid transparent"
-    : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
-    : selected ? "3.5px solid rgba(255,255,255,0.55)"
-    : "2.5px solid rgba(255,255,255,0.22)";
+  const cardBorderTop = status === "running" ? "2px solid transparent"
+    : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
+    : selected ? "1.5px solid rgba(255,255,255,0.65)"
+    : "1.5px solid rgba(255,255,255,0.28)";
   const cardBorder = cardBorderTop;
-  const cardBottomBorder = status === "failed" ? "3px solid rgba(239,68,68,0.4)" : "4px solid rgba(255,255,255,0.28)";
+  const cardBottomBorder = status === "failed" ? "1.5px solid rgba(239,68,68,0.45)" : "2px solid rgba(255,255,255,0.32)";
   const cardShadow = GLASS_SHADOW(isHovered, selected);
 
   return (
