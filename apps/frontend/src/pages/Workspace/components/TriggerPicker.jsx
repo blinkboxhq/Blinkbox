@@ -182,8 +182,8 @@ export default function TriggerPicker() {
                 return (
                   <button key={cat.id} onClick={() => setPage(cat.id)}
                     className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group rounded-xl">
-                    <span className="w-9 h-9 shrink-0 rounded-lg bg-white/[0.05] flex items-center justify-center group-hover:bg-white/[0.09] transition-colors">
-                      <CatIcon size={19} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
+                    <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+                      <CatIcon size={24} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="text-[14px] font-semibold text-white leading-tight">{cat.label}</div>
@@ -227,12 +227,12 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
         focused ? "bg-white/[0.05]" : ""
       }`}
     >
-      <span className="w-9 h-9 shrink-0 rounded-lg bg-white/[0.05] flex items-center justify-center group-hover:bg-white/[0.09] transition-colors">
+      <span className="w-7 h-7 shrink-0 flex items-center justify-center">
         {trigger.logoUrl ? (
-          <img src={trigger.logoUrl} alt={trigger.label} className="w-[18px] h-[18px] object-contain"
+          <img src={trigger.logoUrl} alt={trigger.label} className="w-[26px] h-[26px] object-contain"
             style={trigger.imgFilter ? { filter: trigger.imgFilter } : undefined} />
         ) : (
-          <Icon size={19} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
+          <Icon size={24} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
         )}
       </span>
       <div className="flex-1 min-w-0">
