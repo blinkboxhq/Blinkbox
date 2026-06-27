@@ -24,8 +24,12 @@ const ROUTES = [
     any: ['audit registry', 'audit the registry', 'noderegistry', 'broken import', 'undefined icon', 'missing configpanel', 'white screen'],
   },
   {
+    skill: 'ui-ux-ultra',
+    any: ['make it beautiful', 'world-class', 'world class', 'wow', 'artistic', 'like an artist', 'premium', 'stunning', 'gorgeous', 'jaw-drop', 'jaw drop', 'next level', 'next-level', 'sexy ui', 'beautiful ui', 'ultra ui', 'cinematic', 'redesign', 'restyle', 'make it pop', 'polish the ui', 'level up the ui'],
+  },
+  {
     skill: 'ui-ux-pro-max',
-    any: ['design', 'ui', 'ux', 'redesign', 'restyle', 'glassmorphism', 'layout', 'color palette', 'font pairing', 'dashboard ui', 'landing page', 'component', 'tailwind style'],
+    any: ['design system', 'color palette', 'font pairing', 'ux guideline', 'choose a style', 'pick a palette', 'glassmorphism', 'neumorphism', 'bento grid', 'accessibility', 'chart type', 'component library'],
   },
   {
     skill: 'suggest',
