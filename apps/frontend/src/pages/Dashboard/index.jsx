@@ -405,7 +405,7 @@ export default function Dashboard() {
         )}
         {activeTab === 'settings' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
-            <div className="max-w-[640px]">
+            <div className="max-w-[680px] mx-auto w-full">
               <Settings user={user} />
             </div>
           </div>

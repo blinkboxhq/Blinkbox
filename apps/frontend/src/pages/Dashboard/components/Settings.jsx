@@ -55,8 +55,10 @@ function SaveBtn({ onClick, saving, success, disabled }) {
     <button
       onClick={onClick}
       disabled={saving || disabled}
-      className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-40"
-      style={{ background: success ? 'rgba(16,185,129,0.12)' : '#fff', color: success ? '#10b981' : '#000', border: success ? '1px solid rgba(16,185,129,0.25)' : 'none' }}
+      className={`mt-4 flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-40 ${success ? '' : 'bb-card'}`}
+      style={success
+        ? { background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }
+        : { color: 'var(--bb-text-hi)' }}
     >
       {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : success ? <Check className="w-3.5 h-3.5" /> : null}
       {saving ? 'Saving…' : success ? 'Saved' : 'Save changes'}
@@ -219,8 +221,8 @@ export default function Settings({ user }) {
             </div>
             <button
               onClick={() => navigate('/upgrade')}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all hover:opacity-80"
-              style={{ background: isPro ? 'transparent' : '#fff', color: isPro ? '#a3a3a3' : '#000', border: isPro ? '1px solid #222' : 'none' }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all ${isPro ? 'bb-card' : 'bb-btn bb-btn-accent'}`}
+              style={isPro ? { color: 'var(--bb-text-mid)' } : undefined}
             >
               {isPro ? 'Manage plan' : (
                 <><Zap className="w-3.5 h-3.5" /> Upgrade to Pro</>
