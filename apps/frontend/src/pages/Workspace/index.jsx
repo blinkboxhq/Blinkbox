@@ -7,7 +7,6 @@ import WorkspaceRightSidebar from './components/WorkspaceRightSidebar';
 import logo from '../../assets/logo.svg';
 
 import DashboardSidebar from '../Dashboard/components/DashboardSidebar';
-import AmbientBackground from '../../components/AmbientBackground';
 import Canvas from './components/Canvas';
 import NodeConfigModal from './components/NodeConfigModal';
 import BrianPanel from './components/BrianPanel';
@@ -128,7 +127,6 @@ export default function Workspace() {
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[var(--bb-surface-0)]">
-      <AmbientBackground />
 
       {/* Left sidebar — has its own internal collapse toggle */}
       {panels.leftSidebar && (
