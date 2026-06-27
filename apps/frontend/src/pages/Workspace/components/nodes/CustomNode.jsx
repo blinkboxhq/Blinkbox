@@ -225,18 +225,20 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
 }
 
 // ─── Output Handle + Plus Button ──────────────────────────────────────────────
+const HANDLE_BORDER = "rgba(255,255,255,0.28)";
+
 function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight, handleId = "output" }) {
   const top = cardHeight ? cardHeight / 2 : "50%";
   return (
     <>
       <Handle type="source" position={Position.Right} id={handleId}
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
-        style={{ boxShadow: statusGlow, top, transform: "translate(50%, -50%)", zIndex: 3 }}
+        className="!w-4 !h-4 !rounded-full touch-none"
+        style={{ boxShadow: statusGlow, top, right: 0, transform: "translate(50%, -50%)", zIndex: 4, background: EDGE_COLOR, border: `2px solid ${HANDLE_BORDER}` }}
       />
       {!hasConnection && (
-        <div className="absolute z-10 nodrag flex items-center pointer-events-none"
-          style={{ right: -68, top, transform: "translateY(-50%)" }}>
-          <span className="h-[2px] w-12 shrink-0" style={{ background: EDGE_COLOR }} />
+        <div className="absolute z-[2] nodrag flex items-center pointer-events-none"
+          style={{ left: "100%", top, transform: "translateY(-50%)" }}>
+          <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: EDGE_COLOR }} />
           <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
             className="pointer-events-auto w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
             title="Add next step">
@@ -271,8 +273,8 @@ function AgentInHandle() {
 // ─── Condition dual output handles ───────────────────────────────────────────
 function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
   const plusBtn = (y, handleId) => (
-    <div className="absolute z-10 nodrag flex items-center pointer-events-none" style={{ right: -68, top: y, transform: "translateY(-50%)" }}>
-      <span className="h-[2px] w-12 shrink-0" style={{ background: EDGE_COLOR }} />
+    <div className="absolute z-[2] nodrag flex items-center pointer-events-none" style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
+      <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: EDGE_COLOR }} />
       <button
         onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
         onMouseDown={e => e.stopPropagation()}
@@ -286,8 +288,8 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
   return (
     <>
       <Handle type="source" position={Position.Right} id={topId}
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: topY, transform: "translate(50%, -50%)", zIndex: 3 }} />
+        className="!w-4 !h-4 !rounded-full touch-none"
+        style={{ background: EDGE_COLOR, border: `2px solid ${HANDLE_BORDER}`, top: topY, right: 0, transform: "translate(50%, -50%)", zIndex: 4 }} />
       {topConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{topLabel}</span>
@@ -296,8 +298,8 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
       }
 
       <Handle type="source" position={Position.Right} id={botId}
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] touch-none"
-        style={{ backgroundColor: "#52525b", top: botY, transform: "translate(50%, -50%)", zIndex: 3 }} />
+        className="!w-4 !h-4 !rounded-full touch-none"
+        style={{ background: EDGE_COLOR, border: `2px solid ${HANDLE_BORDER}`, top: botY, right: 0, transform: "translate(50%, -50%)", zIndex: 4 }} />
       {botConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{botLabel}</span>
@@ -369,7 +371,7 @@ function SuggestionGhostNode({ data }) {
   const Icon = nodeDef.icon;
   const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
   const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
-  const cardW = 104, cardH = 104;
+  const cardW = 94, cardH = 94;
 
   return (
     <motion.div
@@ -400,10 +402,10 @@ function SuggestionGhostNode({ data }) {
           boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
         }}>
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-12 h-12 object-contain"
+          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-11 h-11 object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-12 h-12 text-white" strokeWidth={1} />
+          <Icon className="w-11 h-11 text-white" strokeWidth={1} />
         )}
       </div>
 
@@ -538,8 +540,8 @@ function CustomNode({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 104, cardH = 104;
-    const triggerRadius = "36px 10px 10px 36px";
+    const cardW = 94, cardH = 94;
+    const triggerRadius = "33px 10px 10px 33px";
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -557,9 +559,9 @@ function CustomNode({ id, data, selected }) {
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: triggerRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
-            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
+            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-11 h-11 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className="w-11 h-11 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
@@ -580,8 +582,8 @@ function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 200;
-    const cardH = 104;
+    const cardW = 188;
+    const cardH = 94;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -774,7 +776,7 @@ function CustomNode({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 104, cardH = 104;
+  const cardW = 94, cardH = 94;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -808,9 +810,9 @@ function CustomNode({ id, data, selected }) {
           </div>
         )}
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
+          <img src={nodeDef.logoUrl} alt={data.label} className="w-11 h-11 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+          <Icon className="w-11 h-11 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
         )}
       </motion.div>
 

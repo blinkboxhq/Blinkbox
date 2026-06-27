@@ -13,6 +13,7 @@ import {
   BackgroundVariant,
   useReactFlow,
   MarkerType,
+  ConnectionLineType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
@@ -364,7 +365,8 @@ export default function Canvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
-        connectionLineStyle={{ stroke: EDGE_COLOR, strokeWidth: 3 }}
+        connectionLineType={ConnectionLineType.Bezier}
+        connectionLineStyle={{ stroke: EDGE_COLOR, strokeWidth: 3, strokeLinecap: "round" }}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
           const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
