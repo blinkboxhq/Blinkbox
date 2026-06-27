@@ -2,6 +2,18 @@
   "autoCompactEnabled": true,
   "autoCompactWindow": 150000,
   "verbose": false,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/find-skill.mjs\""
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "defaultMode": "auto",
     "allow": [
