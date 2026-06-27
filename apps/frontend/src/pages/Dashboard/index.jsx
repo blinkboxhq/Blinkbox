@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import UsagePage from './components/UsagePage';
+import HistoryPanel from './components/HistoryPanel';
 import AmbientBackground from '../../components/AmbientBackground';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
@@ -385,68 +386,12 @@ export default function Dashboard() {
         )}
         {activeTab === 'logs' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
-            <div className="mb-6 max-w-[1400px] mx-auto w-full">
-              <h2 className="text-[18px] font-bold text-[var(--bb-text-hi)] tracking-tight">History</h2>
-              <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">Recent workflow executions</p>
-            </div>
-            <div className="max-w-[1400px] mx-auto w-full">
-            {execLoading ? (
-              <div className="flex items-center gap-2 text-[var(--bb-text-lo)] text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
-            ) : executions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Activity className="w-8 h-8 text-[var(--bb-text-dim)] mb-3" />
-                <p className="text-[13px] text-[var(--bb-text-lo)]">No executions yet.</p>
-              </div>
-            ) : (
-              <div className="bb-card bb-liquid rounded-2xl overflow-hidden max-w-[1400px]">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-white/[0.02] border-b bb-divider">
-                      <th className="text-left px-5 py-3.5 bb-eyebrow">Workflow</th>
-                      <th className="text-left px-5 py-3.5 bb-eyebrow">Status</th>
-                      <th className="text-left px-5 py-3.5 bb-eyebrow">Started</th>
-                      <th className="text-left px-5 py-3.5 bb-eyebrow">Duration</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {executions.map((ex, i) => {
-                      const dur = ex.completedAt && ex.startedAt
-                        ? `${((new Date(ex.completedAt) - new Date(ex.startedAt)) / 1000).toFixed(1)}s`
-                        : '—';
-                      const ok = ex.status === 'completed' || ex.status === 'executed';
-                      const failed = ex.status === 'failed';
-                      return (
-                        <tr key={ex._id || i} className="border-t bb-divider hover:bg-white/[0.025] transition-colors">
-                          <td className="px-5 py-3.5 text-[12px] text-[var(--bb-text-mid)] truncate max-w-[280px]">{ex.automationName || ex.automationId || '—'}</td>
-                          <td className="px-5 py-3.5">
-                            <span
-                              className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full"
-                              style={
-                                ok
-                                  ? { color: 'var(--bb-accent-hot)', background: 'var(--bb-accent-soft)', border: '1px solid var(--bb-accent-ring)' }
-                                  : failed
-                                  ? { color: '#f87171', background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.22)' }
-                                  : { color: '#f59e0b', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.22)' }
-                              }
-                            >
-                              {ex.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-[11px] text-[var(--bb-text-dim)]">{timeAgo(ex.startedAt || ex.createdAt)}</td>
-                          <td className="px-5 py-3.5 text-[11px] text-[var(--bb-text-dim)] font-mono">{dur}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            </div>
+            <HistoryPanel executions={executions} loading={execLoading} />
           </div>
         )}
         {activeTab === 'usage' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
-            <div className="max-w-[760px]">
+            <div className="max-w-[760px] mx-auto w-full">
               <UsagePage usage={billingUsage} />
             </div>
           </div>
