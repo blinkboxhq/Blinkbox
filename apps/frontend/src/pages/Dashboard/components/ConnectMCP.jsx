@@ -41,7 +41,7 @@ function timeAgo(d) {
   return new Date(d).toLocaleDateString();
 }
 
-function Tile({ c, hero }) {
+function Tile({ c, hero, flat = false }) {
   return (
     <div
       className="rounded-[24px] overflow-hidden flex items-center justify-center"
@@ -51,19 +51,44 @@ function Tile({ c, hero }) {
         background: c.bg,
         padding: c.bleed ? 0 : c.pad,
         border: '1px solid var(--bb-border)',
-        boxShadow: hero
-          ? '0 2px 0 0 rgba(255,255,255,0.12) inset, 0 34px 70px -14px rgba(0,0,0,0.95), 0 12px 28px -10px rgba(0,0,0,0.8)'
-          : '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 26px 54px -16px rgba(0,0,0,0.9), 0 8px 20px -8px rgba(0,0,0,0.7)',
+        boxShadow: flat
+          ? 'none'
+          : hero
+            ? '0 2px 0 0 rgba(255,255,255,0.12) inset, 0 34px 70px -14px rgba(0,0,0,0.95), 0 12px 28px -10px rgba(0,0,0,0.8)'
+            : '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 26px 54px -16px rgba(0,0,0,0.9), 0 8px 20px -8px rgba(0,0,0,0.7)',
       }}
     >
       <img
         src={c.logo}
         alt=""
         className={`w-full h-full ${c.bleed ? 'object-cover' : 'object-contain'}`}
-        style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.45))' }}
+        style={{ filter: flat ? 'none' : 'drop-shadow(0 6px 12px rgba(0,0,0,0.45))' }}
         draggable={false}
       />
     </div>
+  );
+}
+
+// The arc itself — rendered once for real, once flipped for the mirror floor.
+function Fan({ flat = false }) {
+  return (
+    <>
+      {FAN.map((c, i) => {
+        const off = i - MID;
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              transform: `translateX(${off * STEP_X}px) translateY(${Math.abs(off) * ARC_Y - (c.hero ? 8 : 0)}px) rotate(${off * ROT}deg)`,
+              zIndex: c.hero ? 50 : 10 - Math.abs(off),
+            }}
+          >
+            <Tile c={c} hero={c.hero} flat={flat} />
+          </div>
+        );
+      })}
+    </>
   );
 }
 
@@ -109,28 +134,31 @@ export default function ConnectMCP() {
 
   return (
     <div style={{ animation: 'dbFadeIn 0.2s ease-out' }} className="max-w-[860px] mx-auto">
-      {/* ── Hero: wide overlapping arc of app tiles ── */}
-      <div className="relative flex flex-col items-center text-center pt-4 pb-9">
+      {/* ── Hero: a pedestal of glass — wide arc grounded on a mirror floor,
+           a light shaft rising behind the Blinkbox hero tile ── */}
+      <div className="relative flex flex-col items-center text-center pt-6 pb-9">
+        {/* ambient top glow */}
         <div
-          className="absolute inset-x-0 top-0 h-[260px] pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 75% at 50% 0%, rgba(255,255,255,0.05), transparent 70%)' }}
+          className="absolute inset-x-0 top-0 h-[280px] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 60% 80% at 50% 0%, rgba(255,255,255,0.05), transparent 70%)' }}
         />
-        <div className="relative h-[164px] w-full flex items-center justify-center mb-8">
-          {FAN.map((c, i) => {
-            const off = i - MID;
-            return (
-              <div
-                key={i}
-                className="absolute"
-                style={{
-                  transform: `translateX(${off * STEP_X}px) translateY(${Math.abs(off) * ARC_Y - (c.hero ? 8 : 0)}px) rotate(${off * ROT}deg)`,
-                  zIndex: c.hero ? 50 : 10 - Math.abs(off),
-                }}
-              >
-                <Tile c={c} hero={c.hero} />
-              </div>
-            );
-          })}
+        {/* vertical light shaft behind the centre tile */}
+        <div className="bb-shaft absolute left-1/2 -translate-x-1/2 top-2 w-[180px] h-[230px] pointer-events-none" />
+
+        <div className="relative w-full flex flex-col items-center mb-8">
+          {/* real fan */}
+          <div className="relative h-[164px] w-full flex items-center justify-center">
+            <Fan />
+          </div>
+          {/* reflected fan on the mirror floor */}
+          <div className="bb-mirror relative h-[150px] w-full flex items-center justify-center -mt-[150px]" aria-hidden>
+            <Fan flat />
+          </div>
+          {/* grounding line where tiles meet the floor */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bottom-[148px] w-[640px] max-w-[88%] h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.22) 50%, transparent)' }}
+          />
         </div>
 
         <h2 className="relative text-[32px] leading-none font-black text-[var(--bb-text-hi)] tracking-tight uppercase">
@@ -143,7 +171,7 @@ export default function ConnectMCP() {
       </div>
 
       {/* ── MCP Server URL ── */}
-      <div className="bb-card bb-liquid rounded-2xl px-6 py-6 mb-8">
+      <div className="bb-card bb-reflect rounded-2xl px-6 py-6 mb-8">
         <div className="flex items-center gap-2.5 mb-4">
           <span className="bb-eyebrow">MCP Server URL</span>
           <span className="text-[9px] font-semibold text-[var(--bb-text-lo)] px-2 py-0.5 rounded-full bb-pill">Streamable HTTP</span>
@@ -172,13 +200,13 @@ export default function ConnectMCP() {
           <Loader2 className="w-5 h-5 animate-spin" />
         </div>
       ) : keys.length === 0 ? (
-        <div className="bb-card bb-liquid rounded-2xl flex flex-col items-center justify-center py-12 text-center">
+        <div className="bb-card bb-reflect rounded-2xl flex flex-col items-center justify-center py-12 text-center">
           <KeyRound className="w-8 h-8 text-[var(--bb-text-dim)] mb-3" />
           <p className="text-[13px] text-[var(--bb-text-lo)] font-medium">No MCP keys yet.</p>
           <p className="text-[12px] text-[var(--bb-text-dim)] mt-1">Create one in Credentials to authenticate your AI chat.</p>
         </div>
       ) : (
-        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
+        <div className="bb-card bb-reflect rounded-2xl overflow-hidden">
           {keys.map((k) => {
             const id = k.id || k._id;
             return (
