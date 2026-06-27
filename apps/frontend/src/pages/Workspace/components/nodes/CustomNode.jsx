@@ -255,19 +255,17 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
       />
       {!hasConnection && (
         <>
-          <Handle type="source" position={Position.Right} id={handleId}
-            className={`!rounded-full !bg-transparent hover:!bg-transparent !border-0 !shadow-none touch-none nodrag nopan transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
-            style={{ boxShadow: "none", top, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 2 }} />
-          <div className={`absolute z-[3] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
+          <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
             style={{ left: "100%", top, transform: "translateY(-50%)" }}>
             <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
-            <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
-              className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center active:scale-95 transition-all duration-150 group/plus"
-              style={{ border: `1.5px solid ${HANDLE_BORDER}` }}
-              title="Add next step">
-              <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
-            </button>
           </div>
+          <Handle type="source" position={Position.Right} id={handleId}
+            onClick={e => { e.stopPropagation(); onAdd(e); }}
+            className={`group/plus !flex !items-center !justify-center !w-6 !h-6 !rounded-full !shadow-none touch-none nodrag nopan cursor-pointer transition-all duration-500 hover:!bg-zinc-800 hover:!border-white/40 ${connecting ? "opacity-0" : "opacity-100"}`}
+            style={{ top, left: "100%", marginLeft: 72, transform: "translate(0, -50%)", zIndex: 3, background: "#18181b", border: `1.5px solid ${HANDLE_BORDER}` }}
+            title="Drag to connect · click to add step">
+            <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
+          </Handle>
         </>
       )}
     </>
@@ -299,20 +297,16 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
   const connecting = useIsConnecting();
   const plusBtn = (y, handleId) => (
     <>
-      <Handle type="source" position={Position.Right} id={handleId}
-        className={`!rounded-full !bg-transparent hover:!bg-transparent !border-0 !shadow-none touch-none nodrag nopan transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
-        style={{ boxShadow: "none", top: y, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 2 }} />
-      <div className={`absolute z-[3] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
+      <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
         <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
-        <button
-          onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
-          onMouseDown={e => e.stopPropagation()}
-          className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center active:scale-95 transition-all duration-150 group/plus"
-          style={{ border: `1.5px solid ${HANDLE_BORDER}` }}
-          title="Add next step">
-          <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
-        </button>
       </div>
+      <Handle type="source" position={Position.Right} id={handleId}
+        onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
+        className={`group/plus !flex !items-center !justify-center !w-6 !h-6 !rounded-full !shadow-none touch-none nodrag nopan cursor-pointer transition-all duration-500 hover:!bg-zinc-800 hover:!border-white/40 ${connecting ? "opacity-0" : "opacity-100"}`}
+        style={{ top: y, left: "100%", marginLeft: 72, transform: "translate(0, -50%)", zIndex: 3, background: "#18181b", border: `1.5px solid ${HANDLE_BORDER}` }}
+        title="Drag to connect · click to add step">
+        <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
+      </Handle>
     </>
   );
 
