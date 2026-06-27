@@ -287,7 +287,7 @@ export default function Dashboard() {
     if (isCreating) return;
     setIsCreating(true); setSystemError(null);
     try {
-      const r = await api.post('/api/automation', { name: data.name.trim(), description: data.description?.trim() || '', trigger: 'manual' });
+      const r = await api.post('/api/automation', { name: data.name.trim(), description: data.description?.trim() || '', trigger: data.trigger || 'manual' });
       if (r.data?.success) { setWorkflows([r.data.automation, ...workflows]); setIsModalOpen(false); navigate(`/workspace/${r.data.automation._id}`); }
     } catch (e) { setSystemError(e.message || 'Failed.'); }
     setIsCreating(false);
