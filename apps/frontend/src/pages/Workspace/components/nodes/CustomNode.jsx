@@ -702,10 +702,10 @@ function CustomNode({ id, data, selected }) {
             style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
           {badge}
           {nodeDef.logoUrl ? (
-            <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+            <img src={nodeDef.logoUrl} alt={data.label} className="w-7 h-7 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-8 h-8 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className="w-7 h-7 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
 
