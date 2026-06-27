@@ -7,7 +7,7 @@
    own hex. surface ascends 0→3 (deepest page → most-raised), border ascends with
    prominence, text descends hi→lo. Keep this list short on purpose. */
 :root {
-  --bb-surface-0: #0c0c0c;  /* page background */
+  --bb-surface-0: #141414;  /* page background */
   --bb-surface-1: #1b1b1b;  /* card / panel */
   --bb-surface-2: #262626;  /* raised card / hover */
   --bb-surface-3: #303030;  /* popover / inset */
