@@ -58,7 +58,7 @@ function NodeOutputChip({ output }) {
 
 // ─── Liquid-glass card surface, shared across all node types ────────────────
 const GLASS_BG =
-  "linear-gradient(150deg, rgba(48,48,56,0.62) 0%, rgba(30,30,36,0.55) 48%, rgba(22,22,27,0.58) 100%)";
+  "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%), rgba(40,40,40,0.62)";
 const GLASS_SHADOW = (hovered, selected) =>
   [
     `inset 0 1px 0 rgba(255,255,255,${selected ? 0.22 : 0.12})`,
