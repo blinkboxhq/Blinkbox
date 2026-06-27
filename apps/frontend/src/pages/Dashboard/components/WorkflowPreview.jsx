@@ -50,14 +50,14 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
 
       {/* Trigger color glow from left */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse at -5% 50%, ${accentColor}26 0%, transparent 55%)`,
+        background: 'radial-gradient(ellipse at -5% 50%, var(--bb-accent-soft) 0%, transparent 55%)',
       }} />
 
       {/* Left accent bar */}
       <div className="absolute left-0 top-0 bottom-0" style={{
         width: 3,
-        background: accentColor,
-        opacity: 0.85,
+        background: 'var(--bb-accent)',
+        opacity: 0.55,
         borderRadius: '4px 0 0 4px',
       }} />
 
