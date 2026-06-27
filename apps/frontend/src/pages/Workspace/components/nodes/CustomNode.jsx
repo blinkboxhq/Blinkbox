@@ -536,10 +536,10 @@ function CustomNode({ id, data, selected }) {
     const cardW = 104, cardH = 104;
     const triggerRadius = "36px 10px 10px 36px";
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
-    const cardBorder = status === "running" ? "4px solid transparent"
-      : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
-      : selected ? "3.5px solid rgba(255,255,255,0.55)"
-      : "2.5px solid rgba(255,255,255,0.22)";
+    const cardBorder = status === "running" ? "2px solid transparent"
+      : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
+      : selected ? "1.5px solid rgba(255,255,255,0.65)"
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
