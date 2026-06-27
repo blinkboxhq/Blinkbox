@@ -255,7 +255,10 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
       />
       {!hasConnection && (
         <>
-          <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
+          <Handle type="source" position={Position.Right} id={handleId}
+            className={`!rounded-full !bg-transparent hover:!bg-transparent !border-0 !shadow-none touch-none nodrag nopan transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
+            style={{ boxShadow: "none", top, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 2 }} />
+          <div className={`absolute z-[3] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
             style={{ left: "100%", top, transform: "translateY(-50%)" }}>
             <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
             <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
@@ -296,7 +299,10 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
   const connecting = useIsConnecting();
   const plusBtn = (y, handleId) => (
     <>
-      <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
+      <Handle type="source" position={Position.Right} id={handleId}
+        className={`!rounded-full !bg-transparent hover:!bg-transparent !border-0 !shadow-none touch-none nodrag nopan transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
+        style={{ boxShadow: "none", top: y, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 2 }} />
+      <div className={`absolute z-[3] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
         <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
         <button
           onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
