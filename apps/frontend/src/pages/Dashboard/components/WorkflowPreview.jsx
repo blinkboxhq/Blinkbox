@@ -17,7 +17,7 @@ const TRIGGER_ICONS = {
   manual:           Zap,
 };
 
-export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = '#6f97e8', lastRunStatus }) {
+export default function WorkflowPreview({ nodeCount = 0, trigger, lastRunStatus }) {
   const TriggerIcon = TRIGGER_ICONS[trigger] || Zap;
   const displayCount = Math.max(2, Math.min(nodeCount || 2, 7));
   const nodeBoxes = Array.from({ length: displayCount });
@@ -69,16 +69,16 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
               width: 32,
               height: 32,
               borderRadius: 9,
-              background: i === 0 ? `${accentColor}22` : 'var(--bb-surface-2)',
-              border: `1.5px solid ${i === 0 ? accentColor + '55' : 'var(--bb-border)'}`,
+              background: i === 0 ? 'var(--bb-accent-soft)' : 'var(--bb-surface-2)',
+              border: `1.5px solid ${i === 0 ? 'var(--bb-accent-ring)' : 'var(--bb-border)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: i === 0 ? `0 0 14px ${accentColor}18` : 'none',
+              boxShadow: i === 0 ? '0 0 14px var(--bb-accent-soft)' : 'none',
               flexShrink: 0,
             }}>
               {i === 0
-                ? <TriggerIcon style={{ width: 13, height: 13, color: accentColor, opacity: 0.95 }} />
+                ? <TriggerIcon style={{ width: 13, height: 13, color: 'var(--bb-accent-hot)', opacity: 0.95 }} />
                 : <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--bb-border-strong)' }} />
               }
             </div>
@@ -87,7 +87,7 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
                 width: 22,
                 height: 1.5,
                 background: i === 0
-                  ? `linear-gradient(to right, ${accentColor}50, var(--bb-border))`
+                  ? 'linear-gradient(to right, var(--bb-accent-ring), var(--bb-border))'
                   : 'var(--bb-border-subtle)',
                 flexShrink: 0,
               }} />
@@ -95,14 +95,14 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
           </div>
         ))}
         {nodeCount > 7 && (
-          <span className="ml-2 text-[9px] font-mono shrink-0" style={{ color: '#282828' }}>+{nodeCount - 7}</span>
+          <span className="ml-2 text-[9px] font-mono shrink-0" style={{ color: 'var(--bb-text-dim)' }}>+{nodeCount - 7}</span>
         )}
       </div>
 
       {/* Bottom-right meta */}
       <div className="absolute bottom-2.5 right-3 flex items-center gap-2">
         {nodeCount > 0 && (
-          <span className="text-[9px] font-mono" style={{ color: '#222' }}>{nodeCount}n</span>
+          <span className="text-[9px] font-mono" style={{ color: 'var(--bb-text-dim)' }}>{nodeCount}n</span>
         )}
         {statusColor && (
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, opacity: 0.85, boxShadow: `0 0 6px ${statusColor}60` }} />

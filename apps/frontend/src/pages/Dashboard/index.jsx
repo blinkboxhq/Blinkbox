@@ -521,7 +521,7 @@ export default function Dashboard() {
                         className="bb-rise group border-t bb-divider hover:bg-white/[0.02] cursor-pointer transition-colors"
                         style={{ '--bb-i': Math.min(i, 12) }}>
                         <td className="pl-4 py-3">
-                          <div className="w-2 h-2 rounded-full" style={{ background: '#6f97e8' }} />
+                          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--bb-accent)' }} />
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-[13px] font-medium text-neutral-300 group-hover:text-white truncate max-w-[260px]">{wf.name}</p>
@@ -555,7 +555,6 @@ export default function Dashboard() {
               /* ── GRID VIEW — 3 columns with canvas thumbnails ── */
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" style={{ animation: 'dbFadeIn 0.15s ease-out' }}>
                 {filtered.map((wf, i) => {
-                  const accentColor = '#6f97e8';
                   const isActive = wf.status === 'active';
                   const wfId = wf._id || wf.id;
                   return (
@@ -563,16 +562,15 @@ export default function Dashboard() {
                       className="bb-card bb-glass bb-card-hover bb-rise group relative flex flex-col cursor-pointer overflow-hidden"
                       style={{ '--bb-i': Math.min(i, 10) }}>
 
-                      {/* Trigger-accent wash on hover */}
+                      {/* Accent wash on hover */}
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                        style={{ background: `linear-gradient(90deg, transparent, ${accentColor}66, transparent)` }} />
+                        style={{ background: 'linear-gradient(90deg, transparent, var(--bb-accent-ring), transparent)' }} />
 
                       {/* Canvas thumbnail */}
                       <div className="p-3 pb-2">
                         <WorkflowPreview
                           nodeCount={wf.nodeCount}
                           trigger={wf.trigger}
-                          accentColor={accentColor}
                           lastRunStatus={wf.lastRunStatus}
                         />
                       </div>
