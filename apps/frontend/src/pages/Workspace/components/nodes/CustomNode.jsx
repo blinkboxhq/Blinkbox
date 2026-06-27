@@ -547,7 +547,7 @@ function CustomNode({ id, data, selected }) {
         {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={isChatTrigger ? handleOpenConfig : handlePlay}
-          className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
+          className={`bb-card absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
@@ -594,7 +594,7 @@ function CustomNode({ id, data, selected }) {
           style={{ top: cardH / 2, zIndex: 2, position: "absolute" }} />
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig} className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
+          onClick={handleOpenConfig} className="bb-card relative flex items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
 
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
@@ -694,7 +694,7 @@ function CustomNode({ id, data, selected }) {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
           onClick={e => { e.stopPropagation(); setPickerOpen(p => !p); }}
-          className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
+          className="bb-card relative flex items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: d, height: d, borderRadius: 9999, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}
         >
           <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -732,7 +732,7 @@ function CustomNode({ id, data, selected }) {
           className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
           style={{ top: cardH / 2 }} />
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
+          onClick={handleOpenConfig} className="bb-card relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
@@ -790,7 +790,7 @@ function CustomNode({ id, data, selected }) {
         style={{ top: cardH / 2, zIndex: 2, position: "absolute" }} />
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
+        onClick={handleOpenConfig} className="bb-card relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
         style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
         {badge}

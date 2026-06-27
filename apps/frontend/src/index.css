@@ -589,14 +589,6 @@ html {
     inset 0 -18px 40px -28px rgba(255,255,255,0.03),
     0 28px 64px -30px rgba(0,0,0,0.92);
 }
-.bb-glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.025) 32%, transparent 46%);
-}
 .bb-glass::after {
   content: "";
   position: absolute;
