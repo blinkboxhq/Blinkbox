@@ -106,7 +106,7 @@ export default function TriggerPicker() {
     <>
       <div className="fixed inset-0 z-40" onClick={close} />
       <div
-        className="fixed top-14 right-0 bottom-0 z-50 flex flex-col bg-neutral-950 border-l border-white/[0.12]"
+        className="bb-liquid bb-edge-left fixed top-14 right-0 bottom-0 z-50 flex flex-col"
         style={{ width: "clamp(300px, 28vw, 420px)" }}
       >
         {/* Search bar */}
@@ -117,7 +117,7 @@ export default function TriggerPicker() {
               <ArrowLeft size={15} />
             </button>
           )}
-          <div className="flex-1 flex items-center gap-2.5 px-3 h-9 rounded-lg border border-white/[0.1] bg-white/[0.06] backdrop-blur-md focus-within:border-white/[0.22] focus-within:bg-white/[0.09] transition-all">
+          <div className="bb-input bb-glow-border flex-1 flex items-center gap-2.5 px-3 h-9 rounded-lg focus-within:border-white/[0.22] transition-all">
             <Search size={13} className="text-neutral-500 shrink-0" />
             <input
               ref={inputRef}
@@ -177,7 +177,7 @@ export default function TriggerPicker() {
                 const CatIcon = cat.icon;
                 return (
                   <button key={cat.id} onClick={() => setPage(cat.id)}
-                    className="relative flex items-center gap-4 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group">
+                    className="bb-nav-item relative flex items-center gap-4 w-full px-5 py-4 transition-colors text-left group rounded-lg">
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
                       style={{ background: cat.accent }} />
                     <CatIcon size={21} strokeWidth={1.6} className="shrink-0 text-white/70 group-hover:text-white transition-colors" />
@@ -219,8 +219,8 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group relative ${
-        focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
+      className={`bb-nav-item rounded-lg flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group relative ${
+        focused ? "bg-white/[0.05]" : ""
       }`}
     >
       <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity bg-white/40" />

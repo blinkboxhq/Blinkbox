@@ -30,7 +30,7 @@ function PlaceholderNode() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setTriggerPickerOpen(true)}
-          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/[0.08] hover:bg-white/[0.06] hover:ring-white/[0.14] transition-all duration-200 cursor-pointer overflow-hidden"
+          className="bb-glass bb-glow-border group flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
         >
           <Plus className="relative w-6 h-6 text-zinc-400 group-hover:text-white transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
           <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-zinc-100 transition-colors tracking-wide">Manual</span>
@@ -44,7 +44,7 @@ function PlaceholderNode() {
 
         <button
           onClick={() => setBrianOpen(true)}
-          className="group relative flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl bg-white/[0.03] backdrop-blur-xl ring-1 ring-inset ring-white/[0.08] hover:bg-violet-400/[0.07] hover:ring-violet-400/25 transition-all duration-200 cursor-pointer overflow-hidden"
+          className="bb-glass bb-glow-border group flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl hover:bg-violet-400/[0.07] transition-all duration-200 cursor-pointer"
         >
           <Sparkles className="relative w-6 h-6 text-zinc-400 group-hover:text-violet-300 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
           <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-violet-300 transition-colors tracking-wide">Use Brian</span>
