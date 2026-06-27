@@ -364,8 +364,13 @@ export default function Canvas() {
         ref={glowRef}
         className="pointer-events-none absolute inset-0 z-[1] opacity-0 transition-opacity duration-300"
         style={{
-          background:
-            "radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), rgba(139,92,246,0.10), transparent 70%)",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.85) 1.2px, transparent 1.6px)",
+          backgroundSize: "16px 16px",
+          backgroundPosition: "0.5px 0.5px",
+          WebkitMaskImage:
+            "radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 65%)",
+          maskImage:
+            "radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 65%)",
         }}
       />
       <ReactFlow
