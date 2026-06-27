@@ -534,7 +534,7 @@ function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
     const cardW = 104, cardH = 104;
-    const triggerRadius = "28px 8px 8px 28px";
+    const triggerRadius = "36px 10px 10px 36px";
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
