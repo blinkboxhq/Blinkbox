@@ -264,7 +264,7 @@ export default function Settings({ user }) {
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${creditPct}%`,
-                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : '#fafafa',
+                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : 'linear-gradient(90deg, var(--bb-accent), #fafafa)',
                   }}
                 />
               </div>
