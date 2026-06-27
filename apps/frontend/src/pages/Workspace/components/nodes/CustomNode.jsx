@@ -231,10 +231,11 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
         style={{ backgroundColor: dotColor, boxShadow: statusGlow, opacity: hasConnection ? 1 : 0, ...(cardHeight ? { top: cardHeight / 2, transform: "translate(50%, -50%)" } : {}) }}
       />
       {!hasConnection && (
-        <div className="absolute z-10 nodrag"
-          style={cardHeight ? { right: -16, top: cardHeight / 2, transform: "translateY(-50%)" } : { right: -16, top: "50%", transform: "translateY(-50%)" }}>
+        <div className="absolute z-10 nodrag flex items-center"
+          style={cardHeight ? { right: -64, top: cardHeight / 2, transform: "translateY(-50%)" } : { right: -64, top: "50%", transform: "translateY(-50%)" }}>
+          <span className="h-[2px] w-9 bg-zinc-700/70 shrink-0" />
           <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
-            className="w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+            className="w-7 h-7 rounded-lg bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
             title="Add next step">
             <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
           </button>
@@ -267,11 +268,12 @@ function AgentInHandle() {
 // ─── Condition dual output handles ───────────────────────────────────────────
 function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
   const plusBtn = (y, handleId) => (
-    <div className="absolute z-10 nodrag" style={{ right: -16, top: y, transform: "translateY(-50%)" }}>
+    <div className="absolute z-10 nodrag flex items-center" style={{ right: -64, top: y, transform: "translateY(-50%)" }}>
+      <span className="h-[2px] w-9 bg-zinc-700/70 shrink-0" />
       <button
         onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
         onMouseDown={e => e.stopPropagation()}
-        className="w-7 h-7 rounded-full bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
+        className="w-7 h-7 rounded-lg bg-[#18181b] border-[2.5px] border-zinc-700/60 flex items-center justify-center hover:bg-zinc-700 hover:border-zinc-400 active:scale-95 transition-all duration-150 shadow-lg shadow-black/50 group/plus"
         title="Add next step">
         <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
       </button>
