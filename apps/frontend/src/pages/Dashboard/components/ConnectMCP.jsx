@@ -6,14 +6,11 @@ import {
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import imgBlinkbox from '../../../assets/blinkbox-knot.png';
-import imgClaude from '../../../assets/claude.svg';
-import imgChatGPT from '../../../assets/chatgpt.png';
-import imgGrok from '../../../assets/grok-color.svg';
-import imgGemini from '../../../assets/gemini-color.svg';
-import imgPerplexity from '../../../assets/perplexity-color.svg';
-import imgHermes from '../../../assets/hermes.svg';
-import imgManus from '../../../assets/manus.svg';
-import imgOpenClaw from '../../../assets/openclaw.svg';
+import imgCursor from '../../../assets/mcp-cursor.png';
+import imgCodex from '../../../assets/mcp-codex.svg';
+import imgClaude from '../../../assets/mcp-claude.webp';
+import imgHermes from '../../../assets/mcp-hermes.svg';
+import imgOpenClaw from '../../../assets/mcp-openclaw.svg';
 
 const MCP_URL = 'https://mcp.blinkbox.net/mcp';
 
@@ -23,24 +20,24 @@ const TOOLS = [
   'list_executions', 'get_execution', 'get_execution_logs', 'list_credentials',
 ];
 
-// Fanned hero cards — each tile keeps its own brand surface (real app-icon look)
+// Fanned hero cards — each tile keeps its own brand surface (real app-icon look).
+// `bleed`: image already includes its own tile → fill edge-to-edge.
+// otherwise render the mark on `bg` with `pad`.
 const FAN = [
-  { logo: imgClaude,     bg: '#d97757', rot: -24, x: -188, y: 30, z: 1, pad: 16 },
-  { logo: imgGemini,     bg: '#ffffff', rot: -16, x: -128, y: 14, z: 2, pad: 15 },
-  { logo: imgChatGPT,    bg: '#ffffff', rot: -8,  x: -66,  y: 4,  z: 3, pad: 14 },
-  { logo: imgBlinkbox,   bg: '#0a0a0a', rot: 0,   x: 0,    y: -4, z: 5, pad: 12, hero: true },
-  { logo: imgGrok,       bg: '#000000', rot: 8,   x: 66,   y: 4,  z: 3, pad: 16 },
-  { logo: imgPerplexity, bg: '#ffffff', rot: 16,  x: 128,  y: 14, z: 2, pad: 15 },
-  { logo: imgManus,      bg: '#ffffff', rot: 24,  x: 188,  y: 30, z: 1, pad: 15 },
+  { logo: imgCursor,   bleed: true,                rot: -24, x: -188, y: 30, z: 1 },
+  { logo: imgOpenClaw, bg: '#0a0e1a', pad: 22,     rot: -15, x: -120, y: 12, z: 2 },
+  { logo: imgClaude,   bleed: true,                rot: -7,  x: -58,  y: 2,  z: 3 },
+  { logo: imgBlinkbox, bg: '#0a0a0a', pad: 14,     rot: 0,   x: 0,    y: -4, z: 5, hero: true },
+  { logo: imgCodex,    bleed: true,                rot: 7,   x: 58,   y: 2,  z: 3 },
+  { logo: imgHermes,   bg: '#111317', pad: 22, white: true, rot: 15, x: 120, y: 12, z: 2 },
 ];
 
 const CONNECTORS = [
-  { id: 'claude',  name: 'Claude',  logo: imgClaude,  path: 'Settings → Connectors → Add custom connector' },
-  { id: 'chatgpt', name: 'ChatGPT', logo: imgChatGPT, path: 'Settings → Connectors → Add → Custom (MCP server)' },
-  { id: 'grok',    name: 'Grok',    logo: imgGrok,    path: 'Settings → Integrations → Add MCP server' },
-  { id: 'gemini',  name: 'Gemini',  logo: imgGemini,  path: 'Extensions → Add MCP server' },
-  { id: 'hermes',  name: 'Hermes',  logo: imgHermes,  path: 'Add tool / MCP server (Bearer header)' },
-  { id: 'manus',   name: 'Manus',   logo: imgManus,   path: 'Settings → Integrations → Add MCP server' },
+  { id: 'cursor',   name: 'Cursor',   logo: imgCursor,   bleed: true,  path: 'Settings → MCP → Add server' },
+  { id: 'codex',    name: 'Codex',    logo: imgCodex,    bleed: true,  path: '~/.codex/config.toml → add MCP server' },
+  { id: 'claude',   name: 'Claude',   logo: imgClaude,   bleed: true,  path: 'Settings → Connectors → Add custom connector' },
+  { id: 'hermes',   name: 'Hermes',   logo: imgHermes,   white: true,  path: 'Add tool / MCP server (Bearer header)' },
+  { id: 'openclaw', name: 'OpenClaw', logo: imgOpenClaw,               path: 'Tools / MCP → Add server' },
 ];
 
 function timeAgo(d) {
@@ -135,19 +132,25 @@ export default function ConnectMCP() {
               }}
             >
               <div
-                className="rounded-[26px] flex items-center justify-center shadow-[0_20px_45px_-12px_rgba(0,0,0,0.8)]"
+                className="rounded-[26px] overflow-hidden flex items-center justify-center shadow-[0_20px_45px_-12px_rgba(0,0,0,0.8)]"
                 style={{
                   width: c.hero ? 116 : 100,
                   height: c.hero ? 116 : 100,
                   background: c.bg,
-                  padding: c.pad,
+                  padding: c.bleed ? 0 : c.pad,
                   border: c.hero ? '2px solid rgba(111,151,232,0.55)' : '1px solid rgba(255,255,255,0.08)',
                   boxShadow: c.hero
                     ? '0 0 0 5px rgba(111,151,232,0.12), 0 24px 55px -12px rgba(0,0,0,0.85)'
                     : undefined,
                 }}
               >
-                <img src={c.logo} alt="" className="w-full h-full object-contain" draggable={false} />
+                <img
+                  src={c.logo}
+                  alt=""
+                  className={`w-full h-full ${c.bleed ? 'object-cover' : 'object-contain'} ${c.white ? 'text-white' : ''}`}
+                  style={c.white ? { filter: 'brightness(0) invert(1)' } : undefined}
+                  draggable={false}
+                />
               </div>
             </div>
           ))}
@@ -193,7 +196,17 @@ export default function ConnectMCP() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {CONNECTORS.map((c) => (
             <div key={c.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]">
-              <img src={c.logo} alt={c.name} className="w-7 h-7 object-contain shrink-0" />
+              <div
+                className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
+                style={{ background: c.bleed ? undefined : (c.white ? '#111317' : '#0a0e1a'), border: c.bleed ? undefined : '1px solid rgba(255,255,255,0.06)' }}
+              >
+                <img
+                  src={c.logo}
+                  alt={c.name}
+                  className={`w-full h-full ${c.bleed ? 'object-cover' : 'object-contain p-1'}`}
+                  style={c.white ? { filter: 'brightness(0) invert(1)' } : undefined}
+                />
+              </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-neutral-200">{c.name}</p>
                 <p className="text-[11px] text-neutral-600 truncate">{c.path}</p>
