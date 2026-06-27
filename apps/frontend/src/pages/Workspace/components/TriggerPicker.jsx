@@ -106,7 +106,7 @@ export default function TriggerPicker() {
     <>
       <div className="fixed inset-0 z-40" onClick={close} />
       <div
-        className="bb-liquid bb-edge-left fixed top-14 right-0 bottom-0 z-50 flex flex-col"
+        className="bb-liquid bb-edge-left fixed top-0 right-0 bottom-0 z-50 flex flex-col"
         style={{ width: "clamp(360px, 32vw, 480px)" }}
       >
         {/* Header */}
