@@ -61,10 +61,11 @@ const GLASS_BG =
   "linear-gradient(150deg, rgba(48,48,56,0.62) 0%, rgba(30,30,36,0.55) 48%, rgba(22,22,27,0.58) 100%)";
 const GLASS_SHADOW = (hovered, selected) =>
   [
-    "inset 0 1px 0 rgba(255,255,255,0.10)",
-    "inset 0 -16px 32px -24px rgba(255,255,255,0.06)",
-    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : hovered ? 0.12 : 0.06})`,
-    `0 0 22px -4px rgba(255,255,255,${selected ? 0.16 : hovered ? 0.10 : 0.05})`,
+    `inset 0 1px 0 rgba(255,255,255,${hovered || selected ? 0.22 : 0.12})`,
+    `inset 0 0 0 1px rgba(255,255,255,${selected ? 0.22 : hovered ? 0.16 : 0.07})`,
+    "inset 0 -18px 36px -24px rgba(255,255,255,0.07)",
+    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : hovered ? 0.12 : 0.05})`,
+    `0 0 26px -2px rgba(255,255,255,${selected ? 0.20 : hovered ? 0.16 : 0.05})`,
     "0 14px 44px -12px rgba(0,0,0,0.78)",
   ].join(", ");
 
@@ -537,7 +538,6 @@ function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
       : selected ? "3.5px solid rgba(255,255,255,0.55)"
-      : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
@@ -581,7 +581,6 @@ function CustomNode({ id, data, selected }) {
     const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
       : selected ? "3.5px solid rgba(255,255,255,0.55)"
-      : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
@@ -656,7 +655,6 @@ function CustomNode({ id, data, selected }) {
       ? "4px solid transparent"
       : selected
       ? "3.5px solid rgba(255,255,255,0.55)"
-      : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
@@ -738,7 +736,7 @@ function CustomNode({ id, data, selected }) {
           style={{ width: cardW, height: cardH, borderRadius: 16,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
-            border: selected ? "3.5px solid rgba(255,255,255,0.55)" : isHovered ? "7px solid rgba(255,255,255,0.16)" : "2.5px solid rgba(255,255,255,0.22)",
+            border: selected ? "3.5px solid rgba(255,255,255,0.55)" : "2.5px solid rgba(255,255,255,0.22)",
             boxShadow: GLASS_SHADOW(isHovered, selected) }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
