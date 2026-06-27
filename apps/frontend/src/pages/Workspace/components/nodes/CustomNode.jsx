@@ -737,8 +737,6 @@ function CustomNode({ id, data, selected }) {
           className="bb-card relative flex items-center justify-center cursor-pointer transition-all duration-300"
           style={{ width: d, height: d, borderRadius: 9999, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}
         >
-          <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
           {badge}
           {nodeDef.logoUrl ? (
             <img src={nodeDef.logoUrl} alt={data.label} className="w-7 h-7 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
