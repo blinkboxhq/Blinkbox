@@ -560,7 +560,7 @@ export default function Dashboard() {
                   return (
                     <div key={wfId} onClick={() => navigate(`/workspace/${wfId}`)}
                       className="bb-card bb-glass bb-card-hover bb-rise group relative flex flex-col cursor-pointer overflow-hidden"
-                      style={{ '--bb-i': Math.min(i, 10) }}>
+                      style={{ '--bb-i': Math.min(i, 10), transition: 'border-color 0.5s ease, background-color 0.5s ease, transform 0.5s ease' }}>
 
                       {/* Accent wash on hover */}
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
