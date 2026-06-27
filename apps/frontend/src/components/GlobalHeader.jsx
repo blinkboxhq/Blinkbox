@@ -4,7 +4,6 @@ import { Loader2, Save, Play } from 'lucide-react';
 import useWorkspaceStore from '../store/workspaceStore';
 import ProfileModal from './ProfileModal';
 import NotificationBell from './NotificationBell';
-import githubLogo from '../assets/credentials/github.svg';
 
 function UserAvatar({ user, onClick }) {
   const src = user?.avatar || user?.picture;
@@ -135,23 +134,6 @@ export default function GlobalHeader({ user: userProp }) {
             </button>
           </>
         )}
-
-        {/* GitHub — permanent external link */}
-        <a
-          href="https://github.com/blinkboxhq/Blinkbox"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="GitHub"
-          className="bb-glass group flex items-center rounded-lg overflow-hidden hover:bg-white/[0.05] transition-colors"
-        >
-          <span className="flex items-center justify-center px-2 py-[5px]">
-            <img src={githubLogo} alt="" className="w-4 h-4 [filter:brightness(0)_invert(1)]" />
-          </span>
-          <span className="w-px self-stretch bg-white/15" />
-          <span className="px-2.5 py-[5px] text-[11px] font-medium text-[var(--bb-text-lo)] group-hover:text-[var(--bb-text-hi)] transition-colors">
-            GitHub
-          </span>
-        </a>
 
         <NotificationBell />
         <UserAvatar user={user} onClick={() => setProfileOpen(true)} />

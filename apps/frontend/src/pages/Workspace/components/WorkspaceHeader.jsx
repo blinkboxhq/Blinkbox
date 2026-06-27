@@ -11,6 +11,7 @@ import ProfileModal from '../../../components/ProfileModal';
 import CollaboratorsModal from './CollaboratorsModal';
 import CollabDMChat from './CollabDMChat';
 import NotificationBell from '../../../components/NotificationBell';
+import githubLogo from '../../../assets/credentials/github.svg';
 import { getSocket } from '../../../lib/socket';
 import brianLogo from '../../../assets/brian.webp';
 
@@ -221,6 +222,24 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
               <div className={DIV} />
             </>
           )}
+
+          <a
+            href="https://github.com/blinkboxhq/Blinkbox"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="GitHub"
+            className="bb-glass group flex items-center rounded-lg overflow-hidden hover:bg-white/[0.05] transition-colors"
+          >
+            <span className="flex items-center justify-center px-2 py-[5px]">
+              <img src={githubLogo} alt="" className="w-4 h-4 [filter:brightness(0)_invert(1)]" />
+            </span>
+            <span className="w-px self-stretch bg-white/15" />
+            <span className="px-2.5 py-[5px] text-[11px] font-medium text-[var(--bb-text-lo)] group-hover:text-[var(--bb-text-hi)] transition-colors">
+              GitHub
+            </span>
+          </a>
+
+          <div className={DIV} />
 
           <NotificationBell />
 
