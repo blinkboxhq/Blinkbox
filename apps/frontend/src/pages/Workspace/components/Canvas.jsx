@@ -13,7 +13,7 @@ import {
   BackgroundVariant,
   useReactFlow,
   MarkerType,
-  ConnectionLineType,
+  getBezierPath,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
@@ -59,6 +59,26 @@ const nodeTypes = { custom: CustomNode, placeholder: PlaceholderNode };
 const edgeTypes = { configurable: ConfigurableEdge };
 
 const EDGE_COLOR = "#3f3f46";
+
+function PullConnectionLine({ fromX, fromY, toX, toY, fromPosition, toPosition }) {
+  const [path] = getBezierPath({
+    sourceX: fromX, sourceY: fromY, sourcePosition: fromPosition,
+    targetX: toX, targetY: toY, targetPosition: toPosition,
+    curvature: 0.35,
+  });
+  return (
+    <g>
+      <defs>
+        <marker id="pull-arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.5"
+          orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L7,3.5 L0,7 z" fill="#71717a" />
+        </marker>
+      </defs>
+      <path d={path} fill="none" stroke="#ffffff" strokeWidth={1.5}
+        strokeLinecap="round" markerEnd="url(#pull-arrow)" />
+    </g>
+  );
+}
 const defaultEdgeOptions = {
   type: "configurable",
   style: { strokeWidth: 3 },
@@ -365,8 +385,7 @@ export default function Canvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
-        connectionLineType={ConnectionLineType.Bezier}
-        connectionLineStyle={{ stroke: EDGE_COLOR, strokeWidth: 3, strokeLinecap: "round" }}
+        connectionLineComponent={PullConnectionLine}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
           const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
