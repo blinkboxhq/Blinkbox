@@ -241,7 +241,7 @@ export default function Settings({ user }) {
             </div>
             <button
               onClick={() => navigate('/upgrade')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all ${isPro ? 'bb-card' : 'bb-btn bb-btn-accent'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all ${isPro ? 'bb-card' : 'bb-btn bb-btn-primary'}`}
               style={isPro ? { color: 'var(--bb-text-mid)' } : undefined}
             >
               {isPro ? 'Manage plan' : (
@@ -264,7 +264,7 @@ export default function Settings({ user }) {
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${creditPct}%`,
-                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : 'var(--bb-accent)',
+                    background: creditPct > 80 ? '#f87171' : creditPct > 60 ? '#f59e0b' : '#fafafa',
                   }}
                 />
               </div>
