@@ -35,6 +35,10 @@ const ROUTES = [
     skill: 'token-optimizer',
     any: ['expensive', 'burning credit', 'be efficient', 'minimal token', 'too many token', 'save credit', 'reduce token', 'optimize token'],
   },
+  {
+    skill: 'swarm',
+    any: ['sub agent', 'sub-agent', 'subagent', 'sub agents', 'parallel agent', 'fan out', 'fan-out', 'thorough', 'be thorough', 'cross-check', 'cross check', 'double check', 'double-check', 'verify thoroughly', 'maximum accuracy', 'most accurate', 'multiple angle', 'deep dive'],
+  },
 ];
 
 function readInput() {
