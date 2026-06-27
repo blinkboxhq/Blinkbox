@@ -61,11 +61,11 @@ const GLASS_BG =
   "linear-gradient(150deg, rgba(48,48,56,0.62) 0%, rgba(30,30,36,0.55) 48%, rgba(22,22,27,0.58) 100%)";
 const GLASS_SHADOW = (hovered, selected) =>
   [
-    `inset 0 1px 0 rgba(255,255,255,${hovered || selected ? 0.22 : 0.12})`,
-    `inset 0 0 0 1px rgba(255,255,255,${selected ? 0.22 : hovered ? 0.16 : 0.07})`,
+    `inset 0 1px 0 rgba(255,255,255,${selected ? 0.22 : 0.12})`,
+    `inset 0 0 0 1px rgba(255,255,255,${selected ? 0.22 : 0.07})`,
     "inset 0 -18px 36px -24px rgba(255,255,255,0.07)",
-    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : hovered ? 0.12 : 0.05})`,
-    `0 0 26px -2px rgba(255,255,255,${selected ? 0.20 : hovered ? 0.16 : 0.05})`,
+    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : 0.05})`,
+    `0 0 26px -2px rgba(255,255,255,${selected ? 0.20 : 0.05})`,
     "0 14px 44px -12px rgba(0,0,0,0.78)",
   ].join(", ");
 
@@ -773,7 +773,6 @@ function CustomNode({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "4px solid transparent"
     : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
     : selected ? "3.5px solid rgba(255,255,255,0.55)"
-    : isHovered ? "7px solid rgba(255,255,255,0.16)"
     : "2.5px solid rgba(255,255,255,0.22)";
   const cardBorder = cardBorderTop;
   const cardBottomBorder = status === "failed" ? "3px solid rgba(239,68,68,0.4)" : "4px solid rgba(255,255,255,0.28)";
