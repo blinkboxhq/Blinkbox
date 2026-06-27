@@ -11,6 +11,7 @@ import imgCodex from '../../../assets/mcp-codex.svg';
 import imgClaude from '../../../assets/mcp-claude.webp';
 import imgHermes from '../../../assets/mcp-hermes.svg';
 import imgOpenClaw from '../../../assets/mcp-openclaw.svg';
+import imgManus from '../../../assets/mcp-manus.webp';
 
 const MCP_URL = 'https://mcp.blinkbox.net/mcp';
 
@@ -24,12 +25,13 @@ const TOOLS = [
 // `bleed`: image already includes its own tile → fill edge-to-edge.
 // otherwise render the mark on `bg` with `pad`.
 const FAN = [
-  { logo: imgCursor,   bleed: true,                rot: -24, x: -188, y: 30, z: 1 },
-  { logo: imgOpenClaw, bg: '#0a0e1a', pad: 22,     rot: -15, x: -120, y: 12, z: 2 },
-  { logo: imgClaude,   bleed: true,                rot: -7,  x: -58,  y: 2,  z: 3 },
-  { logo: imgBlinkbox, bg: '#0a0a0a', pad: 14,     rot: 0,   x: 0,    y: -4, z: 5, hero: true },
-  { logo: imgCodex,    bleed: true,                rot: 7,   x: 58,   y: 2,  z: 3 },
-  { logo: imgHermes,   bg: '#111317', pad: 22, white: true, rot: 15, x: 120, y: 12, z: 2 },
+  { logo: imgCursor,   bleed: true,                 rot: -26, x: -222, y: 38, z: 1 },
+  { logo: imgOpenClaw, bg: '#ffffff', pad: 18,      rot: -17, x: -156, y: 18, z: 2 },
+  { logo: imgClaude,   bleed: true,                 rot: -8,  x: -82,  y: 4,  z: 3 },
+  { logo: imgBlinkbox, bg: '#0a0a0a', pad: 14,      rot: 0,   x: 0,    y: -4, z: 5, hero: true },
+  { logo: imgCodex,    bleed: true,                 rot: 8,   x: 82,   y: 4,  z: 3 },
+  { logo: imgHermes,   bg: '#111317', pad: 22, white: true, rot: 17, x: 156, y: 18, z: 2 },
+  { logo: imgManus,    bleed: true,                 rot: 26,  x: 222,  y: 38, z: 1 },
 ];
 
 const CONNECTORS = [
@@ -37,7 +39,8 @@ const CONNECTORS = [
   { id: 'codex',    name: 'Codex',    logo: imgCodex,    bleed: true,  path: '~/.codex/config.toml → add MCP server' },
   { id: 'claude',   name: 'Claude',   logo: imgClaude,   bleed: true,  path: 'Settings → Connectors → Add custom connector' },
   { id: 'hermes',   name: 'Hermes',   logo: imgHermes,   white: true,  path: 'Add tool / MCP server (Bearer header)' },
-  { id: 'openclaw', name: 'OpenClaw', logo: imgOpenClaw,               path: 'Tools / MCP → Add server' },
+  { id: 'openclaw', name: 'OpenClaw', logo: imgOpenClaw, light: true, path: 'Tools / MCP → Add server' },
+  { id: 'manus',    name: 'Manus',    logo: imgManus,    bleed: true, path: 'Settings → Integrations → Add MCP server' },
 ];
 
 function timeAgo(d) {
@@ -198,7 +201,7 @@ export default function ConnectMCP() {
             <div key={c.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]">
               <div
                 className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
-                style={{ background: c.bleed ? undefined : (c.white ? '#111317' : '#0a0e1a'), border: c.bleed ? undefined : '1px solid rgba(255,255,255,0.06)' }}
+                style={{ background: c.bleed ? undefined : (c.white ? '#111317' : '#ffffff'), border: c.bleed ? undefined : '1px solid rgba(255,255,255,0.06)' }}
               >
                 <img
                   src={c.logo}
