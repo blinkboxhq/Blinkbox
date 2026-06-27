@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Lock, Server, Zap, ChevronRight,
-  Loader2, Check, AlertTriangle, Shield,
+  Loader2, Check, AlertTriangle, Shield, ShieldCheck, X,
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { toast } from 'sonner';
@@ -79,6 +79,140 @@ function Avatar({ name, size = 48 }) {
   );
 }
 
+// ── Two-factor authentication ───────────────────────────────────────────────
+function TwoFactor({ enabled, isGoogleUser, onChange }) {
+  const [stage, setStage] = useState('idle'); // idle | setup | disable
+  const [qr, setQr] = useState('');
+  const [secret, setSecret] = useState('');
+  const [code, setCode] = useState('');
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const reset = () => { setStage('idle'); setQr(''); setSecret(''); setCode(''); setPw(''); setErr(''); };
+
+  const startSetup = async () => {
+    setErr(''); setBusy(true);
+    try {
+      const r = await api.post('/api/profile/2fa/start');
+      setQr(r.data.qr); setSecret(r.data.secret); setStage('setup');
+    } catch (e) { toast.error(e.response?.data?.message || 'Could not start setup'); }
+    setBusy(false);
+  };
+
+  const confirmEnable = async () => {
+    setErr(''); setBusy(true);
+    try {
+      await api.post('/api/profile/2fa/enable', { token: code.trim() });
+      onChange(true); reset();
+      toast.success('Two-factor authentication enabled');
+    } catch (e) { setErr(e.response?.data?.message || 'Invalid code'); }
+    setBusy(false);
+  };
+
+  const confirmDisable = async () => {
+    setErr(''); setBusy(true);
+    try {
+      await api.post('/api/profile/2fa/disable', { password: pw || undefined, token: code.trim() || undefined });
+      onChange(false); reset();
+      toast.success('Two-factor authentication disabled');
+    } catch (e) { setErr(e.response?.data?.message || 'Verification failed'); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="bb-card bb-liquid rounded-2xl p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: enabled ? 'rgba(16,185,129,0.12)' : 'var(--bb-surface-2)', border: `1px solid ${enabled ? 'rgba(16,185,129,0.25)' : 'var(--bb-border)'}` }}>
+              {enabled ? <ShieldCheck className="w-4 h-4 text-emerald-400" /> : <Shield className="w-4 h-4 text-[var(--bb-text-lo)]" />}
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-[var(--bb-text-hi)]">Two-factor authentication</p>
+              <p className="text-[11px] text-[var(--bb-text-lo)] mt-0.5 leading-snug max-w-[320px]">
+                {enabled
+                  ? 'Your account is protected with an authenticator app.'
+                  : 'Require a 6-digit code from an authenticator app at sign-in.'}
+              </p>
+            </div>
+          </div>
+          {stage === 'idle' && (
+            enabled ? (
+              <button onClick={() => setStage('disable')} className="bb-card shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[var(--bb-text-mid)] hover:text-red-400 transition-colors">
+                Disable
+              </button>
+            ) : (
+              <button onClick={startSetup} disabled={busy} className="bb-btn bb-btn-accent shrink-0 px-3 py-1.5 text-[11px] disabled:opacity-50 flex items-center gap-1.5">
+                {busy && <Loader2 className="w-3 h-3 animate-spin" />} Enable
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Setup flow */}
+        {stage === 'setup' && (
+          <div className="mt-4 pt-4 border-t border-[var(--bb-border-subtle)] flex flex-col gap-4">
+            <p className="text-[12px] text-[var(--bb-text-mid)]">
+              Scan this QR code with Google Authenticator, Authy, or 1Password.
+            </p>
+            <div className="flex items-center gap-4">
+              {qr && <img src={qr} alt="2FA QR code" className="w-[140px] h-[140px] rounded-xl bg-white p-1.5 shrink-0" />}
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-[var(--bb-text-dim)] mb-1">Or enter this key</p>
+                <p className="text-[11px] font-mono text-[var(--bb-text-mid)] break-all leading-relaxed">{secret}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium text-[var(--bb-text-mid)] mb-1.5">Enter the 6-digit code</p>
+              <input
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+                className="w-[160px] bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-xl px-3.5 py-2.5 text-[15px] tracking-[0.3em] font-mono text-[var(--bb-text-hi)] focus:outline-none focus:border-[var(--bb-accent-ring)] placeholder:text-[var(--bb-text-dim)]"
+              />
+            </div>
+            {err && <p className="flex items-center gap-2 text-[12px] text-red-400"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {err}</p>}
+            <div className="flex items-center gap-2">
+              <button onClick={confirmEnable} disabled={busy || code.length !== 6} className="bb-btn bb-btn-accent px-4 py-2 text-[12px] disabled:opacity-40 flex items-center gap-2">
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Verify & enable
+              </button>
+              <button onClick={reset} className="px-3 py-2 text-[12px] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] transition-colors">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Disable flow */}
+        {stage === 'disable' && (
+          <div className="mt-4 pt-4 border-t border-[var(--bb-border-subtle)] flex flex-col gap-3">
+            <p className="text-[12px] text-[var(--bb-text-mid)]">
+              Confirm with {isGoogleUser ? 'a current authenticator code' : 'your password or a current code'} to turn off 2FA.
+            </p>
+            {!isGoogleUser && (
+              <Input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Current password" />
+            )}
+            <input
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="6-digit code"
+              inputMode="numeric"
+              className="w-[160px] bg-[var(--bb-surface-0)] border border-[var(--bb-border)] rounded-xl px-3.5 py-2.5 text-[13px] font-mono text-[var(--bb-text-hi)] focus:outline-none focus:border-[var(--bb-accent-ring)] placeholder:text-[var(--bb-text-dim)]"
+            />
+            {err && <p className="flex items-center gap-2 text-[12px] text-red-400"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {err}</p>}
+            <div className="flex items-center gap-2">
+              <button onClick={confirmDisable} disabled={busy || (!pw && !code)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-40">
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />} Disable 2FA
+              </button>
+              <button onClick={reset} className="px-3 py-2 text-[12px] text-[var(--bb-text-lo)] hover:text-[var(--bb-text-hi)] transition-colors">Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 export default function Settings({ user }) {
   const navigate = useNavigate();
@@ -103,16 +237,26 @@ export default function Settings({ user }) {
   const [systemStats, setSystemStats]   = useState(null);
   const [isTogglingPause, setIsTogglingPause] = useState(false);
 
+  // Account (live profile — tells us auth provider + 2FA state)
+  const [authProvider, setAuthProvider] = useState(user?.authProvider || 'local');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
   useEffect(() => {
     api.get('/api/billing/usage').then(r => setUsage(r.data)).catch(() => {});
     api.get('/api/system/stats').then(r => setSystemStats(r.data)).catch(() => {});
+    api.get('/api/profile').then(r => {
+      setAuthProvider(r.data.authProvider || 'local');
+      setTwoFactorEnabled(!!r.data.twoFactorEnabled);
+    }).catch(() => {});
   }, []);
+
+  const isGoogleUser = authProvider === 'google';
 
   const handleSaveProfile = async () => {
     if (!profileName.trim()) return;
     setProfileSaving(true); setProfileOk(false);
     try {
-      await api.patch('/api/auth/profile', { name: profileName.trim() });
+      await api.put('/api/profile', { name: profileName.trim() });
       const updated = { ...user, name: profileName.trim() };
       localStorage.setItem('blinkbox_user', JSON.stringify(updated));
       setProfileOk(true);
@@ -128,7 +272,7 @@ export default function Settings({ user }) {
     if (pwNew.length < 8) { setPwError('Password must be at least 8 characters'); return; }
     setPwSaving(true); setPwOk(false);
     try {
-      await api.post('/api/auth/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
+      await api.post('/api/profile/change-password', { currentPassword: pwCurrent, newPassword: pwNew });
       setPwCurrent(''); setPwNew(''); setPwConfirm('');
       setPwOk(true);
       setTimeout(() => setPwOk(false), 3000);
@@ -186,24 +330,41 @@ export default function Settings({ user }) {
       </Section>
 
       {/* ── Security ── */}
-      <Section title="Security" description="Update your password">
-        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
-          <Field label="Current password">
-            <Input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="••••••••" />
-          </Field>
-          <Field label="New password" hint="At least 8 characters">
-            <Input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="••••••••" />
-          </Field>
-          <Field label="Confirm password">
-            <Input type="password" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="••••••••" />
-          </Field>
-        </div>
-        {pwError && (
-          <div className="mt-3 flex items-center gap-2 text-[12px] text-red-400">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {pwError}
+      <Section title="Security" description="Protect your account">
+        {isGoogleUser ? (
+          <div className="flex items-center gap-3 px-4 py-3.5 bb-card bb-liquid rounded-2xl">
+            <Lock className="w-4 h-4 text-[var(--bb-text-lo)] shrink-0" />
+            <p className="text-[12px] text-[var(--bb-text-mid)]">
+              You sign in with Google, so there's no password to manage here.
+            </p>
           </div>
+        ) : (
+          <>
+            <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
+              <Field label="Current password">
+                <Input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="••••••••" />
+              </Field>
+              <Field label="New password" hint="At least 8 characters">
+                <Input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="••••••••" />
+              </Field>
+              <Field label="Confirm password">
+                <Input type="password" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="••••••••" />
+              </Field>
+            </div>
+            {pwError && (
+              <div className="mt-3 flex items-center gap-2 text-[12px] text-red-400">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {pwError}
+              </div>
+            )}
+            <SaveBtn onClick={handleChangePassword} saving={pwSaving} success={pwOk} disabled={!pwCurrent || !pwNew || !pwConfirm} />
+          </>
         )}
-        <SaveBtn onClick={handleChangePassword} saving={pwSaving} success={pwOk} disabled={!pwCurrent || !pwNew || !pwConfirm} />
+
+        <TwoFactor
+          enabled={twoFactorEnabled}
+          isGoogleUser={isGoogleUser}
+          onChange={setTwoFactorEnabled}
+        />
       </Section>
 
       {/* ── Billing ── */}

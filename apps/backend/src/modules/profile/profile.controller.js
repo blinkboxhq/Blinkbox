@@ -16,6 +16,7 @@ export async function getProfile(req, res) {
       avatar: user.avatar || "",
       picture: user.picture || "",
       authProvider: user.authProvider,
+      twoFactorEnabled: user.twoFactorEnabled || false,
     });
   } catch (err) {
     console.error("[profile] getProfile error:", err.message);

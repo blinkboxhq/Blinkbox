@@ -21,6 +21,17 @@ const userSchema = new mongoose.Schema(
 
     role: { type: String, enum: ["admin", "user"], default: "user" },
     emailVerified: { type: Boolean, default: false },
+
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: {
+      type: {
+        encryptedData: String,
+        iv: String,
+        authTag: String,
+      },
+      default: null,
+      select: false,
+    },
     avatar: { type: String, default: "" },
     stripeCustomerId:     { type: String, default: null },
     stripeSubscriptionId: { type: String, default: null },

@@ -6,6 +6,8 @@ import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
 import { JWT_SECRET } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
+import { decrypt } from "../../utils/crypto.js";
+import { verifyToken as verifyTotp } from "../../utils/totp.js";
 import {
   sendRegistrationEmail,
   sendVerificationEmail,
@@ -17,6 +19,7 @@ import {
 
 const RESET_TTL  = 60 * 15;      // 15 minutes
 const VERIFY_TTL = 60 * 60 * 24; // 24 hours
+const TWO_FA_TTL = 60 * 5;       // 5 minutes to complete the 2FA step
 
 const APP_URL = process.env.VITE_APP_URL || "https://blinkbox.net";
 
@@ -325,6 +328,16 @@ export async function login(req, res) {
       });
     }
 
+    if (user.twoFactorEnabled) {
+      const challenge = crypto.randomBytes(32).toString("hex");
+      await redis.set(`bb:2fa:${challenge}`, String(user._id), "EX", TWO_FA_TTL);
+      return res.json({
+        twoFactorRequired: true,
+        twoFactorToken: challenge,
+        message: "Enter the code from your authenticator app.",
+      });
+    }
+
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
 
     const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
@@ -338,5 +351,50 @@ export async function login(req, res) {
   } catch (error) {
     console.error("Login Error:", error.message);
     res.status(500).json({ message: "Internal server error during login." });
+  }
+}
+
+export async function loginTwoFactor(req, res) {
+  try {
+    const { twoFactorToken, code } = req.body;
+    if (!twoFactorToken || !code) {
+      return res.status(400).json({ message: "Verification code is required." });
+    }
+
+    const key = `bb:2fa:${twoFactorToken}`;
+    const userId = await redis.get(key);
+    if (!userId) {
+      return res.status(401).json({ message: "This sign-in session expired. Please log in again." });
+    }
+
+    const user = await User.findById(userId).select("+twoFactorSecret");
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      return res.status(401).json({ message: "Two-factor verification unavailable for this account." });
+    }
+
+    const secret = decrypt(
+      user.twoFactorSecret.encryptedData,
+      user.twoFactorSecret.iv,
+      user.twoFactorSecret.authTag,
+    );
+    if (!verifyTotp(code, secret)) {
+      return res.status(401).json({ message: "Invalid code. Please try again." });
+    }
+
+    await redis.del(key);
+
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+
+    const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
+    sendLoginAlertEmail(user, { ip, userAgent: req.headers["user-agent"] }).catch(err => console.error("[Auth] login alert email failed:", err.message));
+
+    res.json({
+      message: "Authentication successful.",
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("Login 2FA Error:", error.message);
+    res.status(500).json({ message: "Internal server error during verification." });
   }
 }

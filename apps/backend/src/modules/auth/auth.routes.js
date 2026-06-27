@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, googleLogin, forgotPassword, resetPassword, verifyEmail, resendVerification } from "./auth.controller.js";
+import { register, login, loginTwoFactor, googleLogin, forgotPassword, resetPassword, verifyEmail, resendVerification } from "./auth.controller.js";
 import { redis } from "../../infra/redis.client.js";
 
 const router = Router();
@@ -23,6 +23,7 @@ const googleRateLimit   = makeRateLimiter({ key: 'bb:rl:google',   max: 10, wind
 
 router.post("/register", registerRateLimit, register);
 router.post("/login", loginRateLimit, login);
+router.post("/login/2fa", loginRateLimit, loginTwoFactor);
 router.post("/google", googleRateLimit, googleLogin);
 router.post("/verify-email", makeRateLimiter({ key: 'bb:rl:verify', max: 10, windowSecs: 3600, message: 'Too many verification attempts. Try again later.' }), verifyEmail);
 router.post("/resend-verification", makeRateLimiter({ key: 'bb:rl:resend', max: 5, windowSecs: 3600, message: 'Too many resend attempts. Try again in 1 hour.' }), resendVerification);

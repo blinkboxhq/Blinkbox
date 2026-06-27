@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle2, ShieldCheck } from 'lucide-react';
 import api from '../../lib/api';
 import { GoogleLogin } from '@react-oauth/google';
 import logo from '../../assets/logo.svg';
@@ -159,6 +159,8 @@ export default function Auth() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -226,6 +228,11 @@ export default function Auth() {
         setVerifyPending(true);
         return;
       }
+      if (response.data.twoFactorRequired) {
+        setTwoFactorToken(response.data.twoFactorToken);
+        setTwoFactorCode('');
+        return;
+      }
       localStorage.setItem('blinkbox_token', response.data.token);
       localStorage.setItem('blinkbox_user', JSON.stringify(response.data.user));
       navigate('/dashboard');
@@ -238,6 +245,30 @@ export default function Auth() {
       }
       if (data?.lockoutTimer) setLockoutTimer(data.lockoutTimer);
       setError(data?.message || 'Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e) => {
+    e.preventDefault();
+    if (twoFactorCode.length !== 6) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.post('/api/auth/login/2fa', {
+        twoFactorToken,
+        code: twoFactorCode,
+      });
+      localStorage.setItem('blinkbox_token', response.data.token);
+      localStorage.setItem('blinkbox_user', JSON.stringify(response.data.user));
+      navigate('/dashboard');
+    } catch (err) {
+      const data = err.response?.data;
+      if (err.response?.status === 401 && data?.message?.includes('expired')) {
+        setTwoFactorToken('');
+      }
+      setError(data?.message || 'Verification failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -537,6 +568,50 @@ export default function Auth() {
       </div>
 
       {/* Email verification pending overlay */}
+      {twoFactorToken && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          style={{ animation: 'fadeIn 0.2s ease-out' }}>
+          <form onSubmit={handleTwoFactorSubmit}
+            className="w-full max-w-[380px] mx-4 bg-neutral-950 border border-neutral-800 rounded-2xl p-8 flex flex-col items-center text-center"
+            style={{ animation: 'scaleIn 0.2s ease-out' }}>
+            <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-5">
+              <ShieldCheck className="w-8 h-8 text-violet-400" />
+            </div>
+            <h2 className="text-[18px] font-bold text-white mb-2">Two-factor authentication</h2>
+            <p className="text-[13px] text-neutral-400 leading-relaxed mb-6">
+              Enter the 6-digit code from your authenticator app.
+            </p>
+            <input
+              autoFocus
+              value={twoFactorCode}
+              onChange={e => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+              inputMode="numeric"
+              className="w-full text-center bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-[20px] tracking-[0.4em] font-mono text-white focus:outline-none focus:border-violet-500/50 placeholder:text-neutral-700 mb-4"
+            />
+            {error && (
+              <div className="flex items-center gap-2 text-red-400 text-[12px] mb-4">
+                <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={isLoading || twoFactorCode.length !== 6}
+              className="w-full py-2.5 rounded-lg bg-white text-black text-[13px] font-semibold hover:bg-neutral-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mb-3"
+            >
+              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</> : <>Verify <ArrowRight className="w-4 h-4" /></>}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTwoFactorToken(''); setTwoFactorCode(''); setError(null); }}
+              className="text-[12px] text-neutral-500 hover:text-white transition-colors"
+            >
+              Back to sign in
+            </button>
+          </form>
+        </div>
+      )}
+
       {verifyPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           style={{ animation: 'fadeIn 0.2s ease-out' }}>
