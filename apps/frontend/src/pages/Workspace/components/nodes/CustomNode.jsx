@@ -259,7 +259,7 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
             style={{ left: "100%", top, transform: "translateY(-50%)" }}>
             <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
             <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
-              className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center hover:bg-zinc-700 hover:border-white/40 active:scale-95 transition-all duration-150 group/plus"
+              className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center active:scale-95 transition-all duration-150 group/plus"
               style={{ border: `1.5px solid ${HANDLE_BORDER}` }}
               title="Add next step">
               <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
@@ -305,7 +305,7 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
         <button
           onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
           onMouseDown={e => e.stopPropagation()}
-          className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center hover:bg-zinc-700 hover:border-white/40 active:scale-95 transition-all duration-150 group/plus"
+          className="pointer-events-auto w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center active:scale-95 transition-all duration-150 group/plus"
           style={{ border: `1.5px solid ${HANDLE_BORDER}` }}
           title="Add next step">
           <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
