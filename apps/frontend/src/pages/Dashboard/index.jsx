@@ -22,9 +22,10 @@ import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
 import VaultManager from './components/VaultManager';
 import Analytics from './components/Analytics';
-import NodeLibrary from './components/NodeLibrary';
+import StatCard from './components/StatCard';
 import Settings from './components/Settings';
 import ConnectMCP from './components/ConnectMCP';
+import { TrendingUp, CheckCircle2, XCircle, Zap as ZapStat } from 'lucide-react';
 
 const TRIGGER_META = {
   manual:           { label: 'Manual',       Icon: Zap,           color: 'text-neutral-400',  bg: 'bg-neutral-800/60' },
@@ -199,7 +200,7 @@ export default function Dashboard() {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [billingUsage, setBillingUsage] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const TABS = ['workflows', 'nodes', 'analytics', 'logs', 'usage', 'vault', 'mcp', 'settings'];
+  const TABS = ['workflows', 'analytics', 'logs', 'usage', 'vault', 'mcp', 'settings'];
   const tabParam = searchParams.get('tab');
   const activeTab = TABS.includes(tabParam) ? tabParam : 'workflows';
   const setActiveTab = useCallback((tab) => {
@@ -217,6 +218,9 @@ export default function Dashboard() {
   // execution logs
   const [executions, setExecutions] = useState([]);
   const [execLoading, setExecLoading] = useState(false);
+
+  // overview stats (current month) for the Dashboard tab
+  const [stats, setStats] = useState(null);
 
 
   const openMenu = (e, id) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuAnchor(r); setOpenMenuId(openMenuId === id ? null : id); };
@@ -268,6 +272,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
     api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    api.get('/api/execution/analytics', { params: { year: now.getFullYear(), month: now.getMonth() + 1 } })
+      .then(r => setStats(r.data))
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -339,6 +351,15 @@ export default function Dashboard() {
   if (statusFilter !== 'all') filtered = filtered.filter((w) => (w.status || 'draft') === statusFilter);
   if (search) filtered = filtered.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()));
 
+  const sb = stats?.breakdown || {};
+  const statTotal = stats?.total || 0;
+  const statSuccess = (sb.executed || 0) + (sb.completed || 0);
+  const statFailed = sb.failed || 0;
+  const statActive = stats?.activeBoxes ?? workflows.filter((w) => w.status === 'active').length;
+  const statSuccessRate = statTotal > 0 ? Math.round((statSuccess / statTotal) * 100) : 0;
+  const statFailRate = statTotal > 0 ? Math.round((statFailed / statTotal) * 100) : 0;
+  const monthLabel = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
   if (!user) return (
     <div className="h-screen w-screen bg-neutral-950 flex items-center justify-center">
       <Loader2 className="w-5 h-5 text-neutral-700 animate-spin" />
@@ -365,11 +386,6 @@ export default function Dashboard() {
         <WorkspaceHeader forceDashboard={true} />
 
         {/* ── Non-workflow tabs rendered full-height ── */}
-        {activeTab === 'nodes' && (
-          <div className="bb-page flex-1 overflow-y-auto">
-            <NodeLibrary />
-          </div>
-        )}
         {activeTab === 'analytics' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1400px] mx-auto">
@@ -421,6 +437,18 @@ export default function Dashboard() {
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {systemError}
               </div>
             )}
+
+            {/* Overview header + stat cards */}
+            <div className="mb-6">
+              <h2 className="text-[18px] font-bold text-white tracking-tight">Dashboard</h2>
+              <p className="text-[12px] text-neutral-600 mt-0.5">Your workflow activity at a glance</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+              <StatCard label="Total Runs"   value={statTotal}   sub={monthLabel}                     icon={TrendingUp}   accent="#a3a3a3" />
+              <StatCard label="Successful"   value={statSuccess} sub={`${statSuccessRate}% success rate`} icon={CheckCircle2} accent="#10b981" dim={statSuccess === 0} />
+              <StatCard label="Failed"       value={statFailed}  sub={`${statFailRate}% failure rate`}    icon={XCircle}      accent="#f87171" dim={statFailed === 0} />
+              <StatCard label="Active Flows" value={statActive}  sub="currently live"                  icon={ZapStat}      accent="#a3a3a3" dim={statActive === 0} />
+            </div>
 
             {/* Section header */}
             <div className="flex items-center justify-between mb-5">

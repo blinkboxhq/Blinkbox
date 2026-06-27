@@ -30,17 +30,27 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
 
   return (
     <div className="relative rounded-xl overflow-hidden"
-      style={{ height: 100, background: '#050505', border: '1px solid #181818' }}>
+      style={{
+        height: 100,
+        background: 'linear-gradient(180deg, var(--bb-surface-1) 0%, var(--bb-surface-0) 100%)',
+        border: '1px solid var(--bb-border)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+      }}>
+
+      {/* Reflective top edge */}
+      <div className="absolute top-0 left-[12%] right-[12%] h-px pointer-events-none" style={{
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent)',
+      }} />
 
       {/* Dot grid */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'radial-gradient(circle, #1c1c1c 1px, transparent 1px)',
+        backgroundImage: 'radial-gradient(circle, var(--bb-border-subtle) 1px, transparent 1px)',
         backgroundSize: '18px 18px',
       }} />
 
       {/* Trigger color glow from left */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse at -5% 50%, ${accentColor}22 0%, transparent 55%)`,
+        background: `radial-gradient(ellipse at -5% 50%, ${accentColor}26 0%, transparent 55%)`,
       }} />
 
       {/* Left accent bar */}
@@ -59,8 +69,8 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
               width: 32,
               height: 32,
               borderRadius: 9,
-              background: i === 0 ? `${accentColor}22` : '#0d0d0d',
-              border: `1.5px solid ${i === 0 ? accentColor + '55' : '#1e1e1e'}`,
+              background: i === 0 ? `${accentColor}22` : 'var(--bb-surface-2)',
+              border: `1.5px solid ${i === 0 ? accentColor + '55' : 'var(--bb-border)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -69,7 +79,7 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
             }}>
               {i === 0
                 ? <TriggerIcon style={{ width: 13, height: 13, color: accentColor, opacity: 0.95 }} />
-                : <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#252525' }} />
+                : <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--bb-border-strong)' }} />
               }
             </div>
             {i < nodeBoxes.length - 1 && (
@@ -77,8 +87,8 @@ export default function WorkflowPreview({ nodeCount = 0, trigger, accentColor = 
                 width: 22,
                 height: 1.5,
                 background: i === 0
-                  ? `linear-gradient(to right, ${accentColor}50, #1e1e1e)`
-                  : '#1a1a1a',
+                  ? `linear-gradient(to right, ${accentColor}50, var(--bb-border))`
+                  : 'var(--bb-border-subtle)',
                 flexShrink: 0,
               }} />
             )}
