@@ -181,7 +181,7 @@ export default function Analytics({ user }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Donut */}
-        <div className="bb-card bb-reflect p-5 rounded-2xl">
+        <div className="bb-card bb-liquid p-5 rounded-2xl">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-1">Status breakdown</p>
           <p className="text-[14px] font-semibold text-white mb-5">Distribution</p>
           {loading ? <Spinner /> : (
@@ -198,7 +198,7 @@ export default function Analytics({ user }) {
         </div>
 
         {/* Last 7 days table */}
-        <div className="bb-card bb-reflect p-5 rounded-2xl">
+        <div className="bb-card bb-liquid p-5 rounded-2xl">
           <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-1">Daily breakdown</p>
           <p className="text-[14px] font-semibold text-white mb-5">Last 7 days</p>
           {loading ? <Spinner /> : (
