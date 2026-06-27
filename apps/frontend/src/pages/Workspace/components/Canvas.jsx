@@ -403,11 +403,12 @@ export default function Canvas() {
         snapToGrid
         snapGrid={[20, 20]}
         minZoom={0.01}
-        panOnDrag={false}
-        selectionOnDrag
+        panOnDrag={[0, 1]}
+        selectionKeyCode="Shift"
         selectionMode="partial"
         panOnScroll
         zoomOnPinch
+        zoomOnScroll
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="#2a2a30" />
         <MiniMap
