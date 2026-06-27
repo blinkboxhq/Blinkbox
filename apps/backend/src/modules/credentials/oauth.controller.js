@@ -18,6 +18,7 @@ import { encrypt } from "../../utils/crypto.js";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, BACKEND_URL } from "../../config/env.js";
 import { redis } from "../../infra/redis.client.js";
+import { emitToUser } from "../../infra/socket.server.js";
 
 const OAUTH_STATE_TTL = 5 * 60; // seconds — states expire after 5 minutes
 
@@ -233,14 +234,18 @@ export async function oauthCallback(req, res) {
       oauthMetadata: mapped.metadata || {},
     });
 
+    const credPayload = {
+      _id: credential._id,
+      name: credential.name,
+      type: credential.type,
+      provider: credential.provider,
+    };
+
+    emitToUser(String(pending.userId), "credential:created", { credential: credPayload });
+
     renderPopupResult(res, {
       success: true,
-      credential: {
-        _id: credential._id,
-        name: credential.name,
-        type: credential.type,
-        provider: credential.provider,
-      },
+      credential: credPayload,
     });
   } catch (err) {
     console.error("[OAuth] Callback error:", err.message);

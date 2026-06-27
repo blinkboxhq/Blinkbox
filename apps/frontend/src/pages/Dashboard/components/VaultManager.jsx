@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil, Link2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getSocket } from '../../../lib/socket';
 
 import logoGoogle from '../../../assets/credentials/google-color.svg';
 import logoGithub from '../../../assets/credentials/github.svg';
@@ -79,6 +80,27 @@ export default function VaultManager() {
   useEffect(() => {
     fetchCredentials();
   }, [fetchCredentials]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    const onCreated = ({ credential }) => {
+      if (!credential?._id) return;
+      setCredentials((prev) =>
+        prev.some((c) => c._id === credential._id) ? prev : [credential, ...prev],
+      );
+    };
+    const onDeleted = ({ id }) => {
+      if (!id) return;
+      setCredentials((prev) => prev.filter((c) => c._id !== id));
+    };
+    socket.on('credential:created', onCreated);
+    socket.on('credential:deleted', onDeleted);
+    return () => {
+      socket.off('credential:created', onCreated);
+      socket.off('credential:deleted', onDeleted);
+    };
+  }, []);
 
   const connectOAuth = (provider) => {
     const token = localStorage.getItem('blinkbox_token');

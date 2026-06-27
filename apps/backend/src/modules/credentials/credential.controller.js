@@ -1,5 +1,6 @@
 import Credential from "../../models/credential.model.js";
 import { encrypt } from "../../utils/crypto.js";
+import { emitToUser } from "../../infra/socket.server.js";
 
 export async function listCredentials(req, res) {
   try {
@@ -38,14 +39,16 @@ export async function createCredential(req, res) {
       authTag,
     });
 
-    res.status(201).json({
-      credential: {
-        _id: credential._id,
-        name: credential.name,
-        type: credential.type,
-        createdAt: credential.createdAt,
-      },
-    });
+    const credPayload = {
+      _id: credential._id,
+      name: credential.name,
+      type: credential.type,
+      createdAt: credential.createdAt,
+    };
+
+    emitToUser(String(req.user.id), "credential:created", { credential: credPayload });
+
+    res.status(201).json({ credential: credPayload });
   } catch (err) {
     console.error("[Credentials] Create error:", err.message);
     res.status(500).json({ message: "Failed to create credential." });
@@ -88,6 +91,8 @@ export async function deleteCredential(req, res) {
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "Credential not found." });
     }
+
+    emitToUser(String(req.user.id), "credential:deleted", { id: req.params.id });
 
     res.json({ success: true });
   } catch (err) {
