@@ -56,6 +56,18 @@ function NodeOutputChip({ output }) {
   );
 }
 
+// ─── Liquid-glass card surface, shared across all node types ────────────────
+const GLASS_BG =
+  "linear-gradient(150deg, rgba(48,48,56,0.62) 0%, rgba(30,30,36,0.55) 48%, rgba(22,22,27,0.58) 100%)";
+const GLASS_SHADOW = (hovered, selected) =>
+  [
+    "inset 0 1px 0 rgba(255,255,255,0.10)",
+    "inset 0 -16px 32px -24px rgba(255,255,255,0.06)",
+    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : hovered ? 0.12 : 0.06})`,
+    `0 0 22px -4px rgba(255,255,255,${selected ? 0.16 : hovered ? 0.10 : 0.05})`,
+    "0 14px 44px -12px rgba(0,0,0,0.78)",
+  ].join(", ");
+
 // ─── Agent Bottom Dock Slots ────────────────────────────────────────────────
 // The AI Agent node has 3 fixed slots on its bottom edge.
 // Only one LLM, one Memory (enforced by connection logic), infinite Tools.
@@ -376,7 +388,8 @@ function SuggestionGhostNode({ data }) {
       <div className="flex flex-col items-center justify-center"
         style={{
           opacity: 0.5, width: cardW, height: cardH, borderRadius: 12,
-          background: 'linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)',
+          background: GLASS_BG,
+          backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
           border: '1px solid rgba(139,92,246,0.3)',
           boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
         }}>
@@ -526,7 +539,7 @@ function CustomNode({ id, data, selected }) {
       : selected ? "3.5px solid rgba(255,255,255,0.55)"
       : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
-    const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+    const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 54 }}>
@@ -535,7 +548,7 @@ function CustomNode({ id, data, selected }) {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={isChatTrigger ? handleOpenConfig : handlePlay}
           className={`absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
-          style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
+          style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
@@ -570,7 +583,7 @@ function CustomNode({ id, data, selected }) {
       : selected ? "3.5px solid rgba(255,255,255,0.55)"
       : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
-    const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+    const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 48 }}>
@@ -583,7 +596,7 @@ function CustomNode({ id, data, selected }) {
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
           onClick={handleOpenConfig} className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
-          style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
+          style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
 
           <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
 
@@ -645,9 +658,7 @@ function CustomNode({ id, data, selected }) {
       ? "3.5px solid rgba(255,255,255,0.55)"
       : isHovered ? "7px solid rgba(255,255,255,0.16)"
       : "2.5px solid rgba(255,255,255,0.22)";
-    const cardShadow = selected
-      ? "0 0 20px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)"
-      : "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+    const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
       <div className="relative group" style={{ width: d, height: d + 22 }}>
@@ -686,7 +697,7 @@ function CustomNode({ id, data, selected }) {
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
           onClick={e => { e.stopPropagation(); setPickerOpen(p => !p); }}
           className="relative flex items-center justify-center cursor-pointer transition-all duration-300"
-          style={{ width: d, height: d, borderRadius: 9999, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}
+          style={{ width: d, height: d, borderRadius: 9999, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}
         >
           <div className="absolute inset-0 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.07) 0%, transparent 70%)` }} />
@@ -725,9 +736,10 @@ function CustomNode({ id, data, selected }) {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
           onClick={handleOpenConfig} className="relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 16,
-            background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
+            background: GLASS_BG,
+            backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
             border: selected ? "3.5px solid rgba(255,255,255,0.55)" : isHovered ? "7px solid rgba(255,255,255,0.16)" : "2.5px solid rgba(255,255,255,0.22)",
-            boxShadow: selected ? "0 0 24px rgba(255,255,255,0.06), 0 12px 40px rgba(0,0,0,0.6)" : "0 12px 40px rgba(0,0,0,0.6)" }}>
+            boxShadow: GLASS_SHADOW(isHovered, selected) }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 15, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
             <div className="flex items-center gap-2">
@@ -767,7 +779,7 @@ function CustomNode({ id, data, selected }) {
     : "2.5px solid rgba(255,255,255,0.22)";
   const cardBorder = cardBorderTop;
   const cardBottomBorder = status === "failed" ? "3px solid rgba(239,68,68,0.4)" : "4px solid rgba(255,255,255,0.28)";
-  const cardShadow = "0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+  const cardShadow = GLASS_SHADOW(isHovered, selected);
 
   return (
     <div className="relative group" style={{ width: cardW, height: cardH + 48 }}>
@@ -781,7 +793,7 @@ function CustomNode({ id, data, selected }) {
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={handleOpenConfig} className="relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
-        style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
+        style={{ width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, borderBottom: cardBottomBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ borderRadius: shapeRadius - 1, background: `radial-gradient(circle at 50% 40%, rgba(${accent},0.06) 0%, transparent 70%)` }} />
         {badge}
         {hasMappingWarning && (

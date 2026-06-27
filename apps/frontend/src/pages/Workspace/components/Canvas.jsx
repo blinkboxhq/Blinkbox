@@ -362,7 +362,7 @@ export default function Canvas() {
     >
       <div
         ref={glowRef}
-        className="pointer-events-none absolute inset-0 z-[1] opacity-0 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300"
         style={{
           backgroundImage: "radial-gradient(rgba(255,255,255,0.85) 1.2px, transparent 1.6px)",
           backgroundSize: "16px 16px",
