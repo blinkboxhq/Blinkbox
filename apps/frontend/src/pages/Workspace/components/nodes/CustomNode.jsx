@@ -534,6 +534,7 @@ function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
     const cardW = 120, cardH = 120;
+    const triggerRadius = "28px 8px 8px 28px";
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "4px solid transparent"
       : status === "failed" ? "3px solid rgba(239,68,68,0.55)"
@@ -548,7 +549,7 @@ function CustomNode({ id, data, selected }) {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={isChatTrigger ? handleOpenConfig : handlePlay}
           className={`bb-card absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
-          style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: shapeRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
+          style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: triggerRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
