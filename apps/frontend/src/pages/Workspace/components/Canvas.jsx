@@ -90,7 +90,21 @@ function debounce(fn, wait) {
 
 export default function Canvas() {
   const reactFlowWrapper = useRef(null);
+  const glowRef = useRef(null);
   const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
+
+  const onCanvasMouseMove = useCallback((e) => {
+    const el = glowRef.current;
+    if (!el) return;
+    const rect = el.parentElement.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    el.style.setProperty("--my", `${e.clientY - rect.top}px`);
+    el.style.opacity = "1";
+  }, []);
+
+  const onCanvasMouseLeave = useCallback(() => {
+    if (glowRef.current) glowRef.current.style.opacity = "0";
+  }, []);
   const { id: automationId } = useParams();
 
   const storeNodes = useWorkspaceStore((s) => s.nodes);
@@ -343,7 +357,17 @@ export default function Canvas() {
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
+      onMouseMove={onCanvasMouseMove}
+      onMouseLeave={onCanvasMouseLeave}
     >
+      <div
+        ref={glowRef}
+        className="pointer-events-none absolute inset-0 z-[1] opacity-0 transition-opacity duration-300"
+        style={{
+          background:
+            "radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), rgba(139,92,246,0.10), transparent 70%)",
+        }}
+      />
       <ReactFlow
         nodes={nodes}
         edges={liveEdges}
@@ -380,7 +404,7 @@ export default function Canvas() {
         panOnScroll
         zoomOnPinch
       >
-        <Background variant={BackgroundVariant.Dots} gap={28} size={1.5} color="#2a2a30" />
+        <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="#2a2a30" />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";
