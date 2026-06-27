@@ -16,6 +16,23 @@ export function setNodeHovered(nodeId, value) {
   hoverListeners.get(nodeId)?.(value);
 }
 
+// Module-level "a connection drag is in progress" signal — toggled by Canvas
+// onConnectStart/onConnectEnd. All output affordances subscribe to fade out.
+const connectingListeners = new Set();
+let _isConnecting = false;
+export function setConnecting(value) {
+  _isConnecting = value;
+  connectingListeners.forEach((fn) => fn(value));
+}
+function useIsConnecting() {
+  const [c, setC] = useState(_isConnecting);
+  useEffect(() => {
+    connectingListeners.add(setC);
+    return () => { connectingListeners.delete(setC); };
+  }, []);
+  return c;
+}
+
 // ─── Inline output preview chip shown below completed action nodes ────────────
 function NodeOutputChip({ output }) {
   const [open, setOpen] = useState(false);
@@ -229,6 +246,7 @@ const HANDLE_BORDER = "rgba(255,255,255,0.28)";
 
 function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight, handleId = "output" }) {
   const top = cardHeight ? cardHeight / 2 : "50%";
+  const connecting = useIsConnecting();
   return (
     <>
       <Handle type="source" position={Position.Right} id={handleId}
@@ -237,7 +255,7 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
       />
       {!hasConnection && (
         <>
-          <div className="absolute z-[2] nodrag flex items-center pointer-events-none"
+          <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
             style={{ left: "100%", top, transform: "translateY(-50%)" }}>
             <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
             <button onClick={e => { e.stopPropagation(); onAdd(e); }} onMouseDown={e => e.stopPropagation()}
@@ -279,9 +297,10 @@ function AgentInHandle() {
 
 // ─── Condition dual output handles ───────────────────────────────────────────
 function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
+  const connecting = useIsConnecting();
   const plusBtn = (y, handleId) => (
     <>
-      <div className="absolute z-[2] nodrag flex items-center pointer-events-none" style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
+      <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
         <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
         <button
           onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}

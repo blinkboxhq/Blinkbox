@@ -17,7 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import CustomNode, { setNodeHovered } from "./nodes/CustomNode";
+import CustomNode, { setNodeHovered, setConnecting } from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
 import { getSocket } from "../../../lib/socket";
 
@@ -386,6 +386,8 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         connectionLineComponent={PullConnectionLine}
+        onConnectStart={() => setConnecting(true)}
+        onConnectEnd={() => setConnecting(false)}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
           const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
