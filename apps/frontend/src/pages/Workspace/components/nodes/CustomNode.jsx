@@ -265,10 +265,6 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
               <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
             </button>
           </div>
-          <Handle type="source" position={Position.Right} id={handleId}
-            className="!rounded-full !bg-transparent !border-0 touch-none !shadow-none nodrag"
-            style={{ boxShadow: "none", top, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 6 }}
-          />
         </>
       )}
     </>
@@ -311,9 +307,6 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
           <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white" strokeWidth={3} />
         </button>
       </div>
-      <Handle type="source" position={Position.Right} id={handleId}
-        className="!rounded-full !bg-transparent !border-0 touch-none !shadow-none nodrag"
-        style={{ boxShadow: "none", top: y, right: -82, width: 24, height: 24, transform: "translate(50%, -50%)", zIndex: 6 }} />
     </>
   );
 
