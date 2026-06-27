@@ -1,26 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Box, Loader2, Zap, Globe, Clock, ArrowRight, Sparkles } from 'lucide-react';
+import { X, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import WorkflowPreview from './WorkflowPreview';
 
 const NAME_MAX = 60;
 
-const TRIGGERS = [
-  { key: 'manual',       Icon: Zap,   label: 'Manual',   hint: 'Run on demand from the canvas' },
-  { key: 'webhook',      Icon: Globe, label: 'Webhook',  hint: 'Start when a URL is called' },
-  { key: 'cron_trigger', Icon: Clock, label: 'Schedule', hint: 'Run on a recurring timer' },
-];
-
 export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoading }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [trigger, setTrigger] = useState('manual');
   const nameRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setName('');
       setDescription('');
-      setTrigger('manual');
       setTimeout(() => nameRef.current?.focus(), 80);
     }
   }, [isOpen]);
@@ -34,11 +26,10 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoadi
   if (!isOpen) return null;
 
   const canSubmit = name.trim().length > 0;
-  const activeTrigger = TRIGGERS.find((t) => t.key === trigger) || TRIGGERS[0];
 
   const handleSubmit = async () => {
     if (!canSubmit || isLoading) return;
-    await onCreate({ name: name.trim(), description: description.trim(), trigger });
+    await onCreate({ name: name.trim(), description: description.trim() });
   };
 
   return (
@@ -69,7 +60,7 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoadi
 
         {/* Live preview glance */}
         <div className="px-5 pt-5">
-          <WorkflowPreview nodeCount={3} trigger={trigger} />
+          <WorkflowPreview nodeCount={3} trigger="manual" />
         </div>
 
         {/* Body */}
@@ -103,32 +94,6 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoadi
               placeholder="What does this box do?"
               className="bb-input bb-glass w-full px-4 py-3 text-[13px]"
             />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-semibold text-[var(--bb-text-dim)] uppercase tracking-widest mb-2">Starts with</label>
-            <div className="grid grid-cols-3 gap-2">
-              {TRIGGERS.map((t) => {
-                const active = trigger === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setTrigger(t.key)}
-                    className="bb-glass relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl overflow-hidden transition-all"
-                    style={{
-                      borderColor: active ? 'var(--bb-accent-ring)' : 'var(--bb-border-subtle)',
-                      boxShadow: active ? '0 0 0 1px var(--bb-accent-ring), 0 8px 24px -12px var(--bb-accent-ring)' : undefined,
-                    }}
-                  >
-                    <t.Icon className="w-4 h-4" style={{ color: active ? 'var(--bb-accent-hot)' : 'var(--bb-text-lo)' }} />
-                    <span className="text-[11px] font-medium" style={{ color: active ? 'var(--bb-text-hi)' : 'var(--bb-text-lo)' }}>{t.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-[var(--bb-text-dim)] mt-2 flex items-center gap-1.5">
-              <activeTrigger.Icon className="w-3 h-3 shrink-0" /> {activeTrigger.hint}
-            </p>
           </div>
         </div>
 
