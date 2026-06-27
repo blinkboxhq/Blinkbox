@@ -229,12 +229,8 @@ export default function VaultManager() {
                   <button
                     onClick={() => connectOAuth(app.provider)}
                     disabled={isConnecting}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-60"
-                    style={
-                      connected
-                        ? { color: 'var(--bb-text-mid)', border: '1px solid var(--bb-border)', background: 'var(--bb-surface-1)' }
-                        : { color: 'var(--bb-accent-hot)', border: '1px solid var(--bb-accent-ring)', background: 'var(--bb-accent-soft)' }
-                    }
+                    className="bb-card flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-60"
+                    style={{ color: connected ? 'var(--bb-text-mid)' : 'var(--bb-text-hi)' }}
                   >
                     {isConnecting
                       ? <Loader2 className="w-3 h-3 animate-spin" />
