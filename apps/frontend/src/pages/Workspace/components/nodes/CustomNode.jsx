@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
+import { getTriggerEvent } from "../../triggerEvents";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -475,6 +476,7 @@ function CustomNode({ id, data, selected }) {
   const { deleteElements } = useReactFlow();
   const nodeDef = NodeRegistry[data.backendType] || NodeRegistry.manual;
   const variantDef = (data.type === "trigger" && data.config?.triggerVariant) ? TRIGGER_VARIANTS[data.config.triggerVariant] : null;
+  const eventDef = (variantDef && data.config?.eventId) ? getTriggerEvent(data.config.triggerVariant, data.config.eventId) : null;
   const Icon = (variantDef || nodeDef).icon;
   const accent = (variantDef?.accentColor || nodeDef.accentColor) || "161,161,170";
 
@@ -598,8 +600,8 @@ function CustomNode({ id, data, selected }) {
           </div>
         )}
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
-          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.customLabel || data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : (data.config?.customLabel || data.config?.selectedAction) ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.customLabel || data.config?.selectedAction || eventDef?.label || variantDef?.label || nodeDef.label || data.label}</span>
+          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : eventDef ? variantDef?.label?.replace(/^On /, "") || nodeDef.label : (data.config?.customLabel || data.config?.selectedAction) ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
