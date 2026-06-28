@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Copy, Check } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import { ConfigSection, ConfigInput, ConfigSelect, ConfigPills } from '@/components/ui/ConfigKit';
+import CredentialPicker from '@/components/ui/CredentialPicker';
 
 // Renders a declarative trigger schema (triggerSchemas.js) as a bordered-mono
 // config panel. JSON in → n8n-style panel out. One renderer, every trigger.
@@ -101,6 +102,22 @@ function Field({ field, config, set, accent, automationId }) {
     case 'password':
       return <ConfigInput label={field.label} icon={field.icon} type="password" value={v(field.key, '')} placeholder={field.placeholder} hint={field.hint}
         onChange={(val) => set(field.key, val)} />;
+
+    case 'credential':
+      return (
+        <div className="flex flex-col">
+          <Label icon={field.icon} accent={accent}>{field.label}</Label>
+          <CredentialPicker
+            value={v(field.key, '')}
+            onChange={(id) => set(field.key, id)}
+            label={field.label}
+            placeholder={field.placeholder}
+            credentialType={field.credType}
+            oauthProvider={field.oauthProvider}
+            hint={field.hint}
+          />
+        </div>
+      );
 
     case 'textarea':
       return (

@@ -63,9 +63,10 @@ const githubRepoField = {
   hint: '// the repo whose events fire this workflow',
 };
 const githubSecretField = {
-  type: 'password', key: 'webhookSecret', label: 'Webhook Secret',
-  placeholder: 'optional — verifies GitHub signatures',
-  hint: '// set this and the matching secret in GitHub → Webhooks',
+  type: 'credential', key: 'webhookSecretCredentialId', label: 'Webhook Secret',
+  credType: 'GitHub Webhook Secret',
+  placeholder: 'select or create a secret',
+  hint: '// verifies GitHub signatures — store the secret once, reuse everywhere',
 };
 const githubVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -77,9 +78,10 @@ const githubVars = (extra = []) => ({
 });
 
 const stripeSecret = {
-  type: 'password', key: 'webhookSecret', label: 'Webhook Signing Secret',
-  placeholder: 'whsec_…',
-  hint: '// from Stripe → Developers → Webhooks; verifies the event is genuine',
+  type: 'credential', key: 'webhookSecretCredentialId', label: 'Webhook Signing Secret',
+  credType: 'Stripe Webhook Secret',
+  placeholder: 'select or create a signing secret',
+  hint: '// from Stripe → Developers → Webhooks; store the whsec_… once, reuse everywhere',
 };
 
 export const TRIGGER_EVENTS = {

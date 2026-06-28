@@ -1,10 +1,12 @@
 import crypto from "crypto";
+import { resolveTriggerSecret } from "../utils/triggerSecret.js";
 
 export default {
-  async run(config, input) {
+  async run(config, input, context) {
     const b = input?.body ?? input;
-    if (config.webhookSecret && input?.rawBody && input?.signature) {
-      const sig = crypto.createHmac("sha256", config.webhookSecret).update(input.rawBody).digest("hex");
+    const secret = await resolveTriggerSecret(config, context, "stripe_trigger");
+    if (secret && input?.rawBody && input?.signature) {
+      const sig = crypto.createHmac("sha256", secret).update(input.rawBody).digest("hex");
       if (`sha256=${sig}` !== input.signature) throw new Error("[stripe_trigger] Invalid webhook signature");
     }
     if (config.event && b?.type && b.type !== config.event) {
