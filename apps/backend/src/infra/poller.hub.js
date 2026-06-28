@@ -318,7 +318,7 @@ const POLL_REGISTRY = {
     triggerName: "pipedrive_trigger",
     required: ["apiToken"],
     extract: (cfg) => ({
-      cfg: { apiToken: cfg.apiToken, watchType: cfg.watchType || cfg.entityType, stageFilter: cfg.stageFilter },
+      cfg: { apiToken: cfg.apiToken, eventType: cfg.eventType || cfg.watchType, stageFilter: cfg.stageFilter, minValue: cfg.minValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "pipedrive",

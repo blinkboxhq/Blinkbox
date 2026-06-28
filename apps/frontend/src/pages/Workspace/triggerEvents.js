@@ -8,6 +8,7 @@ import {
   ListTodo, CircleDashed, PauseCircle, Archive, Sparkle,
   Briefcase, Building2, Ticket, Trophy, UserCheck, Target,
   Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
+  Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -111,6 +112,34 @@ const trelloEvent = (id, label, description, icon, varsExtra = [], includeListFi
   id, label, description, icon, event: id, accent: '#0079bf',
   configExtra: { actionType: id },
   fields: [...trelloBaseFields, ...(includeListFilter ? [trelloListFilter] : []), trelloVars(varsExtra)],
+});
+
+const PIPEDRIVE_POLL = [
+  { value: '2', label: 'Every 2 minutes' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const pipedriveBaseFields = [
+  { type: 'password', key: 'apiToken', label: 'Pipedrive API Token', placeholder: 'from Settings → Personal → API',
+    hint: '// Settings → Personal preferences → API → copy your personal token' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: PIPEDRIVE_POLL },
+];
+const pipedriveVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.id', 'the record id'],
+    ['$trigger.ownerName', 'the record owner'],
+    ['$trigger.addTime', 'when the record was created'],
+    ...extra,
+  ],
+});
+// A Pipedrive event = a REST endpoint + status params + match predicate in the
+// poller. `eventType` (via configExtra) selects the PIPEDRIVE_SCOPES entry.
+const pipedriveEvent = (id, label, description, icon, varsExtra = [], fields = []) => ({
+  id, label, description, icon, event: id, accent: '#017737',
+  configExtra: { eventType: id },
+  fields: [...pipedriveBaseFields, ...fields, pipedriveVars(varsExtra)],
 });
 
 const LINEAR_POLL = [
@@ -653,6 +682,37 @@ export const TRIGGER_EVENTS = {
         [['$trigger.checkItem', 'the item that was completed']]),
       trelloEvent('card_copied', 'Card Copied', 'A card is copied', Copy),
       trelloEvent('list_created', 'List Created', 'A new list is added to the board', Layers, [], false),
+    ],
+  },
+
+  pipedrive: {
+    title: 'Pipedrive',
+    subtitle: 'Trigger on CRM activity — deals, people, organizations, activities, leads',
+    events: [
+      pipedriveEvent('deal_created', 'Deal Created', 'A new deal is added to any pipeline', Handshake,
+        [['$trigger.title', 'the deal name'], ['$trigger.value', 'deal value'], ['$trigger.stage', 'stage id']]),
+      pipedriveEvent('deal_won', 'Deal Won', 'A deal is marked Won', Trophy,
+        [['$trigger.title', 'the won deal'], ['$trigger.value', 'amount won'], ['$trigger.wonTime', 'when it was won']]),
+      pipedriveEvent('deal_lost', 'Deal Lost', 'A deal is marked Lost', XCircle,
+        [['$trigger.title', 'the lost deal'], ['$trigger.lostReason', 'reason it was lost']]),
+      pipedriveEvent('deal_high_value', 'Deal Over Value', 'An open deal worth at least your threshold', DollarSign,
+        [['$trigger.value', 'the deal value']],
+        [{ type: 'text', key: 'minValue', label: 'Minimum Value', default: '10000', placeholder: '10000',
+          hint: '// fire only for open deals worth at least this amount (in the deal currency)' }]),
+      pipedriveEvent('person_created', 'Person Created', 'A new contact person is added', User,
+        [['$trigger.name', 'person name'], ['$trigger.email', 'email'], ['$trigger.orgName', 'their organization']]),
+      pipedriveEvent('organization_created', 'Organization Created', 'A new organization is added', Building2,
+        [['$trigger.name', 'organization name'], ['$trigger.peopleCount', 'number of people']]),
+      pipedriveEvent('activity_created', 'Activity Created', 'A new activity (call, meeting, task) is scheduled', Calendar,
+        [['$trigger.subject', 'activity subject'], ['$trigger.type', 'activity type'], ['$trigger.dueDate', 'due date']]),
+      pipedriveEvent('activity_done', 'Activity Completed', 'An activity is marked done', CheckCheck,
+        [['$trigger.subject', 'the completed activity'], ['$trigger.dealTitle', 'related deal']]),
+      pipedriveEvent('activity_overdue', 'Activity Overdue', 'An open activity is past its due date', AlertCircle,
+        [['$trigger.subject', 'the overdue activity'], ['$trigger.dueDate', 'when it was due']]),
+      pipedriveEvent('lead_created', 'Lead Created', 'A new lead enters the leads inbox', Target,
+        [['$trigger.title', 'lead title'], ['$trigger.value', 'lead value']]),
+      pipedriveEvent('note_created', 'Note Created', 'A note is added to a deal, person, or org', StickyNote,
+        [['$trigger.content', 'the note text'], ['$trigger.userName', 'who wrote it']]),
     ],
   },
 };
