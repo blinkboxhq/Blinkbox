@@ -1,7 +1,9 @@
-import { Table, PlusCircle, Edit3, Trash2, Download, Settings2 } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Download, Settings2 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
-import OAuthConnectButton from '../../../../components/ui/OAuthConnectButton';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import { ConfigSection, ConfigLabel, ConfigSelect, ConfigPills } from '../../../../components/ui/ConfigKit';
+
+const SHEETS_ACCENT = '#0F9D58';
 
 function SheetsIcon({ className }) {
   return (
@@ -25,70 +27,69 @@ export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) 
   const needsValues = ['writeRange', 'appendRow'].includes(operation);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <ConfigSection className="gap-5">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-[#0F9D58]/5 border border-[#0F9D58]/20 rounded-xl">
-        <div className="p-2 bg-[#0F9D58]/10 rounded-lg text-[#0F9D58] shrink-0">
+      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-xl bg-[#0F9D58]/[0.06] backdrop-blur-sm">
+        <div className="w-9 h-9 rounded-lg bg-[#0F9D58]/10 text-[#0F9D58] flex items-center justify-center shrink-0">
           <SheetsIcon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#0F9D58]">Google Sheets</span>
-          <span className="text-[10px] text-zinc-500">Read & write spreadsheet data</span>
+          <span className="text-[14px] font-bold text-[#0F9D58]">Google Sheets</span>
+          <span className="text-[11px] text-neutral-500">Read &amp; write spreadsheet data</span>
         </div>
       </div>
+
+      {/* Credential — real "Sign in with Google" + setup manually */}
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        oauthProvider="google"
+        credentialType="google"
+        accentColor="green"
+        label="Credential"
+        placeholder="Select Google credential…"
+        hint="Connect with Google or pick an existing credential."
+      />
+
+      {/* Operation */}
+      <ConfigSelect
+        label="Operation"
+        value={operation}
+        onChange={(v) => updateConfig('operation', v)}
+        options={OPERATIONS}
+        accentColor={SHEETS_ACCENT}
+      />
 
       {/* Spreadsheet ID */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Spreadsheet ID</label>
-        <input
+      <div className="flex flex-col">
+        <ConfigLabel>Spreadsheet ID</ConfigLabel>
+        <SmartVariableInput
           value={config.spreadsheetId || ''}
-          onChange={(e) => updateConfig('spreadsheetId', e.target.value)}
+          onChange={(val) => updateConfig('spreadsheetId', val)}
           placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#0F9D58]/40 transition-colors"
+          nodeId={nodeId}
         />
-        <p className="text-[10px] text-zinc-600">Found in the spreadsheet URL between /d/ and /edit</p>
-      </div>
-
-      {/* Operations */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <div className="grid grid-cols-2 gap-2">
-          {OPERATIONS.map((op) => {
-            const Icon = op.icon;
-            return (
-              <button key={op.value} onClick={() => updateConfig('operation', op.value)}
-                className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                  operation === op.value
-                    ? 'bg-[#0F9D58]/10 border-[#0F9D58]/40 text-[#0F9D58]'
-                    : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                }`}>
-                <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-              </button>
-            );
-          })}
-        </div>
+        <p className="text-[10px] text-neutral-600 mt-1">Found in the spreadsheet URL between /d/ and /edit</p>
       </div>
 
       {/* Range */}
       {needsRange && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Range</label>
+        <div className="flex flex-col">
+          <ConfigLabel>Range</ConfigLabel>
           <SmartVariableInput
             value={config.range || ''}
             onChange={(val) => updateConfig('range', val)}
             placeholder={operation === 'appendRow' ? 'Sheet1!A:Z' : 'Sheet1!A1:D10'}
             nodeId={nodeId}
           />
-          <p className="text-[10px] text-zinc-600">A1 notation — e.g. Sheet1!A1:D10</p>
+          <p className="text-[10px] text-neutral-600 mt-1">A1 notation — e.g. Sheet1!A1:D10</p>
         </div>
       )}
 
       {/* Values (write / append) */}
       {needsValues && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Values {operation === 'appendRow' ? '(row or rows)' : '(2D array)'}
-          </label>
+        <div className="flex flex-col">
+          <ConfigLabel>Values {operation === 'appendRow' ? '(row or rows)' : '(2D array)'}</ConfigLabel>
           <SmartVariableInput
             value={typeof config.values === 'string' ? config.values : (config.values ? JSON.stringify(config.values) : '')}
             onChange={(val) => { try { updateConfig('values', JSON.parse(val)); } catch { updateConfig('values', val); } }}
@@ -96,26 +97,20 @@ export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) 
             multiline
             nodeId={nodeId}
           />
-          <div className="flex items-center gap-2 mt-1">
-            <button
-              onClick={() => updateConfig('rawInput', !config.rawInput)}
-              className={`px-2 py-1 rounded text-[10px] font-bold border transition-all ${
-                config.rawInput ? 'bg-[#0F9D58]/10 border-[#0F9D58]/40 text-[#0F9D58]' : 'border-[#222] text-zinc-600'
-              }`}
-            >
-              Raw Input
-            </button>
-            <span className="text-[10px] text-zinc-600">Off = Google parses formulas & dates</span>
+          <div className="mt-2">
+            <ConfigPills
+              label="Value Input"
+              value={config.rawInput ? 'raw' : 'parsed'}
+              onChange={(v) => updateConfig('rawInput', v === 'raw')}
+              options={[
+                { value: 'parsed', label: 'Parsed (formulas & dates)' },
+                { value: 'raw', label: 'Raw Input' },
+              ]}
+              accentColor={SHEETS_ACCENT}
+            />
           </div>
         </div>
       )}
-
-      {/* Auth */}
-      <OAuthConnectButton provider="google" providerLabel="Google" accentColor="green"
-        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} icon={SheetsIcon} />
-      <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
-      <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="green" label="Google OAuth Token" placeholder="Select Google credential..." />
-    </div>
+    </ConfigSection>
   );
 }

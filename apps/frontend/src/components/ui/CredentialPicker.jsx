@@ -3,7 +3,23 @@ import { createPortal } from 'react-dom';
 import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
 
+import logoGoogle from '../../assets/credentials/google-color.svg';
+import logoGithub from '../../assets/credentials/github.svg';
+import logoMicrosoft from '../../assets/credentials/microsoft-color.svg';
+import logoNotion from '../../assets/credentials/notion.svg';
+import logoSlack from '../../assets/credentials/slack-new-logo-logo-svgrepo-com.svg';
+import logoAirtable from '../../assets/credentials/Airtable--Streamline-Svg-Logos.svg';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+const OAUTH_LOGO = {
+  google: logoGoogle,
+  github: logoGithub,
+  microsoft: logoMicrosoft,
+  notion: logoNotion,
+  slack: logoSlack,
+  airtable: logoAirtable,
+};
 
 const ACCENT = {
   violet:  { btn: 'text-violet-400', dot: 'bg-violet-500', badge: 'bg-violet-500/10 border-violet-500/20 text-violet-400', save: 'bg-violet-500/15 border-violet-500/30 text-violet-300 hover:bg-violet-500/25' },
@@ -24,12 +40,12 @@ const ACCENT = {
 const DEFAULT_ACCENT = ACCENT.violet;
 
 const OAUTH_META = {
-  google:    { label: 'Google',    color: '#4285F4' },
-  slack:     { label: 'Slack',     color: '#E01E5A' },
-  github:    { label: 'GitHub',    color: '#e8eaea' },
-  airtable:  { label: 'Airtable',  color: '#F82B60' },
-  notion:    { label: 'Notion',    color: '#e8eaea' },
-  microsoft: { label: 'Microsoft', color: '#0078D4' },
+  google:    { label: 'Google',    color: '#4285F4', logo: logoGoogle },
+  slack:     { label: 'Slack',     color: '#E01E5A', logo: logoSlack },
+  github:    { label: 'GitHub',    color: '#e8eaea', logo: logoGithub },
+  airtable:  { label: 'Airtable',  color: '#F82B60', logo: logoAirtable },
+  notion:    { label: 'Notion',    color: '#e8eaea', logo: logoNotion },
+  microsoft: { label: 'Microsoft', color: '#0078D4', logo: logoMicrosoft },
   meta:      { label: 'Meta',      color: '#1877F2' },
 };
 
@@ -69,6 +85,7 @@ export default function CredentialPicker({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [manual, setManual] = useState(false);
 
   const [newName, setNewName] = useState('');
   const [newSecret, setNewSecret] = useState('');
@@ -232,39 +249,39 @@ export default function CredentialPicker({
     onChange('');
   };
 
+  const showManualPicker = !oauthMeta || !!selectedCred || manual;
+
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
         <KeyRound className="w-3 h-3" /> {label}
       </label>
 
-      {/* OAuth connect button — shown when oauthProvider is set and no credential selected */}
-      {oauthMeta && !selectedCred && (
-        <button
-          type="button"
-          onClick={connectOAuth}
-          disabled={isConnecting}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-[#333] hover:border-[#555] text-[13px] font-medium transition-all duration-150 disabled:opacity-60"
-          style={{ color: oauthMeta.color, borderColor: `${oauthMeta.color}30`, backgroundColor: `${oauthMeta.color}0d` }}
-        >
-          {isConnecting
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Link2 className="w-3.5 h-3.5" />
-          }
-          {isConnecting ? `Connecting to ${oauthMeta.label}…` : `Connect with ${oauthMeta.label}`}
-        </button>
-      )}
-
-      {/* Divider between OAuth button and manual picker */}
-      {oauthMeta && !selectedCred && (
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-px bg-[#222]" />
-          <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest">or select existing</span>
-          <div className="flex-1 h-px bg-[#222]" />
+      {/* OAuth "Sign in with X" — real provider logo, n8n-style, with cursor glow */}
+      {oauthMeta?.logo && !selectedCred && (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={connectOAuth}
+            disabled={isConnecting}
+            className="bb-glow-border group flex-1 flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-[13px] font-medium text-neutral-800 transition-all duration-150 disabled:opacity-60 shadow-sm"
+          >
+            {isConnecting
+              ? <Loader2 className="w-[18px] h-[18px] animate-spin text-neutral-500" />
+              : <img src={oauthMeta.logo} alt="" className="w-[18px] h-[18px] object-contain" />}
+            {isConnecting ? `Connecting…` : `Sign in with ${oauthMeta.label}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setManual(true); setOpen(true); }}
+            className="text-[12px] text-neutral-500 hover:text-neutral-300 underline underline-offset-2 decoration-neutral-700 hover:decoration-neutral-400 transition-colors whitespace-nowrap"
+          >
+            or setup manually
+          </button>
         </div>
       )}
 
-      <div className="relative">
+      <div className={`relative ${showManualPicker ? '' : 'hidden'}`}>
         <button
           ref={triggerRef}
           type="button"
@@ -274,8 +291,8 @@ export default function CredentialPicker({
             setSearch('');
             if (next && triggerRef.current) setDropdownRect(triggerRef.current.getBoundingClientRect());
           }}
-          className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-[#0d0d0f] border rounded-lg text-[13px] transition-colors ${
-            selectedCred ? 'border-[#444] text-neutral-200' : 'border-[#333] text-neutral-600 hover:border-neutral-600'
+          className={`bb-glow-border w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-[#0d0d0f]/80 backdrop-blur-sm rounded-lg text-[13px] transition-colors ${
+            selectedCred ? 'text-neutral-200' : 'text-neutral-600'
           }`}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -295,7 +312,7 @@ export default function CredentialPicker({
         {open && dropdownRect && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[9999] bg-[#111] border border-[#333] rounded-lg shadow-2xl overflow-hidden flex flex-col"
+            className="fixed z-[9999] bb-glass border border-[#2a2a2d] rounded-lg shadow-2xl overflow-hidden flex flex-col"
             style={(() => {
               const maxH = 256;
               const spaceBelow = window.innerHeight - dropdownRect.bottom - 8;
@@ -360,10 +377,11 @@ export default function CredentialPicker({
                   type="button"
                   onClick={() => { setOpen(false); connectOAuth(); }}
                   disabled={isConnecting}
-                  className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#1e1e20]"
-                  style={{ color: oauthMeta.color }}
+                  className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#1e1e20] text-neutral-200"
                 >
-                  <Link2 className="w-3.5 h-3.5" /> Connect with {oauthMeta.label}
+                  {oauthMeta.logo
+                    ? <img src={oauthMeta.logo} alt="" className="w-4 h-4 object-contain" />
+                    : <Link2 className="w-3.5 h-3.5" style={{ color: oauthMeta.color }} />} Sign in with {oauthMeta.label}
                 </button>
               )}
               <button
@@ -381,8 +399,10 @@ export default function CredentialPicker({
 
       {/* Connected badge */}
       {selectedCred && (
-        <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${ac.badge}`}>
-          <Shield className="w-3 h-3 shrink-0" />
+        <div className={`bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-lg ${ac.badge}`}>
+          {oauthMeta?.logo && selectedCred.provider === oauthProvider
+            ? <img src={oauthMeta.logo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+            : <Shield className="w-3 h-3 shrink-0" />}
           <span className="text-[11px] font-medium truncate">{selectedCred.name}</span>
           {oauthMeta && selectedCred.provider === oauthProvider && (
             <span className="text-[9px] font-bold opacity-60 uppercase">OAuth</span>
@@ -408,7 +428,7 @@ export default function CredentialPicker({
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="flex flex-col gap-2.5 p-3 bg-[#0d0d0f] border border-[#2a2a2d] rounded-lg mt-0.5"
+          className="bb-glow-border flex flex-col gap-2.5 p-3 bg-[#0d0d0f]/80 backdrop-blur-sm rounded-lg mt-0.5"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">New Credential</span>
