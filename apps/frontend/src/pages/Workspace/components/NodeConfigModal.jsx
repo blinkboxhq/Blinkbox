@@ -147,9 +147,9 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
               >
                 <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                   {def?.logoUrl
-                    ? <img src={def.logoUrl} alt="" className="w-[22px] h-[22px] object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
+                    ? <img src={def.logoUrl} alt="" className="w-[22px] h-[22px] object-contain" style={{ filter: "grayscale(1) brightness(0) invert(0.7)" }} />
                     : def?.icon
-                      ? <def.icon style={{ width: 20, height: 20 }} className={def.colorClass || "text-neutral-400"} strokeWidth={1.5} />
+                      ? <def.icon style={{ width: 20, height: 20 }} className="text-neutral-300" strokeWidth={1.5} />
                       : <div className="w-4 h-4 rounded bg-neutral-700" />
                   }
                 </div>
@@ -527,8 +527,8 @@ export default function NodeConfigModal() {
           <div className="bb-liquid bb-edge-bottom flex items-center gap-3 px-5 shrink-0" style={{ height: 52 }}>
             <div className="w-7 h-7 shrink-0 flex items-center justify-center">
               {logoUrl
-                ? <img src={logoUrl} alt="" className="w-5 h-5 object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
-                : def?.icon && <def.icon className={`w-5 h-5 ${def.colorClass || "text-neutral-400"}`} strokeWidth={1.5} />
+                ? <img src={logoUrl} alt="" className="w-5 h-5 object-contain" style={{ filter: "grayscale(1) brightness(0) invert(0.85)" }} />
+                : def?.icon && <def.icon className="w-5 h-5 text-neutral-200" strokeWidth={1.5} />
               }
             </div>
             <div className="flex items-baseline gap-2 flex-1 min-w-0">

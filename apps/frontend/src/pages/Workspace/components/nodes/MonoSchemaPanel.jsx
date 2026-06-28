@@ -164,7 +164,7 @@ function Field({ field, config, set, accent, automationId }) {
             <span className="text-[11px] font-semibold text-neutral-200 font-mono block">{field.label}</span>
             {field.desc && <span className="text-[9px] text-neutral-600 mt-1 block leading-relaxed font-mono">{field.desc}</span>}
           </div>
-          <Toggle on={!!v(field.key, false)} onClick={() => set(field.key, !v(field.key, false))} accent={accent} />
+          <Toggle on={!!v(field.key, field.default ?? false)} onClick={() => set(field.key, !v(field.key, field.default ?? false))} accent={accent} />
         </div>
       );
 

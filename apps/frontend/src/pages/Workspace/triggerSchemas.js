@@ -33,7 +33,23 @@
 // trigger reads.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot } from 'lucide-react';
+import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot, Inbox, MailOpen, CheckCheck } from 'lucide-react';
+
+const IMAP_HOSTS = [
+  { value: 'imap.gmail.com',        label: 'Gmail',             port: 993 },
+  { value: 'outlook.office365.com', label: 'Outlook / Hotmail', port: 993 },
+  { value: 'imap.mail.yahoo.com',   label: 'Yahoo Mail',        port: 993 },
+  { value: 'imap.mail.me.com',      label: 'iCloud Mail',       port: 993 },
+  { value: '',                      label: 'Custom IMAP',       port: 993 },
+];
+
+const POLL_INTERVALS = [
+  { value: '* * * * *',    label: 'Every minute' },
+  { value: '*/2 * * * *',  label: 'Every 2 minutes' },
+  { value: '*/5 * * * *',  label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+];
 
 const DAY_CRON = { Mon: '1', Tue: '2', Wed: '3', Thu: '4', Fri: '5', Sat: '6', Sun: '0' };
 const pad = (n) => String(n).padStart(2, '0');
@@ -157,6 +173,40 @@ export const TRIGGER_SCHEMAS = {
         showWhen: { authEnabled: true } },
     ],
   },
+};
+
+TRIGGER_SCHEMAS.imap_trigger = {
+  title: 'Email Inbox',
+  subtitle: 'Trigger when a new email arrives (IMAP)',
+  icon: Inbox,
+  accent: '#3fd0e0',
+  tabs: [{ id: 'setup', label: 'Setup' }, { id: 'filters', label: 'Filters' }],
+  fields: [
+    { type: 'select', tab: 'setup', key: 'imapPreset', label: 'Email Provider', default: 'imap.gmail.com',
+      options: IMAP_HOSTS.map((h) => ({ value: h.value, label: h.label })),
+      sideEffects: (val) => { const h = IMAP_HOSTS.find((x) => x.value === val); return { imapHost: val, imapPort: h?.port || 993 }; } },
+    { type: 'text', tab: 'setup', key: 'imapHost', label: 'IMAP Host', placeholder: 'imap.example.com',
+      showWhen: { imapPreset: '' } },
+    { type: 'text', tab: 'setup', key: 'imapPort', label: 'Port', default: '993', placeholder: '993',
+      showWhen: { imapPreset: '' } },
+    { type: 'text', tab: 'setup', key: 'imapUser', label: 'Email Address', placeholder: 'you@gmail.com',
+      hint: '// store the password / app-password in Credentials, not here' },
+    { type: 'select', tab: 'setup', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: POLL_INTERVALS },
+    { type: 'text', tab: 'filters', key: 'mailbox', label: 'Mailbox / Folder', default: 'INBOX', placeholder: 'INBOX',
+      hint: '// use INBOX for the main inbox, or a folder name like "Work"' },
+    { type: 'switch-row', tab: 'filters', key: 'onlyUnread', icon: MailOpen, label: 'Only Unread Emails', default: true,
+      desc: 'Skip emails that have already been read.' },
+    { type: 'switch-row', tab: 'filters', key: 'markRead', icon: CheckCheck, label: 'Mark As Read After Processing', default: true,
+      desc: 'Prevents re-processing the same email on the next poll.' },
+    { type: 'vars', tab: 'filters', label: 'Output Variables', rows: [
+      ['$trigger.latestEmail.subject', 'Subject line of the newest email'],
+      ['$trigger.latestEmail.from', 'Sender address'],
+      ['$trigger.latestEmail.body', 'Plain-text body (first 2000 chars)'],
+      ['$trigger.latestEmail.hasAttachments', 'true if the email has attachments'],
+      ['$trigger.emails', 'Array of all fetched emails'],
+      ['$trigger.count', 'Number of emails this poll'],
+    ] },
+  ],
 };
 
 export function getTriggerSchema(backendType) {
