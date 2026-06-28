@@ -63,10 +63,10 @@ const githubRepoField = {
   hint: '// the repo whose events fire this workflow',
 };
 const githubSecretField = {
-  type: 'credential', key: 'webhookSecretCredentialId', label: 'Webhook Secret',
-  credType: 'GitHub Webhook Secret',
-  placeholder: 'select or create a secret',
-  hint: '// verifies GitHub signatures — store the secret once, reuse everywhere',
+  type: 'credential', key: 'tokenCredentialKey', label: 'GitHub Account',
+  oauthProvider: 'github',
+  placeholder: 'connect with GitHub',
+  hint: '// we register the webhook for you and auto-generate its signing secret — no manual setup',
 };
 const githubVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [

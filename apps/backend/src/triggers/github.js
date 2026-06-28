@@ -1,6 +1,15 @@
+import { verifyGitHubSignature } from "../infra/github.webhook.js";
+
 export default {
   async run(config, input) {
     const b = input?.body ?? input;
+    const secret = config.secret || config.webhookSecret;
+    const signature = input?.signature || input?.headers?.["x-hub-signature-256"];
+    if (secret && input?.rawBody && signature) {
+      if (!verifyGitHubSignature(input.rawBody, signature, secret)) {
+        throw new Error("[github_trigger] Invalid webhook signature");
+      }
+    }
     const event = input?.githubEvent || input?.headers?.["x-github-event"] || "push";
     const base = {
       event,
