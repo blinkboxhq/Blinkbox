@@ -603,6 +603,16 @@ html {
     inset 0 0 0 1px rgba(255,255,255,0.015);
 }
 
+/* Side panels (input / output): darker, recessed glass so the brighter
+   center config panel reads as the focused surface. */
+.bb-modal-side.bb-liquid {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%),
+    rgba(8, 8, 9, 0.78);
+  border-color: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 60px -20px rgba(0,0,0,0.6);
+}
+
 /* ── Liquid-glass: always-on glossy material (visible without a cursor) ──
    A polished top sheen, a soft inner light, and a bright top-edge highlight. */
 .bb-glass {
