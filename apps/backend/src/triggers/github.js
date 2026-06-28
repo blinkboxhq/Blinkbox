@@ -38,6 +38,13 @@ export default {
       const rel = b?.release ?? {};
       return { ...base, releaseName: rel.name, tagName: rel.tag_name, releaseUrl: rel.html_url, body: rel.body, prerelease: rel.prerelease, draft: rel.draft, publishedAt: rel.published_at };
     }
+    if (event === "star") {
+      return { ...base, starredAt: b?.starred_at, starCount: b?.repository?.stargazers_count };
+    }
+    if (event === "fork") {
+      const f = b?.forkee ?? {};
+      return { ...base, forkName: f.full_name, forkUrl: f.html_url, forkOwner: f.owner?.login, forkCount: b?.repository?.forks_count };
+    }
     return { ...base, raw: b };
   },
 };

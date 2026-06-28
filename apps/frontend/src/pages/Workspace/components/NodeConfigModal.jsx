@@ -7,6 +7,7 @@ import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
+import { getTriggerEvent, getTriggerEvents } from "../triggerEvents";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
 import api from "../../../lib/api";
@@ -213,7 +214,12 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const variant      = node?.data.type === "trigger" && node?.data.config?.triggerVariant
     ? TRIGGER_VARIANTS[node.data.config.triggerVariant] : null;
   const def          = variant || nodeDef;
-  const triggerSchema = variant ? getTriggerSchema(variant.backendType || backendType) : null;
+  const eventDef = variant && node?.data.config?.eventId
+    ? getTriggerEvent(node.data.config.triggerVariant, node.data.config.eventId) : null;
+  const eventGroup = variant ? getTriggerEvents(node.data.config?.triggerVariant) : null;
+  const triggerSchema = eventDef
+    ? { title: `${eventGroup?.title || variant.label}`, subtitle: eventDef.description, icon: eventDef.icon, accent: eventDef.accent, fields: eventDef.fields }
+    : variant ? getTriggerSchema(variant.backendType || backendType) : null;
   const configSchema = !variant && backendType ? getConfigSchema(backendType) : null;
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};

@@ -7,6 +7,9 @@ export default {
       const sig = crypto.createHmac("sha256", config.webhookSecret).update(input.rawBody).digest("hex");
       if (`sha256=${sig}` !== input.signature) throw new Error("[stripe_trigger] Invalid webhook signature");
     }
+    if (config.event && b?.type && b.type !== config.event) {
+      return { __conditionResult: false, event: b.type, reason: `does not match configured ${config.event}` };
+    }
     const obj = b?.data?.object ?? {};
     return {
       event:       b?.type,
