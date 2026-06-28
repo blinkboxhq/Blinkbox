@@ -42,9 +42,9 @@ const DEFAULT_ACCENT = ACCENT.violet;
 const OAUTH_META = {
   google:    { label: 'Google',    color: '#4285F4', logo: logoGoogle },
   slack:     { label: 'Slack',     color: '#E01E5A', logo: logoSlack },
-  github:    { label: 'GitHub',    color: '#e8eaea', logo: logoGithub },
+  github:    { label: 'GitHub',    color: '#e8eaea', logo: logoGithub, invert: true },
   airtable:  { label: 'Airtable',  color: '#F82B60', logo: logoAirtable },
-  notion:    { label: 'Notion',    color: '#e8eaea', logo: logoNotion },
+  notion:    { label: 'Notion',    color: '#e8eaea', logo: logoNotion, invert: true },
   microsoft: { label: 'Microsoft', color: '#0078D4', logo: logoMicrosoft },
   meta:      { label: 'Meta',      color: '#1877F2' },
 };
@@ -275,7 +275,7 @@ export default function CredentialPicker({
           >
             {isConnecting
               ? <Loader2 className="w-[18px] h-[18px] animate-spin text-neutral-500" />
-              : <img src={oauthMeta.logo} alt="" className="w-[18px] h-[18px] object-contain" />}
+              : <img src={oauthMeta.logo} alt="" className="w-[18px] h-[18px] object-contain" style={oauthMeta.invert ? { filter: 'invert(1)' } : undefined} />}
             {isConnecting ? `Connecting…` : `Sign in with ${oauthMeta.label}`}
             <span className="ml-auto text-neutral-600 group-hover:text-neutral-400 transition-colors">→</span>
           </button>
@@ -388,7 +388,7 @@ export default function CredentialPicker({
                   className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#2b2b2b] text-neutral-200"
                 >
                   {oauthMeta.logo
-                    ? <img src={oauthMeta.logo} alt="" className="w-4 h-4 object-contain" />
+                    ? <img src={oauthMeta.logo} alt="" className="w-4 h-4 object-contain" style={oauthMeta.invert ? { filter: 'invert(1)' } : undefined} />
                     : <Link2 className="w-3.5 h-3.5" style={{ color: oauthMeta.color }} />} Sign in with {oauthMeta.label}
                 </button>
               )}
@@ -409,7 +409,7 @@ export default function CredentialPicker({
       {selectedCred && (
         <div className="bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
           {oauthMeta?.logo && selectedCred.provider === oauthProvider
-            ? <img src={oauthMeta.logo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+            ? <img src={oauthMeta.logo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={oauthMeta.invert ? { filter: 'invert(1)' } : undefined} />
             : <Shield className="w-3 h-3 shrink-0 text-neutral-400" />}
           <span className="text-[11px] font-mono text-neutral-200 truncate">{selectedCred.name}</span>
           {oauthMeta && selectedCred.provider === oauthProvider && (
