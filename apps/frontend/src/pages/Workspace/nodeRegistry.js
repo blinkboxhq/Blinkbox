@@ -624,7 +624,6 @@ export const NodeRegistry = {
   },
 
   // ── Additional trigger node registry entries (for canvas rendering) ──────────
-  error_trigger:          { label: "Error Trigger",          icon: AlertTriangle, colorClass: "text-red-400",       accentColor: "239,68,68",    logoUrl: imgErrorTrigger,       category: "trigger", ConfigPanel: ErrorTriggerNode },
   asana_trigger:          { label: "Asana Trigger",          icon: CheckSquare,   colorClass: "text-[#F06A6A]",     accentColor: "240,106,106",  logoUrl: imgAsana,              category: "trigger", ConfigPanel: AsanaTriggerNode },
   db_trigger:             { label: "Database Trigger",       icon: Database,      colorClass: "text-emerald-400",   accentColor: "52,211,153",   logoUrl: imgDbTrigger,          category: "trigger", ConfigPanel: DatabaseTriggerNode },
   dns_trigger:            { label: "DNS Trigger",            icon: Globe,         colorClass: "text-blue-400",      accentColor: "96,165,250",   logoUrl: imgDnsTrigger,         category: "trigger", ConfigPanel: DnsTriggerNode },

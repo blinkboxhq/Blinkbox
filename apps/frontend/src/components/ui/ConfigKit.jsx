@@ -141,14 +141,14 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
   );
 }
 
-export function ConfigPills({ label, icon, value, onChange, options = [], accentColor = BB_ACCENT }) {
+export function ConfigPills({ label, icon, value, onChange, options = [], accentColor = BB_ACCENT, multi }) {
   const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
   return (
     <div className="flex flex-col">
       {label && <ConfigLabel icon={icon}>{label}</ConfigLabel>}
       <div className="flex flex-wrap gap-1.5">
         {opts.map((o) => {
-          const sel = o.value === value;
+          const sel = Array.isArray(multi) ? multi.includes(o.value) : o.value === value;
           return (
             <button
               key={o.value}

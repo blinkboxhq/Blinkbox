@@ -25,7 +25,6 @@ import WebhookTriggerNode  from "@triggers/webhook/ConfigPanel.jsx";
 import ScheduleTriggerNode from "@triggers/cron/ConfigPanel.jsx";
 import ChatTriggerNode     from "@triggers/chat/ConfigPanel.jsx";
 import EmailTriggerNode    from "@triggers/imap/ConfigPanel.jsx";
-import ErrorTriggerNode    from "@triggers/error_trigger/ConfigPanel.jsx";
 import RssTriggerNode      from "@triggers/rss/ConfigPanel.jsx";
 import ImapTriggerNode     from "@triggers/imap/ConfigPanel.jsx";
 import DatabaseTriggerNode from "@triggers/db/ConfigPanel.jsx";
@@ -124,7 +123,6 @@ import imgWooCommerce    from "@triggers/woocommerce/logo.svg";
 import imgVirusTotal     from "@triggers/virustotal/logo.svg";
 import imgWebhook       from "@triggers/webhook/logo.png";
 import imgImap          from "@triggers/imap/logo.svg";
-import imgErrorTrigger  from "@triggers/error_trigger/logo.svg";
 import imgHttpMonitor   from "@triggers/http_monitor/logo.svg";
 
 export const TRIGGER_VARIANTS = {
@@ -169,15 +167,6 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
     ConfigPanel: EmailTriggerNode,
-  },
-  error: {
-    backendType: "error_trigger",
-    icon: AlertTriangle,
-    logoUrl: imgErrorTrigger,
-    label: "On Workflow Error",
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    ConfigPanel: ErrorTriggerNode,
   },
   rss: {
     backendType: "rss_trigger",
