@@ -116,7 +116,7 @@ const POLL_REGISTRY = {
     triggerName: "jira_trigger",
     required: ["domain", "token"],
     extract: (cfg) => ({
-      cfg: { domain: cfg.domain, email: cfg.email, token: cfg.token, jql: cfg.jql },
+      cfg: { domain: cfg.domain, email: cfg.email, token: cfg.token, jql: cfg.jql, dedupOn: cfg.dedupOn },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "jira",

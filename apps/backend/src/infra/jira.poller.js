@@ -36,7 +36,7 @@ export async function pollJira(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { domain, email, token, jql = "created >= -15m ORDER BY created DESC" } = cfg;
+    const { domain, email, token, jql = "created >= -15m ORDER BY created DESC", dedupOn = "key" } = cfg;
     if (!domain || !email || !token) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
@@ -44,7 +44,9 @@ export async function pollJira(automationId, triggerNodeId, cfg) {
     const issues = await fetchIssues(domain, email, token, jql);
     const seenKey = `bb:jira:seen:${scope}`;
     for (const issue of issues) {
-      const added = await redis.sadd(seenKey, issue.key);
+      // "updated" events re-fire each time an issue changes; "key" events fire once per issue ever.
+      const dedupId = dedupOn === "updated" ? `${issue.key}:${issue.fields?.updated || ""}` : issue.key;
+      const added = await redis.sadd(seenKey, dedupId);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       const f = issue.fields;
@@ -100,7 +102,7 @@ export async function syncJiraJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await jiraQueue.add("jira-poll", {
       automationId: automation._id.toString(),
-      cfg: { domain: cfg.domain, email: cfg.email, token: cfg.token, jql: cfg.jql },
+      cfg: { domain: cfg.domain, email: cfg.email, token: cfg.token, jql: cfg.jql, dedupOn: cfg.dedupOn },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `jira-${automation._id}` });
   }
   console.log(`[JiraPoller] Synced ${automations.length} automations`);

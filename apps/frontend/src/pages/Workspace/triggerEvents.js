@@ -3,7 +3,48 @@ import {
   MessageSquare, Star, GitFork, Rocket,
   DollarSign, RefreshCw, Repeat, XCircle, FileText, AlertTriangle, ShoppingCart,
   GitCommit, Tag, Users, Flag, Activity,
+  Bug, Bookmark, Layers, UserPlus, ArrowRightCircle, AlertOctagon, CheckCircle2, Clock,
 } from 'lucide-react';
+
+const JIRA_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const jiraBaseFields = [
+  { type: 'text', key: 'domain', label: 'Jira Site', placeholder: 'your-team.atlassian.net',
+    hint: '// your Atlassian cloud domain — no https://' },
+  { type: 'text', key: 'email', label: 'Account Email', placeholder: 'you@company.com',
+    hint: '// the email of the Jira account the API token belongs to' },
+  { type: 'password', key: 'token', label: 'API Token', placeholder: 'your Jira API token',
+    hint: '// create one at id.atlassian.com/manage-profile/security/api-tokens' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: JIRA_POLL },
+];
+const jiraVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.key', 'issue key (e.g. PROJ-123)'],
+    ['$trigger.summary', 'issue summary'],
+    ['$trigger.status', 'current status'],
+    ['$trigger.assignee', 'assigned to'],
+    ['$trigger.url', 'link to the issue'],
+    ...extra,
+  ],
+});
+// Each Jira event is just a distinct JQL filter the poller runs. `dedupOn:'updated'`
+// lets change-based events re-fire when an issue updates; default 'key' fires once.
+// dedupOn rides along in `configExtra` (merged by eventDefaults) — not a visible field.
+const jiraEvent = (id, label, description, icon, jql, dedupOn = 'key', extraVars = []) => ({
+  id, label, description, icon, event: id, accent: '#2684FF',
+  configExtra: { dedupOn },
+  fields: [
+    ...jiraBaseFields,
+    { type: 'textarea', key: 'jql', label: 'JQL Filter', rows: 2, default: jql,
+      hint: '// the saved search this event runs — tweak it to scope by project, label, etc.' },
+    jiraVars(extraVars),
+  ],
+});
 
 const GITLAB_POLL = [
   { value: '1', label: 'Every minute' },
@@ -302,6 +343,42 @@ export const TRIGGER_EVENTS = {
         [['$trigger.title', 'milestone title'], ['$trigger.dueDate', 'due date']]),
     ],
   },
+
+  // ── JIRA ────────────────────────────────────────────────────
+  jira: {
+    title: 'Jira',
+    subtitle: 'Trigger on issue activity in your Jira project',
+    events: [
+      jiraEvent('issue_created', 'Issue Created', 'Any new issue is created', Plus,
+        'created >= -15m ORDER BY created DESC'),
+      jiraEvent('issue_updated', 'Issue Updated', 'Any issue is edited or changed', Pencil,
+        'updated >= -15m ORDER BY updated DESC', 'updated'),
+      jiraEvent('issue_assigned', 'Issue Assigned to Me', 'An issue is assigned to the current user', UserPlus,
+        'assignee = currentUser() AND updated >= -15m ORDER BY updated DESC', 'updated',
+        [['$trigger.assignee', 'the assignee']]),
+      jiraEvent('status_changed', 'Status Changed', 'An issue moves to a new status', ArrowRightCircle,
+        'status CHANGED AFTER -15m ORDER BY updated DESC', 'updated',
+        [['$trigger.status', 'the new status']]),
+      jiraEvent('issue_done', 'Issue Done', 'An issue is moved to Done', CheckCircle2,
+        'statusCategory = Done AND updated >= -15m ORDER BY updated DESC', 'updated'),
+      jiraEvent('issue_commented', 'Issue Commented', 'A comment is added to an issue', MessageSquare,
+        'updated >= -15m AND comment ~ "*" ORDER BY updated DESC', 'updated'),
+      jiraEvent('bug_created', 'Bug Reported', 'A new Bug-type issue is created', Bug,
+        'issuetype = Bug AND created >= -15m ORDER BY created DESC'),
+      jiraEvent('story_created', 'Story Created', 'A new Story is created', Bookmark,
+        'issuetype = Story AND created >= -15m ORDER BY created DESC'),
+      jiraEvent('epic_created', 'Epic Created', 'A new Epic is created', Layers,
+        'issuetype = Epic AND created >= -15m ORDER BY created DESC'),
+      jiraEvent('high_priority', 'High-Priority Issue', 'A High or Highest priority issue appears', AlertOctagon,
+        'priority IN (High, Highest) AND created >= -15m ORDER BY created DESC',
+        'key', [['$trigger.priority', 'the priority']]),
+      jiraEvent('overdue', 'Issue Overdue', 'An open issue passes its due date', Clock,
+        'duedate < now() AND statusCategory != Done ORDER BY duedate ASC', 'updated'),
+      jiraEvent('reopened', 'Issue Reopened', 'A done issue is moved back to open', RefreshCw,
+        'status CHANGED FROM ("Done", "Closed", "Resolved") AFTER -15m ORDER BY updated DESC', 'updated',
+        [['$trigger.status', 'the new status']]),
+    ],
+  },
 };
 
 export function getTriggerEvents(triggerId) {
@@ -316,7 +393,7 @@ export function getTriggerEvent(triggerId, eventId) {
 export function eventDefaults(triggerId, eventId) {
   const ev = getTriggerEvent(triggerId, eventId);
   if (!ev) return {};
-  const cfg = { event: ev.event, eventType: ev.event, eventId: ev.id };
+  const cfg = { event: ev.event, eventType: ev.event, eventId: ev.id, ...(ev.configExtra || {}) };
   for (const f of ev.fields) {
     if (f.key && f.default !== undefined) cfg[f.key] = f.default;
   }
