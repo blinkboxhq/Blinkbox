@@ -26,8 +26,9 @@ async function fetchMastodonNotifications(instance, accessToken, types) {
   }));
 }
 
-export async function pollMastodon(automationId, cfg) {
-  const lockKey = `bb:mastodon:lock:${automationId}`;
+export async function pollMastodon(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:mastodon:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -44,13 +45,13 @@ export async function pollMastodon(automationId, cfg) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:mastodon:seen:${automationId}`;
+    const seenKey = `bb:mastodon:seen:${scope}`;
     for (const notif of notifications) {
       const added = await redis.sadd(seenKey, notif.id);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, notif, { workspaceId: automation.workspaceId, idempotencyKey: `mastodon:${automation._id}:${notif.id}` });
+        await executeAutomation(automation, notif, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `mastodon:${scope}:${notif.id}` });
       } catch (err) {
         console.error(`[MastodonPoller] Failed for "${automation.name}":`, err.message);
       }

@@ -24,8 +24,9 @@ async function fetchStories(query, storyType = "story", minPoints = 0) {
   return (data.hits || []).filter(h => !minPoints || (h.points || 0) >= minPoints);
 }
 
-export async function pollHackerNews(automationId, cfg) {
-  const lockKey = `bb:hn:lock:${automationId}`;
+export async function pollHackerNews(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:hn:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -36,7 +37,7 @@ export async function pollHackerNews(automationId, cfg) {
     const storyType = cfg.storyType || cfg.feedType || "story";
     const minPoints = cfg.minPoints || 0;
     const stories = await fetchStories(query, storyType, parseInt(minPoints));
-    const seenKey = `bb:hn:seen:${automationId}`;
+    const seenKey = `bb:hn:seen:${scope}`;
     for (const story of stories) {
       const id = String(story.objectID);
       const added = await redis.sadd(seenKey, id);
@@ -46,7 +47,7 @@ export async function pollHackerNews(automationId, cfg) {
         id, title: story.title || "", url: story.url || `https://news.ycombinator.com/item?id=${id}`,
         author: story.author || "", points: story.points || 0, numComments: story.num_comments || 0,
         createdAt: story.created_at, storyType,
-      }, { workspaceId: automation.workspaceId, idempotencyKey: `hn:${automationId}:${id}` });
+      }, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `hn:${scope}:${id}` });
     }
   } catch (err) {
     console.warn(`[HNPoller] Error for ${automationId}:`, err.message);

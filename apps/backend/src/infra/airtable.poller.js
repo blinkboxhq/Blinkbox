@@ -36,12 +36,13 @@ async function airtableGet(apiKey, baseId, tableId, params = {}) {
 }
 
 export async function pollAirtable(
-  automationId, apiKey, baseId, tableId,
+  automationId, triggerNodeId, apiKey, baseId, tableId,
   viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId,
 ) {
-  const lockKey  = `bb:airtable:lock:${automationId}`;
-  const seenKey  = `bb:airtable:seen:${automationId}`;
-  const wmKey    = `bb:airtable:wm:${automationId}`;
+  const scope = triggerNodeId || automationId;
+  const lockKey  = `bb:airtable:lock:${scope}`;
+  const seenKey  = `bb:airtable:seen:${scope}`;
+  const wmKey    = `bb:airtable:wm:${scope}`;
 
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;
@@ -84,7 +85,7 @@ export async function pollAirtable(
 
       try {
         const payload = { id: record.id, createdTime: record.createdTime, fields: record.fields, _meta: { baseId, tableId } };
-        await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, idempotencyKey: `airtable:${automationId}:${record.id}:${record.fields["Modified"] || record.createdTime}` });
+        await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `airtable:${scope}:${record.id}:${record.fields["Modified"] || record.createdTime}` });
         console.log(`[AirtablePoller] Fired for "${automation.name}" record: ${record.id}`);
       } catch (err) {
         console.error(`[AirtablePoller] Failed to process ${record.id}:`, err.message);
@@ -108,8 +109,8 @@ export async function startAirtablePoller() {
   atWorker = new Worker(
     AIRTABLE_QUEUE,
     async (job) => {
-      const { automationId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId } = job.data;
-      await pollAirtable(automationId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
+      const { automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId } = job.data;
+      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );

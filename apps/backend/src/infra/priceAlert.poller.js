@@ -33,8 +33,9 @@ async function fetchPrice(coinId, currency) {
   };
 }
 
-export async function pollPrice(automationId, cfg) {
-  const lockKey = `bb:price:lock:${automationId}`;
+export async function pollPrice(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:price:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -47,7 +48,7 @@ export async function pollPrice(automationId, cfg) {
     const currentPrice = priceData.currentPrice;
 
     const currentSide = currentPrice >= thresholdNum ? "above" : "below";
-    const stateKey = `bb:price:state:${automationId}`;
+    const stateKey = `bb:price:state:${scope}`;
     const prevStateStr = await redis.get(stateKey);
     const prevState = prevStateStr ? JSON.parse(prevStateStr) : null;
 
@@ -78,8 +79,8 @@ export async function pollPrice(automationId, cfg) {
     };
 
     try {
-      const crossKey = `price:${automation._id}:${coinId}:${condition}:${Math.floor(Date.now() / 60000)}`;
-      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, idempotencyKey: crossKey });
+      const crossKey = `price:${scope}:${coinId}:${condition}:${Math.floor(Date.now() / 60000)}`;
+      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: crossKey });
       console.log(`[PriceAlert] Fired for "${automation.name}": ${coinId} ${condition} ${threshold}`);
     } catch (err) {
       console.error(`[PriceAlert] Failed for "${automation.name}":`, err.message);
@@ -98,7 +99,7 @@ export async function startPriceAlertPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   paWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollPrice(job.data.automationId, job.data.cfg);
+    await pollPrice(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 5 });
   paWorker.on("failed", (job, err) => console.error(`[PriceAlertPoller] Job failed:`, err.message));
   await syncPriceAlertJobs();
@@ -118,6 +119,7 @@ export async function syncPriceAlertJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await paQueue.add("price-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { coinId: cfg.coinId, currency: cfg.currency, condition: cfg.condition, threshold: cfg.threshold },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pa-${automation._id}` });
   }

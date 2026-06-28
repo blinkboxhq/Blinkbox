@@ -55,8 +55,9 @@ async function fetchUpcomingEvents(token, calendarId, minutesBefore, filterQuery
   }));
 }
 
-export async function pollCalendar(automationId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery) {
-  const lockKey = `bb:gcal:lock:${automationId}`;
+export async function pollCalendar(automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:gcal:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -69,13 +70,13 @@ export async function pollCalendar(automationId, credentialId, workspaceId, cale
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:gcal:seen:${automationId}`;
+    const seenKey = `bb:gcal:seen:${scope}`;
     for (const event of events) {
       const added = await redis.sadd(seenKey, event.eventId);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, event, { workspaceId: automation.workspaceId, idempotencyKey: `gcal:${automation._id}:${event.eventId}` });
+        await executeAutomation(automation, event, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `gcal:${scope}:${event.eventId}` });
       } catch (err) {
         console.error(`[GCalPoller] Failed for "${automation.name}":`, err.message);
       }

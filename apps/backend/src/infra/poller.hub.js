@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import { createBullMQConnection } from "./bullmq.js";
 import Automation from "../models/automation.model.js";
+import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
 import { pollGmail } from "./gmail.poller.js";
 import { pollAirtable } from "./airtable.poller.js";
@@ -57,8 +58,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "gmail",
-    run: async ({ automationId, credentialId, query, maxResults, onlyNew, workspaceId }) => {
-      await pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId);
+    run: async ({ automationId, triggerNodeId, credentialId, query, maxResults, onlyNew, workspaceId }) => {
+      await pollGmail(automationId, triggerNodeId, credentialId, query, maxResults, onlyNew, workspaceId);
     },
   },
 
@@ -73,8 +74,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "airtable",
-    run: async ({ automationId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId }) => {
-      await pollAirtable(automationId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
+    run: async ({ automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId }) => {
+      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
     },
   },
 
@@ -89,8 +90,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "hubspot",
-    run: async ({ automationId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId }) => {
-      await pollHubSpot(automationId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId);
+    run: async ({ automationId, triggerNodeId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId }) => {
+      await pollHubSpot(automationId, triggerNodeId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId);
     },
   },
 
@@ -105,8 +106,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "notion",
-    run: async ({ automationId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId }) => {
-      await pollNotion(automationId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
+    run: async ({ automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId }) => {
+      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
     },
   },
 
@@ -118,7 +119,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "jira",
-    run: async ({ automationId, cfg }) => { await pollJira(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollJira(automationId, triggerNodeId, cfg); },
   },
 
   asana_trigger: {
@@ -139,7 +140,7 @@ const POLL_REGISTRY = {
       return { pattern: `*/${min} * * * *` };
     },
     jobPrefix: "asana",
-    run: async ({ automationId, cfg }) => { await pollAsana(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollAsana(automationId, triggerNodeId, cfg); },
   },
 
   db_trigger: {
@@ -152,7 +153,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "* * * * *" }),
     jobPrefix: "db",
-    run: async ({ automationId, cfg, credentialId, rawConnectionString }) => {
+    run: async ({ automationId, triggerNodeId, cfg, credentialId, rawConnectionString }) => {
       let connectionString = rawConnectionString || cfg.connectionString || "";
       if (credentialId && !connectionString) {
         try {
@@ -165,7 +166,7 @@ const POLL_REGISTRY = {
         }
       }
       if (!connectionString) { console.warn(`[PollHub/db] No connection string for ${automationId}`); return; }
-      await pollTable(automationId, cfg, connectionString);
+      await pollTable(automationId, triggerNodeId, cfg, connectionString);
     },
   },
 
@@ -183,7 +184,7 @@ const POLL_REGISTRY = {
       return { pattern: `*/${min} * * * *` };
     },
     jobPrefix: "dns",
-    run: async ({ automationId, cfg }) => { await pollDns(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollDns(automationId, triggerNodeId, cfg); },
   },
 
   docker_trigger: {
@@ -194,7 +195,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
     jobPrefix: "docker",
-    run: async ({ automationId, cfg }) => { await pollDocker(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollDocker(automationId, triggerNodeId, cfg); },
   },
 
   github_issue_trigger: {
@@ -208,8 +209,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "ghissue",
-    run: async ({ automationId, credentialId, workspaceId, owner, repo, type, labelFilter }) => {
-      await pollRepo(automationId, credentialId, workspaceId, owner, repo, type, labelFilter);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter }) => {
+      await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter);
     },
   },
 
@@ -221,7 +222,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gitlab",
-    run: async ({ automationId, cfg }) => { await pollGitLab(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollGitLab(automationId, triggerNodeId, cfg); },
   },
 
   google_calendar_trigger: {
@@ -234,8 +235,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
     jobPrefix: "gcal",
-    run: async ({ automationId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery }) => {
-      await pollCalendar(automationId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery }) => {
+      await pollCalendar(automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery);
     },
   },
 
@@ -250,7 +251,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gsheets",
-    run: async ({ automationId, cfg }) => { await pollGoogleSheets(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollGoogleSheets(automationId, triggerNodeId, cfg); },
   },
 
   hackernews_trigger: {
@@ -261,7 +262,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 15} * * * *` }),
     jobPrefix: "hn",
-    run: async ({ automationId, cfg }) => { await pollHackerNews(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollHackerNews(automationId, triggerNodeId, cfg); },
   },
 
   http_monitor_trigger: {
@@ -272,7 +273,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ every: (parseInt(cfg.pollIntervalSeconds) || 60) * 1000 }),
     jobPrefix: "httpmon",
-    run: async ({ automationId, cfg }) => { await pollHttpMonitor(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollHttpMonitor(automationId, triggerNodeId, cfg); },
   },
 
   imap_trigger: {
@@ -281,7 +282,7 @@ const POLL_REGISTRY = {
     extract: (cfg) => ({ cfg, credentialId: cfg.credentialId || null }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "imap",
-    run: async ({ automationId, cfg, credentialId }) => {
+    run: async ({ automationId, triggerNodeId, cfg, credentialId }) => {
       let password = "";
       if (credentialId) {
         try {
@@ -293,7 +294,7 @@ const POLL_REGISTRY = {
           return;
         }
       }
-      await pollMailbox(automationId, cfg, password);
+      await pollMailbox(automationId, triggerNodeId, cfg, password);
     },
   },
 
@@ -308,7 +309,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "outlook",
-    run: async ({ automationId, cfg }) => { await pollOutlook(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollOutlook(automationId, triggerNodeId, cfg); },
   },
 
   pipedrive_trigger: {
@@ -319,7 +320,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "pipedrive",
-    run: async ({ automationId, cfg }) => { await pollPipedrive(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollPipedrive(automationId, triggerNodeId, cfg); },
   },
 
   port_monitor_trigger: {
@@ -330,7 +331,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ every: (parseInt(cfg.pollIntervalSeconds) || 60) * 1000 }),
     jobPrefix: "port",
-    run: async ({ automationId, cfg }) => { await pollPort(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollPort(automationId, triggerNodeId, cfg); },
   },
 
   price_alert_trigger: {
@@ -341,7 +342,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "pa",
-    run: async ({ automationId, cfg }) => { await pollPrice(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollPrice(automationId, triggerNodeId, cfg); },
   },
 
   reddit_trigger: {
@@ -352,7 +353,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 10} * * * *` }),
     jobPrefix: "reddit",
-    run: async ({ automationId, cfg }) => { await pollSubreddit(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollSubreddit(automationId, triggerNodeId, cfg); },
   },
 
   rss_trigger: {
@@ -361,7 +362,7 @@ const POLL_REGISTRY = {
     extract: (cfg) => ({ feedUrl: cfg.feedUrl, onlyNew: cfg.onlyNew !== false }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/15 * * * *" }),
     jobPrefix: "rss",
-    run: async ({ automationId, feedUrl, onlyNew }) => { await pollFeed(automationId, feedUrl, onlyNew); },
+    run: async ({ automationId, triggerNodeId, feedUrl, onlyNew }) => { await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew); },
   },
 
   ssh_trigger: {
@@ -376,7 +377,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "ssh",
-    run: async ({ automationId, cfg }) => { await pollSsh(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollSsh(automationId, triggerNodeId, cfg); },
   },
 
   ssl_trigger: {
@@ -387,7 +388,7 @@ const POLL_REGISTRY = {
     }),
     repeat: () => ({ every: 12 * 60 * 60 * 1000 }),
     jobPrefix: "ssl",
-    run: async ({ automationId, cfg }) => { await pollSslCert(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollSslCert(automationId, triggerNodeId, cfg); },
   },
 
   teams_trigger: {
@@ -401,7 +402,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 2} * * * *` }),
     jobPrefix: "teams",
-    run: async ({ automationId, cfg }) => { await pollTeams(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollTeams(automationId, triggerNodeId, cfg); },
   },
 
   trello_trigger: {
@@ -412,7 +413,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "trello",
-    run: async ({ automationId, cfg }) => { await pollTrello(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollTrello(automationId, triggerNodeId, cfg); },
   },
 
   youtube_trigger: {
@@ -424,8 +425,8 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 15} * * * *` }),
     jobPrefix: "yt",
-    run: async ({ automationId, credentialId, workspaceId, channelId, maxResults }) => {
-      await pollChannel(automationId, credentialId, workspaceId, channelId, maxResults);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults }) => {
+      await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults);
     },
   },
 
@@ -437,7 +438,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
     jobPrefix: "ph",
-    run: async ({ automationId, cfg }) => { await pollProductHunt(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollProductHunt(automationId, triggerNodeId, cfg); },
   },
 
   mastodon_trigger: {
@@ -448,7 +449,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "mastodon",
-    run: async ({ automationId, cfg }) => { await pollMastodon(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollMastodon(automationId, triggerNodeId, cfg); },
   },
 
   virustotal_trigger: {
@@ -459,7 +460,7 @@ const POLL_REGISTRY = {
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
     jobPrefix: "vt",
-    run: async ({ automationId, cfg }) => { await pollVirusTotal(automationId, cfg); },
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollVirusTotal(automationId, triggerNodeId, cfg); },
   },
 };
 
@@ -471,13 +472,13 @@ let hubWorker = null;
 // ── Dispatch ───────────────────────────────────────────────────────────────────
 
 async function dispatch(job) {
-  const { triggerType, automationId, ...payload } = job.data;
+  const { triggerType, automationId, triggerNodeId, ...payload } = job.data;
   const entry = POLL_REGISTRY[triggerType];
   if (!entry) {
     console.warn(`[PollHub] Unknown triggerType "${triggerType}" in job ${job.id}`);
     return;
   }
-  await entry.run({ automationId, ...payload });
+  await entry.run({ automationId, triggerNodeId, ...payload });
 }
 
 // ── Sync ───────────────────────────────────────────────────────────────────────
@@ -505,29 +506,30 @@ export async function syncPollerHub(filterTriggerType = null) {
 
   for (const triggerType of typesToSync) {
     const entry = POLL_REGISTRY[triggerType];
-    const automations = await Automation.find({ trigger: entry.triggerName, active: true });
+    const automations = await findAutomationsWithTrigger(entry.triggerName);
 
     for (const automation of automations) {
-      const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
-      const cfg = entryNode?.data?.config || entryNode?.data || {};
+      for (const node of getTriggerNodesOfType(automation, entry.triggerName)) {
+        const cfg = getTriggerConfig(node);
 
-      const missing = entry.required.filter((f) => !cfg[f]);
-      if (missing.length) {
-        console.warn(`[PollHub] ${automation._id} (${triggerType}) missing: ${missing.join(", ")} — skipping`);
-        continue;
+        const missing = entry.required.filter((f) => !cfg[f]);
+        if (missing.length) {
+          console.warn(`[PollHub] ${automation._id} node ${node.id} (${triggerType}) missing: ${missing.join(", ")} — skipping`);
+          continue;
+        }
+
+        const payload = entry.extract(cfg, automation);
+        const repeatOpt = entry.repeat(cfg);
+        const jobId = `${entry.jobPrefix}-${automation._id}-${node.id}`;
+
+        await hubQueue.add(
+          "poll",
+          { triggerType, automationId: automation._id.toString(), triggerNodeId: node.id, ...payload },
+          { repeat: repeatOpt, jobId },
+        );
+
+        total++;
       }
-
-      const payload = entry.extract(cfg, automation);
-      const repeatOpt = entry.repeat(cfg);
-      const jobId = `${entry.jobPrefix}-${automation._id}`;
-
-      await hubQueue.add(
-        "poll",
-        { triggerType, automationId: automation._id.toString(), ...payload },
-        { repeat: repeatOpt, jobId },
-      );
-
-      total++;
     }
   }
 

@@ -45,7 +45,7 @@ async function githubRequest(path, method, token, body = null) {
  * Register a GitHub webhook for the given automation.
  * Returns the webhook ID and signing secret (stored in automation config).
  */
-export async function registerGitHubWebhook(automationId, repo, events, token) {
+export async function registerGitHubWebhook(automationId, repo, events, token, nodeId = null) {
   const webhookUrl = `${BACKEND_URL}/webhook/${automationId}`;
   const secret = crypto.randomBytes(24).toString("hex");
 
@@ -65,7 +65,8 @@ export async function registerGitHubWebhook(automationId, repo, events, token) {
   // so we can delete it on deactivation and verify signatures on incoming events.
   const automation = await Automation.findById(automationId);
   if (automation) {
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const targetId = nodeId || automation.entryNodeId;
+    const entryNode = automation.nodes.find((n) => n.id === targetId);
     if (entryNode) {
       entryNode.data = entryNode.data || {};
       entryNode.data.config = {
@@ -86,7 +87,7 @@ export async function registerGitHubWebhook(automationId, repo, events, token) {
 /**
  * Delete the GitHub webhook for the given automation.
  */
-export async function unregisterGitHubWebhook(automationId, repo, webhookId, token) {
+export async function unregisterGitHubWebhook(automationId, repo, webhookId, token, nodeId = null) {
   try {
     await githubRequest(`/repos/${repo}/hooks/${webhookId}`, "DELETE", token);
     console.log(`[GitHub] Deleted webhook ${webhookId} from ${repo}`);
@@ -98,7 +99,8 @@ export async function unregisterGitHubWebhook(automationId, repo, webhookId, tok
   // Clear the stored webhook metadata
   const automation = await Automation.findById(automationId);
   if (automation) {
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const targetId = nodeId || automation.entryNodeId;
+    const entryNode = automation.nodes.find((n) => n.id === targetId);
     if (entryNode?.data?.config) {
       delete entryNode.data.config.githubWebhookId;
       delete entryNode.data.config.secret;

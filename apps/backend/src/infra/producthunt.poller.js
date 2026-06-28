@@ -39,8 +39,9 @@ async function fetchProductHuntPosts(apiKey, category, minVotes) {
     .filter(p => !minVotes || p.votesCount >= parseInt(minVotes) || 0);
 }
 
-export async function pollProductHunt(automationId, cfg) {
-  const lockKey = `bb:producthunt:lock:${automationId}`;
+export async function pollProductHunt(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:producthunt:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -53,7 +54,7 @@ export async function pollProductHunt(automationId, cfg) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:producthunt:seen:${automationId}`;
+    const seenKey = `bb:producthunt:seen:${scope}`;
     for (const post of posts) {
       const added = await redis.sadd(seenKey, post.id);
       if (!added) continue;
@@ -67,7 +68,7 @@ export async function pollProductHunt(automationId, cfg) {
           maker: post.user?.name, makerUsername: post.user?.username,
           topics: (post.topics?.edges || []).map(e => e.node?.name),
           url: post.url, createdAt: post.createdAt,
-        }, { workspaceId: automation.workspaceId, idempotencyKey: `producthunt:${automation._id}:${post.id}` });
+        }, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `producthunt:${scope}:${post.id}` });
       } catch (err) {
         console.error(`[ProductHuntPoller] Failed for "${automation.name}":`, err.message);
       }

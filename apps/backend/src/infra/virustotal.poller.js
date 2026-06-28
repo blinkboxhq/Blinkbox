@@ -40,8 +40,9 @@ async function fetchVTAnalysis(apiKey, scanTarget, scanType) {
   };
 }
 
-export async function pollVirusTotal(automationId, cfg) {
-  const lockKey = `bb:vt:lock:${automationId}`;
+export async function pollVirusTotal(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:vt:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -52,7 +53,7 @@ export async function pollVirusTotal(automationId, cfg) {
     const result = await fetchVTAnalysis(apiKey, scanTarget, scanType);
     if (!result || !result.isMalicious) return;
 
-    const stateKey = `bb:vt:state:${automationId}`;
+    const stateKey = `bb:vt:state:${scope}`;
     const lastMalicious = parseInt(await redis.get(stateKey) || "0");
     if (result.malicious <= lastMalicious) return;
 
@@ -65,7 +66,8 @@ export async function pollVirusTotal(automationId, cfg) {
     try {
       await executeAutomation(automation, result, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `vt:${automation._id}:${result.id}:${result.malicious}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `vt:${scope}:${result.id}:${result.malicious}`,
       });
     } catch (err) {
       console.error(`[VTPoller] Failed for "${automation.name}":`, err.message);

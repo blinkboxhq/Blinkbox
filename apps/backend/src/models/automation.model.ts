@@ -64,6 +64,10 @@ const AutomationSchema = new mongoose.Schema(
     nodes: { type: [NodeSchema], default: [] },
     edges: { type: [EdgeSchema], default: [] },
     entryNodeId: { type: String, default: null },
+    triggerNodes: {
+      type: [{ nodeId: { type: String, required: true }, type: { type: String, required: true }, _id: false }],
+      default: [],
+    },
     settings: {
       type: Object,
       default: { maxParallel: 10 },

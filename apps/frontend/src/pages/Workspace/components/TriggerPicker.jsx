@@ -60,12 +60,9 @@ export default function TriggerPicker() {
 
   const commit = useCallback((trigger) => {
     const existingTriggers = nodes.filter((n) => n.data?.type === "trigger");
-    if (existingTriggers.length > 0) {
-      addNotification?.({ type: "warning", title: "Only one trigger allowed", message: "A workflow can have a single trigger. Delete the current one to switch." });
-      close();
-      return;
-    }
-    const position = { x: -47, y: -47 };
+    const position = existingTriggers.length > 0
+      ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
+      : { x: -47, y: -47 };
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
     addNode({ id: newId, type: "custom", position, data: { backendType: trigger.backendType, label: trigger.label, type: "trigger", config: { triggerVariant: trigger.id } } });
     playNodeLand();

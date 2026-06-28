@@ -43,8 +43,9 @@ async function fetchVideos(channelId, apiKey, maxResults = 5) {
   }));
 }
 
-export async function pollChannel(automationId, credentialId, workspaceId, channelId, maxResults) {
-  const lockKey = `bb:yt:lock:${automationId}`;
+export async function pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:yt:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -57,14 +58,14 @@ export async function pollChannel(automationId, credentialId, workspaceId, chann
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:yt:seen:${automationId}`;
+    const seenKey = `bb:yt:seen:${scope}`;
     for (const video of videos) {
       if (!video.videoId) continue;
       const added = await redis.sadd(seenKey, video.videoId);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, video, { workspaceId: automation.workspaceId, idempotencyKey: `yt:${automation._id}:${video.videoId}` });
+        await executeAutomation(automation, video, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `yt:${scope}:${video.videoId}` });
       } catch (err) {
         console.error(`[YouTubePoller] Failed for automation "${automation.name}":`, err.message);
       }
@@ -83,8 +84,8 @@ export async function startYouTubePoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   ytWorker = new Worker(QUEUE_NAME, async (job) => {
-    const { automationId, credentialId, workspaceId, channelId, maxResults } = job.data;
-    await pollChannel(automationId, credentialId, workspaceId, channelId, maxResults);
+    const { automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults } = job.data;
+    await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults);
   }, { connection: createBullMQConnection(), concurrency: 3 });
   ytWorker.on("failed", (job, err) => console.error(`[YouTubePoller] Job failed:`, err.message));
   await syncYouTubeJobs();
@@ -104,6 +105,7 @@ export async function syncYouTubeJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 15;
     await ytQueue.add("yt-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       credentialId: cfg.credentialId,
       workspaceId: automation.workspaceId.toString(),
       channelId: cfg.channelId,

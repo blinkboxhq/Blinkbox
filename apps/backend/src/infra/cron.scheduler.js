@@ -19,6 +19,7 @@
 import { Queue, Worker } from "bullmq";
 import { createBullMQConnection } from "./bullmq.js";
 import Automation from "../models/automation.model.js";
+import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
 const CRON_QUEUE_NAME = "bb-cron-scheduler";
 
@@ -40,7 +41,7 @@ export async function startCronScheduler() {
   cronWorker = new Worker(
     CRON_QUEUE_NAME,
     async (job) => {
-      const { automationId } = job.data;
+      const { automationId, triggerNodeId } = job.data;
 
       // Dynamic import to avoid circular deps
       const { executeAutomation } = await import(
@@ -68,7 +69,8 @@ export async function startCronScheduler() {
         },
         {
           workspaceId: automation.workspaceId,
-          idempotencyKey: `cron-${automationId}-${Date.now()}`,
+          entryNodeId: triggerNodeId || automation.entryNodeId,
+          idempotencyKey: `cron-${triggerNodeId || automationId}-${Date.now()}`,
         },
       );
     },
@@ -102,31 +104,33 @@ export async function syncCronJobs() {
   }
 
   // Find all active cron automations
-  const cronAutomations = await Automation.find({
-    trigger: "cron_trigger",
-    active: true,
-  });
+  const cronAutomations = await findAutomationsWithTrigger("cron_trigger");
 
+  let registered = 0;
   for (const automation of cronAutomations) {
-    const schedule = automation.settings?.cronExpression;
-    if (!schedule) {
-      console.warn(`[CronScheduler] Automation ${automation._id} has no cronExpression, skipping`);
-      continue;
+    for (const node of getTriggerNodesOfType(automation, "cron_trigger")) {
+      const cfg = getTriggerConfig(node);
+      const schedule = cfg.cronExpression || cfg.schedule || automation.settings?.cronExpression;
+      if (!schedule) {
+        console.warn(`[CronScheduler] Automation ${automation._id} node ${node.id} has no cronExpression, skipping`);
+        continue;
+      }
+
+      await cronQueue.add(
+        "cron-fire",
+        { automationId: automation._id.toString(), triggerNodeId: node.id },
+        {
+          repeat: { pattern: schedule },
+          jobId: `cron-${automation._id}-${node.id}`,
+        },
+      );
+
+      registered++;
+      console.log(`[CronScheduler] Registered: "${automation.name}" node ${node.id} → ${schedule}`);
     }
-
-    await cronQueue.add(
-      "cron-fire",
-      { automationId: automation._id.toString() },
-      {
-        repeat: { pattern: schedule },
-        jobId: `cron-${automation._id}`,
-      },
-    );
-
-    console.log(`[CronScheduler] Registered: "${automation.name}" → ${schedule}`);
   }
 
-  console.log(`[CronScheduler] Synced ${cronAutomations.length} cron automations`);
+  console.log(`[CronScheduler] Synced ${registered} cron trigger nodes across ${cronAutomations.length} automations`);
 }
 
 /**

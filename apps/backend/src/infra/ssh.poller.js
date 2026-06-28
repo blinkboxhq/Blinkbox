@@ -53,8 +53,9 @@ function runCommand(cfg) {
   });
 }
 
-export async function pollSsh(automationId, cfg) {
-  const lockKey = `bb:ssh:lock:${automationId}`;
+export async function pollSsh(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:ssh:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;
   try {
@@ -69,14 +70,15 @@ export async function pollSsh(automationId, cfg) {
     if (onlyOnChange) {
       // Only fire if stdout changed since last run (stored in redis)
       const { redis } = await import("./redis.client.js");
-      const key = `bb:ssh:last:${automationId}`;
+      const key = `bb:ssh:last:${scope}`;
       const last = await redis.get(key);
       if (last === result.stdout) return;
       await redis.set(key, result.stdout, "EX", 30 * 24 * 60 * 60);
     }
     await executeAutomation(automation, { ...result, host, command }, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `ssh:${automationId}:${Date.now()}`,
+      entryNodeId: triggerNodeId || automation.entryNodeId,
+      idempotencyKey: `ssh:${scope}:${Date.now()}`,
     });
   } catch (err) {
     console.warn(`[SshPoller] Error for ${automationId}:`, err.message);
@@ -92,7 +94,7 @@ export async function startSshPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   sshWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollSsh(job.data.automationId, job.data.cfg);
+    await pollSsh(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   sshWorker.on("failed", (job, err) => console.error(`[SshPoller] Job failed:`, err.message));
   await syncSshJobs();
@@ -111,6 +113,7 @@ export async function syncSshJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await sshQueue.add("ssh-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { host: cfg.host, port: cfg.port, username: cfg.username, password: cfg.password, privateKey: cfg.privateKey, passphrase: cfg.passphrase, authMethod: cfg.authMethod, command: cfg.command, onlyOnChange: cfg.onlyOnChange },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `ssh-${automation._id}` });
   }

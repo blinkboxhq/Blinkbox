@@ -79,11 +79,12 @@ async function claimIfUnseen(seenKey, guid, ttl) {
   return added === 1;
 }
 
-export async function pollFeed(automationId, feedUrl, onlyNew) {
-  const seenKey = `bb:rss:seen:${automationId}`;
+export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew) {
+  const scope = triggerNodeId || automationId;
+  const seenKey = `bb:rss:seen:${scope}`;
 
   // Per-automation poll lock to prevent concurrent ticks from processing the same feed
-  const pollLockKey = `bb:rss:lock:${automationId}`;
+  const pollLockKey = `bb:rss:lock:${scope}`;
   const pollLocked = await acquireLock(pollLockKey, "poller", 60);
   if (!pollLocked) {
     console.warn(`[RSS] Automation ${automationId} already polling, skipping concurrent tick`);
@@ -130,7 +131,7 @@ export async function pollFeed(automationId, feedUrl, onlyNew) {
         await executeAutomation(
           automation,
           { ...item, feed: feedMeta, feedUrl },
-          { workspaceId: automation.workspaceId, idempotencyKey: `rss:${automation._id}:${guid}` },
+          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `rss:${scope}:${guid}` },
         );
         console.log(`[RSS] Fired automation "${automation.name}" for item: "${item.title}"`);
       } catch (err) {
@@ -158,8 +159,8 @@ export async function startRssPoller() {
   rssWorker = new Worker(
     RSS_QUEUE_NAME,
     async (job) => {
-      const { automationId, feedUrl, onlyNew } = job.data;
-      await pollFeed(automationId, feedUrl, onlyNew);
+      const { automationId, triggerNodeId, feedUrl, onlyNew } = job.data;
+      await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -197,7 +198,7 @@ export async function syncRssJobs() {
 
     await rssQueue.add(
       "rss-poll",
-      { automationId: automation._id.toString(), feedUrl, onlyNew },
+      { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, feedUrl, onlyNew },
       { repeat: { pattern: pollInterval }, jobId: `rss-${automation._id}` },
     );
 
@@ -207,11 +208,11 @@ export async function syncRssJobs() {
   console.log(`[RSSPoller] Synced ${rssAutomations.length} RSS automations`);
 }
 
-export async function addRssJob(automationId, feedUrl, pollInterval, onlyNew) {
+export async function addRssJob(automationId, triggerNodeId, feedUrl, pollInterval, onlyNew) {
   if (!rssQueue) return;
   await rssQueue.add(
     "rss-poll",
-    { automationId: automationId.toString(), feedUrl, onlyNew },
+    { automationId: automationId.toString(), triggerNodeId, feedUrl, onlyNew },
     { repeat: { pattern: pollInterval || "*/15 * * * *" }, jobId: `rss-${automationId}` },
   );
 }

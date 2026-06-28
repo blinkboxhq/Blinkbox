@@ -22,8 +22,9 @@ async function fetchTasks(token, projectId) {
   return data.data || [];
 }
 
-export async function pollAsana(automationId, cfg) {
-  const lockKey = `bb:asana:lock:${automationId}`;
+export async function pollAsana(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:asana:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -35,14 +36,14 @@ export async function pollAsana(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const tasks = await fetchTasks(token, projectId);
-    const seenKey = `bb:asana:seen:${automationId}`;
+    const seenKey = `bb:asana:seen:${scope}`;
     for (const task of tasks) {
       if (watchType === "completed" && !task.completed) continue;
       if (watchType === "new_task" && task.completed) continue;
       const added = await redis.sadd(seenKey, task.gid);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
-      await executeAutomation(automation, { gid: task.gid, name: task.name || "", completed: task.completed, assignee: task.assignee?.name || "", dueOn: task.due_on || "", notes: task.notes || "", createdAt: task.created_at, projectId, url: `https://app.asana.com/0/${projectId}/${task.gid}` }, { workspaceId: automation.workspaceId, idempotencyKey: `asana:${automationId}:${task.gid}` });
+      await executeAutomation(automation, { gid: task.gid, name: task.name || "", completed: task.completed, assignee: task.assignee?.name || "", dueOn: task.due_on || "", notes: task.notes || "", createdAt: task.created_at, projectId, url: `https://app.asana.com/0/${projectId}/${task.gid}` }, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `asana:${scope}:${task.gid}` });
     }
   } catch (err) {
     console.warn(`[AsanaPoller] Error for ${automationId}:`, err.message);
@@ -54,7 +55,7 @@ export async function pollAsana(automationId, cfg) {
 export async function startAsanaPoller() {
   console.log("[AsanaPoller] Starting...");
   asanaQueue = new Queue(QUEUE_NAME, { connection: createBullMQConnection(), defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } } });
-  asanaWorker = new Worker(QUEUE_NAME, async (job) => { await pollAsana(job.data.automationId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 4 });
+  asanaWorker = new Worker(QUEUE_NAME, async (job) => { await pollAsana(job.data.automationId, job.data.triggerNodeId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 4 });
   asanaWorker.on("failed", (job, err) => console.error(`[AsanaPoller] Job failed:`, err.message));
   await syncAsanaJobs();
   console.log("[AsanaPoller] Ready");

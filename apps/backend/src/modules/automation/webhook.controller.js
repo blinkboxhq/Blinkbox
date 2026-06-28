@@ -5,6 +5,48 @@ import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
 import { webhookQueue } from "../../infra/webhook.queue.js";
 import { sanitizeAndLog } from "../../utils/errors.js";
+import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
+
+// Header fingerprint → the externally-registered trigger type that owns it.
+// Used to disambiguate which trigger node an inbound webhook belongs to.
+const WEBHOOK_HEADER_SIGNATURES = [
+  { header: "x-hub-signature-256", type: "github_trigger" },
+  { header: "stripe-signature", type: "stripe_trigger" },
+  { header: "x-telegram-bot-api-secret-token", type: "telegram_trigger" },
+  { header: "x-slack-signature", type: "slack_trigger" },
+  { header: "x-shopify-hmac-sha256", type: "shopify_trigger" },
+  { header: "linear-signature", type: "linear_trigger" },
+  { header: "typeform-signature", type: "typeform_trigger" },
+];
+
+/**
+ * Pick which trigger node an inbound webhook belongs to.
+ * 1. Match the stored per-node registration record (webhook id / secret).
+ * 2. Else match the trigger type implied by request headers, taking the first
+ *    trigger node of that type.
+ * 3. Else fall back to the automation's entry node.
+ */
+function resolveWebhookTriggerNode(automation, req) {
+  const triggerEntries = automation.triggerNodes?.length
+    ? automation.triggerNodes
+    : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
+
+  for (const sig of WEBHOOK_HEADER_SIGNATURES) {
+    if (!req.headers[sig.header]) continue;
+    const matches = getTriggerNodesOfType(automation, sig.type);
+    if (matches.length) {
+      return { node: matches[0], config: getTriggerConfig(matches[0]) };
+    }
+  }
+
+  const entry =
+    triggerEntries.find((e) => e.nodeId === automation.entryNodeId) ||
+    triggerEntries[0];
+  const node =
+    automation.nodes.find((n) => n.id === entry?.nodeId) ||
+    automation.nodes.find((n) => n.id === automation.entryNodeId);
+  return { node, config: node ? getTriggerConfig(node) : {} };
+}
 
 const RATE_LIMIT = 60;
 const RATE_WINDOW_SECONDS = 60;
@@ -31,9 +73,12 @@ export async function handlePublicWebhook(req, res) {
       return res.status(404).json({ error: "Webhook not found or inactive" });
     }
 
-    // ── Enforce trigger config: allowed methods + auth ──────────────────────
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
-    const triggerConfig = entryNode?.data || {};
+    // ── Resolve which trigger node this webhook belongs to ──────────────────
+    const { node: entryNode, config: triggerConfig } = resolveWebhookTriggerNode(
+      automation,
+      req,
+    );
+    const entryNodeId = entryNode?.id || automation.entryNodeId;
 
     if (triggerConfig.allowedMethods && triggerConfig.allowedMethods.length > 0) {
       if (!triggerConfig.allowedMethods.includes(req.method)) {
@@ -166,7 +211,7 @@ export async function handlePublicWebhook(req, res) {
           target: e.target ?? e.to,
           targetHandle: e.targetHandle ?? null,
         })),
-        entryNodeId: automation.entryNodeId,
+        entryNodeId,
       });
     } catch (err) {
       return res.status(400).json({ error: `Invalid workflow: ${err.message}` });
@@ -181,6 +226,7 @@ export async function handlePublicWebhook(req, res) {
         const result = await startAndAwaitWorkflowExecution(automation, webhookData, {
           idempotencyKey,
           workspaceId: automation.workspaceId,
+          entryNodeId,
         });
 
         // If the DAG contains a respond_webhook node, use its response
@@ -215,6 +261,7 @@ export async function handlePublicWebhook(req, res) {
         webhookData,
         idempotencyKey,
         workspaceId: automation.workspaceId,
+        entryNodeId,
       },
       { jobId: idempotencyKey },
     );

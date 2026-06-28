@@ -27,8 +27,9 @@ async function fetchEvents(host = "gitlab.com", projectId, token, eventType) {
   return await res.json();
 }
 
-export async function pollGitLab(automationId, cfg) {
-  const lockKey = `bb:gitlab:lock:${automationId}`;
+export async function pollGitLab(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:gitlab:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -38,7 +39,7 @@ export async function pollGitLab(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const events = await fetchEvents(host, projectId, token, eventType);
-    const seenKey = `bb:gitlab:seen:${automationId}`;
+    const seenKey = `bb:gitlab:seen:${scope}`;
     for (const evt of events) {
       const id = String(evt.id || evt.iid);
       const added = await redis.sadd(seenKey, id);
@@ -55,7 +56,8 @@ export async function pollGitLab(automationId, cfg) {
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `gitlab:${automationId}:${eventType}:${id}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `gitlab:${scope}:${eventType}:${id}`,
       });
     }
   } catch (err) {
@@ -72,7 +74,7 @@ export async function startGitLabPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   gitlabWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollGitLab(job.data.automationId, job.data.cfg);
+    await pollGitLab(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   gitlabWorker.on("failed", (job, err) => console.error(`[GitLabPoller] Job failed:`, err.message));
   await syncGitLabJobs();

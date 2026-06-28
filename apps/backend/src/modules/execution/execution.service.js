@@ -58,9 +58,10 @@ function normalizeTriggerData(payload) {
 }
 
 export async function startWorkflowExecution(automation, payload = {}, options = {}) {
-  const { workspaceId = "default", idempotencyKey = crypto.randomUUID() } = options;
+  const { workspaceId = "default", idempotencyKey = crypto.randomUUID(), entryNodeId } = options;
   const triggerData = normalizeTriggerData(payload);
   const definition = buildDefinition(automation, workspaceId);
+  if (entryNodeId) definition.entryNodeId = entryNodeId;
 
   validateAutomation({
     nodes: definition.nodes,
@@ -84,14 +85,18 @@ export async function startWorkflowExecution(automation, payload = {}, options =
     }
   }
 
-  const execution = await executeAutomation(automation, triggerData, { workspaceId });
+  const execution = await executeAutomation(automation, triggerData, {
+    workspaceId,
+    ...(entryNodeId ? { entryNodeId } : {}),
+  });
   return { executionId: execution._id?.toString() };
 }
 
 export async function startAndAwaitWorkflowExecution(automation, payload = {}, options = {}) {
-  const { workspaceId = "default", idempotencyKey = crypto.randomUUID() } = options;
+  const { workspaceId = "default", idempotencyKey = crypto.randomUUID(), entryNodeId } = options;
   const triggerData = normalizeTriggerData(payload);
   const definition = buildDefinition(automation, workspaceId);
+  if (entryNodeId) definition.entryNodeId = entryNodeId;
 
   validateAutomation({
     nodes: definition.nodes,
@@ -114,6 +119,9 @@ export async function startAndAwaitWorkflowExecution(automation, payload = {}, o
     }
   }
 
-  await executeAutomation(automation, triggerData, { workspaceId });
+  await executeAutomation(automation, triggerData, {
+    workspaceId,
+    ...(entryNodeId ? { entryNodeId } : {}),
+  });
   return {};
 }

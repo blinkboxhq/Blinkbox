@@ -30,7 +30,7 @@ export async function startWebhookWorker() {
   worker = new Worker(
     "bb-webhook-ingest",
     async (job) => {
-      const { automationId, webhookData, idempotencyKey, workspaceId } =
+      const { automationId, webhookData, idempotencyKey, workspaceId, entryNodeId } =
         job.data;
 
       // Re-fetch the automation to get the latest version.
@@ -47,6 +47,7 @@ export async function startWebhookWorker() {
       await executeAutomation(automation, webhookData, {
         idempotencyKey,
         workspaceId,
+        ...(entryNodeId ? { entryNodeId } : {}),
       });
     },
     {

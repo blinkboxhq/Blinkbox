@@ -10,7 +10,7 @@
  *   - watchAll: false → fires only if the failed automationId matches config.watchedAutomation
  */
 
-import Automation from "../models/automation.model.js";
+import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
 export async function dispatchErrorTriggers({
   workspaceId,
@@ -23,11 +23,9 @@ export async function dispatchErrorTriggers({
   failedAt = new Date().toISOString(),
 }) {
   // Find active error_trigger automations in this workspace (cap at 20 to prevent cascade DoS)
-  const errorAutomations = await Automation.find({
-    workspaceId,
-    trigger: "error_trigger",
-    active: true,
-  }).limit(20);
+  const errorAutomations = await findAutomationsWithTrigger("error_trigger", { workspaceId }).then((list) =>
+    list.slice(0, 20),
+  );
 
   if (!errorAutomations.length) return;
 
@@ -49,28 +47,30 @@ export async function dispatchErrorTriggers({
   };
 
   for (const errAuto of errorAutomations) {
-    const entryNode = errAuto.nodes.find((n) => n.id === errAuto.entryNodeId);
-    const cfg = entryNode?.data?.config || {};
+    for (const node of getTriggerNodesOfType(errAuto, "error_trigger")) {
+      const cfg = getTriggerConfig(node);
 
-    // If watching a specific automation, filter
-    if (!cfg.watchAll && cfg.watchedAutomation) {
-      if (String(automationId) !== cfg.watchedAutomation) continue;
-    }
+      // If watching a specific automation, filter
+      if (!cfg.watchAll && cfg.watchedAutomation) {
+        if (String(automationId) !== cfg.watchedAutomation) continue;
+      }
 
-    try {
-      await executeAutomation(errAuto, triggerPayload, {
-        workspaceId,
-        idempotencyKey: `error:${errAuto._id}:${executionId}:${failedAt}`,
-      });
-      console.log(
-        `[ErrorTrigger] Fired error handler "${errAuto.name}" for failed automation "${automationName}"`,
-      );
-    } catch (err) {
-      // Never let error handler dispatch crash the caller
-      console.error(
-        `[ErrorTrigger] Failed to fire error handler "${errAuto.name}":`,
-        err.message,
-      );
+      try {
+        await executeAutomation(errAuto, triggerPayload, {
+          workspaceId,
+          entryNodeId: node.id,
+          idempotencyKey: `error:${node.id}:${executionId}:${failedAt}`,
+        });
+        console.log(
+          `[ErrorTrigger] Fired error handler "${errAuto.name}" node ${node.id} for failed automation "${automationName}"`,
+        );
+      } catch (err) {
+        // Never let error handler dispatch crash the caller
+        console.error(
+          `[ErrorTrigger] Failed to fire error handler "${errAuto.name}":`,
+          err.message,
+        );
+      }
     }
   }
 }

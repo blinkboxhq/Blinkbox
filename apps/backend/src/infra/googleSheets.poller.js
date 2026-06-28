@@ -26,8 +26,9 @@ async function fetchRows(spreadsheetId, range, accessToken) {
   return data.values || [];
 }
 
-export async function pollGoogleSheets(automationId, cfg) {
-  const lockKey = `bb:gsheets:lock:${automationId}`;
+export async function pollGoogleSheets(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:gsheets:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -39,7 +40,7 @@ export async function pollGoogleSheets(automationId, cfg) {
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
 
     const rows = await fetchRows(spreadsheetId, range, accessToken);
-    const watermarkKey = `bb:gsheets:watermark:${automationId}`;
+    const watermarkKey = `bb:gsheets:watermark:${scope}`;
     const lastSeen = parseInt(await redis.get(watermarkKey) || "0");
     const startRow = hasHeader ? Math.max(1, lastSeen) : lastSeen;
     const header = hasHeader && rows.length > 0 ? rows[0] : null;
@@ -57,7 +58,8 @@ export async function pollGoogleSheets(automationId, cfg) {
       payload._range = range;
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `gsheets:${automationId}:row:${startRow + i}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `gsheets:${scope}:row:${startRow + i}`,
       });
     }
   } catch (err) {

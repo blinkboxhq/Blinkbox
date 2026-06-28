@@ -57,8 +57,9 @@ async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
     }));
 }
 
-export async function pollRepo(automationId, credentialId, workspaceId, owner, repo, type, labelFilter) {
-  const lockKey = `bb:ghissue:lock:${automationId}`;
+export async function pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:ghissue:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -71,14 +72,14 @@ export async function pollRepo(automationId, credentialId, workspaceId, owner, r
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:ghissue:seen:${automationId}`;
+    const seenKey = `bb:ghissue:seen:${scope}`;
     for (const item of items) {
       const key = `${item.type}-${item.number}`;
       const added = await redis.sadd(seenKey, key);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, idempotencyKey: `ghissue:${automation._id}:${item.type}-${item.number}` });
+        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `ghissue:${scope}:${item.type}-${item.number}` });
       } catch (err) {
         console.error(`[GHIssuePoller] Failed for "${automation.name}":`, err.message);
       }
@@ -97,8 +98,8 @@ export async function startGitHubIssuePoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   ghWorker = new Worker(QUEUE_NAME, async (job) => {
-    const { automationId, credentialId, workspaceId, owner, repo, type, labelFilter } = job.data;
-    await pollRepo(automationId, credentialId, workspaceId, owner, repo, type, labelFilter);
+    const { automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter } = job.data;
+    await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   ghWorker.on("failed", (job, err) => console.error(`[GHIssuePoller] Job failed:`, err.message));
   await syncGitHubIssueJobs();

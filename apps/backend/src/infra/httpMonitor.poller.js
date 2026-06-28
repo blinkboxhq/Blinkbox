@@ -34,8 +34,9 @@ async function checkUrl(url, expectedKeyword, timeoutMs = 10000) {
   }
 }
 
-export async function pollHttpMonitor(automationId, cfg) {
-  const lockKey = `bb:httpmon:lock:${automationId}`;
+export async function pollHttpMonitor(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:httpmon:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;
   try {
@@ -45,7 +46,7 @@ export async function pollHttpMonitor(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const result = await checkUrl(url, expectedKeyword);
-    const stateKey = `bb:httpmon:state:${automationId}`;
+    const stateKey = `bb:httpmon:state:${scope}`;
     const lastState = await redis.get(stateKey) || "unknown";
     const currentState = result.ok && (!maxResponseMs || result.responseTime < maxResponseMs) ? "up" : "down";
     await redis.set(stateKey, currentState, "EX", 7 * 24 * 60 * 60);
@@ -64,7 +65,8 @@ export async function pollHttpMonitor(automationId, cfg) {
       checkedAt: new Date().toISOString(),
     }, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `httpmon:${automationId}:${currentState}:${new Date().toISOString().slice(0, 13)}`,
+      entryNodeId: triggerNodeId || automation.entryNodeId,
+      idempotencyKey: `httpmon:${scope}:${currentState}:${new Date().toISOString().slice(0, 13)}`,
     });
   } catch (err) {
     console.warn(`[HttpMonitor] Error for ${automationId}:`, err.message);

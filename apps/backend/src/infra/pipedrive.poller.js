@@ -23,8 +23,9 @@ async function fetchItems(apiToken, watchType) {
   return data.data || [];
 }
 
-export async function pollPipedrive(automationId, cfg) {
-  const lockKey = `bb:pipedrive:lock:${automationId}`;
+export async function pollPipedrive(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:pipedrive:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -35,7 +36,7 @@ export async function pollPipedrive(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const items = await fetchItems(apiToken, watchType);
-    const seenKey = `bb:pipedrive:seen:${automationId}`;
+    const seenKey = `bb:pipedrive:seen:${scope}`;
     for (const item of items) {
       const id = String(item.id);
       if (stageFilter && item.stage_id && String(item.stage_id) !== String(stageFilter)) continue;
@@ -45,7 +46,7 @@ export async function pollPipedrive(automationId, cfg) {
       const payload = watchType === "deal"
         ? { id, title: item.title || "", value: item.value, currency: item.currency, stage: item.stage_id, status: item.status, ownerName: item.owner_name || "", personName: item.person_name || "", addTime: item.add_time }
         : { id, name: item.name || "", email: item.email?.[0]?.value || "", phone: item.phone?.[0]?.value || "", orgName: item.org_name || "", addTime: item.add_time };
-      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, idempotencyKey: `pipedrive:${automationId}:${id}` });
+      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `pipedrive:${scope}:${id}` });
     }
   } catch (err) {
     console.warn(`[PipedrivePoller] Error for ${automationId}:`, err.message);
@@ -57,7 +58,7 @@ export async function pollPipedrive(automationId, cfg) {
 export async function startPipedrivePoller() {
   console.log("[PipedrivePoller] Starting...");
   pipedriveQueue = new Queue(QUEUE_NAME, { connection: createBullMQConnection(), defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } } });
-  pipedriveWorker = new Worker(QUEUE_NAME, async (job) => { await pollPipedrive(job.data.automationId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 4 });
+  pipedriveWorker = new Worker(QUEUE_NAME, async (job) => { await pollPipedrive(job.data.automationId, job.data.triggerNodeId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 4 });
   pipedriveWorker.on("failed", (job, err) => console.error(`[PipedrivePoller] Job failed:`, err.message));
   await syncPipedriveJobs();
   console.log("[PipedrivePoller] Ready");
@@ -73,7 +74,7 @@ export async function syncPipedriveJobs() {
     const cfg = entryNode?.data?.config || {};
     if (!cfg.apiToken) continue;
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
-    await pipedriveQueue.add("pipedrive-poll", { automationId: automation._id.toString(), cfg: { apiToken: cfg.apiToken, watchType: cfg.watchType || cfg.entityType, stageFilter: cfg.stageFilter } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pipedrive-${automation._id}` });
+    await pipedriveQueue.add("pipedrive-poll", { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, cfg: { apiToken: cfg.apiToken, watchType: cfg.watchType || cfg.entityType, stageFilter: cfg.stageFilter } }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pipedrive-${automation._id}` });
   }
   console.log(`[PipedrivePoller] Synced ${automations.length} automations`);
 }

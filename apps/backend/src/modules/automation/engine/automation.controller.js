@@ -6,34 +6,8 @@ import Execution from "../../../models/execution.model.js";
 import { validateAutomation } from "./automation.validator.js";
 import { executeAutomation } from "../automation.executor.js";
 import { syncCronJobs } from "../../../infra/cron.scheduler.js";
-import { syncRssJobs } from "../../../infra/rss.poller.js";
-import { syncImapJobs } from "../../../infra/imap.poller.js";
-import { syncDbJobs } from "../../../infra/db.poller.js";
-import { syncGmailJobs } from "../../../infra/gmail.poller.js";
+import { syncPollerHub } from "../../../infra/poller.hub.js";
 import { emitToCollabRoom } from "../../../infra/socket.server.js";
-import { syncAirtableJobs } from "../../../infra/airtable.poller.js";
-import { syncNotionJobs } from "../../../infra/notion.poller.js";
-import { syncHubSpotJobs } from "../../../infra/hubspot.poller.js";
-import { syncYouTubeJobs } from "../../../infra/youtube.poller.js";
-import { syncPriceAlertJobs } from "../../../infra/priceAlert.poller.js";
-import { syncRedditJobs } from "../../../infra/reddit.poller.js";
-import { syncGoogleCalendarJobs } from "../../../infra/googleCalendar.poller.js";
-import { syncGitHubIssueJobs } from "../../../infra/githubIssue.poller.js";
-import { syncSshJobs } from "../../../infra/ssh.poller.js";
-import { syncDockerJobs } from "../../../infra/docker.poller.js";
-import { syncJiraJobs } from "../../../infra/jira.poller.js";
-import { syncTrelloJobs } from "../../../infra/trello.poller.js";
-import { syncGoogleSheetsJobs } from "../../../infra/googleSheets.poller.js";
-import { syncOutlookJobs } from "../../../infra/outlookEmail.poller.js";
-import { syncTeamsJobs } from "../../../infra/teamsMessage.poller.js";
-import { syncHttpMonitorJobs } from "../../../infra/httpMonitor.poller.js";
-import { syncGitLabJobs } from "../../../infra/gitlab.poller.js";
-import { syncSslJobs } from "../../../infra/sslCert.poller.js";
-import { syncDnsJobs } from "../../../infra/dnsMonitor.poller.js";
-import { syncPortJobs } from "../../../infra/portMonitor.poller.js";
-import { syncHNJobs } from "../../../infra/hackerNews.poller.js";
-import { syncPipedriveJobs } from "../../../infra/pipedrive.poller.js";
-import { syncAsanaJobs } from "../../../infra/asana.poller.js";
 import {
   registerGitHubWebhook,
   unregisterGitHubWebhook,
@@ -49,6 +23,7 @@ import {
 import { snapshotBeforeSave } from "../version.routes.js";
 import { resolveCredential } from "../../../utils/resolveCredential.js";
 import { decrypt } from "../../../utils/crypto.js";
+import { getTriggerConfig } from "../../../infra/triggerNodes.util.js";
 
 /**
  * ===============================
@@ -133,121 +108,110 @@ export async function activateAutomation(req, res) {
         "No trigger node found. Please save your workflow before activating.",
       );
     }
-    const entryNode = automation.nodes.find(
-      (n) => n.id === automation.entryNodeId,
-    );
-    if (!entryNode) {
-      throw new Error(
-        "Trigger node not found. Please save your workflow and try again.",
-      );
-    }
 
     validateAutomation(automation); // 🔒 Structural + logic validation
 
-    const trigger = automation.trigger;
-    const cfg = entryNode.data || {};
+    const triggerEntries = automation.triggerNodes?.length
+      ? automation.triggerNodes
+      : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
 
-    // Validate cron expression before going live — bad expressions silently never fire
-    if (trigger === "cron_trigger") {
-      const expr = cfg.schedule || cfg.customCron;
-      if (!expr)
+    const triggerTypesSeen = new Set();
+
+    for (const entry of triggerEntries) {
+      const triggerNode = automation.nodes.find((n) => n.id === entry.nodeId);
+      if (!triggerNode) {
         throw new Error(
-          "Cron trigger requires a schedule. Open the trigger node and set a cron expression.",
-        );
-      try {
-        parseCron(expr);
-      } catch {
-        throw new Error(
-          `Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`,
+          "Trigger node not found. Please save your workflow and try again.",
         );
       }
-    }
 
-    // ── Auto-register external webhooks ──────────────────────────────────────
-    // Re-read entry node config after potential webhook registration
-    // (registerGitHubWebhook / registerStripeWebhook save the secret back into the doc)
-    if (trigger === "github_trigger") {
-      const token = cfg.tokenCredentialKey || cfg.githubToken;
-      const repo = cfg.repo;
-      const events = cfg.events || ["push"];
-      if (!repo)
-        throw new Error("GitHub trigger requires a repository (owner/repo).");
-      if (!token) throw new Error("GitHub trigger requires a GitHub token.");
-      if (!cfg.webhookRegistered) {
-        await registerGitHubWebhook(
-          automation._id.toString(),
-          repo,
-          events,
-          token,
-        );
-        // Re-fetch automation after registerGitHubWebhook saved the secret into it
-        const refreshed = await Automation.findById(automation._id);
-        if (refreshed) Object.assign(automation, refreshed.toObject());
+      const trigger = entry.type;
+      const cfg = getTriggerConfig(triggerNode);
+
+      // Validate cron expression before going live — bad expressions silently never fire
+      if (trigger === "cron_trigger") {
+        const expr = cfg.schedule || cfg.customCron;
+        if (!expr)
+          throw new Error(
+            "Cron trigger requires a schedule. Open the trigger node and set a cron expression.",
+          );
+        try {
+          parseCron(expr);
+        } catch {
+          throw new Error(
+            `Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`,
+          );
+        }
       }
-    }
 
-    if (trigger === "stripe_trigger") {
-      const apiKey = cfg.stripeKeyCredential;
-      const events = cfg.events || ["payment_intent.succeeded"];
-      if (!apiKey)
-        throw new Error("Stripe trigger requires a Stripe secret key.");
-      if (!cfg.webhookRegistered) {
-        await registerStripeWebhook(automation._id.toString(), events, apiKey);
-        const refreshed = await Automation.findById(automation._id);
-        if (refreshed) Object.assign(automation, refreshed.toObject());
+      // ── Auto-register external webhooks ────────────────────────────────────
+      // Each external resource is keyed by (automationId, nodeId) so multiple
+      // trigger nodes register and tear down independently.
+      // Re-read node config after registration (register* saves the secret back).
+      if (trigger === "github_trigger") {
+        const token = cfg.tokenCredentialKey || cfg.githubToken;
+        const repo = cfg.repo;
+        const events = cfg.events || ["push"];
+        if (!repo)
+          throw new Error("GitHub trigger requires a repository (owner/repo).");
+        if (!token) throw new Error("GitHub trigger requires a GitHub token.");
+        if (!cfg.webhookRegistered) {
+          await registerGitHubWebhook(
+            automation._id.toString(),
+            repo,
+            events,
+            token,
+            entry.nodeId,
+          );
+          // Re-fetch automation after registerGitHubWebhook saved the secret into it
+          const refreshed = await Automation.findById(automation._id);
+          if (refreshed) Object.assign(automation, refreshed.toObject());
+        }
       }
-    }
 
-    if (trigger === "telegram_trigger") {
-      const credentialId = cfg.botToken;
-      if (!credentialId)
-        throw new Error("Telegram trigger requires a Bot Token credential. Open the trigger node and select your bot token.");
-      resolveCredential(credentialId, automation.workspaceId, "Telegram trigger")
-        .then((cred) => {
-          const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-          return registerTelegramWebhook(automation._id.toString(), token);
-        })
-        .catch((err) =>
-          console.error(`[Telegram] Webhook registration failed for ${automation._id}:`, err.message)
-        );
+      if (trigger === "stripe_trigger") {
+        const apiKey = cfg.stripeKeyCredential;
+        const events = cfg.events || ["payment_intent.succeeded"];
+        if (!apiKey)
+          throw new Error("Stripe trigger requires a Stripe secret key.");
+        if (!cfg.webhookRegistered) {
+          await registerStripeWebhook(
+            automation._id.toString(),
+            events,
+            apiKey,
+            entry.nodeId,
+          );
+          const refreshed = await Automation.findById(automation._id);
+          if (refreshed) Object.assign(automation, refreshed.toObject());
+        }
+      }
+
+      if (trigger === "telegram_trigger") {
+        const credentialId = cfg.botToken;
+        if (!credentialId)
+          throw new Error("Telegram trigger requires a Bot Token credential. Open the trigger node and select your bot token.");
+        resolveCredential(credentialId, automation.workspaceId, "Telegram trigger")
+          .then((cred) => {
+            const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+            return registerTelegramWebhook(automation._id.toString(), token);
+          })
+          .catch((err) =>
+            console.error(`[Telegram] Webhook registration failed for ${automation._id}/${entry.nodeId}:`, err.message)
+          );
+      }
+
+      triggerTypesSeen.add(trigger);
     }
 
     automation.active = true;
     automation.status = "active";
     await automation.save();
 
-    // Re-sync pollers so the new automation is picked up immediately
-    if (trigger === "cron_trigger") syncCronJobs().catch(console.error);
-    if (trigger === "rss_trigger") syncRssJobs().catch(console.error);
-    if (trigger === "imap_trigger") syncImapJobs().catch(console.error);
-    if (trigger === "db_trigger") syncDbJobs().catch(console.error);
-    if (trigger === "gmail_trigger") syncGmailJobs().catch(console.error);
-    if (trigger === "airtable_trigger") syncAirtableJobs().catch(console.error);
-    if (trigger === "notion_trigger") syncNotionJobs().catch(console.error);
-    if (trigger === "hubspot_trigger") syncHubSpotJobs().catch(console.error);
-    if (trigger === "youtube_trigger") syncYouTubeJobs().catch(console.error);
-    if (trigger === "price_alert_trigger")
-      syncPriceAlertJobs().catch(console.error);
-    if (trigger === "reddit_trigger") syncRedditJobs().catch(console.error);
-    if (trigger === "google_calendar_trigger")
-      syncGoogleCalendarJobs().catch(console.error);
-    if (trigger === "github_issue_trigger")
-      syncGitHubIssueJobs().catch(console.error);
-    if (trigger === "ssh_trigger") syncSshJobs().catch(console.error);
-    if (trigger === "docker_trigger") syncDockerJobs().catch(console.error);
-    if (trigger === "jira_trigger") syncJiraJobs().catch(console.error);
-    if (trigger === "trello_trigger") syncTrelloJobs().catch(console.error);
-    if (trigger === "google_sheets_trigger") syncGoogleSheetsJobs().catch(console.error);
-    if (trigger === "outlook_trigger") syncOutlookJobs().catch(console.error);
-    if (trigger === "teams_trigger") syncTeamsJobs().catch(console.error);
-    if (trigger === "http_monitor_trigger") syncHttpMonitorJobs().catch(console.error);
-    if (trigger === "gitlab_trigger") syncGitLabJobs().catch(console.error);
-    if (trigger === "ssl_trigger") syncSslJobs().catch(console.error);
-    if (trigger === "dns_trigger") syncDnsJobs().catch(console.error);
-    if (trigger === "port_monitor_trigger") syncPortJobs().catch(console.error);
-    if (trigger === "hackernews_trigger") syncHNJobs().catch(console.error);
-    if (trigger === "pipedrive_trigger") syncPipedriveJobs().catch(console.error);
-    if (trigger === "asana_trigger") syncAsanaJobs().catch(console.error);
+    // Re-sync so the new automation is picked up immediately. The poller hub is the
+    // single live worker for all polled triggers and iterates every trigger node;
+    // cron runs on its own scheduler.
+    if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
+    syncPollerHub().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {
@@ -262,16 +226,70 @@ export async function activateAutomation(req, res) {
  */
 export async function deactivateAutomation(req, res) {
   try {
-    const automation = await Automation.findOneAndUpdate(
-      { _id: req.params.id, workspaceId: req.user.id },
-      { active: false, status: "draft" },
-      { new: true },
-    );
+    const automation = await Automation.findOne({
+      _id: req.params.id,
+      workspaceId: req.user.id,
+    });
     if (!automation)
       return res
         .status(404)
         .json({ success: false, message: "Automation not found" });
-    res.json({ success: true, automation });
+
+    // Tear down every externally-registered webhook, keyed by (automationId, nodeId).
+    const triggerEntries = automation.triggerNodes?.length
+      ? automation.triggerNodes
+      : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
+
+    for (const entry of triggerEntries) {
+      const triggerNode = automation.nodes.find((n) => n.id === entry.nodeId);
+      if (!triggerNode) continue;
+      const cfg = getTriggerConfig(triggerNode);
+
+      if (entry.type === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
+        await unregisterGitHubWebhook(
+          automation._id.toString(),
+          cfg.repo,
+          cfg.githubWebhookId,
+          cfg.tokenCredentialKey || cfg.githubToken,
+          entry.nodeId,
+        ).catch((e) => console.error("[GitHub] Teardown failed:", e.message));
+      }
+
+      if (entry.type === "stripe_trigger" && cfg.stripeWebhookId) {
+        await unregisterStripeWebhook(
+          automation._id.toString(),
+          cfg.stripeWebhookId,
+          cfg.stripeKeyCredential,
+          entry.nodeId,
+        ).catch((e) => console.error("[Stripe] Teardown failed:", e.message));
+      }
+
+      if (entry.type === "telegram_trigger") {
+        const credentialId = cfg.botToken;
+        if (credentialId) {
+          resolveCredential(credentialId, automation.workspaceId, "Telegram trigger")
+            .then((cred) => {
+              const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+              return unregisterTelegramWebhook(token);
+            })
+            .catch((e) => console.error("[Telegram] Teardown failed:", e.message));
+        }
+      }
+    }
+
+    // Re-fetch to capture config cleared by the unregister helpers, then deactivate.
+    const fresh = await Automation.findById(automation._id);
+    const target = fresh || automation;
+    target.active = false;
+    target.status = "draft";
+    await target.save();
+
+    // Re-sync so the deactivated automation drops out of the job sets.
+    const triggerTypesSeen = new Set(triggerEntries.map((e) => e.type));
+    if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
+    syncPollerHub().catch(console.error);
+
+    res.json({ success: true, automation: target });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -390,29 +408,33 @@ export async function deleteAutomation(req, res) {
         .json({ success: false, message: "Not found or access denied" });
     }
 
-    // Clean up external webhook registrations on delete
-    const entryNode = automation.nodes.find(
-      (n) => n.id === automation.entryNodeId,
-    );
-    const cfg = entryNode?.data?.config || {};
-    if (
-      automation.trigger === "github_trigger" &&
-      cfg.githubWebhookId &&
-      cfg.repo
-    ) {
-      unregisterGitHubWebhook(
-        automation._id.toString(),
-        cfg.repo,
-        cfg.githubWebhookId,
-        cfg.tokenCredentialKey || cfg.githubToken,
-      ).catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
-    }
-    if (automation.trigger === "stripe_trigger" && cfg.stripeWebhookId) {
-      unregisterStripeWebhook(
-        automation._id.toString(),
-        cfg.stripeWebhookId,
-        cfg.stripeKeyCredential,
-      ).catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
+    // Clean up external webhook registrations on delete, per trigger node.
+    const triggerEntries = automation.triggerNodes?.length
+      ? automation.triggerNodes
+      : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
+
+    for (const entry of triggerEntries) {
+      const triggerNode = automation.nodes.find((n) => n.id === entry.nodeId);
+      if (!triggerNode) continue;
+      const cfg = getTriggerConfig(triggerNode);
+
+      if (entry.type === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
+        unregisterGitHubWebhook(
+          automation._id.toString(),
+          cfg.repo,
+          cfg.githubWebhookId,
+          cfg.tokenCredentialKey || cfg.githubToken,
+          entry.nodeId,
+        ).catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
+      }
+      if (entry.type === "stripe_trigger" && cfg.stripeWebhookId) {
+        unregisterStripeWebhook(
+          automation._id.toString(),
+          cfg.stripeWebhookId,
+          cfg.stripeKeyCredential,
+          entry.nodeId,
+        ).catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
+      }
     }
 
     await Execution.deleteMany({

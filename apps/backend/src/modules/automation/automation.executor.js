@@ -13,6 +13,7 @@ export async function executeAutomation(
     executionId = null,
     idempotencyKey = null,
     workspaceId = "default",
+    entryNodeId = automation.entryNodeId,
   } = options;
 
   // Normalize the incoming Webhook/API payload
@@ -31,7 +32,7 @@ export async function executeAutomation(
         status: "pending",
         cursors: [
           {
-            nodeId: automation.entryNodeId,
+            nodeId: entryNodeId,
             status: "pending",
             retries: 0,
             resumeAt: null,
@@ -54,7 +55,7 @@ export async function executeAutomation(
   // We use findOneAndUpdate so the payload is ALWAYS safely injected,
   // even if the API Controller pre-created the Execution ID!
   await ExecutionData.findOneAndUpdate(
-    { executionId: execution._id, nodeId: automation.entryNodeId },
+    { executionId: execution._id, nodeId: entryNodeId },
     {
       output: triggerItems,
       log: {

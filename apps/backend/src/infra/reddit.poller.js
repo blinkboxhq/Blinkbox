@@ -45,8 +45,9 @@ async function fetchPosts(subreddit, sort = "new") {
   });
 }
 
-export async function pollSubreddit(automationId, cfg) {
-  const lockKey = `bb:reddit:lock:${automationId}`;
+export async function pollSubreddit(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:reddit:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
@@ -60,7 +61,7 @@ export async function pollSubreddit(automationId, cfg) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:reddit:seen:${automationId}`;
+    const seenKey = `bb:reddit:seen:${scope}`;
     for (const post of posts) {
       if (!post.id) continue;
       if (minScore && post.score < parseInt(minScore)) continue;
@@ -71,7 +72,7 @@ export async function pollSubreddit(automationId, cfg) {
       await redis.expire(seenKey, SEEN_TTL);
 
       try {
-        await executeAutomation(automation, post, { workspaceId: automation.workspaceId, idempotencyKey: `reddit:${automation._id}:${post.id}` });
+        await executeAutomation(automation, post, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `reddit:${scope}:${post.id}` });
       } catch (err) {
         console.error(`[RedditPoller] Failed for "${automation.name}":`, err.message);
       }
@@ -90,7 +91,7 @@ export async function startRedditPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   redditWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollSubreddit(job.data.automationId, job.data.cfg);
+    await pollSubreddit(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   redditWorker.on("failed", (job, err) => console.error(`[RedditPoller] Job failed:`, err.message));
   await syncRedditJobs();
@@ -110,6 +111,7 @@ export async function syncRedditJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 10;
     await redditQueue.add("reddit-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { subreddit: cfg.subreddit, searchQuery: cfg.searchQuery, sort: cfg.sort, minScore: cfg.minScore },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `reddit-${automation._id}` });
   }

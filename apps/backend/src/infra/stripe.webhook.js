@@ -51,7 +51,7 @@ async function stripeRequest(path, method, apiKey, body = null) {
 /**
  * Register a Stripe webhook endpoint for the given automation.
  */
-export async function registerStripeWebhook(automationId, events, apiKey) {
+export async function registerStripeWebhook(automationId, events, apiKey, nodeId = null) {
   const webhookUrl = `${BACKEND_URL}/webhook/${automationId}`;
 
   const data = await stripeRequest("/webhook_endpoints", "POST", apiKey, {
@@ -65,7 +65,8 @@ export async function registerStripeWebhook(automationId, events, apiKey) {
   // Persist webhook ID and signing secret into the automation config
   const automation = await Automation.findById(automationId);
   if (automation) {
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const targetId = nodeId || automation.entryNodeId;
+    const entryNode = automation.nodes.find((n) => n.id === targetId);
     if (entryNode) {
       entryNode.data = entryNode.data || {};
       entryNode.data.config = {
@@ -85,7 +86,7 @@ export async function registerStripeWebhook(automationId, events, apiKey) {
 /**
  * Delete the Stripe webhook endpoint for the given automation.
  */
-export async function unregisterStripeWebhook(automationId, webhookId, apiKey) {
+export async function unregisterStripeWebhook(automationId, webhookId, apiKey, nodeId = null) {
   try {
     await stripeRequest(`/webhook_endpoints/${webhookId}`, "DELETE", apiKey);
     console.log(`[Stripe] Deleted webhook ${webhookId}`);
@@ -95,7 +96,8 @@ export async function unregisterStripeWebhook(automationId, webhookId, apiKey) {
 
   const automation = await Automation.findById(automationId);
   if (automation) {
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
+    const targetId = nodeId || automation.entryNodeId;
+    const entryNode = automation.nodes.find((n) => n.id === targetId);
     if (entryNode?.data?.config) {
       delete entryNode.data.config.stripeWebhookId;
       delete entryNode.data.config.stripeWebhookSecret;

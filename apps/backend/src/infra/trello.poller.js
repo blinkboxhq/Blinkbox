@@ -21,8 +21,9 @@ async function fetchBoardActions(boardId, apiKey, token) {
   return await res.json();
 }
 
-export async function pollTrello(automationId, cfg) {
-  const lockKey = `bb:trello:lock:${automationId}`;
+export async function pollTrello(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:trello:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -32,7 +33,7 @@ export async function pollTrello(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const actions = await fetchBoardActions(boardId, apiKey, token);
-    const seenKey = `bb:trello:seen:${automationId}`;
+    const seenKey = `bb:trello:seen:${scope}`;
     for (const action of actions) {
       if (watchType === "new_card" && action.type !== "createCard") continue;
       if (watchType === "card_moved" && action.type !== "updateCard") continue;
@@ -56,7 +57,8 @@ export async function pollTrello(automationId, cfg) {
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `trello:${automationId}:${action.id}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `trello:${scope}:${action.id}`,
       });
     }
   } catch (err) {
@@ -73,7 +75,7 @@ export async function startTrelloPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   trelloWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollTrello(job.data.automationId, job.data.cfg);
+    await pollTrello(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   trelloWorker.on("failed", (job, err) => console.error(`[TrelloPoller] Job failed:`, err.message));
   await syncTrelloJobs();
@@ -92,6 +94,7 @@ export async function syncTrelloJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await trelloQueue.add("trello-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { boardId: cfg.boardId, apiKey: cfg.apiKey, token: cfg.token, watchType: cfg.watchType, listFilter: cfg.listFilter },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `trello-${automation._id}` });
   }

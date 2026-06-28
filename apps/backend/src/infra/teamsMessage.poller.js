@@ -27,8 +27,9 @@ async function fetchMessages(accessToken, teamId, channelId) {
   return data.value || [];
 }
 
-export async function pollTeams(automationId, cfg) {
-  const lockKey = `bb:teams:lock:${automationId}`;
+export async function pollTeams(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:teams:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -39,7 +40,7 @@ export async function pollTeams(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const messages = await fetchMessages(accessToken, teamId, channelId);
-    const seenKey = `bb:teams:seen:${automationId}`;
+    const seenKey = `bb:teams:seen:${scope}`;
     for (const msg of messages) {
       if (msg.messageType !== "message") continue;
       const text = msg.body?.content?.replace(/<[^>]+>/g, "") || "";
@@ -59,7 +60,8 @@ export async function pollTeams(automationId, cfg) {
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `teams:${automationId}:${msg.id}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `teams:${scope}:${msg.id}`,
       });
     }
   } catch (err) {
@@ -76,7 +78,7 @@ export async function startTeamsPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   teamsWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollTeams(job.data.automationId, job.data.cfg);
+    await pollTeams(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   teamsWorker.on("failed", (job, err) => console.error(`[TeamsPoller] Job failed:`, err.message));
   await syncTeamsJobs();
@@ -95,6 +97,7 @@ export async function syncTeamsJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 2;
     await teamsQueue.add("teams-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), teamId: cfg.teamId, channelId: cfg.channelId, keywordFilter: cfg.keywordFilter },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `teams-${automation._id}` });
   }

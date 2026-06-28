@@ -29,8 +29,9 @@ async function resolve(domain, type) {
   } catch { return ""; }
 }
 
-export async function pollDns(automationId, cfg) {
-  const lockKey = `bb:dns:lock:${automationId}`;
+export async function pollDns(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:dns:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;
   try {
@@ -42,13 +43,14 @@ export async function pollDns(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const current = await resolve(domain, recordType);
-    const stateKey = `bb:dns:last:${automationId}`;
+    const stateKey = `bb:dns:last:${scope}`;
     const previous = await redis.get(stateKey) || "";
     await redis.set(stateKey, current, "EX", 30 * 24 * 60 * 60);
     if (current === previous || previous === "") return;
     await executeAutomation(automation, { domain, recordType, current, previous, changedAt: new Date().toISOString() }, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `dns:${automationId}:${Date.now()}`,
+      entryNodeId: triggerNodeId || automation.entryNodeId,
+      idempotencyKey: `dns:${scope}:${Date.now()}`,
     });
   } catch (err) {
     console.warn(`[DnsMonitor] Error for ${automationId}:`, err.message);
@@ -60,7 +62,7 @@ export async function pollDns(automationId, cfg) {
 export async function startDnsMonitor() {
   console.log("[DnsMonitor] Starting...");
   dnsQueue = new Queue(QUEUE_NAME, { connection: createBullMQConnection(), defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } } });
-  dnsWorker = new Worker(QUEUE_NAME, async (job) => { await pollDns(job.data.automationId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 8 });
+  dnsWorker = new Worker(QUEUE_NAME, async (job) => { await pollDns(job.data.automationId, job.data.triggerNodeId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 8 });
   dnsWorker.on("failed", (job, err) => console.error(`[DnsMonitor] Job failed:`, err.message));
   await syncDnsJobs();
   console.log("[DnsMonitor] Ready");

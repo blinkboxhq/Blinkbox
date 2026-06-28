@@ -47,8 +47,9 @@ async function fetchDockerEvents(cfg) {
   return events;
 }
 
-export async function pollDocker(automationId, cfg) {
-  const lockKey = `bb:docker:lock:${automationId}`;
+export async function pollDocker(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:docker:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -58,7 +59,7 @@ export async function pollDocker(automationId, cfg) {
     const { eventType = "all", containerFilter } = cfg;
 
     const events = await fetchDockerEvents(cfg);
-    const seenKey = `bb:docker:seen:${automationId}`;
+    const seenKey = `bb:docker:seen:${scope}`;
 
     for (const evt of events) {
       const evtId = `${evt.Type}:${evt.Action}:${evt.Actor?.ID}:${evt.time}`;
@@ -82,7 +83,8 @@ export async function pollDocker(automationId, cfg) {
 
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `docker:${automationId}:${evtId}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `docker:${scope}:${evtId}`,
       });
     }
   } catch (err) {
@@ -99,7 +101,7 @@ export async function startDockerPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   dockerWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollDocker(job.data.automationId, job.data.cfg);
+    await pollDocker(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   dockerWorker.on("failed", (job, err) => console.error(`[DockerPoller] Job failed:`, err.message));
   await syncDockerJobs();

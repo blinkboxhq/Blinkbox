@@ -31,7 +31,8 @@ const IMAP_QUEUE_NAME = "bb-imap-poller";
 let imapQueue = null;
 let imapWorker = null;
 
-export async function pollMailbox(automationId, cfg, password) {
+export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
+  const scope = triggerNodeId || automationId;
   // Dynamic import — imapflow is optional dep, only loaded if IMAP trigger is used
   let ImapFlow;
   try {
@@ -59,8 +60,8 @@ export async function pollMailbox(automationId, cfg, password) {
     // Track last processed UID in Redis to avoid re-processing.
     // Use a per-automation lock so concurrent workers don't both read the same
     // watermark and double-process the same messages.
-    const uidKey = `bb:imap:uid:${automationId}`;
-    const pollLockKey = `bb:imap:lock:${automationId}`;
+    const uidKey = `bb:imap:uid:${scope}`;
+    const pollLockKey = `bb:imap:lock:${scope}`;
     const pollLocked = await acquireLock(pollLockKey, "poller", 120);
     if (!pollLocked) {
       console.warn(`[IMAP] Automation ${automationId} already polling, skipping concurrent tick`);
@@ -111,7 +112,7 @@ export async function pollMailbox(automationId, cfg, password) {
         await executeAutomation(
           automation,
           { email: emailPayload },
-          { workspaceId: automation.workspaceId, idempotencyKey: `imap:${automationId}:${msg.uid}` },
+          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `imap:${scope}:${msg.uid}` },
         );
         console.log(`[IMAP] Fired "${automation.name}" for email: "${emailPayload.subject}"`);
 

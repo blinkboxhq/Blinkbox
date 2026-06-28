@@ -81,7 +81,8 @@ async function queryRows(dbType, connectionString, tableName, timestampColumn, w
 
 // ── Poll logic ────────────────────────────────────────────────────────────────
 
-export async function pollTable(automationId, cfg, resolvedConnectionString) {
+export async function pollTable(automationId, triggerNodeId, cfg, resolvedConnectionString) {
+  const scope = triggerNodeId || automationId;
   const {
     dbType = "postgres",
     tableName,
@@ -93,7 +94,7 @@ export async function pollTable(automationId, cfg, resolvedConnectionString) {
   if (!tableName) return;
 
   // Prevent concurrent workers from reading the same watermark and double-firing rows
-  const pollLockKey = `bb:dbpoll:lock:${automationId}`;
+  const pollLockKey = `bb:dbpoll:lock:${scope}`;
   const pollLocked = await acquireLock(pollLockKey, "poller", 120);
   if (!pollLocked) {
     console.warn(`[DBPoller] Automation ${automationId} already polling, skipping concurrent tick`);
@@ -101,14 +102,15 @@ export async function pollTable(automationId, cfg, resolvedConnectionString) {
   }
 
   try {
-    await pollTableInner(automationId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll);
+    await pollTableInner(automationId, triggerNodeId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll);
   } finally {
     await releaseLock(pollLockKey, "poller");
   }
 }
 
-export async function pollTableInner(automationId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll) {
-  const watermarkKey = `bb:dbpoll:watermark:${automationId}`;
+export async function pollTableInner(automationId, triggerNodeId, cfg, resolvedConnectionString, dbType, tableName, timestampColumn, watchMode, maxRowsPerPoll) {
+  const scope = triggerNodeId || automationId;
+  const watermarkKey = `bb:dbpoll:watermark:${scope}`;
   const watermarkRaw = await redis.get(watermarkKey);
   // Default: 1 minute ago on first run to avoid mass-triggering historical data
   const watermark = watermarkRaw
@@ -151,7 +153,7 @@ export async function pollTableInner(automationId, cfg, resolvedConnectionString
       await executeAutomation(
         automation,
         { row, tableName, event: eventType, detectedAt },
-        { workspaceId: automation.workspaceId, idempotencyKey: `db:${automationId}:${tableName}:${row[cfg.primaryKeyColumn || "id"] ?? new Date(rowTs).getTime()}` },
+        { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `db:${scope}:${tableName}:${row[cfg.primaryKeyColumn || "id"] ?? new Date(rowTs).getTime()}` },
       );
       console.log(`[DBPoller] Fired "${automation.name}" for row in ${tableName}`);
     } catch (err) {
@@ -179,7 +181,7 @@ export async function startDbPoller() {
   dbWorker = new Worker(
     DB_QUEUE_NAME,
     async (job) => {
-      const { automationId, cfg, credentialId, rawConnectionString } = job.data;
+      const { automationId, triggerNodeId, cfg, credentialId, rawConnectionString } = job.data;
 
       let connectionString = rawConnectionString || cfg.connectionString || "";
 
@@ -200,7 +202,7 @@ export async function startDbPoller() {
         return;
       }
 
-      await pollTable(automationId, cfg, connectionString);
+      await pollTable(automationId, triggerNodeId, cfg, connectionString);
     },
     { connection: createBullMQConnection(), concurrency: 3 },
   );

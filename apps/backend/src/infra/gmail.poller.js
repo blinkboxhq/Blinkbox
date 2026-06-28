@@ -16,6 +16,7 @@ import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 import { getOAuthToken } from "../utils/getOAuthToken.js";
+import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
 const GMAIL_QUEUE = "bb-gmail-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -85,9 +86,10 @@ function parseMessage(msg) {
   };
 }
 
-export async function pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId) {
-  const lockKey = `bb:gmail:lock:${automationId}`;
-  const seenKey = `bb:gmail:seen:${automationId}`;
+export async function pollGmail(automationId, triggerNodeId, credentialId, query, maxResults, onlyNew, workspaceId) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:gmail:lock:${scope}`;
+  const seenKey = `bb:gmail:seen:${scope}`;
 
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;
@@ -118,7 +120,11 @@ export async function pollGmail(automationId, credentialId, query, maxResults, o
       try {
         const full = await gmailGet(token, `users/me/messages/${id}`, { format: "full" });
         const parsed = parseMessage(full);
-        await executeAutomation(automation, parsed, { workspaceId: automation.workspaceId, idempotencyKey: `gmail:${automation._id}:${id}` });
+        await executeAutomation(automation, parsed, {
+          workspaceId: automation.workspaceId,
+          entryNodeId: triggerNodeId || automation.entryNodeId,
+          idempotencyKey: `gmail:${scope}:${id}`,
+        });
         console.log(`[GmailPoller] Fired for automation "${automation.name}" message: ${id}`);
       } catch (err) {
         console.error(`[GmailPoller] Failed to process message ${id}:`, err.message);
@@ -140,8 +146,8 @@ export async function startGmailPoller() {
   gmailWorker = new Worker(
     GMAIL_QUEUE,
     async (job) => {
-      const { automationId, credentialId, query, maxResults, onlyNew, workspaceId } = job.data;
-      await pollGmail(automationId, credentialId, query, maxResults, onlyNew, workspaceId);
+      const { automationId, triggerNodeId, credentialId, query, maxResults, onlyNew, workspaceId } = job.data;
+      await pollGmail(automationId, triggerNodeId, credentialId, query, maxResults, onlyNew, workspaceId);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -160,35 +166,39 @@ export async function syncGmailJobs() {
   const existing = await gmailQueue.getRepeatableJobs();
   for (const job of existing) await gmailQueue.removeRepeatableByKey(job.key);
 
-  const automations = await Automation.find({ trigger: "gmail_trigger", active: true });
+  const automations = await findAutomationsWithTrigger("gmail_trigger");
 
+  let registered = 0;
   for (const automation of automations) {
-    const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
-    const cfg = entryNode?.data?.config || entryNode?.data || {};
-    const { credentialId, query, maxResults, onlyNew, pollInterval } = cfg;
+    for (const node of getTriggerNodesOfType(automation, "gmail_trigger")) {
+      const cfg = getTriggerConfig(node);
+      const { credentialId, query, maxResults, onlyNew, pollInterval } = cfg;
 
-    if (!credentialId) {
-      console.warn(`[GmailPoller] Automation ${automation._id} has no credentialId, skipping`);
-      continue;
+      if (!credentialId) {
+        console.warn(`[GmailPoller] Automation ${automation._id} node ${node.id} has no credentialId, skipping`);
+        continue;
+      }
+
+      const interval = pollInterval || "*/5 * * * *";
+      await gmailQueue.add(
+        "gmail-poll",
+        {
+          automationId: automation._id.toString(),
+          triggerNodeId: node.id,
+          credentialId,
+          query: query || "is:unread",
+          maxResults: maxResults || 10,
+          onlyNew: onlyNew !== false,
+          workspaceId: automation.workspaceId,
+        },
+        { repeat: { pattern: interval }, jobId: `gmail-${automation._id}-${node.id}` },
+      );
+      registered++;
+      console.log(`[GmailPoller] Registered: "${automation.name}" node ${node.id} every ${interval}`);
     }
-
-    const interval = pollInterval || "*/5 * * * *";
-    await gmailQueue.add(
-      "gmail-poll",
-      {
-        automationId: automation._id.toString(),
-        credentialId,
-        query: query || "is:unread",
-        maxResults: maxResults || 10,
-        onlyNew: onlyNew !== false,
-        workspaceId: automation.workspaceId,
-      },
-      { repeat: { pattern: interval }, jobId: `gmail-${automation._id}` },
-    );
-    console.log(`[GmailPoller] Registered: "${automation.name}" every ${interval}`);
   }
 
-  console.log(`[GmailPoller] Synced ${automations.length} Gmail automations`);
+  console.log(`[GmailPoller] Synced ${registered} Gmail trigger nodes across ${automations.length} automations`);
 }
 
 export async function stopGmailPoller() {

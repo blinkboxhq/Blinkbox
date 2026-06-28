@@ -30,8 +30,9 @@ async function fetchIssues(domain, email, token, jql) {
   return data.issues || [];
 }
 
-export async function pollJira(automationId, cfg) {
-  const lockKey = `bb:jira:lock:${automationId}`;
+export async function pollJira(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:jira:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -41,7 +42,7 @@ export async function pollJira(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const issues = await fetchIssues(domain, email, token, jql);
-    const seenKey = `bb:jira:seen:${automationId}`;
+    const seenKey = `bb:jira:seen:${scope}`;
     for (const issue of issues) {
       const added = await redis.sadd(seenKey, issue.key);
       if (!added) continue;
@@ -62,7 +63,8 @@ export async function pollJira(automationId, cfg) {
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `jira:${automationId}:${issue.key}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `jira:${scope}:${issue.key}`,
       });
     }
   } catch (err) {
@@ -79,7 +81,7 @@ export async function startJiraPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   jiraWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollJira(job.data.automationId, job.data.cfg);
+    await pollJira(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   jiraWorker.on("failed", (job, err) => console.error(`[JiraPoller] Job failed:`, err.message));
   await syncJiraJobs();

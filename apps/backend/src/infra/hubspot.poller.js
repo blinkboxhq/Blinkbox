@@ -51,12 +51,13 @@ async function hsSearch(apiKey, objectType, filters, properties, limit) {
 }
 
 export async function pollHubSpot(
-  automationId, apiKey, objectType,
+  automationId, triggerNodeId, apiKey, objectType,
   filterProperty, filterValue, limit, triggerOnUpdate, workspaceId,
 ) {
-  const lockKey = `bb:hubspot:lock:${automationId}`;
-  const seenKey = `bb:hubspot:seen:${automationId}`;
-  const wmKey   = `bb:hubspot:wm:${automationId}`;
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:hubspot:lock:${scope}`;
+  const seenKey = `bb:hubspot:seen:${scope}`;
+  const wmKey   = `bb:hubspot:wm:${scope}`;
 
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;
@@ -97,7 +98,7 @@ export async function pollHubSpot(
       if (claimed === 0 && !triggerOnUpdate) continue;
 
       try {
-        await executeAutomation(automation, obj, { workspaceId: automation.workspaceId, idempotencyKey: `hubspot:${automationId}:${obj.id}:${ts}` });
+        await executeAutomation(automation, obj, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `hubspot:${scope}:${obj.id}:${ts}` });
         console.log(`[HubSpotPoller] Fired for "${automation.name}" ${objectType} ID: ${obj.id}`);
       } catch (err) {
         console.error(`[HubSpotPoller] Failed to process ${obj.id}:`, err.message);
@@ -121,8 +122,8 @@ export async function startHubSpotPoller() {
   hsWorker = new Worker(
     HUBSPOT_QUEUE,
     async (job) => {
-      const { automationId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId } = job.data;
-      await pollHubSpot(automationId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId);
+      const { automationId, triggerNodeId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId } = job.data;
+      await pollHubSpot(automationId, triggerNodeId, apiKey, objectType, filterProperty, filterValue, limit, triggerOnUpdate, workspaceId);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );

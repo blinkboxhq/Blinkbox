@@ -31,8 +31,9 @@ function checkCert(host, port = 443) {
   });
 }
 
-export async function pollSslCert(automationId, cfg) {
-  const lockKey = `bb:ssl:lock:${automationId}`;
+export async function pollSslCert(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:ssl:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -47,14 +48,15 @@ export async function pollSslCert(automationId, cfg) {
     if (result.daysLeft > parseInt(warnDays)) return;
 
     // Fire once per expiry window (reset when cert renews)
-    const stateKey = `bb:ssl:fired:${automationId}:${Math.floor(result.daysLeft / 7)}`;
+    const stateKey = `bb:ssl:fired:${scope}:${Math.floor(result.daysLeft / 7)}`;
     const alreadyFired = await redis.get(stateKey);
     if (alreadyFired) return;
     await redis.set(stateKey, "1", "EX", 7 * 24 * 60 * 60);
 
     await executeAutomation(automation, result, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `ssl:${automationId}:${result.daysLeft}`,
+      entryNodeId: triggerNodeId || automation.entryNodeId,
+      idempotencyKey: `ssl:${scope}:${result.daysLeft}`,
     });
   } catch (err) {
     console.warn(`[SslPoller] Error for ${automationId}:`, err.message);
@@ -66,7 +68,7 @@ export async function pollSslCert(automationId, cfg) {
 export async function startSslPoller() {
   console.log("[SslPoller] Starting...");
   sslQueue = new Queue(QUEUE_NAME, { connection: createBullMQConnection(), defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } } });
-  sslWorker = new Worker(QUEUE_NAME, async (job) => { await pollSslCert(job.data.automationId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 8 });
+  sslWorker = new Worker(QUEUE_NAME, async (job) => { await pollSslCert(job.data.automationId, job.data.triggerNodeId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 8 });
   sslWorker.on("failed", (job, err) => console.error(`[SslPoller] Job failed:`, err.message));
   await syncSslJobs();
   console.log("[SslPoller] Ready");
@@ -82,7 +84,7 @@ export async function syncSslJobs() {
     const cfg = entryNode?.data?.config || {};
     const host = cfg.host || cfg.hostname;
     if (!host) continue;
-    await sslQueue.add("ssl-poll", { automationId: automation._id.toString(), cfg: { host, port: cfg.port, warnDays: cfg.warnDays || cfg.warningDays } }, { repeat: { every: 12 * 60 * 60 * 1000 }, jobId: `ssl-${automation._id}` });
+    await sslQueue.add("ssl-poll", { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, cfg: { host, port: cfg.port, warnDays: cfg.warnDays || cfg.warningDays } }, { repeat: { every: 12 * 60 * 60 * 1000 }, jobId: `ssl-${automation._id}` });
   }
   console.log(`[SslPoller] Synced ${automations.length} automations`);
 }

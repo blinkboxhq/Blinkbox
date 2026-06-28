@@ -28,8 +28,9 @@ async function fetchMessages(accessToken, folder = "inbox", filter) {
   return data.value || [];
 }
 
-export async function pollOutlook(automationId, cfg) {
-  const lockKey = `bb:outlook:lock:${automationId}`;
+export async function pollOutlook(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:outlook:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
@@ -41,7 +42,7 @@ export async function pollOutlook(automationId, cfg) {
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const graphFilter = onlyUnread ? "isRead eq false" : undefined;
     const messages = await fetchMessages(accessToken, folder, graphFilter);
-    const seenKey = `bb:outlook:seen:${automationId}`;
+    const seenKey = `bb:outlook:seen:${scope}`;
     for (const msg of messages) {
       if (subjectFilter && !msg.subject?.toLowerCase().includes(subjectFilter.toLowerCase())) continue;
       const added = await redis.sadd(seenKey, msg.id);
@@ -59,7 +60,8 @@ export async function pollOutlook(automationId, cfg) {
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
-        idempotencyKey: `outlook:${automationId}:${msg.id}`,
+        entryNodeId: triggerNodeId || automation.entryNodeId,
+        idempotencyKey: `outlook:${scope}:${msg.id}`,
       });
     }
   } catch (err) {
@@ -76,7 +78,7 @@ export async function startOutlookPoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   outlookWorker = new Worker(QUEUE_NAME, async (job) => {
-    await pollOutlook(job.data.automationId, job.data.cfg);
+    await pollOutlook(job.data.automationId, job.data.triggerNodeId, job.data.cfg);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   outlookWorker.on("failed", (job, err) => console.error(`[OutlookPoller] Job failed:`, err.message));
   await syncOutlookJobs();
@@ -95,6 +97,7 @@ export async function syncOutlookJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await outlookQueue.add("outlook-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), folder: cfg.folder, subjectFilter: cfg.subjectFilter, onlyUnread: cfg.onlyUnread },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `outlook-${automation._id}` });
   }

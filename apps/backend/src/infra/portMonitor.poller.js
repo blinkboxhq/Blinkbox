@@ -27,8 +27,9 @@ function checkPort(host, port, timeoutMs = 5000) {
   });
 }
 
-export async function pollPort(automationId, cfg) {
-  const lockKey = `bb:port:lock:${automationId}`;
+export async function pollPort(automationId, triggerNodeId, cfg) {
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:port:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;
   try {
@@ -39,7 +40,7 @@ export async function pollPort(automationId, cfg) {
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const result = await checkPort(host, parseInt(port));
-    const stateKey = `bb:port:state:${automationId}`;
+    const stateKey = `bb:port:state:${scope}`;
     const lastState = await redis.get(stateKey) || "unknown";
     const currentState = result.open ? "open" : "closed";
     await redis.set(stateKey, currentState, "EX", 7 * 24 * 60 * 60);
@@ -50,7 +51,8 @@ export async function pollPort(automationId, cfg) {
     if (!shouldFire) return;
     await executeAutomation(automation, { host, port: parseInt(port), state: currentState, previousState: lastState, responseTime: result.responseTime, reason: result.reason || null, checkedAt: new Date().toISOString() }, {
       workspaceId: automation.workspaceId,
-      idempotencyKey: `port:${automationId}:${currentState}:${Date.now()}`,
+      entryNodeId: triggerNodeId || automation.entryNodeId,
+      idempotencyKey: `port:${scope}:${currentState}:${Date.now()}`,
     });
   } catch (err) {
     console.warn(`[PortMonitor] Error for ${automationId}:`, err.message);
@@ -62,7 +64,7 @@ export async function pollPort(automationId, cfg) {
 export async function startPortMonitor() {
   console.log("[PortMonitor] Starting...");
   portQueue = new Queue(QUEUE_NAME, { connection: createBullMQConnection(), defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } } });
-  portWorker = new Worker(QUEUE_NAME, async (job) => { await pollPort(job.data.automationId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 12 });
+  portWorker = new Worker(QUEUE_NAME, async (job) => { await pollPort(job.data.automationId, job.data.triggerNodeId, job.data.cfg); }, { connection: createBullMQConnection(), concurrency: 12 });
   portWorker.on("failed", (job, err) => console.error(`[PortMonitor] Job failed:`, err.message));
   await syncPortJobs();
   console.log("[PortMonitor] Ready");
@@ -78,7 +80,7 @@ export async function syncPortJobs() {
     const cfg = entryNode?.data?.config || {};
     if (!cfg.host || !cfg.port) continue;
     const intervalSec = parseInt(cfg.pollIntervalSeconds) || 60;
-    await portQueue.add("port-poll", { automationId: automation._id.toString(), cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn } }, { repeat: { every: intervalSec * 1000 }, jobId: `port-${automation._id}` });
+    await portQueue.add("port-poll", { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn } }, { repeat: { every: intervalSec * 1000 }, jobId: `port-${automation._id}` });
   }
   console.log(`[PortMonitor] Synced ${automations.length} automations`);
 }

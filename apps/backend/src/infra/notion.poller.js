@@ -40,12 +40,13 @@ async function notionPost(apiKey, endpoint, body) {
 }
 
 export async function pollNotion(
-  automationId, apiKey, databaseId,
+  automationId, triggerNodeId, apiKey, databaseId,
   filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId,
 ) {
-  const lockKey = `bb:notion:lock:${automationId}`;
-  const seenKey = `bb:notion:seen:${automationId}`;
-  const wmKey   = `bb:notion:wm:${automationId}`;
+  const scope = triggerNodeId || automationId;
+  const lockKey = `bb:notion:lock:${scope}`;
+  const seenKey = `bb:notion:seen:${scope}`;
+  const wmKey   = `bb:notion:wm:${scope}`;
 
   const locked = await acquireLock(lockKey, "poller", 120);
   if (!locked) return;
@@ -99,7 +100,7 @@ export async function pollNotion(
       if (claimed === 0 && !triggerOnUpdate) continue;
 
       try {
-        await executeAutomation(automation, page, { workspaceId: automation.workspaceId, idempotencyKey: `notion:${automationId}:${dedupeKey}` });
+        await executeAutomation(automation, page, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `notion:${scope}:${dedupeKey}` });
         console.log(`[NotionPoller] Fired for "${automation.name}" page: ${page.id}`);
       } catch (err) {
         console.error(`[NotionPoller] Failed to process page ${page.id}:`, err.message);
@@ -123,8 +124,8 @@ export async function startNotionPoller() {
   notionWorker = new Worker(
     NOTION_QUEUE,
     async (job) => {
-      const { automationId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId } = job.data;
-      await pollNotion(automationId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
+      const { automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId } = job.data;
+      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
