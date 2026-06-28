@@ -6,7 +6,9 @@ import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
+import { getTriggerSchema } from "../triggerSchemas";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
+import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
@@ -211,6 +213,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const variant      = node?.data.type === "trigger" && node?.data.config?.triggerVariant
     ? TRIGGER_VARIANTS[node.data.config.triggerVariant] : null;
   const def          = variant || nodeDef;
+  const triggerSchema = variant ? getTriggerSchema(variant.backendType || backendType) : null;
   const configSchema = !variant && backendType ? getConfigSchema(backendType) : null;
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
@@ -275,7 +278,13 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
       {/* Config fields — padded wrapper */}
       <div className="flex-1 overflow-y-auto">
         <div ref={configRef} className="px-1 py-2">
-          {configSchema ? (
+          {triggerSchema ? (
+            <MonoSchemaPanel
+              schema={triggerSchema}
+              config={config}
+              updateConfig={(key, val) => updateConfig(node.id, key, val)}
+            />
+          ) : configSchema ? (
             <SchemaPanel
               schema={configSchema}
               def={def}
