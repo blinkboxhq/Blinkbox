@@ -4,7 +4,41 @@ import {
   DollarSign, RefreshCw, Repeat, XCircle, FileText, AlertTriangle, ShoppingCart,
   GitCommit, Tag, Users, Flag, Activity,
   Bug, Bookmark, Layers, UserPlus, ArrowRightCircle, AlertOctagon, CheckCircle2, Clock,
+  Play, Ban, Flame, Inbox, Gauge, ShieldAlert,
 } from 'lucide-react';
+
+const LINEAR_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const linearBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'Linear API Key', placeholder: 'lin_api_…',
+    hint: '// create one in Linear → Settings → API → Personal API keys' },
+  { type: 'text', key: 'teamId', label: 'Team ID (optional)', placeholder: 'leave blank for all teams',
+    hint: '// scope this trigger to one team; blank = your whole workspace' },
+  { type: 'text', key: 'labelFilter', label: 'Label (optional)', placeholder: 'e.g. Frontend',
+    hint: '// only fire on issues carrying this label' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: LINEAR_POLL },
+];
+const linearVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'issue title'],
+    ['$trigger.status', 'current status'],
+    ['$trigger.priorityLabel', 'priority (Urgent…No priority)'],
+    ['$trigger.assignee', 'assigned to'],
+    ['$trigger.url', 'link to the issue'],
+    ...extra,
+  ],
+});
+// `view` selects the real server-side filter the Linear poller runs.
+const linearEvent = (view, label, description, icon, extraVars = []) => ({
+  id: view, label, description, icon, event: view, accent: '#5E6AD2',
+  configExtra: { view },
+  fields: [...linearBaseFields, linearVars(extraVars)],
+});
 
 const JIRA_POLL = [
   { value: '1', label: 'Every minute' },
@@ -377,6 +411,25 @@ export const TRIGGER_EVENTS = {
       jiraEvent('reopened', 'Issue Reopened', 'A done issue is moved back to open', RefreshCw,
         'status CHANGED FROM ("Done", "Closed", "Resolved") AFTER -15m ORDER BY updated DESC', 'updated',
         [['$trigger.status', 'the new status']]),
+    ],
+  },
+
+  // ── LINEAR ──────────────────────────────────────────────────
+  linear: {
+    title: 'Linear',
+    subtitle: 'Trigger on issue activity in your Linear workspace',
+    events: [
+      linearEvent('issue_created', 'Issue Created', 'Any new issue is created', Plus),
+      linearEvent('issue_updated', 'Issue Updated', 'Any issue is edited', Pencil),
+      linearEvent('issue_started', 'Issue Started', 'An issue moves into an In-Progress state', Play),
+      linearEvent('issue_completed', 'Issue Completed', 'An issue is marked Done', CheckCircle2),
+      linearEvent('issue_canceled', 'Issue Canceled', 'An issue is canceled', Ban),
+      linearEvent('urgent', 'Urgent Issue', 'An issue is set to Urgent priority', Flame,
+        [['$trigger.priorityLabel', 'always "Urgent"']]),
+      linearEvent('high_priority', 'High-Priority Issue', 'An open High or Urgent issue appears', AlertOctagon),
+      linearEvent('unassigned', 'Unassigned Issue', 'An active issue has no assignee', Inbox),
+      linearEvent('no_estimate', 'Missing Estimate', 'An open issue has no estimate set', Gauge),
+      linearEvent('blocked', 'Issue Blocked', 'An issue is labelled Blocked', ShieldAlert),
     ],
   },
 };

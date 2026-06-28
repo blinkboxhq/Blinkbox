@@ -14,6 +14,7 @@ import { pollDns } from "./dnsMonitor.poller.js";
 import { pollDocker } from "./docker.poller.js";
 import { pollRepo } from "./githubIssue.poller.js";
 import { pollGitLab } from "./gitlab.poller.js";
+import { pollLinear } from "./linear.poller.js";
 import { pollCalendar } from "./googleCalendar.poller.js";
 import { pollGoogleSheets } from "./googleSheets.poller.js";
 import { pollHackerNews } from "./hackerNews.poller.js";
@@ -473,6 +474,18 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gforms",
     run: async ({ automationId, cfg }) => { await pollGoogleForms(automationId, cfg); },
+  },
+
+  linear_trigger: {
+    triggerName: "linear_trigger",
+    required: ["apiKey"],
+    extract: (cfg) => ({
+      cfg: { apiKey: cfg.apiKey, teamId: cfg.teamId, assigneeId: cfg.assigneeId,
+        labelFilter: cfg.labelFilter, statusFilter: cfg.statusFilter, view: cfg.view },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "linear",
+    run: async ({ automationId, cfg }) => { await pollLinear(automationId, cfg); },
   },
 };
 
