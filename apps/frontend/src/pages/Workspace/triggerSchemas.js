@@ -268,6 +268,71 @@ TRIGGER_SCHEMAS.http_monitor_trigger = {
   ],
 };
 
+TRIGGER_SCHEMAS.ssl_trigger = {
+  title: 'SSL Certificate',
+  subtitle: 'Watch a TLS certificate and fire before it expires',
+  icon: ShieldCheck,
+  accent: '#4ade80',
+  fields: [
+    { type: 'text', key: 'host', label: 'Domain to Watch', placeholder: 'yoursite.com',
+      hint: '// the domain whose certificate to check — no https:// needed' },
+    { type: 'text', key: 'port', label: 'Port', default: '443', placeholder: '443',
+      hint: '// the TLS port — almost always 443' },
+    { type: 'select', key: 'warnDays', label: 'Warn Me Before Expiry', default: '30', options: [
+      { value: '7', label: '7 days before' },
+      { value: '14', label: '14 days before' },
+      { value: '30', label: '30 days before' },
+      { value: '60', label: '60 days before' },
+      { value: '90', label: '90 days before' },
+    ] },
+  ],
+};
+
+TRIGGER_SCHEMAS.dns_trigger = {
+  title: 'DNS Monitor',
+  subtitle: 'Watch a domain’s DNS records and fire when they change',
+  icon: Activity,
+  accent: '#38bdf8',
+  fields: [
+    { type: 'text', key: 'domain', label: 'Domain to Watch', placeholder: 'example.com',
+      hint: '// the domain whose DNS records to monitor' },
+    { type: 'select', key: 'recordType', label: 'Record Type', default: 'A', options: [
+      { value: 'A', label: 'A — IPv4 address' },
+      { value: 'AAAA', label: 'AAAA — IPv6 address' },
+      { value: 'MX', label: 'MX — mail servers' },
+      { value: 'NS', label: 'NS — name servers' },
+      { value: 'TXT', label: 'TXT — text records' },
+      { value: 'CNAME', label: 'CNAME — alias' },
+      { value: 'CAA', label: 'CAA — cert authority' },
+      { value: 'SOA', label: 'SOA — zone authority' },
+    ], hint: '// which DNS record to track for changes' },
+    { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15', options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+  ],
+};
+
+TRIGGER_SCHEMAS.port_monitor_trigger = {
+  title: 'Port Monitor',
+  subtitle: 'Watch a TCP port and fire when it opens or closes',
+  icon: Webhook,
+  accent: '#a78bfa',
+  fields: [
+    { type: 'text', key: 'host', label: 'Host', placeholder: 'db.internal.example.com',
+      hint: '// the server to check' },
+    { type: 'text', key: 'port', label: 'Port', placeholder: '5432', default: '443',
+      hint: '// the TCP port to watch' },
+    { type: 'pills', key: 'alertOn', label: 'Fire When', default: 'closed', options: [
+      { value: 'closed', label: 'Goes Down' }, { value: 'open', label: 'Comes Up' }, { value: 'both', label: 'Either Way' },
+    ] },
+    { type: 'select', key: 'pollIntervalSeconds', label: 'Check Every', default: '60', options: HTTP_INTERVALS },
+  ],
+};
+
 export function getTriggerSchema(backendType) {
   return TRIGGER_SCHEMAS[backendType] || null;
 }
