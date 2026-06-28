@@ -29,13 +29,13 @@ export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) 
   return (
     <ConfigSection className="gap-5">
       {/* Header */}
-      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-xl bg-[#0F9D58]/[0.06] backdrop-blur-sm">
-        <div className="w-9 h-9 rounded-lg bg-[#0F9D58]/10 text-[#0F9D58] flex items-center justify-center shrink-0">
+      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
+        <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] text-[#0F9D58] flex items-center justify-center shrink-0">
           <SheetsIcon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[14px] font-bold text-[#0F9D58]">Google Sheets</span>
-          <span className="text-[11px] text-neutral-500">Read &amp; write spreadsheet data</span>
+          <span className="text-[13px] font-bold text-neutral-100 font-mono tracking-wide">Google Sheets</span>
+          <span className="text-[10px] text-neutral-500 font-mono">Read &amp; write spreadsheet data</span>
         </div>
       </div>
 

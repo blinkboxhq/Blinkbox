@@ -252,31 +252,33 @@ export default function CredentialPicker({
   const showManualPicker = !oauthMeta || !!selectedCred || manual;
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+    <div className="flex flex-col gap-2">
+      <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono flex items-center gap-2">
+        <span className="w-[3px] h-[3px] rounded-full bg-[#6f97e8]" />
         <KeyRound className="w-3 h-3" /> {label}
       </label>
 
-      {/* OAuth "Sign in with X" — real provider logo, n8n-style, with cursor glow */}
+      {/* OAuth "Sign in with X" — real provider logo, bordered-mono, with cursor glow */}
       {oauthMeta?.logo && !selectedCred && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-2 items-start">
           <button
             type="button"
             onClick={connectOAuth}
             disabled={isConnecting}
-            className="bb-glow-border group flex-1 flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-[13px] font-medium text-neutral-800 transition-all duration-150 disabled:opacity-60 shadow-sm"
+            className="bb-glow-border group w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md bg-transparent border border-[#3b3b3b] hover:border-[#545454] hover:bg-white/[0.02] text-[12px] font-semibold text-neutral-100 transition-colors disabled:opacity-60"
           >
             {isConnecting
               ? <Loader2 className="w-[18px] h-[18px] animate-spin text-neutral-500" />
               : <img src={oauthMeta.logo} alt="" className="w-[18px] h-[18px] object-contain" />}
             {isConnecting ? `Connecting…` : `Sign in with ${oauthMeta.label}`}
+            <span className="ml-auto text-neutral-600 group-hover:text-neutral-400 transition-colors">→</span>
           </button>
           <button
             type="button"
             onClick={() => { setManual(true); setOpen(true); }}
-            className="text-[12px] text-neutral-500 hover:text-neutral-300 underline underline-offset-2 decoration-neutral-700 hover:decoration-neutral-400 transition-colors whitespace-nowrap"
+            className="text-[10px] font-mono text-neutral-500 hover:text-neutral-300 border-b border-dashed border-[#3b3b3b] pb-px transition-colors whitespace-nowrap"
           >
-            or setup manually
+            or setup manually →
           </button>
         </div>
       )}
@@ -291,12 +293,12 @@ export default function CredentialPicker({
             setSearch('');
             if (next && triggerRef.current) setDropdownRect(triggerRef.current.getBoundingClientRect());
           }}
-          className={`bb-glow-border w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-[#0d0d0f]/80 backdrop-blur-sm rounded-lg text-[13px] transition-colors ${
+          className={`bb-glow-border w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-[#0f0f0f] border border-[#3b3b3b] rounded-md text-[12.5px] font-mono transition-colors ${
             selectedCred ? 'text-neutral-200' : 'text-neutral-600'
           }`}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {selectedCred && <Shield className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+            {selectedCred && <Shield className="w-3.5 h-3.5 text-[#6f97e8] shrink-0" />}
             <span className="truncate">{isLoading ? 'Loading…' : (selectedCred?.name || placeholder)}</span>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -312,7 +314,7 @@ export default function CredentialPicker({
         {open && dropdownRect && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[9999] bb-glass border border-[#2a2a2d] rounded-lg shadow-2xl overflow-hidden flex flex-col"
+            className="fixed z-[9999] bg-[#262626] border border-[#3b3b3b] rounded-md shadow-2xl overflow-hidden flex flex-col"
             style={(() => {
               const maxH = 256;
               const spaceBelow = window.innerHeight - dropdownRect.bottom - 8;
@@ -331,14 +333,14 @@ export default function CredentialPicker({
           >
             {/* Search */}
             {credentials.length > 3 && (
-              <div className="px-2 py-1.5 border-b border-[#1e1e20]">
-                <div className="flex items-center gap-2 px-2 py-1 bg-[#0d0d0f] rounded-md">
+              <div className="px-2 py-1.5 border-b border-[#2b2b2b]">
+                <div className="flex items-center gap-2 px-2 py-1 bg-[#0f0f0f] border border-[#3b3b3b] rounded">
                   <Search className="w-3 h-3 text-neutral-600 shrink-0" />
                   <input
                     autoFocus type="text" value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search credentials…"
-                    className="flex-1 bg-transparent text-[12px] text-neutral-300 placeholder-neutral-600 outline-none"
+                    className="flex-1 bg-transparent text-[12px] font-mono text-neutral-300 placeholder-neutral-600 outline-none"
                   />
                 </div>
               </div>
@@ -360,7 +362,7 @@ export default function CredentialPicker({
               ))}
 
               {others.length > 0 && matched.length > 0 && (
-                <div className="mx-3 my-1 border-t border-[#1e1e20]" />
+                <div className="mx-3 my-1 border-t border-[#2b2b2b]" />
               )}
               {others.length > 0 && !search && (
                 <p className="px-3 pt-1 pb-1 text-[9px] font-bold text-neutral-700 uppercase tracking-widest">Other</p>
@@ -371,13 +373,13 @@ export default function CredentialPicker({
             </div>
 
             {/* Footer */}
-            <div className="border-t border-[#1e1e20] shrink-0">
+            <div className="border-t border-[#2b2b2b] shrink-0">
               {oauthMeta && (
                 <button
                   type="button"
                   onClick={() => { setOpen(false); connectOAuth(); }}
                   disabled={isConnecting}
-                  className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#1e1e20] text-neutral-200"
+                  className="w-full px-3 py-2.5 text-left text-[12px] font-medium hover:bg-white/[0.04] flex items-center gap-2 transition-colors border-b border-[#2b2b2b] text-neutral-200"
                 >
                   {oauthMeta.logo
                     ? <img src={oauthMeta.logo} alt="" className="w-4 h-4 object-contain" />
@@ -387,7 +389,7 @@ export default function CredentialPicker({
               <button
                 type="button"
                 onClick={openCreate}
-                className={`w-full px-3 py-2.5 text-left text-[12px] ${ac.btn} hover:bg-white/[0.04] flex items-center gap-2 transition-colors font-medium`}
+                className="w-full px-3 py-2.5 text-left text-[12px] font-mono text-[#6f97e8] hover:bg-white/[0.04] flex items-center gap-2 transition-colors font-medium"
               >
                 <Plus className="w-3.5 h-3.5" /> Add new credential
               </button>
@@ -399,15 +401,17 @@ export default function CredentialPicker({
 
       {/* Connected badge */}
       {selectedCred && (
-        <div className={`bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-lg ${ac.badge}`}>
+        <div className="bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
           {oauthMeta?.logo && selectedCred.provider === oauthProvider
             ? <img src={oauthMeta.logo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
-            : <Shield className="w-3 h-3 shrink-0" />}
-          <span className="text-[11px] font-medium truncate">{selectedCred.name}</span>
+            : <Shield className="w-3 h-3 shrink-0 text-neutral-400" />}
+          <span className="text-[11px] font-mono text-neutral-200 truncate">{selectedCred.name}</span>
           {oauthMeta && selectedCred.provider === oauthProvider && (
-            <span className="text-[9px] font-bold opacity-60 uppercase">OAuth</span>
+            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+              <span className="w-[5px] h-[5px] rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" /> Connected
+            </span>
           )}
-          <span className="ml-auto text-[9px] font-bold opacity-60 uppercase">{selectedCred.type || 'key'}</span>
+          <span className="ml-auto text-[9px] font-bold font-mono uppercase text-neutral-600">{selectedCred.type || 'key'}</span>
           <button
             type="button"
             onClick={() => onChange('')}
@@ -428,10 +432,10 @@ export default function CredentialPicker({
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="bb-glow-border flex flex-col gap-2.5 p-3 bg-[#0d0d0f]/80 backdrop-blur-sm rounded-lg mt-0.5"
+          className="bb-glow-border flex flex-col gap-2.5 p-3 bg-[#0f0f0f] border border-[#3b3b3b] rounded-md mt-0.5"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">New Credential</span>
+            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono">New Credential</span>
             <button type="button" onClick={() => { setShowCreate(false); setCreateError(null); setNewName(''); setNewSecret(''); }}
               className="text-neutral-600 hover:text-neutral-400 transition-colors">
               <X className="w-3.5 h-3.5" />
@@ -442,7 +446,7 @@ export default function CredentialPicker({
             autoFocus
             type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
             placeholder={`Name (e.g. ${credentialType || 'My'} Production)`}
-            className="bg-[#111] border border-[#333] rounded-md px-3 py-2 text-[13px] text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
+            className="bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2 text-[12.5px] font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-[#545454] transition-colors"
           />
 
           <div className="relative">
@@ -450,7 +454,7 @@ export default function CredentialPicker({
               type={showSecret ? 'text' : 'password'} value={newSecret}
               onChange={(e) => setNewSecret(e.target.value)}
               placeholder={credentialType ? `${credentialType} API key or token` : 'Secret / API key / token'}
-              className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 pr-9 text-[13px] text-white placeholder-neutral-600 font-mono focus:outline-none focus:border-neutral-500 transition-colors"
+              className="w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2 pr-9 text-[12.5px] text-white placeholder-neutral-600 font-mono focus:outline-none focus:border-[#545454] transition-colors"
             />
             <button type="button" onClick={() => setShowSecret((p) => !p)}
               className="absolute right-2.5 top-2.5 text-neutral-600 hover:text-neutral-400 transition-colors">
@@ -467,7 +471,7 @@ export default function CredentialPicker({
               Cancel
             </button>
             <button type="submit" disabled={isCreating || !newName.trim() || !newSecret.trim()}
-              className={`px-3 py-1.5 text-[12px] font-semibold border rounded-md disabled:opacity-40 transition-colors flex items-center gap-1.5 ${ac.save}`}>
+              className="px-3 py-1.5 text-[12px] font-mono font-semibold border rounded-md disabled:opacity-40 transition-colors flex items-center gap-1.5 bg-[#6f97e8]/15 border-[#6f97e8]/40 text-[#a9c0ef] hover:bg-[#6f97e8]/25">
               {isCreating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Save & Connect
             </button>
