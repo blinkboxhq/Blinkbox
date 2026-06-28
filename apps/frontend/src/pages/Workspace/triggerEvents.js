@@ -6,6 +6,7 @@ import {
   Bug, Bookmark, Layers, UserPlus, ArrowRightCircle, AlertOctagon, CheckCircle2, Clock,
   Play, Ban, Flame, Inbox, Gauge, ShieldAlert,
   ListTodo, CircleDashed, PauseCircle, Archive, Sparkle,
+  Briefcase, Building2, Ticket, Trophy, UserCheck, Target,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -41,6 +42,35 @@ const notionEvent = (id, label, description, icon, configExtra, fields = []) => 
 const notionStatusField = (value) => ({
   type: 'text', key: 'filterValue', label: 'Status Value', default: value, placeholder: value,
   hint: '// the exact Status option name in your database — edit if yours differs',
+});
+
+const HUBSPOT_POLL = [
+  { value: '*/2 * * * *', label: 'Every 2 minutes' },
+  { value: '*/5 * * * *', label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+  { value: '0 * * * *', label: 'Every hour' },
+];
+const hubspotBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'HubSpot Private App Token', placeholder: 'pat-na1-…',
+    hint: '// Settings → Integrations → Private Apps → create one with crm.objects.*.read scopes' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: HUBSPOT_POLL },
+];
+const hubspotVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.id', 'the object id'],
+    ['$trigger.properties', 'all property values on the object'],
+    ['$trigger.createdAt', 'when the object was created'],
+    ['$trigger.updatedAt', 'when it was last modified'],
+    ...extra,
+  ],
+});
+// A HubSpot event = the CRM search poller + an object-type/property slice.
+// objectType picks the CRM endpoint; filterProperty/filterValue add an EQ filter;
+// triggerOnUpdate re-fires on every modification instead of once at creation.
+const hubspotEvent = (id, label, description, icon, configExtra, fields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#ff7a59', configExtra,
+  fields: [...hubspotBaseFields, ...fields, hubspotVars(varsExtra)],
 });
 
 const LINEAR_POLL = [
@@ -501,6 +531,57 @@ export const TRIGGER_EVENTS = {
         { triggerOnUpdate: true, filterProperty: 'Priority', filterType: 'select' }, [
           { type: 'text', key: 'filterValue', label: 'Priority Value', default: 'High', placeholder: 'High',
             hint: '// the exact Priority option name in your database' },
+        ]),
+    ],
+  },
+
+  hubspot: {
+    title: 'HubSpot',
+    subtitle: 'Trigger on new or changed CRM records — contacts, deals, companies, tickets',
+    events: [
+      hubspotEvent('contact_created', 'Contact Created', 'A new contact is added to your CRM', UserPlus,
+        { objectType: 'contacts', triggerOnUpdate: false }, [],
+        [['$trigger.properties.email', "the contact's email"], ['$trigger.properties.firstname', 'first name']]),
+      hubspotEvent('contact_updated', 'Contact Updated', 'Any property on a contact changes', Pencil,
+        { objectType: 'contacts', triggerOnUpdate: true }, [],
+        [['$trigger.properties.email', "the contact's email"]]),
+      hubspotEvent('contact_became_lead', 'Contact → Lead', 'A contact reaches the Lead lifecycle stage', Target,
+        { objectType: 'contacts', triggerOnUpdate: true, filterProperty: 'lifecyclestage', filterValue: 'lead' }, [],
+        [['$trigger.properties.lifecyclestage', 'now "lead"']]),
+      hubspotEvent('contact_became_customer', 'Contact → Customer', 'A contact reaches the Customer lifecycle stage', UserCheck,
+        { objectType: 'contacts', triggerOnUpdate: true, filterProperty: 'lifecyclestage', filterValue: 'customer' }, [],
+        [['$trigger.properties.lifecyclestage', 'now "customer"']]),
+      hubspotEvent('deal_created', 'Deal Created', 'A new deal enters any pipeline', Briefcase,
+        { objectType: 'deals', triggerOnUpdate: false }, [],
+        [['$trigger.properties.dealname', 'the deal name'], ['$trigger.properties.amount', 'deal value']]),
+      hubspotEvent('deal_updated', 'Deal Updated', 'Any property on a deal changes', RefreshCw,
+        { objectType: 'deals', triggerOnUpdate: true }, [],
+        [['$trigger.properties.dealstage', 'current stage']]),
+      hubspotEvent('deal_won', 'Deal Won', 'A deal moves to Closed Won', Trophy,
+        { objectType: 'deals', triggerOnUpdate: true, filterProperty: 'dealstage', filterValue: 'closedwon' }, [],
+        [['$trigger.properties.amount', 'the won amount']]),
+      hubspotEvent('deal_lost', 'Deal Lost', 'A deal moves to Closed Lost', XCircle,
+        { objectType: 'deals', triggerOnUpdate: true, filterProperty: 'dealstage', filterValue: 'closedlost' }, [],
+        [['$trigger.properties.dealname', 'the lost deal']]),
+      hubspotEvent('company_created', 'Company Created', 'A new company record is added', Building2,
+        { objectType: 'companies', triggerOnUpdate: false }, [],
+        [['$trigger.properties.name', 'company name'], ['$trigger.properties.domain', 'website domain']]),
+      hubspotEvent('ticket_created', 'Ticket Created', 'A new support ticket is opened', Ticket,
+        { objectType: 'tickets', triggerOnUpdate: false }, [],
+        [['$trigger.properties.subject', 'ticket subject'], ['$trigger.properties.hs_ticket_priority', 'priority']]),
+      hubspotEvent('ticket_urgent', 'Ticket → High Priority', 'A ticket is set to High priority', Flame,
+        { objectType: 'tickets', triggerOnUpdate: true, filterProperty: 'hs_ticket_priority', filterValue: 'HIGH' }, [],
+        [['$trigger.properties.subject', 'the urgent ticket']]),
+      hubspotEvent('object_property_equals', 'Property Equals…', 'Any object where a property matches a value', Sparkle,
+        { triggerOnUpdate: true }, [
+          { type: 'pills', key: 'objectType', label: 'Object', default: 'contacts', options: [
+            { value: 'contacts', label: 'Contacts' }, { value: 'deals', label: 'Deals' },
+            { value: 'companies', label: 'Companies' }, { value: 'tickets', label: 'Tickets' },
+          ] },
+          { type: 'text', key: 'filterProperty', label: 'Property', placeholder: 'e.g. hs_lead_status',
+            hint: '// the internal property name (not the label)' },
+          { type: 'text', key: 'filterValue', label: 'Equals', placeholder: 'e.g. NEW',
+            hint: '// fire only when that property equals this value' },
         ]),
     ],
   },
