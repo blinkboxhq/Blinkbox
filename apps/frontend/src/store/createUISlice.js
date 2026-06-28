@@ -228,9 +228,12 @@ export const createUISlice = (set, get) => ({
     const state = get();
     set({ isSaving: true });
     try {
-      const entryNode = state.nodes.find((n) => n.data.type === "trigger");
-      if (!entryNode)
+      const triggerNodes = state.nodes.filter((n) => n.data.type === "trigger");
+      if (triggerNodes.length === 0)
         throw new Error("A Trigger node is required to save the workflow.");
+      if (triggerNodes.length > 1)
+        throw new Error("Only one trigger per workflow. Remove the extra trigger(s) — additional triggers can't reach the rest of the flow.");
+      const entryNode = triggerNodes[0];
 
       const trigConf = entryNode.data.config || {};
       const bt = entryNode.data.backendType;

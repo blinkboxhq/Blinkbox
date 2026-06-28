@@ -52,6 +52,7 @@ export default function TriggerPicker() {
   const nodes                = useWorkspaceStore((s) => s.nodes);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const setSelectedNodeId    = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const addNotification      = useWorkspaceStore((s) => s.addNotification);
 
   useEffect(() => { inputRef.current?.focus(); }, [page]);
 
@@ -59,15 +60,18 @@ export default function TriggerPicker() {
 
   const commit = useCallback((trigger) => {
     const existingTriggers = nodes.filter((n) => n.data?.type === "trigger");
-    const position = existingTriggers.length > 0
-      ? { x: existingTriggers[existingTriggers.length - 1].position.x, y: existingTriggers[existingTriggers.length - 1].position.y + 220 }
-      : { x: -47, y: -47 };
+    if (existingTriggers.length > 0) {
+      addNotification?.({ type: "warning", title: "Only one trigger allowed", message: "A workflow can have a single trigger. Delete the current one to switch." });
+      close();
+      return;
+    }
+    const position = { x: -47, y: -47 };
     const newId = `${trigger.id}-${crypto.randomUUID()}`;
     addNode({ id: newId, type: "custom", position, data: { backendType: trigger.backendType, label: trigger.label, type: "trigger", config: { triggerVariant: trigger.id } } });
     playNodeLand();
     close();
     setSelectedNodeId(newId);
-  }, [addNode, nodes, close, setSelectedNodeId]);
+  }, [addNode, nodes, close, setSelectedNodeId, addNotification]);
 
   const currentCat = TRIGGER_CATEGORIES.find((c) => c.id === page);
 

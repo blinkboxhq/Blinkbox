@@ -339,6 +339,15 @@ export default function Canvas() {
       if (!nodeDataString) return;
 
       const nodeData = JSON.parse(nodeDataString);
+
+      if (nodeData.type === "trigger") {
+        const hasTrigger = useWorkspaceStore.getState().nodes.some((n) => n.data?.type === "trigger");
+        if (hasTrigger) {
+          useWorkspaceStore.getState().addNotification?.({ type: "warning", title: "Only one trigger allowed", message: "A workflow can have a single trigger. Delete the current one to switch." });
+          return;
+        }
+      }
+
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
