@@ -234,15 +234,6 @@ TRIGGER_SCHEMAS.rss_trigger = {
       hint: '// only fire when the item mentions this. Comma-separate for any-of. Blank = all items.' },
     { type: 'switch-row', tab: 'filters', key: 'matchAll', icon: Filter, label: 'Match All Keywords', default: false,
       desc: 'On: the item must contain every keyword. Off: any one keyword is enough.', showWhen: { keyword: { $ne: '' } } },
-    { type: 'vars', tab: 'filters', label: 'Output Variables', rows: [
-      ['$trigger.latestItem.title', 'Title of the newest matching item'],
-      ['$trigger.latestItem.link', 'URL to the item'],
-      ['$trigger.latestItem.description', 'Short summary text'],
-      ['$trigger.latestItem.author', 'Item author, when present'],
-      ['$trigger.latestItem.pubDate', 'Publish date (ISO)'],
-      ['$trigger.items', 'Array of all new matching items this check'],
-      ['$trigger.count', 'How many new items matched'],
-    ] },
   ],
 };
 
@@ -274,14 +265,6 @@ TRIGGER_SCHEMAS.http_monitor_trigger = {
     { type: 'select', tab: 'setup', key: 'pollIntervalSeconds', label: 'Check Every', default: '60', options: HTTP_INTERVALS },
     { type: 'text', tab: 'advanced', key: 'expectedKeyword', label: 'Expected Keyword (optional)', placeholder: 'e.g. OK',
       hint: '// the page must contain this text to count as healthy. Blank = any 2xx is healthy.' },
-    { type: 'vars', tab: 'advanced', label: 'Output Variables', rows: [
-      ['$trigger.url', 'The URL that was checked'],
-      ['$trigger.status', 'HTTP status code (0 if unreachable)'],
-      ['$trigger.state', 'up or down'],
-      ['$trigger.previousState', 'state on the previous check'],
-      ['$trigger.responseTime', 'Round-trip time in ms'],
-      ['$trigger.reason', 'Why it fired (e.g. "HTTP 503")'],
-    ] },
   ],
 };
 

@@ -105,18 +105,15 @@ function Field({ field, config, set, accent, automationId }) {
 
     case 'credential':
       return (
-        <div className="flex flex-col">
-          <Label icon={field.icon} accent={accent}>{field.label}</Label>
-          <CredentialPicker
-            value={v(field.key, '')}
-            onChange={(id) => set(field.key, id)}
-            label={field.label}
-            placeholder={field.placeholder}
-            credentialType={field.credType}
-            oauthProvider={field.oauthProvider}
-            hint={field.hint}
-          />
-        </div>
+        <CredentialPicker
+          value={v(field.key, '')}
+          onChange={(id) => set(field.key, id)}
+          label={field.label}
+          placeholder={field.placeholder}
+          credentialType={field.credType}
+          oauthProvider={field.oauthProvider}
+          hint={field.hint}
+        />
       );
 
     case 'textarea':
