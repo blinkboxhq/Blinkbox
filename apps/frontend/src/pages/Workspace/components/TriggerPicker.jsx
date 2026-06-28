@@ -177,7 +177,7 @@ export default function TriggerPicker() {
         <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
           {eventList ? (
             eventList.map((ev, i) => (
-              <EventRow key={ev.id} event={ev} focused={i === focusIdx}
+              <EventRow key={ev.id} event={ev} subject={eventTrigger} focused={i === focusIdx}
                 onHover={() => setFocusIdx(i)} onSelect={() => commit(eventTrigger, ev)} />
             ))
           ) : query ? (
@@ -271,11 +271,11 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
   );
 }
 
-function EventRow({ event, focused, onHover, onSelect }) {
+function EventRow({ event, subject, focused, onHover, onSelect }) {
   const rowRef = useRef(null);
   useEffect(() => { if (focused) rowRef.current?.scrollIntoView({ block: "nearest" }); }, [focused]);
 
-  const Icon = event.icon;
+  const Icon = subject?.icon || event.icon;
   return (
     <button
       ref={rowRef}
@@ -285,9 +285,13 @@ function EventRow({ event, focused, onHover, onSelect }) {
         focused ? "bg-white/[0.05]" : ""
       }`}
     >
-      <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg border border-white/[0.07]"
-        style={{ background: event.accent ? `${event.accent}14` : "transparent" }}>
-        {Icon && <Icon size={16} strokeWidth={1.8} style={{ color: event.accent || "#a3a3a3" }} />}
+      <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+        {subject?.logoUrl ? (
+          <img src={subject.logoUrl} alt={subject.label} className="w-[24px] h-[24px] object-contain"
+            style={subject.imgFilter ? { filter: subject.imgFilter } : undefined} />
+        ) : (
+          Icon && <Icon size={22} strokeWidth={1.7} className="text-neutral-300" />
+        )}
       </span>
       <div className="flex-1 min-w-0">
         <div className="text-[13.5px] font-semibold text-white leading-tight">{event.label}</div>
