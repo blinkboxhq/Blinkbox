@@ -25,6 +25,17 @@ import { resolveCredential } from "../../../utils/resolveCredential.js";
 import { decrypt } from "../../../utils/crypto.js";
 import { getTriggerConfig } from "../../../infra/triggerNodes.util.js";
 
+// The GitHub trigger stores a credentialId (OAuth account) — resolve it to the
+// real access token before calling the GitHub API. A raw PAT (legacy githubToken)
+// is passed through unchanged.
+async function resolveGitHubToken(value, workspaceId) {
+  if (!value) return null;
+  const looksLikeCredentialId = /^[a-f\d]{24}$/i.test(value);
+  if (!looksLikeCredentialId) return value;
+  const cred = await resolveCredential(value, workspaceId, "GitHub trigger");
+  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
+}
+
 /**
  * ===============================
  * CREATE / UPDATE AUTOMATION
@@ -149,12 +160,15 @@ export async function activateAutomation(req, res) {
       // trigger nodes register and tear down independently.
       // Re-read node config after registration (register* saves the secret back).
       if (trigger === "github_trigger") {
-        const token = cfg.tokenCredentialKey || cfg.githubToken;
         const repo = cfg.repo;
         const events = cfg.events || ["push"];
         if (!repo)
           throw new Error("GitHub trigger requires a repository (owner/repo).");
-        if (!token) throw new Error("GitHub trigger requires a GitHub token.");
+        const token = await resolveGitHubToken(
+          cfg.tokenCredentialKey || cfg.githubToken,
+          automation.workspaceId,
+        );
+        if (!token) throw new Error("GitHub trigger requires a connected GitHub account.");
         if (!cfg.webhookRegistered) {
           await registerGitHubWebhook(
             automation._id.toString(),
@@ -246,11 +260,15 @@ export async function deactivateAutomation(req, res) {
       const cfg = getTriggerConfig(triggerNode);
 
       if (entry.type === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
+        const token = await resolveGitHubToken(
+          cfg.tokenCredentialKey || cfg.githubToken,
+          automation.workspaceId,
+        ).catch(() => null);
         await unregisterGitHubWebhook(
           automation._id.toString(),
           cfg.repo,
           cfg.githubWebhookId,
-          cfg.tokenCredentialKey || cfg.githubToken,
+          token,
           entry.nodeId,
         ).catch((e) => console.error("[GitHub] Teardown failed:", e.message));
       }
@@ -419,13 +437,21 @@ export async function deleteAutomation(req, res) {
       const cfg = getTriggerConfig(triggerNode);
 
       if (entry.type === "github_trigger" && cfg.githubWebhookId && cfg.repo) {
-        unregisterGitHubWebhook(
-          automation._id.toString(),
-          cfg.repo,
-          cfg.githubWebhookId,
+        resolveGitHubToken(
           cfg.tokenCredentialKey || cfg.githubToken,
-          entry.nodeId,
-        ).catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
+          automation.workspaceId,
+        )
+          .catch(() => null)
+          .then((token) =>
+            unregisterGitHubWebhook(
+              automation._id.toString(),
+              cfg.repo,
+              cfg.githubWebhookId,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[GitHub] Cleanup failed:", e.message));
       }
       if (entry.type === "stripe_trigger" && cfg.stripeWebhookId) {
         unregisterStripeWebhook(
