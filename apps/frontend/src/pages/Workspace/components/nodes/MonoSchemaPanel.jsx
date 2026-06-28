@@ -205,6 +205,7 @@ export default function MonoSchemaPanel({ schema, config = {}, updateConfig }) {
   const [tab, setTab] = useState(tabs ? tabs[0].id : null);
   const accent = schema.accent || '#6f97e8';
   const Icon = schema.icon;
+  const logoUrl = schema.logoUrl;
 
   const set = (key, val) => updateConfig?.(key, val);
 
@@ -217,7 +218,12 @@ export default function MonoSchemaPanel({ schema, config = {}, updateConfig }) {
   return (
     <ConfigSection className="gap-5">
       <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
-        {Icon && (
+        {logoUrl ? (
+          <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
+            <img src={logoUrl} alt={schema.title} className="w-[26px] h-[26px] object-contain"
+              style={schema.imgFilter ? { filter: schema.imgFilter } : undefined} />
+          </div>
+        ) : Icon && (
           <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
             <Icon className="w-5 h-5" />
           </div>

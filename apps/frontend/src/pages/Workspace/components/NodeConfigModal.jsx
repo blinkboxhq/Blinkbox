@@ -217,9 +217,12 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const eventDef = variant && node?.data.config?.eventId
     ? getTriggerEvent(node.data.config.triggerVariant, node.data.config.eventId) : null;
   const eventGroup = variant ? getTriggerEvents(node.data.config?.triggerVariant) : null;
-  const triggerSchema = eventDef
+  const baseTriggerSchema = eventDef
     ? { title: `${eventGroup?.title || variant.label}`, subtitle: eventDef.description, icon: eventDef.icon, accent: eventDef.accent, fields: eventDef.fields }
     : variant ? getTriggerSchema(variant.backendType || backendType) : null;
+  const triggerSchema = baseTriggerSchema && variant?.logoUrl
+    ? { ...baseTriggerSchema, logoUrl: variant.logoUrl, imgFilter: variant.imgFilter }
+    : baseTriggerSchema;
   const configSchema = !variant && backendType ? getConfigSchema(backendType) : null;
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
