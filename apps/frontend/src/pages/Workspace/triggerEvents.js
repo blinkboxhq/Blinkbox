@@ -2,7 +2,37 @@ import {
   Plus, Pencil, Trash2, Search, GitBranch, GitMerge, GitPullRequest, CircleDot,
   MessageSquare, Star, GitFork, Rocket,
   DollarSign, RefreshCw, Repeat, XCircle, FileText, AlertTriangle, ShoppingCart,
+  GitCommit, Tag, Users, Flag, Activity,
 } from 'lucide-react';
+
+const GITLAB_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const gitlabBaseFields = [
+  { type: 'text', key: 'projectId', label: 'Project ID or Path', placeholder: '278964  or  group/project',
+    hint: '// numeric project id, or url-style namespace/project' },
+  { type: 'password', key: 'token', label: 'GitLab Access Token', placeholder: 'glpat-…',
+    hint: '// a Personal/Project token with read_api scope — store it once, we keep it encrypted' },
+  { type: 'text', key: 'host', label: 'Host (self-managed only)', default: 'gitlab.com', placeholder: 'gitlab.com',
+    hint: '// leave as gitlab.com unless you self-host' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GITLAB_POLL },
+];
+const gitlabVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.type', 'the event type'],
+    ['$trigger.author', 'who created it'],
+    ['$trigger.url', 'link to the object'],
+    ...extra,
+  ],
+});
+const gitlabEvent = (id, label, description, icon, eventType, extraVars = []) => ({
+  id, label, description, icon, event: eventType, accent: '#FC6D26',
+  fields: [...gitlabBaseFields, gitlabVars(extraVars)],
+});
 
 // The "what type of trigger" layer. Keyed by trigger-picker id (github, database,
 // stripe). Each subject expands into a list of REAL events; picking one writes
@@ -240,6 +270,38 @@ export const TRIGGER_EVENTS = {
       },
     ],
   },
+
+  // ── GITLAB ──────────────────────────────────────────────────
+  gitlab: {
+    title: 'GitLab',
+    subtitle: 'Trigger on activity in a GitLab project',
+    events: [
+      gitlabEvent('mr_opened', 'Merge Request Opened', 'A new merge request is opened', GitPullRequest, 'merge_request',
+        [['$trigger.title', 'MR title'], ['$trigger.sourceBranch', 'source branch'], ['$trigger.targetBranch', 'target branch']]),
+      gitlabEvent('mr_merged', 'Merge Request Merged', 'A merge request is merged', GitMerge, 'merge_request_merged',
+        [['$trigger.title', 'MR title'], ['$trigger.mergedBy', 'who merged it']]),
+      gitlabEvent('issue_opened', 'Issue Opened', 'A new issue is created', CircleDot, 'issue',
+        [['$trigger.title', 'issue title'], ['$trigger.labels', 'issue labels']]),
+      gitlabEvent('issue_closed', 'Issue Closed', 'An issue is closed', XCircle, 'issue_closed',
+        [['$trigger.title', 'issue title'], ['$trigger.closedAt', 'when it closed']]),
+      gitlabEvent('pipeline_any', 'Pipeline Run', 'A CI/CD pipeline runs', Activity, 'pipeline',
+        [['$trigger.status', 'pipeline status'], ['$trigger.ref', 'branch/tag']]),
+      gitlabEvent('pipeline_failed', 'Pipeline Failed', 'A CI/CD pipeline fails', AlertTriangle, 'pipeline_failed',
+        [['$trigger.ref', 'branch/tag'], ['$trigger.sha', 'commit sha']]),
+      gitlabEvent('commit_pushed', 'Commit Pushed', 'A new commit lands on the repo', GitCommit, 'commit',
+        [['$trigger.title', 'commit title'], ['$trigger.sha', 'commit sha']]),
+      gitlabEvent('tag_created', 'Tag Created', 'A new git tag is created', Tag, 'tag',
+        [['$trigger.tag', 'tag name'], ['$trigger.sha', 'commit sha']]),
+      gitlabEvent('release_published', 'Release Published', 'A new release is published', Rocket, 'release',
+        [['$trigger.tag', 'release tag'], ['$trigger.title', 'release name']]),
+      gitlabEvent('branch_created', 'Branch Created', 'A new branch appears', GitBranch, 'branch',
+        [['$trigger.branch', 'branch name'], ['$trigger.default', 'is default branch']]),
+      gitlabEvent('member_added', 'Member Added', 'Someone is added to the project', Users, 'member',
+        [['$trigger.memberName', 'member name'], ['$trigger.accessLevel', 'access level']]),
+      gitlabEvent('milestone_created', 'Milestone Created', 'A new milestone is created', Flag, 'milestone',
+        [['$trigger.title', 'milestone title'], ['$trigger.dueDate', 'due date']]),
+    ],
+  },
 };
 
 export function getTriggerEvents(triggerId) {
@@ -254,7 +316,7 @@ export function getTriggerEvent(triggerId, eventId) {
 export function eventDefaults(triggerId, eventId) {
   const ev = getTriggerEvent(triggerId, eventId);
   if (!ev) return {};
-  const cfg = { event: ev.event, eventId: ev.id };
+  const cfg = { event: ev.event, eventType: ev.event, eventId: ev.id };
   for (const f of ev.fields) {
     if (f.key && f.default !== undefined) cfg[f.key] = f.default;
   }
