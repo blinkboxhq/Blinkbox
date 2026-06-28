@@ -75,6 +75,31 @@ export function validateAutomation(automation: {
     adjacency.get(edge.source)!.push(edge.target);
   }
 
+  // Slot-only nodes are agent sub-nodes (llm/memory/tools): a source of a slot
+  // edge but never a source in the data-flow graph. They are intentionally
+  // "floating" and must not be treated as trigger roots nor flagged unreachable.
+  const slotOnlyNodes = new Set<string>();
+  for (const e of edges) {
+    if (e.targetHandle && AGENT_SLOT_HANDLES.has(e.targetHandle)) {
+      slotOnlyNodes.add(e.source);
+    }
+  }
+
+  // ── Entry Roots (multi-trigger) ───────────────────────────────────────────
+  // Every trigger node is an independent entry point. Beyond the declared
+  // entryNodeId, any node with no incoming data-flow edge is a trigger root.
+  // Reachability is seeded from ALL of them so a second trigger feeding a
+  // shared downstream node is never reported "unreachable".
+  const hasIncoming = new Set<string>();
+  for (const edge of dataFlowEdges) hasIncoming.add(edge.target);
+
+  const entryRoots = new Set<string>([entryNodeId]);
+  for (const nodeId of nodeMap) {
+    if (!hasIncoming.has(nodeId) && !slotOnlyNodes.has(nodeId)) {
+      entryRoots.add(nodeId);
+    }
+  }
+
   // ── Reachability Check ────────────────────────────────────────────────────
   const visited = new Set<string>();
   function dfs(nodeId: string): void {
@@ -84,17 +109,7 @@ export function validateAutomation(automation: {
     for (const n of next) dfs(n);
   }
 
-  dfs(entryNodeId);
-
-  // Build the set of nodes that are slot-only (source of a slot edge but not
-  // a source of any data-flow edge). These sub-nodes are intentionally "floating"
-  // and must not trigger the reachability error.
-  const slotOnlyNodes = new Set<string>();
-  for (const e of edges) {
-    if (e.targetHandle && AGENT_SLOT_HANDLES.has(e.targetHandle)) {
-      slotOnlyNodes.add(e.source);
-    }
-  }
+  for (const root of entryRoots) dfs(root);
 
   for (const nodeId of nodeMap) {
     if (!visited.has(nodeId) && !slotOnlyNodes.has(nodeId)) {
@@ -119,7 +134,7 @@ export function validateAutomation(automation: {
     fullyVisited.add(nodeId);
   }
 
-  detectCycle(entryNodeId);
+  for (const root of entryRoots) detectCycle(root);
 
   return true;
 }
