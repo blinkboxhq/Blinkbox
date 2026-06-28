@@ -41,7 +41,7 @@ async function notionPost(apiKey, endpoint, body) {
 
 export async function pollNotion(
   automationId, triggerNodeId, apiKey, databaseId,
-  filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId,
+  filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId, filterType = "status",
 ) {
   const scope = triggerNodeId || automationId;
   const lockKey = `bb:notion:lock:${scope}`;
@@ -65,9 +65,11 @@ export async function pollNotion(
     }
 
     if (filterProperty && filterValue !== undefined && filterValue !== "") {
+      // Notion needs the right key per property type: status vs select.
+      const kind = filterType === "select" ? "select" : "status";
       filterConditions.push({
         property: filterProperty,
-        select: { equals: filterValue },
+        [kind]: { equals: filterValue },
       });
     }
 
@@ -124,8 +126,8 @@ export async function startNotionPoller() {
   notionWorker = new Worker(
     NOTION_QUEUE,
     async (job) => {
-      const { automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId } = job.data;
-      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
+      const { automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId, filterType } = job.data;
+      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId, filterType);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -149,7 +151,7 @@ export async function syncNotionJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || entryNode?.data || {};
-    const { apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, pollInterval } = cfg;
+    const { apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, pollInterval, filterType } = cfg;
 
     if (!apiKey || !databaseId) {
       console.warn(`[NotionPoller] Automation ${automation._id} missing required fields, skipping`);
@@ -165,6 +167,7 @@ export async function syncNotionJobs() {
         maxPages: maxPages || 20,
         triggerOnUpdate: !!triggerOnUpdate,
         workspaceId: automation.workspaceId,
+        filterType: filterType || "status",
       },
       { repeat: { pattern: interval }, jobId: `notion-${automation._id}` },
     );

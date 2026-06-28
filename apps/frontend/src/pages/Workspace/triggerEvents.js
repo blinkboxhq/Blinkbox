@@ -5,7 +5,43 @@ import {
   GitCommit, Tag, Users, Flag, Activity,
   Bug, Bookmark, Layers, UserPlus, ArrowRightCircle, AlertOctagon, CheckCircle2, Clock,
   Play, Ban, Flame, Inbox, Gauge, ShieldAlert,
+  ListTodo, CircleDashed, PauseCircle, Archive, Sparkle,
 } from 'lucide-react';
+
+const NOTION_POLL = [
+  { value: '* * * * *', label: 'Every minute' },
+  { value: '*/5 * * * *', label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+  { value: '0 * * * *', label: 'Every hour' },
+];
+const notionBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'Notion Integration Token', placeholder: 'secret_…  or  ntn_…',
+    hint: '// create an internal integration at notion.so/my-integrations, then share the database with it' },
+  { type: 'text', key: 'databaseId', label: 'Database ID', placeholder: '32-char id from the database URL',
+    hint: '// open the database as a full page — the id is the part before ?v= in the URL' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: NOTION_POLL },
+];
+const notionVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.id', 'the page id'],
+    ['$trigger.url', 'link to the page'],
+    ['$trigger.properties', 'all page property values'],
+    ['$trigger.created_time', 'when the page was created'],
+    ['$trigger.last_edited_time', 'when it was last edited'],
+    ...extra,
+  ],
+});
+// A Notion event = the poll engine + an event-specific config slice. Status events
+// pre-fill a Status filter (editable); created/edited toggle triggerOnUpdate.
+const notionEvent = (id, label, description, icon, configExtra, fields = []) => ({
+  id, label, description, icon, event: id, accent: '#e8eaea', configExtra,
+  fields: [...notionBaseFields, ...fields, notionVars()],
+});
+const notionStatusField = (value) => ({
+  type: 'text', key: 'filterValue', label: 'Status Value', default: value, placeholder: value,
+  hint: '// the exact Status option name in your database — edit if yours differs',
+});
 
 const LINEAR_POLL = [
   { value: '1', label: 'Every minute' },
@@ -430,6 +466,42 @@ export const TRIGGER_EVENTS = {
       linearEvent('unassigned', 'Unassigned Issue', 'An active issue has no assignee', Inbox),
       linearEvent('no_estimate', 'Missing Estimate', 'An open issue has no estimate set', Gauge),
       linearEvent('blocked', 'Issue Blocked', 'An issue is labelled Blocked', ShieldAlert),
+    ],
+  },
+
+  // ── NOTION ──────────────────────────────────────────────────
+  notion: {
+    title: 'Notion',
+    subtitle: 'Trigger on new or changed pages in a Notion database',
+    events: [
+      notionEvent('page_created', 'Page Created', 'A new page (row) is added to the database', Plus,
+        { triggerOnUpdate: false }),
+      notionEvent('page_edited', 'Page Edited', 'Any page in the database is edited', Pencil,
+        { triggerOnUpdate: true }),
+      notionEvent('status_done', 'Status → Done', 'A page moves to the Done status', CheckCircle2,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('Done')]),
+      notionEvent('status_in_progress', 'Status → In Progress', 'A page moves to In Progress', Play,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('In progress')]),
+      notionEvent('status_todo', 'Status → To Do', 'A page moves to a not-started status', ListTodo,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('Not started')]),
+      notionEvent('status_blocked', 'Status → Blocked', 'A page moves to a Blocked status', ShieldAlert,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('Blocked')]),
+      notionEvent('status_review', 'Status → In Review', 'A page moves to In Review', CircleDashed,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('In review')]),
+      notionEvent('status_archived', 'Status → Archived', 'A page moves to Archived', Archive,
+        { triggerOnUpdate: true, filterProperty: 'Status' }, [notionStatusField('Archived')]),
+      notionEvent('category_match', 'Property Equals…', 'A page whose select-property matches a value', Sparkle,
+        { triggerOnUpdate: true, filterType: 'select' }, [
+          { type: 'text', key: 'filterProperty', label: 'Property Name', placeholder: 'e.g. Priority',
+            hint: '// the name of a Select property in your database' },
+          { type: 'text', key: 'filterValue', label: 'Equals', placeholder: 'e.g. High',
+            hint: '// fire only when that property equals this value' },
+        ]),
+      notionEvent('priority_high', 'Priority → High', 'A page with Priority set to High', Flame,
+        { triggerOnUpdate: true, filterProperty: 'Priority', filterType: 'select' }, [
+          { type: 'text', key: 'filterValue', label: 'Priority Value', default: 'High', placeholder: 'High',
+            hint: '// the exact Priority option name in your database' },
+        ]),
     ],
   },
 };

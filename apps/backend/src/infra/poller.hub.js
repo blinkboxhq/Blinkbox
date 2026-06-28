@@ -104,12 +104,12 @@ const POLL_REGISTRY = {
       apiKey: cfg.apiKey, databaseId: cfg.databaseId,
       filterProperty: cfg.filterProperty, filterValue: cfg.filterValue,
       maxPages: cfg.maxPages || 20, triggerOnUpdate: !!cfg.triggerOnUpdate,
-      workspaceId: automation.workspaceId,
+      workspaceId: automation.workspaceId, filterType: cfg.filterType || "status",
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "notion",
-    run: async ({ automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId }) => {
-      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId);
+    run: async ({ automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId, filterType }) => {
+      await pollNotion(automationId, triggerNodeId, apiKey, databaseId, filterProperty, filterValue, maxPages, triggerOnUpdate, workspaceId, filterType);
     },
   },
 
