@@ -31,8 +31,8 @@ export default function TriggerNode({ config = {}, updateConfig }) {
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/25 flex items-center justify-center shrink-0">
-          <MousePointerClick className="w-[18px] h-[18px] text-green-400" strokeWidth={1.8} />
+        <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/25 flex items-center justify-center shrink-0">
+          <MousePointerClick className="w-7 h-7 text-green-400" strokeWidth={1.8} />
         </div>
         <div className="min-w-0">
           <h3 className="text-[14px] font-semibold text-white leading-tight">Trigger Manually</h3>
