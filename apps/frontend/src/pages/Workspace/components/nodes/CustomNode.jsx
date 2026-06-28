@@ -584,9 +584,9 @@ function CustomNode({ id, data, selected }) {
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: triggerRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
-            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-11 h-11 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
+            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-14 h-14 object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-11 h-11 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className="w-14 h-14 text-white opacity-90 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
@@ -598,8 +598,8 @@ function CustomNode({ id, data, selected }) {
           </div>
         )}
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
-          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : data.config?.selectedAction ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.customLabel || data.config?.selectedAction || variantDef?.label || nodeDef.label || data.label}</span>
+          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : (data.config?.customLabel || data.config?.selectedAction) ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
