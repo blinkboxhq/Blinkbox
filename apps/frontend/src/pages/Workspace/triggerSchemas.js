@@ -333,6 +333,79 @@ TRIGGER_SCHEMAS.port_monitor_trigger = {
   ],
 };
 
+TRIGGER_SCHEMAS.price_alert_trigger = {
+  title: 'Crypto Price Alert',
+  subtitle: 'Fire when a coin crosses a price you set',
+  icon: Sparkles,
+  accent: '#facc15',
+  fields: [
+    { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin', hint: '// the CoinGecko coin id, lowercase — e.g. bitcoin, ethereum, solana' },
+    { type: 'select', key: 'currency', label: 'Currency', default: 'usd', options: [ { value: 'usd', label: 'USD' }, { value: 'eur', label: 'EUR' }, { value: 'gbp', label: 'GBP' }, { value: 'inr', label: 'INR' }, { value: 'jpy', label: 'JPY' } ] },
+    { type: 'pills', key: 'condition', label: 'Fire When', default: 'below', options: [ { value: 'above', label: 'Rises Above' }, { value: 'below', label: 'Falls Below' } ] },
+    { type: 'text', key: 'threshold', label: 'Price Level', placeholder: '50000', hint: '// the price level to watch' },
+    { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: [ { value: '1', label: 'Every minute' }, { value: '5', label: 'Every 5 minutes' }, { value: '15', label: 'Every 15 minutes' }, { value: '30', label: 'Every 30 minutes' }, { value: '60', label: 'Every hour' } ] },
+  ],
+};
+
+TRIGGER_SCHEMAS.producthunt_trigger = {
+  title: 'Product Hunt',
+  subtitle: 'Fire when a new product launches in a topic you follow',
+  icon: Rss,
+  accent: '#da552f',
+  fields: [
+    { type: 'password', key: 'apiKey', label: 'Developer Token', placeholder: 'your Product Hunt developer token', hint: '// create one at producthunt.com/v2/oauth/applications' },
+    { type: 'select', key: 'category', label: 'Topic', default: 'artificial-intelligence', options: [
+      { value: 'artificial-intelligence', label: 'Artificial Intelligence' },
+      { value: 'developer-tools', label: 'Developer Tools' },
+      { value: 'productivity', label: 'Productivity' },
+      { value: 'design-tools', label: 'Design Tools' },
+      { value: 'marketing', label: 'Marketing' },
+      { value: 'fintech', label: 'Fintech' },
+    ], hint: '// the Product Hunt topic to watch' },
+    { type: 'text', key: 'minVotes', label: 'Minimum Votes', default: '0', placeholder: '0', hint: '// only fire when a launch has at least this many votes' },
+    { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60', options: [
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+      { value: '180', label: 'Every 3 hours' },
+      { value: '360', label: 'Every 6 hours' },
+    ], hint: '// how often to check for new launches' },
+  ],
+};
+
+TRIGGER_SCHEMAS.virustotal_trigger = {
+  title: 'VirusTotal',
+  subtitle: 'Watch a file, URL, or IP and fire on its scan verdict',
+  icon: ShieldCheck,
+  accent: '#394eff',
+  fields: [
+    { type: 'password', key: 'apiKey', label: 'VirusTotal API Key', placeholder: 'your VirusTotal API key', hint: '// from virustotal.com → profile → API key' },
+    { type: 'pills', key: 'scanType', label: 'Scan Type', default: 'file', options: [ { value: 'file', label: 'File Hash' }, { value: 'url', label: 'URL' }, { value: 'ip', label: 'IP Address' } ] },
+    { type: 'text', key: 'scanTarget', label: 'Target', placeholder: 'sha256 hash, URL, or IP', hint: '// what to look up — a file hash (sha256/md5/sha1), a URL, or an IP address' },
+    { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60', options: [ { value: '30', label: 'Every 30 minutes' }, { value: '60', label: 'Every hour' }, { value: '180', label: 'Every 3 hours' }, { value: '360', label: 'Every 6 hours' }, { value: '720', label: 'Every 12 hours' } ] },
+  ],
+};
+
+TRIGGER_SCHEMAS.google_forms_trigger = {
+  title: 'Google Forms',
+  subtitle: 'Fire when someone submits a new form response',
+  icon: Inbox,
+  accent: '#673ab7',
+  fields: [
+    { type: 'credential', key: 'credentialId', label: 'Google Account', oauthProvider: 'google',
+      placeholder: 'connect with Google', hint: '// we read responses on your behalf — no manual setup' },
+    { type: 'text', key: 'formId', label: 'Form ID', placeholder: '1FAIpQLSc…',
+      hint: '// the id in the form URL: docs.google.com/forms/d/<FORM_ID>/edit' },
+    { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+  ],
+};
+
 export function getTriggerSchema(backendType) {
   return TRIGGER_SCHEMAS[backendType] || null;
 }

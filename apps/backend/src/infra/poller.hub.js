@@ -33,6 +33,7 @@ import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
 import { pollMastodon } from "./mastodon.poller.js";
 import { pollVirusTotal } from "./virustotal.poller.js";
+import { pollGoogleForms } from "./googleForms.poller.js";
 
 const HUB_QUEUE = "bb-poll-hub";
 
@@ -461,6 +462,17 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
     jobPrefix: "vt",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollVirusTotal(automationId, triggerNodeId, cfg); },
+  },
+
+  google_forms_trigger: {
+    triggerName: "google_forms_trigger",
+    required: ["credentialId", "formId"],
+    extract: (cfg, automation) => ({
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId, formId: cfg.formId },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "gforms",
+    run: async ({ automationId, cfg }) => { await pollGoogleForms(automationId, cfg); },
   },
 };
 
