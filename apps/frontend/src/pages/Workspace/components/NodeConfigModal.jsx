@@ -93,7 +93,7 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
   const others = canvasNodes.filter((n) => n.id !== currentNodeId);
 
   return (
-    <div className="bb-liquid flex flex-col h-full">
+    <div className="bb-liquid bb-panel-glow flex flex-col h-full">
       <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-white">Input</p>
         <p className="text-[10px] text-neutral-500 mt-0.5">Drag a field into any input, or click to copy</p>
@@ -244,7 +244,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   };
 
   return (
-    <div className="bb-liquid flex flex-col h-full overflow-hidden">
+    <div className="bb-liquid bb-panel-glow flex flex-col h-full">
       {/* Panel header */}
       <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
         {editing ? (
@@ -367,7 +367,7 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
   const display = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
 
   return (
-    <div className="bb-liquid flex flex-col h-full">
+    <div className="bb-liquid bb-panel-glow flex flex-col h-full">
       {/* Panel header */}
       <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
         <p className="text-[13px] font-semibold text-white">Output</p>
