@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { KeyRound, Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
+import { Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
 
 import logoGoogle from '../../assets/credentials/google-color.svg';
@@ -253,10 +253,12 @@ export default function CredentialPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono flex items-center gap-2">
-        <span className="w-[3px] h-[3px] rounded-full bg-[#6f97e8]" />
-        <KeyRound className="w-3 h-3" /> {label}
-      </label>
+      {label && (
+        <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono flex items-center gap-2">
+          <span className="w-[3px] h-[3px] rounded-full bg-[#6f97e8]" />
+          {label}
+        </label>
+      )}
 
       {/* OAuth "Sign in with X" — real provider logo, bordered-mono, with cursor glow */}
       {oauthMeta?.logo && !selectedCred && (
