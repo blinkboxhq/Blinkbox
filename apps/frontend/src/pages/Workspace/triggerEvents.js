@@ -7,6 +7,7 @@ import {
   Play, Ban, Flame, Inbox, Gauge, ShieldAlert,
   ListTodo, CircleDashed, PauseCircle, Archive, Sparkle,
   Briefcase, Building2, Ticket, Trophy, UserCheck, Target,
+  Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -71,6 +72,45 @@ const hubspotVars = (extra = []) => ({
 const hubspotEvent = (id, label, description, icon, configExtra, fields = [], varsExtra = []) => ({
   id, label, description, icon, event: id, accent: '#ff7a59', configExtra,
   fields: [...hubspotBaseFields, ...fields, hubspotVars(varsExtra)],
+});
+
+const TRELLO_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const trelloListFilter = {
+  type: 'text', key: 'listFilter', label: 'Limit to List (optional)', placeholder: 'e.g. Done',
+  hint: '// only fire for cards in a list whose name contains this — leave blank for the whole board',
+};
+const trelloBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'Trello API Key', placeholder: 'from trello.com/app-key',
+    hint: '// grab your key at trello.com/app-key' },
+  { type: 'password', key: 'token', label: 'Trello Token', placeholder: 'token generated from your API key',
+    hint: '// click "Token" on the app-key page and authorize read access' },
+  { type: 'text', key: 'boardId', label: 'Board ID', placeholder: '24-char id from the board URL',
+    hint: '// add .json to a board URL, or copy the id segment after /b/' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: TRELLO_POLL },
+];
+const trelloVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.cardName', 'the card title'],
+    ['$trigger.cardId', 'the card id'],
+    ['$trigger.listName', 'the list the card is in'],
+    ['$trigger.memberName', 'who performed the action'],
+    ['$trigger.url', 'link to the card'],
+    ['$trigger.date', 'when it happened'],
+    ...extra,
+  ],
+});
+// A Trello event = one Trello "action" type from the board actions feed, narrowed
+// server-side by `filter` and refined in the poller's `match`. `actionType` selects it.
+const trelloEvent = (id, label, description, icon, varsExtra = [], includeListFilter = true) => ({
+  id, label, description, icon, event: id, accent: '#0079bf',
+  configExtra: { actionType: id },
+  fields: [...trelloBaseFields, ...(includeListFilter ? [trelloListFilter] : []), trelloVars(varsExtra)],
 });
 
 const LINEAR_POLL = [
@@ -583,6 +623,36 @@ export const TRIGGER_EVENTS = {
           { type: 'text', key: 'filterValue', label: 'Equals', placeholder: 'e.g. NEW',
             hint: '// fire only when that property equals this value' },
         ]),
+    ],
+  },
+
+  trello: {
+    title: 'Trello',
+    subtitle: 'Trigger on board activity — cards, members, comments, checklists',
+    events: [
+      trelloEvent('card_created', 'Card Created', 'A new card is added to the board', Plus),
+      trelloEvent('card_moved', 'Card Moved', 'A card is moved from one list to another', ArrowRightCircle,
+        [['$trigger.listBefore', 'list it came from'], ['$trigger.listAfter', 'list it moved to']]),
+      trelloEvent('card_archived', 'Card Archived', 'A card is archived (sent to the archive)', Archive),
+      trelloEvent('card_unarchived', 'Card Unarchived', 'An archived card is restored', RefreshCw),
+      trelloEvent('card_renamed', 'Card Renamed', 'A card title is changed', Type),
+      trelloEvent('card_due_changed', 'Due Date Changed', 'A card due date is set or changed', Calendar),
+      trelloEvent('card_commented', 'Comment Added', 'Someone comments on a card', MessageSquare,
+        [['$trigger.comment', 'the comment text']]),
+      trelloEvent('member_added', 'Member Added to Card', 'A member is assigned to a card', UserPlus,
+        [['$trigger.targetMember', 'who was added']]),
+      trelloEvent('member_removed', 'Member Removed', 'A member is unassigned from a card', UserMinus,
+        [['$trigger.targetMember', 'who was removed']]),
+      trelloEvent('label_added', 'Label Added', 'A label is applied to a card', Tag,
+        [['$trigger.label', 'the label name or color']]),
+      trelloEvent('attachment_added', 'Attachment Added', 'A file or link is attached to a card', Paperclip,
+        [['$trigger.attachmentName', 'attachment name'], ['$trigger.attachmentUrl', 'attachment url']]),
+      trelloEvent('checklist_added', 'Checklist Added', 'A checklist is added to a card', ListTodo,
+        [['$trigger.checklistName', 'the checklist name']]),
+      trelloEvent('checkitem_done', 'Checklist Item Completed', 'A checklist item is marked complete', CheckSquare,
+        [['$trigger.checkItem', 'the item that was completed']]),
+      trelloEvent('card_copied', 'Card Copied', 'A card is copied', Copy),
+      trelloEvent('list_created', 'List Created', 'A new list is added to the board', Layers, [], false),
     ],
   },
 };

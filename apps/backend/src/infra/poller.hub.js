@@ -411,7 +411,7 @@ const POLL_REGISTRY = {
     triggerName: "trello_trigger",
     required: ["boardId", "apiKey"],
     extract: (cfg) => ({
-      cfg: { boardId: cfg.boardId, apiKey: cfg.apiKey, token: cfg.token, watchType: cfg.watchType, listFilter: cfg.listFilter },
+      cfg: { boardId: cfg.boardId, apiKey: cfg.apiKey, token: cfg.token, actionType: cfg.actionType || cfg.watchType, listFilter: cfg.listFilter },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "trello",

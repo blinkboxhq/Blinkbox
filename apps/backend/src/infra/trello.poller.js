@@ -14,8 +14,29 @@ const SEEN_TTL = 30 * 24 * 60 * 60;
 let trelloQueue = null;
 let trelloWorker = null;
 
-async function fetchBoardActions(boardId, apiKey, token) {
-  const url = `https://api.trello.com/1/boards/${boardId}/actions?filter=createCard,updateCard&limit=50&key=${apiKey}&token=${token}`;
+// Each entry is a genuinely distinct Trello event. `filter` is the Trello
+// actions API filter (server-side); `match` further narrows by sub-shape when
+// one action type covers several events (e.g. updateCard → moved vs archived).
+const TRELLO_ACTIONS = {
+  card_created:      { filter: "createCard",                 match: () => true },
+  card_moved:        { filter: "updateCard",                 match: (a) => !!a.data?.listAfter && !!a.data?.listBefore },
+  card_archived:     { filter: "updateCard",                 match: (a) => a.data?.card?.closed === true && a.data?.old?.closed === false },
+  card_unarchived:   { filter: "updateCard",                 match: (a) => a.data?.card?.closed === false && a.data?.old?.closed === true },
+  card_renamed:      { filter: "updateCard",                 match: (a) => a.data?.old?.name !== undefined },
+  card_due_changed:  { filter: "updateCard",                 match: (a) => a.data?.old?.due !== undefined },
+  card_commented:    { filter: "commentCard",               match: () => true },
+  member_added:      { filter: "addMemberToCard",           match: () => true },
+  member_removed:    { filter: "removeMemberFromCard",      match: () => true },
+  label_added:       { filter: "addLabelToCard",            match: () => true },
+  attachment_added:  { filter: "addAttachmentToCard",       match: () => true },
+  checklist_added:   { filter: "addChecklistToCard",        match: () => true },
+  checkitem_done:    { filter: "updateCheckItemStateOnCard", match: (a) => a.data?.checkItem?.state === "complete" },
+  card_copied:       { filter: "copyCard",                  match: () => true },
+  list_created:      { filter: "createList",                match: () => true },
+};
+
+async function fetchBoardActions(boardId, apiKey, token, filter) {
+  const url = `https://api.trello.com/1/boards/${boardId}/actions?filter=${encodeURIComponent(filter)}&limit=50&key=${apiKey}&token=${token}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Trello API ${res.status}`);
   return await res.json();
@@ -27,21 +48,22 @@ export async function pollTrello(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { boardId, apiKey, token, watchType = "new_card", listFilter } = cfg;
+    const { boardId, apiKey, token, listFilter } = cfg;
+    const actionType = cfg.actionType || cfg.watchType || "card_created";
     if (!boardId || !apiKey || !token) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const actions = await fetchBoardActions(boardId, apiKey, token);
-    const seenKey = `bb:trello:seen:${scope}`;
+    const spec = TRELLO_ACTIONS[actionType] || TRELLO_ACTIONS.card_created;
+    const actions = await fetchBoardActions(boardId, apiKey, token, spec.filter);
+    const seenKey = `bb:trello:seen:${scope}:${actionType}`;
     for (const action of actions) {
-      if (watchType === "new_card" && action.type !== "createCard") continue;
-      if (watchType === "card_moved" && action.type !== "updateCard") continue;
+      if (!spec.match(action)) continue;
       const added = await redis.sadd(seenKey, action.id);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       const card = action.data?.card || {};
-      const list = action.data?.list || action.data?.listAfter || {};
+      const list = action.data?.list || action.data?.listAfter || action.data?.listBefore || {};
       if (listFilter && list.name && !list.name.toLowerCase().includes(listFilter.toLowerCase())) continue;
       const payload = {
         actionId: action.id,
@@ -50,7 +72,16 @@ export async function pollTrello(automationId, triggerNodeId, cfg) {
         cardName: card.name || "",
         listId: list.id || "",
         listName: list.name || "",
+        listBefore: action.data?.listBefore?.name || "",
+        listAfter: action.data?.listAfter?.name || "",
         memberName: action.memberCreator?.fullName || "",
+        targetMember: action.member?.fullName || action.data?.member?.name || "",
+        comment: action.data?.text || "",
+        label: action.data?.label?.name || action.data?.label?.color || "",
+        attachmentName: action.data?.attachment?.name || "",
+        attachmentUrl: action.data?.attachment?.url || "",
+        checklistName: action.data?.checklist?.name || "",
+        checkItem: action.data?.checkItem?.name || "",
         date: action.date,
         boardId,
         url: `https://trello.com/c/${card.shortLink || card.id}`,
@@ -58,7 +89,7 @@ export async function pollTrello(automationId, triggerNodeId, cfg) {
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
         entryNodeId: triggerNodeId || automation.entryNodeId,
-        idempotencyKey: `trello:${scope}:${action.id}`,
+        idempotencyKey: `trello:${scope}:${actionType}:${action.id}`,
       });
     }
   } catch (err) {
@@ -95,7 +126,7 @@ export async function syncTrelloJobs() {
     await trelloQueue.add("trello-poll", {
       automationId: automation._id.toString(),
       triggerNodeId: automation.entryNodeId,
-      cfg: { boardId: cfg.boardId, apiKey: cfg.apiKey, token: cfg.token, watchType: cfg.watchType, listFilter: cfg.listFilter },
+      cfg: { boardId: cfg.boardId, apiKey: cfg.apiKey, token: cfg.token, actionType: cfg.actionType || cfg.watchType, listFilter: cfg.listFilter },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `trello-${automation._id}` });
   }
   console.log(`[TrelloPoller] Synced ${automations.length} automations`);
