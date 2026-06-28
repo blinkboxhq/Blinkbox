@@ -172,12 +172,16 @@ export default function CredentialPicker({
       messageHandlerRef.current = null;
       setIsConnecting(false);
 
-      if (payload?.success && payload?.credential) {
+      if (payload?.success && payload?.credential?._id) {
+        const cred = payload.credential;
         setCredentials((prev) => {
-          const already = prev.find((c) => c._id === payload.credential._id);
-          return already ? prev : [payload.credential, ...prev];
+          const already = prev.find((c) => c._id === cred._id);
+          return already ? prev : [cred, ...prev];
         });
-        onChange(payload.credential._id);
+        onChange(cred._id);
+        setManual(false);
+        setOpen(false);
+        fetchCredentials();
       }
     };
 
@@ -267,7 +271,7 @@ export default function CredentialPicker({
             type="button"
             onClick={connectOAuth}
             disabled={isConnecting}
-            className="bb-glow-border group w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md bg-transparent border border-[#3b3b3b] hover:border-[#545454] hover:bg-white/[0.02] text-[12px] font-semibold text-neutral-100 transition-colors disabled:opacity-60"
+            className="bb-glow-border group w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md bg-[#0a0a0a] border border-[#3b3b3b] hover:border-[#545454] hover:bg-black text-[12px] font-semibold text-neutral-100 transition-colors disabled:opacity-60"
           >
             {isConnecting
               ? <Loader2 className="w-[18px] h-[18px] animate-spin text-neutral-500" />
