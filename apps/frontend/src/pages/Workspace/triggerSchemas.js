@@ -33,7 +33,7 @@
 // trigger reads.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot, Inbox, MailOpen, CheckCheck, Rss, Filter, Sparkles } from 'lucide-react';
+import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot, Inbox, MailOpen, CheckCheck, Rss, Filter, Sparkles, Activity } from 'lucide-react';
 
 const IMAP_HOSTS = [
   { value: 'imap.gmail.com',        label: 'Gmail',             port: 993 },
@@ -242,6 +242,45 @@ TRIGGER_SCHEMAS.rss_trigger = {
       ['$trigger.latestItem.pubDate', 'Publish date (ISO)'],
       ['$trigger.items', 'Array of all new matching items this check'],
       ['$trigger.count', 'How many new items matched'],
+    ] },
+  ],
+};
+
+const HTTP_INTERVALS = [
+  { value: '30',   label: 'Every 30 seconds' },
+  { value: '60',   label: 'Every minute' },
+  { value: '300',  label: 'Every 5 minutes' },
+  { value: '900',  label: 'Every 15 minutes' },
+  { value: '1800', label: 'Every 30 minutes' },
+];
+
+TRIGGER_SCHEMAS.http_monitor_trigger = {
+  title: 'HTTP Monitor',
+  subtitle: 'Watch a URL and fire when it goes down, recovers, or slows',
+  icon: Activity,
+  accent: '#f87171',
+  tabs: [{ id: 'setup', label: 'Setup' }, { id: 'advanced', label: 'Advanced' }],
+  fields: [
+    { type: 'text', tab: 'setup', key: 'url', label: 'URL to Watch', placeholder: 'https://yoursite.com',
+      hint: '// the endpoint to check — a homepage, health route, or API' },
+    { type: 'pills', tab: 'setup', key: 'alertOn', label: 'Fire When', default: 'down', options: [
+      { value: 'down', label: 'Goes Down' },
+      { value: 'up',   label: 'Recovers' },
+      { value: 'both', label: 'Either Way' },
+      { value: 'slow', label: 'Too Slow' },
+    ] },
+    { type: 'text', tab: 'setup', key: 'maxResponseMs', label: 'Slow Threshold (ms)', default: '3000', placeholder: '3000',
+      hint: '// fire when a response takes longer than this', showWhen: { alertOn: 'slow' } },
+    { type: 'select', tab: 'setup', key: 'pollIntervalSeconds', label: 'Check Every', default: '60', options: HTTP_INTERVALS },
+    { type: 'text', tab: 'advanced', key: 'expectedKeyword', label: 'Expected Keyword (optional)', placeholder: 'e.g. OK',
+      hint: '// the page must contain this text to count as healthy. Blank = any 2xx is healthy.' },
+    { type: 'vars', tab: 'advanced', label: 'Output Variables', rows: [
+      ['$trigger.url', 'The URL that was checked'],
+      ['$trigger.status', 'HTTP status code (0 if unreachable)'],
+      ['$trigger.state', 'up or down'],
+      ['$trigger.previousState', 'state on the previous check'],
+      ['$trigger.responseTime', 'Round-trip time in ms'],
+      ['$trigger.reason', 'Why it fired (e.g. "HTTP 503")'],
     ] },
   ],
 };
