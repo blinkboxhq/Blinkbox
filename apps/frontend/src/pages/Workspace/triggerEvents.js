@@ -76,6 +76,12 @@ const githubVars = (extra = []) => ({
   ],
 });
 
+const stripeSecret = {
+  type: 'password', key: 'webhookSecret', label: 'Webhook Signing Secret',
+  placeholder: 'whsec_…',
+  hint: '// from Stripe → Developers → Webhooks; verifies the event is genuine',
+};
+
 export const TRIGGER_EVENTS = {
   // ── DATABASE ────────────────────────────────────────────────
   database: {
@@ -233,15 +239,6 @@ export const TRIGGER_EVENTS = {
     ],
   },
 };
-
-function stripeSecretField() {
-  return {
-    type: 'password', key: 'webhookSecret', label: 'Webhook Signing Secret',
-    placeholder: 'whsec_…',
-    hint: '// from Stripe → Developers → Webhooks; verifies the event is genuine',
-  };
-}
-const stripeSecret = stripeSecretField();
 
 export function getTriggerEvents(triggerId) {
   return TRIGGER_EVENTS[triggerId] || null;
