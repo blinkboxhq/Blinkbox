@@ -79,7 +79,16 @@ async function claimIfUnseen(seenKey, guid, ttl) {
   return added === 1;
 }
 
-export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew) {
+// Title/description/content keyword match. Comma-separated terms; matchAll=false
+// means any term is enough, matchAll=true means every term must appear.
+function matchesKeyword(item, keyword, matchAll) {
+  const terms = String(keyword || "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+  if (!terms.length) return true;
+  const hay = `${item.title} ${item.description} ${item.content}`.toLowerCase();
+  return matchAll ? terms.every((t) => hay.includes(t)) : terms.some((t) => hay.includes(t));
+}
+
+export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll) {
   const scope = triggerNodeId || automationId;
   const seenKey = `bb:rss:seen:${scope}`;
 
@@ -122,6 +131,8 @@ export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew) {
       const guid = item.guid || item.link || item.title;
       if (!guid) continue;
 
+      if (!matchesKeyword(item, keyword, matchAll)) continue;
+
       if (onlyNew) {
         const claimed = await claimIfUnseen(seenKey, guid, SEEN_TTL_SECONDS);
         if (!claimed) continue;
@@ -159,8 +170,8 @@ export async function startRssPoller() {
   rssWorker = new Worker(
     RSS_QUEUE_NAME,
     async (job) => {
-      const { automationId, triggerNodeId, feedUrl, onlyNew } = job.data;
-      await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew);
+      const { automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll } = job.data;
+      await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -190,6 +201,8 @@ export async function syncRssJobs() {
     const feedUrl = cfg.feedUrl;
     const pollInterval = cfg.pollInterval || "*/15 * * * *";
     const onlyNew = cfg.onlyNew ?? true;
+    const keyword = cfg.keyword || "";
+    const matchAll = !!cfg.matchAll;
 
     if (!feedUrl) {
       console.warn(`[RSSPoller] Automation ${automation._id} has no feedUrl, skipping`);
@@ -198,7 +211,7 @@ export async function syncRssJobs() {
 
     await rssQueue.add(
       "rss-poll",
-      { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, feedUrl, onlyNew },
+      { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, feedUrl, onlyNew, keyword, matchAll },
       { repeat: { pattern: pollInterval }, jobId: `rss-${automation._id}` },
     );
 
@@ -208,11 +221,11 @@ export async function syncRssJobs() {
   console.log(`[RSSPoller] Synced ${rssAutomations.length} RSS automations`);
 }
 
-export async function addRssJob(automationId, triggerNodeId, feedUrl, pollInterval, onlyNew) {
+export async function addRssJob(automationId, triggerNodeId, feedUrl, pollInterval, onlyNew, keyword, matchAll) {
   if (!rssQueue) return;
   await rssQueue.add(
     "rss-poll",
-    { automationId: automationId.toString(), triggerNodeId, feedUrl, onlyNew },
+    { automationId: automationId.toString(), triggerNodeId, feedUrl, onlyNew, keyword: keyword || "", matchAll: !!matchAll },
     { repeat: { pattern: pollInterval || "*/15 * * * *" }, jobId: `rss-${automationId}` },
   );
 }

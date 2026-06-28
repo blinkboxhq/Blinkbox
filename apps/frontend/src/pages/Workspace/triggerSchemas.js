@@ -33,7 +33,7 @@
 // trigger reads.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot, Inbox, MailOpen, CheckCheck } from 'lucide-react';
+import { Clock, Webhook, MessageSquare, Zap, Lock, ShieldCheck, Bot, Inbox, MailOpen, CheckCheck, Rss, Filter, Sparkles } from 'lucide-react';
 
 const IMAP_HOSTS = [
   { value: 'imap.gmail.com',        label: 'Gmail',             port: 993 },
@@ -205,6 +205,43 @@ TRIGGER_SCHEMAS.imap_trigger = {
       ['$trigger.latestEmail.hasAttachments', 'true if the email has attachments'],
       ['$trigger.emails', 'Array of all fetched emails'],
       ['$trigger.count', 'Number of emails this poll'],
+    ] },
+  ],
+};
+
+const RSS_INTERVALS = [
+  { value: '*/5 * * * *',  label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+  { value: '0 * * * *',    label: 'Every hour' },
+  { value: '0 */6 * * *',  label: 'Every 6 hours' },
+  { value: '0 9 * * *',    label: 'Once a day (9am)' },
+];
+
+TRIGGER_SCHEMAS.rss_trigger = {
+  title: 'RSS / Atom Feed',
+  subtitle: 'Trigger when a feed publishes a new item',
+  icon: Rss,
+  accent: '#fb923c',
+  tabs: [{ id: 'setup', label: 'Setup' }, { id: 'filters', label: 'Filters' }],
+  fields: [
+    { type: 'text', tab: 'setup', key: 'feedUrl', label: 'Feed URL', placeholder: 'https://example.com/feed.xml',
+      hint: '// any public RSS or Atom feed — blog, news site, podcast, YouTube channel' },
+    { type: 'select', tab: 'setup', key: 'pollInterval', label: 'Check Every', default: '*/15 * * * *', options: RSS_INTERVALS },
+    { type: 'switch-row', tab: 'setup', key: 'onlyNew', icon: Sparkles, label: 'Only New Items', default: true,
+      desc: 'Fire once per item. Skip entries already seen on previous checks.' },
+    { type: 'text', tab: 'filters', key: 'keyword', label: 'Title / Content Contains', placeholder: 'e.g. funding, release',
+      hint: '// only fire when the item mentions this. Comma-separate for any-of. Blank = all items.' },
+    { type: 'switch-row', tab: 'filters', key: 'matchAll', icon: Filter, label: 'Match All Keywords', default: false,
+      desc: 'On: the item must contain every keyword. Off: any one keyword is enough.', showWhen: { keyword: { $ne: '' } } },
+    { type: 'vars', tab: 'filters', label: 'Output Variables', rows: [
+      ['$trigger.latestItem.title', 'Title of the newest matching item'],
+      ['$trigger.latestItem.link', 'URL to the item'],
+      ['$trigger.latestItem.description', 'Short summary text'],
+      ['$trigger.latestItem.author', 'Item author, when present'],
+      ['$trigger.latestItem.pubDate', 'Publish date (ISO)'],
+      ['$trigger.items', 'Array of all new matching items this check'],
+      ['$trigger.count', 'How many new items matched'],
     ] },
   ],
 };

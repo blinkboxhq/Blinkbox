@@ -15,6 +15,9 @@ function matchesShowWhen(showWhen, config) {
   if (!showWhen) return true;
   return Object.entries(showWhen).every(([key, want]) => {
     const have = config[key];
+    if (want && typeof want === 'object' && !Array.isArray(want)) {
+      if ('$ne' in want) return have !== want.$ne;
+    }
     return Array.isArray(want) ? want.includes(have) : have === want;
   });
 }

@@ -359,10 +359,10 @@ const POLL_REGISTRY = {
   rss_trigger: {
     triggerName: "rss_trigger",
     required: ["feedUrl"],
-    extract: (cfg) => ({ feedUrl: cfg.feedUrl, onlyNew: cfg.onlyNew !== false }),
+    extract: (cfg) => ({ feedUrl: cfg.feedUrl, onlyNew: cfg.onlyNew !== false, keyword: cfg.keyword || "", matchAll: !!cfg.matchAll }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/15 * * * *" }),
     jobPrefix: "rss",
-    run: async ({ automationId, triggerNodeId, feedUrl, onlyNew }) => { await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew); },
+    run: async ({ automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll }) => { await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll); },
   },
 
   ssh_trigger: {
