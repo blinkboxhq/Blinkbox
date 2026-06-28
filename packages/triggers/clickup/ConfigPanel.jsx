@@ -58,12 +58,7 @@ export default function ClickUpTriggerNode({ config = {}, updateConfig }) {
           </div>
         )}
         {tab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+          <div className="flex flex-col gap-1.5">            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               {[['$trigger.event','Event type'],['$trigger.taskId','Task ID'],['$trigger.taskName','Task name'],['$trigger.status','Task status'],['$trigger.assignees','Assigned users'],['$trigger.listId','List ID'],['$trigger.spaceId','Space ID']].map(([k,d]) => (
                 <div key={k} className="flex items-baseline gap-2">
                   <span className="text-[10px] font-mono shrink-0" style={{ color: accent }}>{k}</span>

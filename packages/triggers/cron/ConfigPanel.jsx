@@ -99,7 +99,7 @@ export default function ScheduleTriggerNode({ config = {}, updateConfig }) {
       {/* Header */}
       <div className="bb-glow-border flex items-center justify-between gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0" style={{ color: ACCENT }}>
+          <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
             <Clock className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
@@ -189,16 +189,6 @@ export default function ScheduleTriggerNode({ config = {}, updateConfig }) {
         accentColor={ACCENT}
       />
 
-      {/* Output variables */}
-      <div className="flex flex-col gap-2 p-3 rounded-md bg-[#0f0f0f] border border-[#2b2b2b]">
-        <span className="text-[9px] font-bold text-neutral-600 uppercase tracking-[0.18em] font-mono">Available In Workflow As</span>
-        {VARS.map(([key, desc]) => (
-          <div key={key} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-mono" style={{ color: ACCENT }}>{key}</span>
-            <span className="text-[9px] text-neutral-600 font-mono">{desc}</span>
-          </div>
-        ))}
-      </div>
-    </ConfigSection>
+      {/* Output variables */}    </ConfigSection>
   );
 }

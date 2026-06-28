@@ -85,26 +85,6 @@ export default function PriceAlertTriggerNode({ config = {}, updateConfig }) {
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-500/40"
         />
       </div>
-
-      <div className="flex flex-col gap-1 p-3 bg-zinc-900 rounded-lg border border-zinc-800">
-        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
-        {[
-          ['$trigger.currentPrice', 'Current price in selected currency'],
-          ['$trigger.coinId', 'Coin identifier (e.g. "bitcoin")'],
-          ['$trigger.currency', 'Currency code (e.g. "USD")'],
-          ['$trigger.condition', '"above" or "below"'],
-          ['$trigger.threshold', 'The price threshold that was crossed'],
-          ['$trigger.priceChange24h', '24-hour price change'],
-          ['$trigger.marketCap', 'Current market cap'],
-          ['$trigger.volume', '24-hour trading volume'],
-          ['$trigger.triggeredAt', 'ISO timestamp of the alert'],
-        ].map(([key, desc]) => (
-          <div key={key} className="flex items-baseline gap-2">
-            <span className="text-[10px] font-mono text-yellow-400 shrink-0">{key}</span>
-            <span className="text-[9px] text-zinc-600">{desc}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

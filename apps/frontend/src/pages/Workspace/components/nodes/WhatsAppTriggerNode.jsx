@@ -35,7 +35,7 @@ export default function WhatsAppTriggerNode({ config = {}, updateConfig, nodeId 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'payload'].map((tab) => (
+        {['setup'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#25D366] text-[#25D366]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -117,49 +117,6 @@ export default function WhatsAppTriggerNode({ config = {}, updateConfig, nodeId 
               </>
             )}
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            {provider === 'twilio' ? (
-              <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-                {[
-                  ['$trigger.body.Body', 'Message text content'],
-                  ['$trigger.body.From', 'Sender number (whatsapp:+1234567890)'],
-                  ['$trigger.body.To', 'Your WhatsApp number'],
-                  ['$trigger.body.NumMedia', 'Count of attached media files'],
-                  ['$trigger.body.MediaUrl0', 'URL of first media attachment'],
-                  ['$trigger.body.MediaContentType0', 'MIME type of first attachment'],
-                  ['$trigger.body.AccountSid', 'Your Twilio account SID'],
-                  ['$trigger.body.MessageSid', 'Unique message ID'],
-                ].map(([key, desc]) => (
-                  <div key={key} className="flex items-baseline gap-2">
-                    <span className="text-[10px] font-mono text-[#25D366] shrink-0">{key}</span>
-                    <span className="text-[9px] text-zinc-600">{desc}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-                {[
-                  ['$trigger.body.entry[0].changes[0].value.messages[0].text.body', 'Message text'],
-                  ['$trigger.body.entry[0].changes[0].value.messages[0].from', 'Sender phone number'],
-                  ['$trigger.body.entry[0].changes[0].value.messages[0].id', 'Message ID'],
-                  ['$trigger.body.entry[0].changes[0].value.messages[0].type', 'Message type (text/image/document)'],
-                  ['$trigger.body.entry[0].changes[0].value.contacts[0].profile.name', 'Sender display name'],
-                ].map(([key, desc]) => (
-                  <div key={key} className="flex items-baseline gap-2">
-                    <span className="text-[10px] font-mono text-[#25D366] shrink-0 break-all">{key}</span>
-                    <span className="text-[9px] text-zinc-600 shrink-0">{desc}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         )}
       </div>
     </div>

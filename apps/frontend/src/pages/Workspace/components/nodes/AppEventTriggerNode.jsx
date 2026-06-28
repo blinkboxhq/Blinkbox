@@ -23,7 +23,7 @@ export default function AppEventTriggerNode({ config = {}, updateConfig, nodeId 
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <AppWindow className="w-3 h-3 text-violet-400" />
+          <AppWindow className="w-3 h-3 text-white" />
         </div>
         <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">App Event Trigger</span>
       </div>
@@ -79,22 +79,6 @@ export default function AppEventTriggerNode({ config = {}, updateConfig, nodeId 
         </div>
 
         {/* Variables */}
-        <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
-          {[
-            ['$trigger.body', 'Full JSON body sent by your app'],
-            ['$trigger.body.event', 'Event type (e.g. "user.created")'],
-            ['$trigger.body.*', 'Any field from the posted payload'],
-            ['$trigger.headers', 'Request headers'],
-            ['$trigger.query', 'URL query parameters'],
-          ].map(([key, desc]) => (
-            <div key={key} className="flex items-baseline gap-2">
-              <span className="text-[10px] font-mono text-violet-400 shrink-0">{key}</span>
-              <span className="text-[9px] text-zinc-600">{desc}</span>
-            </div>
-          ))}
-        </div>
-
       </div>
     </div>
   );

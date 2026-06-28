@@ -60,7 +60,7 @@ export default function LinearTriggerNode({ config = {}, updateConfig, nodeId })
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'events', 'payload'].map((tab) => (
+        {['setup', 'events'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#5E6AD2] text-[#5E6AD2]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -141,33 +141,6 @@ export default function LinearTriggerNode({ config = {}, updateConfig, nodeId })
               </div>
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.body.action', '"create", "update", or "remove"'],
-                ['$trigger.body.type', 'Resource type (e.g. "Issue")'],
-                ['$trigger.body.data.id', 'Resource ID (UUID)'],
-                ['$trigger.body.data.title', 'Issue title'],
-                ['$trigger.body.data.description', 'Issue description (markdown)'],
-                ['$trigger.body.data.state.name', 'Issue state name (e.g. "In Progress")'],
-                ['$trigger.body.data.assignee.email', 'Assignee email'],
-                ['$trigger.body.data.priority', 'Priority (0=none,1=urgent,2=high...)'],
-                ['$trigger.body.url', 'URL of the affected resource'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#5E6AD2] shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

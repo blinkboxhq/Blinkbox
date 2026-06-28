@@ -50,12 +50,7 @@ export default function GoogleFormsTriggerNode({ config = {}, updateConfig }) {
           </div>
         )}
         {tab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+          <div className="flex flex-col gap-1.5">            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               {[['$trigger.responseId','Unique response ID'],['$trigger.answers','Array of answers'],['$trigger.submittedAt','Submission timestamp'],['$trigger.formId','Form ID'],['$trigger.formTitle','Form title']].map(([k,d]) => (
                 <div key={k} className="flex items-baseline gap-2">
                   <span className="text-[10px] font-mono shrink-0" style={{ color: accent }}>{k}</span>

@@ -35,7 +35,7 @@ export default function HubSpotTriggerNode({ config = {}, updateConfig, nodeId }
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'filter', 'payload'].map((tab) => (
+        {['setup', 'filter'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#FF7A59] text-[#FF7A59]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -128,33 +128,6 @@ export default function HubSpotTriggerNode({ config = {}, updateConfig, nodeId }
               />
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.id', 'HubSpot object ID'],
-                ['$trigger.createdAt', 'When the record was created'],
-                ['$trigger.updatedAt', 'When the record was last updated'],
-                ['$trigger.properties.email', 'Contact email (contacts only)'],
-                ['$trigger.properties.firstname', 'First name (contacts)'],
-                ['$trigger.properties.lastname', 'Last name (contacts)'],
-                ['$trigger.properties.dealname', 'Deal name (deals)'],
-                ['$trigger.properties.dealstage', 'Deal stage (deals)'],
-                ['$trigger.properties.amount', 'Deal amount (deals)'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#FF7A59] shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

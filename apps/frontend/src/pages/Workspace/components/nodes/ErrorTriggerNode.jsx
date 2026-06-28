@@ -10,7 +10,7 @@ export default function ErrorTriggerNode({ config = {}, updateConfig, nodeId }) 
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <AlertTriangle className="w-3 h-3 text-red-400" />
+          <AlertTriangle className="w-3 h-3 text-white" />
         </div>
         <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">On Workflow Error</span>
       </div>
@@ -51,12 +51,7 @@ export default function ErrorTriggerNode({ config = {}, updateConfig, nodeId }) 
         )}
 
         {/* Available variables */}
-        <div className="flex flex-col gap-1.5 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Info className="w-3 h-3 text-zinc-600" />
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-          </div>
-          {[
+        <div className="flex flex-col gap-1.5 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">          {[
             ['$trigger.error.message', 'Error message text'],
             ['$trigger.error.nodeId', 'Node that failed'],
             ['$trigger.error.nodeType', 'Type of failed node'],

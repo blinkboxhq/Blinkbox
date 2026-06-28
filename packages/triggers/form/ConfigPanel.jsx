@@ -47,7 +47,7 @@ ${expectedFields.map((f) => `  <input name="${f}" />`).join('\n') || '  <input n
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <ClipboardList className="w-3 h-3 text-emerald-400" />
+          <ClipboardList className="w-3 h-3 text-white" />
         </div>
         <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Form Submission Trigger</span>
       </div>
@@ -138,21 +138,7 @@ ${expectedFields.map((f) => `  <input name="${f}" />`).join('\n') || '  <input n
               {htmlSnippet}
             </pre>
 
-            {/* Variables */}
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg mt-1">
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
-              {(expectedFields.length > 0 ? expectedFields : ['field_name']).map((field) => (
-                <div key={field} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-emerald-400 shrink-0">{`$trigger.body.${field}`}</span>
-                  <span className="text-[9px] text-zinc-600">Form field "{field}"</span>
-                </div>
-              ))}
-              <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-[10px] font-mono text-emerald-400 shrink-0">$trigger.headers</span>
-                <span className="text-[9px] text-zinc-600">Request headers</span>
-              </div>
-            </div>
-          </div>
+            {/* Variables */}          </div>
         )}
       </div>
     </div>

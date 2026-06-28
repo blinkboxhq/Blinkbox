@@ -79,28 +79,6 @@ export default function GitHubIssueTriggerNode({ config = {}, updateConfig }) {
           className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500/40"
         />
       </div>
-
-      <div className="flex flex-col gap-1 p-3 bg-zinc-900 rounded-lg border border-zinc-800">
-        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Available in workflow as</span>
-        {[
-          ['$trigger.number', 'Issue or PR number'],
-          ['$trigger.title', 'Issue or PR title'],
-          ['$trigger.body', 'Description / body text'],
-          ['$trigger.type', '"issue" or "pull_request"'],
-          ['$trigger.state', '"open", "closed", etc.'],
-          ['$trigger.url', 'HTML URL to the issue/PR'],
-          ['$trigger.author', 'GitHub username who opened it'],
-          ['$trigger.labels', 'Array of label names'],
-          ['$trigger.createdAt', 'Creation date (ISO)'],
-          ['$trigger.repo', 'Repository name'],
-          ['$trigger.owner', 'Repository owner'],
-        ].map(([key, desc]) => (
-          <div key={key} className="flex items-baseline gap-2">
-            <span className="text-[10px] font-mono text-zinc-300 shrink-0">{key}</span>
-            <span className="text-[9px] text-zinc-600">{desc}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

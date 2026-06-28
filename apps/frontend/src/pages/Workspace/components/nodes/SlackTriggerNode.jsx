@@ -47,7 +47,7 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'events', 'payload'].map((tab) => (
+        {['setup', 'events'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#E01E5A] text-[#E01E5A]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -129,35 +129,6 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
                   </button>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['text', 'Message text content'],
-                ['user', 'User ID who triggered the event'],
-                ['channel', 'Channel ID where event occurred'],
-                ['eventType', 'Event type ("message", "app_mention", etc.)'],
-                ['ts', 'Timestamp — use as message ID for threading'],
-                ['threadTs', 'Thread timestamp if in a thread'],
-                ['teamId', 'Slack workspace team ID'],
-                ['resolvedUser.name', 'Username (when Resolve IDs is on)'],
-                ['resolvedUser.realName', 'Full name (when Resolve IDs is on)'],
-                ['resolvedChannel.name', 'Channel name (when Resolve IDs is on)'],
-                ['hasMedia', 'true if files were attached'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#E01E5A] shrink-0">{`{{ nodeId.${key} }}`}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
             </div>
           </div>
         )}

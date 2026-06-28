@@ -28,7 +28,7 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'filter', 'payload'].map((tab) => (
+        {['setup', 'filter'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -114,32 +114,6 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
               />
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.id', 'Notion page ID'],
-                ['$trigger.url', 'Page URL in Notion'],
-                ['$trigger.created_time', 'When the page was created'],
-                ['$trigger.last_edited_time', 'When the page was last edited'],
-                ['$trigger.created_by.id', 'ID of user who created the page'],
-                ['$trigger.properties', 'Object with all database property values'],
-                ['$trigger.properties.Name.title[0].plain_text', 'Title property value'],
-                ['$trigger.parent.database_id', 'Parent database ID'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-zinc-300 shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

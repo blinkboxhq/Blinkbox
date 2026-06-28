@@ -47,7 +47,7 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'events', 'payload'].map((tab) => (
+        {['setup', 'events'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#E01E5A] text-[#E01E5A]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -116,32 +116,6 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
                   </button>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.body.event.type', 'Event type (e.g. "message", "app_mention")'],
-                ['$trigger.body.event.text', 'Message text content'],
-                ['$trigger.body.event.user', 'User ID who triggered the event'],
-                ['$trigger.body.event.channel', 'Channel ID where event occurred'],
-                ['$trigger.body.event.ts', 'Event timestamp (use for threading)'],
-                ['$trigger.body.event.thread_ts', 'Thread timestamp (for thread replies)'],
-                ['$trigger.body.team_id', 'Slack workspace team ID'],
-                ['$trigger.body.event.files', 'Attached files array (if any)'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#E01E5A] shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
             </div>
           </div>
         )}

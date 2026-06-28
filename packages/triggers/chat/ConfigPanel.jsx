@@ -36,7 +36,7 @@ export default function ChatTriggerNode({ config = {}, updateConfig }) {
     <ConfigSection className="gap-5">
       {/* Header */}
       <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
-        <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0" style={{ color: ACCENT }}>
+        <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
           <MessageSquare className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
@@ -97,14 +97,7 @@ export default function ChatTriggerNode({ config = {}, updateConfig }) {
             <pre className="text-[10px] font-mono text-neutral-400 bg-[#0f0f0f] border border-[#2b2b2b] rounded-md p-3 leading-relaxed whitespace-pre-wrap">{examplePayload}</pre>
           </div>
 
-          {/* Available variables */}
-          <div className="flex flex-col gap-2 p-3 rounded-md bg-[#0f0f0f] border border-[#2b2b2b]">
-            <span className="text-[9px] font-bold text-neutral-600 uppercase tracking-[0.18em] font-mono">Available In Workflow As</span>
-            {['$trigger.body.message', `$trigger.body.${sessionIdField}`, '$trigger.body'].map((v) => (
-              <span key={v} className="text-[10px] font-mono" style={{ color: ACCENT }}>{v}</span>
-            ))}
-          </div>
-        </>
+          {/* Available variables */}        </>
       )}
 
       {tab === 'prompt' && (

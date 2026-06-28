@@ -31,7 +31,7 @@ export default function ChatTriggerNode({ config = {}, updateConfig, nodeId }) {
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-            <MessageSquare className="w-3 h-3 text-pink-400" />
+            <MessageSquare className="w-3 h-3 text-white" />
           </div>
           <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Chat Trigger</span>
         </div>
@@ -88,14 +88,7 @@ export default function ChatTriggerNode({ config = {}, updateConfig, nodeId }) {
               </pre>
             </div>
 
-            {/* Available variables */}
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-              {['$trigger.body.message', `$trigger.body.${sessionIdField}`, '$trigger.body'].map((v) => (
-                <span key={v} className="text-[10px] font-mono text-zinc-500">{v}</span>
-              ))}
-            </div>
-          </>
+            {/* Available variables */}          </>
         )}
 
         {activeTab === 'prompt' && (

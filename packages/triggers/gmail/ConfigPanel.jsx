@@ -28,7 +28,7 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'filter', 'payload'].map((tab) => (
+        {['setup', 'filter'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#EA4335] text-[#EA4335]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -106,35 +106,6 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
               />
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.id', 'Gmail message ID'],
-                ['$trigger.threadId', 'Thread ID'],
-                ['$trigger.subject', 'Email subject line'],
-                ['$trigger.from', 'Sender email address'],
-                ['$trigger.to', 'Recipient email addresses'],
-                ['$trigger.date', 'Received date (ISO string)'],
-                ['$trigger.snippet', 'Short preview of message body'],
-                ['$trigger.bodyText', 'Plain text body content'],
-                ['$trigger.bodyHtml', 'HTML body content'],
-                ['$trigger.attachments', 'Array of attachment metadata'],
-                ['$trigger.labels', 'Array of Gmail label IDs'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#EA4335] shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

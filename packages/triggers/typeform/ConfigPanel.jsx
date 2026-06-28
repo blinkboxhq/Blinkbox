@@ -28,7 +28,7 @@ export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'payload'].map((tab) => (
+        {['setup'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-zinc-400 text-zinc-300' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -79,32 +79,6 @@ export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId 
               />
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.body.event_id', 'Unique submission event ID'],
-                ['$trigger.body.event_type', '"form_response" (always)'],
-                ['$trigger.body.form_response.form_id', 'The form ID'],
-                ['$trigger.body.form_response.token', 'Response token (unique per submission)'],
-                ['$trigger.body.form_response.submitted_at', 'Submission timestamp (ISO)'],
-                ['$trigger.body.form_response.answers', 'Array of answers'],
-                ['$trigger.body.form_response.answers[0].text', 'First answer text value'],
-                ['$trigger.body.form_response.hidden', 'Hidden fields object'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-zinc-300 shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

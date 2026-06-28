@@ -28,7 +28,7 @@ export default function AirtableTriggerNode({ config = {}, updateConfig, nodeId 
       </div>
 
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'filter', 'payload'].map((tab) => (
+        {['setup', 'filter'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[9px] font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab ? 'border-[#F65858] text-[#F65858]' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}>
             {tab}
@@ -123,31 +123,6 @@ export default function AirtableTriggerNode({ config = {}, updateConfig, nodeId 
               </div>
             </div>
           </>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.id', 'Airtable record ID (recXXXXXX)'],
-                ['$trigger.createdTime', 'When the record was created (ISO)'],
-                ['$trigger.fields', 'Object with all field values'],
-                ['$trigger.fields.Name', 'Value of the "Name" field (example)'],
-                ['$trigger.fields.Status', 'Value of the "Status" field (example)'],
-                ['$trigger._meta.baseId', 'Base ID the record came from'],
-                ['$trigger._meta.tableId', 'Table ID the record came from'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-[#F65858] shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     </div>

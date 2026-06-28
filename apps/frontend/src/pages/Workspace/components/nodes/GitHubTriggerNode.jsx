@@ -42,7 +42,7 @@ export default function GitHubTriggerNode({ config = {}, updateConfig, nodeId })
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <Github className="w-3 h-3 text-zinc-300" />
+          <Github className="w-3 h-3 text-white" />
         </div>
         <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">GitHub</span>
         {isRegistered && (
@@ -54,7 +54,7 @@ export default function GitHubTriggerNode({ config = {}, updateConfig, nodeId })
 
       {/* Tabs */}
       <div className="flex bg-[#0a0a0a] px-3 pt-2 gap-3 border-b border-[#1a1a1a]">
-        {['setup', 'events', 'payload'].map((tab) => (
+        {['setup', 'events'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -140,35 +140,6 @@ export default function GitHubTriggerNode({ config = {}, updateConfig, nodeId })
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {activeTab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow as</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-              {[
-                ['$trigger.body.action', 'Event action (e.g. "opened", "closed")'],
-                ['$trigger.body.repository.full_name', 'Repo full name (owner/repo)'],
-                ['$trigger.body.sender.login', 'GitHub username who triggered event'],
-                ['$trigger.body.commits', 'Array of commits (push events)'],
-                ['$trigger.body.pull_request', 'PR object (PR events)'],
-                ['$trigger.body.issue', 'Issue object (issue events)'],
-                ['$trigger.body.release', 'Release object (release events)'],
-                ['$trigger.event', 'GitHub event type (X-GitHub-Event header)'],
-              ].map(([key, desc]) => (
-                <div key={key} className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-zinc-400 shrink-0">{key}</span>
-                  <span className="text-[9px] text-zinc-600">{desc}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-[9px] text-zinc-600 leading-relaxed mt-1">
-              GitHub sends the full event payload — all fields are accessible via <span className="font-mono text-zinc-500">$trigger.body.*</span>.
-            </p>
           </div>
         )}
 

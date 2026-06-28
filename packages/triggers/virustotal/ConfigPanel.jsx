@@ -61,12 +61,7 @@ export default function VirusTotalTriggerNode({ config = {}, updateConfig }) {
           </div>
         )}
         {tab === 'payload' && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Info className="w-3 h-3 text-zinc-600" />
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Available in workflow</span>
-            </div>
-            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
+          <div className="flex flex-col gap-1.5">            <div className="flex flex-col gap-1 p-2.5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
               {[['$trigger.id','Analysis ID'],['$trigger.type','Scan type (file/url/ip)'],['$trigger.name','Target name'],['$trigger.sha256','File SHA-256 hash'],['$trigger.malicious','Malicious engine count'],['$trigger.suspicious','Suspicious engine count'],['$trigger.totalEngines','Total engines scanned'],['$trigger.detectionRate','Detection rate (%)'],['$trigger.isMalicious','Boolean: is malicious'],['$trigger.analysedAt','When analysis completed']].map(([k,d]) => (
                 <div key={k} className="flex items-baseline gap-2">
                   <span className="text-[10px] font-mono shrink-0" style={{ color: accent }}>{k}</span>
