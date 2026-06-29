@@ -591,6 +591,47 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
   fields: [...datadogBaseFields, ...extraFields, datadogVars(varsExtra)],
 });
 
+// VirusTotal reads a raw API key (not OAuth), so it is a password field. The
+// user watches one target (a file hash, URL, or IP); the poller re-checks its
+// analysis on a schedule. `eventType` (via configExtra) selects the VT_EVENTS entry.
+const VT_TYPE_OPTIONS = [
+  { value: 'file', label: 'File hash' },
+  { value: 'url', label: 'URL' },
+  { value: 'ip', label: 'IP address' },
+];
+const vtBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'VirusTotal API Key',
+    hint: '// your account → API Key (the public or premium key)' },
+  { type: 'select', key: 'scanType', label: 'Target Type', default: 'file', options: VT_TYPE_OPTIONS },
+  { type: 'text', key: 'scanTarget', label: 'Target', placeholder: '44d88612fea8a8f36de82e1278abb02f',
+    hint: '// the file hash (SHA-256/MD5), full URL, or IP address to watch' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60',
+    options: [
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+      { value: '360', label: 'Every 6 hours' },
+    ] },
+];
+const vtTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const vtVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the analysed file / URL / IP'],
+    ['$trigger.malicious', 'how many engines flagged it malicious'],
+    ['$trigger.suspicious', 'how many flagged it suspicious'],
+    ['$trigger.detectionRate', 'percent of engines flagging it (0–100)'],
+    ['$trigger.totalEngines', 'how many engines reported'],
+    ['$trigger.lastAnalysisDate', 'when VirusTotal last scanned it'],
+    ...extra,
+  ],
+});
+const vtEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#394EFF',
+  configExtra: { eventType: id },
+  fields: [...vtBaseFields, ...extraFields, vtVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1568,6 +1609,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  virustotal: {
+    title: 'VirusTotal',
+    subtitle: 'Watch a file, URL or IP — react to verdicts, detections and rescans',
+    events: [
+      vtEvent('any_result', 'Any New Result', 'Fire whenever the verdict or scan date changes.', Activity),
+      vtEvent('became_malicious', 'Became Malicious', 'Detections went from zero to at least one — a clean target turned bad.', ShieldAlert),
+      vtEvent('malicious_over', 'Detections Over', 'At least N engines flag it as malicious.', AlertOctagon,
+        [vtTargetField('Minimum Detections', '3', '// fire when malicious count ≥ this')]),
+      vtEvent('malicious_under', 'Detections Under', 'No more than N engines flag it (confirmed low-risk).', CheckCircle2,
+        [vtTargetField('Maximum Detections', '0', '// fire when malicious count ≤ this')]),
+      vtEvent('detection_rate_over', 'Detection Rate Over', 'The share of engines flagging it crosses a percentage.', Gauge,
+        [vtTargetField('Minimum Rate (%)', '5', '// fire when detectionRate ≥ this percent')]),
+      vtEvent('suspicious_found', 'Suspicious Found', 'At least one engine marks it suspicious.', Eye),
+      vtEvent('clean', 'Came Back Clean', 'A completed scan with no malicious or suspicious hits.', Heart),
+      vtEvent('engine_count_over', 'Enough Engines Reported', 'Coverage reached — at least N engines reported.', Layers,
+        [vtTargetField('Minimum Engines', '40', '// fire when totalEngines ≥ this')]),
+      vtEvent('verdict_changed', 'Verdict Changed', 'The malicious count changed in either direction.', RefreshCw),
+      vtEvent('harmless_majority', 'Mostly Harmless', 'Half or more of the engines call it harmless.', CheckCircle2),
+      vtEvent('undetected_high', 'Many Undetected', 'At least N engines had no detection (low coverage).', AlertTriangle,
+        [vtTargetField('Minimum Undetected', '20', '// fire when undetected count ≥ this')]),
+      vtEvent('new_analysis', 'Rescanned', 'VirusTotal ran a fresh analysis since last check.', RefreshCw),
     ],
   },
 

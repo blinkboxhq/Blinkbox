@@ -547,7 +547,10 @@ const POLL_REGISTRY = {
     triggerName: "virustotal_trigger",
     required: ["apiKey", "scanTarget"],
     extract: (cfg) => ({
-      cfg: { apiKey: cfg.apiKey, scanTarget: cfg.scanTarget, scanType: cfg.scanType || "file" },
+      cfg: {
+        apiKey: cfg.apiKey, scanTarget: cfg.scanTarget, scanType: cfg.scanType || "file",
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
     jobPrefix: "vt",
