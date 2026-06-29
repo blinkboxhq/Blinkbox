@@ -626,6 +626,38 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
   fields: [...instagramBaseFields, ...extraFields, instagramVars(varsExtra)],
 });
 
+// TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
+// The poller reads the connected creator's video feed and `eventType` (via
+// configExtra) selects the TIKTOK_EVENTS predicate over each video.
+const tiktokBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'TikTok Account', credType: 'tiktok',
+    oauthProvider: 'tiktok', hint: '// connect your TikTok creator account' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+    options: [
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const tiktokTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const tiktokVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.videoId', 'the video id'],
+    ['$trigger.title', 'the video title'],
+    ['$trigger.views', 'the view count'],
+    ['$trigger.likes', 'the like count'],
+    ['$trigger.comments', 'the comment count'],
+    ['$trigger.embedLink', 'link to the video'],
+    ...extra,
+  ],
+});
+const tiktokEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FE2C55',
+  configExtra: { eventType: id },
+  fields: [...tiktokBaseFields, ...extraFields, tiktokVars(varsExtra)],
+});
+
 // Vercel authenticates with an API token (vault credential). The user optionally
 // scopes to one Project (and Team); the poller watches the deployments feed and
 // `eventType` (via configExtra) selects the VERCEL_EVENTS predicate per deploy.
@@ -2130,6 +2162,33 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  tiktok: {
+    title: 'TikTok',
+    subtitle: 'Watch your videos — new uploads, captions, views, likes and shares',
+    events: [
+      tiktokEvent('new_video', 'New Video', 'A new video is published.', Plus),
+      tiktokEvent('title_contains', 'Title Contains', 'A video title contains your text.', Type,
+        [tiktokTargetField('Text', 'launch', '// case-insensitive match in the title')]),
+      tiktokEvent('description_contains', 'Description Contains', 'A video description contains your text.', Type,
+        [tiktokTargetField('Text', 'sale', '// case-insensitive match in the description')]),
+      tiktokEvent('hashtag_used', 'Hashtag Used', 'A video uses a specific hashtag.', Hash,
+        [tiktokTargetField('Hashtag', 'fyp', '// without the # — e.g. fyp')]),
+      tiktokEvent('views_over', 'Views Over', 'A video reaches a view threshold.', Eye,
+        [tiktokTargetField('Minimum Views', '10000', '// fires when views ≥ this')]),
+      tiktokEvent('likes_over', 'Likes Over', 'A video reaches a like threshold.', Heart,
+        [tiktokTargetField('Minimum Likes', '1000', '// fires when likes ≥ this')]),
+      tiktokEvent('comments_over', 'Comments Over', 'A video reaches a comment threshold.', MessageSquare,
+        [tiktokTargetField('Minimum Comments', '100', '// fires when comments ≥ this')]),
+      tiktokEvent('shares_over', 'Shares Over', 'A video reaches a share threshold.', Send,
+        [tiktokTargetField('Minimum Shares', '50', '// fires when shares ≥ this')]),
+      tiktokEvent('new_like', 'New Likes', 'A video gains likes since last check.', Heart),
+      tiktokEvent('new_comment', 'New Comments', 'A video gains comments since last check.', MessageSquare),
+      tiktokEvent('new_share', 'New Shares', 'A video gains shares since last check.', Repeat),
+      tiktokEvent('went_viral', 'Went Viral', 'A video crosses a viral view threshold.', Flame,
+        [tiktokTargetField('Viral Views', '100000', '// fires the moment views cross this')]),
     ],
   },
 

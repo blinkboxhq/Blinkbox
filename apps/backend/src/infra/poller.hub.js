@@ -48,6 +48,7 @@ import { pollPagerDuty } from "./pagerduty.poller.js";
 import { pollNetlify } from "./netlify.poller.js";
 import { pollVercel } from "./vercel.poller.js";
 import { pollInstagram } from "./instagram.poller.js";
+import { pollTikTok } from "./tiktok.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -510,6 +511,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "instagram",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollInstagram(automationId, triggerNodeId, cfg); },
+  },
+
+  tiktok_trigger: {
+    triggerName: "tiktok_trigger",
+    required: ["credentialId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "tiktok",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollTikTok(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
