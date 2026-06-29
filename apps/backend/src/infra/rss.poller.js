@@ -88,9 +88,39 @@ function matchesKeyword(item, keyword, matchAll) {
   return matchAll ? terms.every((t) => hay.includes(t)) : terms.some((t) => hay.includes(t));
 }
 
-export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll) {
+const lc = (s) => String(s ?? "").toLowerCase();
+const encType = (item) => lc(item.enclosure?.type || item.enclosure?.["$"]?.type || "");
+const encUrl = (item) => item.enclosure?.url || item.enclosure?.["$"]?.url || item.thumbnail || "";
+const isToday = (item) => {
+  if (!item.pubDate) return false;
+  const d = new Date(item.pubDate);
+  const n = new Date();
+  return d.getUTCFullYear() === n.getUTCFullYear() && d.getUTCMonth() === n.getUTCMonth() && d.getUTCDate() === n.getUTCDate();
+};
+
+// RSS items are immutable once published, so every event is a one-shot
+// classification of a newly-seen item. `eventType` (via configExtra) selects one
+// predicate; dedup is the feed's stable guid.
+const RSS_EVENTS = {
+  new_item:        (i) => true,
+  title_contains:  (i, c) => lc(i.title).includes(lc(c.targetValue)),
+  body_contains:   (i, c) => `${lc(i.description)} ${lc(i.content)}`.includes(lc(c.targetValue)),
+  by_author:       (i, c) => lc(i.author) === lc(c.targetValue) || lc(i.author).includes(lc(c.targetValue)),
+  in_category:     (i, c) => (i.categories || []).some((cat) => lc(typeof cat === "string" ? cat : cat?._ || cat?.name || "").includes(lc(c.targetValue))),
+  link_domain:     (i, c) => lc(i.link).includes(lc(c.targetValue)),
+  has_media:       (i) => !!(i.enclosure || i.thumbnail),
+  has_image:       (i) => !!i.thumbnail || encType(i).startsWith("image") || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(encUrl(i)),
+  podcast_episode: (i) => encType(i).startsWith("audio") || /\.(mp3|m4a|ogg|wav)(\?|$)/i.test(encUrl(i)),
+  video_item:      (i) => encType(i).startsWith("video") || /\.(mp4|webm|mov)(\?|$)/i.test(encUrl(i)),
+  published_today: (i) => isToday(i),
+  long_read:       (i, c) => `${i.description} ${i.content}`.length >= Number(c.targetValue || 2000),
+};
+
+export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue) {
   const scope = triggerNodeId || automationId;
-  const seenKey = `bb:rss:seen:${scope}`;
+  const evType = eventType || "new_item";
+  const predicate = RSS_EVENTS[evType] || RSS_EVENTS.new_item;
+  const seenKey = `bb:rss:seen:${scope}:${evType}`;
 
   // Per-automation poll lock to prevent concurrent ticks from processing the same feed
   const pollLockKey = `bb:rss:lock:${scope}`;
@@ -132,6 +162,7 @@ export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, ke
       if (!guid) continue;
 
       if (!matchesKeyword(item, keyword, matchAll)) continue;
+      if (!predicate(item, { targetValue })) continue;
 
       if (onlyNew) {
         const claimed = await claimIfUnseen(seenKey, guid, SEEN_TTL_SECONDS);
@@ -142,7 +173,7 @@ export async function pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, ke
         await executeAutomation(
           automation,
           { ...item, feed: feedMeta, feedUrl },
-          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `rss:${scope}:${guid}` },
+          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `rss:${scope}:${evType}:${guid}` },
         );
         console.log(`[RSS] Fired automation "${automation.name}" for item: "${item.title}"`);
       } catch (err) {
@@ -170,8 +201,8 @@ export async function startRssPoller() {
   rssWorker = new Worker(
     RSS_QUEUE_NAME,
     async (job) => {
-      const { automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll } = job.data;
-      await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll);
+      const { automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue } = job.data;
+      await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue);
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -203,6 +234,8 @@ export async function syncRssJobs() {
     const onlyNew = cfg.onlyNew ?? true;
     const keyword = cfg.keyword || "";
     const matchAll = !!cfg.matchAll;
+    const eventType = cfg.eventType || cfg.watchType || "new_item";
+    const targetValue = cfg.targetValue || "";
 
     if (!feedUrl) {
       console.warn(`[RSSPoller] Automation ${automation._id} has no feedUrl, skipping`);
@@ -211,7 +244,7 @@ export async function syncRssJobs() {
 
     await rssQueue.add(
       "rss-poll",
-      { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, feedUrl, onlyNew, keyword, matchAll },
+      { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue },
       { repeat: { pattern: pollInterval }, jobId: `rss-${automation._id}` },
     );
 

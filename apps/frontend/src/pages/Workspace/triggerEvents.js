@@ -12,6 +12,7 @@ import {
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
   Mail, MailOpen, AtSign, Reply, Send, Globe, Heart,
   FolderPlus, Image, Film, FileSpreadsheet, FileType, HardDrive,
+  Rss, Music,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -629,6 +630,40 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// RSS reads any RSS/Atom feed by URL (no credential needed). Items are immutable,
+// so each event is a one-shot classification of a newly-seen item; `eventType`
+// (via configExtra) selects the RSS_EVENTS predicate. pollInterval is a cron string.
+const rssBaseFields = [
+  { type: 'text', key: 'feedUrl', label: 'Feed URL', placeholder: 'https://example.com/feed.xml',
+    hint: '// the RSS or Atom feed to watch' },
+  { type: 'switch-row', key: 'onlyNew', label: 'Only New Items', default: true,
+    hint: '// skip items already seen on earlier checks' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/15 * * * *',
+    options: [
+      { value: '*/5 * * * *', label: 'Every 5 minutes' },
+      { value: '*/15 * * * *', label: 'Every 15 minutes' },
+      { value: '*/30 * * * *', label: 'Every 30 minutes' },
+      { value: '0 * * * *', label: 'Every hour' },
+    ] },
+];
+const rssTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const rssVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the item title'],
+    ['$trigger.link', 'link to the item'],
+    ['$trigger.author', 'the item author'],
+    ['$trigger.description', 'the item summary'],
+    ['$trigger.pubDate', 'when it was published'],
+    ...extra,
+  ],
+});
+const rssEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#EE802F',
+  configExtra: { eventType: id },
+  fields: [...rssBaseFields, ...extraFields, rssVars(varsExtra)],
+});
+
 // Reddit reads a subreddit's public JSON feed (no credential needed). The user
 // names the subreddit and sort order; the poller watches new posts and `eventType`
 // (via configExtra) selects the REDDIT_EVENTS predicate per post.
@@ -2235,6 +2270,31 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  rss: {
+    title: 'RSS / Atom',
+    subtitle: 'Watch any feed — new items, authors, categories, media and podcasts',
+    events: [
+      rssEvent('new_item', 'New Item', 'Any new item is published to the feed.', Rss),
+      rssEvent('title_contains', 'Title Contains', 'An item title contains your text.', Search,
+        [rssTargetField('Text', 'release', '// case-insensitive match in the title')]),
+      rssEvent('body_contains', 'Body Contains', 'An item summary or content contains your text.', Type,
+        [rssTargetField('Text', 'security', '// case-insensitive match in the body')]),
+      rssEvent('by_author', 'By Author', 'An item is written by a specific author.', User,
+        [rssTargetField('Author', 'Jane Doe', '// matched against the item author')]),
+      rssEvent('in_category', 'In Category', 'An item is tagged with a category.', Tag,
+        [rssTargetField('Category', 'news', '// matched against item categories')]),
+      rssEvent('link_domain', 'Link Domain', 'The item link is on a specific domain.', Globe,
+        [rssTargetField('Domain', 'github.com', '// substring match in the item link')]),
+      rssEvent('has_media', 'Has Media', 'An item carries an enclosure or thumbnail.', Paperclip),
+      rssEvent('has_image', 'Has Image', 'An item carries an image.', Image),
+      rssEvent('podcast_episode', 'Podcast Episode', 'An item carries an audio enclosure.', Music),
+      rssEvent('video_item', 'Video Item', 'An item carries a video enclosure.', Film),
+      rssEvent('published_today', 'Published Today', 'An item was published today.', Calendar),
+      rssEvent('long_read', 'Long Read', 'An item body exceeds a length threshold.', FileText,
+        [rssTargetField('Min Characters', '2000', '// fires when the body is at least this long')]),
     ],
   },
 
