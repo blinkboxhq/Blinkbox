@@ -40,6 +40,7 @@ import { pollShopify } from "./shopify.poller.js";
 import { pollWooCommerce } from "./woocommerce.poller.js";
 import { pollMonday } from "./monday.poller.js";
 import { pollZendesk } from "./zendesk.poller.js";
+import { pollIntercom } from "./intercom.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -385,6 +386,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "zendesk",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollZendesk(automationId, triggerNodeId, cfg); },
+  },
+
+  intercom_trigger: {
+    triggerName: "intercom_trigger",
+    required: ["credentialId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "intercom",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollIntercom(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {

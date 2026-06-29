@@ -594,6 +594,38 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Intercom authenticates with an access token (vault credential). The poller
+// watches the workspace's conversation feed; `eventType` (via configExtra)
+// selects the INTERCOM_EVENTS predicate over each conversation.
+const intercomBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Intercom Account', credType: 'intercom',
+    hint: '// connect the workspace (access token or OAuth)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const intercomTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const intercomVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.conversationId', 'the conversation id'],
+    ['$trigger.state', 'open / closed / snoozed'],
+    ['$trigger.priority', 'priority / not_priority'],
+    ['$trigger.author', 'who started it'],
+    ['$trigger.assigneeId', 'the assigned teammate id'],
+    ...extra,
+  ],
+});
+const intercomEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#1F8DED',
+  configExtra: { eventType: id },
+  fields: [...intercomBaseFields, ...extraFields, intercomVars(varsExtra)],
+});
+
 // Zendesk authenticates with an email + API token pair stored as a single
 // vault credential. The poller watches a subdomain's ticket feed;
 // `eventType` (via configExtra) selects the ZENDESK_EVENTS predicate.
@@ -1862,6 +1894,29 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  intercom: {
+    title: 'Intercom',
+    subtitle: 'Watch conversations — created, closed, reopened, assigned, priority and more',
+    events: [
+      intercomEvent('conversation_created', 'Conversation Started', 'A new conversation opens.', Plus),
+      intercomEvent('conversation_updated', 'Conversation Updated', 'Any change to a conversation.', Pencil),
+      intercomEvent('reopened', 'Reopened', 'A closed conversation is reopened.', RefreshCw),
+      intercomEvent('closed', 'Closed', 'A conversation is closed.', XCircle),
+      intercomEvent('snoozed', 'Snoozed', 'A conversation is snoozed for later.', Clock),
+      intercomEvent('priority_set', 'Marked Priority', 'A conversation is flagged as priority.', Flag),
+      intercomEvent('assigned', 'Assigned', 'A conversation is assigned (optionally to one teammate).', UserCheck,
+        [intercomTargetField('Teammate ID (optional)', '123456', '// leave blank for anyone — or an admin id')]),
+      intercomEvent('unassigned', 'Unassigned', 'An open conversation has no owner.', UserMinus),
+      intercomEvent('waiting', 'Waiting on You', 'An open conversation is awaiting a reply.', AlertCircle),
+      intercomEvent('has_tag', 'Has Tag', 'A conversation carries a specific tag.', Tag,
+        [intercomTargetField('Tag', 'billing', '// match a conversation tag')]),
+      intercomEvent('from_source', 'From Channel', 'A conversation came from a specific channel.', Inbox,
+        [intercomTargetField('Channel', 'email', '// e.g. email, conversation, chat')]),
+      intercomEvent('subject_contains', 'Subject Contains', 'The conversation subject includes your text.', Search,
+        [intercomTargetField('Text', 'refund', '// match part of the subject')]),
     ],
   },
 
