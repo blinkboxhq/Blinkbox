@@ -31,8 +31,43 @@ const IMAP_QUEUE_NAME = "bb-imap-poller";
 let imapQueue = null;
 let imapWorker = null;
 
+// Walk an imapflow bodyStructure tree and collect attachment parts (anything
+// with a filename or a disposition of "attachment"), plus a total byte size.
+function walkStructure(node, attachments, sizeRef) {
+  if (!node) return;
+  if (Array.isArray(node.childNodes)) {
+    for (const child of node.childNodes) walkStructure(child, attachments, sizeRef);
+  }
+  sizeRef.size += node.size || 0;
+  const fname = node.dispositionParameters?.filename || node.parameters?.name;
+  const isAttachment = (node.disposition || "").toLowerCase() === "attachment";
+  if (fname || (isAttachment && node.type && node.type !== "multipart")) {
+    attachments.push({ filename: fname || "", type: node.type || "", size: node.size || 0 });
+  }
+}
+
+const lc = (s) => String(s ?? "").toLowerCase();
+// Each event = a predicate over the normalized email payload. `eventType`
+// (passed via cfg) selects the entry; question events read cfg.targetValue.
+const IMAP_EVENTS = {
+  new_email:        { match: () => true },
+  from_sender:      { match: (e, c) => lc(e.from) === lc(c.targetValue) },
+  from_domain:      { match: (e, c) => lc(e.from).endsWith("@" + lc(c.targetValue).replace(/^@/, "")) },
+  subject_contains: { match: (e, c) => lc(e.subject).includes(lc(c.targetValue)) },
+  subject_is:       { match: (e, c) => lc(e.subject).trim() === lc(c.targetValue).trim() },
+  body_contains:    { match: (e, c) => (lc(e.text) + lc(e.html)).includes(lc(c.targetValue)) },
+  to_address:       { match: (e, c) => lc(e.to).includes(lc(c.targetValue)) },
+  cc_address:       { match: (e, c) => lc(e.cc).includes(lc(c.targetValue)) },
+  has_attachment:   { match: (e) => (e.attachments?.length || 0) > 0 },
+  attachment_named: { match: (e, c) => (e.attachments || []).some(a => lc(a.filename).includes(lc(c.targetValue))) },
+  large_email:      { match: (e, c) => (e.sizeBytes || 0) >= Number(c.targetValue || 0) * 1024 },
+  reply_email:      { match: (e) => /^\s*re:/i.test(e.subject || "") },
+};
+
 export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
   const scope = triggerNodeId || automationId;
+  const eventType = cfg.eventType || cfg.watchType || "new_email";
+  const spec = IMAP_EVENTS[eventType] || IMAP_EVENTS.new_email;
   // Dynamic import — imapflow is optional dep, only loaded if IMAP trigger is used
   let ImapFlow;
   try {
@@ -96,23 +131,32 @@ export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
 
       const source = msg.source?.toString() || "";
 
+      const attachments = [];
+      const sizeRef = { size: 0 };
+      walkStructure(msg.bodyStructure, attachments, sizeRef);
+
       // Simple text/html extraction from raw RFC822 source
       const emailPayload = {
         from: msg.envelope?.from?.[0]?.address || "",
         to: (msg.envelope?.to || []).map((a) => a.address).join(", "),
+        cc: (msg.envelope?.cc || []).map((a) => a.address).join(", "),
         subject: msg.envelope?.subject || "",
         date: msg.envelope?.date?.toISOString() || new Date().toISOString(),
         messageId: msg.envelope?.messageId || "",
         text: extractBodyPart(source, "text/plain"),
         html: extractBodyPart(source, "text/html"),
-        attachments: [], // Attachment metadata (not contents — keep payloads lean)
+        attachments,
+        attachmentCount: attachments.length,
+        sizeBytes: sizeRef.size || source.length,
       };
+
+      if (!spec.match(emailPayload, cfg)) continue;
 
       try {
         await executeAutomation(
           automation,
           { email: emailPayload },
-          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `imap:${scope}:${msg.uid}` },
+          { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `imap:${scope}:${eventType}:${msg.uid}` },
         );
         console.log(`[IMAP] Fired "${automation.name}" for email: "${emailPayload.subject}"`);
 
@@ -179,7 +223,7 @@ export async function startImapPoller() {
         }
       }
 
-      await pollMailbox(automationId, cfg, password);
+      await pollMailbox(automationId, job.data.triggerNodeId || null, cfg, password);
     },
     { connection: createBullMQConnection(), concurrency: 2 },
   );

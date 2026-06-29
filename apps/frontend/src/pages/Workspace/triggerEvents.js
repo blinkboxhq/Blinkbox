@@ -591,6 +591,49 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
   fields: [...datadogBaseFields, ...extraFields, datadogVars(varsExtra)],
 });
 
+// IMAP authenticates with a vault-stored mailbox password (resolved by
+// credentialId at poll time), plus plaintext host/user/mailbox settings.
+// `eventType` (via configExtra) selects the IMAP_EVENTS entry in the poller.
+const imapBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Mailbox Password', credType: 'imap',
+    hint: '// stored securely in the credential vault — the IMAP login password' },
+  { type: 'text', key: 'imapHost', label: 'IMAP Host', placeholder: 'imap.gmail.com',
+    hint: '// your mail provider’s IMAP server' },
+  { type: 'text', key: 'imapUser', label: 'Email / Username', placeholder: 'you@example.com',
+    hint: '// the mailbox login (usually your full email)' },
+  { type: 'text', key: 'mailbox', label: 'Folder', placeholder: 'INBOX',
+    hint: '// which folder to watch — defaults to INBOX' },
+  { type: 'switch-row', key: 'onlyUnread', label: 'Only Unread', default: true,
+    hint: '// when on, only unseen messages are considered' },
+  { type: 'switch-row', key: 'markRead', label: 'Mark as Read', default: true,
+    hint: '// flag matched messages \\Seen after firing' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *',
+    options: [
+      { value: '* * * * *', label: 'Every minute' },
+      { value: '*/5 * * * *', label: 'Every 5 minutes' },
+      { value: '*/15 * * * *', label: 'Every 15 minutes' },
+      { value: '0 * * * *', label: 'Every hour' },
+    ] },
+];
+const imapTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const imapVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.email.from', 'the sender address'],
+    ['$trigger.email.subject', 'the subject line'],
+    ['$trigger.email.text', 'the plain-text body'],
+    ['$trigger.email.to', 'the To recipients'],
+    ['$trigger.email.attachmentCount', 'how many attachments'],
+    ['$trigger.email.date', 'when it was received'],
+    ...extra,
+  ],
+});
+const imapEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#1A8FE3',
+  configExtra: { eventType: id },
+  fields: [...imapBaseFields, ...extraFields, imapVars(varsExtra)],
+});
+
 // VirusTotal reads a raw API key (not OAuth), so it is a password field. The
 // user watches one target (a file hash, URL, or IP); the poller re-checks its
 // analysis on a schedule. `eventType` (via configExtra) selects the VT_EVENTS entry.
@@ -1609,6 +1652,34 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  imap: {
+    title: 'Email (IMAP)',
+    subtitle: 'Watch any mailbox — by sender, subject, body, attachments and more',
+    events: [
+      imapEvent('new_email', 'New Email', 'Fire on every new message in the folder.', Inbox),
+      imapEvent('from_sender', 'From a Sender', 'Only mail from a specific email address.', User,
+        [imapTargetField('Sender Address', 'boss@company.com', '// match the From address exactly')]),
+      imapEvent('from_domain', 'From a Domain', 'Only mail from a specific domain.', AtSign,
+        [imapTargetField('Domain', 'company.com', '// match the part after the @')]),
+      imapEvent('subject_contains', 'Subject Contains', 'The subject line includes your text.', Search,
+        [imapTargetField('Text in Subject', 'invoice', '// case-insensitive contains')]),
+      imapEvent('subject_is', 'Subject Is Exactly', 'The subject equals your text.', Type,
+        [imapTargetField('Exact Subject', 'Weekly Report', '// must match the whole subject')]),
+      imapEvent('body_contains', 'Body Contains', 'The message body includes your text.', FileText,
+        [imapTargetField('Text in Body', 'unsubscribe', '// searches plain text and HTML')]),
+      imapEvent('to_address', 'Sent To Address', 'A specific address is in the To line.', Send,
+        [imapTargetField('Recipient Address', 'sales@you.com', '// match an address in To')]),
+      imapEvent('cc_address', 'CC’d Address', 'A specific address is on CC.', Users,
+        [imapTargetField('CC Address', 'manager@you.com', '// match an address in CC')]),
+      imapEvent('has_attachment', 'Has Attachment', 'The message carries at least one attachment.', Paperclip),
+      imapEvent('attachment_named', 'Attachment Named', 'An attachment filename matches your text.', FileText,
+        [imapTargetField('Filename Contains', '.pdf', '// e.g. an extension or a name fragment')]),
+      imapEvent('large_email', 'Large Email', 'The message is over a size threshold.', HardDrive,
+        [imapTargetField('Minimum Size (KB)', '500', '// fire when the email is at least this big')]),
+      imapEvent('reply_email', 'Is a Reply', 'The subject starts with “Re:”.', Reply),
     ],
   },
 
