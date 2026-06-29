@@ -46,6 +46,7 @@ import { pollTypeform } from "./typeform.poller.js";
 import { pollMailchimp } from "./mailchimp.poller.js";
 import { pollPagerDuty } from "./pagerduty.poller.js";
 import { pollNetlify } from "./netlify.poller.js";
+import { pollVercel } from "./vercel.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -479,6 +480,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "netlify",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollNetlify(automationId, triggerNodeId, cfg); },
+  },
+
+  vercel_trigger: {
+    triggerName: "vercel_trigger",
+    required: ["credentialId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        projectId: cfg.projectId, teamId: cfg.teamId,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "vercel",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollVercel(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {

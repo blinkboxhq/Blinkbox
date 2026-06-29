@@ -594,6 +594,42 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Vercel authenticates with an API token (vault credential). The user optionally
+// scopes to one Project (and Team); the poller watches the deployments feed and
+// `eventType` (via configExtra) selects the VERCEL_EVENTS predicate per deploy.
+const vercelBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Vercel Account', credType: 'vercel',
+    hint: '// connect with a Vercel API token' },
+  { type: 'text', key: 'projectId', label: 'Project ID', placeholder: 'prj_... (optional)',
+    hint: '// limit to one project — leave blank for all' },
+  { type: 'text', key: 'teamId', label: 'Team ID', placeholder: 'team_... (optional)',
+    hint: '// only if the project lives under a team' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const vercelTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const vercelVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.deploymentId', 'the deployment id'],
+    ['$trigger.state', 'READY / BUILDING / ERROR / QUEUED / CANCELED'],
+    ['$trigger.target', 'production / preview'],
+    ['$trigger.branch', 'the git branch'],
+    ['$trigger.url', 'the deployment URL'],
+    ...extra,
+  ],
+});
+const vercelEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FFFFFF',
+  configExtra: { eventType: id },
+  fields: [...vercelBaseFields, ...extraFields, vercelVars(varsExtra)],
+});
+
 // Netlify authenticates with a Personal Access Token (vault credential). The
 // user picks one Site by id; the poller watches its deploy feed and `eventType`
 // (via configExtra) selects the NETLIFY_EVENTS predicate over each deploy.
@@ -2062,6 +2098,28 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  vercel: {
+    title: 'Vercel',
+    subtitle: 'Watch deployments — ready, errored, building, by branch and target',
+    events: [
+      vercelEvent('deployment_created', 'Deployment Created', 'A new deployment appears.', Rocket),
+      vercelEvent('deploy_ready', 'Deploy Ready', 'A deployment goes live (READY).', CheckCircle2),
+      vercelEvent('deploy_error', 'Deploy Errored', 'A deployment fails to build.', XCircle),
+      vercelEvent('deploy_building', 'Deploy Building', 'A deployment enters the build phase.', Activity),
+      vercelEvent('deploy_queued', 'Deploy Queued', 'A deployment is queued / initializing.', Clock),
+      vercelEvent('deploy_canceled', 'Deploy Canceled', 'A deployment is canceled.', Ban),
+      vercelEvent('state_changed', 'State Changed', 'Any change to deployment state.', RefreshCw),
+      vercelEvent('state_is', 'State Is', 'The deployment matches a state you name.', ListTodo,
+        [vercelTargetField('State', 'READY', '// e.g. READY, BUILDING, ERROR')]),
+      vercelEvent('on_branch', 'On Branch', 'A deployment is for a specific git branch.', GitBranch,
+        [vercelTargetField('Branch', 'main', '// match the deployment branch')]),
+      vercelEvent('production_deploy', 'Production Deploy', 'A deployment targets production.', Globe),
+      vercelEvent('preview_deploy', 'Preview Deploy', 'A deployment is a preview build.', Eye),
+      vercelEvent('slow_deploy', 'Slow Deploy', 'A build takes longer than a threshold.', Gauge,
+        [vercelTargetField('Minimum Seconds', '120', '// fires when build time ≥ this')]),
     ],
   },
 
