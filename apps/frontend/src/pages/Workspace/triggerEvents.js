@@ -629,6 +629,40 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// Slack authenticates with a bot OAuth token (vault credential). The user names
+// one channel by id; the poller reads its message feed via conversations.history
+// and `eventType` (via configExtra) selects the SLACK_EVENTS predicate per message.
+const slackBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Slack Workspace', credType: 'slack',
+    oauthProvider: 'slack', hint: '// connect your Slack workspace' },
+  { type: 'text', key: 'channel', label: 'Channel ID', placeholder: 'C0123456789',
+    hint: '// the channel to watch — copy its ID from Slack' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const slackTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const slackVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.ts', 'the message timestamp/id'],
+    ['$trigger.text', 'the message text'],
+    ['$trigger.user', 'who sent it'],
+    ['$trigger.channel', 'the channel id'],
+    ['$trigger.reactionCount', 'total reactions'],
+    ...extra,
+  ],
+});
+const slackEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#4A154B',
+  configExtra: { eventType: id },
+  fields: [...slackBaseFields, ...extraFields, slackVars(varsExtra)],
+});
+
 const tiktokBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'TikTok Account', credType: 'tiktok',
     oauthProvider: 'tiktok', hint: '// connect your TikTok creator account' },
@@ -2162,6 +2196,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  slack: {
+    title: 'Slack',
+    subtitle: 'Watch a channel — new messages, mentions, links, files and reactions',
+    events: [
+      slackEvent('new_message', 'New Message', 'A new top-level message is posted.', MessageSquare),
+      slackEvent('human_message', 'New Human Message', 'A real person posts (ignores bots and system notices).', UserCheck),
+      slackEvent('from_user', 'Message From User', 'A message is posted by a specific person.', User,
+        [slackTargetField('User ID', 'U0123456789', '// the Slack member ID to watch')]),
+      slackEvent('text_contains', 'Message Contains', 'A message contains your text.', Search,
+        [slackTargetField('Text', 'deploy', '// case-insensitive match in the message')]),
+      slackEvent('mentions', 'Mentions Someone', 'A message mentions a name or handle.', AtSign,
+        [slackTargetField('Name or Handle', 'oncall', '// matched anywhere in the message text')]),
+      slackEvent('has_link', 'Has a Link', 'A message contains a URL.', Globe),
+      slackEvent('has_file', 'Has an Attachment', 'A message includes an uploaded file.', Paperclip),
+      slackEvent('thread_reply', 'Thread Reply', 'A reply is posted inside a thread.', Reply),
+      slackEvent('bot_message', 'Bot Message', 'A bot or app posts a message.', Activity),
+      slackEvent('new_reply', 'New Reply on Message', 'A message gains a new threaded reply.', Inbox,
+        [], [['$trigger.replyCount', 'total replies on the message']]),
+      slackEvent('reaction_added', 'Reaction Added', 'A message gains a new reaction.', Heart),
+      slackEvent('reactions_over', 'Reactions Over', 'A message reaches a reaction threshold.', Flame,
+        [slackTargetField('Reaction Count', '10', '// fires when total reactions reach this')]),
     ],
   },
 

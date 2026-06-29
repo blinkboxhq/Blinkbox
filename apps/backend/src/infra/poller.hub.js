@@ -49,6 +49,7 @@ import { pollNetlify } from "./netlify.poller.js";
 import { pollVercel } from "./vercel.poller.js";
 import { pollInstagram } from "./instagram.poller.js";
 import { pollTikTok } from "./tiktok.poller.js";
+import { pollSlack } from "./slack.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -511,6 +512,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "instagram",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollInstagram(automationId, triggerNodeId, cfg); },
+  },
+
+  slack_trigger: {
+    triggerName: "slack_trigger",
+    required: ["credentialId", "channel"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        channel: cfg.channel,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "slack",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollSlack(automationId, triggerNodeId, cfg); },
   },
 
   tiktok_trigger: {
