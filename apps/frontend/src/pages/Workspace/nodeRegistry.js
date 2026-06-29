@@ -156,7 +156,6 @@ import imgPinecone from "@nodes/pinecone/logo.svg";
 import imgZep from "@nodes/vector_memory/logo.svg";
 import imgComputer from "../../assets/computer.png";
 import imgHTTP from "@nodes/http_request/logo.svg";
-import imgCode from "@nodes/code/logo.svg";
 import imgAirtable from "@nodes/airtable/logo.svg";
 import imgNotion from "@nodes/notion/logo.svg";
 import imgSendGrid from "@nodes/sendgrid/logo.svg";
@@ -268,7 +267,6 @@ import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
 import VirtualComputerPanel from "@nodes/virtual_computer/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
 import SetFieldsNode from "@nodes/set_fields/ConfigPanel.jsx";
-import CodeNode from "@nodes/code/ConfigPanel.jsx";
 import LoopNode from "@nodes/loop/ConfigPanel.jsx";
 import SlackNode from "@nodes/slack/ConfigPanel.jsx";
 import DiscordNode from "@nodes/discord/ConfigPanel.jsx";
@@ -282,7 +280,6 @@ import WebSearchNode from "@nodes/web_search/ConfigPanel.jsx";
 import makeOpenAICompatNode from "@nodes/openai_compat/ConfigPanel.jsx";
 import DeepSeekNode from "@nodes/deepseek/ConfigPanel.jsx";
 import NvidiaNimNode from "@nodes/nvidia_nim/ConfigPanel.jsx";
-import GemmaNimNode from "@nodes/gemma/ConfigPanel.jsx";
 import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
@@ -321,7 +318,6 @@ import InstagramNode from "@nodes/instagram/ConfigPanel.jsx";
 import TikTokNode from "@nodes/tiktok/ConfigPanel.jsx";
 import LinkedInNode from "@nodes/linkedin/ConfigPanel.jsx";
 import ResendNode from "@nodes/resend/ConfigPanel.jsx";
-import OpenAIAssistantNode from "@nodes/openai_assistant/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
 import SshTriggerNode from "@triggers/ssh/ConfigPanel.jsx";
 import DockerTriggerNode from "@triggers/docker/ConfigPanel.jsx";
@@ -714,16 +710,6 @@ export const NodeRegistry = {
     logoUrl: imgNvidiaNim,
     description: "NVIDIA Inference Microservices — Llama, Nemotron, vision & embedding models",
     ConfigPanel: NvidiaNimNode,
-    category: "ai_models",
-  },
-  gemma: {
-    label: "Google Gemma",
-    icon: Brain,
-    colorClass: "text-[#4285F4]",
-    accentColor: "66,133,244",
-    logoUrl: imgGemmaNim,
-    description: "Gemma 4, Gemma 3, Gemma 3n, Gemma 2 & CodeGemma via NVIDIA NIM",
-    ConfigPanel: GemmaNimNode,
     category: "ai_models",
   },
   moonshot: {
@@ -1917,15 +1903,6 @@ export const NodeRegistry = {
   },
 
   // Code
-  code: {
-    label: "Run Code",
-    icon: Code2,
-    colorClass: "text-white",
-    accentColor: "163,230,53",
-    logoUrl: imgCode,
-    ConfigPanel: CodeNode,
-    category: "ai_models",
-  },
 
   // Integrations (comms) — all have logoUrl so colorClass is fallback only
   telegram: {
@@ -2182,73 +2159,6 @@ export const NodeRegistry = {
     category: "logic",
   },
   // ── Coding Agents ─────────────────────────────────────────────────────────
-  claude_code: {
-    label: "Claude Code",
-    icon: Brain,
-    logoUrl: imgAnthropic,
-    colorClass: "text-[#D4C1B3]",
-    accentColor: "212,193,179",
-    ConfigPanel: makeCodingAgentNode({
-      label: "Claude Code",
-      accent: "orange",
-      credentialType: "Anthropic",
-      defaultModel: "claude-sonnet-4-20250514",
-      models: [
-        { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4.6" },
-        { value: "claude-opus-4-20250514", label: "Claude Opus 4" },
-        { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
-      ],
-    }),
-    category: "ai_models",
-  },
-  groq: {
-    label: "Groq",
-    icon: Zap,
-    logoUrl: imgGroq,
-    colorClass: "text-[#F55036]",
-    accentColor: "245,80,54",
-    ConfigPanel: makeCodingAgentNode({
-      label: "Groq",
-      accent: "red",
-      credentialType: "Groq",
-      defaultModel: "llama-3.3-70b-versatile",
-      models: [
-        { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" },
-        { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" },
-        { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" },
-      ],
-    }),
-    category: "ai_models",
-  },
-  ollama: {
-    label: "Ollama",
-    icon: Server,
-    logoUrl: imgOllama,
-    colorClass: "text-zinc-300",
-    accentColor: "212,212,216",
-    ConfigPanel: makeCodingAgentNode({
-      label: "Ollama (Local)",
-      accent: "zinc",
-      defaultModel: "llama3.2",
-      hasBaseUrl: true,
-    }),
-    category: "ai_models",
-  },
-  lm_studio: {
-    label: "LM Studio",
-    icon: Server,
-    logoUrl: imgLmStudio,
-    colorClass: "text-purple-400",
-    accentColor: "192,132,252",
-    description: "Run local AI models via LM Studio's OpenAI-compatible server",
-    ConfigPanel: makeCodingAgentNode({
-      label: "LM Studio",
-      accent: "purple",
-      defaultModel: "local-model",
-      hasBaseUrl: true,
-    }),
-    category: "ai_models",
-  },
 
   // ── New Integration Nodes ──────────────────────────────────────────────────
   elevenlabs: {
@@ -2271,7 +2181,6 @@ export const NodeRegistry = {
   },
   vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
   browser_agent:     { label: "Browser Agent",    icon: Monitor,                          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: BrowserAgentNode,    category: "ai_agent", description: "Autonomous Puppeteer agent that browses and extracts web data" },
-  openai_assistant:  { label: "OpenAI Assistant", icon: Cpu,          logoUrl: imgOpenAI, colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: OpenAIAssistantNode, category: "ai_models", description: "Create threads and run OpenAI Assistants API with file attachments" },
   resend: {
     label: "Resend",
     icon: Mail,
