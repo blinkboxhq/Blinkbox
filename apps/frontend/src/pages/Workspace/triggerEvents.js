@@ -633,6 +633,40 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // DNS resolves all record types each poll and diffs against the last snapshot.
 // No credential; `eventType` (via configExtra) selects which record / condition
 // fires the workflow.
+// Port Monitor opens a TCP socket each poll. No credential; open/closed state and
+// a flap counter are tracked in Redis so transition and flapping events diff.
+// `eventType` (via configExtra) selects which condition fires.
+const portMonBaseFields = [
+  { type: 'text', key: 'host', label: 'Host', placeholder: 'db.example.com',
+    hint: '// the host to probe' },
+  { type: 'text', key: 'port', label: 'Port', placeholder: '5432',
+    hint: '// the TCP port to test' },
+  { type: 'select', key: 'pollIntervalSeconds', label: 'Check Every', default: '60',
+    options: [
+      { value: '30', label: 'Every 30 seconds' },
+      { value: '60', label: 'Every minute' },
+      { value: '300', label: 'Every 5 minutes' },
+      { value: '900', label: 'Every 15 minutes' },
+    ] },
+];
+const portMonTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const portMonVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.host', 'the probed host'],
+    ['$trigger.port', 'the probed port'],
+    ['$trigger.state', 'open or closed'],
+    ['$trigger.responseTime', 'connect time in ms'],
+    ['$trigger.reason', 'failure reason if closed'],
+    ...extra,
+  ],
+});
+const portMonEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#F472B6',
+  configExtra: { eventType: id },
+  fields: [...portMonBaseFields, ...extraFields, portMonVars(varsExtra)],
+});
+
 // HTTP Monitor checks a URL each poll. No credential; up/down state and the body
 // hash are tracked in Redis so recovery and content-change events diff. `eventType`
 // (via configExtra) selects which condition fires.
@@ -2534,6 +2568,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  port_monitor: {
+    title: 'Port Monitor',
+    subtitle: 'Probe a TCP port — open/closed transitions, latency and flapping',
+    events: [
+      portMonEvent('port_open', 'Port Open', 'The port is accepting connections.', CheckCircle2),
+      portMonEvent('port_closed', 'Port Closed', 'The port is not reachable.', XCircle),
+      portMonEvent('went_down', 'Went Down', 'An open port stopped responding.', AlertTriangle),
+      portMonEvent('came_up', 'Came Up', 'A closed port started responding.', Play),
+      portMonEvent('state_changed', 'State Changed', 'The port flipped open/closed.', RefreshCw),
+      portMonEvent('slow_connect', 'Slow Connect', 'Connect time exceeded a threshold.', Gauge,
+        [portMonTargetField('Max Connect (ms)', '1000', '// fire when connect time is at or over this')]),
+      portMonEvent('fast_connect', 'Fast Connect', 'Connect time is under a threshold.', Activity,
+        [portMonTargetField('Under (ms)', '100', '// fire when connect time is below this')]),
+      portMonEvent('response_over', 'Response Over', 'Connect time exceeded a limit (open or closed).', Clock,
+        [portMonTargetField('Over (ms)', '1000', '// fire when probe time is at or over this')]),
+      portMonEvent('timed_out', 'Timed Out', 'The connection attempt timed out.', PauseCircle),
+      portMonEvent('refused', 'Connection Refused', 'The host actively refused the connection.', Ban),
+      portMonEvent('flapping', 'Flapping', 'The port flipped repeatedly within an hour.', Flame,
+        [portMonTargetField('Flip Count', '4', '// fire after this many open/closed flips in an hour')], [['$trigger.flips', 'flips counted in the window']]),
+      portMonEvent('recovered_fast', 'Recovered Fast', 'A closed port came back and responded quickly.', Sparkle,
+        [portMonTargetField('Under (ms)', '100', '// recovery considered fast under this')]),
     ],
   },
 

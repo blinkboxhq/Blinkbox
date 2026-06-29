@@ -12,6 +12,9 @@ import net from "net";
 import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-port-monitor";
+const STATE_TTL = 7 * 24 * 60 * 60;
+const SEEN_TTL = 7 * 24 * 60 * 60;
+const FLAP_WINDOW = 60 * 60; // count open/closed flips over the last hour
 let portQueue = null;
 let portWorker = null;
 
@@ -20,12 +23,30 @@ function checkPort(host, port, timeoutMs = 5000) {
     const socket = new net.Socket();
     const start = Date.now();
     socket.setTimeout(timeoutMs);
-    socket.on("connect", () => { socket.destroy(); resolve({ open: true, responseTime: Date.now() - start }); });
+    socket.on("connect", () => { socket.destroy(); resolve({ open: true, responseTime: Date.now() - start, reason: "" }); });
     socket.on("timeout", () => { socket.destroy(); resolve({ open: false, responseTime: Date.now() - start, reason: "timeout" }); });
-    socket.on("error", (err) => { resolve({ open: false, responseTime: Date.now() - start, reason: err.message }); });
+    socket.on("error", (err) => { resolve({ open: false, responseTime: Date.now() - start, reason: err.code || err.message }); });
     socket.connect(port, host);
   });
 }
+
+// Each event is a predicate over the current check (`r` = {open,responseTime,reason}),
+// previous state (`s`), config (`c`, with `flips` = flap count in window). `needsState`
+// events compare against the prior state to catch transitions.
+const PORT_EVENTS = {
+  port_open:      { needsState: false, dedup: (_r, _s, c) => `open:${c.flips}`, match: (r) => r.open },
+  port_closed:    { needsState: false, dedup: (_r, _s, c) => `closed:${c.flips}`, match: (r) => !r.open },
+  went_down:      { needsState: true,  dedup: (_r, _s, c) => `down:${c.flips}`, match: (r, s) => !r.open && s === "open" },
+  came_up:        { needsState: true,  dedup: (_r, _s, c) => `up:${c.flips}`, match: (r, s) => r.open && s === "closed" },
+  state_changed:  { needsState: true,  dedup: (_r, _s, c) => `chg:${c.flips}`, match: (r, s) => (r.open ? "open" : "closed") !== s },
+  slow_connect:   { needsState: false, dedup: (r, _s, c) => `slow:${r.responseTime >= Number(c.targetValue || 1000)}`, match: (r, _s, c) => r.open && r.responseTime >= Number(c.targetValue || 1000) },
+  fast_connect:   { needsState: false, dedup: (r, _s, c) => `fast:${r.responseTime < Number(c.targetValue || 100)}`, match: (r, _s, c) => r.open && r.responseTime < Number(c.targetValue || 100) },
+  response_over:  { needsState: false, dedup: (r) => `ro:${r.responseTime}`, match: (r, _s, c) => r.responseTime >= Number(c.targetValue || 1000) },
+  timed_out:      { needsState: false, dedup: (r) => `to:${r.reason}`, match: (r) => !r.open && r.reason === "timeout" },
+  refused:        { needsState: false, dedup: (r) => `ref:${r.reason}`, match: (r) => !r.open && String(r.reason).includes("ECONNREFUSED") },
+  flapping:       { needsState: false, dedup: (_r, _s, c) => `flap:${c.flips}`, match: (_r, _s, c) => c.flips >= Number(c.targetValue || 4) },
+  recovered_fast: { needsState: true,  dedup: (_r, _s, c) => `recfast:${c.flips}`, match: (r, s, c) => r.open && s === "closed" && r.responseTime < Number(c.targetValue || 100) },
+};
 
 export async function pollPort(automationId, triggerNodeId, cfg) {
   const scope = triggerNodeId || automationId;
@@ -33,26 +54,52 @@ export async function pollPort(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 30);
   if (!locked) return;
   try {
-    const { host, port, alertOn = "closed" } = cfg;
+    const { host, port } = cfg;
     if (!host || !port) return;
     assertSafeHost(host);
+    const legacyMap = { closed: "port_closed", open: "came_up", change: "state_changed" };
+    const evType = cfg.eventType || cfg.watchType || legacyMap[cfg.alertOn] || "state_changed";
+    const spec = PORT_EVENTS[evType] || PORT_EVENTS.state_changed;
+
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
+
     const result = await checkPort(host, parseInt(port));
+    const currentState = result.open ? "open" : "closed";
+
     const stateKey = `bb:port:state:${scope}`;
     const lastState = await redis.get(stateKey) || "unknown";
-    const currentState = result.open ? "open" : "closed";
-    await redis.set(stateKey, currentState, "EX", 7 * 24 * 60 * 60);
-    const shouldFire =
-      (alertOn === "closed" && currentState === "closed") ||
-      (alertOn === "open" && currentState === "open" && lastState === "closed") ||
-      (alertOn === "change" && currentState !== lastState && lastState !== "unknown");
-    if (!shouldFire) return;
-    await executeAutomation(automation, { host, port: parseInt(port), state: currentState, previousState: lastState, responseTime: result.responseTime, reason: result.reason || null, checkedAt: new Date().toISOString() }, {
+    await redis.set(stateKey, currentState, "EX", STATE_TTL);
+
+    // Track flips in a rolling window for the flapping event.
+    let flips = 0;
+    if (lastState !== "unknown" && currentState !== lastState) {
+      const flapKey = `bb:port:flaps:${scope}`;
+      flips = await redis.incr(flapKey);
+      if (flips === 1) await redis.expire(flapKey, FLAP_WINDOW);
+    } else {
+      flips = parseInt(await redis.get(`bb:port:flaps:${scope}`)) || 0;
+    }
+
+    if (spec.needsState && lastState === "unknown") return;
+    const c = { targetValue: cfg.targetValue, flips };
+    if (!spec.match(result, lastState, c)) return;
+
+    const dedup = spec.dedup(result, lastState, c);
+    const seenKey = `bb:port:seen:${scope}:${evType}`;
+    const added = await redis.sadd(seenKey, dedup);
+    if (!added) return;
+    await redis.expire(seenKey, SEEN_TTL);
+
+    await executeAutomation(automation, {
+      host, port: parseInt(port), state: currentState, previousState: lastState,
+      responseTime: result.responseTime, reason: result.reason || null,
+      flips, eventType: evType, checkedAt: new Date().toISOString(),
+    }, {
       workspaceId: automation.workspaceId,
       entryNodeId: triggerNodeId || automation.entryNodeId,
-      idempotencyKey: `port:${scope}:${currentState}:${Date.now()}`,
+      idempotencyKey: `port:${scope}:${evType}:${dedup}`,
     });
   } catch (err) {
     console.warn(`[PortMonitor] Error for ${automationId}:`, err.message);
@@ -80,7 +127,7 @@ export async function syncPortJobs() {
     const cfg = entryNode?.data?.config || {};
     if (!cfg.host || !cfg.port) continue;
     const intervalSec = parseInt(cfg.pollIntervalSeconds) || 60;
-    await portQueue.add("port-poll", { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn } }, { repeat: { every: intervalSec * 1000 }, jobId: `port-${automation._id}` });
+    await portQueue.add("port-poll", { automationId: automation._id.toString(), triggerNodeId: automation.entryNodeId, cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue } }, { repeat: { every: intervalSec * 1000 }, jobId: `port-${automation._id}` });
   }
   console.log(`[PortMonitor] Synced ${automations.length} automations`);
 }
