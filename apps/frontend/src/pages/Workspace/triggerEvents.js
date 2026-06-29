@@ -630,6 +630,38 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// Hacker News reads the public Algolia API (no credential). The optional keyword
+// narrows the by-date feed; `eventType` (via configExtra) selects the HN_EVENTS
+// predicate per story.
+const hnBaseFields = [
+  { type: 'text', key: 'query', label: 'Keyword', placeholder: 'rust (optional)',
+    hint: '// narrows the feed to matching stories — leave blank for all' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+    options: [
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const hnTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const hnVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the story title'],
+    ['$trigger.url', 'the story link'],
+    ['$trigger.author', 'the submitter username'],
+    ['$trigger.points', 'the current points'],
+    ['$trigger.numComments', 'the current comment count'],
+    ...extra,
+  ],
+});
+const hnEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FF6600',
+  configExtra: { eventType: id },
+  fields: [...hnBaseFields, ...extraFields, hnVars(varsExtra)],
+});
+
 // Product Hunt authenticates with a developer API token. The user optionally
 // scopes to a topic; the poller watches the launch ranking and `eventType` (via
 // configExtra) selects the PH_EVENTS predicate per launch.
@@ -2303,6 +2335,35 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  hackernews: {
+    title: 'Hacker News',
+    subtitle: 'Watch HN — new stories, Ask/Show HN, points, comments and front page',
+    events: [
+      hnEvent('new_story', 'New Story', 'Any new story is submitted.', FileText),
+      hnEvent('title_contains', 'Title Contains', 'A story title contains your text.', Search,
+        [hnTargetField('Text', 'open source', '// case-insensitive match in the title')]),
+      hnEvent('by_author', 'By Author', 'A story is submitted by a specific user.', User,
+        [hnTargetField('Username', 'pg', '// exact match on the submitter')]),
+      hnEvent('domain_is', 'From Domain', 'A story links to a specific domain.', Globe,
+        [hnTargetField('Domain', 'github.com', '// substring match in the story URL')]),
+      hnEvent('ask_hn', 'Ask HN', 'An Ask HN post is submitted.', MessageSquare),
+      hnEvent('show_hn', 'Show HN', 'A Show HN post is submitted.', Eye),
+      hnEvent('job_post', 'Job Post', 'A hiring / job post is submitted.', Briefcase),
+      hnEvent('points_over', 'Points Over', 'A story reaches a points threshold.', Flame,
+        [hnTargetField('Min Points', '100', '// fires when points climb past this')],
+        [['$trigger.points', 'the current points']]),
+      hnEvent('comments_over', 'Comments Over', 'A story reaches a comment threshold.', MessageSquare,
+        [hnTargetField('Min Comments', '50', '// fires when comments climb past this')],
+        [['$trigger.numComments', 'the current comment count']]),
+      hnEvent('new_comment', 'Gained Comments', 'A story gained comments since last check.', MessageSquare,
+        [], [['$trigger.numComments', 'the current comment count']]),
+      hnEvent('hit_front_page', 'Hit Front Page', 'A story reached the front page.', Star),
+      hnEvent('went_viral', 'Went Viral', 'A story crosses a points threshold for the first time.', Trophy,
+        [hnTargetField('Points Threshold', '500', '// fires once when points first cross this')],
+        [['$trigger.points', 'the current points']]),
     ],
   },
 
