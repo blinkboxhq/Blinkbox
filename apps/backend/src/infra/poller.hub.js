@@ -18,6 +18,7 @@ import { pollLinear } from "./linear.poller.js";
 import { pollCalendar } from "./googleCalendar.poller.js";
 import { pollGoogleSheets } from "./googleSheets.poller.js";
 import { pollGoogleDrive } from "./googleDrive.poller.js";
+import { pollGoogleDocs } from "./googleDocs.poller.js";
 import { pollOneDrive } from "./onedrive.poller.js";
 import { pollSharePoint } from "./sharepoint.poller.js";
 import { pollHackerNews } from "./hackerNews.poller.js";
@@ -277,6 +278,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gdrive",
     run: async ({ automationId, cfg }) => { await pollGoogleDrive(automationId, cfg); },
+  },
+
+  google_docs_trigger: {
+    triggerName: "google_docs_trigger",
+    required: ["credentialId", "docId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        docId: cfg.docId, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "gdocs",
+    run: async ({ automationId, cfg }) => { await pollGoogleDocs(automationId, cfg); },
   },
 
   onedrive_trigger: {

@@ -429,6 +429,37 @@ const sharepointEvent = (id, label, description, icon, varsExtra = [], extraFiel
   fields: [...sharepointBaseFields, ...extraFields, sharepointVars(varsExtra)],
 });
 
+const DOCS_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const docsBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
+    hint: '// connect the Google account that can open the doc (OAuth)' },
+  { type: 'text', key: 'docId', label: 'Document ID', placeholder: 'the id from the doc URL',
+    hint: '// the long id between /d/ and /edit in the document URL' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: DOCS_POLL },
+];
+const docsVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.docName', 'the document title'],
+    ['$trigger.modifiedBy', 'who made the edit'],
+    ['$trigger.webViewLink', 'a link to open the doc'],
+    ['$trigger.wordCount', 'the document word count'],
+    ...extra,
+  ],
+});
+// A Docs event = a predicate over the doc revision + a content snapshot diff in
+// the poller. `eventType` (via configExtra) selects the DOCS_EVENTS entry.
+const docsEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#4285F4',
+  configExtra: { eventType: id },
+  fields: [...docsBaseFields, ...extraFields, docsVars(varsExtra)],
+});
+
 const FORMS_POLL = [
   { value: '1', label: 'Every minute' },
   { value: '5', label: 'Every 5 minutes' },
@@ -1401,6 +1432,41 @@ export const TRIGGER_EVENTS = {
         [{ type: 'text', key: 'targetValue', label: 'Author Email', placeholder: 'name@contoso.com',
           hint: '// fire only for items created by this email' }]),
       sharepointEvent('any_change', 'Any Change', 'Any add or edit on the list', RefreshCw),
+    ],
+  },
+
+  google_docs: {
+    title: 'Google Docs',
+    subtitle: 'Trigger on edits — content growth, keywords, headings and more',
+    events: [
+      docsEvent('doc_edited', 'Document Edited', 'Any new edit / revision is made', Pencil),
+      docsEvent('edited_by', 'Edited By…', 'A specific person makes an edit', User,
+        [], [{ type: 'text', key: 'targetValue', label: 'Editor Email', placeholder: 'someone@example.com',
+          hint: '// fire only when this person edits' }]),
+      docsEvent('content_grew', 'Content Grew', 'The document gained words', Plus,
+        [], [{ type: 'text', key: 'targetValue', label: 'Min Words Added', placeholder: '1', default: '1',
+          hint: '// fire when at least this many words are added' }]),
+      docsEvent('content_shrank', 'Content Shrank', 'The document lost words', Minus,
+        [], [{ type: 'text', key: 'targetValue', label: 'Min Words Removed', placeholder: '1', default: '1',
+          hint: '// fire when at least this many words are removed' }]),
+      docsEvent('contains_text', 'Contains Text', 'The document contains your keyword', Search,
+        [], [{ type: 'text', key: 'targetValue', label: 'Keyword', placeholder: 'e.g. approved',
+          hint: '// fire on any edit while this text is present' }]),
+      docsEvent('text_added', 'Text Just Added', 'Your keyword newly appears in the doc', Type,
+        [], [{ type: 'text', key: 'targetValue', label: 'Keyword', placeholder: 'e.g. signed',
+          hint: '// fire the moment this text first appears' }]),
+      docsEvent('text_removed', 'Text Just Removed', 'Your keyword disappears from the doc', Tag,
+        [], [{ type: 'text', key: 'targetValue', label: 'Keyword', placeholder: 'e.g. DRAFT',
+          hint: '// fire the moment this text is removed' }]),
+      docsEvent('over_words', 'Over Word Count', 'The doc reaches a word count', Hash,
+        [], [{ type: 'text', key: 'targetValue', label: 'At Or Above', placeholder: '500',
+          hint: '// fire while the word count is ≥ this' }]),
+      docsEvent('under_words', 'Under Word Count', 'The doc is below a word count', List,
+        [], [{ type: 'text', key: 'targetValue', label: 'At Or Below', placeholder: '50',
+          hint: '// fire while the word count is ≤ this' }]),
+      docsEvent('heading_added', 'Heading Added', 'A new heading / section appears', Bookmark),
+      docsEvent('link_added', 'Link Added', 'A new hyperlink is inserted', Globe),
+      docsEvent('renamed', 'Document Renamed', 'The document title changes', Sparkle),
     ],
   },
 
