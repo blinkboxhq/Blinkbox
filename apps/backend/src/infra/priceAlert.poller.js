@@ -11,9 +11,30 @@ import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 
 const QUEUE_NAME = "bb-price-alert-poller";
+const SNAP_TTL = 30 * 24 * 60 * 60;
+const SEEN_TTL = 7 * 24 * 60 * 60;
 
 let paQueue = null;
 let paWorker = null;
+
+// Each event is a predicate over the current price data (`p`), previous snapshot
+// (`prev` = {side,price,high,low}, may be null) and config (`c`). `needsPrev`
+// events stay quiet until a baseline exists. Crossings dedup on the side flip so
+// they fire once per crossing; threshold events dedup on the boolean state.
+const PRICE_EVENTS = {
+  crosses_above: { needsPrev: true,  dedup: (p, prev) => `xa:${prev?.side}`, match: (p, prev, c) => p.currentPrice >= Number(c.targetValue) && prev.side === "below" },
+  crosses_below: { needsPrev: true,  dedup: (p, prev) => `xb:${prev?.side}`, match: (p, prev, c) => p.currentPrice < Number(c.targetValue) && prev.side === "above" },
+  pumped:        { needsPrev: false, dedup: (p) => `pump:${Math.round(p.priceChangePercent24h)}`, match: (p, _prev, c) => p.priceChangePercent24h >= Number(c.targetValue || 10) },
+  dumped:        { needsPrev: false, dedup: (p) => `dump:${Math.round(p.priceChangePercent24h)}`, match: (p, _prev, c) => p.priceChangePercent24h <= -Number(c.targetValue || 10) },
+  up_24h:        { needsPrev: false, dedup: (p) => `up:${p.priceChangePercent24h > 0}`, match: (p) => p.priceChangePercent24h > 0 },
+  down_24h:      { needsPrev: false, dedup: (p) => `dn:${p.priceChangePercent24h < 0}`, match: (p) => p.priceChangePercent24h < 0 },
+  mcap_over:     { needsPrev: false, dedup: (p, _prev, c) => `mc:${p.marketCap >= Number(c.targetValue)}`, match: (p, _prev, c) => p.marketCap >= Number(c.targetValue || 0) },
+  volume_over:   { needsPrev: false, dedup: (p, _prev, c) => `vol:${p.volume >= Number(c.targetValue)}`, match: (p, _prev, c) => p.volume >= Number(c.targetValue || 0) },
+  price_equals:  { needsPrev: false, dedup: (p, _prev, c) => `eq:${c.targetValue}`, match: (p, _prev, c) => Math.abs(p.currentPrice - Number(c.targetValue)) / Number(c.targetValue || 1) <= 0.005 },
+  new_high:      { needsPrev: true,  dedup: (p) => `hi:${p.currentPrice}`, match: (p, prev) => prev.high != null && p.currentPrice > Number(prev.high) },
+  new_low:       { needsPrev: true,  dedup: (p) => `lo:${p.currentPrice}`, match: (p, prev) => prev.low != null && p.currentPrice < Number(prev.low) },
+  change_over:   { needsPrev: false, dedup: (p) => `co:${Math.round(p.priceChangePercent24h)}`, match: (p, _prev, c) => Math.abs(p.priceChangePercent24h) >= Number(c.targetValue || 5) },
+};
 
 async function fetchPrice(coinId, currency) {
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(coinId)}&vs_currencies=${currency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
@@ -40,27 +61,36 @@ export async function pollPrice(automationId, triggerNodeId, cfg) {
   if (!locked) return;
 
   try {
-    const { coinId, currency = "usd", condition = "below", threshold } = cfg;
-    if (!coinId || threshold == null) return;
+    const { coinId, currency = "usd" } = cfg;
+    if (!coinId) return;
 
-    const thresholdNum = parseFloat(threshold);
+    // Legacy `condition` (above/below) maps onto the crossing events; `threshold`
+    // is the old name for the crossing target.
+    const legacyMap = { above: "crosses_above", below: "crosses_below" };
+    const evType = cfg.eventType || cfg.watchType || legacyMap[cfg.condition] || "crosses_above";
+    const spec = PRICE_EVENTS[evType] || PRICE_EVENTS.crosses_above;
+    const targetValue = cfg.targetValue ?? cfg.threshold;
+
     const priceData = await fetchPrice(coinId.toLowerCase(), currency.toLowerCase());
     const currentPrice = priceData.currentPrice;
 
-    const currentSide = currentPrice >= thresholdNum ? "above" : "below";
-    const stateKey = `bb:price:state:${scope}`;
-    const prevStateStr = await redis.get(stateKey);
-    const prevState = prevStateStr ? JSON.parse(prevStateStr) : null;
+    const snapKey = `bb:price:state:${scope}`;
+    const prevRaw = await redis.get(snapKey);
+    const prev = prevRaw ? JSON.parse(prevRaw) : null;
+    const side = targetValue != null ? (currentPrice >= Number(targetValue) ? "above" : "below") : (prev?.side || "above");
+    const high = Math.max(currentPrice, prev?.high ?? currentPrice);
+    const low = Math.min(currentPrice, prev?.low ?? currentPrice);
+    await redis.set(snapKey, JSON.stringify({ side, price: currentPrice, high, low }), "EX", SNAP_TTL);
 
-    await redis.set(stateKey, JSON.stringify({ side: currentSide, price: currentPrice }), "EX", 86400);
+    if (spec.needsPrev && !prev) return;
+    const c = { targetValue };
+    if (!spec.match(priceData, prev || {}, c)) return;
 
-    // Only fire when threshold is freshly crossed
-    const shouldFire =
-      condition === "above" ? (currentSide === "above" && (!prevState || prevState.side === "below")) :
-      condition === "below" ? (currentSide === "below" && (!prevState || prevState.side === "above")) :
-      false;
-
-    if (!shouldFire) return;
+    const dedup = spec.dedup(priceData, prev || {}, c);
+    const seenKey = `bb:price:seen:${scope}:${evType}`;
+    const added = await redis.sadd(seenKey, dedup);
+    if (!added) return;
+    await redis.expire(seenKey, SEEN_TTL);
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });
@@ -73,15 +103,15 @@ export async function pollPrice(automationId, triggerNodeId, cfg) {
       currentPrice,
       ...priceData,
       currency: currency.toUpperCase(),
-      condition,
-      threshold: thresholdNum,
+      eventType: evType,
+      threshold: targetValue != null ? Number(targetValue) : null,
+      high, low,
       triggeredAt: new Date().toISOString(),
     };
 
     try {
-      const crossKey = `price:${scope}:${coinId}:${condition}:${Math.floor(Date.now() / 60000)}`;
-      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: crossKey });
-      console.log(`[PriceAlert] Fired for "${automation.name}": ${coinId} ${condition} ${threshold}`);
+      await executeAutomation(automation, payload, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `price:${scope}:${evType}:${dedup}` });
+      console.log(`[PriceAlert] Fired for "${automation.name}": ${coinId} ${evType}`);
     } catch (err) {
       console.error(`[PriceAlert] Failed for "${automation.name}":`, err.message);
     }
@@ -120,7 +150,7 @@ export async function syncPriceAlertJobs() {
     await paQueue.add("price-poll", {
       automationId: automation._id.toString(),
       triggerNodeId: automation.entryNodeId,
-      cfg: { coinId: cfg.coinId, currency: cfg.currency, condition: cfg.condition, threshold: cfg.threshold },
+      cfg: { coinId: cfg.coinId, currency: cfg.currency, condition: cfg.condition, threshold: cfg.threshold, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `pa-${automation._id}` });
   }
   console.log(`[PriceAlertPoller] Synced ${automations.length} automations`);

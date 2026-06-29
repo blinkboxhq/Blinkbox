@@ -633,6 +633,46 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // DNS resolves all record types each poll and diffs against the last snapshot.
 // No credential; `eventType` (via configExtra) selects which record / condition
 // fires the workflow.
+// Price Alert polls CoinGecko (no key) each interval. Side/high/low are tracked
+// in Redis so crossing and new-high/low events diff. `eventType` (via configExtra)
+// selects which condition fires.
+const priceBaseFields = [
+  { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin',
+    hint: '// CoinGecko coin id, e.g. bitcoin, ethereum, solana' },
+  { type: 'select', key: 'currency', label: 'Currency', default: 'usd',
+    options: [
+      { value: 'usd', label: 'USD' },
+      { value: 'eur', label: 'EUR' },
+      { value: 'gbp', label: 'GBP' },
+      { value: 'inr', label: 'INR' },
+      { value: 'btc', label: 'BTC' },
+    ] },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const priceTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const priceVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.coinId', 'the watched coin'],
+    ['$trigger.currentPrice', 'current price'],
+    ['$trigger.priceChangePercent24h', '24h change %'],
+    ['$trigger.marketCap', 'market cap'],
+    ['$trigger.volume', '24h volume'],
+    ...extra,
+  ],
+});
+const priceEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FBBF24',
+  configExtra: { eventType: id },
+  fields: [...priceBaseFields, ...extraFields, priceVars(varsExtra)],
+});
+
 // Port Monitor opens a TCP socket each poll. No credential; open/closed state and
 // a flap counter are tracked in Redis so transition and flapping events diff.
 // `eventType` (via configExtra) selects which condition fires.
@@ -2568,6 +2608,33 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  price_alert: {
+    title: 'Crypto Price',
+    subtitle: 'Watch a coin — threshold crossings, pumps, highs, volume and more',
+    events: [
+      priceEvent('crosses_above', 'Crosses Above', 'The price rises above your target.', ArrowRightCircle,
+        [priceTargetField('Target Price', '70000', '// fire when price crosses up through this')]),
+      priceEvent('crosses_below', 'Crosses Below', 'The price falls below your target.', Ban,
+        [priceTargetField('Target Price', '60000', '// fire when price crosses down through this')]),
+      priceEvent('pumped', 'Pumped', 'The 24h change rose above a percentage.', Rocket,
+        [priceTargetField('Min % Up', '10', '// fire when 24h change is at or above this %')]),
+      priceEvent('dumped', 'Dumped', 'The 24h change fell below a percentage.', Flame,
+        [priceTargetField('Min % Down', '10', '// fire when 24h change is at or below -this %')]),
+      priceEvent('up_24h', 'Up Over 24h', 'The coin is up over the last 24 hours.', Activity),
+      priceEvent('down_24h', 'Down Over 24h', 'The coin is down over the last 24 hours.', Gauge),
+      priceEvent('mcap_over', 'Market Cap Over', 'The market cap exceeds a value.', Database,
+        [priceTargetField('Min Market Cap', '1000000000', '// fire when market cap is at or above this')]),
+      priceEvent('volume_over', 'Volume Over', 'The 24h volume exceeds a value.', Hash,
+        [priceTargetField('Min Volume', '500000000', '// fire when 24h volume is at or above this')]),
+      priceEvent('price_equals', 'Price Near', 'The price is within 0.5% of a target.', Target,
+        [priceTargetField('Target Price', '65000', '// fire when price is within ±0.5% of this')]),
+      priceEvent('new_high', 'New High', 'The price set a new high since tracking began.', Trophy),
+      priceEvent('new_low', 'New Low', 'The price set a new low since tracking began.', AlertTriangle),
+      priceEvent('change_over', 'Big Move', 'The absolute 24h change exceeds a percentage.', DollarSign,
+        [priceTargetField('Min % Move', '5', '// fire when |24h change| is at or above this %')]),
     ],
   },
 
