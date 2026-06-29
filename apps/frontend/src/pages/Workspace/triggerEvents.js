@@ -296,6 +296,42 @@ const gdriveEvent = (id, label, description, icon, varsExtra = [], extraFields =
   fields: [...gdriveBaseFields, ...extraFields, gdriveVars(varsExtra)],
 });
 
+const GCAL_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const gcalBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
+    hint: '// connect the Google account whose calendar you want to watch (OAuth)' },
+  { type: 'text', key: 'calendarId', label: 'Calendar', default: 'primary', placeholder: 'primary',
+    hint: '// leave as "primary" for your main calendar, or paste another calendar id' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GCAL_POLL },
+];
+const gcalLeadField = { type: 'text', key: 'minutesBefore', label: 'Minutes Before Start', default: '0', placeholder: '0',
+  hint: '// fire this many minutes before the event begins (0 = right as it starts)' };
+const gcalFilterField = { type: 'text', key: 'filterQuery', label: 'Title Contains (optional)', placeholder: 'e.g. standup',
+  hint: '// optional — only fire for events whose title/description matches this text' };
+const gcalVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the event title'],
+    ['$trigger.startTime', 'when the event starts'],
+    ['$trigger.endTime', 'when the event ends'],
+    ['$trigger.organizer', "the organizer's email"],
+    ...extra,
+  ],
+});
+// A Calendar event = a query MODE + a client-side predicate in the poller.
+// `eventType` (via configExtra) selects the CAL_EVENTS entry. Upcoming-mode
+// events expose the lead-time field; change-mode events don't.
+const gcalEvent = (id, label, description, icon, varsExtra = [], extraFields = [gcalLeadField, gcalFilterField]) => ({
+  id, label, description, icon, event: id, accent: '#4285F4',
+  configExtra: { eventType: id },
+  fields: [...gcalBaseFields, ...extraFields, gcalVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1052,6 +1088,35 @@ export const TRIGGER_EVENTS = {
       gdriveEvent('image_added', 'Image Added', 'A new image file appears', Image),
       gdriveEvent('video_added', 'Video Added', 'A new video file appears', Film),
       gdriveEvent('owned_by_me', 'File I Own Changed', 'A change to any file you own', HardDrive),
+    ],
+  },
+
+  google_calendar: {
+    title: 'Google Calendar',
+    subtitle: 'Trigger on calendar activity — events starting, created, edited, cancelled or RSVPed',
+    events: [
+      gcalEvent('event_starting', 'Event Starting', 'An event is about to begin', CalendarClock),
+      gcalEvent('all_day_starting', 'All-Day Event Today', "An all-day event's day has begun", Calendar),
+      gcalEvent('recurring_starting', 'Recurring Event Starting', 'An instance of a repeating event begins', Repeat,
+        [['$trigger.recurringEventId', 'the id of the parent recurring event']]),
+      gcalEvent('with_meet_link', 'Meeting With Video Link', 'An event that has a Google Meet / video link is starting', Play,
+        [['$trigger.meetLink', 'the video call link']]),
+      gcalEvent('with_attendees', 'Event With Guests', 'An event that has invited guests is starting', Users,
+        [['$trigger.attendees', 'the list of guest emails']]),
+      gcalEvent('location_set', 'Event With Location', 'An event that has a physical location is starting', Globe,
+        [['$trigger.location', 'the event location']]),
+      gcalEvent('ends_soon', 'Event Ending', 'An event is wrapping up', Clock,
+        [], [gcalLeadField, gcalFilterField]),
+      gcalEvent('event_created', 'Event Created', 'A brand-new event is added to the calendar', Plus,
+        [['$trigger.created', 'when the event was created']], [gcalFilterField]),
+      gcalEvent('event_updated', 'Event Updated', 'An existing event is edited', Pencil,
+        [['$trigger.updated', 'when the event was last changed']], [gcalFilterField]),
+      gcalEvent('event_cancelled', 'Event Cancelled', 'An event is deleted or cancelled', XCircle,
+        [['$trigger.status', 'the event status (cancelled)']], [gcalFilterField]),
+      gcalEvent('invite_accepted', 'You Accepted An Invite', 'You RSVP "yes" to an event', CheckCircle2,
+        [['$trigger.selfResponse', 'your RSVP status']], [gcalFilterField]),
+      gcalEvent('invite_declined', 'You Declined An Invite', 'You RSVP "no" to an event', UserMinus,
+        [['$trigger.selfResponse', 'your RSVP status']], [gcalFilterField]),
     ],
   },
 

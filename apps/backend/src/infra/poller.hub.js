@@ -239,11 +239,12 @@ const POLL_REGISTRY = {
       credentialId: cfg.credentialId, workspaceId: automation.workspaceId,
       calendarId: cfg.calendarId || "primary",
       minutesBefore: cfg.minutesBefore, filterQuery: cfg.filterQuery,
+      eventType: cfg.eventType || cfg.watchType,
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
     jobPrefix: "gcal",
-    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery }) => {
-      await pollCalendar(automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery, eventType }) => {
+      await pollCalendar(automationId, triggerNodeId, credentialId, workspaceId, calendarId, minutesBefore, filterQuery, eventType);
     },
   },
 
