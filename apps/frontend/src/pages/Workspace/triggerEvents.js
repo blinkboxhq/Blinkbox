@@ -633,6 +633,40 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // DNS resolves all record types each poll and diffs against the last snapshot.
 // No credential; `eventType` (via configExtra) selects which record / condition
 // fires the workflow.
+// SSL inspects the TLS certificate for a host each poll. No credential; the cert
+// fingerprint/issuer/SAN are snapshotted so renewals and issuer swaps diff.
+// `eventType` (via configExtra) selects which lifecycle event fires.
+const sslBaseFields = [
+  { type: 'text', key: 'host', label: 'Host', placeholder: 'example.com',
+    hint: '// the hostname whose certificate we inspect' },
+  { type: 'text', key: 'port', label: 'Port', placeholder: '443',
+    hint: '// TLS port — defaults to 443' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '360',
+    options: [
+      { value: '60', label: 'Every hour' },
+      { value: '360', label: 'Every 6 hours' },
+      { value: '720', label: 'Every 12 hours' },
+      { value: '1440', label: 'Once a day' },
+    ] },
+];
+const sslTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const sslVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.host', 'the inspected host'],
+    ['$trigger.daysLeft', 'days until the cert expires'],
+    ['$trigger.expiresAt', 'expiry timestamp (ISO)'],
+    ['$trigger.issuer', 'certificate issuer org'],
+    ['$trigger.fingerprint', 'SHA-256 cert fingerprint'],
+    ...extra,
+  ],
+});
+const sslEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#10B981',
+  configExtra: { eventType: id },
+  fields: [...sslBaseFields, ...extraFields, sslVars(varsExtra)],
+});
+
 const dnsBaseFields = [
   { type: 'text', key: 'domain', label: 'Domain', placeholder: 'example.com',
     hint: '// the domain whose DNS records we watch' },
@@ -2425,6 +2459,26 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  ssl: {
+    title: 'SSL Certificate',
+    subtitle: 'Watch a TLS cert — expiry windows, renewals, issuer and SAN changes',
+    events: [
+      sslEvent('expiring_soon', 'Expiring Soon', 'The cert expires within your warning window.', ShieldAlert,
+        [sslTargetField('Warn Days', '14', '// fire when days-left drops to/below this')], [['$trigger.daysLeft', 'days remaining']]),
+      sslEvent('expires_30d', 'Expires In 30 Days', 'Less than 30 days of validity remain.', Clock),
+      sslEvent('expires_7d', 'Expires In 7 Days', 'Less than 7 days of validity remain.', AlertTriangle),
+      sslEvent('expires_1d', 'Expires In 1 Day', 'Less than a day of validity remains.', AlertOctagon),
+      sslEvent('expired', 'Expired', 'The certificate has already expired.', XCircle),
+      sslEvent('renewed', 'Renewed', 'The cert fingerprint changed — a new cert was installed.', RefreshCw),
+      sslEvent('issuer_changed', 'Issuer Changed', 'The certificate authority changed.', Building2),
+      sslEvent('san_changed', 'SAN Changed', 'The Subject Alternative Names changed.', Globe),
+      sslEvent('newly_issued', 'Newly Issued', 'A freshly-issued cert (under 2 days old) was seen.', Sparkle),
+      sslEvent('self_signed', 'Self-Signed', 'The certificate is self-signed.', Copy),
+      sslEvent('cn_mismatch', 'Hostname Mismatch', 'The cert does not cover the watched host.', AlertCircle),
+      sslEvent('valid_again', 'Valid Again', 'A previously-expired cert is valid again.', CheckCircle2),
     ],
   },
 
