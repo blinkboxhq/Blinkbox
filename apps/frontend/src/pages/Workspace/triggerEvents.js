@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Mailchimp authenticates with an API key (vault credential, format key-dcXX).
+// The user picks one Audience by list id; the poller watches its member feed and
+// `eventType` (via configExtra) selects the MAILCHIMP_EVENTS predicate.
+const mailchimpBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Mailchimp Account', credType: 'mailchimp',
+    hint: '// connect with an API key (key-dcXX)' },
+  { type: 'text', key: 'listId', label: 'Audience ID', placeholder: 'a1b2c3d4e5',
+    hint: '// the audience/list to watch' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const mailchimpTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const mailchimpVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.email', 'the member email'],
+    ['$trigger.status', 'subscribed / unsubscribed / cleaned / pending'],
+    ['$trigger.firstName', 'their first name'],
+    ['$trigger.tags', 'tags on the member'],
+    ['$trigger.rating', 'the member rating (0–5)'],
+    ...extra,
+  ],
+});
+const mailchimpEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FFE01B',
+  configExtra: { eventType: id },
+  fields: [...mailchimpBaseFields, ...extraFields, mailchimpVars(varsExtra)],
+});
+
 // Typeform authenticates with a personal access token (vault credential). The
 // user picks one Form by id; the poller watches its response feed and `eventType`
 // (via configExtra) selects the TYPEFORM_EVENTS predicate over each submission.
@@ -1960,6 +1994,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  mailchimp: {
+    title: 'Mailchimp',
+    subtitle: 'Watch an audience — new subscribers, unsubs, tags, VIPs and more',
+    events: [
+      mailchimpEvent('member_subscribed', 'Member Subscribed', 'A contact subscribes to the audience.', UserPlus),
+      mailchimpEvent('member_unsubscribed', 'Member Unsubscribed', 'A contact opts out.', UserMinus),
+      mailchimpEvent('status_changed', 'Status Changed', 'A member moves between statuses.', RefreshCw),
+      mailchimpEvent('cleaned', 'Email Cleaned', 'An address bounces and is cleaned.', Ban),
+      mailchimpEvent('pending', 'Pending Confirmation', 'A double opt-in is awaiting confirmation.', Clock),
+      mailchimpEvent('vip_added', 'Marked VIP', 'A member is flagged as VIP.', Star),
+      mailchimpEvent('tagged', 'Tagged', 'A member carries a specific tag.', Tag,
+        [mailchimpTargetField('Tag', 'lead', '// match a member tag')]),
+      mailchimpEvent('rating_over', 'Rating Over', 'A member rating reaches a threshold.', Gauge,
+        [mailchimpTargetField('Minimum Rating', '4', '// 0–5, fires when rating ≥ this')]),
+      mailchimpEvent('open_rate_over', 'Open Rate Over', 'A member opens above a percentage.', Gauge,
+        [mailchimpTargetField('Minimum Open %', '50', '// fires when avg open rate ≥ this %')]),
+      mailchimpEvent('member_updated', 'Member Updated', 'Any change to a member record.', Pencil),
+      mailchimpEvent('from_source', 'From Source', 'A member joined via a specific source.', Globe,
+        [mailchimpTargetField('Source', 'API', '// e.g. API, import, signup form')]),
+      mailchimpEvent('in_country', 'In Country', 'A member is in a specific country.', Flag,
+        [mailchimpTargetField('Country Code', 'US', '// two-letter country code')]),
     ],
   },
 
