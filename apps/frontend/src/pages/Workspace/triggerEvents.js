@@ -332,6 +332,37 @@ const gcalEvent = (id, label, description, icon, varsExtra = [], extraFields = [
   fields: [...gcalBaseFields, ...extraFields, gcalVars(varsExtra)],
 });
 
+const ONEDRIVE_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const onedriveBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Microsoft Account', provider: 'microsoft',
+    hint: '// connect the Microsoft account whose OneDrive you want to watch (OAuth)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: ONEDRIVE_POLL },
+];
+const onedriveFolderField = { type: 'text', key: 'folderId', label: 'Limit To Folder (optional)', placeholder: 'OneDrive folder item id',
+  hint: '// optional — only watch changes inside this folder item id' };
+const onedriveVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the file or folder name'],
+    ['$trigger.itemId', 'the OneDrive item id'],
+    ['$trigger.webUrl', 'a link to open the item'],
+    ['$trigger.lastModifiedBy', 'who last changed it'],
+    ...extra,
+  ],
+});
+// A OneDrive event = a client-side predicate over the Graph delta stream in
+// the poller. `eventType` (via configExtra) selects the ONEDRIVE_EVENTS entry.
+const onedriveEvent = (id, label, description, icon, varsExtra = [], extraFields = [onedriveFolderField]) => ({
+  id, label, description, icon, event: id, accent: '#0078D4',
+  configExtra: { eventType: id },
+  fields: [...onedriveBaseFields, ...extraFields, onedriveVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1117,6 +1148,27 @@ export const TRIGGER_EVENTS = {
         [['$trigger.selfResponse', 'your RSVP status']], [gcalFilterField]),
       gcalEvent('invite_declined', 'You Declined An Invite', 'You RSVP "no" to an event', UserMinus,
         [['$trigger.selfResponse', 'your RSVP status']], [gcalFilterField]),
+    ],
+  },
+
+  onedrive: {
+    title: 'OneDrive',
+    subtitle: 'Trigger on OneDrive activity — files added, changed, deleted, shared, by type',
+    events: [
+      onedriveEvent('file_added', 'File Added', 'A new file appears in your OneDrive', FileText),
+      onedriveEvent('file_modified', 'File Modified', 'An existing file is edited', Pencil,
+        [['$trigger.lastModified', 'when it was last changed']]),
+      onedriveEvent('file_deleted', 'File Deleted', 'A file is removed', Trash2),
+      onedriveEvent('folder_added', 'Folder Created', 'A new folder is created', FolderPlus),
+      onedriveEvent('shared_item', 'Item Shared', 'A file or folder gets shared', Users),
+      onedriveEvent('image_added', 'Image Added', 'A new image file appears', Image),
+      onedriveEvent('video_added', 'Video Added', 'A new video file appears', Film),
+      onedriveEvent('audio_added', 'Audio Added', 'A new audio file appears', Activity),
+      onedriveEvent('pdf_added', 'PDF Added', 'A new PDF file appears', FileText),
+      onedriveEvent('office_added', 'Office Doc Added', 'A new Word / Excel / PowerPoint file appears', FileSpreadsheet),
+      onedriveEvent('large_file', 'Large File Added', 'A file of 10 MB or more is added', HardDrive,
+        [['$trigger.size', 'the file size in bytes']]),
+      onedriveEvent('any_change', 'Any Change', 'Any add, edit or delete in the watched scope', RefreshCw),
     ],
   },
 
