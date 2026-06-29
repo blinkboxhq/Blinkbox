@@ -310,7 +310,9 @@ const POLL_REGISTRY = {
     extract: (cfg, automation) => ({
       cfg: {
         credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
-        folder: cfg.folder, subjectFilter: cfg.subjectFilter, onlyUnread: cfg.onlyUnread,
+        eventType: cfg.eventType || cfg.watchType,
+        folder: cfg.folder, subjectFilter: cfg.subjectFilter,
+        fromEmail: cfg.fromEmail, fromDomain: cfg.fromDomain, onlyUnread: cfg.onlyUnread,
       },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),

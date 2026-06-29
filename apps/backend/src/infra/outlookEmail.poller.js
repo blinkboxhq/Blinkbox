@@ -16,8 +16,29 @@ const SEEN_TTL = 30 * 24 * 60 * 60;
 let outlookQueue = null;
 let outlookWorker = null;
 
+function escGraph(v) {
+  return String(v).replace(/'/g, "''");
+}
+
+// Each event = a real Graph mail folder + a server-side $filter slice +
+// an optional client-side match. `eventType` selects the OUTLOOK_EVENTS entry.
+const OUTLOOK_EVENTS = {
+  any_new:         { folder: "inbox",     filter: () => undefined },
+  unread:          { folder: "inbox",     filter: () => "isRead eq false" },
+  from_sender:     { folder: "inbox",     filter: (cfg) => cfg.fromEmail ? `from/emailAddress/address eq '${escGraph(cfg.fromEmail)}'` : undefined },
+  from_domain:     { folder: "inbox",     filter: () => undefined, match: (m, cfg) => cfg.fromDomain ? (m.from?.emailAddress?.address || "").toLowerCase().endsWith(String(cfg.fromDomain).toLowerCase().replace(/^@/, "")) : true },
+  subject_match:   { folder: "inbox",     filter: () => undefined, match: (m, cfg) => cfg.subjectFilter ? (m.subject || "").toLowerCase().includes(String(cfg.subjectFilter).toLowerCase()) : true },
+  has_attachment:  { folder: "inbox",     filter: () => "hasAttachments eq true" },
+  high_importance: { folder: "inbox",     filter: () => "importance eq 'high'" },
+  flagged:         { folder: "inbox",     filter: () => "flag/flagStatus eq 'flagged'" },
+  sent:            { folder: "sentitems", filter: () => undefined },
+  junk:            { folder: "junkemail", filter: () => undefined },
+  archived:        { folder: "archive",   filter: () => undefined },
+  draft_saved:     { folder: "drafts",    filter: () => undefined },
+};
+
 async function fetchMessages(accessToken, folder = "inbox", filter) {
-  let url = `https://graph.microsoft.com/v1.0/me/mailFolders/${folder}/messages?$top=20&$orderby=receivedDateTime desc&$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead`;
+  let url = `https://graph.microsoft.com/v1.0/me/mailFolders/${folder}/messages?$top=20&$orderby=receivedDateTime desc&$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead,importance,flag`;
   if (filter) url += `&$filter=${encodeURIComponent(filter)}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
@@ -34,17 +55,19 @@ export async function pollOutlook(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { credentialId, workspaceId, folder = "inbox", subjectFilter, onlyUnread = true } = cfg;
+    const { credentialId, workspaceId } = cfg;
+    const eventType = cfg.eventType || cfg.watchType || (cfg.onlyUnread === false ? "any_new" : "unread");
+    const spec = OUTLOOK_EVENTS[eventType] || OUTLOOK_EVENTS.unread;
     if (!credentialId) return;
     const accessToken = await getOAuthToken(credentialId, workspaceId, "Outlook Trigger");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const graphFilter = onlyUnread ? "isRead eq false" : undefined;
-    const messages = await fetchMessages(accessToken, folder, graphFilter);
-    const seenKey = `bb:outlook:seen:${scope}`;
+    const folder = cfg.folder || spec.folder;
+    const messages = await fetchMessages(accessToken, folder, spec.filter(cfg));
+    const seenKey = `bb:outlook:seen:${scope}:${eventType}`;
     for (const msg of messages) {
-      if (subjectFilter && !msg.subject?.toLowerCase().includes(subjectFilter.toLowerCase())) continue;
+      if (spec.match && !spec.match(msg, cfg)) continue;
       const added = await redis.sadd(seenKey, msg.id);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
@@ -56,12 +79,14 @@ export async function pollOutlook(automationId, triggerNodeId, cfg) {
         receivedAt: msg.receivedDateTime,
         preview: msg.bodyPreview || "",
         hasAttachments: msg.hasAttachments || false,
+        importance: msg.importance || "normal",
+        flagged: msg.flag?.flagStatus === "flagged",
         folder,
       };
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
         entryNodeId: triggerNodeId || automation.entryNodeId,
-        idempotencyKey: `outlook:${scope}:${msg.id}`,
+        idempotencyKey: `outlook:${scope}:${eventType}:${msg.id}`,
       });
     }
   } catch (err) {
@@ -98,7 +123,7 @@ export async function syncOutlookJobs() {
     await outlookQueue.add("outlook-poll", {
       automationId: automation._id.toString(),
       triggerNodeId: automation.entryNodeId,
-      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), folder: cfg.folder, subjectFilter: cfg.subjectFilter, onlyUnread: cfg.onlyUnread },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), eventType: cfg.eventType || cfg.watchType, folder: cfg.folder, subjectFilter: cfg.subjectFilter, fromEmail: cfg.fromEmail, fromDomain: cfg.fromDomain, onlyUnread: cfg.onlyUnread },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `outlook-${automation._id}` });
   }
   console.log(`[OutlookPoller] Synced ${automations.length} automations`);

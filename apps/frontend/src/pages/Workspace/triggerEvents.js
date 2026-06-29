@@ -10,7 +10,7 @@ import {
   Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
   Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
-  Mail, MailOpen, AtSign, Reply,
+  Mail, MailOpen, AtSign, Reply, Send, Globe,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -203,6 +203,35 @@ const gmailEvent = (id, label, description, icon, query, varsExtra = [], fields 
   id, label, description, icon, event: id, accent: '#EA4335',
   configExtra: { query },
   fields: [...gmailBaseFields, ...fields, gmailVars(varsExtra)],
+});
+
+const OUTLOOK_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const outlookBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Outlook Account', provider: 'microsoft',
+    hint: '// connect the Microsoft 365 / Outlook account to watch (OAuth)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: OUTLOOK_POLL },
+];
+const outlookVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.from', 'the sender address'],
+    ['$trigger.subject', 'the email subject'],
+    ['$trigger.preview', 'a short body preview'],
+    ['$trigger.id', 'the message id'],
+    ...extra,
+  ],
+});
+// An Outlook event = a Graph mail folder + a $filter slice in the poller.
+// `eventType` (via configExtra) selects the OUTLOOK_EVENTS entry.
+const outlookEvent = (id, label, description, icon, varsExtra = [], fields = []) => ({
+  id, label, description, icon, event: id, accent: '#0A66C2',
+  configExtra: { eventType: id },
+  fields: [...outlookBaseFields, ...fields, outlookVars(varsExtra)],
 });
 
 const AIRTABLE_POLL = [
@@ -886,6 +915,37 @@ export const TRIGGER_EVENTS = {
         'in:inbox filename:ics'),
       gmailEvent('reply_received', 'Reply Received', 'A new reply (Re:) arrives in your inbox', Reply,
         'in:inbox subject:Re:'),
+    ],
+  },
+
+  outlook: {
+    title: 'Outlook',
+    subtitle: 'Trigger on Microsoft 365 / Outlook mail — by folder, sender, importance, attachments',
+    events: [
+      outlookEvent('any_new', 'Any New Email', 'Any new message arrives in your inbox', Mail),
+      outlookEvent('unread', 'New Unread Email', 'A new unread message arrives', MailOpen),
+      outlookEvent('from_sender', 'Email From Sender', 'A new email from a specific address', AtSign,
+        [['$trigger.fromName', 'the sender name']],
+        [{ type: 'text', key: 'fromEmail', label: 'From Address', placeholder: 'boss@company.com',
+          hint: '// only fire for mail from this exact address' }]),
+      outlookEvent('from_domain', 'Email From Domain', 'A new email from anyone at a domain', Globe,
+        [['$trigger.from', 'the matched sender']],
+        [{ type: 'text', key: 'fromDomain', label: 'From Domain', placeholder: 'company.com',
+          hint: '// only fire for mail from any address at this domain' }]),
+      outlookEvent('subject_match', 'Subject Contains', 'A new email whose subject contains a keyword', Search,
+        [['$trigger.subject', 'the matched subject']],
+        [{ type: 'text', key: 'subjectFilter', label: 'Subject Keyword', placeholder: 'invoice',
+          hint: '// only fire when the subject line contains this word or phrase' }]),
+      outlookEvent('has_attachment', 'Email With Attachment', 'A new email carrying a file attachment', Paperclip,
+        [['$trigger.hasAttachments', 'whether it has attachments']]),
+      outlookEvent('high_importance', 'Marked High Importance', 'A new email flagged high importance', AlertOctagon,
+        [['$trigger.importance', 'the importance level']]),
+      outlookEvent('flagged', 'Email Flagged', 'A message gets a follow-up flag', Flag,
+        [['$trigger.flagged', 'whether it is flagged']]),
+      outlookEvent('sent', 'Email Sent', 'A new message lands in Sent Items', Send),
+      outlookEvent('junk', 'Junk Email', 'A new message arrives in the Junk folder', ShieldAlert),
+      outlookEvent('archived', 'Email Archived', 'A message moves to the Archive folder', Archive),
+      outlookEvent('draft_saved', 'Draft Saved', 'A new draft is saved', FileText),
     ],
   },
 
