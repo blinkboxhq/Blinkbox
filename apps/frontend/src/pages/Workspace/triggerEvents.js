@@ -734,6 +734,37 @@ const azureEvent = (id, label, description, icon, extraFields = [], varsExtra = 
   fields: [...azureBaseFields, ...extraFields, azureVars(varsExtra)],
 });
 
+// Figma polls the REST API with a Personal Access Token (X-Figma-Token).
+// Version events read /v1/files/:key; comment events read the comments
+// endpoint. `eventType` (via configExtra) selects the query.
+const figmaBaseFields = [
+  { type: 'text', key: 'fileKey', label: 'File Key', placeholder: 'aBcD1234EfGh',
+    hint: '// the key in figma.com/file/{KEY}/...' },
+  { type: 'password', key: 'token', label: 'Personal Access Token',
+    hint: '// Figma → Settings → Personal access tokens' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
+    options: [
+      { value: '2', label: 'Every 2 minutes' },
+      { value: '3', label: 'Every 3 minutes' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+    ] },
+];
+const figmaVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.fileName', 'Figma file name'],
+    ['$trigger.version', 'current version id'],
+    ['$trigger.author', 'who made the change'],
+    ['$trigger.comment', 'comment text (comment events)'],
+    ...extra,
+  ],
+});
+const figmaEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#F24E1E',
+  configExtra: { eventType: id },
+  fields: [...figmaBaseFields, ...extraFields, figmaVars(varsExtra)],
+});
+
 const priceBaseFields = [
   { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin',
     hint: '// CoinGecko coin id, e.g. bitcoin, ethereum, solana' },
@@ -1948,6 +1979,31 @@ const stripeSecret = {
 };
 
 export const TRIGGER_EVENTS = {
+  figma: {
+    title: 'Figma',
+    subtitle: 'REST API polling with a Personal Access Token',
+    events: [
+      figmaEvent('file_updated', 'File Updated', 'The file changes (any new version).', RefreshCw),
+      figmaEvent('version_published', 'Version Published', 'A new version is saved to history.', GitCommit),
+      figmaEvent('version_named', 'Named Version Saved', 'A version is saved with a label.', Tag),
+      figmaEvent('comment_added', 'Comment Added', 'A new top-level comment is posted.', MessageSquare),
+      figmaEvent('comment_reply', 'Comment Reply', 'Someone replies to a comment thread.', Reply),
+      figmaEvent('comment_resolved', 'Comment Resolved', 'A comment thread is marked resolved.', CheckCircle2),
+      figmaEvent('comment_mentions', 'Comment Contains Text', 'A comment contains specific text.', Search,
+        [{ type: 'text', key: 'targetValue', label: 'Text', placeholder: 'urgent',
+          hint: '// fire when a comment includes this (case-insensitive)' }]),
+      figmaEvent('comment_from', 'Comment From User', 'A comment is posted by a specific person.', User,
+        [{ type: 'text', key: 'targetValue', label: 'Author Handle', placeholder: 'jane',
+          hint: '// match against the commenter handle (case-insensitive)' }]),
+      figmaEvent('name_changed', 'File Renamed', 'The file name changes.', Type),
+      figmaEvent('thumbnail_changed', 'Thumbnail Changed', 'The file thumbnail image updates.', Image),
+      figmaEvent('branch_created', 'Branch Created', 'A new branch is created off the file.', GitBranch),
+      figmaEvent('comment_count_over', 'Open Comments Over', 'Open comment count crosses a threshold.', Gauge,
+        [{ type: 'text', key: 'targetValue', label: 'Threshold', placeholder: '10',
+          hint: '// fire when open comments reach this number' }]),
+    ],
+  },
+
   azure_devops: {
     title: 'Azure DevOps',
     subtitle: 'REST API polling with a Personal Access Token',

@@ -59,6 +59,7 @@ import { pollGoogleForms } from "./googleForms.poller.js";
 import { pollDiscord } from "./discord.poller.js";
 import { pollTelegram } from "./telegram.poller.js";
 import { pollAzureDevops } from "./azureDevops.poller.js";
+import { pollFigma } from "./figma.poller.js";
 
 const HUB_QUEUE = "bb-poll-hub";
 
@@ -857,6 +858,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 3} * * * *` }),
     jobPrefix: "ado",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollAzureDevops(automationId, triggerNodeId, cfg); },
+  },
+
+  figma_trigger: {
+    triggerName: "figma_trigger",
+    required: ["fileKey", "token"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        fileKey: cfg.fileKey, token: cfg.token,
+        workspaceId: automation.workspaceId?.toString(),
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 3} * * * *` }),
+    jobPrefix: "figma",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollFigma(automationId, triggerNodeId, cfg); },
   },
 
   linear_trigger: {
