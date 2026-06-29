@@ -3,7 +3,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import Automation from "../models/automation.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
-import { pollGmail } from "./gmail.poller.js";
+import { pollGmail, buildGmailQuery } from "./gmail.poller.js";
 import { pollAirtable } from "./airtable.poller.js";
 import { pollHubSpot } from "./hubspot.poller.js";
 import { pollNotion } from "./notion.poller.js";
@@ -53,7 +53,7 @@ const POLL_REGISTRY = {
     required: ["credentialId"],
     extract: (cfg, automation) => ({
       credentialId: cfg.credentialId,
-      query: cfg.query || "is:unread",
+      query: buildGmailQuery(cfg),
       maxResults: cfg.maxResults || 10,
       onlyNew: cfg.onlyNew !== false,
       workspaceId: automation.workspaceId,

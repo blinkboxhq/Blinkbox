@@ -24,6 +24,19 @@ const SEEN_TTL = 30 * 24 * 60 * 60;
 let gmailQueue = null;
 let gmailWorker = null;
 
+// Compose the final Gmail `q` from the event's base query (configExtra.query)
+// plus any friendly per-event fields. Each event is a genuinely different slice.
+export function buildGmailQuery(cfg = {}) {
+  const parts = [];
+  if (cfg.query) parts.push(cfg.query);
+  if (cfg.fromEmail) parts.push(`from:${cfg.fromEmail}`);
+  if (cfg.subjectKeyword) parts.push(`subject:(${cfg.subjectKeyword})`);
+  if (cfg.labelName) parts.push(`label:${cfg.labelName.replace(/\s+/g, "-")}`);
+  if (cfg.largerThan) parts.push(`larger:${cfg.largerThan}`);
+  const q = parts.join(" ").trim();
+  return q || "is:unread";
+}
+
 async function gmailGet(token, path, params = {}) {
   const url = new URL(`https://gmail.googleapis.com/gmail/v1/${path}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -172,7 +185,8 @@ export async function syncGmailJobs() {
   for (const automation of automations) {
     for (const node of getTriggerNodesOfType(automation, "gmail_trigger")) {
       const cfg = getTriggerConfig(node);
-      const { credentialId, query, maxResults, onlyNew, pollInterval } = cfg;
+      const { credentialId, maxResults, onlyNew, pollInterval } = cfg;
+      const query = buildGmailQuery(cfg);
 
       if (!credentialId) {
         console.warn(`[GmailPoller] Automation ${automation._id} node ${node.id} has no credentialId, skipping`);
@@ -186,7 +200,7 @@ export async function syncGmailJobs() {
           automationId: automation._id.toString(),
           triggerNodeId: node.id,
           credentialId,
-          query: query || "is:unread",
+          query,
           maxResults: maxResults || 10,
           onlyNew: onlyNew !== false,
           workspaceId: automation.workspaceId,

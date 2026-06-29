@@ -10,6 +10,7 @@ import {
   Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
   Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
+  Mail, MailOpen, AtSign, Reply,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -172,6 +173,36 @@ const asanaEvent = (id, label, description, icon, varsExtra = [], fields = []) =
   id, label, description, icon, event: id, accent: '#F06A6A',
   configExtra: { eventType: id },
   fields: [...asanaBaseFields, ...fields, asanaVars(varsExtra)],
+});
+
+const GMAIL_POLL = [
+  { value: '* * * * *', label: 'Every minute' },
+  { value: '*/5 * * * *', label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+  { value: '0 * * * *', label: 'Every hour' },
+];
+const gmailBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Gmail Account', provider: 'google',
+    hint: '// connect the Gmail account to watch (OAuth — no password stored)' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: GMAIL_POLL },
+];
+const gmailVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.from', 'the sender'],
+    ['$trigger.subject', 'the email subject'],
+    ['$trigger.snippet', 'a short preview of the body'],
+    ['$trigger.id', 'the message id'],
+    ...extra,
+  ],
+});
+// A Gmail event = a distinct Gmail search query baked into configExtra.query.
+// The poller already passes `query` straight to the Gmail API `q` param, so no
+// backend change is needed — each event is a genuinely different inbox slice.
+const gmailEvent = (id, label, description, icon, query, varsExtra = [], fields = []) => ({
+  id, label, description, icon, event: id, accent: '#EA4335',
+  configExtra: { query },
+  fields: [...gmailBaseFields, ...fields, gmailVars(varsExtra)],
 });
 
 const AIRTABLE_POLL = [
@@ -816,6 +847,45 @@ export const TRIGGER_EVENTS = {
           hint: '// exact name of the Asana tag to watch for' }]),
       asanaEvent('subtask_added', 'Subtask Created', 'A subtask (task with a parent) appears', GitBranch,
         [['$trigger.parentGid', 'the parent task id']]),
+    ],
+  },
+
+  gmail: {
+    title: 'Gmail',
+    subtitle: 'Trigger on new emails — by sender, subject, label, attachments, and more',
+    events: [
+      gmailEvent('any_new', 'Any New Email', 'Any new message arrives in your inbox', Mail,
+        'in:inbox'),
+      gmailEvent('unread', 'New Unread Email', 'A new unread message arrives', MailOpen,
+        'in:inbox is:unread'),
+      gmailEvent('from_sender', 'Email From Sender', 'A new email arrives from a specific address', AtSign,
+        'in:inbox', [['$trigger.from', 'the sender that matched']],
+        [{ type: 'text', key: 'fromEmail', label: 'From Address', placeholder: 'boss@company.com',
+          hint: '// only fire for mail from this address (or domain, e.g. @company.com)' }]),
+      gmailEvent('subject_match', 'Subject Contains', 'A new email whose subject contains a keyword', Search,
+        'in:inbox', [['$trigger.subject', 'the matched subject']],
+        [{ type: 'text', key: 'subjectKeyword', label: 'Subject Keyword', placeholder: 'invoice',
+          hint: '// only fire when the subject line contains this word or phrase' }]),
+      gmailEvent('has_attachment', 'Email With Attachment', 'A new email that carries a file attachment', Paperclip,
+        'in:inbox has:attachment', [['$trigger.attachments', 'the attached files']]),
+      gmailEvent('in_label', 'Email In Label', 'A new email lands under a specific label', Tag,
+        'in:inbox', [['$trigger.labels', 'labels on the message']],
+        [{ type: 'text', key: 'labelName', label: 'Label Name', placeholder: 'Clients',
+          hint: '// only fire for mail filed under this Gmail label' }]),
+      gmailEvent('starred', 'Email Starred', 'A message is starred', Star,
+        'is:starred'),
+      gmailEvent('important', 'Marked Important', 'Gmail flags a new email as important', Flag,
+        'in:inbox is:important'),
+      gmailEvent('from_person', 'Direct Email (not list)', 'A new personal email, excluding mailing lists', Inbox,
+        'in:inbox -category:promotions -category:social -list:*'),
+      gmailEvent('large_email', 'Large Email', 'A new email larger than a size threshold', FileText,
+        'in:inbox', [['$trigger.id', 'the message id']],
+        [{ type: 'text', key: 'largerThan', label: 'Larger Than', default: '5M', placeholder: '5M',
+          hint: '// e.g. 5M for 5 megabytes, 500K for 500 kilobytes' }]),
+      gmailEvent('calendar_invite', 'Calendar Invite', 'A new email containing a calendar invitation', CalendarClock,
+        'in:inbox filename:ics'),
+      gmailEvent('reply_received', 'Reply Received', 'A new reply (Re:) arrives in your inbox', Reply,
+        'in:inbox subject:Re:'),
     ],
   },
 
