@@ -636,6 +636,41 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // Price Alert polls CoinGecko (no key) each interval. Side/high/low are tracked
 // in Redis so crossing and new-high/low events diff. `eventType` (via configExtra)
 // selects which condition fires.
+// Discord polls the REST API with a bot token. Channel-message events read
+// /channels/:id/messages; member/guild events need a Guild ID. `eventType`
+// (via configExtra) selects which query/predicate runs.
+const discordBaseFields = [
+  { type: 'password', key: 'botToken', label: 'Bot Token',
+    hint: '// from the Discord Developer Portal → Bot → Reset Token' },
+  { type: 'text', key: 'channelId', label: 'Channel ID', placeholder: '1234567890',
+    hint: '// right-click a channel → Copy Channel ID (needs Developer Mode)' },
+  { type: 'text', key: 'guildId', label: 'Server ID', placeholder: '(optional)',
+    hint: '// required for member, thread and boost events' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '2', label: 'Every 2 minutes' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+    ] },
+];
+const discordTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const discordVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.content', 'message text'],
+    ['$trigger.authorName', 'who sent it'],
+    ['$trigger.channelId', 'channel id'],
+    ['$trigger.url', 'jump-to-message link'],
+    ...extra,
+  ],
+});
+const discordEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#5865F2',
+  configExtra: { eventType: id },
+  fields: [...discordBaseFields, ...extraFields, discordVars(varsExtra)],
+});
+
 const priceBaseFields = [
   { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin',
     hint: '// CoinGecko coin id, e.g. bitcoin, ethereum, solana' },
@@ -1850,6 +1885,28 @@ const stripeSecret = {
 };
 
 export const TRIGGER_EVENTS = {
+  discord: {
+    title: 'Discord',
+    subtitle: 'Bot-token polling — messages, threads, members and server boosts',
+    events: [
+      discordEvent('message_created', 'New Message', 'A new message is posted in the channel.', MessageSquare),
+      discordEvent('message_contains', 'Message Contains', 'A message contains specific text.', Search,
+        [discordTargetField('Text', 'deploy', '// fire when the message includes this (case-insensitive)')]),
+      discordEvent('message_mentions', 'Mentions Someone', 'A message @-mentions a user or @everyone.', AtSign),
+      discordEvent('message_with_link', 'Has a Link', 'A message contains a URL.', Globe),
+      discordEvent('message_with_file', 'Has an Attachment', 'A message has a file or image attached.', Paperclip),
+      discordEvent('message_with_embed', 'Has an Embed', 'A message contains a rich embed.', Image),
+      discordEvent('message_pinned', 'Message Pinned', 'A message is pinned in the channel.', Bookmark),
+      discordEvent('message_from_bot', 'From a Bot', 'A message was sent by a bot account.', Code),
+      discordEvent('message_from_human', 'From a Human', 'A message was sent by a real user.', User),
+      discordEvent('thread_created', 'Thread Created', 'A new thread is opened in the server.', Layers),
+      discordEvent('member_joined', 'Member Joined', 'A new member joins the server.', UserPlus),
+      discordEvent('member_count_over', 'Member Count Over', 'The server passes a member-count milestone.', Users,
+        [discordTargetField('Target Count', '1000', '// fire once when member count reaches this')]),
+      discordEvent('boost_changed', 'Boosts Changed', 'The server boost count goes up or down.', Sparkle),
+    ],
+  },
+
   // ── DATABASE ────────────────────────────────────────────────
   database: {
     title: 'Database',

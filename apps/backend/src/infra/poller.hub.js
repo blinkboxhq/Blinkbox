@@ -56,6 +56,7 @@ import { pollProductHunt } from "./producthunt.poller.js";
 import { pollMastodon } from "./mastodon.poller.js";
 import { pollVirusTotal } from "./virustotal.poller.js";
 import { pollGoogleForms } from "./googleForms.poller.js";
+import { pollDiscord } from "./discord.poller.js";
 
 const HUB_QUEUE = "bb-poll-hub";
 
@@ -814,6 +815,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gforms",
     run: async ({ automationId, cfg }) => { await pollGoogleForms(automationId, cfg); },
+  },
+
+  discord_trigger: {
+    triggerName: "discord_trigger",
+    required: ["botToken"],
+    extract: (cfg) => ({
+      cfg: {
+        botToken: cfg.botToken, channelId: cfg.channelId, guildId: cfg.guildId,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 2} * * * *` }),
+    jobPrefix: "discord",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollDiscord(automationId, triggerNodeId, cfg); },
   },
 
   linear_trigger: {
