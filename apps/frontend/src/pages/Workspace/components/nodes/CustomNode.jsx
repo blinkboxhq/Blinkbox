@@ -3,7 +3,7 @@ import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
 import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles, Plug } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
-import { NodeRegistry, CATEGORIES } from "../../nodeRegistry";
+import { NodeRegistry } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import { getTriggerEvent } from "../../triggerEvents";
 import useWorkspaceStore from "../../../../store/workspaceStore";
@@ -524,9 +524,10 @@ function CustomNode({ id, data, selected }) {
     (e.source === id && e.targetHandle && HUB_HANDLES.has(e.targetHandle))
   );
 
-  // Shape per category
-  const catShape = CATEGORIES.find(c => c.id === nodeDef.category)?.shape ?? "rounded";
-  const shapeRadius = catShape === "sharp" ? 4 : catShape === "pill" ? 32 : catShape === "rounded" ? 12 : 20;
+  // Action cards use EDGE_RADIUS on all four corners, matching the trigger
+  // card's top-right / bottom-right corners exactly.
+  const EDGE_RADIUS = 10;
+  const shapeRadius = EDGE_RADIUS;
   const configHint = getConfigHint(data, edges, id);
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
@@ -568,7 +569,7 @@ function CustomNode({ id, data, selected }) {
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
     const cardW = 94, cardH = 94;
-    const triggerRadius = "33px 10px 10px 33px";
+    const triggerRadius = `33px ${EDGE_RADIUS}px ${EDGE_RADIUS}px 33px`;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
