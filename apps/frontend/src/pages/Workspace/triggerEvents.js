@@ -633,6 +633,49 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // DNS resolves all record types each poll and diffs against the last snapshot.
 // No credential; `eventType` (via configExtra) selects which record / condition
 // fires the workflow.
+// SSH runs a command on a remote host each poll and classifies its output.
+// Auth is inline (password or private key). `eventType` (via configExtra) selects
+// which output condition fires; output_changed diffs against the last stdout hash.
+const sshBaseFields = [
+  { type: 'text', key: 'host', label: 'Host', placeholder: 'server.example.com',
+    hint: '// the SSH host to connect to' },
+  { type: 'text', key: 'port', label: 'Port', placeholder: '22', hint: '// defaults to 22' },
+  { type: 'text', key: 'username', label: 'Username', placeholder: 'deploy' },
+  { type: 'pills', key: 'authMethod', label: 'Auth Method', default: 'password',
+    options: [{ value: 'password', label: 'Password' }, { value: 'privateKey', label: 'Private Key' }] },
+  { type: 'password', key: 'password', label: 'Password', placeholder: '••••••••',
+    hint: '// used when Auth Method is Password' },
+  { type: 'textarea', key: 'privateKey', label: 'Private Key', placeholder: '-----BEGIN OPENSSH PRIVATE KEY-----',
+    hint: '// used when Auth Method is Private Key' },
+  { type: 'password', key: 'passphrase', label: 'Key Passphrase', placeholder: 'optional',
+    hint: '// only if the private key is encrypted' },
+  { type: 'textarea', key: 'command', label: 'Command', placeholder: 'systemctl is-active nginx',
+    hint: '// the command run on each poll' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Run Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const sshTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const sshVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.stdout', 'standard output of the command'],
+    ['$trigger.stderr', 'standard error output'],
+    ['$trigger.exitCode', 'process exit code'],
+    ['$trigger.host', 'the host it ran on'],
+    ...extra,
+  ],
+});
+const sshEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#A78BFA',
+  configExtra: { eventType: id },
+  fields: [...sshBaseFields, ...extraFields, sshVars(varsExtra)],
+});
+
 // SSL inspects the TLS certificate for a host each poll. No credential; the cert
 // fingerprint/issuer/SAN are snapshotted so renewals and issuer swaps diff.
 // `eventType` (via configExtra) selects which lifecycle event fires.
@@ -2459,6 +2502,31 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  ssh: {
+    title: 'SSH Command',
+    subtitle: 'Run a command on a remote host and react to its output',
+    events: [
+      sshEvent('command_runs', 'Command Runs', 'Fires every time the command runs.', Play),
+      sshEvent('output_changed', 'Output Changed', 'The command output differs from the last run.', RefreshCw),
+      sshEvent('output_contains', 'Output Contains', 'The output contains a given string.', Search,
+        [sshTargetField('Contains', 'active', '// fire when stdout includes this')]),
+      sshEvent('output_not_contains', 'Output Missing Text', 'The output does NOT contain a given string.', Ban,
+        [sshTargetField('Missing Text', 'running', '// fire when stdout lacks this')]),
+      sshEvent('exit_nonzero', 'Command Failed', 'The command exited with a non-zero code.', XCircle),
+      sshEvent('exit_zero', 'Command Succeeded', 'The command exited cleanly (code 0).', CheckCircle2),
+      sshEvent('stderr_present', 'Stderr Output', 'The command wrote to standard error.', AlertTriangle),
+      sshEvent('output_empty', 'Empty Output', 'The command produced no stdout.', CircleDashed),
+      sshEvent('output_over_lines', 'Output Over N Lines', 'The output has at least N lines.', ListTodo,
+        [sshTargetField('Min Lines', '10', '// fire when stdout has this many lines or more')]),
+      sshEvent('numeric_over', 'Number Above', 'The first number in output exceeds a threshold.', Gauge,
+        [sshTargetField('Threshold', '90', '// e.g. disk-usage % over this')], [['$trigger.num', 'parsed number']]),
+      sshEvent('numeric_under', 'Number Below', 'The first number in output is below a threshold.', Activity,
+        [sshTargetField('Threshold', '10', '// e.g. free-space % under this')], [['$trigger.num', 'parsed number']]),
+      sshEvent('matches_regex', 'Output Matches Regex', 'The output matches a regular expression.', Code,
+        [sshTargetField('Pattern', 'ERROR|FATAL', '// JS regex tested against stdout')]),
     ],
   },
 
