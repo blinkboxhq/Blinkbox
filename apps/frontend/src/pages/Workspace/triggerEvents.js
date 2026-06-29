@@ -701,6 +701,39 @@ const discordEvent = (id, label, description, icon, extraFields = [], varsExtra 
   fields: [...discordBaseFields, ...extraFields, discordVars(varsExtra)],
 });
 
+// Azure DevOps polls the REST API with a Personal Access Token. Work-item events
+// run a WIQL query; build/PR/push events hit their resource endpoints. `eventType`
+// (via configExtra) selects which query runs.
+const azureBaseFields = [
+  { type: 'text', key: 'organization', label: 'Organization', placeholder: 'my-org',
+    hint: '// the {org} in dev.azure.com/{org}' },
+  { type: 'text', key: 'project', label: 'Project', placeholder: 'my-project',
+    hint: '// the project name inside the organization' },
+  { type: 'password', key: 'pat', label: 'Personal Access Token',
+    hint: '// User Settings → Personal Access Tokens (needs Read scopes)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
+    options: [
+      { value: '2', label: 'Every 2 minutes' },
+      { value: '3', label: 'Every 3 minutes' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+    ] },
+];
+const azureVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'work item / PR title'],
+    ['$trigger.state', 'current state'],
+    ['$trigger.assignedTo', 'assignee name'],
+    ['$trigger.url', 'link to the item'],
+    ...extra,
+  ],
+});
+const azureEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#0078D4',
+  configExtra: { eventType: id },
+  fields: [...azureBaseFields, ...extraFields, azureVars(varsExtra)],
+});
+
 const priceBaseFields = [
   { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin',
     hint: '// CoinGecko coin id, e.g. bitcoin, ethereum, solana' },
@@ -1915,6 +1948,27 @@ const stripeSecret = {
 };
 
 export const TRIGGER_EVENTS = {
+  azure_devops: {
+    title: 'Azure DevOps',
+    subtitle: 'REST API polling with a Personal Access Token',
+    events: [
+      azureEvent('workitem_created', 'Work Item Created', 'A new work item is added to the project.', Plus),
+      azureEvent('workitem_updated', 'Work Item Updated', 'An existing work item is edited.', Pencil),
+      azureEvent('workitem_assigned', 'Assigned To Me', 'A work item is assigned to the token owner.', UserCheck),
+      azureEvent('workitem_state_changed', 'State Changed', 'A work item moves to a new state.', ArrowRightCircle,
+        [{ type: 'text', key: 'targetValue', label: 'Only This State', placeholder: '(any)',
+          hint: '// e.g. "Active" — leave blank to fire on any state change' }]),
+      azureEvent('workitem_closed', 'Work Item Closed', 'A work item is closed, resolved or completed.', CheckCircle2),
+      azureEvent('bug_created', 'Bug Created', 'A new Bug work item is filed.', Bug),
+      azureEvent('build_completed', 'Build Completed', 'A pipeline build finishes (any result).', CheckCheck),
+      azureEvent('build_failed', 'Build Failed', 'A pipeline build finishes with a failure.', XCircle),
+      azureEvent('pr_created', 'Pull Request Opened', 'A new active pull request is created.', GitPullRequest),
+      azureEvent('pr_merged', 'Pull Request Merged', 'A pull request is completed (merged).', GitMerge),
+      azureEvent('code_pushed', 'Code Pushed', 'Commits are pushed to any repository.', GitCommit),
+      azureEvent('release_deployed', 'Release Deployed', 'A release deployment succeeds in an environment.', Rocket),
+    ],
+  },
+
   telegram: {
     title: 'Telegram',
     subtitle: 'Bot getUpdates polling — no public webhook URL needed',
