@@ -594,6 +594,41 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Shopify authenticates with an Admin API access token (vault credential).
+// The poller watches a shop's order feed; `eventType` (via configExtra)
+// selects the SHOPIFY_EVENTS predicate over each order.
+const shopifyBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Shopify Account', credType: 'shopify',
+    hint: '// connect the store (Admin API access token or OAuth)' },
+  { type: 'text', key: 'shop', label: 'Store Domain', placeholder: 'mystore.myshopify.com',
+    hint: '// your *.myshopify.com domain' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const shopifyTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const shopifyVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.orderName', 'the order number (e.g. #1042)'],
+    ['$trigger.email', 'the buyer email'],
+    ['$trigger.totalPrice', 'order total'],
+    ['$trigger.financialStatus', 'paid / pending / refunded'],
+    ['$trigger.fulfillmentStatus', 'fulfilled / partial / unfulfilled'],
+    ['$trigger.url', 'a link to the order status page'],
+    ...extra,
+  ],
+});
+const shopifyEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#95BF47',
+  configExtra: { eventType: id },
+  fields: [...shopifyBaseFields, ...extraFields, shopifyVars(varsExtra)],
+});
+
 // Sentry authenticates with a Personal Auth Token (vault credential). The
 // poller watches an org's (optionally one project's) unresolved issue feed;
 // `eventType` (via configExtra) selects the SENTRY_EVENTS predicate.
@@ -1724,6 +1759,27 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  shopify: {
+    title: 'Shopify',
+    subtitle: 'Watch your orders — created, paid, fulfilled, refunded, cancelled and more',
+    events: [
+      shopifyEvent('order_created', 'Order Created', 'A new order is placed.', Plus),
+      shopifyEvent('order_updated', 'Order Updated', 'Any change to an existing order.', Pencil),
+      shopifyEvent('order_paid', 'Order Paid', 'An order becomes fully paid.', DollarSign),
+      shopifyEvent('order_pending', 'Payment Pending', 'An order is awaiting payment.', Clock),
+      shopifyEvent('order_refunded', 'Order Refunded', 'An order is fully or partially refunded.', RefreshCw),
+      shopifyEvent('order_cancelled', 'Order Cancelled', 'An order is cancelled.', Ban),
+      shopifyEvent('order_fulfilled', 'Order Fulfilled', 'An order is fully fulfilled.', CheckCircle2),
+      shopifyEvent('partial_fulfill', 'Partially Fulfilled', 'Some items in an order have shipped.', CircleDashed),
+      shopifyEvent('unfulfilled', 'Paid & Unfulfilled', 'A paid order still needs fulfilling.', XCircle),
+      shopifyEvent('high_value', 'High-Value Order', 'An order total crosses your threshold.', Gauge,
+        [shopifyTargetField('Minimum Total', '200', '// fire when the order total reaches this amount')]),
+      shopifyEvent('new_customer', 'First-Time Customer', 'An order from a brand-new customer.', UserPlus),
+      shopifyEvent('has_tag', 'Has Tag', 'An order carries a specific tag.', Tag,
+        [shopifyTargetField('Tag', 'wholesale', '// match an order tag')]),
     ],
   },
 

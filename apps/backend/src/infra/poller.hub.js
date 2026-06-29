@@ -36,6 +36,7 @@ import { pollTeams } from "./teamsMessage.poller.js";
 import { pollDatadog } from "./datadog.poller.js";
 import { pollClickUp } from "./clickup.poller.js";
 import { pollSentry } from "./sentry.poller.js";
+import { pollShopify } from "./shopify.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -324,6 +325,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "sentry",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollSentry(automationId, triggerNodeId, cfg); },
+  },
+
+  shopify_trigger: {
+    triggerName: "shopify_trigger",
+    required: ["credentialId", "shop"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        shop: cfg.shop, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "shopify",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollShopify(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
