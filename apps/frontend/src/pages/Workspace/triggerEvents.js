@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Monday.com authenticates with an API token (vault credential). The poller
+// watches one board's items via GraphQL; `eventType` (via configExtra)
+// selects the MONDAY_EVENTS predicate over each item.
+const mondayBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Monday Account', credType: 'monday',
+    hint: '// paste a monday.com API v2 token (or connect via OAuth)' },
+  { type: 'text', key: 'boardId', label: 'Board ID', placeholder: '1234567890',
+    hint: '// the board to watch — copy the id from the board URL' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const mondayTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const mondayVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the item name'],
+    ['$trigger.status', 'its status column(s)'],
+    ['$trigger.group', 'which group it is in'],
+    ['$trigger.assignee', 'who it is assigned to'],
+    ['$trigger.itemId', 'the item id'],
+    ...extra,
+  ],
+});
+const mondayEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FF3D57',
+  configExtra: { eventType: id },
+  fields: [...mondayBaseFields, ...extraFields, mondayVars(varsExtra)],
+});
+
 // WooCommerce authenticates with a consumer key/secret pair stored as a
 // single vault credential. The poller watches a store's order feed;
 // `eventType` (via configExtra) selects the WOO_EVENTS predicate.
@@ -1794,6 +1828,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  monday: {
+    title: 'monday.com',
+    subtitle: 'Watch a board — items created, status moves, groups, assignees and more',
+    events: [
+      mondayEvent('item_created', 'Item Created', 'A new item appears on the board.', Plus),
+      mondayEvent('item_updated', 'Item Updated', 'Any change to an item on the board.', Pencil),
+      mondayEvent('status_changed', 'Status Changed', 'An item’s status column changes.', ArrowRightCircle),
+      mondayEvent('status_is', 'Status Is', 'An item reaches a specific status label.', Flag,
+        [mondayTargetField('Status Label', 'Working on it', '// match a status label (case-insensitive)')]),
+      mondayEvent('done', 'Marked Done', 'An item’s status becomes Done / Complete.', CheckCircle2),
+      mondayEvent('stuck', 'Stuck', 'An item is marked Stuck.', AlertCircle),
+      mondayEvent('moved_group', 'Moved Group', 'An item moves to a different group.', Layers),
+      mondayEvent('in_group', 'In Group', 'An item belongs to one specific group.', Bookmark,
+        [mondayTargetField('Group Name', 'In Progress', '// match the group title')]),
+      mondayEvent('assigned', 'Assigned', 'A person is assigned (optionally a specific one).', UserCheck,
+        [mondayTargetField('Person (optional)', 'Jane', '// leave blank for anyone — or a name')]),
+      mondayEvent('archived', 'Archived', 'An item is archived.', Archive),
+      mondayEvent('name_contains', 'Name Contains', 'The item name includes your text.', Search,
+        [mondayTargetField('Text', 'bug', '// match part of the item name')]),
+      mondayEvent('column_value_is', 'Column Value Is', 'Any column on the item equals your text.', Hash,
+        [mondayTargetField('Value', 'High', '// match any column’s displayed value')]),
     ],
   },
 

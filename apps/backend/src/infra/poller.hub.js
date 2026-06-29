@@ -38,6 +38,7 @@ import { pollClickUp } from "./clickup.poller.js";
 import { pollSentry } from "./sentry.poller.js";
 import { pollShopify } from "./shopify.poller.js";
 import { pollWooCommerce } from "./woocommerce.poller.js";
+import { pollMonday } from "./monday.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -354,6 +355,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "woocommerce",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollWooCommerce(automationId, triggerNodeId, cfg); },
+  },
+
+  monday_trigger: {
+    triggerName: "monday_trigger",
+    required: ["credentialId", "boardId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        boardId: cfg.boardId, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "monday",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollMonday(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
