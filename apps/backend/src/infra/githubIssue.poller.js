@@ -12,10 +12,15 @@ import { getOAuthToken } from "../utils/getOAuthToken.js";
 
 const QUEUE_NAME = "bb-ghissue-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
+const SNAP_TTL = 30 * 24 * 60 * 60;
+const lc = (s) => String(s ?? "").toLowerCase();
 
 let ghQueue = null;
 let ghWorker = null;
 
+// Fetch open + recently-updated issues/PRs so state transitions (closed,
+// reopened) and comment/reaction growth are visible to the diff. `state=all` +
+// `sort=updated` surfaces items that changed since the last poll.
 async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
   const headers = {
     Authorization: `Bearer ${token}`,
@@ -23,7 +28,7 @@ async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
     "Accept": "application/vnd.github+json",
   };
 
-  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=open&sort=created&direction=desc&per_page=20`;
+  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=all&sort=updated&direction=desc&per_page=30`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
     if (res.status === 404) throw new Error(`GitHub: repo ${owner}/${repo} not found.`);
@@ -52,34 +57,73 @@ async function fetchIssues(owner, repo, token, type = "both", labelFilter) {
       author: item.user?.login || "",
       labels: (item.labels || []).map((l) => l.name),
       assignees: (item.assignees || []).map((a) => a.login),
+      milestone: item.milestone?.title || "",
+      comments: item.comments || 0,
+      reactions: item.reactions?.total_count || 0,
       createdAt: item.created_at || "",
       type: item.pull_request ? "pull_request" : "issue",
     }));
 }
 
-export async function pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter) {
+// Each event is a predicate over the current item (`i`), its previous snapshot
+// (`prev`, may be null) and config (`c`). Comments/reactions/labels/state mutate,
+// so `changeAware` events dedup on a changing token; `needsPrev` events stay quiet
+// until a baseline snapshot exists.
+const GH_ISSUE_EVENTS = {
+  new_issue:      { needsPrev: false, dedup: (i) => `${i.number}`, match: (i) => i.type === "issue" },
+  new_pr:         { needsPrev: false, dedup: (i) => `${i.number}`, match: (i) => i.type === "pull_request" },
+  title_contains: { needsPrev: false, dedup: (i) => `${i.number}`, match: (i, _p, c) => lc(i.title).includes(lc(c.targetValue)) },
+  by_author:      { needsPrev: false, dedup: (i) => `${i.number}`, match: (i, _p, c) => lc(i.author) === lc(c.targetValue).replace(/^@/, "") },
+  has_label:      { needsPrev: false, dedup: (i) => `${i.number}:${lc(i.labels.join(","))}`, match: (i, _p, c) => i.labels.map(lc).includes(lc(c.targetValue)) },
+  is_assigned:    { needsPrev: false, changeAware: true, dedup: (i) => `${i.number}:a${i.assignees.length}`, match: (i) => i.assignees.length > 0 },
+  milestone_set:  { needsPrev: false, dedup: (i) => `${i.number}:m${lc(i.milestone)}`, match: (i) => !!i.milestone },
+  closed:         { needsPrev: true,  dedup: (i) => `${i.number}:closed`, match: (i, prev) => i.state === "closed" && prev.state === "open" },
+  reopened:       { needsPrev: true,  dedup: (i) => `${i.number}:reopen`, match: (i, prev) => i.state === "open" && prev.state === "closed" },
+  new_comment:    { needsPrev: true,  changeAware: true, dedup: (i) => `${i.number}:c${i.comments}`, match: (i, prev) => Number(i.comments) > Number(prev.comments || 0) },
+  comments_over:  { needsPrev: false, changeAware: true, dedup: (i) => `${i.number}:c${i.comments}`, match: (i, _p, c) => Number(i.comments) >= Number(c.targetValue || 0) },
+  reactions_over: { needsPrev: false, changeAware: true, dedup: (i) => `${i.number}:r${i.reactions}`, match: (i, _p, c) => Number(i.reactions) >= Number(c.targetValue || 0) },
+};
+
+export async function pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter, eventType, targetValue) {
   const scope = triggerNodeId || automationId;
   const lockKey = `bb:ghissue:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
   try {
+    const evType = eventType || "new_issue";
+    const spec = GH_ISSUE_EVENTS[evType] || GH_ISSUE_EVENTS.new_issue;
     const token = await getOAuthToken(credentialId, workspaceId, "GitHub Issue Trigger");
     const items = await fetchIssues(owner, repo, token, type, labelFilter);
     if (!items.length) return;
+
+    const snapKey = `bb:ghissue:snap:${scope}`;
+    const prevRaw = await redis.get(snapKey);
+    const prevSnap = prevRaw ? JSON.parse(prevRaw) : {};
+    const firstSync = !prevRaw;
+    const nextSnap = {};
+    for (const i of items) nextSnap[i.number] = { state: i.state, comments: i.comments, reactions: i.reactions };
+    await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
+
+    const createdOnce = ["new_issue", "new_pr", "title_contains", "by_author", "has_label", "is_assigned", "milestone_set"];
+    if (firstSync && (spec.needsPrev || createdOnce.includes(evType))) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:ghissue:seen:${scope}`;
+    const cfg = { targetValue };
+    const seenKey = `bb:ghissue:seen:${scope}:${evType}`;
     for (const item of items) {
-      const key = `${item.type}-${item.number}`;
-      const added = await redis.sadd(seenKey, key);
+      const prev = prevSnap[item.number] || null;
+      if (spec.needsPrev && !prev) continue;
+      if (!spec.match(item, prev, cfg)) continue;
+
+      const added = await redis.sadd(seenKey, spec.dedup(item));
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `ghissue:${scope}:${item.type}-${item.number}` });
+        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `ghissue:${scope}:${evType}:${spec.dedup(item)}` });
       } catch (err) {
         console.error(`[GHIssuePoller] Failed for "${automation.name}":`, err.message);
       }
@@ -98,8 +142,8 @@ export async function startGitHubIssuePoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   ghWorker = new Worker(QUEUE_NAME, async (job) => {
-    const { automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter } = job.data;
-    await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter);
+    const { automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter, eventType, targetValue } = job.data;
+    await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter, eventType, targetValue);
   }, { connection: createBullMQConnection(), concurrency: 4 });
   ghWorker.on("failed", (job, err) => console.error(`[GHIssuePoller] Job failed:`, err.message));
   await syncGitHubIssueJobs();
@@ -119,12 +163,15 @@ export async function syncGitHubIssueJobs() {
     const interval = parseInt(cfg.pollIntervalMinutes) || 5;
     await ghQueue.add("ghissue-poll", {
       automationId: automation._id.toString(),
+      triggerNodeId: automation.entryNodeId,
       credentialId: cfg.credentialId,
       workspaceId: automation.workspaceId.toString(),
       owner: cfg.owner,
       repo: cfg.repo,
       type: cfg.type || "both",
       labelFilter: cfg.labelFilter || "",
+      eventType: cfg.eventType || cfg.watchType,
+      targetValue: cfg.targetValue || "",
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `ghissue-${automation._id}` });
   }
   console.log(`[GHIssuePoller] Synced ${automations.length} automations`);

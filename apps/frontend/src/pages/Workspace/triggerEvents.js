@@ -630,6 +630,43 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// GitHub Issues/PRs polls the repo issues API with an OAuth credential. The
+// poller reads `credentialId`, `owner`, `repo`; `eventType` (via configExtra)
+// selects the GH_ISSUE_EVENTS predicate per item.
+const ghIssueBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'GitHub Account',
+    oauthProvider: 'github', placeholder: 'connect with GitHub',
+    hint: '// used to read issues and pull requests from the repo' },
+  { type: 'text', key: 'owner', label: 'Owner', placeholder: 'facebook',
+    hint: '// the user or org that owns the repo' },
+  { type: 'text', key: 'repo', label: 'Repository', placeholder: 'react',
+    hint: '// the repo name (without the owner)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '2', label: 'Every 2 minutes' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+    ] },
+];
+const ghIssueTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const ghIssueVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.number', 'the issue or PR number'],
+    ['$trigger.title', 'the title'],
+    ['$trigger.author', 'the author username'],
+    ['$trigger.state', 'open or closed'],
+    ['$trigger.url', 'link to the item'],
+    ...extra,
+  ],
+});
+const ghIssueEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#8B949E',
+  configExtra: { eventType: id },
+  fields: [...ghIssueBaseFields, ...extraFields, ghIssueVars(varsExtra)],
+});
+
 // Hacker News reads the public Algolia API (no credential). The optional keyword
 // narrows the by-date feed; `eventType` (via configExtra) selects the HN_EVENTS
 // predicate per story.
@@ -2335,6 +2372,34 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  github_issue: {
+    title: 'GitHub Issues & PRs',
+    subtitle: 'Watch a repo — issues, PRs, labels, assignees, comments and reactions',
+    events: [
+      ghIssueEvent('new_issue', 'New Issue', 'A new issue is opened.', CircleDot),
+      ghIssueEvent('new_pr', 'New Pull Request', 'A new pull request is opened.', GitPullRequest),
+      ghIssueEvent('title_contains', 'Title Contains', 'An issue or PR title contains your text.', Search,
+        [ghIssueTargetField('Text', 'crash', '// case-insensitive match in the title')]),
+      ghIssueEvent('by_author', 'By Author', 'Opened by a specific user.', User,
+        [ghIssueTargetField('Username', '@octocat', '// exact match on the author')]),
+      ghIssueEvent('has_label', 'Has Label', 'An issue or PR carries a label.', Tag,
+        [ghIssueTargetField('Label', 'bug', '// matched against the item labels')]),
+      ghIssueEvent('is_assigned', 'Assigned', 'An issue or PR gets an assignee.', UserCheck),
+      ghIssueEvent('milestone_set', 'Milestone Set', 'An issue or PR is put on a milestone.', Flag,
+        [], [['$trigger.milestone', 'the milestone title']]),
+      ghIssueEvent('closed', 'Closed', 'An issue or PR is closed.', CheckCircle2),
+      ghIssueEvent('reopened', 'Reopened', 'A closed issue or PR is reopened.', RefreshCw),
+      ghIssueEvent('new_comment', 'New Comment', 'An issue or PR gained comments since last check.', MessageSquare,
+        [], [['$trigger.comments', 'the current comment count']]),
+      ghIssueEvent('comments_over', 'Comments Over', 'An issue or PR reaches a comment threshold.', MessageSquare,
+        [ghIssueTargetField('Min Comments', '20', '// fires when comments climb past this')],
+        [['$trigger.comments', 'the current comment count']]),
+      ghIssueEvent('reactions_over', 'Reactions Over', 'An issue or PR reaches a reaction threshold.', Heart,
+        [ghIssueTargetField('Min Reactions', '10', '// fires when reactions climb past this')],
+        [['$trigger.reactions', 'the current reaction count']]),
     ],
   },
 
