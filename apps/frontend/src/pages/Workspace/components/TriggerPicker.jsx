@@ -243,12 +243,23 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
   useEffect(() => { if (focused) rowRef.current?.scrollIntoView({ block: "nearest" }); }, [focused]);
 
   const Icon = trigger.icon;
+  const onDragStart = (e) => {
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: trigger.backendType,
+      label: trigger.label,
+      type: "trigger",
+      config: { triggerVariant: trigger.id },
+    }));
+  };
   return (
     <button
       ref={rowRef}
+      draggable
+      onDragStart={onDragStart}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group ${
+      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group cursor-grab active:cursor-grabbing ${
         focused ? "bg-white/[0.05]" : ""
       }`}
     >
@@ -276,12 +287,23 @@ function EventRow({ event, subject, focused, onHover, onSelect }) {
   useEffect(() => { if (focused) rowRef.current?.scrollIntoView({ block: "nearest" }); }, [focused]);
 
   const Icon = subject?.icon || event.icon;
+  const onDragStart = (e) => {
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: subject.backendType,
+      label: `${subject.label.replace(/^On /, "")}: ${event.label}`,
+      type: "trigger",
+      config: { triggerVariant: subject.id, ...eventDefaults(subject.id, event.id) },
+    }));
+  };
   return (
     <button
       ref={rowRef}
+      draggable
+      onDragStart={onDragStart}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group ${
+      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group cursor-grab active:cursor-grabbing ${
         focused ? "bg-white/[0.05]" : ""
       }`}
     >

@@ -287,12 +287,23 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
   useEffect(() => { if (focused) rowRef.current?.scrollIntoView({ block: "nearest" }); }, [focused]);
 
   const Icon = nodeDef.icon;
+  const onDragStart = (e) => {
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: nodeDef.key,
+      label: nodeDef.label,
+      type: "action",
+      config: {},
+    }));
+  };
   return (
     <button
       ref={rowRef}
+      draggable
+      onDragStart={onDragStart}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group ${
+      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group cursor-grab active:cursor-grabbing ${
         selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : ""
       }`}
     >
@@ -323,10 +334,21 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
 
 function ActionRow({ action, subject, onSelect }) {
   const Icon = subject?.icon;
+  const onDragStart = (e) => {
+    e.dataTransfer.effectAllowed = "copy";
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      backendType: subject.key,
+      label: action.name,
+      type: "action",
+      config: { selectedAction: action.name },
+    }));
+  };
   return (
     <button
+      draggable
+      onDragStart={onDragStart}
       onClick={onSelect}
-      className="bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group"
+      className="bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group cursor-grab active:cursor-grabbing"
     >
       <span className="w-7 h-7 shrink-0 flex items-center justify-center">
         {subject?.logoUrl ? (
