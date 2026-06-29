@@ -12,7 +12,7 @@ import {
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
   Mail, MailOpen, AtSign, Reply, Send, Globe, Heart,
   FolderPlus, Image, Film, FileSpreadsheet, FileType, HardDrive,
-  Rss, Music, Minus,
+  Rss, Music, Minus, List,
 } from 'lucide-react';
 
 const NOTION_POLL = [
