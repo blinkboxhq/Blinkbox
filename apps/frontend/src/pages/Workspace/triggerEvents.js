@@ -394,6 +394,41 @@ const youtubeEvent = (id, label, description, icon, varsExtra = [], extraFields 
   fields: [...youtubeBaseFields, ...extraFields, youtubeVars(varsExtra)],
 });
 
+const SHAREPOINT_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const sharepointBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Microsoft Account', provider: 'microsoft',
+    hint: '// connect the Microsoft account with access to the SharePoint site (OAuth)' },
+  { type: 'text', key: 'siteId', label: 'Site ID', placeholder: 'contoso.sharepoint.com,guid,guid',
+    hint: '// the Graph site id of the SharePoint site' },
+  { type: 'text', key: 'listId', label: 'List ID', placeholder: 'list guid',
+    hint: '// the id of the list (or library) whose items you want to watch' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: SHAREPOINT_POLL },
+];
+const sharepointColumnField = { type: 'text', key: 'columnName', label: 'Column Name', placeholder: 'e.g. Status',
+  hint: '// the internal name of the list column to inspect' };
+const sharepointVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.itemId', 'the list item id'],
+    ['$trigger.webUrl', 'a link to the item'],
+    ['$trigger.fields', 'all column values for the item'],
+    ['$trigger.lastModified', 'when it was last changed'],
+    ...extra,
+  ],
+});
+// A SharePoint event = a client-side predicate over the list-item delta stream.
+// `eventType` (via configExtra) selects the SHAREPOINT_EVENTS entry.
+const sharepointEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#0078D4',
+  configExtra: { eventType: id },
+  fields: [...sharepointBaseFields, ...extraFields, sharepointVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1231,6 +1266,41 @@ export const TRIGGER_EVENTS = {
       youtubeEvent('channel_activity', 'Any Channel Activity', 'Any activity on the channel feed', Activity,
         [['$trigger.type', 'the kind of activity']]),
       youtubeEvent('social_post', 'Community Post', 'The channel publishes a community / bulletin post', Send),
+    ],
+  },
+
+  sharepoint: {
+    title: 'SharePoint',
+    subtitle: 'Trigger on SharePoint list items — added, changed, by column value',
+    events: [
+      sharepointEvent('item_created', 'Item Created', 'A new item is added to the list', Plus),
+      sharepointEvent('item_modified', 'Item Modified', 'An existing item is edited', Pencil),
+      sharepointEvent('item_deleted', 'Item Deleted', 'An item is removed from the list', Trash2),
+      sharepointEvent('column_equals', 'Column Equals…', 'An item where a column matches a value', Sparkle,
+        [], [sharepointColumnField,
+          { type: 'text', key: 'targetValue', label: 'Equals', placeholder: 'e.g. Active',
+            hint: '// fire only when that column equals this exact value' }]),
+      sharepointEvent('column_changed_to', 'Column Changes To…', 'An item is edited so a column becomes a value', ArrowRightCircle,
+        [], [sharepointColumnField,
+          { type: 'text', key: 'targetValue', label: 'Becomes', placeholder: 'e.g. Done',
+            hint: '// e.g. Status changes to Done — re-fires when the item is modified to match' }]),
+      sharepointEvent('checkbox_checked', 'Checkbox Checked', 'A Yes/No column becomes Yes', CheckSquare,
+        [], [{ ...sharepointColumnField, placeholder: 'e.g. Approved', hint: '// the name of a Yes/No column' }]),
+      sharepointEvent('field_filled', 'Field Filled In', 'A column that was blank now has a value', Square,
+        [], [{ ...sharepointColumnField, placeholder: 'e.g. Owner' }]),
+      sharepointEvent('field_cleared', 'Field Cleared', 'A column becomes empty', Circle,
+        [], [{ ...sharepointColumnField, placeholder: 'e.g. Assignee' }]),
+      sharepointEvent('number_over', 'Number Over Threshold', 'A numeric column reaches at least a value', Hash,
+        [], [{ ...sharepointColumnField, placeholder: 'e.g. Amount', hint: '// the name of a number column' },
+          { type: 'text', key: 'targetValue', label: 'At Least', default: '100', placeholder: '100',
+            hint: '// fire when the column is greater than or equal to this number' }]),
+      sharepointEvent('date_today', 'Date Is Today', 'An item whose date column is today', CalendarClock,
+        [], [{ ...sharepointColumnField, placeholder: 'e.g. DueDate', hint: '// the name of a date column' }]),
+      sharepointEvent('by_author', 'Created By Person', 'A new item created by a specific person', User,
+        [['$trigger.createdByName', 'who created it']],
+        [{ type: 'text', key: 'targetValue', label: 'Author Email', placeholder: 'name@contoso.com',
+          hint: '// fire only for items created by this email' }]),
+      sharepointEvent('any_change', 'Any Change', 'Any add or edit on the list', RefreshCw),
     ],
   },
 

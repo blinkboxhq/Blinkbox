@@ -19,6 +19,7 @@ import { pollCalendar } from "./googleCalendar.poller.js";
 import { pollGoogleSheets } from "./googleSheets.poller.js";
 import { pollGoogleDrive } from "./googleDrive.poller.js";
 import { pollOneDrive } from "./onedrive.poller.js";
+import { pollSharePoint } from "./sharepoint.poller.js";
 import { pollHackerNews } from "./hackerNews.poller.js";
 import { pollHttpMonitor } from "./httpMonitor.poller.js";
 import { pollMailbox } from "./imap.poller.js";
@@ -289,6 +290,22 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "onedrive",
     run: async ({ automationId, cfg }) => { await pollOneDrive(automationId, cfg); },
+  },
+
+  sharepoint_trigger: {
+    triggerName: "sharepoint_trigger",
+    required: ["credentialId", "siteId", "listId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        siteId: cfg.siteId, listId: cfg.listId,
+        eventType: cfg.eventType || cfg.watchType,
+        columnName: cfg.columnName, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "sharepoint",
+    run: async ({ automationId, cfg }) => { await pollSharePoint(automationId, cfg); },
   },
 
   hackernews_trigger: {
