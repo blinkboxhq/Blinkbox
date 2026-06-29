@@ -454,10 +454,13 @@ const XAINode = makeOpenAICompatNode({
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [
-  { id: "trigger",      label: "Triggers",        icon: Zap,           shape: "square"  },
-  { id: "ai",           label: "AI & Code",        icon: Sparkles,      shape: "glass"   },
-  { id: "apps",         label: "Apps",             icon: Briefcase,     shape: "pill"    },
-  { id: "flow",         label: "Flow & Control",   icon: GitFork,       shape: "sharp"   },
+  { id: "trigger",   label: "Triggers",   icon: Zap,        shape: "square" },
+  { id: "ai_models", label: "AI Models",  icon: Sparkles,   shape: "glass"  },
+  { id: "ai_agent",  label: "AI Agent",   icon: Bot,        shape: "glass"  },
+  { id: "apps",      label: "Apps",       icon: Briefcase,  shape: "pill"   },
+  { id: "logic",     label: "Logic & Flow", icon: GitFork,  shape: "sharp"  },
+  { id: "data",      label: "Data",       icon: Database,   shape: "rounded"},
+  { id: "infra",     label: "Files & Infra", icon: Server,  shape: "rounded"},
 ];
 
 export const NodeRegistry = {
@@ -656,7 +659,7 @@ export const NodeRegistry = {
     accentColor: "16,163,127",
     logoUrl: imgOpenAI,
     ConfigPanel: OpenAINode,
-    category: "ai",
+    category: "ai_models",
   },
   anthropic: {
     label: "Anthropic",
@@ -665,7 +668,7 @@ export const NodeRegistry = {
     accentColor: "212,193,179",
     logoUrl: imgAnthropic,
     ConfigPanel: AnthropicNode,
-    category: "ai",
+    category: "ai_models",
   },
   gemini: {
     label: "Google Gemini",
@@ -674,7 +677,7 @@ export const NodeRegistry = {
     accentColor: "66,133,244",
     logoUrl: imgGemini,
     ConfigPanel: GeminiNode,
-    category: "ai",
+    category: "ai_models",
   },
   perplexity: {
     label: "Perplexity",
@@ -683,7 +686,7 @@ export const NodeRegistry = {
     accentColor: "34,211,238",
     logoUrl: imgPerplexity,
     ConfigPanel: PerplexityNode,
-    category: "ai",
+    category: "ai_models",
   },
   xai: {
     label: "xAI (Grok)",
@@ -692,7 +695,7 @@ export const NodeRegistry = {
     accentColor: "244,244,245",
     logoUrl: imgGrok,
     ConfigPanel: XAINode,
-    category: "ai",
+    category: "ai_models",
   },
   deepseek: {
     label: "DeepSeek",
@@ -701,7 +704,7 @@ export const NodeRegistry = {
     accentColor: "77,155,248",
     logoUrl: imgDeepSeek,
     ConfigPanel: DeepSeekNode,
-    category: "ai",
+    category: "ai_models",
   },
   nvidia_nim: {
     label: "NVIDIA NIM",
@@ -711,7 +714,7 @@ export const NodeRegistry = {
     logoUrl: imgNvidiaNim,
     description: "NVIDIA Inference Microservices — Llama, Nemotron, vision & embedding models",
     ConfigPanel: NvidiaNimNode,
-    category: "ai",
+    category: "ai_models",
   },
   gemma: {
     label: "Google Gemma",
@@ -721,7 +724,7 @@ export const NodeRegistry = {
     logoUrl: imgGemmaNim,
     description: "Gemma 4, Gemma 3, Gemma 3n, Gemma 2 & CodeGemma via NVIDIA NIM",
     ConfigPanel: GemmaNimNode,
-    category: "ai",
+    category: "ai_models",
   },
   moonshot: {
     label: "Kimi",
@@ -731,7 +734,7 @@ export const NodeRegistry = {
     logoUrl: imgKimi,
     description: "Kimi long-context models — 8K, 32K, 128K & vision",
     ConfigPanel: MoonshotNode,
-    category: "ai",
+    category: "ai_models",
   },
   ai_agent: {
     label: "AI Agent",
@@ -739,7 +742,7 @@ export const NodeRegistry = {
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
     ConfigPanel: AIAgentNode,
-    category: "ai",
+    category: "ai_agent",
     description:
       "Autonomous AI that reasons, uses tools, and completes multi-step tasks on its own",
   },
@@ -751,7 +754,7 @@ export const NodeRegistry = {
     colorClass: "text-violet-300",
     accentColor: "167,139,250",
     ConfigPanel: AgentLLMNode,
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "LLM powering the AI Agent",
   },
@@ -761,7 +764,7 @@ export const NodeRegistry = {
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
     ConfigPanel: AgentMemoryNode,
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Conversation memory for the AI Agent",
   },
@@ -771,7 +774,7 @@ export const NodeRegistry = {
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     ConfigPanel: AgentToolNode,
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "A capability the AI Agent can invoke",
   },
@@ -783,7 +786,7 @@ export const NodeRegistry = {
     logoUrl: imgOpenAI,
     colorClass: "text-[#10A37F]",
     accentColor: "16,163,127",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "GPT models powering the AI Agent",
     defaultModel: "gpt-4o",
@@ -806,7 +809,7 @@ export const NodeRegistry = {
     logoUrl: imgAnthropic,
     colorClass: "text-[#D4C1B3]",
     accentColor: "212,193,179",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Claude models powering the AI Agent",
     defaultModel: "claude-sonnet-4-6",
@@ -832,7 +835,7 @@ export const NodeRegistry = {
     logoUrl: imgGemini,
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Gemini models powering the AI Agent",
     defaultModel: "gemini-2.0-flash",
@@ -855,7 +858,7 @@ export const NodeRegistry = {
     logoUrl: imgGrok,
     colorClass: "text-zinc-100",
     accentColor: "244,244,245",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Grok models powering the AI Agent",
     defaultModel: "grok-2",
@@ -877,7 +880,7 @@ export const NodeRegistry = {
     logoUrl: imgDeepSeek,
     colorClass: "text-[#4D9BF8]",
     accentColor: "77,155,248",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "DeepSeek models powering the AI Agent",
     defaultModel: "deepseek-chat",
@@ -898,7 +901,7 @@ export const NodeRegistry = {
     logoUrl: imgKimi,
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Kimi long-context models powering the AI Agent",
     defaultModel: "moonshot-v1-8k",
@@ -921,7 +924,7 @@ export const NodeRegistry = {
     logoUrl: imgGroq,
     colorClass: "text-[#F55036]",
     accentColor: "245,80,54",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Groq fast inference powering the AI Agent",
     defaultModel: "llama-3.3-70b-versatile",
@@ -948,7 +951,7 @@ export const NodeRegistry = {
     logoUrl: imgNvidiaNim,
     colorClass: "text-[#76B900]",
     accentColor: "118,185,0",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "NVIDIA-hosted Llama, Nemotron & Mistral models powering the AI Agent",
     defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
@@ -992,7 +995,7 @@ export const NodeRegistry = {
     logoUrl: imgGemmaNim,
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Gemma 4 & Gemma 3 models via NVIDIA NIM powering the AI Agent",
     defaultModel: "google/gemma-4-31b-it",
@@ -1024,7 +1027,7 @@ export const NodeRegistry = {
     logoUrl: imgOllama,
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Run Ollama models on the server or connect to any Ollama instance",
     defaultModel: "llama3.2",
@@ -1037,7 +1040,7 @@ export const NodeRegistry = {
     logoUrl: imgLmStudio,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Any OpenAI-compatible server — LM Studio, llama.cpp, vLLM, KoboldCpp, or a remote endpoint",
     defaultModel: "local-model",
@@ -1050,7 +1053,7 @@ export const NodeRegistry = {
     logoUrl: imgPerplexity,
     colorClass: "text-[#22d3ee]",
     accentColor: "34,211,238",
-    category: "ai",
+    category: "ai_models",
     agentOnly: true,
     description: "Perplexity search-augmented models for the AI Agent",
     defaultModel: "llama-3.1-sonar-large-128k-online",
@@ -1082,7 +1085,7 @@ export const NodeRegistry = {
     icon: MemoryStick,
     colorClass: "text-violet-400",
     accentColor: "167,139,250",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "In-memory sliding window of recent messages",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1096,7 +1099,7 @@ export const NodeRegistry = {
     logoUrl: imgRedis,
     colorClass: "text-[#DC382D]",
     accentColor: "220,56,45",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Persist conversation memory in Redis",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1111,7 +1114,7 @@ export const NodeRegistry = {
     logoUrl: imgMongoDB,
     colorClass: "text-[#47A248]",
     accentColor: "71,162,72",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Persist conversation memory in MongoDB",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1127,7 +1130,7 @@ export const NodeRegistry = {
     logoUrl: imgPostgres,
     colorClass: "text-white",
     accentColor: "91,155,213",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Persist conversation memory in PostgreSQL",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1143,7 +1146,7 @@ export const NodeRegistry = {
     logoUrl: imgPinecone,
     colorClass: "text-[#1A73E8]",
     accentColor: "26,115,232",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Vector memory using Pinecone",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1158,7 +1161,7 @@ export const NodeRegistry = {
     logoUrl: imgSupabase,
     colorClass: "text-[#3ECF8E]",
     accentColor: "62,207,142",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Persist conversation memory in Supabase",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1173,7 +1176,7 @@ export const NodeRegistry = {
     logoUrl: imgZep,
     colorClass: "text-[#7C3AED]",
     accentColor: "124,58,237",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Long-term memory with Zep",
     ConfigPanel: makeAgentMemoryPanel({
@@ -1185,28 +1188,28 @@ export const NodeRegistry = {
   },
 
   // ── Agent Integrations — platform nodes attached via the Integration slot ──────
-  agent_integration_slack:          { label: "Slack",           icon: Zap, logoUrl: imgSlack,          colorClass: "text-[#E01E5A]", accentColor: "224,30,90",   category: "ai", agentOnly: true, description: "Post messages, files & DMs", ConfigPanel: AgentIntegrationNode },
-  agent_integration_gmail:          { label: "Gmail",           icon: Mail, logoUrl: imgGmail,         colorClass: "text-[#EA4335]", accentColor: "234,67,53",   category: "ai", agentOnly: true, description: "Send & search email",       ConfigPanel: AgentIntegrationNode },
-  agent_integration_discord:        { label: "Discord",         icon: Zap, logoUrl: imgDiscord,        colorClass: "text-[#5865F2]", accentColor: "88,101,242",  category: "ai", agentOnly: true, description: "Post to channels",          ConfigPanel: AgentIntegrationNode },
-  agent_integration_telegram:       { label: "Telegram",        icon: Zap, logoUrl: imgTelegram,       colorClass: "text-[#229ED9]", accentColor: "34,158,217",  category: "ai", agentOnly: true, description: "Send messages via bot",     ConfigPanel: AgentIntegrationNode },
-  agent_integration_notion:         { label: "Notion",          icon: FileText, logoUrl: imgNotion,    colorClass: "text-zinc-300",  accentColor: "161,161,170", category: "ai", agentOnly: true, description: "Create & query pages",      ConfigPanel: AgentIntegrationNode, imgFilter: "invert(1)" },
-  agent_integration_airtable:       { label: "Airtable",        icon: Database, logoUrl: imgAirtable,  colorClass: "text-[#F82B60]", accentColor: "248,43,96",   category: "ai", agentOnly: true, description: "Create & read records",     ConfigPanel: AgentIntegrationNode },
-  agent_integration_google_sheets:  { label: "Google Sheets",   icon: FileText, logoUrl: imgGoogleSheets, colorClass: "text-[#34A853]", accentColor: "52,168,83", category: "ai", agentOnly: true, description: "Read & append rows",      ConfigPanel: AgentIntegrationNode },
-  agent_integration_google_calendar:{ label: "Google Calendar", icon: Zap, logoUrl: imgGoogleCalendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",  category: "ai", agentOnly: true, description: "Create & manage events",   ConfigPanel: AgentIntegrationNode },
-  agent_integration_google_drive:   { label: "Google Drive",    icon: Zap, logoUrl: imgGoogleDrive,    colorClass: "text-[#FBBC05]", accentColor: "251,188,5",   category: "ai", agentOnly: true, description: "Upload, list & share files",ConfigPanel: AgentIntegrationNode },
-  agent_integration_outlook:        { label: "Outlook",         icon: Mail, logoUrl: imgOutlook,       colorClass: "text-[#0078D4]", accentColor: "0,120,212",   category: "ai", agentOnly: true, description: "Email via Microsoft",       ConfigPanel: AgentIntegrationNode },
-  agent_integration_github:         { label: "GitHub",          icon: GitBranch, logoUrl: imgGitHub,   colorClass: "text-zinc-300",  accentColor: "161,161,170", category: "ai", agentOnly: true, description: "Issues, PRs, comments",     ConfigPanel: AgentIntegrationNode, imgFilter: "invert(1)" },
-  agent_integration_linear:         { label: "Linear",          icon: Zap, logoUrl: imgLinear,         colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",  category: "ai", agentOnly: true, description: "Create & update issues",    ConfigPanel: AgentIntegrationNode },
-  agent_integration_hubspot:        { label: "HubSpot",         icon: Zap, logoUrl: imgHubSpot,        colorClass: "text-[#FF7A59]", accentColor: "255,122,89",  category: "ai", agentOnly: true, description: "CRM contacts & deals",      ConfigPanel: AgentIntegrationNode },
-  agent_integration_jira:           { label: "Jira",            icon: Zap, logoUrl: imgJira,           colorClass: "text-[#0052CC]", accentColor: "0,82,204",    category: "ai", agentOnly: true, description: "Tickets, sprints & projects",ConfigPanel: AgentIntegrationNode },
-  agent_integration_asana:          { label: "Asana",           icon: Zap, logoUrl: imgAsana,          colorClass: "text-[#F06A6A]", accentColor: "240,106,106", category: "ai", agentOnly: true, description: "Tasks & project tracking",  ConfigPanel: AgentIntegrationNode },
-  agent_integration_stripe:         { label: "Stripe",          icon: Zap, logoUrl: imgStripe,         colorClass: "text-[#635BFF]", accentColor: "99,91,255",   category: "ai", agentOnly: true, description: "Payments & subscriptions",  ConfigPanel: AgentIntegrationNode },
-  agent_integration_shopify:        { label: "Shopify",         icon: Zap, logoUrl: imgShopify,        colorClass: "text-[#95BF47]", accentColor: "149,191,71",  category: "ai", agentOnly: true, description: "Orders, products, customers",ConfigPanel: AgentIntegrationNode },
-  agent_integration_clickup:        { label: "ClickUp",         icon: Zap, logoUrl: imgClickUp,        colorClass: "text-[#7B68EE]", accentColor: "123,104,238", category: "ai", agentOnly: true, description: "Tasks & workspace mgmt",    ConfigPanel: AgentIntegrationNode },
-  agent_integration_twilio:         { label: "Twilio",          icon: Zap, logoUrl: imgTwilio,         colorClass: "text-[#F22F46]", accentColor: "242,47,70",   category: "ai", agentOnly: true, description: "SMS & voice messaging",     ConfigPanel: AgentIntegrationNode },
-  agent_integration_mongodb:        { label: "MongoDB",         icon: Database, logoUrl: imgMongoDB,   colorClass: "text-[#4DB33D]", accentColor: "77,179,61",   category: "ai", agentOnly: true, description: "Query & insert documents",  ConfigPanel: AgentIntegrationNode },
-  agent_integration_postgres:       { label: "PostgreSQL",      icon: Database, logoUrl: imgPostgres,  colorClass: "text-[#336791]", accentColor: "51,103,145",  category: "ai", agentOnly: true, description: "Run SQL queries",           ConfigPanel: AgentIntegrationNode },
-  agent_integration_redis:          { label: "Redis",           icon: Database, logoUrl: imgRedis,     colorClass: "text-[#DC382D]", accentColor: "220,56,45",   category: "ai", agentOnly: true, description: "Get & set cache values",    ConfigPanel: AgentIntegrationNode },
+  agent_integration_slack:          { label: "Slack",           icon: Zap, logoUrl: imgSlack,          colorClass: "text-[#E01E5A]", accentColor: "224,30,90",   category: "ai_agent", agentOnly: true, description: "Post messages, files & DMs", ConfigPanel: AgentIntegrationNode },
+  agent_integration_gmail:          { label: "Gmail",           icon: Mail, logoUrl: imgGmail,         colorClass: "text-[#EA4335]", accentColor: "234,67,53",   category: "ai_agent", agentOnly: true, description: "Send & search email",       ConfigPanel: AgentIntegrationNode },
+  agent_integration_discord:        { label: "Discord",         icon: Zap, logoUrl: imgDiscord,        colorClass: "text-[#5865F2]", accentColor: "88,101,242",  category: "ai_agent", agentOnly: true, description: "Post to channels",          ConfigPanel: AgentIntegrationNode },
+  agent_integration_telegram:       { label: "Telegram",        icon: Zap, logoUrl: imgTelegram,       colorClass: "text-[#229ED9]", accentColor: "34,158,217",  category: "ai_agent", agentOnly: true, description: "Send messages via bot",     ConfigPanel: AgentIntegrationNode },
+  agent_integration_notion:         { label: "Notion",          icon: FileText, logoUrl: imgNotion,    colorClass: "text-zinc-300",  accentColor: "161,161,170", category: "ai_agent", agentOnly: true, description: "Create & query pages",      ConfigPanel: AgentIntegrationNode, imgFilter: "invert(1)" },
+  agent_integration_airtable:       { label: "Airtable",        icon: Database, logoUrl: imgAirtable,  colorClass: "text-[#F82B60]", accentColor: "248,43,96",   category: "ai_agent", agentOnly: true, description: "Create & read records",     ConfigPanel: AgentIntegrationNode },
+  agent_integration_google_sheets:  { label: "Google Sheets",   icon: FileText, logoUrl: imgGoogleSheets, colorClass: "text-[#34A853]", accentColor: "52,168,83", category: "ai_agent", agentOnly: true, description: "Read & append rows",      ConfigPanel: AgentIntegrationNode },
+  agent_integration_google_calendar:{ label: "Google Calendar", icon: Zap, logoUrl: imgGoogleCalendar, colorClass: "text-[#4285F4]", accentColor: "66,133,244",  category: "ai_agent", agentOnly: true, description: "Create & manage events",   ConfigPanel: AgentIntegrationNode },
+  agent_integration_google_drive:   { label: "Google Drive",    icon: Zap, logoUrl: imgGoogleDrive,    colorClass: "text-[#FBBC05]", accentColor: "251,188,5",   category: "ai_agent", agentOnly: true, description: "Upload, list & share files",ConfigPanel: AgentIntegrationNode },
+  agent_integration_outlook:        { label: "Outlook",         icon: Mail, logoUrl: imgOutlook,       colorClass: "text-[#0078D4]", accentColor: "0,120,212",   category: "ai_agent", agentOnly: true, description: "Email via Microsoft",       ConfigPanel: AgentIntegrationNode },
+  agent_integration_github:         { label: "GitHub",          icon: GitBranch, logoUrl: imgGitHub,   colorClass: "text-zinc-300",  accentColor: "161,161,170", category: "ai_agent", agentOnly: true, description: "Issues, PRs, comments",     ConfigPanel: AgentIntegrationNode, imgFilter: "invert(1)" },
+  agent_integration_linear:         { label: "Linear",          icon: Zap, logoUrl: imgLinear,         colorClass: "text-[#5E6AD2]", accentColor: "94,106,210",  category: "ai_agent", agentOnly: true, description: "Create & update issues",    ConfigPanel: AgentIntegrationNode },
+  agent_integration_hubspot:        { label: "HubSpot",         icon: Zap, logoUrl: imgHubSpot,        colorClass: "text-[#FF7A59]", accentColor: "255,122,89",  category: "ai_agent", agentOnly: true, description: "CRM contacts & deals",      ConfigPanel: AgentIntegrationNode },
+  agent_integration_jira:           { label: "Jira",            icon: Zap, logoUrl: imgJira,           colorClass: "text-[#0052CC]", accentColor: "0,82,204",    category: "ai_agent", agentOnly: true, description: "Tickets, sprints & projects",ConfigPanel: AgentIntegrationNode },
+  agent_integration_asana:          { label: "Asana",           icon: Zap, logoUrl: imgAsana,          colorClass: "text-[#F06A6A]", accentColor: "240,106,106", category: "ai_agent", agentOnly: true, description: "Tasks & project tracking",  ConfigPanel: AgentIntegrationNode },
+  agent_integration_stripe:         { label: "Stripe",          icon: Zap, logoUrl: imgStripe,         colorClass: "text-[#635BFF]", accentColor: "99,91,255",   category: "ai_agent", agentOnly: true, description: "Payments & subscriptions",  ConfigPanel: AgentIntegrationNode },
+  agent_integration_shopify:        { label: "Shopify",         icon: Zap, logoUrl: imgShopify,        colorClass: "text-[#95BF47]", accentColor: "149,191,71",  category: "ai_agent", agentOnly: true, description: "Orders, products, customers",ConfigPanel: AgentIntegrationNode },
+  agent_integration_clickup:        { label: "ClickUp",         icon: Zap, logoUrl: imgClickUp,        colorClass: "text-[#7B68EE]", accentColor: "123,104,238", category: "ai_agent", agentOnly: true, description: "Tasks & workspace mgmt",    ConfigPanel: AgentIntegrationNode },
+  agent_integration_twilio:         { label: "Twilio",          icon: Zap, logoUrl: imgTwilio,         colorClass: "text-[#F22F46]", accentColor: "242,47,70",   category: "ai_agent", agentOnly: true, description: "SMS & voice messaging",     ConfigPanel: AgentIntegrationNode },
+  agent_integration_mongodb:        { label: "MongoDB",         icon: Database, logoUrl: imgMongoDB,   colorClass: "text-[#4DB33D]", accentColor: "77,179,61",   category: "ai_agent", agentOnly: true, description: "Query & insert documents",  ConfigPanel: AgentIntegrationNode },
+  agent_integration_postgres:       { label: "PostgreSQL",      icon: Database, logoUrl: imgPostgres,  colorClass: "text-[#336791]", accentColor: "51,103,145",  category: "ai_agent", agentOnly: true, description: "Run SQL queries",           ConfigPanel: AgentIntegrationNode },
+  agent_integration_redis:          { label: "Redis",           icon: Database, logoUrl: imgRedis,     colorClass: "text-[#DC382D]", accentColor: "220,56,45",   category: "ai_agent", agentOnly: true, description: "Get & set cache values",    ConfigPanel: AgentIntegrationNode },
 
   // ── Agent Tools — Search (12) ────────────────────────────────────────────────
   tool_google_search: {
@@ -1216,7 +1219,7 @@ export const NodeRegistry = {
     imgFilter: "invert(1)",
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Live Google search results via SerpApi",
     ConfigPanel: makeAgentToolPanel({
@@ -1238,7 +1241,7 @@ export const NodeRegistry = {
     logoUrl: imgTavily,
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "AI-optimised search engine for agents",
     ConfigPanel: makeAgentToolPanel({
@@ -1259,7 +1262,7 @@ export const NodeRegistry = {
     icon: Newspaper,
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Search latest news articles worldwide",
     ConfigPanel: makeAgentToolPanel({
@@ -1284,7 +1287,7 @@ export const NodeRegistry = {
     imgFilter: "invert(1)",
     colorClass: "text-yellow-400",
     accentColor: "250,204,21",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Execute JavaScript in a sandboxed runtime",
     ConfigPanel: makeAgentToolPanel({
@@ -1297,7 +1300,7 @@ export const NodeRegistry = {
     icon: Terminal,
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Run shell commands on the local machine",
     ConfigPanel: makeAgentToolPanel({
@@ -1312,7 +1315,7 @@ export const NodeRegistry = {
     imgFilter: "brightness(0) invert(1)",
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Control a full browser-based virtual computer",
     ConfigPanel: VirtualComputerPanel,
@@ -1324,7 +1327,7 @@ export const NodeRegistry = {
     icon: Globe,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Scrape content from any URL",
     ConfigPanel: makeAgentToolPanel({
@@ -1345,7 +1348,7 @@ export const NodeRegistry = {
     icon: Globe,
     colorClass: "text-blue-500",
     accentColor: "59,130,246",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Make any HTTP request and return the response",
     ConfigPanel: makeAgentToolPanel({
@@ -1368,7 +1371,7 @@ export const NodeRegistry = {
     icon: FolderOpen,
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Read files from the local filesystem",
     ConfigPanel: makeAgentToolPanel({
@@ -1381,7 +1384,7 @@ export const NodeRegistry = {
     icon: FileOutput,
     colorClass: "text-amber-500",
     accentColor: "245,158,11",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Write or append content to files",
     ConfigPanel: makeAgentToolPanel({
@@ -1394,7 +1397,7 @@ export const NodeRegistry = {
     icon: Table2,
     colorClass: "text-green-400",
     accentColor: "74,222,128",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Read, parse, and query CSV files",
     ConfigPanel: makeAgentToolPanel({
@@ -1407,7 +1410,7 @@ export const NodeRegistry = {
     icon: FileText,
     colorClass: "text-red-300",
     accentColor: "252,165,165",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Extract text and data from PDF files",
     ConfigPanel: makeAgentToolPanel({
@@ -1420,7 +1423,7 @@ export const NodeRegistry = {
     icon: Code2,
     colorClass: "text-yellow-300",
     accentColor: "253,224,71",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Parse, query, and transform JSON data",
     ConfigPanel: makeAgentToolPanel({
@@ -1433,7 +1436,7 @@ export const NodeRegistry = {
     icon: LayoutGrid,
     colorClass: "text-green-500",
     accentColor: "34,197,94",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Read and query Excel / XLSX spreadsheets",
     ConfigPanel: makeAgentToolPanel({
@@ -1447,7 +1450,7 @@ export const NodeRegistry = {
     icon: Database,
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Run SQL queries on any database",
     ConfigPanel: makeAgentToolPanel({
@@ -1469,7 +1472,7 @@ export const NodeRegistry = {
     logoUrl: imgMongoDB,
     colorClass: "text-green-400",
     accentColor: "74,222,128",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Query and update MongoDB collections",
     ConfigPanel: makeAgentToolPanel({
@@ -1493,7 +1496,7 @@ export const NodeRegistry = {
     logoUrl: imgSendGrid,
     colorClass: "text-rose-400",
     accentColor: "251,113,133",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Compose and send emails",
     ConfigPanel: makeAgentToolPanel({
@@ -1515,7 +1518,7 @@ export const NodeRegistry = {
     logoUrl: imgSlack,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Send messages to Slack channels",
     ConfigPanel: makeAgentToolPanel({
@@ -1537,7 +1540,7 @@ export const NodeRegistry = {
     logoUrl: imgDiscord,
     colorClass: "text-indigo-400",
     accentColor: "129,140,248",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Send messages to Discord channels",
     ConfigPanel: makeAgentToolPanel({
@@ -1559,7 +1562,7 @@ export const NodeRegistry = {
     logoUrl: imgTelegram,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Send Telegram messages and media",
     ConfigPanel: makeAgentToolPanel({
@@ -1580,7 +1583,7 @@ export const NodeRegistry = {
     icon: Webhook,
     colorClass: "text-zinc-400",
     accentColor: "161,161,170",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Trigger an outbound webhook URL",
     ConfigPanel: makeAgentToolPanel({
@@ -1603,7 +1606,7 @@ export const NodeRegistry = {
     icon: Languages,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Translate text between any languages",
     ConfigPanel: makeAgentToolPanel({
@@ -1624,7 +1627,7 @@ export const NodeRegistry = {
     icon: ScanLine,
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Extract printed text from images and scans",
     ConfigPanel: makeAgentToolPanel({
@@ -1641,7 +1644,7 @@ export const NodeRegistry = {
     logoUrl: imgGoogleCalendar,
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Create, read, and update calendar events",
     ConfigPanel: makeAgentToolPanel({
@@ -1663,7 +1666,7 @@ export const NodeRegistry = {
     icon: Brain,
     colorClass: "text-violet-400",
     accentColor: "139,92,246",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description:
       "Internal reasoning scratchpad — improves agent logic before acting",
@@ -1677,7 +1680,7 @@ export const NodeRegistry = {
     icon: Zap,
     colorClass: "text-yellow-400",
     accentColor: "250,204,21",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Run any Blinkbox workflow as an agent tool",
     ConfigPanel: makeAgentToolPanel({
@@ -1700,7 +1703,7 @@ export const NodeRegistry = {
     imgFilter: "invert(1)",
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Connect to any MCP server — one node exposes dozens of tools",
     ConfigPanel: makeAgentToolPanel({
@@ -1727,7 +1730,7 @@ export const NodeRegistry = {
     icon: MemoryStick,
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
-    category: "ai",
+    category: "ai_agent",
     agentOnly: true,
     description: "Store and retrieve keyed values across agent turns",
     ConfigPanel: makeAgentToolPanel({
@@ -1744,7 +1747,7 @@ export const NodeRegistry = {
     accentColor: "59,130,246",
     logoUrl: imgHTTP,
     ConfigPanel: HttpRequestNode,
-    category: "flow",
+    category: "infra",
   },
   postgres: {
     label: "PostgreSQL",
@@ -1753,7 +1756,7 @@ export const NodeRegistry = {
     accentColor: "91,155,213",
     logoUrl: imgPostgres,
     ConfigPanel: PostgresNode,
-    category: "flow",
+    category: "data",
   },
   supabase: {
     label: "Supabase",
@@ -1762,7 +1765,7 @@ export const NodeRegistry = {
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: SupabaseNode,
-    category: "flow",
+    category: "data",
   },
   mongodb: {
     label: "MongoDB",
@@ -1771,7 +1774,7 @@ export const NodeRegistry = {
     colorClass: "text-[#47A248]",
     accentColor: "71,162,72",
     ConfigPanel: MongoDBNode,
-    category: "flow",
+    category: "data",
   },
   redis_node: {
     label: "Redis",
@@ -1780,7 +1783,7 @@ export const NodeRegistry = {
     colorClass: "text-[#FF4438]",
     accentColor: "255,68,56",
     ConfigPanel: RedisNode,
-    category: "flow",
+    category: "data",
   },
   firebase: {
     label: "Firebase",
@@ -1789,7 +1792,7 @@ export const NodeRegistry = {
     colorClass: "text-[#FFCA28]",
     accentColor: "255,202,40",
     ConfigPanel: FirebaseNode,
-    category: "flow",
+    category: "data",
   },
 
   // Transform (array/data manipulation)
@@ -1799,7 +1802,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "244,114,182",
     ConfigPanel: FilterArrayNode,
-    category: "flow",
+    category: "logic",
   },
   sort_array: {
     label: "Sort Array",
@@ -1807,7 +1810,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "34,211,238",
     ConfigPanel: SortArrayNode,
-    category: "flow",
+    category: "logic",
   },
   deduplicate: {
     label: "Deduplicate",
@@ -1815,7 +1818,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "139,92,246",
     ConfigPanel: DeduplicateNode,
-    category: "flow",
+    category: "logic",
   },
   batch_split: {
     label: "Batch Split",
@@ -1823,7 +1826,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "251,146,60",
     ConfigPanel: BatchSplitNode,
-    category: "flow",
+    category: "logic",
   },
   csv_parser: {
     label: "CSV Parser",
@@ -1831,7 +1834,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "52,211,153",
     ConfigPanel: CSVParserNode,
-    category: "flow",
+    category: "data",
   },
   data_mapper: {
     label: "Data Mapper",
@@ -1839,7 +1842,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "52,211,153",
     ConfigPanel: DataMapperNode,
-    category: "flow",
+    category: "data",
   },
   set_fields: {
     label: "Set Fields",
@@ -1847,17 +1850,17 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "52,211,153",
     ConfigPanel: SetFieldsNode,
-    category: "flow",
+    category: "data",
   },
-  date_time:         { label: "Date & Time",        icon: Calendar,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DateTimeNode,         category: "flow", description: "Parse, format and manipulate dates and times" },
-  crypto_utils:      { label: "Crypto / Hash",       icon: Lock,           colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoUtilsNode,      category: "flow", description: "Hash, encrypt and HMAC sign data with SHA, MD5, AES" },
-  image_resize:      { label: "Image Resize",        icon: Image,          colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: ImageResizeNode,      category: "flow", description: "Resize, crop, convert and optimise images" },
-  pdf_generator:     { label: "PDF Generator",       icon: FileText,       colorClass: "text-red-400",    accentColor: "248,113,113", ConfigPanel: PDFGeneratorNode,     category: "flow", description: "Generate PDFs from HTML templates and merge documents" },
-  email_parser:      { label: "Email Parser",        icon: Mail,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: EmailParserNode,      category: "flow", description: "Parse raw email into subject, body, attachments and headers" },
-  text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "flow", description: "Trim, truncate, slugify, case-convert and pad strings" },
-  regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "flow", description: "Test, capture and replace with regular expressions" },
-  url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "flow", description: "Parse URLs into protocol, host, path, query and hash" },
-  math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "flow", description: "Evaluate math expressions, formulas and unit conversions" },
+  date_time:         { label: "Date & Time",        icon: Calendar,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DateTimeNode,         category: "data", description: "Parse, format and manipulate dates and times" },
+  crypto_utils:      { label: "Crypto / Hash",       icon: Lock,           colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoUtilsNode,      category: "data", description: "Hash, encrypt and HMAC sign data with SHA, MD5, AES" },
+  image_resize:      { label: "Image Resize",        icon: Image,          colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: ImageResizeNode,      category: "infra", description: "Resize, crop, convert and optimise images" },
+  pdf_generator:     { label: "PDF Generator",       icon: FileText,       colorClass: "text-red-400",    accentColor: "248,113,113", ConfigPanel: PDFGeneratorNode,     category: "infra", description: "Generate PDFs from HTML templates and merge documents" },
+  email_parser:      { label: "Email Parser",        icon: Mail,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: EmailParserNode,      category: "infra", description: "Parse raw email into subject, body, attachments and headers" },
+  text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "data", description: "Trim, truncate, slugify, case-convert and pad strings" },
+  regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "data", description: "Test, capture and replace with regular expressions" },
+  url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "data", description: "Parse URLs into protocol, host, path, query and hash" },
+  math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "data", description: "Evaluate math expressions, formulas and unit conversions" },
 
   // Research
   web_scraper: {
@@ -1868,7 +1871,7 @@ export const NodeRegistry = {
     logoUrl: imgComputer,
     imgFilter: "brightness(0) invert(1)",
     ConfigPanel: InformerNode,
-    category: "flow",
+    category: "infra",
   },
   web_search: {
     label: "Web Search",
@@ -1877,7 +1880,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "129,140,248",
     ConfigPanel: WebSearchNode,
-    category: "flow",
+    category: "infra",
   },
   // Logic & Flow
   delay: {
@@ -1886,7 +1889,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "251,146,60",
     ConfigPanel: DelayNode,
-    category: "flow",
+    category: "logic",
   },
   loop: {
     label: "Loop",
@@ -1894,7 +1897,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "251,191,36",
     ConfigPanel: LoopNode,
-    category: "flow",
+    category: "logic",
   },
   merge: {
     label: "Merge",
@@ -1902,7 +1905,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "45,212,191",
     ConfigPanel: MergeNode,
-    category: "flow",
+    category: "logic",
   },
   approval: {
     label: "Approval Gate",
@@ -1910,7 +1913,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "250,204,21",
     ConfigPanel: ApprovalNode,
-    category: "flow",
+    category: "logic",
   },
 
   // Code
@@ -1921,7 +1924,7 @@ export const NodeRegistry = {
     accentColor: "163,230,53",
     logoUrl: imgCode,
     ConfigPanel: CodeNode,
-    category: "ai",
+    category: "ai_models",
   },
 
   // Integrations (comms) — all have logoUrl so colorClass is fallback only
@@ -2043,7 +2046,7 @@ export const NodeRegistry = {
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: EnvVariableNode,
-    category: "flow",
+    category: "data",
     description: "Inject, read or assert environment variables in the workflow",
   },
   graphql_request: {
@@ -2052,7 +2055,7 @@ export const NodeRegistry = {
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: GraphQLNode,
-    category: "flow",
+    category: "data",
     description: "Query or mutate any GraphQL API with variables and auth",
   },
   sftp: {
@@ -2061,7 +2064,7 @@ export const NodeRegistry = {
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: SftpNode,
-    category: "flow",
+    category: "infra",
     description: "Upload, download, list or delete files via SFTP",
   },
   s3: {
@@ -2071,7 +2074,7 @@ export const NodeRegistry = {
     accentColor: "251,191,36",
     logoUrl: imgAWS,
     ConfigPanel: S3Node,
-    category: "flow",
+    category: "infra",
     description:
       "AWS S3 (and S3-compatible) object storage — upload, download, presign",
   },
@@ -2081,7 +2084,7 @@ export const NodeRegistry = {
     colorClass: "text-violet-400",
     accentColor: "167,139,250",
     ConfigPanel: WebhookResponseNode,
-    category: "flow",
+    category: "infra",
     description: "Send a custom HTTP response to the webhook caller",
   },
   github: {
@@ -2091,7 +2094,7 @@ export const NodeRegistry = {
     accentColor: "244,244,245",
     logoUrl: imgGitHub,
     ConfigPanel: GithubNode,
-    category: "flow",
+    category: "infra",
   },
   jira: {
     label: "Jira",
@@ -2152,7 +2155,7 @@ export const NodeRegistry = {
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: TextSplitterNode,
-    category: "flow",
+    category: "data",
   },
   template_renderer: {
     label: "Template Renderer",
@@ -2160,7 +2163,7 @@ export const NodeRegistry = {
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
     ConfigPanel: TemplateRendererNode,
-    category: "flow",
+    category: "data",
   },
   switch: {
     label: "Switch",
@@ -2168,7 +2171,7 @@ export const NodeRegistry = {
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: SwitchNode,
-    category: "flow",
+    category: "logic",
   },
   aggregate: {
     label: "Aggregate",
@@ -2176,7 +2179,7 @@ export const NodeRegistry = {
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     ConfigPanel: AggregateNode,
-    category: "flow",
+    category: "logic",
   },
   // ── Coding Agents ─────────────────────────────────────────────────────────
   claude_code: {
@@ -2196,7 +2199,7 @@ export const NodeRegistry = {
         { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
       ],
     }),
-    category: "ai",
+    category: "ai_models",
   },
   groq: {
     label: "Groq",
@@ -2215,7 +2218,7 @@ export const NodeRegistry = {
         { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" },
       ],
     }),
-    category: "ai",
+    category: "ai_models",
   },
   ollama: {
     label: "Ollama",
@@ -2229,7 +2232,7 @@ export const NodeRegistry = {
       defaultModel: "llama3.2",
       hasBaseUrl: true,
     }),
-    category: "ai",
+    category: "ai_models",
   },
   lm_studio: {
     label: "LM Studio",
@@ -2244,7 +2247,7 @@ export const NodeRegistry = {
       defaultModel: "local-model",
       hasBaseUrl: true,
     }),
-    category: "ai",
+    category: "ai_models",
   },
 
   // ── New Integration Nodes ──────────────────────────────────────────────────
@@ -2255,7 +2258,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgElevenLabs,
     ConfigPanel: ElevenLabsNode,
-    category: "flow",
+    category: "infra",
   },
   pinecone: {
     label: "Pinecone",
@@ -2264,11 +2267,11 @@ export const NodeRegistry = {
     colorClass: "text-green-400",
     accentColor: "74,222,128",
     ConfigPanel: PineconeNode,
-    category: "flow",
+    category: "data",
   },
-  vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai", description: "Store and search vector embeddings with semantic similarity" },
-  browser_agent:     { label: "Browser Agent",    icon: Monitor,                          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: BrowserAgentNode,    category: "ai", description: "Autonomous Puppeteer agent that browses and extracts web data" },
-  openai_assistant:  { label: "OpenAI Assistant", icon: Cpu,          logoUrl: imgOpenAI, colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: OpenAIAssistantNode, category: "ai", description: "Create threads and run OpenAI Assistants API with file attachments" },
+  vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
+  browser_agent:     { label: "Browser Agent",    icon: Monitor,                          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: BrowserAgentNode,    category: "ai_agent", description: "Autonomous Puppeteer agent that browses and extracts web data" },
+  openai_assistant:  { label: "OpenAI Assistant", icon: Cpu,          logoUrl: imgOpenAI, colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: OpenAIAssistantNode, category: "ai_models", description: "Create threads and run OpenAI Assistants API with file attachments" },
   resend: {
     label: "Resend",
     icon: Mail,
@@ -2285,7 +2288,7 @@ export const NodeRegistry = {
     accentColor: "252,109,38",
     logoUrl: imgGitLab,
     ConfigPanel: GitLabNode,
-    category: "flow",
+    category: "infra",
     description: "Manage GitLab issues, MRs, pipelines and repositories",
   },
   trello: {
@@ -2419,7 +2422,7 @@ export const NodeRegistry = {
     accentColor: "0,120,212",
     logoUrl: imgAzureDevOps,
     ConfigPanel: AzureDevOpsNode,
-    category: "flow",
+    category: "infra",
     description: "Manage work items, pipelines and repos in Azure DevOps",
   },
   // Google
@@ -2451,7 +2454,7 @@ export const NodeRegistry = {
     accentColor: "251,66,38",
     logoUrl: imgSentry,
     ConfigPanel: SentryNode,
-    category: "flow",
+    category: "infra",
     description: "Resolve issues, assign errors and manage Sentry projects",
   },
   vercel: {
@@ -2461,7 +2464,7 @@ export const NodeRegistry = {
     accentColor: "228,228,231",
     logoUrl: imgVercel,
     ConfigPanel: VercelNode,
-    category: "flow",
+    category: "infra",
     description: "Trigger deployments, manage domains and fetch deploy status",
   },
   netlify: {
@@ -2471,7 +2474,7 @@ export const NodeRegistry = {
     accentColor: "0,199,183",
     logoUrl: imgNetlify,
     ConfigPanel: NetlifyNode,
-    category: "flow",
+    category: "infra",
     description: "Trigger builds, manage deploys and update site config",
   },
   pagerduty: {
@@ -2481,7 +2484,7 @@ export const NodeRegistry = {
     accentColor: "6,172,56",
     logoUrl: imgPagerDuty,
     ConfigPanel: PagerDutyNode,
-    category: "flow",
+    category: "infra",
     description:
       "Create incidents, acknowledge alerts and manage on-call schedules",
   },
@@ -2492,7 +2495,7 @@ export const NodeRegistry = {
     accentColor: "99,44,166",
     logoUrl: imgDatadog,
     ConfigPanel: DatadogNode,
-    category: "flow",
+    category: "infra",
     description: "Send metrics, create monitors and query Datadog dashboards",
   },
   zendesk: {
@@ -2545,7 +2548,7 @@ export const NodeRegistry = {
     accentColor: "161,161,170",
     logoUrl: imgSsh,
     ConfigPanel: SshTriggerNode,
-    category: "flow",
+    category: "infra",
     description: "Run a command on a remote server via SSH and capture output",
   },
   // Content / Feed
@@ -2609,10 +2612,10 @@ export const NodeRegistry = {
     category: "apps",
     description: "Create and manage Zoom meetings",
   },
-  ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "flow", description: "Geolocate any IP — city, country, timezone, ISP" },
-  dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "flow", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
-  ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "flow", description: "Inspect TLS certificate expiry and validity for any hostname" },
-  http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "flow", description: "Check if an HTTP endpoint is up, track status code and latency" },
+  ip_lookup: { label: "IP Lookup", icon: MapPin, colorClass: "text-violet-400", accentColor: "167,139,250", ConfigPanel: IpLookupNode, category: "infra", description: "Geolocate any IP — city, country, timezone, ISP" },
+  dns_lookup: { label: "DNS Lookup", icon: Globe, colorClass: "text-blue-400", accentColor: "96,165,250", ConfigPanel: DnsLookupNode, category: "infra", description: "Resolve A, MX, TXT, NS, CNAME, SOA records for any hostname" },
+  ssl_check: { label: "SSL Check", icon: Shield, colorClass: "text-green-400", accentColor: "74,222,128", ConfigPanel: SslCheckNode, category: "infra", description: "Inspect TLS certificate expiry and validity for any hostname" },
+  http_monitor: { label: "HTTP Monitor", icon: Globe, colorClass: "text-emerald-400", accentColor: "52,211,153", ConfigPanel: HttpMonitorNode, category: "infra", description: "Check if an HTTP endpoint is up, track status code and latency" },
   rss: {
     label: "RSS Feed",
     icon: Rss,
@@ -2620,7 +2623,7 @@ export const NodeRegistry = {
     accentColor: "251,146,60",
     logoUrl: imgRss,
     ConfigPanel: RssFeedGeneratorNode,
-    category: "flow",
+    category: "infra",
     description: "Read, parse and generate RSS / Atom feeds",
   },
   database: {
@@ -2630,7 +2633,7 @@ export const NodeRegistry = {
     accentColor: "91,155,213",
     logoUrl: imgPostgres,
     ConfigPanel: PostgresNode,
-    category: "flow",
+    category: "data",
     description: "Query and write to PostgreSQL or MySQL databases",
   },
   email: {
@@ -2660,7 +2663,7 @@ export const NodeRegistry = {
     accentColor: "239,68,68",
     logoUrl: imgErrorTrigger,
     ConfigPanel: ErrorTriggerNode,
-    category: "flow",
+    category: "logic",
     description: "Catch and handle errors from other nodes in the workflow",
   },
 
@@ -2672,7 +2675,7 @@ export const NodeRegistry = {
     colorClass: "text-cyan-400",
     accentColor: "34,211,238",
     ConfigPanel: VariableSetGetNode,
-    category: "flow",
+    category: "data",
     description:
       "Store and retrieve values across nodes with execution/workflow/global scope",
   },
@@ -2682,7 +2685,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "96,165,250",
     ConfigPanel: FileUploadNode,
-    category: "flow",
+    category: "infra",
     description: "Upload to S3, GCS, Azure Blob, SFTP or HTTP PUT",
   },
   file_download: {
@@ -2691,7 +2694,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "52,211,153",
     ConfigPanel: FileDownloadNode,
-    category: "flow",
+    category: "infra",
     description:
       "Download any URL into payload as base64, text, JSON or buffer",
   },
@@ -2701,7 +2704,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "161,161,170",
     ConfigPanel: ZipFilesNode,
-    category: "flow",
+    category: "infra",
     description:
       "Compress or extract ZIP, TAR and TAR.GZ archives with password support",
   },
@@ -2713,7 +2716,7 @@ export const NodeRegistry = {
     colorClass: "text-blue-400",
     accentColor: "96,165,250",
     ConfigPanel: TranslationNode,
-    category: "flow",
+    category: "infra",
     description:
       "Translate text between 25+ languages via OpenAI, Google or DeepL",
   },
@@ -2723,7 +2726,7 @@ export const NodeRegistry = {
     colorClass: "text-purple-400",
     accentColor: "167,139,250",
     ConfigPanel: TextToSpeechNode,
-    category: "flow",
+    category: "infra",
     description:
       "Convert text to natural-sounding audio via Whisper, ElevenLabs or Google",
   },
@@ -2733,7 +2736,7 @@ export const NodeRegistry = {
     colorClass: "text-rose-400",
     accentColor: "251,113,133",
     ConfigPanel: SpeechToTextNode,
-    category: "flow",
+    category: "infra",
     description: "Transcribe audio to text via Whisper, Google or AssemblyAI",
   },
   ocr: {
@@ -2742,7 +2745,7 @@ export const NodeRegistry = {
     colorClass: "text-teal-400",
     accentColor: "45,212,191",
     ConfigPanel: OcrNode,
-    category: "flow",
+    category: "infra",
     description: "Extract text from images and scanned documents",
   },
 
@@ -2753,7 +2756,7 @@ export const NodeRegistry = {
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: ConditionNode,
-    category: "flow",
+    category: "logic",
     description: "Branch into True or False path based on a condition",
   },
   success_failed: {
@@ -2762,7 +2765,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "161,161,170",
     ConfigPanel: SuccessFailedNode,
-    category: "flow",
+    category: "logic",
     description: "Explicitly mark this branch as succeeded or failed",
   },
   wait_for_event: {
@@ -2771,7 +2774,7 @@ export const NodeRegistry = {
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: WaitForEventNode,
-    category: "flow",
+    category: "logic",
     description: "Pause workflow until a webhook or condition is met",
   },
   retry: {
@@ -2780,7 +2783,7 @@ export const NodeRegistry = {
     colorClass: "text-amber-400",
     accentColor: "251,191,36",
     ConfigPanel: RetryNode,
-    category: "flow",
+    category: "logic",
     description: "Retry the previous node N times on failure",
   },
   stop_error: {
@@ -2789,7 +2792,7 @@ export const NodeRegistry = {
     colorClass: "text-red-400",
     accentColor: "239,68,68",
     ConfigPanel: StopErrorNode,
-    category: "flow",
+    category: "logic",
     description: "Halt the workflow and throw a custom error",
   },
   rate_limiter: {
@@ -2798,7 +2801,7 @@ export const NodeRegistry = {
     colorClass: "text-orange-400",
     accentColor: "251,146,60",
     ConfigPanel: RateLimiterNode,
-    category: "flow",
+    category: "logic",
     description: "Throttle workflow to N executions per time window",
   },
 };

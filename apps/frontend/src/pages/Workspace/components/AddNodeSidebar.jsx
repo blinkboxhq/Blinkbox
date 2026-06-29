@@ -12,9 +12,12 @@ const ALL_NODES = Object.entries(NodeRegistry)
   .map(([key, def]) => ({ key, ...def }));
 
 const CAT_COLORS = {
-  ai:   { accent: "#a78bfa" },
-  apps: { accent: "#38bdf8" },
-  flow: { accent: "#34d399" },
+  ai_models: { accent: "#a78bfa" },
+  ai_agent:  { accent: "#e879f9" },
+  apps:      { accent: "#38bdf8" },
+  logic:     { accent: "#34d399" },
+  data:      { accent: "#60a5fa" },
+  infra:     { accent: "#7dd3fc" },
 };
 
 export default function AddNodeSidebar() {

@@ -9,24 +9,13 @@ const ALL_NODES = Object.entries(NodeRegistry)
   .map(([key, def]) => ({ key, ...def }));
 
 const CATEGORY_COLORS = {
-  ai:          'text-violet-400 bg-violet-500/10 border-violet-500/20',
-  ai_tools:    'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20',
-  data:        'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  transform:   'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-  research:    'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-  flow:        'text-amber-400 bg-amber-500/10 border-amber-500/20',
-  code:        'text-lime-400 bg-lime-500/10 border-lime-500/20',
-  integration: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
-  devtools:    'text-sky-400 bg-sky-500/10 border-sky-500/20',
-  payments:    'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
-  crm:         'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  social:      'text-rose-400 bg-rose-500/10 border-rose-500/20',
-  education:   'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
-  design:      'text-pink-400 bg-pink-500/10 border-pink-500/20',
-  social_pub:  'text-red-400 bg-red-500/10 border-red-500/20',
-  finance:     'text-green-400 bg-green-500/10 border-green-500/20',
-  gaming:      'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  automation:  'text-teal-400 bg-teal-500/10 border-teal-500/20',
+  trigger:   'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  ai_models: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
+  ai_agent:  'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20',
+  apps:      'text-pink-400 bg-pink-500/10 border-pink-500/20',
+  logic:     'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  data:      'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  infra:     'text-sky-400 bg-sky-500/10 border-sky-500/20',
 };
 
 function NodeCard({ node }) {
