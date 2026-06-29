@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Typeform authenticates with a personal access token (vault credential). The
+// user picks one Form by id; the poller watches its response feed and `eventType`
+// (via configExtra) selects the TYPEFORM_EVENTS predicate over each submission.
+const typeformBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Typeform Account', credType: 'typeform',
+    hint: '// connect with a personal access token' },
+  { type: 'text', key: 'formId', label: 'Form ID', placeholder: 'AbC123',
+    hint: '// the form to watch — its id from the share URL' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const typeformTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const typeformVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.responseToken', 'the unique response id'],
+    ['$trigger.answers', 'a map of question → answer'],
+    ['$trigger.submittedAt', 'when it was submitted'],
+    ['$trigger.score', 'the calculated score (if any)'],
+    ['$trigger.referrer', 'where the respondent came from'],
+    ...extra,
+  ],
+});
+const typeformEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#262627',
+  configExtra: { eventType: id },
+  fields: [...typeformBaseFields, ...extraFields, typeformVars(varsExtra)],
+});
+
 // Calendly authenticates with a personal access token (vault credential). The
 // poller resolves the user, watches their scheduled-events feed, and `eventType`
 // (via configExtra) selects the CALENDLY_EVENTS predicate over each booking.
@@ -1926,6 +1960,33 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  typeform: {
+    title: 'Typeform',
+    subtitle: 'Watch a form — new submissions, answers, choices, scores and more',
+    events: [
+      typeformEvent('response_submitted', 'Response Submitted', 'Someone completes the form.', Send),
+      typeformEvent('any_response', 'Any Response', 'Any response lands, complete or not.', Inbox),
+      typeformEvent('partial', 'Partial Response', 'A response started but not finished.', CircleDashed),
+      typeformEvent('field_answered', 'Field Answered', 'A specific question got an answer.', CheckSquare,
+        [typeformTargetField('Field', 'email', '// the question ref, id, or title')]),
+      typeformEvent('answer_equals', 'Answer Equals', 'A field answer matches an exact value.', CheckCircle2,
+        [typeformTargetField('Field = Value', 'plan=Pro', '// "field=value" — exact match')]),
+      typeformEvent('answer_contains', 'Answer Contains', 'Any answer includes your text.', Search,
+        [typeformTargetField('Text', 'urgent', '// match across all answers')]),
+      typeformEvent('choice_selected', 'Choice Selected', 'A multiple-choice option was picked.', ListTodo,
+        [typeformTargetField('Choice', 'Enterprise', '// match a selected option label')]),
+      typeformEvent('email_provided', 'Email Provided', 'The response includes an email answer.', AtSign),
+      typeformEvent('score_over', 'Score Over', 'The quiz/score is at or above a number.', Gauge,
+        [typeformTargetField('Minimum Score', '8', '// fires when score ≥ this')]),
+      typeformEvent('score_under', 'Score Under', 'The quiz/score is at or below a number.', Gauge,
+        [typeformTargetField('Maximum Score', '3', '// fires when score ≤ this')]),
+      typeformEvent('has_hidden_field', 'Has Hidden Field', 'A hidden field is present on the response.', Eye,
+        [typeformTargetField('Hidden Field', 'utm_source', '// the hidden field key')]),
+      typeformEvent('from_referrer', 'From Referrer', 'The respondent came from a URL.', Globe,
+        [typeformTargetField('Referrer', 'newsletter', '// match part of the referer URL')]),
     ],
   },
 
