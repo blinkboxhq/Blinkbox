@@ -257,6 +257,7 @@ const POLL_REGISTRY = {
       cfg: {
         credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
         spreadsheetId: cfg.spreadsheetId, range: cfg.range, hasHeader: cfg.hasHeader,
+        eventType: cfg.eventType || cfg.watchType, columnName: cfg.columnName, targetValue: cfg.targetValue,
       },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),

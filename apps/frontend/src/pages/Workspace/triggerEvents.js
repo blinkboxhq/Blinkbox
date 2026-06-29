@@ -429,6 +429,42 @@ const sharepointEvent = (id, label, description, icon, varsExtra = [], extraFiel
   fields: [...sharepointBaseFields, ...extraFields, sharepointVars(varsExtra)],
 });
 
+const SHEETS_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const sheetsBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
+    hint: '// connect the Google account that owns the sheet (OAuth)' },
+  { type: 'text', key: 'spreadsheetId', label: 'Spreadsheet ID', placeholder: '1AbC…the long id from the sheet URL',
+    hint: '// the id between /d/ and /edit in the spreadsheet URL' },
+  { type: 'text', key: 'range', label: 'Sheet / Range', placeholder: 'Sheet1', default: 'Sheet1',
+    hint: '// a tab name like Sheet1, or a range like Sheet1!A:F' },
+  { type: 'switch-row', key: 'hasHeader', label: 'First Row Is A Header', default: true,
+    hint: '// on = use row 1 as column names so variables read like $trigger.Email' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: SHEETS_POLL },
+];
+const sheetsColumnField = { type: 'text', key: 'columnName', label: 'Column', placeholder: 'e.g. Status (header name, A, or 0)',
+  hint: '// which column to watch — a header name, an A1 letter, or a 0-based index' };
+const sheetsVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.<column>', 'each column by its header name'],
+    ['$trigger._rowNumber', 'the row number in the sheet'],
+    ['$trigger._changeKind', 'added, updated or deleted'],
+    ...extra,
+  ],
+});
+// A Sheets event = a change kind (add/update/delete) + an optional column
+// predicate in the poller. `eventType` (via configExtra) selects SHEETS_EVENTS.
+const sheetsEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#0F9D58',
+  configExtra: { eventType: id },
+  fields: [...sheetsBaseFields, ...extraFields, sheetsVars(varsExtra)],
+});
+
 const TEAMS_POLL = [
   { value: '1', label: 'Every minute' },
   { value: '2', label: 'Every 2 minutes' },
@@ -1333,6 +1369,39 @@ export const TRIGGER_EVENTS = {
         [{ type: 'text', key: 'targetValue', label: 'Author Email', placeholder: 'name@contoso.com',
           hint: '// fire only for items created by this email' }]),
       sharepointEvent('any_change', 'Any Change', 'Any add or edit on the list', RefreshCw),
+    ],
+  },
+
+  google_sheets: {
+    title: 'Google Sheets',
+    subtitle: 'Trigger on rows added, edited or deleted — and on column values',
+    events: [
+      sheetsEvent('row_added', 'Row Added', 'A new row appears in the sheet', Plus),
+      sheetsEvent('row_updated', 'Row Updated', 'An existing row is edited', Pencil),
+      sheetsEvent('row_deleted', 'Row Deleted', 'A row is removed from the sheet', Trash2),
+      sheetsEvent('cell_equals', 'Cell Equals…', 'A column matches a value', CheckCircle2,
+        [['$trigger.<column>', 'the matched value']],
+        [sheetsColumnField, { type: 'text', key: 'targetValue', label: 'Equals Value', placeholder: 'e.g. Done',
+          hint: '// fire when the column equals exactly this' }]),
+      sheetsEvent('cell_changed_to', 'Cell Changed To…', 'A column just became a value', Sparkle,
+        [], [sheetsColumnField, { type: 'text', key: 'targetValue', label: 'New Value', placeholder: 'e.g. Approved',
+          hint: '// fire when an edit sets the column to this value' }]),
+      sheetsEvent('cell_filled', 'Cell Filled', 'A previously empty column gets a value', Type,
+        [], [sheetsColumnField]),
+      sheetsEvent('cell_cleared', 'Cell Cleared', 'A column is emptied', XCircle,
+        [], [sheetsColumnField]),
+      sheetsEvent('contains_text', 'Cell Contains…', 'A column contains your text', Search,
+        [], [sheetsColumnField, { type: 'text', key: 'targetValue', label: 'Contains Text', placeholder: 'e.g. urgent',
+          hint: '// fire when the column text contains this' }]),
+      sheetsEvent('number_over', 'Number Over…', 'A numeric column is at or above a threshold', Hash,
+        [], [sheetsColumnField, { type: 'text', key: 'targetValue', label: 'At Or Above', placeholder: 'e.g. 100',
+          hint: '// fire when the number is ≥ this' }]),
+      sheetsEvent('number_under', 'Number Under…', 'A numeric column is at or below a threshold', Minus,
+        [], [sheetsColumnField, { type: 'text', key: 'targetValue', label: 'At Or Below', placeholder: 'e.g. 10',
+          hint: '// fire when the number is ≤ this' }]),
+      sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
+        [], [sheetsColumnField]),
+      sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
     ],
   },
 
