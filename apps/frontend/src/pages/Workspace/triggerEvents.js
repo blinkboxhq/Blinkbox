@@ -630,6 +630,35 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// DNS resolves all record types each poll and diffs against the last snapshot.
+// No credential; `eventType` (via configExtra) selects which record / condition
+// fires the workflow.
+const dnsBaseFields = [
+  { type: 'text', key: 'domain', label: 'Domain', placeholder: 'example.com',
+    hint: '// the domain whose DNS records we watch' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+    options: [
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const dnsTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const dnsVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.domain', 'the watched domain'],
+    ['$trigger.A', 'current A records (comma-joined)'],
+    ['$trigger.previous', 'the previous resolution map'],
+    ...extra,
+  ],
+});
+const dnsEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#4B8BBE',
+  configExtra: { eventType: id },
+  fields: [...dnsBaseFields, ...extraFields, dnsVars(varsExtra)],
+});
+
 // Docker reads the Engine event stream over a local socket or remote TCP host.
 // No credential; `eventType` (via configExtra) selects which Engine event Type +
 // Action fires the workflow.
@@ -2396,6 +2425,27 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  dns: {
+    title: 'DNS',
+    subtitle: 'Watch records — A, AAAA, MX, TXT, NS changes and resolution',
+    events: [
+      dnsEvent('a_changed', 'A Record Changed', 'The A (IPv4) records changed.', Globe),
+      dnsEvent('aaaa_changed', 'AAAA Record Changed', 'The AAAA (IPv6) records changed.', Globe),
+      dnsEvent('cname_changed', 'CNAME Changed', 'The CNAME alias changed.', ArrowRightCircle),
+      dnsEvent('mx_changed', 'MX Changed', 'The mail (MX) records changed.', Mail),
+      dnsEvent('txt_changed', 'TXT Changed', 'The TXT records changed.', Type),
+      dnsEvent('ns_changed', 'Nameservers Changed', 'The NS records changed.', Database),
+      dnsEvent('any_changed', 'Any Record Changed', 'Any watched record changed.', RefreshCw),
+      dnsEvent('resolves_to', 'Resolves To IP', 'The domain resolves to a specific IP.', Target,
+        [dnsTargetField('IP Address', '93.184.216.34', '// fires when this IP appears in A/AAAA')]),
+      dnsEvent('no_longer_resolves', 'Stopped Resolving', 'The domain stopped resolving.', Ban),
+      dnsEvent('started_resolving', 'Started Resolving', 'The domain began resolving.', CheckCircle2),
+      dnsEvent('mx_set', 'Has Mail Records', 'The domain has MX records set.', Inbox,
+        [dnsTargetField('Contains (optional)', 'google.com', '// optionally require this in the MX value')]),
+      dnsEvent('record_count_changed', 'A Record Count Changed', 'The number of A records changed.', Hash),
     ],
   },
 
