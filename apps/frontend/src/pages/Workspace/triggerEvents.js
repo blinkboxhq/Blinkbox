@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Zendesk authenticates with an email + API token pair stored as a single
+// vault credential. The poller watches a subdomain's ticket feed;
+// `eventType` (via configExtra) selects the ZENDESK_EVENTS predicate.
+const zendeskBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Zendesk Account', credType: 'zendesk',
+    hint: '// connect the account (agent email + API token)' },
+  { type: 'text', key: 'subdomain', label: 'Subdomain', placeholder: 'acme',
+    hint: '// the acme in acme.zendesk.com' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const zendeskTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const zendeskVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.subject', 'the ticket subject'],
+    ['$trigger.status', 'status (new/open/pending/solved)'],
+    ['$trigger.priority', 'priority (low/normal/high/urgent)'],
+    ['$trigger.assigneeId', 'the assigned agent id'],
+    ['$trigger.ticketId', 'the ticket id'],
+    ...extra,
+  ],
+});
+const zendeskEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#17494D',
+  configExtra: { eventType: id },
+  fields: [...zendeskBaseFields, ...extraFields, zendeskVars(varsExtra)],
+});
+
 // Monday.com authenticates with an API token (vault credential). The poller
 // watches one board's items via GraphQL; `eventType` (via configExtra)
 // selects the MONDAY_EVENTS predicate over each item.
@@ -1828,6 +1862,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  zendesk: {
+    title: 'Zendesk',
+    subtitle: 'Watch your tickets — created, status moves, priority, assignees and more',
+    events: [
+      zendeskEvent('ticket_created', 'Ticket Created', 'A new ticket is opened.', Plus),
+      zendeskEvent('ticket_updated', 'Ticket Updated', 'Any change to an existing ticket.', Pencil),
+      zendeskEvent('status_changed', 'Status Changed', 'A ticket moves to a different status.', ArrowRightCircle),
+      zendeskEvent('status_is', 'Status Is', 'A ticket reaches one specific status.', Flag,
+        [zendeskTargetField('Status', 'open', '// new, open, pending, hold, solved or closed')]),
+      zendeskEvent('solved', 'Solved', 'A ticket is marked solved.', CheckCircle2),
+      zendeskEvent('pending', 'Pending', 'A ticket is waiting on the requester.', PauseCircle),
+      zendeskEvent('priority_is', 'Priority Is', 'A ticket has a specific priority.', Gauge,
+        [zendeskTargetField('Priority', 'high', '// low, normal, high or urgent')]),
+      zendeskEvent('urgent', 'Urgent', 'A ticket is set to urgent priority.', Flame),
+      zendeskEvent('assigned', 'Assigned', 'A ticket is assigned (optionally to one agent).', UserCheck,
+        [zendeskTargetField('Agent ID (optional)', '123456', '// leave blank for anyone — or an agent id')]),
+      zendeskEvent('unassigned', 'Unassigned', 'A ticket has no assignee.', UserMinus),
+      zendeskEvent('has_tag', 'Has Tag', 'A ticket carries a specific tag.', Tag,
+        [zendeskTargetField('Tag', 'vip', '// match a ticket tag')]),
+      zendeskEvent('subject_contains', 'Subject Contains', 'The ticket subject includes your text.', Search,
+        [zendeskTargetField('Text', 'refund', '// match part of the subject')]),
     ],
   },
 

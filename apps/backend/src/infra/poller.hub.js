@@ -39,6 +39,7 @@ import { pollSentry } from "./sentry.poller.js";
 import { pollShopify } from "./shopify.poller.js";
 import { pollWooCommerce } from "./woocommerce.poller.js";
 import { pollMonday } from "./monday.poller.js";
+import { pollZendesk } from "./zendesk.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -369,6 +370,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "monday",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollMonday(automationId, triggerNodeId, cfg); },
+  },
+
+  zendesk_trigger: {
+    triggerName: "zendesk_trigger",
+    required: ["credentialId", "subdomain"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        subdomain: cfg.subdomain, email: cfg.email,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "zendesk",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollZendesk(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
