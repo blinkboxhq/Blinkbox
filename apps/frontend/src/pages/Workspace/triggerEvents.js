@@ -765,6 +765,30 @@ const figmaEvent = (id, label, description, icon, extraFields = [], varsExtra = 
   fields: [...figmaBaseFields, ...extraFields, figmaVars(varsExtra)],
 });
 
+// WhatsApp uses the Meta Cloud API, which is webhook-only (no polling endpoint).
+// Point Meta's webhook at this automation's public URL; the controller answers
+// the hub.challenge handshake and drops payloads that don't match `whatsappEvent`.
+const whatsappBaseFields = [
+  { type: 'text', key: 'metaVerifyToken', label: 'Verify Token',
+    hint: '// any phrase you choose — paste the same value in Meta → Webhooks → Verify token' },
+  { type: 'password', key: 'metaAppSecret', label: 'App Secret (optional)',
+    hint: '// Meta → App Settings → Basic → App Secret; enables signature verification' },
+];
+const whatsappVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.from', 'sender phone number'],
+    ['$trigger.fromName', 'sender display name'],
+    ['$trigger.text', 'message text'],
+    ['$trigger.type', 'message type'],
+    ...extra,
+  ],
+});
+const whatsappEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#25D366',
+  configExtra: { whatsappEvent: id },
+  fields: [...whatsappBaseFields, ...extraFields, whatsappVars(varsExtra)],
+});
+
 const priceBaseFields = [
   { type: 'text', key: 'coinId', label: 'Coin', placeholder: 'bitcoin',
     hint: '// CoinGecko coin id, e.g. bitcoin, ethereum, solana' },
@@ -1979,6 +2003,27 @@ const stripeSecret = {
 };
 
 export const TRIGGER_EVENTS = {
+  whatsapp: {
+    title: 'WhatsApp',
+    subtitle: 'Meta Cloud API webhook — point Meta at your automation URL',
+    events: [
+      whatsappEvent('message_received', 'Message Received', 'Any inbound message from a contact.', MessageSquare),
+      whatsappEvent('text_message', 'Text Message', 'An inbound text message.', Type),
+      whatsappEvent('text_contains', 'Text Contains', 'A message whose text includes specific words.', Search,
+        [{ type: 'text', key: 'targetValue', label: 'Text', placeholder: 'order',
+          hint: '// fire when the message text includes this (case-insensitive)' }]),
+      whatsappEvent('image_message', 'Image Received', 'A contact sends an image.', Image),
+      whatsappEvent('document_message', 'Document Received', 'A contact sends a document or file.', Paperclip),
+      whatsappEvent('audio_message', 'Voice / Audio', 'A contact sends a voice note or audio.', Music),
+      whatsappEvent('video_message', 'Video Received', 'A contact sends a video.', Film),
+      whatsappEvent('location_message', 'Location Shared', 'A contact shares a location pin.', Target),
+      whatsappEvent('button_reply', 'Button / List Reply', 'A contact taps an interactive button or list option.', Square),
+      whatsappEvent('message_delivered', 'Message Delivered', 'An outbound message is delivered.', CheckCheck),
+      whatsappEvent('message_read', 'Message Read', 'A contact reads your message (blue ticks).', Eye),
+      whatsappEvent('message_failed', 'Message Failed', 'An outbound message fails to send.', XCircle),
+    ],
+  },
+
   figma: {
     title: 'Figma',
     subtitle: 'REST API polling with a Personal Access Token',

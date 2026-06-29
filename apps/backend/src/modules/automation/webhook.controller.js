@@ -6,6 +6,7 @@ import { redis } from "../../infra/redis.client.js";
 import { webhookQueue } from "../../infra/webhook.queue.js";
 import { sanitizeAndLog } from "../../utils/errors.js";
 import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
+import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
 
 // Header fingerprint → the externally-registered trigger type that owns it.
 // Used to disambiguate which trigger node an inbound webhook belongs to.
@@ -30,6 +31,16 @@ function resolveWebhookTriggerNode(automation, req) {
   const triggerEntries = automation.triggerNodes?.length
     ? automation.triggerNodes
     : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
+
+  // Meta WhatsApp shares the x-hub-signature-256 header with GitHub, so route
+  // by payload shape first: the GET verify (hub.mode) and POST (object) both
+  // self-identify as a whatsapp_business_account.
+  const isMeta = req.query?.["hub.mode"] === "subscribe"
+    || req.body?.object === "whatsapp_business_account";
+  if (isMeta) {
+    const matches = getTriggerNodesOfType(automation, "whatsapp_trigger");
+    if (matches.length) return { node: matches[0], config: getTriggerConfig(matches[0]) };
+  }
 
   for (const sig of WEBHOOK_HEADER_SIGNATURES) {
     if (!req.headers[sig.header]) continue;
@@ -79,6 +90,7 @@ export async function handlePublicWebhook(req, res) {
       req,
     );
     const entryNodeId = entryNode?.id || automation.entryNodeId;
+    let isWhatsapp = false;
 
     if (triggerConfig.allowedMethods && triggerConfig.allowedMethods.length > 0) {
       if (!triggerConfig.allowedMethods.includes(req.method)) {
@@ -193,12 +205,38 @@ export async function handlePublicWebhook(req, res) {
       return res.status(403).json({ error: "Meta webhook verification failed" });
     }
 
-    const webhookData = {
-      body:    req.body    || {},
-      query:   req.query   || {},
-      headers: req.headers || {},
-      method:  req.method,
-    };
+    // ── Meta WhatsApp: app-secret signature + per-event classification (POST) ─
+    if (triggerConfig.metaVerifyToken && req.method === "POST") {
+      if (triggerConfig.metaAppSecret) {
+        const provided = req.headers["x-hub-signature-256"] || "";
+        const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+        const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.metaAppSecret)
+          .update(rawBody).digest("hex");
+        const pBuf = Buffer.from(provided.padEnd(expected.length));
+        const eBuf = Buffer.from(expected);
+        if (pBuf.length !== eBuf.length || !crypto.timingSafeEqual(pBuf, eBuf)) {
+          return res.status(401).json({ error: "Invalid Meta webhook signature" });
+        }
+      }
+      // Meta sends every subscribed change to one URL; drop payloads that don't
+      // match the selected event so each trigger only fires on its own event.
+      const eventType = triggerConfig.whatsappEvent || triggerConfig.eventType;
+      if (eventType && !matchesWhatsappEvent(req.body, eventType, { targetValue: triggerConfig.targetValue })) {
+        return res.status(200).json({ ignored: true });
+      }
+      isWhatsapp = true;
+    }
+
+    // WhatsApp triggers run on a flattened payload so $trigger.text / $trigger.from
+    // resolve directly; the raw Meta body stays under $trigger.raw.
+    const webhookData = isWhatsapp
+      ? shapeWhatsappPayload(req.body)
+      : {
+          body:    req.body    || {},
+          query:   req.query   || {},
+          headers: req.headers || {},
+          method:  req.method,
+        };
 
     const idempotencyKey = crypto.randomUUID();
 
