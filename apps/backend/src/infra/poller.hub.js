@@ -132,7 +132,10 @@ const POLL_REGISTRY = {
       cfg: {
         token: cfg.token || cfg.accessToken,
         projectId: cfg.projectId || cfg.projectGid,
-        eventType: cfg.eventType,
+        eventType: cfg.eventType || cfg.watchType,
+        dueWithinDays: cfg.dueWithinDays,
+        sectionName: cfg.sectionName,
+        tagName: cfg.tagName,
       },
     }),
     repeat: (cfg) => {

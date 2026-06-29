@@ -143,6 +143,37 @@ const pipedriveEvent = (id, label, description, icon, varsExtra = [], fields = [
   fields: [...pipedriveBaseFields, ...fields, pipedriveVars(varsExtra)],
 });
 
+const ASANA_POLL = [
+  { value: '2', label: 'Every 2 minutes' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const asanaBaseFields = [
+  { type: 'password', key: 'token', label: 'Asana Personal Access Token', placeholder: 'from My Settings → Apps → Developer apps',
+    hint: '// Asana → My Settings → Apps → Manage Developer Apps → Personal access token' },
+  { type: 'text', key: 'projectId', label: 'Project ID', placeholder: '1201234567890123',
+    hint: '// the long number in your project URL: app.asana.com/0/<PROJECT_ID>/list' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: ASANA_POLL },
+];
+const asanaVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.gid', 'the task id'],
+    ['$trigger.name', 'the task name'],
+    ['$trigger.assignee', 'who it is assigned to'],
+    ['$trigger.url', 'a direct link to the task'],
+    ...extra,
+  ],
+});
+// An Asana event = a match predicate over the enriched task list in the poller.
+// `eventType` (via configExtra) selects the ASANA_MATCH entry.
+const asanaEvent = (id, label, description, icon, varsExtra = [], fields = []) => ({
+  id, label, description, icon, event: id, accent: '#F06A6A',
+  configExtra: { eventType: id },
+  fields: [...asanaBaseFields, ...fields, asanaVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -750,6 +781,41 @@ export const TRIGGER_EVENTS = {
         [['$trigger.title', 'lead title'], ['$trigger.value', 'lead value']]),
       pipedriveEvent('note_created', 'Note Created', 'A note is added to a deal, person, or org', StickyNote,
         [['$trigger.content', 'the note text'], ['$trigger.userName', 'who wrote it']]),
+    ],
+  },
+
+  asana: {
+    title: 'Asana',
+    subtitle: 'Trigger on task activity in a project — created, completed, assigned, due, overdue',
+    events: [
+      asanaEvent('new_task', 'Task Created', 'A new task is added to the project', Plus,
+        [['$trigger.createdAt', 'when it was created']]),
+      asanaEvent('task_completed', 'Task Completed', 'A task is marked complete', CheckCircle2,
+        [['$trigger.completedAt', 'when it was completed']]),
+      asanaEvent('task_assigned', 'Task Assigned', 'A task gets an assignee', UserCheck,
+        [['$trigger.assignee', 'who it was assigned to']]),
+      asanaEvent('task_unassigned', 'Task Unassigned', 'An open task has no assignee', UserMinus,
+        [['$trigger.name', 'the unassigned task']]),
+      asanaEvent('due_today', 'Due Today', 'An open task is due today', Calendar,
+        [['$trigger.dueOn', 'the due date']]),
+      asanaEvent('overdue', 'Task Overdue', 'An open task is past its due date', AlertCircle,
+        [['$trigger.dueOn', 'when it was due']]),
+      asanaEvent('due_soon', 'Due Soon', 'An open task is due within the next few days', Clock,
+        [['$trigger.dueOn', 'the due date']],
+        [{ type: 'text', key: 'dueWithinDays', label: 'Within How Many Days', default: '3', placeholder: '3',
+          hint: '// fire when an open task is due within this many days from now' }]),
+      asanaEvent('no_due_date', 'Missing Due Date', 'An open task has no due date set', CircleDashed,
+        [['$trigger.name', 'the task without a due date']]),
+      asanaEvent('in_section', 'Task In Section', 'A task lands in a specific section/column', Layers,
+        [['$trigger.section', 'the section it is in']],
+        [{ type: 'text', key: 'sectionName', label: 'Section Name', placeholder: 'In Progress',
+          hint: '// exact name of the board column / list section to watch' }]),
+      asanaEvent('has_tag', 'Task Has Tag', 'A task carries a specific tag', Tag,
+        [['$trigger.tags', 'all tags on the task']],
+        [{ type: 'text', key: 'tagName', label: 'Tag Name', placeholder: 'urgent',
+          hint: '// exact name of the Asana tag to watch for' }]),
+      asanaEvent('subtask_added', 'Subtask Created', 'A subtask (task with a parent) appears', GitBranch,
+        [['$trigger.parentGid', 'the parent task id']]),
     ],
   },
 
