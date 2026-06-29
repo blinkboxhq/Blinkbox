@@ -594,6 +594,38 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Instagram authenticates with an OAuth token (vault credential, auto-refreshed).
+// The poller reads the connected account's media feed and `eventType` (via
+// configExtra) selects the INSTAGRAM_EVENTS predicate over each post.
+const instagramBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Instagram Account', credType: 'instagram',
+    oauthProvider: 'instagram', hint: '// connect your Instagram professional account' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const instagramTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const instagramVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.mediaId', 'the post id'],
+    ['$trigger.caption', 'the post caption'],
+    ['$trigger.mediaType', 'IMAGE / VIDEO / CAROUSEL_ALBUM'],
+    ['$trigger.likes', 'the like count'],
+    ['$trigger.comments', 'the comment count'],
+    ['$trigger.permalink', 'link to the post'],
+    ...extra,
+  ],
+});
+const instagramEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#E4405F',
+  configExtra: { eventType: id },
+  fields: [...instagramBaseFields, ...extraFields, instagramVars(varsExtra)],
+});
+
 // Vercel authenticates with an API token (vault credential). The user optionally
 // scopes to one Project (and Team); the poller watches the deployments feed and
 // `eventType` (via configExtra) selects the VERCEL_EVENTS predicate per deploy.
@@ -2098,6 +2130,31 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  instagram: {
+    title: 'Instagram',
+    subtitle: 'Watch your posts — new media, captions, hashtags, likes and comments',
+    events: [
+      instagramEvent('new_post', 'New Post', 'Any new media is published.', Plus),
+      instagramEvent('new_image', 'New Photo', 'A new image post is published.', Image),
+      instagramEvent('new_video', 'New Video', 'A new video or reel is published.', Film),
+      instagramEvent('new_carousel', 'New Carousel', 'A new multi-photo album is published.', Layers),
+      instagramEvent('caption_contains', 'Caption Contains', 'A post caption contains your text.', Type,
+        [instagramTargetField('Text', 'launch', '// case-insensitive match in the caption')]),
+      instagramEvent('hashtag_used', 'Hashtag Used', 'A post uses a specific hashtag.', Hash,
+        [instagramTargetField('Hashtag', 'sale', '// without the # — e.g. sale')]),
+      instagramEvent('media_type_is', 'Media Type Is', 'A post matches a media type you name.', ListTodo,
+        [instagramTargetField('Media Type', 'IMAGE', '// IMAGE, VIDEO, or CAROUSEL_ALBUM')]),
+      instagramEvent('likes_over', 'Likes Over', 'A post reaches a like threshold.', Heart,
+        [instagramTargetField('Minimum Likes', '100', '// fires when likes ≥ this')]),
+      instagramEvent('comments_over', 'Comments Over', 'A post reaches a comment threshold.', MessageSquare,
+        [instagramTargetField('Minimum Comments', '20', '// fires when comments ≥ this')]),
+      instagramEvent('new_like', 'New Like', 'A post gains likes since last check.', Heart),
+      instagramEvent('new_comment', 'New Comment', 'A post gains comments since last check.', MessageSquare),
+      instagramEvent('went_viral', 'Went Viral', 'A post crosses a viral like threshold.', Flame,
+        [instagramTargetField('Viral Likes', '1000', '// fires the moment likes cross this')]),
     ],
   },
 
