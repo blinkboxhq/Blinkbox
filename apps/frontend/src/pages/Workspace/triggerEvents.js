@@ -11,6 +11,7 @@ import {
   Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
   Mail, MailOpen, AtSign, Reply, Send, Globe, Heart,
+  FolderPlus, Image, Film, FileSpreadsheet, FileType, HardDrive,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -262,6 +263,37 @@ const mastodonEvent = (id, label, description, icon, varsExtra = [], fields = []
   id, label, description, icon, event: id, accent: '#6364FF',
   configExtra: { eventType: id },
   fields: [...mastodonBaseFields, ...fields, mastodonVars(varsExtra)],
+});
+
+const GDRIVE_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const gdriveBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
+    hint: '// connect the Google account whose Drive you want to watch (OAuth)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GDRIVE_POLL },
+];
+const gdriveFolderField = { type: 'text', key: 'folderId', label: 'Limit To Folder (optional)', placeholder: 'folder id from the Drive URL',
+  hint: '// optional — only fire for files directly inside this folder id' };
+const gdriveVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the file name'],
+    ['$trigger.fileId', 'the Drive file id'],
+    ['$trigger.webViewLink', 'a link to open the file'],
+    ['$trigger.mimeType', 'the file type'],
+    ...extra,
+  ],
+});
+// A Drive event = a client-side predicate over the change stream in the poller.
+// `eventType` (via configExtra) selects the DRIVE_EVENTS entry.
+const gdriveEvent = (id, label, description, icon, varsExtra = [], extraFields = [gdriveFolderField]) => ({
+  id, label, description, icon, event: id, accent: '#1FA463',
+  configExtra: { eventType: id },
+  fields: [...gdriveBaseFields, ...extraFields, gdriveVars(varsExtra)],
 });
 
 const AIRTABLE_POLL = [
@@ -999,6 +1031,27 @@ export const TRIGGER_EVENTS = {
           hint: '// watch the public timeline for this hashtag (no # needed)' }]),
       mastodonEvent('bookmark_added', 'Post Bookmarked', 'You bookmark a post', Bookmark),
       mastodonEvent('favourited_post', 'You Favourited', 'You favourite a post', Heart),
+    ],
+  },
+
+  google_drive: {
+    title: 'Google Drive',
+    subtitle: 'Trigger on Drive file activity — added, modified, trashed, shared, by type',
+    events: [
+      gdriveEvent('file_added', 'File Added', 'A new file appears in your Drive', FileText),
+      gdriveEvent('file_modified', 'File Modified', 'An existing file is edited', Pencil,
+        [['$trigger.modifiedTime', 'when it was last modified']]),
+      gdriveEvent('file_trashed', 'File Trashed', 'A file is moved to the trash', Trash2),
+      gdriveEvent('folder_added', 'Folder Created', 'A new folder is created', FolderPlus),
+      gdriveEvent('shared_with_me', 'Shared With Me', 'A file is shared with you by someone else', Users,
+        [['$trigger.owner', 'who shared it']]),
+      gdriveEvent('starred', 'File Starred', 'A file gets starred', Star),
+      gdriveEvent('doc_added', 'Google Doc Added', 'A new Google Doc is created', FileType),
+      gdriveEvent('sheet_added', 'Google Sheet Added', 'A new Google Sheet is created', FileSpreadsheet),
+      gdriveEvent('pdf_added', 'PDF Added', 'A new PDF file appears', FileText),
+      gdriveEvent('image_added', 'Image Added', 'A new image file appears', Image),
+      gdriveEvent('video_added', 'Video Added', 'A new video file appears', Film),
+      gdriveEvent('owned_by_me', 'File I Own Changed', 'A change to any file you own', HardDrive),
     ],
   },
 

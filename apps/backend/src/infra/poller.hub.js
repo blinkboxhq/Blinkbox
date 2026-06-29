@@ -17,6 +17,7 @@ import { pollGitLab } from "./gitlab.poller.js";
 import { pollLinear } from "./linear.poller.js";
 import { pollCalendar } from "./googleCalendar.poller.js";
 import { pollGoogleSheets } from "./googleSheets.poller.js";
+import { pollGoogleDrive } from "./googleDrive.poller.js";
 import { pollHackerNews } from "./hackerNews.poller.js";
 import { pollHttpMonitor } from "./httpMonitor.poller.js";
 import { pollMailbox } from "./imap.poller.js";
@@ -258,6 +259,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gsheets",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollGoogleSheets(automationId, triggerNodeId, cfg); },
+  },
+
+  google_drive_trigger: {
+    triggerName: "google_drive_trigger",
+    required: ["credentialId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        eventType: cfg.eventType || cfg.watchType, folderId: cfg.folderId,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "gdrive",
+    run: async ({ automationId, cfg }) => { await pollGoogleDrive(automationId, cfg); },
   },
 
   hackernews_trigger: {
