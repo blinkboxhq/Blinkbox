@@ -630,6 +630,30 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// Docker reads the Engine event stream over a local socket or remote TCP host.
+// No credential; `eventType` (via configExtra) selects which Engine event Type +
+// Action fires the workflow.
+const dockerBaseFields = [
+  { type: 'text', key: 'host', label: 'Docker Host', placeholder: 'unix:///var/run/docker.sock',
+    hint: '// local socket, or tcp://host:2375 for a remote engine' },
+  { type: 'text', key: 'containerFilter', label: 'Container Filter', placeholder: 'api (optional)',
+    hint: '// only fire for containers whose name contains this' },
+];
+const dockerVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the container or object name'],
+    ['$trigger.image', 'the image involved'],
+    ['$trigger.action', 'the Docker action (start, die, …)'],
+    ['$trigger.type', 'container, image, volume or network'],
+    ...extra,
+  ],
+});
+const dockerEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#2496ED',
+  configExtra: { eventType: id },
+  fields: [...dockerBaseFields, ...extraFields, dockerVars(varsExtra)],
+});
+
 // GitHub Issues/PRs polls the repo issues API with an OAuth credential. The
 // poller reads `credentialId`, `owner`, `repo`; `eventType` (via configExtra)
 // selects the GH_ISSUE_EVENTS predicate per item.
@@ -2372,6 +2396,25 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  docker: {
+    title: 'Docker',
+    subtitle: 'Watch the Engine — container lifecycle, images, volumes and networks',
+    events: [
+      dockerEvent('container_started', 'Container Started', 'A container starts.', Play),
+      dockerEvent('container_stopped', 'Container Stopped', 'A container is stopped.', Ban),
+      dockerEvent('container_died', 'Container Died', 'A container exits on its own.', XCircle),
+      dockerEvent('container_killed', 'Container Killed', 'A container is killed.', Flag),
+      dockerEvent('container_oom', 'Out Of Memory', 'A container is OOM-killed.', AlertOctagon),
+      dockerEvent('container_created', 'Container Created', 'A container is created.', Plus),
+      dockerEvent('container_destroyed', 'Container Removed', 'A container is removed.', Trash2),
+      dockerEvent('container_paused', 'Container Paused', 'A container is paused or unpaused.', PauseCircle),
+      dockerEvent('image_pulled', 'Image Pulled', 'An image is pulled.', Layers),
+      dockerEvent('image_deleted', 'Image Deleted', 'An image is deleted or untagged.', Archive),
+      dockerEvent('volume_created', 'Volume Event', 'A volume is created or destroyed.', Database),
+      dockerEvent('network_event', 'Network Event', 'A network connect/disconnect/change.', Globe),
     ],
   },
 

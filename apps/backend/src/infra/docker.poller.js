@@ -47,6 +47,25 @@ async function fetchDockerEvents(cfg) {
   return events;
 }
 
+// Each event maps to a Docker Engine event Type + the set of Actions that fire it.
+// Docker emits a discrete event stream, so these are plain classifiers over one
+// event — no snapshot needed. `all` passes everything through.
+const DOCKER_EVENTS = {
+  all:                 { type: null,        actions: null },
+  container_started:   { type: "container", actions: ["start"] },
+  container_stopped:   { type: "container", actions: ["stop"] },
+  container_died:      { type: "container", actions: ["die"] },
+  container_killed:    { type: "container", actions: ["kill"] },
+  container_oom:       { type: "container", actions: ["oom"] },
+  container_created:   { type: "container", actions: ["create"] },
+  container_destroyed: { type: "container", actions: ["destroy"] },
+  container_paused:    { type: "container", actions: ["pause", "unpause"] },
+  image_pulled:        { type: "image",     actions: ["pull"] },
+  image_deleted:       { type: "image",     actions: ["delete", "untag"] },
+  volume_created:      { type: "volume",    actions: ["create", "destroy"] },
+  network_event:       { type: "network",   actions: ["connect", "disconnect", "create", "destroy"] },
+};
+
 export async function pollDocker(automationId, triggerNodeId, cfg) {
   const scope = triggerNodeId || automationId;
   const lockKey = `bb:docker:lock:${scope}`;
@@ -56,19 +75,22 @@ export async function pollDocker(automationId, triggerNodeId, cfg) {
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const { eventType = "all", containerFilter } = cfg;
+    const { containerFilter } = cfg;
+    const evType = cfg.eventType || cfg.watchType || "all";
+    const spec = DOCKER_EVENTS[evType] || DOCKER_EVENTS.all;
 
     const events = await fetchDockerEvents(cfg);
-    const seenKey = `bb:docker:seen:${scope}`;
+    const seenKey = `bb:docker:seen:${scope}:${evType}`;
 
     for (const evt of events) {
+      if (spec.type && evt.Type !== spec.type) continue;
+      if (spec.actions && !spec.actions.includes(String(evt.Action).split(":")[0])) continue;
+      if (containerFilter && !evt.Actor?.Attributes?.name?.includes(containerFilter)) continue;
+
       const evtId = `${evt.Type}:${evt.Action}:${evt.Actor?.ID}:${evt.time}`;
       const added = await redis.sadd(seenKey, evtId);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
-
-      if (eventType !== "all" && evt.Type !== eventType) continue;
-      if (containerFilter && !evt.Actor?.Attributes?.name?.includes(containerFilter)) continue;
 
       const payload = {
         type: evt.Type,
@@ -84,7 +106,7 @@ export async function pollDocker(automationId, triggerNodeId, cfg) {
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
         entryNodeId: triggerNodeId || automation.entryNodeId,
-        idempotencyKey: `docker:${scope}:${evtId}`,
+        idempotencyKey: `docker:${scope}:${evType}:${evtId}`,
       });
     }
   } catch (err) {
@@ -118,7 +140,8 @@ export async function syncDockerJobs() {
     const cfg = entryNode?.data?.config || {};
     await dockerQueue.add("docker-poll", {
       automationId: automation._id.toString(),
-      cfg: { host: cfg.host, eventType: cfg.eventType, containerFilter: cfg.containerFilter },
+      triggerNodeId: automation.entryNodeId,
+      cfg: { host: cfg.host, eventType: cfg.eventType || cfg.watchType, containerFilter: cfg.containerFilter },
     }, { repeat: { every: 30_000 }, jobId: `docker-${automation._id}` });
   }
   console.log(`[DockerPoller] Synced ${automations.length} automations`);
