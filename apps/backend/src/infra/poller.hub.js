@@ -35,6 +35,7 @@ import { pollSslCert } from "./sslCert.poller.js";
 import { pollTeams } from "./teamsMessage.poller.js";
 import { pollDatadog } from "./datadog.poller.js";
 import { pollClickUp } from "./clickup.poller.js";
+import { pollSentry } from "./sentry.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -308,6 +309,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "clickup",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollClickUp(automationId, triggerNodeId, cfg); },
+  },
+
+  sentry_trigger: {
+    triggerName: "sentry_trigger",
+    required: ["credentialId", "organization"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        organization: cfg.organization, project: cfg.project, query: cfg.query,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "sentry",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollSentry(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {

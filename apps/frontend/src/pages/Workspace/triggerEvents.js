@@ -594,6 +594,43 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Sentry authenticates with a Personal Auth Token (vault credential). The
+// poller watches an org's (optionally one project's) unresolved issue feed;
+// `eventType` (via configExtra) selects the SENTRY_EVENTS predicate.
+const sentryBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Sentry Account', credType: 'sentry',
+    hint: '// paste a Sentry Personal Auth Token with issues:read scope' },
+  { type: 'text', key: 'organization', label: 'Organization Slug', placeholder: 'acme-inc',
+    hint: '// your org slug — found in the Sentry URL after /organizations/' },
+  { type: 'text', key: 'project', label: 'Project (optional)', placeholder: 'backend-api',
+    hint: '// leave blank to watch every project in the org' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const sentryTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const sentryVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the issue title'],
+    ['$trigger.level', 'severity (error/warning/fatal/info)'],
+    ['$trigger.count', 'how many times it has happened'],
+    ['$trigger.userCount', 'how many users it has hit'],
+    ['$trigger.project', 'the project slug'],
+    ['$trigger.url', 'a link to open the issue'],
+    ...extra,
+  ],
+});
+const sentryEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#362D59',
+  configExtra: { eventType: id },
+  fields: [...sentryBaseFields, ...extraFields, sentryVars(varsExtra)],
+});
+
 const clickupBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'ClickUp Account', credType: 'clickup',
     hint: '// connect the ClickUp account (Personal API token or OAuth)' },
@@ -1687,6 +1724,31 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  sentry: {
+    title: 'Sentry',
+    subtitle: 'Watch your error feed — new issues, regressions, spikes, severity and more',
+    events: [
+      sentryEvent('new_issue', 'New Issue', 'A brand-new error issue is created.', AlertOctagon),
+      sentryEvent('any_issue', 'Any New Event', 'Any unresolved issue receives a fresh occurrence.', Activity),
+      sentryEvent('regression', 'Regression', 'A resolved issue comes back (regressed).', RefreshCw),
+      sentryEvent('escalating', 'Escalating', 'An issue is escalating in volume.', Flame),
+      sentryEvent('level_is', 'Severity Is', 'An issue matches a specific severity level.', Gauge,
+        [sentryTargetField('Level', 'error', '// error, warning, fatal or info')]),
+      sentryEvent('fatal_error', 'Fatal Error', 'An issue logged at the fatal level.', AlertTriangle),
+      sentryEvent('unhandled', 'Unhandled Error', 'An issue from an uncaught exception.', Bug),
+      sentryEvent('frequency_over', 'Happened N+ Times', 'An issue crosses an occurrence count.', Flag,
+        [sentryTargetField('Count Threshold', '100', '// fire once the event count reaches this number')]),
+      sentryEvent('users_over', 'Affecting N+ Users', 'An issue impacts at least N users.', Users,
+        [sentryTargetField('User Threshold', '10', '// fire once this many users are affected')]),
+      sentryEvent('title_contains', 'Title Contains', 'The issue title includes your text.', Search,
+        [sentryTargetField('Text', 'TimeoutError', '// match part of the issue title')]),
+      sentryEvent('in_project', 'In Project', 'The issue belongs to one specific project.', Hash,
+        [sentryTargetField('Project Slug', 'backend-api', '// match the project slug exactly')]),
+      sentryEvent('assigned', 'Assigned', 'An issue is assigned (optionally to a specific person).', UserCheck,
+        [sentryTargetField('Assignee (optional)', 'jane@acme.com', '// leave blank for anyone — or a name/email')]),
     ],
   },
 
