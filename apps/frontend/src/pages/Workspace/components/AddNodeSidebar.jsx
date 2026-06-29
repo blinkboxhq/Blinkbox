@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, X, ArrowLeft, ChevronRight, CheckCircle2, Plus } from "lucide-react";
+import { Search, X, ArrowLeft, ChevronRight, CheckCircle2, Plus, Layers } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import { NODE_ACTIONS } from "../nodeActions";
@@ -10,6 +10,15 @@ const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
 const ALL_NODES = Object.entries(NodeRegistry)
   .filter(([, def]) => def.category !== "trigger" && !def.agentOnly)
   .map(([key, def]) => ({ key, ...def }));
+
+const CAT_DESC = {
+  ai_models: "Chat models, code & assistants",
+  ai_agent:  "Agents, memory, tools & integrations",
+  apps:      "SaaS & platform actions",
+  logic:     "Conditions, loops & flow control",
+  data:      "Databases, transforms & variables",
+  infra:     "Files, network & system ops",
+};
 
 const CAT_COLORS = {
   ai_models: { accent: "#a78bfa" },
@@ -98,7 +107,7 @@ export default function AddNodeSidebar() {
 
   const handleNodeClick = (nodeDef) => {
     const actions = NODE_ACTIONS[nodeDef.key];
-    if (actions?.length > 0) { setPending(nodeDef); return; }
+    if (actions?.length > 0) { setPending(nodeDef); setSearch(""); return; }
     if (selected.size > 0) { toggleSelect(nodeDef); return; }
     commitOne(nodeDef);
   };
@@ -117,12 +126,12 @@ export default function AddNodeSidebar() {
     const onKey = (e) => {
       if (e.key === "Escape") {
         if (pendingNode) { setPending(null); return; }
-        if (catPage) { setCatPage(null); return; }
+        if (catPage) { setCatPage(null); setSearch(""); return; }
         if (search) { setSearch(""); return; }
         close();
         return;
       }
-      if (!visibleNodes) return;
+      if (pendingNode || !visibleNodes) return;
       if (e.key === "ArrowDown") { e.preventDefault(); setFocusIdx((i) => Math.min(i + 1, visibleNodes.length - 1)); }
       if (e.key === "ArrowUp")   { e.preventDefault(); setFocusIdx((i) => Math.max(i - 1, 0)); }
       if (e.key === "Enter" && visibleNodes[focusIdx]) handleNodeClick(visibleNodes[focusIdx]);
@@ -133,108 +142,85 @@ export default function AddNodeSidebar() {
 
   const cat = catPage ? ACTION_CATEGORIES.find((c) => c.id === catPage) : null;
   const catColor = catPage ? CAT_COLORS[catPage] : null;
+  const actions = pendingNode ? (NODE_ACTIONS[pendingNode.key] || []) : null;
 
-  // ── Action picker phase ────────────────────────────────────────────────────
-  if (pendingNode) {
-    const actions = NODE_ACTIONS[pendingNode.key] || [];
-    const Icon = pendingNode.icon;
-    const nodeColor = CAT_COLORS[pendingNode.category];
-    return (
-      <>
-        <div className="fixed inset-0 z-40" onClick={() => setPending(null)} />
-        <div className="fixed top-14 right-0 bottom-0 z-50 flex flex-col bg-neutral-950 border-l border-white/[0.12]"
-          style={{ width: "clamp(300px, 28vw, 420px)" }}>
-          <div className="flex items-center border-b border-white/[0.08] shrink-0">
-            <button onClick={() => setPending(null)}
-              className="flex items-center justify-center w-12 h-14 text-neutral-500 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
-              <ArrowLeft size={17} />
-            </button>
-            <div className="flex-1 flex items-center gap-3 px-2 h-14">
-              {pendingNode.logoUrl ? (
-                <img src={pendingNode.logoUrl} alt={pendingNode.label} className="w-5 h-5 object-contain shrink-0"
-                  style={pendingNode.imgFilter ? { filter: pendingNode.imgFilter } : undefined} />
-              ) : (
-                <Icon size={20} strokeWidth={1.8} className="shrink-0" style={{ color: nodeColor?.accent || "rgba(255,255,255,0.5)" }} />
-              )}
-              <span className="text-[14px] font-semibold text-white truncate">{pendingNode.label}</span>
-              <span className="text-[11px] text-neutral-600 ml-auto shrink-0">{actions.length} actions</span>
-            </div>
-            <button onClick={close}
-              className="flex items-center justify-center w-12 h-14 text-neutral-600 hover:text-white hover:bg-white/[0.05] transition-colors shrink-0">
-              <X size={15} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
-            {actions.map((action, i) => (
-              <button key={i} onClick={() => commitOne(pendingNode, action.name)}
-                className="flex items-center gap-3 w-full px-5 py-4 hover:bg-white/[0.04] transition-colors text-left group border-b border-white/[0.04] last:border-0">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-white leading-tight">{action.name}</div>
-                  {action.description && <div className="text-[11px] text-neutral-500 mt-0.5">{action.description}</div>}
-                </div>
-                <ChevronRight size={14} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
-              </button>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
+  const headerTitle = pendingNode
+    ? pendingNode.label
+    : cat
+    ? cat.label
+    : "What should this step do?";
+  const headerSub = pendingNode
+    ? "Pick the action to run"
+    : cat
+    ? (CAT_DESC[cat.id] || `${visibleNodes?.length ?? 0} nodes`)
+    : "An action is a step that does something in your workflow";
+
+  const goBack = () => {
+    if (pendingNode) { setPending(null); return; }
+    setCatPage(null); setSearch("");
+  };
 
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={close} />
       <div
-        className="fixed top-14 right-0 bottom-0 z-50 flex flex-col bg-neutral-950 border-l border-white/[0.12]"
-        style={{ width: "clamp(300px, 28vw, 420px)" }}
+        className="bb-liquid bb-edge-left fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+        style={{ width: "clamp(360px, 32vw, 480px)" }}
       >
-        {/* Search bar */}
-        <div className="px-3 py-3 border-b border-white/[0.08] shrink-0 flex items-center gap-2">
-          {catPage && (
-            <button onClick={() => { setCatPage(null); setSearch(""); }}
-              className="flex items-center justify-center w-8 h-8 text-neutral-500 hover:text-white transition-colors shrink-0">
-              <ArrowLeft size={15} />
-            </button>
-          )}
-          <div className="flex-1 flex items-center gap-2.5 px-3 h-9 rounded-lg border border-white/[0.1] bg-white/[0.06] backdrop-blur-md focus-within:border-white/[0.22] focus-within:bg-white/[0.09] transition-all">
-            <Search size={13} className="text-neutral-500 shrink-0" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); if (catPage) setCatPage(null); }}
-              placeholder={catPage ? `Search in ${cat?.label || catPage}…` : "Search nodes…"}
-              className="flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-neutral-600 font-medium"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="text-neutral-600 hover:text-white transition-colors">
-                <X size={12} />
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 shrink-0">
+          <div className="flex items-start gap-3">
+            {(catPage || pendingNode) && (
+              <button onClick={goBack}
+                className="flex items-center justify-center w-7 h-7 -ml-1 rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0">
+                <ArrowLeft size={16} />
               </button>
             )}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-[16px] font-semibold text-white leading-tight truncate">{headerTitle}</h2>
+              <p className="text-[12px] text-neutral-500 mt-1 leading-snug">{headerSub}</p>
+            </div>
+            <button onClick={close}
+              className="flex items-center justify-center w-7 h-7 rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0">
+              <X size={16} />
+            </button>
           </div>
-          <button onClick={close}
-            className="flex items-center justify-center w-8 h-8 text-neutral-600 hover:text-white transition-colors shrink-0">
-            <X size={14} />
-          </button>
         </div>
 
-        {/* Category label strip */}
-        {catPage && cat && !query && (
-          <div className="flex items-center gap-2.5 px-5 py-2.5 border-b border-white/[0.06] shrink-0">
-            <cat.icon size={13} style={{ color: catColor?.accent }} />
-            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: catColor?.accent }}>
-              {cat.label}
-            </span>
+        {/* Search bar (hidden on the action drill-down) */}
+        {!pendingNode && (
+          <div className="px-5 pb-3 shrink-0">
+            <div className="bb-input bb-glow-border flex items-center gap-2.5 px-3.5 h-11 rounded-xl focus-within:border-white/[0.22] transition-all">
+              <Search size={15} className="text-neutral-500 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); if (catPage) setCatPage(null); }}
+                placeholder={cat ? `Search in ${cat.label}…` : "Search actions…"}
+                className="flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-600 font-medium"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="text-neutral-600 hover:text-white transition-colors">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
-          {query ? (
+        <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
+          {pendingNode ? (
+            actions.map((action, i) => (
+              <ActionRow key={i} action={action} subject={pendingNode}
+                onSelect={() => commitOne(pendingNode, action.name)} />
+            ))
+          ) : query ? (
             visibleNodes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Search size={24} className="text-neutral-700" />
-                <p className="text-[12px] text-neutral-600">No nodes match "{search}"</p>
+                <p className="text-[12px] text-neutral-600">No actions match "{search}"</p>
               </div>
             ) : (
               visibleNodes.map((n, i) => (
@@ -254,27 +240,26 @@ export default function AddNodeSidebar() {
               const count = ALL_NODES.filter((n) => n.category === c.id).length;
               if (count === 0) return null;
               const CatIcon = c.icon;
-              const cc = CAT_COLORS[c.id];
               return (
                 <button key={c.id} onClick={() => setCatPage(c.id)}
-                  className="relative flex items-center gap-4 w-full pl-5 pr-4 py-4 hover:bg-white/[0.04] transition-colors text-left group">
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: cc?.accent }} />
-                  <CatIcon size={20} strokeWidth={1.6} className="shrink-0 text-neutral-400 group-hover:text-white transition-colors" />
+                  className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group rounded-xl">
+                  <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+                    <CatIcon size={24} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[14px] font-semibold text-white leading-tight">{c.label}</div>
-                    <div className="text-[11px] text-neutral-600 mt-0.5">{count} nodes</div>
+                    <div className="text-[12px] text-neutral-500 mt-0.5 truncate">{CAT_DESC[c.id] || ""} · {count}</div>
                   </div>
-                  <ChevronRight size={14} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
+                  <ChevronRight size={16} className="text-neutral-600 shrink-0 group-hover:text-neutral-300 transition-colors" />
                 </button>
               );
             })
           )}
         </div>
 
-        {/* Selection footer */}
-        {selected.size > 0 && (
-          <div className="shrink-0 px-4 py-3 border-t border-white/[0.08] flex items-center gap-3">
+        {/* Footer */}
+        {selected.size > 0 ? (
+          <div className="shrink-0 px-5 py-3.5 border-t border-white/[0.06] flex items-center gap-3">
             <button onClick={() => setSelected(new Set())}
               className="p-1.5 text-neutral-600 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors shrink-0">
               <X size={13} />
@@ -284,6 +269,12 @@ export default function AddNodeSidebar() {
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white text-black text-[12px] font-bold hover:bg-neutral-200 transition-colors">
               <Plus size={13} /> Add {selected.size}
             </button>
+          </div>
+        ) : (
+          <div className="shrink-0 px-5 py-3.5 border-t border-white/[0.06] flex items-center gap-2">
+            <Layers size={12} className="text-neutral-600" />
+            <span className="text-[12px] text-neutral-600">{ALL_NODES.length} actions</span>
+            <span className="text-[11px] text-neutral-700 ml-auto">ESC {catPage || pendingNode ? "back" : "close"}</span>
           </div>
         )}
       </div>
@@ -296,38 +287,62 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
   useEffect(() => { if (focused) rowRef.current?.scrollIntoView({ block: "nearest" }); }, [focused]);
 
   const Icon = nodeDef.icon;
-  const cc   = CAT_COLORS[nodeDef.category];
-
   return (
     <button
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-4 w-full pl-5 pr-4 py-3.5 transition-colors text-left group relative ${
-        selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : "hover:bg-white/[0.04]"
+      className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group ${
+        selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : ""
       }`}
     >
-      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ background: cc?.accent || "rgba(255,255,255,0.3)" }} />
-      <div className="w-5 h-5 shrink-0 flex items-center justify-center">
+      <span className="w-7 h-7 shrink-0 flex items-center justify-center">
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-5 h-5 object-contain"
+          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-[26px] h-[26px] object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon size={20} strokeWidth={1.7} className="text-neutral-500 group-hover:text-neutral-200 transition-colors" />
+          <Icon size={24} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
         )}
-      </div>
+      </span>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-white leading-tight">{nodeDef.label}</div>
+        <div className="text-[14px] font-semibold text-white leading-tight">{nodeDef.label}</div>
         {nodeDef.description && (
-          <div className="text-[11px] text-neutral-600 mt-0.5 truncate">{nodeDef.description}</div>
+          <div className="text-[12px] text-neutral-500 mt-0.5 truncate">{nodeDef.description}</div>
         )}
       </div>
       {selected ? (
-        <CheckCircle2 size={14} className="text-white shrink-0" />
+        <CheckCircle2 size={16} className="text-white shrink-0" />
       ) : hasActions ? (
-        <ChevronRight size={14} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
-      ) : null}
+        <ChevronRight size={16} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
+      ) : (
+        <ChevronRight size={16} className="text-neutral-700 shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-neutral-400 transition-all" />
+      )}
+    </button>
+  );
+}
+
+function ActionRow({ action, subject, onSelect }) {
+  const Icon = subject?.icon;
+  return (
+    <button
+      onClick={onSelect}
+      className="bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group"
+    >
+      <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+        {subject?.logoUrl ? (
+          <img src={subject.logoUrl} alt={subject.label} className="w-[24px] h-[24px] object-contain"
+            style={subject.imgFilter ? { filter: subject.imgFilter } : undefined} />
+        ) : (
+          Icon && <Icon size={22} strokeWidth={1.7} className="text-neutral-300" />
+        )}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13.5px] font-semibold text-white leading-tight">{action.name}</div>
+        {action.description && (
+          <div className="text-[11.5px] text-neutral-500 mt-0.5 truncate">{action.description}</div>
+        )}
+      </div>
+      <ChevronRight size={16} className="text-neutral-700 shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-neutral-400 transition-all" />
     </button>
   );
 }
