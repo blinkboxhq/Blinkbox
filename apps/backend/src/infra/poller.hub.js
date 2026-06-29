@@ -57,6 +57,7 @@ import { pollMastodon } from "./mastodon.poller.js";
 import { pollVirusTotal } from "./virustotal.poller.js";
 import { pollGoogleForms } from "./googleForms.poller.js";
 import { pollDiscord } from "./discord.poller.js";
+import { pollTelegram } from "./telegram.poller.js";
 
 const HUB_QUEUE = "bb-poll-hub";
 
@@ -815,6 +816,17 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gforms",
     run: async ({ automationId, cfg }) => { await pollGoogleForms(automationId, cfg); },
+  },
+
+  telegram_trigger: {
+    triggerName: "telegram_trigger",
+    required: ["botToken"],
+    extract: (cfg, automation) => ({
+      cfg: { botToken: cfg.botToken, workspaceId: automation.workspaceId?.toString(), eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
+    jobPrefix: "telegram",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollTelegram(automationId, triggerNodeId, cfg); },
   },
 
   discord_trigger: {

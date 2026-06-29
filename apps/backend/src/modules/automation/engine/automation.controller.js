@@ -17,7 +17,6 @@ import {
   unregisterStripeWebhook,
 } from "../../../infra/stripe.webhook.js";
 import {
-  registerTelegramWebhook,
   unregisterTelegramWebhook,
 } from "../../../infra/telegram.webhook.js";
 import { snapshotBeforeSave } from "../version.routes.js";
@@ -204,13 +203,15 @@ export async function activateAutomation(req, res) {
         const credentialId = cfg.botToken;
         if (!credentialId)
           throw new Error("Telegram trigger requires a Bot Token credential. Open the trigger node and select your bot token.");
+        // Telegram is polled via getUpdates, which Telegram rejects while a
+        // webhook is set — clear any stale webhook so the poller can read.
         resolveCredential(credentialId, automation.workspaceId, "Telegram trigger")
           .then((cred) => {
             const token = decrypt(cred.encryptedData, cred.iv, cred.authTag);
-            return registerTelegramWebhook(automation._id.toString(), token);
+            return unregisterTelegramWebhook(token);
           })
           .catch((err) =>
-            console.error(`[Telegram] Webhook registration failed for ${automation._id}/${entry.nodeId}:`, err.message)
+            console.error(`[Telegram] Webhook clear failed for ${automation._id}/${entry.nodeId}:`, err.message)
           );
       }
 

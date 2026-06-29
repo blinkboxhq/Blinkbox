@@ -636,6 +636,36 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // Price Alert polls CoinGecko (no key) each interval. Side/high/low are tracked
 // in Redis so crossing and new-high/low events diff. `eventType` (via configExtra)
 // selects which condition fires.
+// Telegram polls the Bot API with getUpdates and tracks the update offset in
+// Redis, so it needs no public webhook URL. Just a bot token. `eventType`
+// (via configExtra) classifies each incoming update.
+const telegramBaseFields = [
+  { type: 'password', key: 'botToken', label: 'Bot Token',
+    hint: '// from @BotFather → /newbot or /token' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '2', label: 'Every 2 minutes' },
+      { value: '5', label: 'Every 5 minutes' },
+    ] },
+];
+const telegramTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const telegramVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.text', 'message text'],
+    ['$trigger.fromUsername', 'sender @username'],
+    ['$trigger.chatId', 'chat id (for replying)'],
+    ['$trigger.chatType', 'private / group / channel'],
+    ...extra,
+  ],
+});
+const telegramEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#26A5E4',
+  configExtra: { eventType: id },
+  fields: [...telegramBaseFields, ...extraFields, telegramVars(varsExtra)],
+});
+
 // Discord polls the REST API with a bot token. Channel-message events read
 // /channels/:id/messages; member/guild events need a Guild ID. `eventType`
 // (via configExtra) selects which query/predicate runs.
@@ -1885,6 +1915,27 @@ const stripeSecret = {
 };
 
 export const TRIGGER_EVENTS = {
+  telegram: {
+    title: 'Telegram',
+    subtitle: 'Bot getUpdates polling — no public webhook URL needed',
+    events: [
+      telegramEvent('message', 'New Message', 'Someone sends a message to your bot or group.', MessageSquare),
+      telegramEvent('command', 'Slash Command', 'A message starting with / (e.g. /start).', Code),
+      telegramEvent('text_contains', 'Text Contains', 'A message contains specific text.', Search,
+        [telegramTargetField('Text', 'help', '// fire when the message includes this (case-insensitive)')]),
+      telegramEvent('has_photo', 'Photo Sent', 'A message includes a photo.', Image),
+      telegramEvent('has_document', 'File Sent', 'A message includes a document or file.', Paperclip),
+      telegramEvent('has_link', 'Link Sent', 'A message contains a URL.', Globe),
+      telegramEvent('mentions_bot', 'Mention', 'A message @-mentions a user.', AtSign),
+      telegramEvent('edited_message', 'Message Edited', 'A user edits a previous message.', Pencil),
+      telegramEvent('channel_post', 'Channel Post', 'A new post appears in a channel the bot is in.', Send),
+      telegramEvent('callback_query', 'Button Click', 'An inline keyboard button is pressed.', Square),
+      telegramEvent('new_chat_member', 'Member Joined', 'A new member joins the group.', UserPlus),
+      telegramEvent('left_chat_member', 'Member Left', 'A member leaves the group.', UserMinus),
+      telegramEvent('my_chat_member', 'Bot Status Changed', 'The bot is added to or removed from a chat.', ShieldAlert),
+    ],
+  },
+
   discord: {
     title: 'Discord',
     subtitle: 'Bot-token polling — messages, threads, members and server boosts',
