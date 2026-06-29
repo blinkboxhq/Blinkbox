@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const QUEUE_NAME = "bb-asana-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -56,14 +57,15 @@ export async function pollAsana(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const token = cfg.token || cfg.accessToken;
+    const rawToken = cfg.token || cfg.accessToken;
     const projectId = cfg.projectId || cfg.projectGid;
     let eventType = cfg.eventType || cfg.watchType || "new_task";
     if (eventType === "completed") eventType = "task_completed";
     const spec = ASANA_MATCH[eventType] || ASANA_MATCH.new_task;
-    if (!token || !projectId) return;
+    if (!rawToken || !projectId) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
+    const token = await resolveSecret(rawToken, automation.workspaceId?.toString(), "Asana trigger");
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const tasks = await fetchTasks(token, projectId);
     const seenKey = `bb:asana:seen:${scope}:${eventType}`;

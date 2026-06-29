@@ -23,7 +23,7 @@ const NOTION_POLL = [
   { value: '0 * * * *', label: 'Every hour' },
 ];
 const notionBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'Notion Integration Token', placeholder: 'secret_…  or  ntn_…',
+  { type: 'credential', key: 'apiKey', label: 'Notion Integration Token', credType: 'notion',
     hint: '// create an internal integration at notion.so/my-integrations, then share the database with it' },
   { type: 'text', key: 'databaseId', label: 'Database ID', placeholder: '32-char id from the database URL',
     hint: '// open the database as a full page — the id is the part before ?v= in the URL' },
@@ -58,7 +58,7 @@ const HUBSPOT_POLL = [
   { value: '0 * * * *', label: 'Every hour' },
 ];
 const hubspotBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'HubSpot Private App Token', placeholder: 'pat-na1-…',
+  { type: 'credential', key: 'apiKey', label: 'HubSpot Private App Token', credType: 'hubspot',
     hint: '// Settings → Integrations → Private Apps → create one with crm.objects.*.read scopes' },
   { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: HUBSPOT_POLL },
 ];
@@ -91,9 +91,9 @@ const trelloListFilter = {
   hint: '// only fire for cards in a list whose name contains this — leave blank for the whole board',
 };
 const trelloBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'Trello API Key', placeholder: 'from trello.com/app-key',
+  { type: 'credential', key: 'apiKey', label: 'Trello API Key', credType: 'trello',
     hint: '// grab your key at trello.com/app-key' },
-  { type: 'password', key: 'token', label: 'Trello Token', placeholder: 'token generated from your API key',
+  { type: 'credential', key: 'token', label: 'Trello Token', credType: 'trello',
     hint: '// click "Token" on the app-key page and authorize read access' },
   { type: 'text', key: 'boardId', label: 'Board ID', placeholder: '24-char id from the board URL',
     hint: '// add .json to a board URL, or copy the id segment after /b/' },
@@ -126,7 +126,7 @@ const PIPEDRIVE_POLL = [
   { value: '60', label: 'Every hour' },
 ];
 const pipedriveBaseFields = [
-  { type: 'password', key: 'apiToken', label: 'Pipedrive API Token', placeholder: 'from Settings → Personal → API',
+  { type: 'credential', key: 'apiToken', label: 'Pipedrive API Token', credType: 'pipedrive',
     hint: '// Settings → Personal preferences → API → copy your personal token' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: PIPEDRIVE_POLL },
 ];
@@ -154,7 +154,7 @@ const ASANA_POLL = [
   { value: '60', label: 'Every hour' },
 ];
 const asanaBaseFields = [
-  { type: 'password', key: 'token', label: 'Asana Personal Access Token', placeholder: 'from My Settings → Apps → Developer apps',
+  { type: 'credential', key: 'token', label: 'Asana Personal Access Token', credType: 'asana',
     hint: '// Asana → My Settings → Apps → Manage Developer Apps → Personal access token' },
   { type: 'text', key: 'projectId', label: 'Project ID', placeholder: '1201234567890123',
     hint: '// the long number in your project URL: app.asana.com/0/<PROJECT_ID>/list' },
@@ -246,7 +246,7 @@ const MASTODON_POLL = [
 const mastodonBaseFields = [
   { type: 'text', key: 'instanceUrl', label: 'Instance URL', placeholder: 'mastodon.social',
     hint: '// your Mastodon server, e.g. mastodon.social or fosstodon.org' },
-  { type: 'password', key: 'accessToken', label: 'Access Token', placeholder: 'from Preferences → Development',
+  { type: 'credential', key: 'accessToken', label: 'Access Token', credType: 'mastodon',
     hint: '// Preferences → Development → New application → copy the access token' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: MASTODON_POLL },
 ];
@@ -565,9 +565,9 @@ const teamsEvent = (id, label, description, icon, varsExtra = [], extraFields = 
 // password fields — the picker stores the literal keys the poller sends to
 // the Events API. `eventType` (via configExtra) selects the DATADOG_EVENTS entry.
 const datadogBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'Datadog API Key',
+  { type: 'credential', key: 'apiKey', label: 'Datadog API Key', credType: 'datadog',
     hint: '// Organization Settings → API Keys → copy a key' },
-  { type: 'password', key: 'appKey', label: 'Datadog Application Key',
+  { type: 'credential', key: 'appKey', label: 'Datadog Application Key', credType: 'datadog',
     hint: '// Organization Settings → Application Keys → copy a key (needed to read events)' },
   { type: 'text', key: 'tags', label: 'Tag Filter (optional)', placeholder: 'env:prod,service:api',
     hint: '// only pull events with these tags — leave blank for all' },
@@ -640,7 +640,7 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // Redis, so it needs no public webhook URL. Just a bot token. `eventType`
 // (via configExtra) classifies each incoming update.
 const telegramBaseFields = [
-  { type: 'password', key: 'botToken', label: 'Bot Token',
+  { type: 'credential', key: 'botToken', label: 'Bot Token', credType: 'telegram',
     hint: '// from @BotFather → /newbot or /token' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
@@ -670,7 +670,7 @@ const telegramEvent = (id, label, description, icon, extraFields = [], varsExtra
 // /channels/:id/messages; member/guild events need a Guild ID. `eventType`
 // (via configExtra) selects which query/predicate runs.
 const discordBaseFields = [
-  { type: 'password', key: 'botToken', label: 'Bot Token',
+  { type: 'credential', key: 'botToken', label: 'Bot Token', credType: 'discord',
     hint: '// from the Discord Developer Portal → Bot → Reset Token' },
   { type: 'text', key: 'channelId', label: 'Channel ID', placeholder: '1234567890',
     hint: '// right-click a channel → Copy Channel ID (needs Developer Mode)' },
@@ -709,7 +709,7 @@ const azureBaseFields = [
     hint: '// the {org} in dev.azure.com/{org}' },
   { type: 'text', key: 'project', label: 'Project', placeholder: 'my-project',
     hint: '// the project name inside the organization' },
-  { type: 'password', key: 'pat', label: 'Personal Access Token',
+  { type: 'credential', key: 'pat', label: 'Personal Access Token', credType: 'azure_devops',
     hint: '// User Settings → Personal Access Tokens (needs Read scopes)' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
     options: [
@@ -740,7 +740,7 @@ const azureEvent = (id, label, description, icon, extraFields = [], varsExtra = 
 const figmaBaseFields = [
   { type: 'text', key: 'fileKey', label: 'File Key', placeholder: 'aBcD1234EfGh',
     hint: '// the key in figma.com/file/{KEY}/...' },
-  { type: 'password', key: 'token', label: 'Personal Access Token',
+  { type: 'credential', key: 'token', label: 'Personal Access Token', credType: 'figma',
     hint: '// Figma → Settings → Personal access tokens' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
     options: [
@@ -1092,7 +1092,7 @@ const hnEvent = (id, label, description, icon, extraFields = [], varsExtra = [])
 // scopes to a topic; the poller watches the launch ranking and `eventType` (via
 // configExtra) selects the PH_EVENTS predicate per launch.
 const phBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'API Token', placeholder: 'ph_...',
+  { type: 'credential', key: 'apiKey', label: 'API Token', credType: 'producthunt',
     hint: '// your Product Hunt developer token' },
   { type: 'text', key: 'category', label: 'Topic', placeholder: 'artificial-intelligence (optional)',
     hint: '// limit to one topic slug — leave blank for all' },
@@ -1752,7 +1752,7 @@ const VT_TYPE_OPTIONS = [
   { value: 'ip', label: 'IP address' },
 ];
 const vtBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'VirusTotal API Key',
+  { type: 'credential', key: 'apiKey', label: 'VirusTotal API Key', credType: 'virustotal',
     hint: '// your account → API Key (the public or premium key)' },
   { type: 'select', key: 'scanType', label: 'Target Type', default: 'file', options: VT_TYPE_OPTIONS },
   { type: 'text', key: 'scanTarget', label: 'Target', placeholder: '44d88612fea8a8f36de82e1278abb02f',
@@ -1792,7 +1792,7 @@ const AIRTABLE_POLL = [
   { value: '0 * * * *', label: 'Every hour' },
 ];
 const airtableBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'Airtable Personal Access Token', placeholder: 'pat…',
+  { type: 'credential', key: 'apiKey', label: 'Airtable Personal Access Token', credType: 'airtable',
     hint: '// create at airtable.com/create/tokens with data.records:read scope on your base' },
   { type: 'text', key: 'baseId', label: 'Base ID', placeholder: 'app…',
     hint: '// the app… id from the base API docs (airtable.com/api)' },
@@ -1828,7 +1828,7 @@ const LINEAR_POLL = [
   { value: '60', label: 'Every hour' },
 ];
 const linearBaseFields = [
-  { type: 'password', key: 'apiKey', label: 'Linear API Key', placeholder: 'lin_api_…',
+  { type: 'credential', key: 'apiKey', label: 'Linear API Key', credType: 'linear',
     hint: '// create one in Linear → Settings → API → Personal API keys' },
   { type: 'text', key: 'teamId', label: 'Team ID (optional)', placeholder: 'leave blank for all teams',
     hint: '// scope this trigger to one team; blank = your whole workspace' },
@@ -1865,7 +1865,7 @@ const jiraBaseFields = [
     hint: '// your Atlassian cloud domain — no https://' },
   { type: 'text', key: 'email', label: 'Account Email', placeholder: 'you@company.com',
     hint: '// the email of the Jira account the API token belongs to' },
-  { type: 'password', key: 'token', label: 'API Token', placeholder: 'your Jira API token',
+  { type: 'credential', key: 'token', label: 'API Token', credType: 'jira',
     hint: '// create one at id.atlassian.com/manage-profile/security/api-tokens' },
   { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: JIRA_POLL },
 ];
@@ -1903,7 +1903,7 @@ const GITLAB_POLL = [
 const gitlabBaseFields = [
   { type: 'text', key: 'projectId', label: 'Project ID or Path', placeholder: '278964  or  group/project',
     hint: '// numeric project id, or url-style namespace/project' },
-  { type: 'password', key: 'token', label: 'GitLab Access Token', placeholder: 'glpat-…',
+  { type: 'credential', key: 'token', label: 'GitLab Access Token', credType: 'gitlab',
     hint: '// a Personal/Project token with read_api scope — store it once, we keep it encrypted' },
   { type: 'text', key: 'host', label: 'Host (self-managed only)', default: 'gitlab.com', placeholder: 'gitlab.com',
     hint: '// leave as gitlab.com unless you self-host' },

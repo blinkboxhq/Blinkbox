@@ -353,7 +353,7 @@ TRIGGER_SCHEMAS.producthunt_trigger = {
   icon: Rss,
   accent: '#da552f',
   fields: [
-    { type: 'password', key: 'apiKey', label: 'Developer Token', placeholder: 'your Product Hunt developer token', hint: '// create one at producthunt.com/v2/oauth/applications' },
+    { type: 'credential', key: 'apiKey', label: 'Developer Token', credType: 'producthunt', hint: '// create one at producthunt.com/v2/oauth/applications' },
     { type: 'select', key: 'category', label: 'Topic', default: 'artificial-intelligence', options: [
       { value: 'artificial-intelligence', label: 'Artificial Intelligence' },
       { value: 'developer-tools', label: 'Developer Tools' },
@@ -379,7 +379,7 @@ TRIGGER_SCHEMAS.virustotal_trigger = {
   icon: ShieldCheck,
   accent: '#394eff',
   fields: [
-    { type: 'password', key: 'apiKey', label: 'VirusTotal API Key', placeholder: 'your VirusTotal API key', hint: '// from virustotal.com → profile → API key' },
+    { type: 'credential', key: 'apiKey', label: 'VirusTotal API Key', credType: 'virustotal', hint: '// from virustotal.com → profile → API key' },
     { type: 'pills', key: 'scanType', label: 'Scan Type', default: 'file', options: [ { value: 'file', label: 'File Hash' }, { value: 'url', label: 'URL' }, { value: 'ip', label: 'IP Address' } ] },
     { type: 'text', key: 'scanTarget', label: 'Target', placeholder: 'sha256 hash, URL, or IP', hint: '// what to look up — a file hash (sha256/md5/sha1), a URL, or an IP address' },
     { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60', options: [ { value: '30', label: 'Every 30 minutes' }, { value: '60', label: 'Every hour' }, { value: '180', label: 'Every 3 hours' }, { value: '360', label: 'Every 6 hours' }, { value: '720', label: 'Every 12 hours' } ] },

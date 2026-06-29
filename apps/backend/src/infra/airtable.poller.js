@@ -15,6 +15,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const AIRTABLE_QUEUE = "bb-airtable-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -69,6 +70,7 @@ export async function pollAirtable(
   if (!locked) return;
 
   try {
+    apiKey = await resolveSecret(apiKey, workspaceId, "Airtable trigger");
     const watermark = await redis.get(wmKey);
     const now = new Date().toISOString();
 

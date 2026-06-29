@@ -1,6 +1,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 async function fetchVTAnalysis(apiKey, scanTarget, scanType) {
   let url;
@@ -69,10 +70,14 @@ export async function pollVirusTotal(automationId, triggerNodeId, cfg) {
   if (!locked) return;
 
   try {
-    const { apiKey, scanTarget, scanType = "file" } = cfg;
-    if (!apiKey || !scanTarget) return;
+    const { apiKey: rawApiKey, scanTarget, scanType = "file" } = cfg;
+    if (!rawApiKey || !scanTarget) return;
     const eventType = cfg.eventType || cfg.watchType || "any_result";
     const spec = VT_EVENTS[eventType] || VT_EVENTS.any_result;
+
+    const automation = await Automation.findOne({ _id: automationId, active: true });
+    if (!automation) return;
+    const apiKey = await resolveSecret(rawApiKey, automation.workspaceId?.toString(), "VirusTotal trigger");
 
     const result = await fetchVTAnalysis(apiKey, scanTarget, scanType);
     if (!result) return;
@@ -95,8 +100,6 @@ export async function pollVirusTotal(automationId, triggerNodeId, cfg) {
     if (!fresh) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const automation = await Automation.findOne({ _id: automationId, active: true });
-    if (!automation) return;
 
     try {
       await executeAutomation(automation, result, {

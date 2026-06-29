@@ -1,6 +1,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const SEEN_TTL = 7 * 24 * 60 * 60;
 
@@ -78,18 +79,20 @@ export async function pollMastodon(automationId, triggerNodeId, cfg) {
   if (!locked) return;
 
   try {
-    const { instanceUrl, accessToken } = cfg;
+    const { instanceUrl, accessToken: rawAccessToken } = cfg;
     const eventType = cfg.eventType || cfg.watchType || "mention";
     const spec = MASTODON_EVENTS[eventType] || MASTODON_EVENTS.mention;
-    if (!instanceUrl || !accessToken) return;
+    if (!instanceUrl || !rawAccessToken) return;
+
+    const automation = await Automation.findOne({ _id: automationId, active: true });
+    if (!automation) return;
+    const accessToken = await resolveSecret(rawAccessToken, automation.workspaceId?.toString(), "Mastodon trigger");
 
     const instance = instanceUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
     const items = await fetchMastodon(instance, accessToken, spec, cfg);
     if (!items.length) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const automation = await Automation.findOne({ _id: automationId, active: true });
-    if (!automation) return;
 
     const seenKey = `bb:mastodon:seen:${scope}:${eventType}`;
     for (const item of items) {

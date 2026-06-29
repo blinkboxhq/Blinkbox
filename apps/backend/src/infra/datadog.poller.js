@@ -1,6 +1,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const SEEN_TTL = 7 * 24 * 60 * 60;
 
@@ -50,17 +51,21 @@ export async function pollDatadog(automationId, cfg) {
   if (!locked) return;
 
   try {
-    const { apiKey, appKey, tags, priority, windowMinutes } = cfg;
-    if (!apiKey || !appKey) return;
+    const { apiKey: rawApiKey, appKey: rawAppKey, tags, priority, windowMinutes } = cfg;
+    if (!rawApiKey || !rawAppKey) return;
     const eventType = cfg.eventType || cfg.watchType || "any_event";
     const spec = DATADOG_EVENTS[eventType] || DATADOG_EVENTS.any_event;
+
+    const automation = await Automation.findOne({ _id: automationId, active: true });
+    if (!automation) return;
+    const wsId = automation.workspaceId?.toString();
+    const apiKey = await resolveSecret(rawApiKey, wsId, "Datadog API key");
+    const appKey = await resolveSecret(rawAppKey, wsId, "Datadog app key");
 
     const events = await fetchDatadogEvents(apiKey, appKey, tags, priority, windowMinutes);
     if (!events.length) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const automation = await Automation.findOne({ _id: automationId, active: true });
-    if (!automation) return;
 
     const seenKey = `bb:datadog:seen:${automationId}:${eventType}`;
     for (const event of events) {

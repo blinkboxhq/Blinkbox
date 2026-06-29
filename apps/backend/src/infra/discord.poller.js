@@ -12,6 +12,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const API = "https://discord.com/api/v10";
 const SEEN_TTL = 7 * 24 * 60 * 60;
@@ -159,13 +160,14 @@ export async function pollDiscord(automationId, triggerNodeId, cfg) {
   if (!locked) return;
 
   try {
-    const botToken = cfg.botToken;
-    if (!botToken) return;
+    const rawBotToken = cfg.botToken;
+    if (!rawBotToken) return;
     const eventType = cfg.eventType || cfg.watchType || "message_created";
     const kind = EVENT_KIND[eventType] || "message";
 
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
+    const botToken = await resolveSecret(rawBotToken, automation.workspaceId?.toString(), "Discord trigger");
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
 
     const emit = async (payload, dedup) => {

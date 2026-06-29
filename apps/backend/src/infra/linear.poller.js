@@ -1,6 +1,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const SEEN_TTL = 7 * 24 * 60 * 60;
 
@@ -60,15 +61,17 @@ export async function pollLinear(automationId, cfg) {
   if (!locked) return;
 
   try {
-    const { apiKey, teamId, assigneeId, labelFilter, statusFilter, view = "issue_created" } = cfg;
-    if (!apiKey) return;
+    const { apiKey: rawApiKey, teamId, assigneeId, labelFilter, statusFilter, view = "issue_created" } = cfg;
+    if (!rawApiKey) return;
+
+    const automation = await Automation.findOne({ _id: automationId, active: true });
+    if (!automation) return;
+    const apiKey = await resolveSecret(rawApiKey, automation.workspaceId?.toString(), "Linear trigger");
 
     const issues = await fetchLinearIssues(apiKey, teamId, assigneeId, labelFilter, statusFilter, view);
     if (!issues.length) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const automation = await Automation.findOne({ _id: automationId, active: true });
-    if (!automation) return;
 
     const dedupOn = (LINEAR_VIEWS[view] || LINEAR_VIEWS.issue_created).dedupOn;
     const seenKey = `bb:linear:seen:${automationId}:${view}`;

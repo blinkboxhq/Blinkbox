@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const QUEUE_NAME = "bb-pipedrive-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -65,12 +66,13 @@ export async function pollPipedrive(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { apiToken, stageFilter } = cfg;
+    const { apiToken: rawApiToken, stageFilter } = cfg;
     const eventType = cfg.eventType || cfg.watchType || "deal_created";
     const spec = PIPEDRIVE_SCOPES[eventType] || PIPEDRIVE_SCOPES.deal_created;
-    if (!apiToken) return;
+    if (!rawApiToken) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
+    const apiToken = await resolveSecret(rawApiToken, automation.workspaceId?.toString(), "Pipedrive trigger");
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const items = await fetchItems(apiToken, spec);
     // status/done flips need re-fire, so dedup on the item's update timestamp for those.

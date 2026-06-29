@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 import { assertSafeHost } from "../utils/ssrf.js";
 
 const QUEUE_NAME = "bb-jira-poller";
@@ -36,10 +37,11 @@ export async function pollJira(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { domain, email, token, jql = "created >= -15m ORDER BY created DESC", dedupOn = "key" } = cfg;
-    if (!domain || !email || !token) return;
+    const { domain, email, token: rawToken, jql = "created >= -15m ORDER BY created DESC", dedupOn = "key" } = cfg;
+    if (!domain || !email || !rawToken) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
+    const token = await resolveSecret(rawToken, automation.workspaceId?.toString(), "Jira trigger");
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const issues = await fetchIssues(domain, email, token, jql);
     const seenKey = `bb:jira:seen:${scope}`;

@@ -8,6 +8,7 @@ import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const QUEUE_NAME = "bb-trello-poller";
 const SEEN_TTL = 30 * 24 * 60 * 60;
@@ -48,11 +49,14 @@ export async function pollTrello(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { boardId, apiKey, token, listFilter } = cfg;
+    const { boardId, apiKey: rawApiKey, token: rawToken, listFilter } = cfg;
     const actionType = cfg.actionType || cfg.watchType || "card_created";
-    if (!boardId || !apiKey || !token) return;
+    if (!boardId || !rawApiKey || !rawToken) return;
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
+    const wsId = automation.workspaceId?.toString();
+    const apiKey = await resolveSecret(rawApiKey, wsId, "Trello API key");
+    const token = await resolveSecret(rawToken, wsId, "Trello token");
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const spec = TRELLO_ACTIONS[actionType] || TRELLO_ACTIONS.card_created;
     const actions = await fetchBoardActions(boardId, apiKey, token, spec.filter);

@@ -1,6 +1,7 @@
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
+import { resolveSecret } from "../utils/resolveSecret.js";
 
 const SEEN_TTL = 7 * 24 * 60 * 60;
 const SNAP_TTL = 7 * 24 * 60 * 60;
@@ -67,9 +68,14 @@ export async function pollProductHunt(automationId, triggerNodeId, cfg) {
   if (!locked) return;
 
   try {
-    const { apiKey, category, minVotes } = cfg;
+    const { apiKey: rawApiKey, category, minVotes } = cfg;
     const eventType = cfg.eventType || cfg.watchType || "new_launch";
     const spec = PH_EVENTS[eventType] || PH_EVENTS.new_launch;
+    if (!rawApiKey) return;
+
+    const automation = await Automation.findOne({ _id: automationId, active: true });
+    if (!automation) return;
+    const apiKey = await resolveSecret(rawApiKey, automation.workspaceId?.toString(), "Product Hunt trigger");
 
     const raw = await fetchProductHuntPosts(apiKey, category, minVotes);
     if (!raw.length) return;
@@ -96,8 +102,6 @@ export async function pollProductHunt(automationId, triggerNodeId, cfg) {
     if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const automation = await Automation.findOne({ _id: automationId, active: true });
-    if (!automation) return;
 
     const seenKey = `bb:producthunt:seen:${scope}:${eventType}`;
     for (const post of posts) {
