@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Netlify authenticates with a Personal Access Token (vault credential). The
+// user picks one Site by id; the poller watches its deploy feed and `eventType`
+// (via configExtra) selects the NETLIFY_EVENTS predicate over each deploy.
+const netlifyBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Netlify Account', credType: 'netlify',
+    hint: '// connect with a Personal Access Token' },
+  { type: 'text', key: 'siteId', label: 'Site ID', placeholder: 'a1b2c3d4-...',
+    hint: '// the site to watch — its API id' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const netlifyTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const netlifyVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.deployId', 'the deploy id'],
+    ['$trigger.state', 'ready / building / error / enqueued'],
+    ['$trigger.branch', 'the git branch'],
+    ['$trigger.url', 'the deploy URL'],
+    ['$trigger.context', 'production / deploy-preview / branch-deploy'],
+    ...extra,
+  ],
+});
+const netlifyEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#00AD9F',
+  configExtra: { eventType: id },
+  fields: [...netlifyBaseFields, ...extraFields, netlifyVars(varsExtra)],
+});
+
 // PagerDuty authenticates with an API key (vault credential). The poller watches
 // the account's incident feed (optionally scoped to one service) and `eventType`
 // (via configExtra) selects the PAGERDUTY_EVENTS predicate over each incident.
@@ -2028,6 +2062,28 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  netlify: {
+    title: 'Netlify',
+    subtitle: 'Watch a site — deploys started, succeeded, failed, by branch and more',
+    events: [
+      netlifyEvent('deploy_started', 'Deploy Started', 'A new deploy begins.', Rocket),
+      netlifyEvent('deploy_succeeded', 'Deploy Succeeded', 'A deploy goes live (ready).', CheckCircle2),
+      netlifyEvent('deploy_failed', 'Deploy Failed', 'A deploy errors out.', XCircle),
+      netlifyEvent('deploy_building', 'Deploy Building', 'A deploy enters the build phase.', Activity),
+      netlifyEvent('deploy_enqueued', 'Deploy Enqueued', 'A deploy is queued to start.', Clock),
+      netlifyEvent('deploy_canceled', 'Deploy Canceled', 'A deploy is canceled.', Ban),
+      netlifyEvent('state_changed', 'State Changed', 'Any change to deploy state.', RefreshCw),
+      netlifyEvent('state_is', 'State Is', 'The deploy matches a state you name.', ListTodo,
+        [netlifyTargetField('State', 'ready', '// e.g. ready, building, error')]),
+      netlifyEvent('on_branch', 'On Branch', 'A deploy is for a specific git branch.', GitBranch,
+        [netlifyTargetField('Branch', 'main', '// match the deploy branch')]),
+      netlifyEvent('production_deploy', 'Production Deploy', 'A deploy targets production.', Globe),
+      netlifyEvent('preview_deploy', 'Preview Deploy', 'A deploy is a deploy-preview.', Eye),
+      netlifyEvent('slow_deploy', 'Slow Deploy', 'A deploy takes longer than a threshold.', Gauge,
+        [netlifyTargetField('Minimum Seconds', '120', '// fires when deploy time ≥ this')]),
     ],
   },
 

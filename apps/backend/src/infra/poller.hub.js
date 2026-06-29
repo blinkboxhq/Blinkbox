@@ -45,6 +45,7 @@ import { pollCalendly } from "./calendly.poller.js";
 import { pollTypeform } from "./typeform.poller.js";
 import { pollMailchimp } from "./mailchimp.poller.js";
 import { pollPagerDuty } from "./pagerduty.poller.js";
+import { pollNetlify } from "./netlify.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -463,6 +464,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "pagerduty",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollPagerDuty(automationId, triggerNodeId, cfg); },
+  },
+
+  netlify_trigger: {
+    triggerName: "netlify_trigger",
+    required: ["credentialId", "siteId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        siteId: cfg.siteId,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "netlify",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollNetlify(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
