@@ -461,11 +461,12 @@ const POLL_REGISTRY = {
     extract: (cfg, automation) => ({
       credentialId: cfg.credentialId, workspaceId: automation.workspaceId,
       channelId: cfg.channelId, maxResults: cfg.maxResults || 10,
+      cfg: { eventType: cfg.eventType || cfg.watchType, searchQuery: cfg.searchQuery, minViews: cfg.minViews, minLikes: cfg.minLikes },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 15} * * * *` }),
     jobPrefix: "yt",
-    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults }) => {
-      await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults, cfg }) => {
+      await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults, cfg);
     },
   },
 

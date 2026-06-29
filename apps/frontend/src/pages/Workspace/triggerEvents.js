@@ -363,6 +363,37 @@ const onedriveEvent = (id, label, description, icon, varsExtra = [], extraFields
   fields: [...onedriveBaseFields, ...extraFields, onedriveVars(varsExtra)],
 });
 
+const YOUTUBE_POLL = [
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+  { value: '180', label: 'Every 3 hours' },
+];
+const youtubeBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'YouTube API Key', provider: 'google',
+    hint: '// a YouTube Data API v3 key (stored encrypted as a credential)' },
+  { type: 'text', key: 'channelId', label: 'Channel ID', placeholder: 'UCxxxxxxxxxxxxxxxxxxxxxx',
+    hint: '// the channel to watch — the UC… id from the channel URL' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15', options: YOUTUBE_POLL },
+];
+const youtubeVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the video or item title'],
+    ['$trigger.url', 'the YouTube link'],
+    ['$trigger.channelTitle', 'the channel name'],
+    ['$trigger.publishedAt', 'when it was published'],
+    ...extra,
+  ],
+});
+// A YouTube event = a distinct Data API call in the poller. `eventType` (via
+// configExtra) selects the YT_EVENTS entry.
+const youtubeEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#FF0000',
+  configExtra: { eventType: id },
+  fields: [...youtubeBaseFields, ...extraFields, youtubeVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1169,6 +1200,37 @@ export const TRIGGER_EVENTS = {
       onedriveEvent('large_file', 'Large File Added', 'A file of 10 MB or more is added', HardDrive,
         [['$trigger.size', 'the file size in bytes']]),
       onedriveEvent('any_change', 'Any Change', 'Any add, edit or delete in the watched scope', RefreshCw),
+    ],
+  },
+
+  youtube: {
+    title: 'YouTube',
+    subtitle: 'Trigger on channel activity — uploads, shorts, livestreams, comments and more',
+    events: [
+      youtubeEvent('new_video', 'New Video', 'The channel uploads any new video', Play),
+      youtubeEvent('new_short', 'New Short', 'A new video 60 seconds or shorter', Film,
+        [['$trigger.durationSec', 'the length in seconds']]),
+      youtubeEvent('new_long', 'New Long Video', 'A new video longer than 60 seconds', FileText,
+        [['$trigger.durationSec', 'the length in seconds']]),
+      youtubeEvent('live_now', 'Went Live', 'The channel starts a live stream', Flame),
+      youtubeEvent('upcoming_stream', 'Stream Scheduled', 'An upcoming live stream is announced', Clock),
+      youtubeEvent('keyword_video', 'Video Matching Keyword', 'A new video whose title/description matches a keyword', Search,
+        [], [{ type: 'text', key: 'searchQuery', label: 'Keyword', placeholder: 'e.g. tutorial',
+          hint: '// only fire for videos matching this search term on the channel' }]),
+      youtubeEvent('popular_video', 'Video Hits View Count', 'A recent video reaches a view threshold', Eye,
+        [['$trigger.viewCount', 'the current view count']],
+        [{ type: 'text', key: 'minViews', label: 'Minimum Views', default: '1000', placeholder: '1000',
+          hint: '// fire when a recent video has at least this many views' }]),
+      youtubeEvent('highly_liked', 'Video Hits Like Count', 'A recent video reaches a like threshold', Heart,
+        [['$trigger.likeCount', 'the current like count']],
+        [{ type: 'text', key: 'minLikes', label: 'Minimum Likes', default: '100', placeholder: '100',
+          hint: '// fire when a recent video has at least this many likes' }]),
+      youtubeEvent('new_comment', 'New Comment', 'Someone comments on the channel', MessageSquare,
+        [['$trigger.text', 'the comment text'], ['$trigger.author', 'who commented']]),
+      youtubeEvent('playlist_update', 'Playlist Updated', 'A video is added to one of the channel playlists', ListTodo),
+      youtubeEvent('channel_activity', 'Any Channel Activity', 'Any activity on the channel feed', Activity,
+        [['$trigger.type', 'the kind of activity']]),
+      youtubeEvent('social_post', 'Community Post', 'The channel publishes a community / bulletin post', Send),
     ],
   },
 

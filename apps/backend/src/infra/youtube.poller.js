@@ -23,49 +23,167 @@ async function resolveApiKey(credentialId, workspaceId) {
   return decrypt(cred.encryptedData, cred.iv, cred.authTag);
 }
 
-async function fetchVideos(channelId, apiKey, maxResults = 5) {
-  const url = `https://www.googleapis.com/youtube/v3/search?channelId=${encodeURIComponent(channelId)}&order=date&type=video&maxResults=${maxResults}&part=snippet&key=${apiKey}`;
-  const res = await fetch(url, { headers: { "User-Agent": "BlinkBox/1.0" } });
+const API = "https://www.googleapis.com/youtube/v3";
+
+async function ytGet(path, params, apiKey) {
+  params.set("key", apiKey);
+  const res = await fetch(`${API}/${path}?${params.toString()}`, { headers: { "User-Agent": "BlinkBox/1.0" } });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(`YouTube API ${res.status}: ${err.error?.message || res.statusText}`);
   }
-  const data = await res.json();
-  return (data.items || []).map((item) => ({
-    videoId: item.id?.videoId,
-    title: item.snippet?.title || "",
-    description: item.snippet?.description || "",
-    publishedAt: item.snippet?.publishedAt || "",
-    channelId: item.snippet?.channelId || channelId,
-    channelTitle: item.snippet?.channelTitle || "",
-    thumbnailUrl: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || "",
-    url: item.id?.videoId ? `https://www.youtube.com/watch?v=${item.id.videoId}` : "",
+  return res.json();
+}
+
+function videoShape(snippet, videoId, extra = {}) {
+  return {
+    videoId,
+    title: snippet?.title || "",
+    description: snippet?.description || "",
+    publishedAt: snippet?.publishedAt || "",
+    channelId: snippet?.channelId || "",
+    channelTitle: snippet?.channelTitle || "",
+    thumbnailUrl: snippet?.thumbnails?.medium?.url || snippet?.thumbnails?.default?.url || "",
+    url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : "",
+    ...extra,
+  };
+}
+
+// A search over the channel, optionally narrowed by eventType / q. Used by the
+// video, short, live, upcoming and keyword events. Returns shaped videos.
+async function searchVideos(channelId, apiKey, maxResults, { eventType, q } = {}) {
+  const params = new URLSearchParams({
+    channelId, order: "date", type: "video", part: "snippet",
+    maxResults: String(maxResults || 5),
+  });
+  if (eventType) params.set("eventType", eventType);
+  if (q) params.set("q", q);
+  const data = await ytGet("search", params, apiKey);
+  return (data.items || [])
+    .filter((i) => i.id?.videoId)
+    .map((i) => videoShape(i.snippet, i.id.videoId, { liveStatus: i.snippet?.liveBroadcastContent || "none" }));
+}
+
+// videos.list enriches search hits with statistics + contentDetails so we can
+// gate on views / likes / duration (shorts).
+async function enrichVideos(videos, apiKey) {
+  const ids = videos.map((v) => v.videoId).filter(Boolean).slice(0, 50);
+  if (!ids.length) return videos;
+  const params = new URLSearchParams({ part: "statistics,contentDetails", id: ids.join(",") });
+  const data = await ytGet("videos", params, apiKey);
+  const byId = {};
+  for (const v of data.items || []) byId[v.id] = v;
+  return videos.map((v) => {
+    const d = byId[v.videoId];
+    if (!d) return v;
+    return {
+      ...v,
+      viewCount: parseInt(d.statistics?.viewCount || "0", 10),
+      likeCount: parseInt(d.statistics?.likeCount || "0", 10),
+      commentCount: parseInt(d.statistics?.commentCount || "0", 10),
+      durationSec: iso8601ToSeconds(d.contentDetails?.duration || ""),
+    };
+  });
+}
+
+function iso8601ToSeconds(iso) {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (parseInt(m[1] || 0) * 3600) + (parseInt(m[2] || 0) * 60) + parseInt(m[3] || 0);
+}
+
+async function fetchComments(channelId, apiKey, maxResults) {
+  const params = new URLSearchParams({
+    allThreadsRelatedToChannelId: channelId, part: "snippet",
+    order: "time", maxResults: String(maxResults || 10),
+  });
+  const data = await ytGet("commentThreads", params, apiKey);
+  return (data.items || []).map((t) => {
+    const c = t.snippet?.topLevelComment?.snippet || {};
+    return {
+      id: t.id,
+      commentId: t.snippet?.topLevelComment?.id,
+      text: c.textDisplay || "",
+      author: c.authorDisplayName || "",
+      authorChannelUrl: c.authorChannelUrl || "",
+      likeCount: c.likeCount || 0,
+      publishedAt: c.publishedAt || "",
+      videoId: t.snippet?.videoId || "",
+      url: t.snippet?.videoId ? `https://www.youtube.com/watch?v=${t.snippet.videoId}` : "",
+    };
+  });
+}
+
+async function fetchActivities(channelId, apiKey, maxResults) {
+  const params = new URLSearchParams({
+    channelId, part: "snippet,contentDetails",
+    maxResults: String(maxResults || 10),
+  });
+  const data = await ytGet("activities", params, apiKey);
+  return (data.items || []).map((a) => ({
+    id: a.id,
+    type: a.snippet?.type || "",
+    title: a.snippet?.title || "",
+    description: a.snippet?.description || "",
+    publishedAt: a.snippet?.publishedAt || "",
+    channelId: a.snippet?.channelId || channelId,
+    playlistId: a.contentDetails?.playlistItem?.playlistId || "",
+    videoId: a.contentDetails?.upload?.videoId || a.contentDetails?.playlistItem?.resourceId?.videoId || "",
   }));
 }
 
-export async function pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults) {
+// Each event = a distinct YouTube Data API call (and an optional client gate).
+const YT_EVENTS = {
+  new_video:      { kind: "search", search: {},                          dedup: (v) => v.videoId },
+  new_short:      { kind: "search", search: {}, enrich: true, match: (v) => (v.durationSec || 0) > 0 && v.durationSec <= 60, dedup: (v) => v.videoId },
+  new_long:       { kind: "search", search: {}, enrich: true, match: (v) => (v.durationSec || 0) > 60, dedup: (v) => v.videoId },
+  live_now:       { kind: "search", search: { eventType: "live" },       dedup: (v) => v.videoId },
+  upcoming_stream:{ kind: "search", search: { eventType: "upcoming" },    dedup: (v) => v.videoId },
+  keyword_video:  { kind: "search", search: (cfg) => ({ q: cfg.searchQuery }), dedup: (v) => v.videoId },
+  popular_video:  { kind: "search", search: {}, enrich: true, match: (v, cfg) => v.viewCount >= (parseInt(cfg.minViews) || 1000), dedup: (v) => `${v.videoId}:pop` },
+  highly_liked:   { kind: "search", search: {}, enrich: true, match: (v, cfg) => v.likeCount >= (parseInt(cfg.minLikes) || 100), dedup: (v) => `${v.videoId}:liked` },
+  new_comment:    { kind: "comments",                                     dedup: (c) => c.commentId || c.id },
+  playlist_update:{ kind: "activities", match: (a) => a.type === "playlistItem", dedup: (a) => a.id },
+  channel_activity:{ kind: "activities", match: () => true,               dedup: (a) => a.id },
+  social_post:    { kind: "activities", match: (a) => a.type === "social" || a.type === "bulletin", dedup: (a) => a.id },
+};
+
+async function fetchForEvent(spec, channelId, apiKey, maxResults, cfg) {
+  if (spec.kind === "comments") return fetchComments(channelId, apiKey, maxResults);
+  if (spec.kind === "activities") return fetchActivities(channelId, apiKey, maxResults);
+  const search = typeof spec.search === "function" ? spec.search(cfg) : spec.search;
+  let items = await searchVideos(channelId, apiKey, maxResults, search);
+  if (spec.enrich) items = await enrichVideos(items, apiKey);
+  return items;
+}
+
+export async function pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults, cfg = {}) {
   const scope = triggerNodeId || automationId;
   const lockKey = `bb:yt:lock:${scope}`;
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
 
   try {
+    const eventType = cfg.eventType || cfg.watchType || "new_video";
+    const spec = YT_EVENTS[eventType] || YT_EVENTS.new_video;
     const apiKey = await resolveApiKey(credentialId, workspaceId);
-    const videos = await fetchVideos(channelId, apiKey, maxResults || 5);
-    if (!videos.length) return;
+    const items = await fetchForEvent(spec, channelId, apiKey, maxResults || 10, cfg);
+    if (!items.length) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:yt:seen:${scope}`;
-    for (const video of videos) {
-      if (!video.videoId) continue;
-      const added = await redis.sadd(seenKey, video.videoId);
+    const seenKey = `bb:yt:seen:${scope}:${eventType}`;
+    for (const item of items) {
+      if (spec.match && !spec.match(item, cfg)) continue;
+      const dedup = spec.dedup(item);
+      if (!dedup) continue;
+      const added = await redis.sadd(seenKey, dedup);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, video, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `yt:${scope}:${video.videoId}` });
+        await executeAutomation(automation, item, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `yt:${scope}:${eventType}:${dedup}` });
       } catch (err) {
         console.error(`[YouTubePoller] Failed for automation "${automation.name}":`, err.message);
       }
@@ -84,8 +202,8 @@ export async function startYouTubePoller() {
     defaultJobOptions: { removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } },
   });
   ytWorker = new Worker(QUEUE_NAME, async (job) => {
-    const { automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults } = job.data;
-    await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults);
+    const { automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults, cfg } = job.data;
+    await pollChannel(automationId, triggerNodeId, credentialId, workspaceId, channelId, maxResults, cfg);
   }, { connection: createBullMQConnection(), concurrency: 3 });
   ytWorker.on("failed", (job, err) => console.error(`[YouTubePoller] Job failed:`, err.message));
   await syncYouTubeJobs();
@@ -109,7 +227,8 @@ export async function syncYouTubeJobs() {
       credentialId: cfg.credentialId,
       workspaceId: automation.workspaceId.toString(),
       channelId: cfg.channelId,
-      maxResults: cfg.maxResults || 5,
+      maxResults: cfg.maxResults || 10,
+      cfg: { eventType: cfg.eventType || cfg.watchType, searchQuery: cfg.searchQuery, minViews: cfg.minViews, minLikes: cfg.minLikes },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `yt-${automation._id}` });
   }
   console.log(`[YouTubePoller] Synced ${automations.length} automations`);
