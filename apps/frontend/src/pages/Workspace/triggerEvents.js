@@ -591,6 +591,41 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
   fields: [...datadogBaseFields, ...extraFields, datadogVars(varsExtra)],
 });
 
+// ClickUp authenticates with a Personal API token stored in the credential
+// vault (resolved at poll time). The user picks one List to watch; the poller
+// diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+const clickupBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'ClickUp Account', credType: 'clickup',
+    hint: '// connect the ClickUp account (Personal API token or OAuth)' },
+  { type: 'text', key: 'listId', label: 'List ID', placeholder: '901100000000',
+    hint: '// the List to watch — open the list and copy the id from its URL' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const clickupTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const clickupVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the task name'],
+    ['$trigger.status', 'its current status'],
+    ['$trigger.priority', 'its priority (urgent/high/…)'],
+    ['$trigger.assignees', 'who it is assigned to'],
+    ['$trigger.url', 'a link to open the task'],
+    ['$trigger.dueDate', 'when it is due'],
+    ...extra,
+  ],
+});
+const clickupEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#7B68EE',
+  configExtra: { eventType: id },
+  fields: [...clickupBaseFields, ...extraFields, clickupVars(varsExtra)],
+});
+
 // IMAP authenticates with a vault-stored mailbox password (resolved by
 // credentialId at poll time), plus plaintext host/user/mailbox settings.
 // `eventType` (via configExtra) selects the IMAP_EVENTS entry in the poller.
@@ -1652,6 +1687,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  clickup: {
+    title: 'ClickUp',
+    subtitle: 'Watch a list — tasks created, status moves, assignees, due dates and more',
+    events: [
+      clickupEvent('task_created', 'Task Created', 'A new task appears in the list.', Plus),
+      clickupEvent('task_updated', 'Task Updated', 'Any change to a task in the list.', Pencil),
+      clickupEvent('status_changed', 'Status Changed', 'A task moves to a different status.', ArrowRightCircle),
+      clickupEvent('moved_to_status', 'Moved to Status', 'A task enters one specific status.', Flag,
+        [clickupTargetField('Status Name', 'in progress', '// match the status name (case-insensitive)')]),
+      clickupEvent('completed', 'Task Completed', 'A task is marked done / closed.', CheckCircle2),
+      clickupEvent('priority_set', 'Priority Is', 'A task has a specific priority.', Flame,
+        [clickupTargetField('Priority', 'urgent', '// urgent, high, normal or low')]),
+      clickupEvent('assignee_added', 'Assignee Added', 'Someone is assigned (optionally a specific person).', UserPlus,
+        [clickupTargetField('Assignee (optional)', 'jane', '// leave blank for anyone — or a username/id')]),
+      clickupEvent('unassigned', 'Unassigned', 'A task has no assignee.', UserMinus),
+      clickupEvent('due_date_set', 'Due Date Set', 'A due date is added to a task.', Calendar),
+      clickupEvent('overdue', 'Overdue', 'A task is past its due date and not done.', Clock),
+      clickupEvent('tag_added', 'Has Tag', 'A task carries a specific tag.', Tag,
+        [clickupTargetField('Tag', 'bug', '// match a tag name')]),
+      clickupEvent('name_contains', 'Name Contains', 'The task name includes your text.', Search,
+        [clickupTargetField('Text in Name', 'release', '// case-insensitive contains')]),
     ],
   },
 
