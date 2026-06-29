@@ -453,7 +453,7 @@ const POLL_REGISTRY = {
     triggerName: "mastodon_trigger",
     required: ["instanceUrl", "accessToken"],
     extract: (cfg) => ({
-      cfg: { instanceUrl: cfg.instanceUrl, accessToken: cfg.accessToken, notificationTypes: cfg.notificationTypes },
+      cfg: { instanceUrl: cfg.instanceUrl, accessToken: cfg.accessToken, eventType: cfg.eventType || cfg.watchType, hashtag: cfg.hashtag },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "mastodon",

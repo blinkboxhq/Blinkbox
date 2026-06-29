@@ -10,7 +10,7 @@ import {
   Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
   Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
   Database, Hash, CalendarClock, Eye, Square, Code, Circle,
-  Mail, MailOpen, AtSign, Reply, Send, Globe,
+  Mail, MailOpen, AtSign, Reply, Send, Globe, Heart,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -232,6 +232,36 @@ const outlookEvent = (id, label, description, icon, varsExtra = [], fields = [])
   id, label, description, icon, event: id, accent: '#0A66C2',
   configExtra: { eventType: id },
   fields: [...outlookBaseFields, ...fields, outlookVars(varsExtra)],
+});
+
+const MASTODON_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const mastodonBaseFields = [
+  { type: 'text', key: 'instanceUrl', label: 'Instance URL', placeholder: 'mastodon.social',
+    hint: '// your Mastodon server, e.g. mastodon.social or fosstodon.org' },
+  { type: 'password', key: 'accessToken', label: 'Access Token', placeholder: 'from Preferences → Development',
+    hint: '// Preferences → Development → New application → copy the access token' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: MASTODON_POLL },
+];
+const mastodonVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.accountName', 'the account handle'],
+    ['$trigger.statusContent', 'the post text'],
+    ['$trigger.statusUrl', 'a link to the post'],
+    ...extra,
+  ],
+});
+// A Mastodon event = a distinct API endpoint (notification type or timeline).
+// `eventType` (via configExtra) selects the MASTODON_EVENTS entry.
+const mastodonEvent = (id, label, description, icon, varsExtra = [], fields = []) => ({
+  id, label, description, icon, event: id, accent: '#6364FF',
+  configExtra: { eventType: id },
+  fields: [...mastodonBaseFields, ...fields, mastodonVars(varsExtra)],
 });
 
 const AIRTABLE_POLL = [
@@ -946,6 +976,29 @@ export const TRIGGER_EVENTS = {
       outlookEvent('junk', 'Junk Email', 'A new message arrives in the Junk folder', ShieldAlert),
       outlookEvent('archived', 'Email Archived', 'A message moves to the Archive folder', Archive),
       outlookEvent('draft_saved', 'Draft Saved', 'A new draft is saved', FileText),
+    ],
+  },
+
+  mastodon: {
+    title: 'Mastodon',
+    subtitle: 'Trigger on social activity — mentions, boosts, follows, and timeline posts',
+    events: [
+      mastodonEvent('mention', 'Mentioned', 'Someone mentions you in a post', AtSign),
+      mastodonEvent('favourite', 'Post Favourited', 'Someone favourites one of your posts', Star),
+      mastodonEvent('reblog', 'Post Boosted', 'Someone boosts (reblogs) one of your posts', Repeat),
+      mastodonEvent('follow', 'New Follower', 'Someone follows you', UserPlus),
+      mastodonEvent('follow_request', 'Follow Request', 'Someone requests to follow you', UserCheck),
+      mastodonEvent('poll_ended', 'Poll Ended', 'A poll you voted in or created has ended', Activity),
+      mastodonEvent('status_update', 'Post Edited', 'A post you interacted with is edited', Pencil),
+      mastodonEvent('home_post', 'Home Timeline Post', 'A new post appears in your home timeline', Inbox),
+      mastodonEvent('local_post', 'Local Timeline Post', 'A new post on your instance’s local timeline', Users),
+      mastodonEvent('federated_post', 'Federated Post', 'A new post on the public federated timeline', Globe),
+      mastodonEvent('hashtag_post', 'Hashtag Post', 'A new public post using a specific hashtag', Hash,
+        [['$trigger.tags', 'all hashtags on the post']],
+        [{ type: 'text', key: 'hashtag', label: 'Hashtag', placeholder: 'opensource',
+          hint: '// watch the public timeline for this hashtag (no # needed)' }]),
+      mastodonEvent('bookmark_added', 'Post Bookmarked', 'You bookmark a post', Bookmark),
+      mastodonEvent('favourited_post', 'You Favourited', 'You favourite a post', Heart),
     ],
   },
 
