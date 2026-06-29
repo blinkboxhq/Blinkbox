@@ -560,6 +560,37 @@ const teamsEvent = (id, label, description, icon, varsExtra = [], extraFields = 
   fields: [...teamsBaseFields, ...extraFields, teamsVars(varsExtra)],
 });
 
+// Datadog reads a raw API key + Application key (not OAuth), so these are
+// password fields — the picker stores the literal keys the poller sends to
+// the Events API. `eventType` (via configExtra) selects the DATADOG_EVENTS entry.
+const datadogBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'Datadog API Key',
+    hint: '// Organization Settings → API Keys → copy a key' },
+  { type: 'password', key: 'appKey', label: 'Datadog Application Key',
+    hint: '// Organization Settings → Application Keys → copy a key (needed to read events)' },
+  { type: 'text', key: 'tags', label: 'Tag Filter (optional)', placeholder: 'env:prod,service:api',
+    hint: '// only pull events with these tags — leave blank for all' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2', options: TEAMS_POLL },
+];
+const datadogTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const datadogVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the event title'],
+    ['$trigger.text', 'the event body'],
+    ['$trigger.alertType', 'error / warning / success / info'],
+    ['$trigger.priority', 'normal or low'],
+    ['$trigger.host', 'the host the event came from'],
+    ['$trigger.url', 'a link to the event in Datadog'],
+    ...extra,
+  ],
+});
+const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#632CA6',
+  configExtra: { eventType: id },
+  fields: [...datadogBaseFields, ...extraFields, datadogVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1537,6 +1568,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  datadog: {
+    title: 'Datadog',
+    subtitle: 'Trigger on monitoring events — alerts, recoveries, warnings, hosts and tags',
+    events: [
+      datadogEvent('any_event', 'Any Event', 'Fire on every new event in your Datadog stream.', Activity),
+      datadogEvent('alert_error', 'Alert Triggered', 'A monitor alert fired (error state).', AlertOctagon),
+      datadogEvent('alert_warning', 'Warning Raised', 'An event came in at warning level.', AlertTriangle),
+      datadogEvent('alert_recovery', 'Alert Recovered', 'A previously-firing monitor went back to OK.', CheckCircle2),
+      datadogEvent('alert_info', 'Info Event', 'An informational (non-alert) event arrived.', AlertCircle),
+      datadogEvent('high_priority', 'High Priority Event', 'A normal-priority (high-visibility) event arrived.', Flame),
+      datadogEvent('low_priority', 'Low Priority Event', 'A low-priority event arrived.', Gauge),
+      datadogEvent('from_source', 'From a Source', 'Only events from a specific integration source (e.g. nagios, github).', Globe,
+        [datadogTargetField('Source Name', 'nagios', '// match $trigger.source exactly')]),
+      datadogEvent('from_host', 'From a Host', 'Only events originating from a specific host.', HardDrive,
+        [datadogTargetField('Host Name', 'web-01.prod', '// match the event host exactly')]),
+      datadogEvent('has_tag', 'Has a Tag', 'Only events carrying a specific tag.', Tag,
+        [datadogTargetField('Tag', 'service:api', '// match one of the event tags exactly')]),
+      datadogEvent('title_contains', 'Title Contains', 'The event title includes your text.', Search,
+        [datadogTargetField('Text in Title', 'CPU', '// case-insensitive contains on the title')]),
+      datadogEvent('text_contains', 'Body Contains', 'The event body includes your text.', FileText,
+        [datadogTargetField('Text in Body', 'timeout', '// case-insensitive contains on the body')]),
     ],
   },
 
