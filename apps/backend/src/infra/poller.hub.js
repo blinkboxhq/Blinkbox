@@ -526,7 +526,7 @@ const POLL_REGISTRY = {
     triggerName: "google_forms_trigger",
     required: ["credentialId", "formId"],
     extract: (cfg, automation) => ({
-      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId, formId: cfg.formId },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId, formId: cfg.formId, eventType: cfg.eventType || cfg.watchType, questionTitle: cfg.questionTitle, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "gforms",

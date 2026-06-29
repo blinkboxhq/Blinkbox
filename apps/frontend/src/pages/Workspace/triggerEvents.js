@@ -429,6 +429,38 @@ const sharepointEvent = (id, label, description, icon, varsExtra = [], extraFiel
   fields: [...sharepointBaseFields, ...extraFields, sharepointVars(varsExtra)],
 });
 
+const FORMS_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+  { value: '30', label: 'Every 30 minutes' },
+  { value: '60', label: 'Every hour' },
+];
+const formsBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
+    hint: '// connect the Google account that owns the form (OAuth)' },
+  { type: 'text', key: 'formId', label: 'Form ID', placeholder: 'the id from the form edit URL',
+    hint: '// the long id in the form URL after /forms/d/' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: FORMS_POLL },
+];
+const formsQuestionField = { type: 'text', key: 'questionTitle', label: 'Question', placeholder: 'exact question title',
+  hint: '// type the question label exactly as it appears on the form' };
+const formsVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.respondentEmail', 'the respondent email (if collected)'],
+    ['$trigger.submittedAt', 'when it was submitted'],
+    ['$trigger.answersByTitle', 'answers keyed by question title'],
+    ...extra,
+  ],
+});
+// A Forms event = a predicate over a response in the poller. Question events
+// read questionTitle + targetValue. `eventType` (via configExtra) selects it.
+const formsEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#7248B9',
+  configExtra: { eventType: id },
+  fields: [...formsBaseFields, ...extraFields, formsVars(varsExtra)],
+});
+
 const SHEETS_POLL = [
   { value: '1', label: 'Every minute' },
   { value: '5', label: 'Every 5 minutes' },
@@ -1369,6 +1401,43 @@ export const TRIGGER_EVENTS = {
         [{ type: 'text', key: 'targetValue', label: 'Author Email', placeholder: 'name@contoso.com',
           hint: '// fire only for items created by this email' }]),
       sharepointEvent('any_change', 'Any Change', 'Any add or edit on the list', RefreshCw),
+    ],
+  },
+
+  google_forms: {
+    title: 'Google Forms',
+    subtitle: 'Trigger on form submissions — and on what people answered',
+    events: [
+      formsEvent('new_response', 'New Response', 'Someone submits the form', Inbox),
+      formsEvent('answer_equals', 'Answer Equals…', 'A question is answered with an exact value', CheckCircle2,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'Equals', placeholder: 'e.g. Yes',
+          hint: '// fire only when that question equals this' }]),
+      formsEvent('answer_contains', 'Answer Contains…', 'A question answer contains your text', Search,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'Contains', placeholder: 'e.g. refund',
+          hint: '// fire when the answer text contains this' }]),
+      formsEvent('answer_one_of', 'Answer Is One Of…', 'A question answer matches any value in a list', ListTodo,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'Any Of (comma separated)', placeholder: 'e.g. Gold, Platinum',
+          hint: '// fire when the answer is any of these comma-separated values' }]),
+      formsEvent('answer_filled', 'Question Answered', 'A specific question was given an answer', Type,
+        [], [formsQuestionField]),
+      formsEvent('answer_empty', 'Question Left Blank', 'A specific question was skipped', XCircle,
+        [], [formsQuestionField]),
+      formsEvent('rating_over', 'Rating At Or Above…', 'A numeric / rating answer meets a threshold', Star,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'At Or Above', placeholder: 'e.g. 4',
+          hint: '// fire when the number is ≥ this' }]),
+      formsEvent('rating_under', 'Rating At Or Below…', 'A low numeric / rating answer', Minus,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'At Or Below', placeholder: 'e.g. 2',
+          hint: '// fire when the number is ≤ this' }]),
+      formsEvent('long_answer', 'Long Answer', 'A text answer over a character length', MessageSquare,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'Min Characters', placeholder: '100',
+          hint: '// fire when the answer is at least this many characters' }]),
+      formsEvent('multiple_choices', 'Multiple Selected', 'A checkbox question with several selections', FileText,
+        [], [formsQuestionField, { type: 'text', key: 'targetValue', label: 'At Least N Selected', placeholder: '2',
+          hint: '// fire when at least this many options were picked' }]),
+      formsEvent('has_file', 'File Uploaded', 'The response includes a file upload', Paperclip),
+      formsEvent('from_email', 'From Email…', 'A response from a specific respondent email', Mail,
+        [], [{ type: 'text', key: 'targetValue', label: 'Respondent Email', placeholder: 'someone@example.com',
+          hint: '// requires the form to collect email addresses' }]),
     ],
   },
 
