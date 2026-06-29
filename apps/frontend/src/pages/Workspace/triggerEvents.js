@@ -594,6 +594,38 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// Calendly authenticates with a personal access token (vault credential). The
+// poller resolves the user, watches their scheduled-events feed, and `eventType`
+// (via configExtra) selects the CALENDLY_EVENTS predicate over each booking.
+const calendlyBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Calendly Account', credType: 'calendly',
+    hint: '// connect with a personal access token or OAuth' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const calendlyTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const calendlyVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.eventId', 'the scheduled-event id'],
+    ['$trigger.name', 'the event-type name'],
+    ['$trigger.status', 'active / canceled'],
+    ['$trigger.startTime', 'when it starts (ISO)'],
+    ['$trigger.location', 'meeting location / link'],
+    ...extra,
+  ],
+});
+const calendlyEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#006BFF',
+  configExtra: { eventType: id },
+  fields: [...calendlyBaseFields, ...extraFields, calendlyVars(varsExtra)],
+});
+
 // Intercom authenticates with an access token (vault credential). The poller
 // watches the workspace's conversation feed; `eventType` (via configExtra)
 // selects the INTERCOM_EVENTS predicate over each conversation.
@@ -1894,6 +1926,29 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  calendly: {
+    title: 'Calendly',
+    subtitle: 'Watch your bookings — scheduled, rescheduled, canceled, starting soon and more',
+    events: [
+      calendlyEvent('event_scheduled', 'Event Booked', 'Someone schedules a new meeting.', CalendarClock),
+      calendlyEvent('event_updated', 'Event Updated', 'Any change to a booked event.', Pencil),
+      calendlyEvent('rescheduled', 'Rescheduled', 'A booking moves to a new time.', RefreshCw),
+      calendlyEvent('canceled', 'Canceled', 'A booking is canceled.', XCircle),
+      calendlyEvent('starting_soon', 'Starting Soon', 'A meeting begins within 15 minutes.', AlertCircle),
+      calendlyEvent('upcoming', 'Upcoming', 'An active meeting is still ahead.', Clock),
+      calendlyEvent('ended', 'Ended', 'A meeting has just finished.', CheckCircle2),
+      calendlyEvent('status_is', 'Status Is', 'The event matches a status you name.', Activity,
+        [calendlyTargetField('Status', 'active', '// active or canceled')]),
+      calendlyEvent('event_type_is', 'Event Type Is', 'The booking is for a specific event type.', Tag,
+        [calendlyTargetField('Event Type', '30 Minute Meeting', '// match the event-type name')]),
+      calendlyEvent('location_is', 'Location Is', 'The meeting uses a specific location kind.', Globe,
+        [calendlyTargetField('Location', 'zoom', '// e.g. zoom, google_conference, physical')]),
+      calendlyEvent('fully_booked', 'Fully Booked', 'A group event reaches its invitee limit.', Users),
+      calendlyEvent('name_contains', 'Name Contains', 'The event-type name includes your text.', Search,
+        [calendlyTargetField('Text', 'demo', '// match part of the event name')]),
     ],
   },
 
