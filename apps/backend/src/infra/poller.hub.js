@@ -73,11 +73,12 @@ const POLL_REGISTRY = {
       viewName: cfg.viewName, filterFormula: cfg.filterFormula,
       maxRecords: cfg.maxRecords || 20, triggerOnUpdate: !!cfg.triggerOnUpdate,
       workspaceId: automation.workspaceId,
+      formulaMode: cfg.formulaMode, filterField: cfg.filterField, filterValue: cfg.filterValue,
     }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/5 * * * *" }),
     jobPrefix: "airtable",
-    run: async ({ automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId }) => {
-      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
+    run: async ({ automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId, formulaMode, filterField, filterValue }) => {
+      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId, { formulaMode, filterField, filterValue });
     },
   },
 

@@ -9,6 +9,7 @@ import {
   Briefcase, Building2, Ticket, Trophy, UserCheck, Target,
   Paperclip, CheckSquare, UserMinus, Copy, Calendar, Type,
   Handshake, Phone, StickyNote, User, CheckCheck, AlertCircle,
+  Database, Hash, CalendarClock, Eye, Square, Code, Circle,
 } from 'lucide-react';
 
 const NOTION_POLL = [
@@ -140,6 +141,42 @@ const pipedriveEvent = (id, label, description, icon, varsExtra = [], fields = [
   id, label, description, icon, event: id, accent: '#017737',
   configExtra: { eventType: id },
   fields: [...pipedriveBaseFields, ...fields, pipedriveVars(varsExtra)],
+});
+
+const AIRTABLE_POLL = [
+  { value: '* * * * *', label: 'Every minute' },
+  { value: '*/5 * * * *', label: 'Every 5 minutes' },
+  { value: '*/15 * * * *', label: 'Every 15 minutes' },
+  { value: '*/30 * * * *', label: 'Every 30 minutes' },
+  { value: '0 * * * *', label: 'Every hour' },
+];
+const airtableBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'Airtable Personal Access Token', placeholder: 'pat…',
+    hint: '// create at airtable.com/create/tokens with data.records:read scope on your base' },
+  { type: 'text', key: 'baseId', label: 'Base ID', placeholder: 'app…',
+    hint: '// the app… id from the base API docs (airtable.com/api)' },
+  { type: 'text', key: 'tableId', label: 'Table', placeholder: 'Table name or tbl… id',
+    hint: '// the table name exactly as shown, or its tbl… id' },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: AIRTABLE_POLL },
+];
+const airtableFieldInput = {
+  type: 'text', key: 'filterField', label: 'Field Name', placeholder: 'e.g. Status',
+  hint: '// the exact column name in your table',
+};
+const airtableVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.id', 'the record id'],
+    ['$trigger.fields', 'all column values on the record'],
+    ['$trigger.createdTime', 'when the record was created'],
+    ...extra,
+  ],
+});
+// An Airtable event = a record poll + a formulaMode the poller turns into a real
+// filterByFormula. triggerOnUpdate switches created-vs-modified watermarking.
+const airtableEvent = (id, label, description, icon, configExtra, fields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#fcb400',
+  configExtra,
+  fields: [...airtableBaseFields, ...fields, airtableVars(varsExtra)],
 });
 
 const LINEAR_POLL = [
@@ -713,6 +750,61 @@ export const TRIGGER_EVENTS = {
         [['$trigger.title', 'lead title'], ['$trigger.value', 'lead value']]),
       pipedriveEvent('note_created', 'Note Created', 'A note is added to a deal, person, or org', StickyNote,
         [['$trigger.content', 'the note text'], ['$trigger.userName', 'who wrote it']]),
+    ],
+  },
+
+  airtable: {
+    title: 'Airtable',
+    subtitle: 'Trigger on new or changed records in an Airtable table',
+    events: [
+      airtableEvent('record_created', 'Record Created', 'A new record (row) is added to the table', Plus,
+        { triggerOnUpdate: false, formulaMode: 'none' }),
+      airtableEvent('record_updated', 'Record Updated', 'Any field on a record is changed', Pencil,
+        { triggerOnUpdate: true, formulaMode: 'none' }),
+      airtableEvent('record_in_view', 'Record Enters View', 'A record appears in a specific Airtable view', Eye,
+        { triggerOnUpdate: true, formulaMode: 'none' }, [
+          { type: 'text', key: 'viewName', label: 'View Name', placeholder: 'e.g. To Review',
+            hint: '// only records visible in this grid/kanban view will fire' },
+        ]),
+      airtableEvent('field_equals', 'Field Equals…', 'A new record where a field matches a value', Sparkle,
+        { triggerOnUpdate: false, formulaMode: 'field_equals' }, [
+          airtableFieldInput,
+          { type: 'text', key: 'filterValue', label: 'Equals', placeholder: 'e.g. Active',
+            hint: '// fire only when that field equals this exact value' },
+        ]),
+      airtableEvent('field_changed_to', 'Field Changes To…', 'A record is updated so a field becomes a value', ArrowRightCircle,
+        { triggerOnUpdate: true, formulaMode: 'field_changed_to' }, [
+          airtableFieldInput,
+          { type: 'text', key: 'filterValue', label: 'Becomes', placeholder: 'e.g. Done',
+            hint: '// e.g. Status changes to Done — re-fires whenever the record is modified to match' },
+        ]),
+      airtableEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox field becomes checked', CheckSquare,
+        { triggerOnUpdate: true, formulaMode: 'checkbox_checked' }, [
+          { ...airtableFieldInput, placeholder: 'e.g. Approved', hint: '// the name of a checkbox column' },
+        ]),
+      airtableEvent('field_not_empty', 'Field Filled In', 'A field that was blank now has a value', Square,
+        { triggerOnUpdate: true, formulaMode: 'field_not_empty' }, [
+          { ...airtableFieldInput, placeholder: 'e.g. Owner' },
+        ]),
+      airtableEvent('field_empty', 'Field Cleared', 'A field becomes empty', Circle,
+        { triggerOnUpdate: true, formulaMode: 'field_empty' }, [
+          { ...airtableFieldInput, placeholder: 'e.g. Assignee' },
+        ]),
+      airtableEvent('number_over', 'Number Over Threshold', 'A numeric field reaches at least a value', Hash,
+        { triggerOnUpdate: true, formulaMode: 'number_over' }, [
+          { ...airtableFieldInput, placeholder: 'e.g. Amount', hint: '// the name of a number/currency column' },
+          { type: 'text', key: 'filterValue', label: 'At Least', default: '100', placeholder: '100',
+            hint: '// fire when the field is greater than or equal to this number' },
+        ]),
+      airtableEvent('date_today', 'Date Is Today', 'A record whose date field is today (e.g. due today)', CalendarClock,
+        { triggerOnUpdate: true, formulaMode: 'date_today' }, [
+          { ...airtableFieldInput, placeholder: 'e.g. Due Date', hint: '// the name of a date column' },
+        ]),
+      airtableEvent('raw_formula', 'Custom Formula', 'Fire on records matching your own Airtable formula', Code,
+        { triggerOnUpdate: true, formulaMode: 'raw' }, [
+          { type: 'textarea', key: 'filterFormula', label: 'filterByFormula', placeholder: "AND({Status}='Open', {Priority}='High')",
+            hint: '// a raw Airtable formula — same syntax as filterByFormula in the API' },
+        ]),
     ],
   },
 };

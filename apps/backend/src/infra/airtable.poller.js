@@ -22,6 +22,27 @@ const SEEN_TTL = 30 * 24 * 60 * 60;
 let atQueue = null;
 let atWorker = null;
 
+// Build the per-event Airtable filterByFormula from a mode + field/value.
+// Each mode is a genuinely different query; `raw` is the power-user escape hatch.
+function escAt(v) {
+  return String(v).replace(/'/g, "\\'");
+}
+function buildFormula(cfg) {
+  const { formulaMode, filterField, filterValue, filterFormula } = cfg;
+  const f = filterField ? `{${filterField}}` : "";
+  switch (formulaMode) {
+    case "field_equals":     return f ? `${f} = '${escAt(filterValue)}'` : "";
+    case "field_changed_to": return f ? `${f} = '${escAt(filterValue)}'` : "";
+    case "checkbox_checked": return f ? `${f} = TRUE()` : "";
+    case "field_not_empty":  return f ? `NOT({${filterField}} = '')` : "";
+    case "field_empty":      return f ? `{${filterField}} = ''` : "";
+    case "number_over":      return f ? `${f} >= ${Number(filterValue) || 0}` : "";
+    case "date_today":       return f ? `IS_SAME(${f}, TODAY(), 'day')` : "";
+    case "raw":              return filterFormula || "";
+    default:                 return filterFormula || "";
+  }
+}
+
 async function airtableGet(apiKey, baseId, tableId, params = {}) {
   const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableId)}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
@@ -37,7 +58,7 @@ async function airtableGet(apiKey, baseId, tableId, params = {}) {
 
 export async function pollAirtable(
   automationId, triggerNodeId, apiKey, baseId, tableId,
-  viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId,
+  viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId, extra = {},
 ) {
   const scope = triggerNodeId || automationId;
   const lockKey  = `bb:airtable:lock:${scope}`;
@@ -57,7 +78,7 @@ export async function pollAirtable(
     };
     if (viewName) params.view = viewName;
 
-    let formula = filterFormula || "";
+    let formula = buildFormula({ ...extra, filterFormula }) || filterFormula || "";
     if (watermark) {
       const tsFilter = triggerOnUpdate
         ? `IS_AFTER(LAST_MODIFIED_TIME(), '${watermark}')`
@@ -109,8 +130,8 @@ export async function startAirtablePoller() {
   atWorker = new Worker(
     AIRTABLE_QUEUE,
     async (job) => {
-      const { automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId } = job.data;
-      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId);
+      const { automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId, formulaMode, filterField, filterValue } = job.data;
+      await pollAirtable(automationId, triggerNodeId, apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, workspaceId, { formulaMode, filterField, filterValue });
     },
     { connection: createBullMQConnection(), concurrency: 4 },
   );
@@ -134,7 +155,7 @@ export async function syncAirtableJobs() {
   for (const automation of automations) {
     const entryNode = automation.nodes.find((n) => n.id === automation.entryNodeId);
     const cfg = entryNode?.data?.config || entryNode?.data || {};
-    const { apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, pollInterval } = cfg;
+    const { apiKey, baseId, tableId, viewName, filterFormula, maxRecords, triggerOnUpdate, pollInterval, formulaMode, filterField, filterValue } = cfg;
 
     if (!apiKey || !baseId || !tableId) {
       console.warn(`[AirtablePoller] Automation ${automation._id} missing required fields, skipping`);
@@ -150,6 +171,7 @@ export async function syncAirtableJobs() {
         maxRecords: maxRecords || 20,
         triggerOnUpdate: !!triggerOnUpdate,
         workspaceId: automation.workspaceId,
+        formulaMode, filterField, filterValue,
       },
       { repeat: { pattern: interval }, jobId: `airtable-${automation._id}` },
     );
