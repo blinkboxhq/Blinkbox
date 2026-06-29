@@ -44,6 +44,7 @@ import { pollIntercom } from "./intercom.poller.js";
 import { pollCalendly } from "./calendly.poller.js";
 import { pollTypeform } from "./typeform.poller.js";
 import { pollMailchimp } from "./mailchimp.poller.js";
+import { pollPagerDuty } from "./pagerduty.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -447,6 +448,21 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "mailchimp",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollMailchimp(automationId, triggerNodeId, cfg); },
+  },
+
+  pagerduty_trigger: {
+    triggerName: "pagerduty_trigger",
+    required: ["credentialId"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        serviceId: cfg.serviceId,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "pagerduty",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollPagerDuty(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {

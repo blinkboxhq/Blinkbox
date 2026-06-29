@@ -594,6 +594,40 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// PagerDuty authenticates with an API key (vault credential). The poller watches
+// the account's incident feed (optionally scoped to one service) and `eventType`
+// (via configExtra) selects the PAGERDUTY_EVENTS predicate over each incident.
+const pagerdutyBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'PagerDuty Account', credType: 'pagerduty',
+    hint: '// connect with a REST API key' },
+  { type: 'text', key: 'serviceId', label: 'Service ID (optional)', placeholder: 'PXXXXXX',
+    hint: '// limit to one service — leave blank for all' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const pagerdutyTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const pagerdutyVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.incidentId', 'the incident id'],
+    ['$trigger.title', 'the incident title'],
+    ['$trigger.status', 'triggered / acknowledged / resolved'],
+    ['$trigger.urgency', 'high / low'],
+    ['$trigger.service', 'the affected service'],
+    ...extra,
+  ],
+});
+const pagerdutyEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#06AC38',
+  configExtra: { eventType: id },
+  fields: [...pagerdutyBaseFields, ...extraFields, pagerdutyVars(varsExtra)],
+});
+
 // Mailchimp authenticates with an API key (vault credential, format key-dcXX).
 // The user picks one Audience by list id; the poller watches its member feed and
 // `eventType` (via configExtra) selects the MAILCHIMP_EVENTS predicate.
@@ -1994,6 +2028,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  pagerduty: {
+    title: 'PagerDuty',
+    subtitle: 'Watch incidents — triggered, acknowledged, resolved, escalated and more',
+    events: [
+      pagerdutyEvent('incident_triggered', 'Incident Triggered', 'A new incident fires.', AlertTriangle),
+      pagerdutyEvent('acknowledged', 'Acknowledged', 'A responder acknowledges an incident.', UserCheck),
+      pagerdutyEvent('resolved', 'Resolved', 'An incident is resolved.', CheckCircle2),
+      pagerdutyEvent('reopened', 'Reopened', 'A resolved incident fires again.', RefreshCw),
+      pagerdutyEvent('escalated', 'Escalated', 'An incident moves up the escalation policy.', AlertOctagon),
+      pagerdutyEvent('status_changed', 'Status Changed', 'Any change to incident status.', Activity),
+      pagerdutyEvent('high_urgency', 'High Urgency', 'A high-urgency incident is active.', Flame),
+      pagerdutyEvent('status_is', 'Status Is', 'The incident matches a status you name.', ListTodo,
+        [pagerdutyTargetField('Status', 'triggered', '// triggered, acknowledged, or resolved')]),
+      pagerdutyEvent('priority_is', 'Priority Is', 'The incident has a specific priority.', Flag,
+        [pagerdutyTargetField('Priority', 'P1', '// match the priority label')]),
+      pagerdutyEvent('on_service', 'On Service', 'The incident is on a specific service.', Building2,
+        [pagerdutyTargetField('Service', 'API', '// service name or id')]),
+      pagerdutyEvent('assigned_to', 'Assigned To', 'The incident is assigned to someone.', Target,
+        [pagerdutyTargetField('Assignee', 'Jane', '// match part of the assignee name')]),
+      pagerdutyEvent('title_contains', 'Title Contains', 'The incident title includes your text.', Search,
+        [pagerdutyTargetField('Text', 'database', '// match part of the title')]),
     ],
   },
 
