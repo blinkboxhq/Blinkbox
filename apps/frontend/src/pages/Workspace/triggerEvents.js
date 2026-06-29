@@ -629,6 +629,45 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// Reddit reads a subreddit's public JSON feed (no credential needed). The user
+// names the subreddit and sort order; the poller watches new posts and `eventType`
+// (via configExtra) selects the REDDIT_EVENTS predicate per post.
+const redditBaseFields = [
+  { type: 'text', key: 'subreddit', label: 'Subreddit', placeholder: 'webdev',
+    hint: '// without the r/ — the subreddit to watch' },
+  { type: 'select', key: 'sort', label: 'Sort', default: 'new',
+    options: [
+      { value: 'new', label: 'Newest first' },
+      { value: 'hot', label: 'Hot' },
+      { value: 'top', label: 'Top' },
+      { value: 'rising', label: 'Rising' },
+    ] },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '10',
+    options: [
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '10', label: 'Every 10 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const redditTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const redditVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.title', 'the post title'],
+    ['$trigger.author', 'who posted it'],
+    ['$trigger.score', 'the upvote score'],
+    ['$trigger.numComments', 'the comment count'],
+    ['$trigger.permalink', 'link to the post'],
+    ...extra,
+  ],
+});
+const redditEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#FF4500',
+  configExtra: { eventType: id },
+  fields: [...redditBaseFields, ...extraFields, redditVars(varsExtra)],
+});
+
 // Slack authenticates with a bot OAuth token (vault credential). The user names
 // one channel by id; the poller reads its message feed via conversations.history
 // and `eventType` (via configExtra) selects the SLACK_EVENTS predicate per message.
@@ -2196,6 +2235,32 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  reddit: {
+    title: 'Reddit',
+    subtitle: 'Watch a subreddit — new posts, flair, authors, score and comments',
+    events: [
+      redditEvent('new_post', 'New Post', 'Any new post appears in the subreddit.', MessageSquare),
+      redditEvent('self_post', 'New Text Post', 'A new self/text post is published.', FileText),
+      redditEvent('link_post', 'New Link Post', 'A new link/media post is published.', Globe),
+      redditEvent('title_contains', 'Title Contains', 'A post title contains your text.', Search,
+        [redditTargetField('Text', 'release', '// case-insensitive match in the title')]),
+      redditEvent('body_contains', 'Body Contains', 'A post body contains your text.', Type,
+        [redditTargetField('Text', 'bug', '// case-insensitive match in the post body')]),
+      redditEvent('by_author', 'By Author', 'A post is made by a specific user.', User,
+        [redditTargetField('Username', 'spez', '// the u/ name, without the u/')]),
+      redditEvent('flair_is', 'Flair Is', 'A post has a specific flair.', Tag,
+        [redditTargetField('Flair', 'Discussion', '// exact flair text to match')]),
+      redditEvent('is_nsfw', 'NSFW Post', 'A post is flagged NSFW.', ShieldAlert),
+      redditEvent('score_over', 'Score Over', 'A post reaches an upvote threshold.', Flame,
+        [redditTargetField('Score', '500', '// fires when the score reaches this')]),
+      redditEvent('comments_over', 'Comments Over', 'A post reaches a comment threshold.', Hash,
+        [redditTargetField('Comment Count', '50', '// fires when comments reach this')]),
+      redditEvent('new_comment', 'Comments Growing', 'A watched post gains new comments.', Activity),
+      redditEvent('went_hot', 'Went Hot', 'A post crosses a big score threshold.', Star,
+        [redditTargetField('Score', '1000', '// fires once when score crosses this')]),
     ],
   },
 
