@@ -633,6 +633,38 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // DNS resolves all record types each poll and diffs against the last snapshot.
 // No credential; `eventType` (via configExtra) selects which record / condition
 // fires the workflow.
+// HTTP Monitor checks a URL each poll. No credential; up/down state and the body
+// hash are tracked in Redis so recovery and content-change events diff. `eventType`
+// (via configExtra) selects which condition fires.
+const httpMonBaseFields = [
+  { type: 'text', key: 'url', label: 'URL', placeholder: 'https://example.com/health',
+    hint: '// the endpoint to check each poll' },
+  { type: 'select', key: 'pollIntervalSeconds', label: 'Check Every', default: '60',
+    options: [
+      { value: '30', label: 'Every 30 seconds' },
+      { value: '60', label: 'Every minute' },
+      { value: '300', label: 'Every 5 minutes' },
+      { value: '900', label: 'Every 15 minutes' },
+    ] },
+];
+const httpMonTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const httpMonVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.url', 'the checked URL'],
+    ['$trigger.status', 'HTTP status code'],
+    ['$trigger.responseTime', 'response time in ms'],
+    ['$trigger.state', 'up or down'],
+    ['$trigger.reason', 'why it fired'],
+    ...extra,
+  ],
+});
+const httpMonEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#38BDF8',
+  configExtra: { eventType: id },
+  fields: [...httpMonBaseFields, ...extraFields, httpMonVars(varsExtra)],
+});
+
 // SSH runs a command on a remote host each poll and classifies its output.
 // Auth is inline (password or private key). `eventType` (via configExtra) selects
 // which output condition fires; output_changed diffs against the last stdout hash.
@@ -2502,6 +2534,30 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  http_monitor: {
+    title: 'HTTP Monitor',
+    subtitle: 'Watch a URL — uptime, status codes, latency, keywords and content',
+    events: [
+      httpMonEvent('is_down', 'Site Down', 'The endpoint is unreachable or returned an error.', Ban),
+      httpMonEvent('recovered', 'Recovered', 'The site came back up after being down.', Activity),
+      httpMonEvent('is_up', 'Back Up', 'The site is reachable again after downtime.', Play),
+      httpMonEvent('status_is', 'Status Is', 'The response matches a specific status code.', Hash,
+        [httpMonTargetField('Status Code', '503', '// fire when the HTTP status equals this')]),
+      httpMonEvent('status_2xx', 'Success (2xx)', 'The response is a 2xx success.', CheckCircle2),
+      httpMonEvent('status_4xx', 'Client Error (4xx)', 'The response is a 4xx client error.', AlertTriangle),
+      httpMonEvent('status_5xx', 'Server Error (5xx)', 'The response is a 5xx server error.', Flame),
+      httpMonEvent('slow_response', 'Slow Response', 'The response took longer than your threshold.', Gauge,
+        [httpMonTargetField('Max Response (ms)', '3000', '// fire when response time exceeds this')]),
+      httpMonEvent('keyword_present', 'Keyword Present', 'A keyword was found in the response body.', Search,
+        [{ type: 'text', key: 'expectedKeyword', label: 'Keyword', placeholder: 'healthy', hint: '// text expected in the body' }]),
+      httpMonEvent('keyword_missing', 'Keyword Missing', 'A keyword is absent from the response body.', XCircle,
+        [{ type: 'text', key: 'expectedKeyword', label: 'Keyword', placeholder: 'healthy', hint: '// text that should be present' }]),
+      httpMonEvent('redirected', 'Redirected', 'The endpoint returned a 3xx redirect.', ArrowRightCircle,
+        [], [['$trigger.location', 'the redirect target']]),
+      httpMonEvent('content_changed', 'Content Changed', 'The response body changed since last check.', RefreshCw),
     ],
   },
 
