@@ -16,15 +16,40 @@ const SEEN_TTL = 7 * 24 * 60 * 60;
 let teamsQueue = null;
 let teamsWorker = null;
 
-async function fetchMessages(accessToken, teamId, channelId) {
-  const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages?$top=20`;
+// Each event = a client-side predicate over the channel message stream
+// (optionally including reply posts). `eventType` selects the entry.
+const TEAMS_EVENTS = {
+  new_message:    { match: (m) => m.messageType === "message" && !m.replyToId, withReplies: false },
+  reply_posted:   { match: (m) => m.messageType === "message" && !!m.replyToId, withReplies: true },
+  mention:        { match: (m) => m.messageType === "message" && (m.mentions || []).length > 0, withReplies: false },
+  urgent:         { match: (m) => m.messageType === "message" && m.importance === "urgent", withReplies: false },
+  important:      { match: (m) => m.messageType === "message" && (m.importance === "high" || m.importance === "urgent"), withReplies: false },
+  with_attachment:{ match: (m) => m.messageType === "message" && (m.attachments || []).length > 0, withReplies: false },
+  with_reaction:  { match: (m) => m.messageType === "message" && (m.reactions || []).length > 0, withReplies: true },
+  has_link:       { match: (m) => m.messageType === "message" && /<a\s|https?:\/\//i.test(m.body?.content || ""), withReplies: false },
+  announcement:   { match: (m) => m.messageType === "message" && !!m.subject, withReplies: false },
+  from_user:      { match: (m, cfg) => m.messageType === "message" && (m.from?.user?.displayName || "").toLowerCase() === String(cfg.fromUser || "").toLowerCase(), withReplies: false },
+  keyword:        { match: (m, cfg) => m.messageType === "message" && (m.body?.content || "").replace(/<[^>]+>/g, "").toLowerCase().includes(String(cfg.keywordFilter || "").toLowerCase()), withReplies: false },
+  system_event:   { match: (m) => m.messageType && m.messageType !== "message", withReplies: false },
+};
+
+async function fetchMessages(accessToken, teamId, channelId, withReplies) {
+  const expand = withReplies ? "&$expand=replies" : "";
+  const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages?$top=20${expand}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
     signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  return data.value || [];
+  const top = data.value || [];
+  if (!withReplies) return top;
+  const flat = [];
+  for (const m of top) {
+    flat.push(m);
+    for (const r of m.replies || []) flat.push(r);
+  }
+  return flat;
 }
 
 export async function pollTeams(automationId, triggerNodeId, cfg) {
@@ -33,26 +58,34 @@ export async function pollTeams(automationId, triggerNodeId, cfg) {
   const locked = await acquireLock(lockKey, "poller", 60);
   if (!locked) return;
   try {
-    const { credentialId, workspaceId, teamId, channelId, keywordFilter } = cfg;
+    const { credentialId, workspaceId, teamId, channelId } = cfg;
     if (!credentialId || !teamId || !channelId) return;
+    const eventType = cfg.eventType || cfg.watchType || "new_message";
+    const spec = TEAMS_EVENTS[eventType] || TEAMS_EVENTS.new_message;
     const accessToken = await getOAuthToken(credentialId, workspaceId, "Teams Trigger");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
-    const messages = await fetchMessages(accessToken, teamId, channelId);
-    const seenKey = `bb:teams:seen:${scope}`;
+    const messages = await fetchMessages(accessToken, teamId, channelId, spec.withReplies);
+    const seenKey = `bb:teams:seen:${scope}:${eventType}`;
     for (const msg of messages) {
-      if (msg.messageType !== "message") continue;
+      if (!spec.match(msg, cfg)) continue;
       const text = msg.body?.content?.replace(/<[^>]+>/g, "") || "";
-      if (keywordFilter && !text.toLowerCase().includes(keywordFilter.toLowerCase())) continue;
       const added = await redis.sadd(seenKey, msg.id);
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       const payload = {
         id: msg.id,
         text,
+        subject: msg.subject || "",
         author: msg.from?.user?.displayName || "",
         authorEmail: msg.from?.user?.userIdentityType || "",
+        importance: msg.importance || "normal",
+        mentionCount: (msg.mentions || []).length,
+        attachmentCount: (msg.attachments || []).length,
+        reactionCount: (msg.reactions || []).length,
+        isReply: !!msg.replyToId,
+        messageType: msg.messageType || "",
         createdAt: msg.createdDateTime,
         teamId,
         channelId,
@@ -61,7 +94,7 @@ export async function pollTeams(automationId, triggerNodeId, cfg) {
       await executeAutomation(automation, payload, {
         workspaceId: automation.workspaceId,
         entryNodeId: triggerNodeId || automation.entryNodeId,
-        idempotencyKey: `teams:${scope}:${msg.id}`,
+        idempotencyKey: `teams:${scope}:${eventType}:${msg.id}`,
       });
     }
   } catch (err) {
@@ -98,7 +131,7 @@ export async function syncTeamsJobs() {
     await teamsQueue.add("teams-poll", {
       automationId: automation._id.toString(),
       triggerNodeId: automation.entryNodeId,
-      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), teamId: cfg.teamId, channelId: cfg.channelId, keywordFilter: cfg.keywordFilter },
+      cfg: { credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(), teamId: cfg.teamId, channelId: cfg.channelId, eventType: cfg.eventType || cfg.watchType, keywordFilter: cfg.keywordFilter, fromUser: cfg.fromUser },
     }, { repeat: { pattern: `*/${interval} * * * *` }, jobId: `teams-${automation._id}` });
   }
   console.log(`[TeamsPoller] Synced ${automations.length} automations`);

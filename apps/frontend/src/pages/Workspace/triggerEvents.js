@@ -429,6 +429,38 @@ const sharepointEvent = (id, label, description, icon, varsExtra = [], extraFiel
   fields: [...sharepointBaseFields, ...extraFields, sharepointVars(varsExtra)],
 });
 
+const TEAMS_POLL = [
+  { value: '1', label: 'Every minute' },
+  { value: '2', label: 'Every 2 minutes' },
+  { value: '5', label: 'Every 5 minutes' },
+  { value: '15', label: 'Every 15 minutes' },
+];
+const teamsBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'Microsoft Account', provider: 'microsoft',
+    hint: '// connect the Microsoft account that can read this team channel (OAuth)' },
+  { type: 'text', key: 'teamId', label: 'Team ID', placeholder: '00000000-0000-0000-0000-000000000000',
+    hint: '// the team (group) id — copy it from the Teams channel link' },
+  { type: 'text', key: 'channelId', label: 'Channel ID', placeholder: '19:xxxxx@thread.tacv2',
+    hint: '// the channel id from the channel link (the 19:… value)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2', options: TEAMS_POLL },
+];
+const teamsVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.text', 'the message text (HTML stripped)'],
+    ['$trigger.author', 'who posted it'],
+    ['$trigger.createdAt', 'when it was posted'],
+    ['$trigger.webUrl', 'a link to open the message in Teams'],
+    ...extra,
+  ],
+});
+// A Teams event = a client-side predicate over the channel message stream in
+// the poller. `eventType` (via configExtra) selects the TEAMS_EVENTS entry.
+const teamsEvent = (id, label, description, icon, varsExtra = [], extraFields = []) => ({
+  id, label, description, icon, event: id, accent: '#6264A7',
+  configExtra: { eventType: id },
+  fields: [...teamsBaseFields, ...extraFields, teamsVars(varsExtra)],
+});
+
 const AIRTABLE_POLL = [
   { value: '* * * * *', label: 'Every minute' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1301,6 +1333,36 @@ export const TRIGGER_EVENTS = {
         [{ type: 'text', key: 'targetValue', label: 'Author Email', placeholder: 'name@contoso.com',
           hint: '// fire only for items created by this email' }]),
       sharepointEvent('any_change', 'Any Change', 'Any add or edit on the list', RefreshCw),
+    ],
+  },
+
+  teams: {
+    title: 'Microsoft Teams',
+    subtitle: 'Trigger on channel messages — replies, mentions, urgent, attachments and more',
+    events: [
+      teamsEvent('new_message', 'New Message', 'A new top-level message is posted in the channel', MessageSquare),
+      teamsEvent('reply_posted', 'Reply Posted', 'Someone replies to a message thread', Reply),
+      teamsEvent('mention', 'Someone Mentioned', 'A message that @mentions a person or tag', AtSign,
+        [['$trigger.mentionCount', 'how many mentions are in it']]),
+      teamsEvent('urgent', 'Urgent Message', 'A message marked Urgent', AlertTriangle,
+        [['$trigger.importance', 'the message importance']]),
+      teamsEvent('important', 'Important Message', 'A message marked Important or Urgent', Flame,
+        [['$trigger.importance', 'the message importance']]),
+      teamsEvent('with_attachment', 'Has Attachment', 'A message that includes a file or card', Paperclip,
+        [['$trigger.attachmentCount', 'how many attachments']]),
+      teamsEvent('with_reaction', 'Got A Reaction', 'A message that received a reaction', Heart,
+        [['$trigger.reactionCount', 'how many reactions']]),
+      teamsEvent('has_link', 'Contains A Link', 'A message that contains a URL', Globe),
+      teamsEvent('announcement', 'Announcement', 'A message posted with a headline / subject', Sparkle,
+        [['$trigger.subject', 'the announcement headline']]),
+      teamsEvent('from_user', 'From Person…', 'A message from a specific person', User,
+        [], [{ type: 'text', key: 'fromUser', label: 'Person Display Name', placeholder: 'e.g. Jane Doe',
+          hint: '// fire only for messages from this exact display name' }]),
+      teamsEvent('keyword', 'Contains Keyword…', 'A message containing your keyword', Search,
+        [], [{ type: 'text', key: 'keywordFilter', label: 'Keyword', placeholder: 'e.g. deploy',
+          hint: '// fire only when the message text contains this word' }]),
+      teamsEvent('system_event', 'System Event', 'A member joins, leaves or the channel changes', Activity,
+        [['$trigger.messageType', 'the system event type']]),
     ],
   },
 
