@@ -594,6 +594,41 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 // ClickUp authenticates with a Personal API token stored in the credential
 // vault (resolved at poll time). The user picks one List to watch; the poller
 // diffs its tasks. `eventType` (via configExtra) selects the CLICKUP_EVENTS entry.
+// WooCommerce authenticates with a consumer key/secret pair stored as a
+// single vault credential. The poller watches a store's order feed;
+// `eventType` (via configExtra) selects the WOO_EVENTS predicate.
+const wooBaseFields = [
+  { type: 'credential', key: 'credentialId', label: 'WooCommerce Account', credType: 'woocommerce',
+    hint: '// connect the store (REST API consumer key + secret)' },
+  { type: 'text', key: 'storeUrl', label: 'Store URL', placeholder: 'https://mystore.com',
+    hint: '// your WordPress site URL (no trailing slash needed)' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+    options: [
+      { value: '1', label: 'Every minute' },
+      { value: '5', label: 'Every 5 minutes' },
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const wooTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const wooVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.orderNumber', 'the order number'],
+    ['$trigger.status', 'order status (processing/completed/…)'],
+    ['$trigger.total', 'order total'],
+    ['$trigger.email', 'the buyer email'],
+    ['$trigger.customerName', 'the buyer name'],
+    ['$trigger.paymentMethod', 'how they paid'],
+    ...extra,
+  ],
+});
+const wooEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#96588A',
+  configExtra: { eventType: id },
+  fields: [...wooBaseFields, ...extraFields, wooVars(varsExtra)],
+});
+
 // Shopify authenticates with an Admin API access token (vault credential).
 // The poller watches a shop's order feed; `eventType` (via configExtra)
 // selects the SHOPIFY_EVENTS predicate over each order.
@@ -1759,6 +1794,27 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  woocommerce: {
+    title: 'WooCommerce',
+    subtitle: 'Watch your orders — created, processing, completed, refunded and more',
+    events: [
+      wooEvent('order_created', 'Order Created', 'A new order is placed.', Plus),
+      wooEvent('order_updated', 'Order Updated', 'Any change to an existing order.', Pencil),
+      wooEvent('status_changed', 'Status Changed', 'An order moves to a different status.', ArrowRightCircle),
+      wooEvent('processing', 'Processing', 'An order enters processing (paid, awaiting fulfilment).', RefreshCw),
+      wooEvent('completed', 'Completed', 'An order is marked completed.', CheckCircle2),
+      wooEvent('on_hold', 'On Hold', 'An order is placed on hold.', PauseCircle),
+      wooEvent('cancelled', 'Cancelled', 'An order is cancelled.', Ban),
+      wooEvent('refunded', 'Refunded', 'An order is refunded.', DollarSign),
+      wooEvent('failed', 'Failed', 'An order payment fails.', XCircle),
+      wooEvent('high_value', 'High-Value Order', 'An order total crosses your threshold.', Gauge,
+        [wooTargetField('Minimum Total', '200', '// fire when the order total reaches this amount')]),
+      wooEvent('guest_order', 'Guest Order', 'An order placed without a customer account.', User),
+      wooEvent('status_is', 'Status Is', 'An order matches one specific status.', Flag,
+        [wooTargetField('Status', 'completed', '// e.g. processing, completed, on-hold, refunded')]),
     ],
   },
 

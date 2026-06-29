@@ -37,6 +37,7 @@ import { pollDatadog } from "./datadog.poller.js";
 import { pollClickUp } from "./clickup.poller.js";
 import { pollSentry } from "./sentry.poller.js";
 import { pollShopify } from "./shopify.poller.js";
+import { pollWooCommerce } from "./woocommerce.poller.js";
 import { pollTrello } from "./trello.poller.js";
 import { pollChannel } from "./youtube.poller.js";
 import { pollProductHunt } from "./producthunt.poller.js";
@@ -339,6 +340,20 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "shopify",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollShopify(automationId, triggerNodeId, cfg); },
+  },
+
+  woocommerce_trigger: {
+    triggerName: "woocommerce_trigger",
+    required: ["credentialId", "storeUrl"],
+    extract: (cfg, automation) => ({
+      cfg: {
+        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
+        storeUrl: cfg.storeUrl, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
+      },
+    }),
+    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
+    jobPrefix: "woocommerce",
+    run: async ({ automationId, triggerNodeId, cfg }) => { await pollWooCommerce(automationId, triggerNodeId, cfg); },
   },
 
   datadog_trigger: {
