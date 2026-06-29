@@ -3,6 +3,27 @@ import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";
 
 const SEEN_TTL = 7 * 24 * 60 * 60;
+const SNAP_TTL = 7 * 24 * 60 * 60;
+const lc = (s) => String(s ?? "").toLowerCase();
+
+// Each event is a predicate over the current post (`p`), its previous snapshot
+// (`prev`, may be null) and config (`c`). Vote/comment counts mutate during the
+// launch day, so `changeAware` events dedup on a changing token to re-fire as the
+// numbers climb; `needsPrev` events stay quiet until a baseline snapshot exists.
+const PH_EVENTS = {
+  new_launch:       { needsPrev: false, dedup: (p) => `${p.id}`, match: () => true },
+  name_contains:    { needsPrev: false, dedup: (p) => `${p.id}`, match: (p, _v, c) => lc(p.name).includes(lc(c.targetValue)) },
+  tagline_contains: { needsPrev: false, dedup: (p) => `${p.id}`, match: (p, _v, c) => lc(p.tagline).includes(lc(c.targetValue)) },
+  by_maker:         { needsPrev: false, dedup: (p) => `${p.id}`, match: (p, _v, c) => lc(p.makerUsername) === lc(c.targetValue).replace(/^@/, "") || lc(p.maker).includes(lc(c.targetValue)) },
+  in_topic:         { needsPrev: false, dedup: (p) => `${p.id}`, match: (p, _v, c) => (p.topics || []).some((t) => lc(t).includes(lc(c.targetValue))) },
+  ai_product:       { needsPrev: false, dedup: (p) => `${p.id}`, match: (p) => `${lc(p.name)} ${lc(p.tagline)} ${(p.topics || []).map(lc).join(" ")}`.match(/\bai\b|artificial intelligence|gpt|llm/) != null },
+  votes_over:       { needsPrev: false, changeAware: true, dedup: (p) => `${p.id}:v${p.votesCount}`, match: (p, _v, c) => Number(p.votesCount) >= Number(c.targetValue || 0) },
+  comments_over:    { needsPrev: false, changeAware: true, dedup: (p) => `${p.id}:c${p.commentsCount}`, match: (p, _v, c) => Number(p.commentsCount) >= Number(c.targetValue || 0) },
+  new_vote:         { needsPrev: true,  changeAware: true, dedup: (p) => `${p.id}:v${p.votesCount}`, match: (p, prev) => Number(p.votesCount) > Number(prev.votesCount || 0) },
+  new_comment:      { needsPrev: true,  changeAware: true, dedup: (p) => `${p.id}:c${p.commentsCount}`, match: (p, prev) => Number(p.commentsCount) > Number(prev.commentsCount || 0) },
+  trending:         { needsPrev: true,  changeAware: true, dedup: (p) => `${p.id}:trend`, match: (p, prev, c) => Number(p.votesCount) >= Number(c.targetValue || 500) && Number(prev.votesCount || 0) < Number(c.targetValue || 500) },
+  has_website:      { needsPrev: false, dedup: (p) => `${p.id}`, match: (p) => !!p.website },
+};
 
 async function fetchProductHuntPosts(apiKey, category, minVotes) {
   const query = `query {
@@ -47,28 +68,48 @@ export async function pollProductHunt(automationId, triggerNodeId, cfg) {
 
   try {
     const { apiKey, category, minVotes } = cfg;
-    const posts = await fetchProductHuntPosts(apiKey, category, minVotes);
-    if (!posts.length) return;
+    const eventType = cfg.eventType || cfg.watchType || "new_launch";
+    const spec = PH_EVENTS[eventType] || PH_EVENTS.new_launch;
+
+    const raw = await fetchProductHuntPosts(apiKey, category, minVotes);
+    if (!raw.length) return;
+
+    const posts = raw.map((post) => ({
+      id: post.id, name: post.name, slug: post.slug,
+      tagline: post.tagline, description: post.description,
+      votesCount: post.votesCount, commentsCount: post.commentsCount,
+      thumbnail: post.thumbnail?.url, website: post.website,
+      maker: post.user?.name, makerUsername: post.user?.username,
+      topics: (post.topics?.edges || []).map(e => e.node?.name),
+      url: post.url, createdAt: post.createdAt,
+    }));
+
+    const snapKey = `bb:producthunt:snap:${scope}`;
+    const prevRaw = await redis.get(snapKey);
+    const prevSnap = prevRaw ? JSON.parse(prevRaw) : {};
+    const firstSync = !prevRaw;
+    const nextSnap = {};
+    for (const p of posts) nextSnap[p.id] = { votesCount: p.votesCount, commentsCount: p.commentsCount };
+    await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
+
+    const createdOnce = ["new_launch", "name_contains", "tagline_contains", "by_maker", "in_topic", "ai_product", "has_website"];
+    if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });
     if (!automation) return;
 
-    const seenKey = `bb:producthunt:seen:${scope}`;
+    const seenKey = `bb:producthunt:seen:${scope}:${eventType}`;
     for (const post of posts) {
-      const added = await redis.sadd(seenKey, post.id);
+      const prev = prevSnap[post.id] || null;
+      if (spec.needsPrev && !prev) continue;
+      if (!spec.match(post, prev, cfg)) continue;
+
+      const added = await redis.sadd(seenKey, spec.dedup(post));
       if (!added) continue;
       await redis.expire(seenKey, SEEN_TTL);
       try {
-        await executeAutomation(automation, {
-          id: post.id, name: post.name, slug: post.slug,
-          tagline: post.tagline, description: post.description,
-          votesCount: post.votesCount, commentsCount: post.commentsCount,
-          thumbnail: post.thumbnail?.url, website: post.website,
-          maker: post.user?.name, makerUsername: post.user?.username,
-          topics: (post.topics?.edges || []).map(e => e.node?.name),
-          url: post.url, createdAt: post.createdAt,
-        }, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `producthunt:${scope}:${post.id}` });
+        await executeAutomation(automation, post, { workspaceId: automation.workspaceId, entryNodeId: triggerNodeId || automation.entryNodeId, idempotencyKey: `producthunt:${scope}:${eventType}:${spec.dedup(post)}` });
       } catch (err) {
         console.error(`[ProductHuntPoller] Failed for "${automation.name}":`, err.message);
       }

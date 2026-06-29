@@ -630,6 +630,39 @@ const instagramEvent = (id, label, description, icon, extraFields = [], varsExtr
 // TikTok authenticates with an OAuth token (vault credential, auto-refreshed).
 // The poller reads the connected creator's video feed and `eventType` (via
 // configExtra) selects the TIKTOK_EVENTS predicate over each video.
+// Product Hunt authenticates with a developer API token. The user optionally
+// scopes to a topic; the poller watches the launch ranking and `eventType` (via
+// configExtra) selects the PH_EVENTS predicate per launch.
+const phBaseFields = [
+  { type: 'password', key: 'apiKey', label: 'API Token', placeholder: 'ph_...',
+    hint: '// your Product Hunt developer token' },
+  { type: 'text', key: 'category', label: 'Topic', placeholder: 'artificial-intelligence (optional)',
+    hint: '// limit to one topic slug — leave blank for all' },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60',
+    options: [
+      { value: '15', label: 'Every 15 minutes' },
+      { value: '30', label: 'Every 30 minutes' },
+      { value: '60', label: 'Every hour' },
+    ] },
+];
+const phTargetField = (label, placeholder, hint) =>
+  ({ type: 'text', key: 'targetValue', label, placeholder, hint });
+const phVars = (extra = []) => ({
+  type: 'vars', label: 'Output Variables', rows: [
+    ['$trigger.name', 'the product name'],
+    ['$trigger.tagline', 'the one-line tagline'],
+    ['$trigger.votesCount', 'the upvote count'],
+    ['$trigger.maker', 'the maker name'],
+    ['$trigger.url', 'link to the launch'],
+    ...extra,
+  ],
+});
+const phEvent = (id, label, description, icon, extraFields = [], varsExtra = []) => ({
+  id, label, description, icon, event: id, accent: '#DA552F',
+  configExtra: { eventType: id },
+  fields: [...phBaseFields, ...extraFields, phVars(varsExtra)],
+});
+
 // RSS reads any RSS/Atom feed by URL (no credential needed). Items are immutable,
 // so each event is a one-shot classification of a newly-seen item; `eventType`
 // (via configExtra) selects the RSS_EVENTS predicate. pollInterval is a cron string.
@@ -2270,6 +2303,38 @@ export const TRIGGER_EVENTS = {
       sheetsEvent('checkbox_checked', 'Checkbox Checked', 'A checkbox / yes column becomes true', CheckSquare,
         [], [sheetsColumnField]),
       sheetsEvent('any_change', 'Any Change', 'Any row added, edited or deleted', RefreshCw),
+    ],
+  },
+
+  producthunt: {
+    title: 'Product Hunt',
+    subtitle: 'Watch launches — votes, comments, makers, topics and trending',
+    events: [
+      phEvent('new_launch', 'New Launch', 'Any new product appears in the ranking.', Rocket),
+      phEvent('name_contains', 'Name Contains', 'A launch name contains your text.', Search,
+        [phTargetField('Text', 'notion', '// case-insensitive match in the product name')]),
+      phEvent('tagline_contains', 'Tagline Contains', 'A launch tagline contains your text.', Type,
+        [phTargetField('Text', 'open source', '// case-insensitive match in the tagline')]),
+      phEvent('by_maker', 'By Maker', 'A launch is from a specific maker.', User,
+        [phTargetField('Maker', '@levelsio', '// username or display name of the maker')]),
+      phEvent('in_topic', 'In Topic', 'A launch is tagged with a topic.', Hash,
+        [phTargetField('Topic', 'developer tools', '// matched against launch topics')]),
+      phEvent('ai_product', 'AI Product', 'A launch is AI-related (name, tagline or topics).', Sparkle),
+      phEvent('votes_over', 'Votes Over', 'A launch reaches an upvote threshold.', Flame,
+        [phTargetField('Min Votes', '200', '// fires when votes climb past this')],
+        [['$trigger.votesCount', 'the current upvote count']]),
+      phEvent('comments_over', 'Comments Over', 'A launch reaches a comment threshold.', MessageSquare,
+        [phTargetField('Min Comments', '50', '// fires when comments climb past this')],
+        [['$trigger.commentsCount', 'the current comment count']]),
+      phEvent('new_vote', 'Gained Votes', 'A launch gained upvotes since last check.', Flame,
+        [], [['$trigger.votesCount', 'the current upvote count']]),
+      phEvent('new_comment', 'New Comment', 'A launch gained comments since last check.', MessageSquare,
+        [], [['$trigger.commentsCount', 'the current comment count']]),
+      phEvent('trending', 'Trending', 'A launch crosses a vote threshold for the first time.', Star,
+        [phTargetField('Vote Threshold', '500', '// fires once when votes first cross this')],
+        [['$trigger.votesCount', 'the current upvote count']]),
+      phEvent('has_website', 'Has Website', 'A launch links out to a product website.', Globe,
+        [], [['$trigger.website', 'the product website URL']]),
     ],
   },
 

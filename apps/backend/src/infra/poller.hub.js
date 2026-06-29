@@ -773,7 +773,7 @@ const POLL_REGISTRY = {
     triggerName: "producthunt_trigger",
     required: [],
     extract: (cfg) => ({
-      cfg: { apiKey: cfg.apiKey, category: cfg.category, minVotes: cfg.minVotes },
+      cfg: { apiKey: cfg.apiKey, category: cfg.category, minVotes: cfg.minVotes, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 60} * * * *` }),
     jobPrefix: "ph",
