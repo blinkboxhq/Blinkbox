@@ -1,221 +1,498 @@
-import { Settings2, MessageSquare, Image, FileText, Wand2, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Settings2, MessageSquare, Code2, Braces, Wrench, Brain,
+  Image as ImageIcon, FileText, ScanText, Tags, AlignLeft,
+  Languages, Heart, Sparkles, Wand2, ChevronDown, RefreshCw, Loader2,
+} from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import api from '@/lib/api';
 
-const MODELS = [
-  { value: 'moonshot-v1-8k',               label: 'Moonshot V1 · 8K',              ctx: '8K context' },
-  { value: 'moonshot-v1-32k',              label: 'Moonshot V1 · 32K',             ctx: '32K context' },
-  { value: 'moonshot-v1-128k',             label: 'Moonshot V1 · 128K',            ctx: '128K context — documents' },
-  { value: 'moonshot-v1-8k-vision-preview', label: 'Moonshot V1 · Vision (8K)',     ctx: 'Image understanding' },
-];
+const ACCENT = 'fuchsia';
+const ACCENT_HEX = '#7C3AED';
 
 const OPERATIONS = [
-  { value: 'message',        label: 'Chat / Message',      icon: MessageSquare },
-  { value: 'analyzeImage',   label: 'Analyze Image',       icon: Image },
-  { value: 'analyzeDocument', label: 'Analyze Document',   icon: FileText },
-  { value: 'generatePrompt', label: 'Generate Prompt',     icon: Wand2 },
-  { value: 'improvePrompt',  label: 'Improve Prompt',      icon: Wand2 },
+  { value: 'message', label: 'Chat Message', icon: MessageSquare, description: 'Talk to Kimi — general chat & generation' },
+  { value: 'code', label: 'Code', icon: Code2, description: 'Generate or refactor code (Kimi K2 Code)' },
+  { value: 'structuredOutput', label: 'Structured Output', icon: Braces, description: 'Force valid JSON, optionally to a schema' },
+  { value: 'functionCalling', label: 'Function Calling', icon: Wrench, description: 'Let Kimi call your tools / functions' },
+  { value: 'reasoning', label: 'Reasoning', icon: Brain, description: 'Step-by-step thinking (Kimi K2 Thinking)' },
+  { value: 'analyzeImage', label: 'Analyze Image', icon: ImageIcon, description: 'Vision — describe / answer about an image' },
+  { value: 'analyzeDocument', label: 'Analyze Document', icon: FileText, description: 'Long-context document understanding' },
+  { value: 'extractData', label: 'Extract Data', icon: ScanText, description: 'Pull structured fields from text' },
+  { value: 'classify', label: 'Classify', icon: Tags, description: 'Label text into one of your categories' },
+  { value: 'summarize', label: 'Summarize', icon: AlignLeft, description: 'Condense long text' },
+  { value: 'translate', label: 'Translate', icon: Languages, description: 'Translate to a target language' },
+  { value: 'sentiment', label: 'Sentiment', icon: Heart, description: 'Sentiment & emotion analysis' },
+  { value: 'generatePrompt', label: 'Generate Prompt', icon: Sparkles, description: 'Write an effective AI prompt for a task' },
+  { value: 'improvePrompt', label: 'Improve Prompt', icon: Wand2, description: 'Rewrite a prompt to be sharper' },
 ];
 
-const ACCENT = '#1B64F4';
-const ACCENT_LIGHT = 'rgba(27,100,244,0.15)';
-const ACCENT_BORDER = 'rgba(27,100,244,0.25)';
+const MODELS_CHAT = ['kimi-k2.6', 'kimi-k2.5', 'kimi-k2-instruct', 'moonshot-v1-128k', 'moonshot-v1-32k', 'moonshot-v1-8k'];
+const MODELS_CODE = ['kimi-k2.7-code', 'kimi-k2.6'];
+const MODELS_THINK = ['kimi-k2-thinking', 'kimi-k2.6'];
+const MODELS_VISION = ['kimi-k2.6', 'kimi-k2.5'];
 
-function MoonshotIcon({ className }) {
+const ADVANCED_OPS = new Set(['message', 'code', 'structuredOutput', 'functionCalling', 'analyzeImage', 'analyzeDocument', 'summarize']);
+
+function Header() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2C6.477 2 2 6.477 2 12c0 4.236 2.636 7.855 6.356 9.312-.088-.791-.167-2.005.035-2.868.181-.78 1.172-4.97 1.172-4.97s-.299-.598-.299-1.482c0-1.388.806-2.428 1.808-2.428.853 0 1.267.641 1.267 1.408 0 .858-.546 2.14-.828 3.33-.236.995.499 1.806 1.476 1.806 1.772 0 3.14-1.867 3.14-4.56 0-2.386-1.716-4.054-4.165-4.054-2.837 0-4.5 2.127-4.5 4.327 0 .856.33 1.774.741 2.275a.3.3 0 0 1 .069.285c-.076.313-.244.995-.277 1.134-.044.183-.146.222-.337.134-1.249-.581-2.03-2.407-2.03-3.874 0-3.154 2.292-6.052 6.608-6.052 3.469 0 6.165 2.473 6.165 5.776 0 3.447-2.173 6.22-5.19 6.22-1.013 0-1.966-.527-2.292-1.148l-.623 2.378c-.226.869-.835 1.958-1.244 2.621.937.29 1.931.446 2.962.446 5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-    </svg>
+    <div className="flex items-center gap-3 px-4 pt-4 pb-1">
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+        style={{ background: `${ACCENT_HEX}1a`, border: `1px solid ${ACCENT_HEX}33` }}
+      >
+        <Sparkles className="w-[18px] h-[18px]" style={{ color: ACCENT_HEX }} />
+      </div>
+      <div>
+        <div className="text-[13px] font-semibold text-zinc-100">Kimi · Moonshot AI</div>
+        <div className="text-[11px] text-zinc-500">Long-context · multimodal · thinking & agentic tool use</div>
+      </div>
+    </div>
   );
 }
 
-export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'message';
-  const model = config.model || 'moonshot-v1-8k';
-  const selectedOp = OPERATIONS.find(o => o.value === operation);
-  const selectedModel = MODELS.find(m => m.value === model);
+function Field({ label, children, hint }) {
+  return (
+    <div>
+      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">{label}</label>
+      {children}
+      {hint && <p className="text-[10px] text-zinc-600 mt-1">{hint}</p>}
+    </div>
+  );
+}
+
+function Select({ value, onChange, options }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => {
+        const active = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className="px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 border"
+            style={active
+              ? { background: `${ACCENT_HEX}1f`, borderColor: `${ACCENT_HEX}66`, color: '#fafafa' }
+              : { background: '#18181b', borderColor: '#27272a', color: '#a1a1aa' }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function IOBadge({ kind, children }) {
+  const tone = kind === 'in'
+    ? { color: '#38bdf8', bg: '#38bdf81a', border: '#38bdf833' }
+    : { color: '#a3e635', bg: '#a3e6351a', border: '#a3e63533' };
+  return (
+    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+      style={{ color: tone.color, background: tone.bg, border: `1px solid ${tone.border}` }}>
+      {children}
+    </span>
+  );
+}
+
+function ModelPicker({ value, onChange, baseModels, credentialId }) {
+  const [models, setModels] = useState(baseModels);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function fetchLatest() {
+    if (!credentialId) { setError('Select an API key first'); return; }
+    setLoading(true); setError('');
+    try {
+      const { data } = await api.get('/automation/models/moonshot', { params: { credentialId } });
+      const live = (data.models || []).filter(Boolean);
+      if (live.length) {
+        const merged = Array.from(new Set([...baseModels, ...live]));
+        setModels(merged);
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not fetch models');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: ACCENT_LIGHT, border: `1px solid ${ACCENT_BORDER}` }}>
-        <div className="p-2 rounded-lg shrink-0" style={{ background: ACCENT_LIGHT, border: `1px solid ${ACCENT_BORDER}`, color: ACCENT }}>
-          <MoonshotIcon className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold" style={{ color: ACCENT }}>Kimi</span>
-          <span className="text-[10px] text-zinc-500 mt-0.5">by Moonshot AI · up to 128K context</span>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Model</label>
+        <button
+          type="button"
+          onClick={fetchLatest}
+          disabled={loading}
+          className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+          Fetch latest
+        </button>
       </div>
+      {models.length > 8 ? (
+        <div className="relative">
+          <select
+            value={value || models[0]}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full appearance-none bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500"
+          >
+            {models.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <ChevronDown className="w-4 h-4 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
+      ) : (
+        <Select value={value || models[0]} onChange={onChange} options={models.map((m) => ({ value: m, label: m }))} />
+      )}
+      {error && <p className="text-[10px] text-amber-400 mt-1">{error}</p>}
+    </div>
+  );
+}
 
-      {/* Operation picker */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <div className="grid grid-cols-1 gap-1">
-          {OPERATIONS.map(op => {
+function MessageFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">text / json out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Prompt" hint="Your instruction. Combined with the previous node's output.">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Summarize the input and list 3 action items..." multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="System Prompt" hint="Optional — sets Kimi's persona / rules.">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => update('systemPrompt', v)} placeholder="You are a helpful assistant..." multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Output Format">
+        <Select value={config.outputFormat || 'text'} onChange={(v) => update('outputFormat', v)} options={[{ value: 'text', label: 'Text' }, { value: 'json', label: 'JSON' }]} />
+      </Field>
+    </div>
+  );
+}
+
+function CodeFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">code out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CODE} credentialId={credentialId} />
+      <Field label="Instruction">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Write a Python function that..." multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="System Prompt" hint="Optional override.">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => update('systemPrompt', v)} placeholder="You are an expert in Rust..." multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function StructuredFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Extract name, email and company from the input." multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="JSON Schema" hint="Optional — paste a JSON Schema to constrain the shape.">
+        <SmartVariableInput value={config.jsonSchema || ''} onChange={(v) => update('jsonSchema', v)} placeholder='{"type":"object","properties":{...}}' multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function FunctionFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">tool calls out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="What's the weather in Tokyo and should I bring an umbrella?" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Tools (JSON array)" hint="OpenAI-style function definitions.">
+        <SmartVariableInput value={config.tools || ''} onChange={(v) => update('tools', v)} placeholder='[{"name":"get_weather","description":"...","parameters":{...}}]' multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Tool Choice" hint='Optional: "auto", "none", or {"type":"function","function":{"name":"..."}}'>
+        <SmartVariableInput value={config.toolChoice || ''} onChange={(v) => update('toolChoice', v)} placeholder="auto" nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function ReasoningFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">answer + reasoning out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_THINK} credentialId={credentialId} />
+      <Field label="Problem" hint="Kimi thinks step by step; reasoning is returned separately.">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="A train leaves at... solve and explain." multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function ImageFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">image url in</IOBadge><IOBadge kind="out">text out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_VISION} credentialId={credentialId} />
+      <Field label="Image URL" hint="Public URL or data: URI. Falls back to input.imageUrl.">
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => update('imageUrl', v)} placeholder="https://... or {{ $json.imageUrl }}" nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Question">
+        <SmartVariableInput value={config.question || ''} onChange={(v) => update('question', v)} placeholder="What's in this image?" multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function DocumentFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">document text in</IOBadge><IOBadge kind="out">text out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Document Text" hint="Falls back to input.text / input.content. Kimi has very long context.">
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => update('documentText', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Instruction">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Summarize and list key obligations." multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function ExtractFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Text" hint="Falls back to input.text.">
+        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Fields to Extract" hint="Comma-separated, e.g. name, email, total. Leave blank to auto-extract.">
+        <SmartVariableInput value={config.fields || ''} onChange={(v) => update('fields', v)} placeholder="name, email, amount, date" nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function ClassifyFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">label out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Text" hint="Falls back to input.text.">
+        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Labels" hint="Comma-separated categories.">
+        <SmartVariableInput value={config.labels || ''} onChange={(v) => update('labels', v)} placeholder="urgent, normal, spam" nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function SummarizeFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">summary out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Text" hint="Falls back to input.text / input.content.">
+        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.content }}" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Style">
+        <Select value={config.style || 'concise'} onChange={(v) => update('style', v)} options={[
+          { value: 'concise', label: 'Concise' }, { value: 'detailed', label: 'Detailed' }, { value: 'bullet points', label: 'Bullets' },
+        ]} />
+      </Field>
+      <Field label="Max Words" hint="Optional length target.">
+        <SmartVariableInput value={config.maxWords || ''} onChange={(v) => update('maxWords', v)} placeholder="100" nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function TranslateFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">translation out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Text">
+        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+      </Field>
+      <Field label="Target Language">
+        <SmartVariableInput value={config.targetLanguage || ''} onChange={(v) => update('targetLanguage', v)} placeholder="English" nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function SentimentFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Text" hint="Falls back to input.text.">
+        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function GeneratePromptFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">task in</IOBadge><IOBadge kind="out">prompt out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Task Description">
+        <SmartVariableInput value={config.task || ''} onChange={(v) => update('task', v)} placeholder="Classify support tickets by urgency" multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+function ImprovePromptFields({ config, update, credentialId }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2"><IOBadge kind="in">prompt in</IOBadge><IOBadge kind="out">prompt out</IOBadge></div>
+      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <Field label="Prompt to Improve">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Paste a prompt to sharpen..." multiline nodeId={config.__nodeId} />
+      </Field>
+    </div>
+  );
+}
+
+const OP_FIELDS = {
+  message: MessageFields,
+  code: CodeFields,
+  structuredOutput: StructuredFields,
+  functionCalling: FunctionFields,
+  reasoning: ReasoningFields,
+  analyzeImage: ImageFields,
+  analyzeDocument: DocumentFields,
+  extractData: ExtractFields,
+  classify: ClassifyFields,
+  summarize: SummarizeFields,
+  translate: TranslateFields,
+  sentiment: SentimentFields,
+  generatePrompt: GeneratePromptFields,
+  improvePrompt: ImprovePromptFields,
+};
+
+function AdvancedSection({ config, update }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-zinc-800 pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider hover:text-zinc-200 transition-colors"
+      >
+        <Settings2 className="w-3.5 h-3.5" />
+        Advanced
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <Field label="Temperature">
+            <SmartVariableInput value={config.temperature ?? ''} onChange={(v) => update('temperature', v)} placeholder="0.6" nodeId={config.__nodeId} />
+          </Field>
+          <Field label="Max Tokens">
+            <SmartVariableInput value={config.maxTokens ?? ''} onChange={(v) => update('maxTokens', v)} placeholder="2000" nodeId={config.__nodeId} />
+          </Field>
+          <Field label="Top P">
+            <SmartVariableInput value={config.topP ?? ''} onChange={(v) => update('topP', v)} placeholder="1" nodeId={config.__nodeId} />
+          </Field>
+          <Field label="Frequency Penalty">
+            <SmartVariableInput value={config.frequencyPenalty ?? ''} onChange={(v) => update('frequencyPenalty', v)} placeholder="0" nodeId={config.__nodeId} />
+          </Field>
+          <Field label="Presence Penalty">
+            <SmartVariableInput value={config.presencePenalty ?? ''} onChange={(v) => update('presencePenalty', v)} placeholder="0" nodeId={config.__nodeId} />
+          </Field>
+          <Field label="Stop Sequences" hint="One per line, max 4.">
+            <SmartVariableInput value={config.stop ?? ''} onChange={(v) => update('stop', v)} placeholder="###" multiline nodeId={config.__nodeId} />
+          </Field>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OperationPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const current = OPERATIONS.find((o) => o.value === value) || OPERATIONS[0];
+  const Icon = current.icon;
+  return (
+    <div className="relative">
+      <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Operation</label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-2.5 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-left hover:border-zinc-600 transition-colors"
+      >
+        <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+          style={{ background: `${ACCENT_HEX}1a`, border: `1px solid ${ACCENT_HEX}33` }}>
+          <Icon className="w-4 h-4" style={{ color: ACCENT_HEX }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-medium text-zinc-100">{current.label}</div>
+          <div className="text-[10px] text-zinc-500 truncate">{current.description}</div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-[320px] overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl backdrop-blur-md">
+          {OPERATIONS.map((op) => {
             const OpIcon = op.icon;
-            const active = operation === op.value;
+            const active = op.value === value;
             return (
               <button
                 key={op.value}
-                onClick={() => updateConfig('operation', op.value)}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all duration-150"
-                style={active
-                  ? { background: ACCENT_LIGHT, border: `1px solid ${ACCENT_BORDER}`, color: ACCENT }
-                  : { background: 'transparent', border: '1px solid transparent', color: '#71717a' }
-                }
+                type="button"
+                onClick={() => { onChange(op.value); setOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${active ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'}`}
               >
-                <OpIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-                <span className="text-[12px] font-semibold">{op.label}</span>
+                <OpIcon className="w-4 h-4 shrink-0" style={{ color: active ? ACCENT_HEX : '#71717a' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-medium text-zinc-200">{op.label}</div>
+                  <div className="text-[10px] text-zinc-500 truncate">{op.description}</div>
+                </div>
               </button>
             );
           })}
         </div>
-      </div>
-
-      {/* Model + config */}
-      <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl">
-        <div className="flex items-center gap-2 pb-3 border-b border-[#222]">
-          <Settings2 className="w-4 h-4" style={{ color: ACCENT }} />
-          <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Config</span>
-        </div>
-
-        {/* Model selector */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Model</span>
-          <div className="relative">
-            <select
-              value={model}
-              onChange={e => updateConfig('model', e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-semibold focus:outline-none transition-colors cursor-pointer appearance-none pr-8"
-              style={{ focusBorderColor: ACCENT }}
-            >
-              {MODELS.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-          {selectedModel && (
-            <span className="text-[10px] text-zinc-600 pl-1">{selectedModel.ctx}</span>
-          )}
-        </div>
-
-        {/* Output format — only for message op */}
-        {operation === 'message' && (
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider w-14 shrink-0">Output</span>
-            <div className="flex gap-1.5">
-              {['text', 'json'].map(fmt => (
-                <button
-                  key={fmt}
-                  onClick={() => updateConfig('outputFormat', fmt)}
-                  className="px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-150"
-                  style={(config.outputFormat || 'text') === fmt
-                    ? { background: ACCENT_LIGHT, border: `1px solid ${ACCENT_BORDER}`, color: ACCENT }
-                    : { background: '#111', border: '1px solid #333', color: '#71717a' }
-                  }
-                >
-                  {fmt === 'text' ? 'Raw Text' : 'JSON'}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Temperature */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider w-14 shrink-0">Temp</span>
-          <input
-            type="range" min="0" max="1" step="0.1"
-            value={config.temperature ?? 0.7}
-            onChange={e => updateConfig('temperature', parseFloat(e.target.value))}
-            className="flex-1 h-1 accent-blue-500 cursor-pointer"
-          />
-          <span className="text-[11px] font-mono text-zinc-400 w-6 text-right">{(config.temperature ?? 0.7).toFixed(1)}</span>
-        </div>
-
-        {/* Max tokens */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider w-14 shrink-0">Tokens</span>
-          <input
-            type="number" min="100" max="32000" step="100"
-            value={config.maxTokens || 2000}
-            onChange={e => updateConfig('maxTokens', parseInt(e.target.value, 10))}
-            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-xs text-white font-semibold focus:outline-none focus:border-zinc-600 transition-colors"
-          />
-        </div>
-      </div>
-
-      {/* Prompt / Image URL / Document text depending on operation */}
-      {operation === 'analyzeImage' ? (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <Image className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Image URL
-          </label>
-          <SmartVariableInput
-            value={config.imageUrl || ''}
-            onChange={val => updateConfig('imageUrl', val)}
-            placeholder="https://example.com/image.jpg"
-          />
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mt-1">
-            <MessageSquare className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Question / Instruction
-          </label>
-          <SmartVariableInput
-            value={config.prompt || ''}
-            onChange={val => updateConfig('prompt', val)}
-            placeholder="Describe this image..."
-            multiline
-          />
-        </div>
-      ) : operation === 'analyzeDocument' ? (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <FileText className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Document Text
-          </label>
-          <SmartVariableInput
-            value={config.documentText || ''}
-            onChange={val => updateConfig('documentText', val)}
-            placeholder="Paste document text or use {{ $json.text }}"
-            multiline
-          />
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mt-1">
-            <MessageSquare className="w-3.5 h-3.5" style={{ color: ACCENT }} /> Question / Task
-          </label>
-          <SmartVariableInput
-            value={config.prompt || ''}
-            onChange={val => updateConfig('prompt', val)}
-            placeholder="Summarize this document..."
-            multiline
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <MessageSquare className="w-3.5 h-3.5" style={{ color: ACCENT }} />
-            {operation === 'generatePrompt' ? 'Task Description' : operation === 'improvePrompt' ? 'Prompt to Improve' : 'Prompt'}
-          </label>
-          <SmartVariableInput
-            value={config.prompt || ''}
-            onChange={val => updateConfig('prompt', val)}
-            placeholder={
-              operation === 'generatePrompt' ? 'Describe the task you need a prompt for...'
-              : operation === 'improvePrompt' ? 'Paste the prompt to improve...'
-              : 'What should Kimi do with the input data?'
-            }
-            multiline
-          />
-        </div>
       )}
+    </div>
+  );
+}
 
-      {/* Credential */}
-      <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={id => updateConfig('credentialId', id)}
-        accentColor="blue"
-        label="Kimi API Key"
-        placeholder="Select Kimi credential..."
-      />
+export default function MoonshotNode({ config = {}, onChange, nodeId }) {
+  const operation = config.operation || 'message';
+  const update = (key, val) => onChange({ ...config, [key]: val, __nodeId: nodeId });
+  const Fields = OP_FIELDS[operation] || MessageFields;
+
+  return (
+    <div className="flex flex-col">
+      <Header />
+      <div className="flex flex-col gap-4 p-4">
+        <CredentialPicker
+          value={config.credentialId}
+          onChange={(v) => update('credentialId', v)}
+          accentColor={ACCENT}
+          credentialType="Moonshot"
+          label="Moonshot (Kimi) API Key"
+          placeholder="Select a Moonshot credential"
+        />
+
+        <div className="border-t border-zinc-800" />
+
+        <OperationPicker value={operation} onChange={(v) => update('operation', v)} />
+
+        <div className="border-t border-zinc-800" />
+
+        <Fields config={{ ...config, __nodeId: nodeId }} update={update} credentialId={config.credentialId} />
+
+        {ADVANCED_OPS.has(operation) && <AdvancedSection config={{ ...config, __nodeId: nodeId }} update={update} />}
+      </div>
     </div>
   );
 }
