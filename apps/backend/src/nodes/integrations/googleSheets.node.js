@@ -123,13 +123,163 @@ async function opGetSheet(config, token) {
   };
 }
 
+async function sheetIdForTitle(spreadsheetId, sheetTitle, token) {
+  const meta = await opGetSheet({ spreadsheetId }, token);
+  const match = (meta.sheets || []).find((s) => s.title === sheetTitle);
+  if (!match) throw new Error(`Google Sheets: tab "${sheetTitle}" not found in spreadsheet.`);
+  return match.sheetId;
+}
+
+async function opLookupRow(config, token) {
+  if (!config.range) return { success: false, error: "Google Sheets lookupRow: 'range' is required (e.g. Sheet1!A:Z).", skipped: true };
+  if (!config.lookupColumn) return { success: false, error: "Google Sheets lookupRow: 'lookupColumn' is required.", skipped: true };
+  if (config.lookupValue === undefined || config.lookupValue === null)
+    return { success: false, error: "Google Sheets lookupRow: 'lookupValue' is required.", skipped: true };
+  const { values } = await opReadRange(config, token);
+  if (!values.length) return { found: false, row: null, rowNumber: null };
+  const header = values[0];
+  const colIdx = header.findIndex((h) => String(h).trim() === String(config.lookupColumn).trim());
+  if (colIdx === -1) throw new Error(`Google Sheets lookupRow: column "${config.lookupColumn}" not found in header row.`);
+  const target = String(config.lookupValue);
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][colIdx]) === target) {
+      const obj = {};
+      header.forEach((h, j) => { obj[h] = values[i][j]; });
+      return { found: true, row: obj, rowNumber: i + 1, raw: values[i] };
+    }
+  }
+  return { found: false, row: null, rowNumber: null };
+}
+
+async function opUpdateRow(config, token) {
+  const found = await opLookupRow(config, token);
+  if (found.skipped) return found;
+  if (!found.found) return { success: false, error: "Google Sheets updateRow: no row matched the lookup value.", skipped: true };
+  const sheetName = String(config.range).split("!")[0];
+  const writeRange = `${sheetName}!A${found.rowNumber}`;
+  return opWriteRange({ ...config, range: writeRange }, token);
+}
+
+async function opBatchGet(config, token) {
+  let ranges = config.ranges;
+  if (typeof ranges === "string") ranges = ranges.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!Array.isArray(ranges) || ranges.length === 0)
+    return { success: false, error: "Google Sheets batchGet: 'ranges' must be a non-empty list.", skipped: true };
+  const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values:batchGet`;
+  const params = new URLSearchParams();
+  ranges.forEach((r) => params.append("ranges", r));
+  params.append("valueRenderOption", "UNFORMATTED_VALUE");
+  const response = await axios.get(`${url}?${params.toString()}`, { headers: authHeaders(token), timeout: 20000 });
+  return { valueRanges: (response.data.valueRanges || []).map((vr) => ({ range: vr.range, values: vr.values || [] })) };
+}
+
+async function batchUpdate(spreadsheetId, requests, token) {
+  const url = `${BASE}/${encodeURIComponent(spreadsheetId)}:batchUpdate`;
+  const response = await axios.post(url, { requests }, {
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    timeout: 20000,
+  });
+  return response.data;
+}
+
+async function opInsertRow(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets insertRow: 'sheetName' is required.", skipped: true };
+  const sheetId = await sheetIdForTitle(config.spreadsheetId, config.sheetName, token);
+  const startIndex = config.rowIndex != null ? Number(config.rowIndex) - 1 : 1;
+  await batchUpdate(config.spreadsheetId, [{
+    insertDimension: {
+      range: { sheetId, dimension: "ROWS", startIndex: Math.max(startIndex, 0), endIndex: Math.max(startIndex, 0) + (Number(config.rowCount) || 1) },
+      inheritFromBefore: startIndex > 0,
+    },
+  }], token);
+  if (config.values) {
+    const writeRange = `${config.sheetName}!A${startIndex + 1}`;
+    await opWriteRange({ ...config, range: writeRange }, token);
+  }
+  return { success: true, inserted: Number(config.rowCount) || 1, sheetName: config.sheetName };
+}
+
+async function opDeleteRow(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets deleteRow: 'sheetName' is required.", skipped: true };
+  if (config.rowIndex == null) return { success: false, error: "Google Sheets deleteRow: 'rowIndex' (1-based) is required.", skipped: true };
+  const sheetId = await sheetIdForTitle(config.spreadsheetId, config.sheetName, token);
+  const startIndex = Number(config.rowIndex) - 1;
+  await batchUpdate(config.spreadsheetId, [{
+    deleteDimension: {
+      range: { sheetId, dimension: "ROWS", startIndex: Math.max(startIndex, 0), endIndex: Math.max(startIndex, 0) + (Number(config.rowCount) || 1) },
+    },
+  }], token);
+  return { success: true, deleted: Number(config.rowCount) || 1, sheetName: config.sheetName };
+}
+
+async function opCreateSpreadsheet(config, token) {
+  if (!config.title) return { success: false, error: "Google Sheets createSpreadsheet: 'title' is required.", skipped: true };
+  const body = { properties: { title: config.title } };
+  if (config.sheetTitles) {
+    let titles = config.sheetTitles;
+    if (typeof titles === "string") titles = titles.split(",").map((s) => s.trim()).filter(Boolean);
+    if (Array.isArray(titles) && titles.length) body.sheets = titles.map((t) => ({ properties: { title: t } }));
+  }
+  const response = await axios.post(BASE, body, {
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    timeout: 15000,
+  });
+  return { spreadsheetId: response.data.spreadsheetId, spreadsheetUrl: response.data.spreadsheetUrl, title: response.data.properties?.title };
+}
+
+async function opCreateSheet(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets createSheet: 'sheetName' is required.", skipped: true };
+  const data = await batchUpdate(config.spreadsheetId, [{ addSheet: { properties: { title: config.sheetName } } }], token);
+  const props = data.replies?.[0]?.addSheet?.properties;
+  return { sheetId: props?.sheetId, title: props?.title };
+}
+
+async function opDeleteSheet(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets deleteSheet: 'sheetName' is required.", skipped: true };
+  const sheetId = await sheetIdForTitle(config.spreadsheetId, config.sheetName, token);
+  await batchUpdate(config.spreadsheetId, [{ deleteSheet: { sheetId } }], token);
+  return { success: true, deletedSheet: config.sheetName };
+}
+
+async function opRenameSheet(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets renameSheet: 'sheetName' is required.", skipped: true };
+  if (!config.newSheetName) return { success: false, error: "Google Sheets renameSheet: 'newSheetName' is required.", skipped: true };
+  const sheetId = await sheetIdForTitle(config.spreadsheetId, config.sheetName, token);
+  await batchUpdate(config.spreadsheetId, [{
+    updateSheetProperties: { properties: { sheetId, title: config.newSheetName }, fields: "title" },
+  }], token);
+  return { success: true, sheetId, title: config.newSheetName };
+}
+
+async function opDuplicateSheet(config, token) {
+  if (!config.sheetName) return { success: false, error: "Google Sheets duplicateSheet: 'sheetName' is required.", skipped: true };
+  const sheetId = await sheetIdForTitle(config.spreadsheetId, config.sheetName, token);
+  const data = await batchUpdate(config.spreadsheetId, [{
+    duplicateSheet: { sourceSheetId: sheetId, newSheetName: config.newSheetName || `${config.sheetName} Copy` },
+  }], token);
+  const props = data.replies?.[0]?.duplicateSheet?.properties;
+  return { sheetId: props?.sheetId, title: props?.title };
+}
+
 const OPERATIONS = {
   readRange: opReadRange,
   writeRange: opWriteRange,
   appendRow: opAppendRow,
   clearRange: opClearRange,
   getSheet: opGetSheet,
+  lookupRow: opLookupRow,
+  updateRow: opUpdateRow,
+  batchGet: opBatchGet,
+  insertRow: opInsertRow,
+  deleteRow: opDeleteRow,
+  createSpreadsheet: opCreateSpreadsheet,
+  createSheet: opCreateSheet,
+  deleteSheet: opDeleteSheet,
+  renameSheet: opRenameSheet,
+  duplicateSheet: opDuplicateSheet,
 };
+
+const NO_SPREADSHEET_OPS = new Set(["createSpreadsheet"]);
 
 export default {
   async run(config, input, context = {}) {
@@ -137,7 +287,7 @@ export default {
     const handler = OPERATIONS[operation];
     if (!handler)
       throw new Error(`Google Sheets: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
-    if (!config.spreadsheetId) return { success: false, error: "Google Sheets: 'spreadsheetId' is required.", skipped: true };
+    if (!NO_SPREADSHEET_OPS.has(operation) && !config.spreadsheetId) return { success: false, error: "Google Sheets: 'spreadsheetId' is required.", skipped: true };
     if (!config.credentialId) return { success: false, error: "Google Sheets: No credential selected.", skipped: true };
 
     let token;
