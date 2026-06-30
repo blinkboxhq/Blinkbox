@@ -220,6 +220,7 @@ import imgTavily from "../../assets/tavily.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
 import imgOpenRouter from "@nodes/openrouter/logo.svg";
 import imgZai from "@nodes/zai/logo.svg";
+import imgMiniMax from "@nodes/minimax/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
@@ -285,6 +286,7 @@ import NvidiaNimNode from "@nodes/nvidia_nim/ConfigPanel.jsx";
 import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
 import OpenRouterNode from "@nodes/openrouter/ConfigPanel.jsx";
 import ZaiNode from "@nodes/zai/ConfigPanel.jsx";
+import MiniMaxNode from "@nodes/minimax/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
 import NotionNode from "@nodes/notion/ConfigPanel.jsx";
@@ -726,6 +728,16 @@ export const NodeRegistry = {
     logoUrl: imgZai,
     description: "GLM-5.2 — frontier reasoning, coding & agentic models from Z.ai",
     ConfigPanel: ZaiNode,
+    category: "ai_models",
+  },
+  minimax: {
+    label: "MiniMax",
+    icon: Brain,
+    colorClass: "text-neutral-300",
+    accentColor: "229,229,229",
+    logoUrl: imgMiniMax,
+    description: "MiniMax-M3 — multimodal, 1M context, frontier coding & agents",
+    ConfigPanel: MiniMaxNode,
     category: "ai_models",
   },
   ai_agent: {
