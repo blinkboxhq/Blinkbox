@@ -176,6 +176,7 @@ import webSearch      from "./integrations/webSearch.node.js";
 import github         from "./integrations/github.node.js";
 import jira           from "./integrations/jira.node.js";
 import linear         from "./integrations/linear.node.js";
+import azureDevops    from "./integrations/azure_devops.node.js";
 import hubspot        from "./integrations/hubspot.node.js";
 import asana          from "./integrations/asana.node.js";
 import trello         from "./integrations/trello.node.js";
@@ -403,6 +404,7 @@ const rawNodeRegistry = {
   github:    github,
   jira:      jira,
   linear:    linear,
+  azure_devops: azureDevops,
   hubspot:   hubspot,
   asana:     asana,
   trello:    trello,
