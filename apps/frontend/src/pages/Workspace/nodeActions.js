@@ -99,10 +99,17 @@ export const NODE_ACTIONS = {
   ],
   deepseek: [
     { name: "Chat Completion", description: "Query DeepSeek for a conversational response" },
-    { name: "Code Generation", description: "Generate, explain, or fix code with DeepSeek-Coder" },
-    { name: "Math Reasoning", description: "Solve math problems step-by-step" },
-    { name: "Document Q&A", description: "Ask questions about a document or text blob" },
-    { name: "Stream Chat", description: "Stream DeepSeek's response token by token" },
+    { name: "Structured Output", description: "Return JSON matching a schema" },
+    { name: "Function Calling", description: "Let DeepSeek call your tools/functions" },
+    { name: "Reasoning", description: "Thinking mode with exposed chain-of-thought" },
+    { name: "Analyze Document", description: "Answer questions about a supplied document" },
+    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
+    { name: "Classify", description: "Label text into one of your categories" },
+    { name: "Summarize", description: "Condense text in a chosen style" },
+    { name: "Translate", description: "Translate text into a target language" },
+    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
+    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
+    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
   ],
 
   // ── AI Agent Building Blocks ────────────────────────────────────────────────
