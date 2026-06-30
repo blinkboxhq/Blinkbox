@@ -1,14 +1,9 @@
 /**
  * GMAIL NODE
  *
- * Operations:
- *   sendEmail    — Send an email (default)
- *   readEmail    — Get a single email by message ID
- *   searchEmails — Search emails (Gmail query syntax)
- *   createDraft  — Create a draft email
- *   replyToEmail — Reply to an existing thread
- *   markRead     — Mark message(s) as read
- *   deleteEmail  — Move to trash
+ * Operations: send/reply/forward, read/search, drafts (create/list/send/delete),
+ *   read-state (markRead/markUnread), star/unstar, archive, trash/untrash/delete,
+ *   labels (add/remove/list/create/delete), threads (get/list), getProfile.
  *
  * Auth: Google OAuth2 credential
  */
@@ -160,6 +155,155 @@ async function opReplyToEmail(config, token) {
   return { messageId: response.data.id, threadId: response.data.threadId };
 }
 
+async function opForwardEmail(config, token) {
+  if (!config.messageId) return { success: false, error: "Gmail forwardEmail: 'messageId' is required.", skipped: true };
+  if (!config.to) return { success: false, error: "Gmail forwardEmail: 'to' (recipient) is required.", skipped: true };
+  const orig = await axios.get(`${BASE}/messages/${encodeURIComponent(config.messageId)}`, {
+    headers: auth(token),
+    params: { format: "full" },
+    timeout: 15000,
+  });
+  const msg = orig.data;
+  const oh = Object.fromEntries((msg.payload?.headers || []).map((h) => [h.name.toLowerCase(), h.value]));
+  const origData = msg.payload?.body?.data || msg.payload?.parts?.[0]?.body?.data || "";
+  const origBody = origData ? Buffer.from(origData, "base64").toString("utf-8") : msg.snippet || "";
+  const fwdBody =
+    (config.body ? `${config.body}\r\n\r\n` : "") +
+    `---------- Forwarded message ----------\r\n` +
+    `From: ${oh["from"] || ""}\r\nDate: ${oh["date"] || ""}\r\nSubject: ${oh["subject"] || ""}\r\nTo: ${oh["to"] || ""}\r\n\r\n` +
+    origBody;
+  const raw = buildRawEmail({ ...config, subject: config.subject || `Fwd: ${oh["subject"] || ""}`, body: fwdBody });
+  const response = await axios.post(`${BASE}/messages/send`, { raw }, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 30000,
+  });
+  return { messageId: response.data.id, threadId: response.data.threadId, forwardedFrom: config.messageId };
+}
+
+async function modifyLabels(config, token, add, remove) {
+  if (!config.messageId) return { success: false, error: "Gmail: 'messageId' is required.", skipped: true };
+  const response = await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/modify`, {
+    addLabelIds: add,
+    removeLabelIds: remove,
+  }, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 10000,
+  });
+  return { messageId: config.messageId, labelIds: response.data.labelIds };
+}
+
+async function opMarkUnread(config, token) {
+  return modifyLabels(config, token, ["UNREAD"], []);
+}
+
+async function opStarEmail(config, token) {
+  return modifyLabels(config, token, ["STARRED"], []);
+}
+
+async function opUnstarEmail(config, token) {
+  return modifyLabels(config, token, [], ["STARRED"]);
+}
+
+async function opArchiveEmail(config, token) {
+  return modifyLabels(config, token, [], ["INBOX"]);
+}
+
+async function opUntrashEmail(config, token) {
+  if (!config.messageId) return { success: false, error: "Gmail untrashEmail: 'messageId' is required.", skipped: true };
+  await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/untrash`, {}, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 10000,
+  });
+  return { messageId: config.messageId, untrashed: true };
+}
+
+async function opAddLabel(config, token) {
+  if (!config.labelId) return { success: false, error: "Gmail addLabel: 'labelId' is required.", skipped: true };
+  return modifyLabels(config, token, [config.labelId], []);
+}
+
+async function opRemoveLabel(config, token) {
+  if (!config.labelId) return { success: false, error: "Gmail removeLabel: 'labelId' is required.", skipped: true };
+  return modifyLabels(config, token, [], [config.labelId]);
+}
+
+async function opListLabels(config, token) {
+  const response = await axios.get(`${BASE}/labels`, { headers: auth(token), timeout: 10000 });
+  return { labels: response.data.labels || [] };
+}
+
+async function opCreateLabel(config, token) {
+  if (!config.labelName) return { success: false, error: "Gmail createLabel: 'labelName' is required.", skipped: true };
+  const response = await axios.post(`${BASE}/labels`, {
+    name: config.labelName,
+    labelListVisibility: config.labelListVisibility || "labelShow",
+    messageListVisibility: config.messageListVisibility || "show",
+  }, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 10000,
+  });
+  return { labelId: response.data.id, name: response.data.name };
+}
+
+async function opDeleteLabel(config, token) {
+  if (!config.labelId) return { success: false, error: "Gmail deleteLabel: 'labelId' is required.", skipped: true };
+  await axios.delete(`${BASE}/labels/${encodeURIComponent(config.labelId)}`, { headers: auth(token), timeout: 10000 });
+  return { labelId: config.labelId, deleted: true };
+}
+
+async function opGetThread(config, token) {
+  if (!config.threadId) return { success: false, error: "Gmail getThread: 'threadId' is required.", skipped: true };
+  const response = await axios.get(`${BASE}/threads/${encodeURIComponent(config.threadId)}`, {
+    headers: auth(token),
+    params: { format: config.format || "metadata" },
+    timeout: 15000,
+  });
+  return { threadId: response.data.id, messages: response.data.messages || [], historyId: response.data.historyId };
+}
+
+async function opListThreads(config, token) {
+  const response = await axios.get(`${BASE}/threads`, {
+    headers: auth(token),
+    params: { q: config.query || undefined, maxResults: Math.min(config.maxResults || 10, 100) },
+    timeout: 15000,
+  });
+  return { threads: response.data.threads || [], total: response.data.resultSizeEstimate || 0 };
+}
+
+async function opListDrafts(config, token) {
+  const response = await axios.get(`${BASE}/drafts`, {
+    headers: auth(token),
+    params: { maxResults: Math.min(config.maxResults || 10, 100) },
+    timeout: 15000,
+  });
+  return { drafts: response.data.drafts || [], total: response.data.resultSizeEstimate || 0 };
+}
+
+async function opSendDraft(config, token) {
+  if (!config.draftId) return { success: false, error: "Gmail sendDraft: 'draftId' is required.", skipped: true };
+  const response = await axios.post(`${BASE}/drafts/send`, { id: config.draftId }, {
+    headers: { ...auth(token), "Content-Type": "application/json" },
+    timeout: 30000,
+  });
+  return { messageId: response.data.id, threadId: response.data.threadId, sentFromDraft: config.draftId };
+}
+
+async function opDeleteDraft(config, token) {
+  if (!config.draftId) return { success: false, error: "Gmail deleteDraft: 'draftId' is required.", skipped: true };
+  await axios.delete(`${BASE}/drafts/${encodeURIComponent(config.draftId)}`, { headers: auth(token), timeout: 10000 });
+  return { draftId: config.draftId, deleted: true };
+}
+
+async function opGetProfile(config, token) {
+  const response = await axios.get(`${BASE}/profile`, { headers: auth(token), timeout: 10000 });
+  return {
+    emailAddress: response.data.emailAddress,
+    messagesTotal: response.data.messagesTotal,
+    threadsTotal: response.data.threadsTotal,
+    historyId: response.data.historyId,
+  };
+}
+
 async function opMarkRead(config, token) {
   if (!config.messageId) return { success: false, error: "Gmail markRead: 'messageId' is required.", skipped: true };
   await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/modify`, {
@@ -182,12 +326,29 @@ async function opDeleteEmail(config, token) {
 
 const OPERATIONS = {
   sendEmail: opSendEmail,
+  replyToEmail: opReplyToEmail,
+  forwardEmail: opForwardEmail,
   readEmail: opReadEmail,
   searchEmails: opSearchEmails,
   createDraft: opCreateDraft,
-  replyToEmail: opReplyToEmail,
+  listDrafts: opListDrafts,
+  sendDraft: opSendDraft,
+  deleteDraft: opDeleteDraft,
   markRead: opMarkRead,
+  markUnread: opMarkUnread,
+  starEmail: opStarEmail,
+  unstarEmail: opUnstarEmail,
+  archiveEmail: opArchiveEmail,
   deleteEmail: opDeleteEmail,
+  untrashEmail: opUntrashEmail,
+  addLabel: opAddLabel,
+  removeLabel: opRemoveLabel,
+  listLabels: opListLabels,
+  createLabel: opCreateLabel,
+  deleteLabel: opDeleteLabel,
+  getThread: opGetThread,
+  listThreads: opListThreads,
+  getProfile: opGetProfile,
 };
 
 export default {
