@@ -218,6 +218,7 @@ import imgTikTok from "@nodes/tiktok/logo.svg";
 import imgLinkedIn from "@nodes/linkedin/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
+import imgOpenRouter from "@nodes/openrouter/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
@@ -281,6 +282,7 @@ import makeOpenAICompatNode from "@nodes/openai_compat/ConfigPanel.jsx";
 import DeepSeekNode from "@nodes/deepseek/ConfigPanel.jsx";
 import NvidiaNimNode from "@nodes/nvidia_nim/ConfigPanel.jsx";
 import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
+import OpenRouterNode from "@nodes/openrouter/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
 import NotionNode from "@nodes/notion/ConfigPanel.jsx";
@@ -702,6 +704,16 @@ export const NodeRegistry = {
     logoUrl: imgKimi,
     description: "Kimi long-context models — 8K, 32K, 128K & vision",
     ConfigPanel: MoonshotNode,
+    category: "ai_models",
+  },
+  openrouter: {
+    label: "OpenRouter",
+    icon: Brain,
+    colorClass: "text-neutral-300",
+    accentColor: "229,229,229",
+    logoUrl: imgOpenRouter,
+    description: "One key, 300+ models — route to any lab via OpenRouter",
+    ConfigPanel: OpenRouterNode,
     category: "ai_models",
   },
   ai_agent: {

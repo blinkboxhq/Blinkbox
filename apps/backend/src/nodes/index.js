@@ -127,6 +127,7 @@ import xai                 from "./integrations/xai.node.js";
 import deepseek            from "./integrations/deepseek.node.js";
 import moonshot            from "./integrations/moonshot.node.js";
 import groq               from "./integrations/groq.node.js";
+import openrouter         from "./integrations/openrouter.node.js";
 import nvidiaNim          from "./integrations/nvidiaNim.node.js";
 import gemma              from "./integrations/gemma.node.js";
 import ollama             from "./integrations/ollama.node.js";
@@ -350,6 +351,7 @@ const rawNodeRegistry = {
   deepseek:         deepseek,
   moonshot:         moonshot,
   groq:             groq,
+  openrouter:       openrouter,
   nvidia_nim:       nvidiaNim,
   gemma:            gemma,
   ollama:           ollama,
