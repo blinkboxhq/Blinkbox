@@ -419,24 +419,131 @@ async function opImprovePrompt(config, input, apiKey) {
   return { improvedPrompt: r.text, result: r.text, originalPrompt, tokensUsed: r.tokensUsed, provider: "anthropic", operation: "improvePrompt" };
 }
 
+async function opMultiTurn(config, input, apiKey) {
+  const { model = DEFAULT_MODEL, maxTokens = 2000 } = config;
+  let messages;
+  try { messages = typeof config.messages === "string" ? JSON.parse(config.messages) : config.messages; }
+  catch { return { success: false, error: "Anthropic multiTurn: 'messages' is not valid JSON.", skipped: true }; }
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { success: false, error: "Anthropic multiTurn: a non-empty messages array is required.", skipped: true };
+  }
+  const body = {
+    model, max_tokens: Number(maxTokens), messages,
+    ...(config.systemPrompt ? { system: config.systemPrompt } : {}),
+    ...samplingParams(config, { temperature: 0.7 }),
+  };
+  const response = await axios.post(API_URL, body, {
+    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
+  });
+  const blocks = response.data.content || [];
+  const text = blocks.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
+  const usage = response.data.usage || {};
+  return { result: text, text, stopReason: response.data.stop_reason, model: response.data.model, tokensUsed: (usage.input_tokens || 0) + (usage.output_tokens || 0), provider: "anthropic", operation: "multiTurn" };
+}
+
+async function opCodeReview(config, input, apiKey) {
+  const { model = DEFAULT_MODEL, maxTokens = 4000 } = config;
+  const code = config.code || (typeof input === "string" ? input : input?.code || inputSummary(input));
+  if (!code) return { success: false, error: "Anthropic codeReview: 'code' is required.", skipped: true };
+  const focus = config.focus || "bugs, security, performance, and readability";
+  const system = "You are a senior staff engineer doing a rigorous code review. Be specific, cite line ranges, and prioritize by severity.";
+  const content = `Review the following code. Focus on: ${focus}.\n\nReturn JSON: { "summary": string, "issues": [{ "severity": "high|medium|low", "line": string, "problem": string, "fix": string }] }\n\n---\nCode:\n${code}`;
+  const r = await callAnthropic(apiKey, { model, system, content, maxTokens: Number(maxTokens), sampling: samplingParams(config, { temperature: 0.2 }) });
+  return { result: maybeJson(r.text), model: r.model, tokensUsed: r.tokensUsed, provider: "anthropic", operation: "codeReview" };
+}
+
+async function opCountTokens(config, input, apiKey) {
+  const { model = DEFAULT_MODEL } = config;
+  const text = config.prompt || config.text || (typeof input === "string" ? input : inputSummary(input));
+  if (!text) return { success: false, error: "Anthropic countTokens: text is required.", skipped: true };
+  const body = {
+    model, messages: [{ role: "user", content: text }],
+    ...(config.systemPrompt ? { system: config.systemPrompt } : {}),
+  };
+  const response = await axios.post("https://api.anthropic.com/v1/messages/count_tokens", body, {
+    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 30000,
+  });
+  return { inputTokens: response.data.input_tokens, model, provider: "anthropic", operation: "countTokens" };
+}
+
+async function opCitations(config, input, apiKey) {
+  const { model = DEFAULT_MODEL, maxTokens = 2000 } = config;
+  const document = config.document || (typeof input === "string" ? input : input?.document || inputSummary(input));
+  const question = config.prompt || config.question;
+  if (!document || !question) return { success: false, error: "Anthropic citations: both 'document' and a question are required.", skipped: true };
+  const content = [
+    { type: "document", source: { type: "text", media_type: "text/plain", data: String(document) }, title: config.title || "Source", citations: { enabled: true } },
+    { type: "text", text: question },
+  ];
+  const body = { model, max_tokens: Number(maxTokens), messages: [{ role: "user", content }], ...samplingParams(config) };
+  const response = await axios.post(API_URL, body, {
+    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
+  });
+  const blocks = response.data.content || [];
+  const text = blocks.filter(b => b.type === "text").map(b => b.text).join("").trim();
+  const citations = blocks.flatMap(b => b.citations || []);
+  const usage = response.data.usage || {};
+  return { result: text, text, citations, model: response.data.model, tokensUsed: (usage.input_tokens || 0) + (usage.output_tokens || 0), provider: "anthropic", operation: "citations" };
+}
+
+async function opPromptCaching(config, input, apiKey) {
+  const { model = DEFAULT_MODEL, maxTokens = 1000 } = config;
+  const context = config.context || (typeof input === "string" ? input : inputSummary(input));
+  const prompt = config.prompt;
+  if (!context || !prompt) return { success: false, error: "Anthropic promptCaching: both cached 'context' and a 'prompt' are required.", skipped: true };
+  const body = {
+    model, max_tokens: Number(maxTokens),
+    system: [{ type: "text", text: String(context), cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: prompt }],
+    ...samplingParams(config),
+  };
+  const response = await axios.post(API_URL, body, {
+    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
+  });
+  const blocks = response.data.content || [];
+  const text = blocks.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
+  const usage = response.data.usage || {};
+  return {
+    result: text, text,
+    cacheCreationTokens: usage.cache_creation_input_tokens || 0,
+    cacheReadTokens: usage.cache_read_input_tokens || 0,
+    model: response.data.model, tokensUsed: (usage.input_tokens || 0) + (usage.output_tokens || 0),
+    provider: "anthropic", operation: "promptCaching",
+  };
+}
+
+async function opListModels(config, input, apiKey) {
+  const response = await axios.get(MODELS_URL, {
+    headers: { "x-api-key": apiKey, "anthropic-version": ANTHROPIC_VERSION }, timeout: 30000,
+  });
+  const models = (response.data.data || []).map(m => ({ id: m.id, displayName: m.display_name, createdAt: m.created_at }));
+  return { models, count: models.length, provider: "anthropic", operation: "listModels" };
+}
+
 // ── Main export ─────────────────────────────────────────────────────────────
 
 const OPERATIONS = {
   message: opMessage,
+  multiTurn: opMultiTurn,
   structuredOutput: opStructuredOutput,
   functionCalling: opFunctionCalling,
   extendedThinking: opExtendedThinking,
   analyzeImage: opAnalyzeImage,
   analyzeDocument: opAnalyzeDocument,
   analyzePdf: opAnalyzePdf,
+  citations: opCitations,
   extractData: opExtractData,
   classify: opClassify,
   summarize: opSummarize,
   translate: opTranslate,
   sentiment: opSentiment,
   moderateContent: opModerateContent,
+  codeReview: opCodeReview,
   generatePrompt: opGeneratePrompt,
   improvePrompt: opImprovePrompt,
+  promptCaching: opPromptCaching,
+  countTokens: opCountTokens,
+  listModels: opListModels,
 };
 
 // Live model list for the "fetch latest" button. Resolves the saved credential

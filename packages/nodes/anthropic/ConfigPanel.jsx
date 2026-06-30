@@ -1,229 +1,288 @@
-import {
-  MessageSquare, Image, FileText,
-  Sparkles, PenLine, ChevronDown,
-} from 'lucide-react';
+import { useEffect } from 'react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } from '@/components/ui/ConfigKit';
 
-const ACCENT = 'orange';
+// Black & white only. The brand logo is the sole colored element.
+const MONO = '#e5e5e5';
 
-const OPERATIONS = [
-  {
-    value: 'message',
-    label: 'Message a model',
-    icon: MessageSquare,
-    description: 'Chat with Claude — text or JSON output',
-  },
-  {
-    value: 'analyzeImage',
-    label: 'Analyze image',
-    icon: Image,
-    description: 'Describe or interrogate an image with Claude Vision',
-  },
-  {
-    value: 'analyzeDocument',
-    label: 'Analyze document',
-    icon: FileText,
-    description: 'Deep-read a long document or passage of text',
-  },
-  {
-    value: 'improvePrompt',
-    label: 'Improve a prompt',
-    icon: Sparkles,
-    description: 'Rewrite a prompt to be clearer and more effective',
-  },
-  {
-    value: 'generatePrompt',
-    label: 'Generate a prompt',
-    icon: PenLine,
-    description: 'Write an effective AI prompt for a described task',
-  },
-];
+const MODELS_CHAT     = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5', 'claude-3-5-sonnet-latest'];
+const MODELS_THINKING = ['claude-opus-4-8', 'claude-sonnet-4-6'];
+const MODELS_VISION   = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5'];
 
-const MODELS_CHAT = [
-  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-  { value: 'claude-opus-4-20250514',   label: 'Claude Opus 4' },
-  { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
-];
-const MODELS_VISION = [
-  { value: 'claude-opus-4-20250514',   label: 'Claude Opus 4 (best vision)' },
-  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-];
+const opt = (v) => v.map((s) => ({ value: s, label: s }));
 
-// ── Shared primitives ──────────────────────────────────────────────────────
-
-function Field({ label, children }) {
+function Text({ label, value, onChange, placeholder, multiline, nodeId }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
-      {children}
+    <div className="flex flex-col">
+      <ConfigLabel>{label}</ConfigLabel>
+      <SmartVariableInput value={value || ''} onChange={onChange} placeholder={placeholder} multiline={multiline} nodeId={nodeId} />
     </div>
   );
 }
 
-function Select({ value, onChange, options }) {
+function Dropdown({ label, value, fallback, onChange, options }) {
+  return <ConfigSelect label={label} value={value || fallback} onChange={onChange} options={options} accentColor={MONO} />;
+}
+
+// ── 21 per-action panels ────────────────────────────────────────────────────
+
+function ChatPanel({ config, updateConfig, nodeId }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 pr-8 text-xs text-white font-semibold focus:outline-none focus:border-orange-500/50 transition-colors cursor-pointer appearance-none"
-      >
-        {options.map((o) => (
-          <option key={typeof o === 'string' ? o : o.value} value={typeof o === 'string' ? o : o.value}>
-            {typeof o === 'string' ? o : o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize the following data…" multiline nodeId={nodeId} />
+      <Dropdown label="Output Format" value={config.outputFormat} fallback="text" onChange={(v) => updateConfig('outputFormat', v)} options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]} />
+      <ConfigInput label="Max Tokens" type="number" value={config.maxTokens ?? '2000'} onChange={(v) => updateConfig('maxTokens', v)} placeholder="2000" />
+    </>
+  );
+}
+
+function MultiTurnPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="Persona / rules for the whole conversation…" multiline nodeId={nodeId} />
+      <Text label="Messages (JSON array)" value={config.messages} onChange={(v) => updateConfig('messages', v)} placeholder='[{"role":"user","content":"Hi"},{"role":"assistant","content":"Hello"}]' multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function StructuredPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the invoice fields…" multiline nodeId={nodeId} />
+      <Text label="JSON Schema" value={config.jsonSchema} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"type":"object","properties":{…}}' multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ToolUsePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Paris?" multiline nodeId={nodeId} />
+      <Text label="Tools (JSON array)" value={config.tools} onChange={(v) => updateConfig('tools', v)} placeholder='[{"name":"get_weather","description":"…","input_schema":{…}}]' multiline nodeId={nodeId} />
+      <Dropdown label="Tool Choice" value={config.toolChoice} fallback="auto" onChange={(v) => updateConfig('toolChoice', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'any', label: 'Any tool' }, { value: 'none', label: 'None' }]} />
+    </>
+  );
+}
+
+function ThinkingPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-opus-4-8" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_THINKING)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Solve this step by step…" multiline nodeId={nodeId} />
+      <ConfigInput label="Thinking Budget (tokens)" type="number" value={config.thinkingBudget ?? '10000'} onChange={(v) => updateConfig('thinkingBudget', v)} placeholder="10000" />
+      <ConfigInput label="Max Tokens" type="number" value={config.maxTokens ?? '16000'} onChange={(v) => updateConfig('maxTokens', v)} placeholder="16000" />
+    </>
+  );
+}
+
+function VisionPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_VISION)} />
+      <Text label="Image URL" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.imageUrl}}" nodeId={nodeId} />
+      <Text label="Question" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function DocumentPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Question / Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What are the key obligations in this contract?" multiline nodeId={nodeId} />
+      <Text label="Document Text (optional — falls back to input)" value={config.documentText} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank to use previous node" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function PdfPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_VISION)} />
+      <Text label="PDF URL" value={config.fileInput} onChange={(v) => updateConfig('fileInput', v)} placeholder="https://… .pdf or {{$node.fileUrl}}" nodeId={nodeId} />
+      <Text label="Question" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this PDF and list action items." multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function CitationsPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Source Document" value={config.document} onChange={(v) => updateConfig('document', v)} placeholder="Paste the document text to cite from…" multiline nodeId={nodeId} />
+      <Text label="Question" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What does the document say about refunds?" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ExtractPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="What to Extract" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract name, email, and total amount…" multiline nodeId={nodeId} />
+      <Text label="Source Text (optional)" value={config.documentText} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.text}} or leave blank to use input" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ClassifyPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-haiku-4-5" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text to Classify" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.message}}" multiline nodeId={nodeId} />
+      <Text label="Labels (comma-separated)" value={config.labels} onChange={(v) => updateConfig('labels', v)} placeholder="spam, support, sales, billing" nodeId={nodeId} />
+    </>
+  );
+}
+
+function SummarizePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text to Summarize" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.article}} or paste text…" multiline nodeId={nodeId} />
+      <Dropdown label="Length" value={config.length} fallback="medium" onChange={(v) => updateConfig('length', v)} options={[{ value: 'short', label: 'Short — a sentence or two' }, { value: 'medium', label: 'Medium — a paragraph' }, { value: 'long', label: 'Long — detailed' }, { value: 'bullets', label: 'Bullet points' }]} />
+    </>
+  );
+}
+
+function TranslatePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text to Translate" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}}" multiline nodeId={nodeId} />
+      <Text label="Target Language" value={config.targetLanguage} onChange={(v) => updateConfig('targetLanguage', v)} placeholder="Spanish, French, Japanese…" nodeId={nodeId} />
+    </>
+  );
+}
+
+function SentimentPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-haiku-4-5" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text to Analyze" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.review}}" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ModeratePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-haiku-4-5" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text to Moderate" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function CodeReviewPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Code" value={config.code} onChange={(v) => updateConfig('code', v)} placeholder="{{$node.diff}} or paste code…" multiline nodeId={nodeId} />
+      <Text label="Focus (optional)" value={config.focus} onChange={(v) => updateConfig('focus', v)} placeholder="security and performance" nodeId={nodeId} />
+    </>
+  );
+}
+
+function GeneratePromptPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Task Description" value={config.task} onChange={(v) => updateConfig('task', v)} placeholder="Classify support tickets by priority…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ImprovePromptPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt to Improve" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function CachingPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Cached Context (large, reused)" value={config.context} onChange={(v) => updateConfig('context', v)} placeholder="A big document or knowledge base to cache…" multiline nodeId={nodeId} />
+      <Text label="Prompt (changes per call)" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Ask a question about the cached context…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function CountTokensPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="claude-sonnet-4-6" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Text" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text to count…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function ListModelsPanel() {
+  return (
+    <div className="text-[11px] text-neutral-500 font-mono leading-relaxed px-1 py-2">
+      Fetches the live list of Claude models available to the selected API key. No parameters needed.
     </div>
   );
 }
 
-// ── Operation picker ───────────────────────────────────────────────────────
+// ── Action → panel + canonical operation key ────────────────────────────────
 
-function OperationPicker({ value, onChange }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</span>
-      <div className="grid grid-cols-1 gap-1">
-        {OPERATIONS.map((op) => {
-          const Icon = op.icon;
-          const active = value === op.value;
-          return (
-            <button
-              key={op.value}
-              type="button"
-              onClick={() => onChange(op.value)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all duration-150
-                ${active
-                  ? 'bg-orange-500/10 border-orange-500/30'
-                  : 'bg-[#0d0d0d] border-[#222] hover:bg-zinc-800/60 hover:border-zinc-700/50'
-                }`}
-            >
-              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-orange-400' : 'text-zinc-500'}`} strokeWidth={1.75} />
-              <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold leading-tight ${active ? 'text-orange-300' : 'text-zinc-300'}`}>{op.label}</div>
-                <div className="text-[10px] text-zinc-600 mt-0.5 leading-snug">{op.description}</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Per-operation config fields ────────────────────────────────────────────
-
-function MessageFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-sonnet-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_CHAT} />
-      </Field>
-      <Field label="Output format">
-        <Select
-          value={config.outputFormat || 'text'}
-          onChange={(v) => updateConfig('outputFormat', v)}
-          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]}
-        />
-      </Field>
-      <Field label="Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Analyze this dataset and extract key insights..." multiline />
-      </Field>
-    </>
-  );
-}
-
-function AnalyzeImageFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-opus-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_VISION} />
-      </Field>
-      <Field label="Image URL">
-        <SmartVariableInput nodeId={nodeId} value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
-      </Field>
-    </>
-  );
-}
-
-function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-sonnet-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_CHAT} />
-      </Field>
-      <Field label="Output format">
-        <Select
-          value={config.outputFormat || 'text'}
-          onChange={(v) => updateConfig('outputFormat', v)}
-          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]}
-        />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
-      </Field>
-      <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput nodeId={nodeId} value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline />
-      </Field>
-    </>
-  );
-}
-
-function ImprovePromptFields({ config, updateConfig, nodeId }) {
-  return (
-    <Field label="Prompt to improve">
-      <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline />
-    </Field>
-  );
-}
-
-function GeneratePromptFields({ config, updateConfig, nodeId }) {
-  return (
-    <Field label="Task description">
-      <SmartVariableInput nodeId={nodeId} value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by urgency..." multiline />
-    </Field>
-  );
-}
-
-const OP_FIELDS = {
-  message: MessageFields,
-  analyzeImage: AnalyzeImageFields,
-  analyzeDocument: AnalyzeDocumentFields,
-  improvePrompt: ImprovePromptFields,
-  generatePrompt: GeneratePromptFields,
+const ACTIONS = {
+  'Chat Completion':         { op: 'message',          Panel: ChatPanel },
+  'Multi-turn Conversation': { op: 'multiTurn',        Panel: MultiTurnPanel },
+  'Structured Output':       { op: 'structuredOutput', Panel: StructuredPanel },
+  'Tool Use':                { op: 'functionCalling',  Panel: ToolUsePanel },
+  'Extended Thinking':       { op: 'extendedThinking', Panel: ThinkingPanel },
+  'Vision Analysis':         { op: 'analyzeImage',     Panel: VisionPanel },
+  'Analyze Document':        { op: 'analyzeDocument',  Panel: DocumentPanel },
+  'Analyze PDF':             { op: 'analyzePdf',       Panel: PdfPanel },
+  'Cited Answer':            { op: 'citations',        Panel: CitationsPanel },
+  'Extract Structured Data': { op: 'extractData',      Panel: ExtractPanel },
+  'Classify':                { op: 'classify',         Panel: ClassifyPanel },
+  'Summarize':               { op: 'summarize',        Panel: SummarizePanel },
+  'Translate':               { op: 'translate',        Panel: TranslatePanel },
+  'Sentiment Analysis':      { op: 'sentiment',        Panel: SentimentPanel },
+  'Moderate Content':        { op: 'moderateContent',  Panel: ModeratePanel },
+  'Code Review':             { op: 'codeReview',       Panel: CodeReviewPanel },
+  'Generate Prompt':         { op: 'generatePrompt',   Panel: GeneratePromptPanel },
+  'Improve Prompt':          { op: 'improvePrompt',    Panel: ImprovePromptPanel },
+  'Prompt Caching':          { op: 'promptCaching',    Panel: CachingPanel },
+  'Count Tokens':            { op: 'countTokens',      Panel: CountTokensPanel },
+  'List Models':             { op: 'listModels',       Panel: ListModelsPanel },
 };
 
-// ── Main component ─────────────────────────────────────────────────────────
+const DEFAULT_ACTION = 'Chat Completion';
 
 export default function AnthropicNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'message';
-  const OpFields = OP_FIELDS[operation] || MessageFields;
+  const action = config.selectedAction && ACTIONS[config.selectedAction] ? config.selectedAction : DEFAULT_ACTION;
+  const { op, Panel } = ACTIONS[action];
+
+  useEffect(() => {
+    if (config.operation !== op) updateConfig('operation', op);
+  }, [op, config.operation]);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
-      <div className="border-t border-[#222]" />
-      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
+    <ConfigSection>
+      <Panel config={config} updateConfig={updateConfig} nodeId={nodeId} />
+
+      <ConfigDivider />
+
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="orange"
+        accentColor="zinc"
         label="Anthropic API Key"
-        placeholder="Select Anthropic credential..."
+        placeholder="Select Anthropic credential…"
       />
-      <div className="p-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest block mb-0.5">Available as</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.result }}"} — response text</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.text }}"} — alias for result</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.model }}"} — model used</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.tokensUsed }}"}</span>
-      </div>
-    </div>
+    </ConfigSection>
   );
 }
