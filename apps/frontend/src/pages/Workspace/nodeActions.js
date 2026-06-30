@@ -785,13 +785,19 @@ export const NODE_ACTIONS = {
 
   // ── Integrations: Productivity ────────────────────────────────────────────────
   airtable: [
-    { name: "List Records", description: "Fetch records from an Airtable base" },
     { name: "Create Record", description: "Add a new row to an Airtable table" },
+    { name: "Read Records", description: "Fetch & filter records from a base" },
     { name: "Update Record", description: "Modify fields of an existing record" },
     { name: "Delete Record", description: "Remove a record from a table" },
-    { name: "Search Records", description: "Find records matching a formula filter" },
     { name: "Get Record", description: "Fetch a specific record by its ID" },
-    { name: "Upsert Record", description: "Create or update based on a match field" },
+    { name: "Search Records", description: "Find records where a field equals a value" },
+    { name: "Bulk Create", description: "Create up to 10 records in one call" },
+    { name: "Bulk Update", description: "Update up to 10 records in one call" },
+    { name: "Bulk Delete", description: "Delete up to 10 records in one call" },
+    { name: "List Bases", description: "List all accessible Airtable bases" },
+    { name: "List Tables", description: "List tables & schema in a base" },
+    { name: "Create Table", description: "Create a new table in a base" },
+    { name: "Create Field", description: "Add a new field/column to a table" },
   ],
   google_sheets: [
     { name: "Append Row", description: "Add a new row to the end of a sheet" },

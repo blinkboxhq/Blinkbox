@@ -160,6 +160,61 @@ async function opBulkUpdate(config, token) {
   };
 }
 
+async function opBulkDelete(config, token) {
+  let ids = config.recordIds;
+  if (typeof ids === "string") ids = ids.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!Array.isArray(ids) || ids.length === 0)
+    return { success: false, error: "Airtable bulkDelete: 'recordIds' must be a non-empty list of record IDs.", skipped: true };
+  if (ids.length > BULK_LIMIT)
+    return { success: false, error: `Airtable bulkDelete: maximum ${BULK_LIMIT} records per call. Split into batches.`, skipped: true };
+  const url = tableUrl(config.baseId, config.tableName);
+  const params = new URLSearchParams();
+  ids.forEach((id) => params.append("records[]", id));
+  const response = await axios.delete(`${url}?${params.toString()}`, { headers: headers(token), timeout: 20000 });
+  return { records: response.data.records || [], deleted: (response.data.records || []).length };
+}
+
+async function opListBases(config, token) {
+  const response = await axios.get("https://api.airtable.com/v0/meta/bases", { headers: headers(token), timeout: 15000 });
+  return { bases: (response.data.bases || []).map((b) => ({ id: b.id, name: b.name, permissionLevel: b.permissionLevel })) };
+}
+
+async function opListTables(config, token) {
+  if (!config.baseId) return { success: false, error: "Airtable listTables: 'baseId' is required.", skipped: true };
+  const response = await axios.get(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, { headers: headers(token), timeout: 15000 });
+  return {
+    tables: (response.data.tables || []).map((t) => ({
+      id: t.id, name: t.name, primaryFieldId: t.primaryFieldId,
+      fields: (t.fields || []).map((f) => ({ id: f.id, name: f.name, type: f.type })),
+    })),
+  };
+}
+
+async function opCreateTable(config, token) {
+  if (!config.baseId) return { success: false, error: "Airtable createTable: 'baseId' is required.", skipped: true };
+  if (!config.newTableName) return { success: false, error: "Airtable createTable: 'newTableName' is required.", skipped: true };
+  let tableFields = config.tableFields;
+  if (typeof tableFields === "string") {
+    try { tableFields = JSON.parse(tableFields); } catch { throw new Error("Airtable createTable: 'tableFields' is not valid JSON."); }
+  }
+  if (!Array.isArray(tableFields) || tableFields.length === 0)
+    tableFields = [{ name: "Name", type: "singleLineText" }];
+  const body = { name: config.newTableName, fields: tableFields };
+  if (config.tableDescription) body.description = config.tableDescription;
+  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, body, { headers: headers(token), timeout: 15000 });
+  return { id: response.data.id, name: response.data.name };
+}
+
+async function opCreateField(config, token) {
+  if (!config.baseId) return { success: false, error: "Airtable createField: 'baseId' is required.", skipped: true };
+  if (!config.tableId) return { success: false, error: "Airtable createField: 'tableId' is required.", skipped: true };
+  if (!config.fieldName) return { success: false, error: "Airtable createField: 'fieldName' is required.", skipped: true };
+  const body = { name: config.fieldName, type: config.fieldType || "singleLineText" };
+  if (config.fieldOptions && typeof config.fieldOptions === "object") body.options = config.fieldOptions;
+  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables/${encodeURIComponent(config.tableId)}/fields`, body, { headers: headers(token), timeout: 15000 });
+  return { id: response.data.id, name: response.data.name, type: response.data.type };
+}
+
 // ── Operations map ───────────────────────────────────────────────────────────
 
 const OPERATIONS = {
@@ -167,11 +222,19 @@ const OPERATIONS = {
   read: opRead,
   update: opUpdate,
   delete: opDelete,
+  bulkDelete: opBulkDelete,
   getRecord: opGetRecord,
   search: opSearch,
   bulkCreate: opBulkCreate,
   bulkUpdate: opBulkUpdate,
+  listBases: opListBases,
+  listTables: opListTables,
+  createTable: opCreateTable,
+  createField: opCreateField,
 };
+
+const NO_TABLE_OPS = new Set(["listBases", "listTables", "createTable", "createField"]);
+const NO_BASE_OPS = new Set(["listBases"]);
 
 export default {
   async run(config, input, context = {}) {
@@ -181,8 +244,10 @@ export default {
       throw new Error(`Airtable: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);
 
     if (!config.credentialId) return { success: false, error: "Airtable: credential required.", skipped: true };
-    if (!config.baseId) return { success: false, error: "Airtable: 'baseId' is required — configure this field.", skipped: true };
-    if (!config.tableName) return { success: false, error: "Airtable: 'tableName' is required — configure this field.", skipped: true };
+    if (!NO_BASE_OPS.has(operation) && !config.baseId)
+      return { success: false, error: "Airtable: 'baseId' is required — configure this field.", skipped: true };
+    if (!NO_TABLE_OPS.has(operation) && !config.tableName)
+      return { success: false, error: "Airtable: 'tableName' is required — configure this field.", skipped: true };
 
     try {
       const token = await getToken(config.credentialId, context.workspaceId);
