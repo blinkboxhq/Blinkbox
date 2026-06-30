@@ -130,11 +130,112 @@ async function opAddContact(config, token) {
   return { jobId: response.data.job_id, added: true };
 }
 
+async function opSearchContacts(config, token) {
+  if (!config.query) return { success: false, error: "SendGrid searchContacts: 'query' (SGQL) is required, e.g. email LIKE 'a@b.com'.", skipped: true };
+  const response = await axios.post(`${BASE}/marketing/contacts/search`, { query: config.query }, { headers: auth(token), timeout: 15000 });
+  return { contacts: response.data.result || [], total: response.data.contact_count || (response.data.result || []).length };
+}
+
+async function opGetContact(config, token) {
+  if (!config.contactId && !config.email) return { success: false, error: "SendGrid getContact: 'contactId' or 'email' is required.", skipped: true };
+  if (config.contactId) {
+    const response = await axios.get(`${BASE}/marketing/contacts/${encodeURIComponent(config.contactId)}`, { headers: auth(token), timeout: 10000 });
+    return { contact: response.data };
+  }
+  const response = await axios.post(`${BASE}/marketing/contacts/search/emails`, { emails: [config.email] }, { headers: auth(token), timeout: 10000 });
+  const match = response.data.result?.[config.email]?.contact;
+  if (!match) return { success: false, error: `SendGrid getContact: no contact found for ${config.email}.`, skipped: true };
+  return { contact: match };
+}
+
+async function opDeleteContact(config, token) {
+  if (!config.contactId) return { success: false, error: "SendGrid deleteContact: 'contactId' is required.", skipped: true };
+  const response = await axios.delete(`${BASE}/marketing/contacts`, { headers: auth(token), params: { ids: config.contactId }, timeout: 10000 });
+  return { jobId: response.data.job_id, deleted: true };
+}
+
+async function opListLists(config, token) {
+  const response = await axios.get(`${BASE}/marketing/lists`, { headers: auth(token), params: { page_size: Math.min(config.maxResults || 50, 1000) }, timeout: 15000 });
+  return { lists: response.data.result || [] };
+}
+
+async function opCreateList(config, token) {
+  if (!config.listName) return { success: false, error: "SendGrid createList: 'listName' is required.", skipped: true };
+  const response = await axios.post(`${BASE}/marketing/lists`, { name: config.listName }, { headers: auth(token), timeout: 10000 });
+  return { listId: response.data.id, name: response.data.name };
+}
+
+async function opDeleteList(config, token) {
+  if (!config.listId) return { success: false, error: "SendGrid deleteList: 'listId' is required.", skipped: true };
+  await axios.delete(`${BASE}/marketing/lists/${encodeURIComponent(config.listId)}`, { headers: auth(token), params: { delete_contacts: !!config.deleteContacts }, timeout: 10000 });
+  return { listId: config.listId, deleted: true };
+}
+
+async function opListTemplates(config, token) {
+  const response = await axios.get(`${BASE}/templates`, {
+    headers: auth(token),
+    params: { generations: "dynamic", page_size: Math.min(config.maxResults || 50, 200) },
+    timeout: 15000,
+  });
+  return { templates: response.data.result || response.data.templates || [] };
+}
+
+async function opGetTemplate(config, token) {
+  if (!config.templateId) return { success: false, error: "SendGrid getTemplate: 'templateId' is required.", skipped: true };
+  const response = await axios.get(`${BASE}/templates/${encodeURIComponent(config.templateId)}`, { headers: auth(token), timeout: 10000 });
+  return { template: response.data };
+}
+
+async function opValidateEmail(config, token) {
+  if (!config.email) return { success: false, error: "SendGrid validateEmail: 'email' is required.", skipped: true };
+  const response = await axios.post(`${BASE}/validations/email`, { email: config.email, source: config.source || "blinkbox" }, { headers: auth(token), timeout: 15000 });
+  const r = response.data.result || {};
+  return { verdict: r.verdict, score: r.score, email: r.email, suggestion: r.suggestion, checks: r.checks };
+}
+
+async function opGetStats(config, token) {
+  if (!config.startDate) return { success: false, error: "SendGrid getStats: 'startDate' (YYYY-MM-DD) is required.", skipped: true };
+  const params = { start_date: config.startDate };
+  if (config.endDate) params.end_date = config.endDate;
+  if (config.aggregatedBy) params.aggregated_by = config.aggregatedBy;
+  const response = await axios.get(`${BASE}/stats`, { headers: auth(token), params, timeout: 15000 });
+  return { stats: response.data || [] };
+}
+
+async function opListSuppressions(config, token) {
+  const type = config.suppressionType || "bounces";
+  const valid = ["bounces", "blocks", "spam_reports", "invalid_emails", "unsubscribes"];
+  if (!valid.includes(type)) throw new Error(`SendGrid listSuppressions: 'suppressionType' must be one of ${valid.join(", ")}.`);
+  const path = type === "unsubscribes" ? "/suppression/unsubscribes" : `/suppression/${type}`;
+  const response = await axios.get(`${BASE}${path}`, { headers: auth(token), timeout: 15000 });
+  return { type, suppressions: response.data || [] };
+}
+
+async function opDeleteSuppression(config, token) {
+  const type = config.suppressionType || "bounces";
+  if (!config.email) return { success: false, error: "SendGrid deleteSuppression: 'email' is required.", skipped: true };
+  const path = type === "unsubscribes" ? "/asm/suppressions/global" : `/suppression/${type}`;
+  await axios.delete(`${BASE}${path}/${encodeURIComponent(config.email)}`, { headers: auth(token), timeout: 10000 });
+  return { email: config.email, type, removed: true };
+}
+
 const OPERATIONS = {
   sendEmail: opSendEmail,
   sendTemplate: opSendTemplate,
   sendBulk: opSendBulk,
   addContact: opAddContact,
+  getContact: opGetContact,
+  searchContacts: opSearchContacts,
+  deleteContact: opDeleteContact,
+  listLists: opListLists,
+  createList: opCreateList,
+  deleteList: opDeleteList,
+  listTemplates: opListTemplates,
+  getTemplate: opGetTemplate,
+  validateEmail: opValidateEmail,
+  getStats: opGetStats,
+  listSuppressions: opListSuppressions,
+  deleteSuppression: opDeleteSuppression,
 };
 
 export default {

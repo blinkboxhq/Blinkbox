@@ -1,4 +1,4 @@
-import { Send, Layout, Users, UserPlus } from 'lucide-react';
+import { Send, Layout, Users, UserPlus, Search, UserSearch, UserX, List, ListPlus, ListX, Files, FileSearch, ShieldCheck, BarChart3, Ban } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 
@@ -10,16 +10,47 @@ function SendGridIcon({ className }) {
   );
 }
 
-const OPERATIONS = [
-  { value: 'sendEmail',    label: 'Send Email',    icon: Send },
-  { value: 'sendTemplate', label: 'Use Template',  icon: Layout },
-  { value: 'sendBulk',     label: 'Bulk Send',     icon: Users },
-  { value: 'addContact',   label: 'Add Contact',   icon: UserPlus },
+const GROUPS = [
+  { name: 'Email', ops: [
+    { value: 'sendEmail',    label: 'Send Email',   icon: Send },
+    { value: 'sendTemplate', label: 'Use Template', icon: Layout },
+    { value: 'sendBulk',     label: 'Bulk Send',    icon: Users },
+  ]},
+  { name: 'Contacts', ops: [
+    { value: 'addContact',    label: 'Add Contact',     icon: UserPlus },
+    { value: 'getContact',    label: 'Get Contact',     icon: UserSearch },
+    { value: 'searchContacts',label: 'Search Contacts', icon: Search },
+    { value: 'deleteContact', label: 'Delete Contact',  icon: UserX },
+  ]},
+  { name: 'Lists', ops: [
+    { value: 'listLists',   label: 'List Lists',  icon: List },
+    { value: 'createList',  label: 'Create List', icon: ListPlus },
+    { value: 'deleteList',  label: 'Delete List', icon: ListX },
+  ]},
+  { name: 'Templates & Validation', ops: [
+    { value: 'listTemplates', label: 'List Templates', icon: Files },
+    { value: 'getTemplate',   label: 'Get Template',   icon: FileSearch },
+    { value: 'validateEmail', label: 'Validate Email', icon: ShieldCheck },
+  ]},
+  { name: 'Stats & Suppressions', ops: [
+    { value: 'getStats',          label: 'Get Stats',          icon: BarChart3 },
+    { value: 'listSuppressions',  label: 'List Suppressions',  icon: Ban },
+    { value: 'deleteSuppression', label: 'Remove Suppression', icon: UserX },
+  ]},
 ];
+
+const lbl = 'text-[10px] font-bold text-zinc-500 uppercase tracking-widest';
+const inputCls = 'w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#1A82E2]/40 transition-colors';
 
 export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendEmail';
   const isEmail = ['sendEmail', 'sendTemplate', 'sendBulk'].includes(operation);
+  const Field = ({ label, hint, k, placeholder, multiline }) => (
+    <div className="flex flex-col gap-2">
+      <label className={lbl}>{label}{hint && <span className="text-zinc-700"> {hint}</span>}</label>
+      <SmartVariableInput value={config[k] || ''} onChange={(val) => updateConfig(k, val)} placeholder={placeholder} multiline={multiline} nodeId={nodeId} />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -35,23 +66,27 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
       </div>
 
       {/* Operations */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        <div className="grid grid-cols-2 gap-2">
-          {OPERATIONS.map((op) => {
-            const Icon = op.icon;
-            return (
-              <button key={op.value} onClick={() => updateConfig('operation', op.value)}
-                className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                  operation === op.value
-                    ? 'bg-[#1A82E2]/10 border-[#1A82E2]/40 text-[#1A82E2]'
-                    : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                }`}>
-                <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex flex-col gap-3">
+        {GROUPS.map((group) => (
+          <div key={group.name} className="flex flex-col gap-2">
+            <label className={lbl}>{group.name}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {group.ops.map((op) => {
+                const Icon = op.icon;
+                return (
+                  <button key={op.value} onClick={() => updateConfig('operation', op.value)}
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
+                      operation === op.value
+                        ? 'bg-[#1A82E2]/10 border-[#1A82E2]/40 text-[#1A82E2]'
+                        : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
+                    }`}>
+                    <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Shared email fields */}
@@ -136,6 +171,103 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
               className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#1A82E2]/40 transition-colors" />
           </div>
         </>
+      )}
+
+      {/* getContact */}
+      {operation === 'getContact' && (
+        <>
+          <Field label="Contact ID" hint="(or use email below)" k="contactId" placeholder="xxxxxxxx-xxxx-..." />
+          <Field label="Email" hint="(if no contact ID)" k="email" placeholder="{{trigger.data.email}}" />
+        </>
+      )}
+
+      {/* searchContacts */}
+      {operation === 'searchContacts' && (
+        <div className="flex flex-col gap-2">
+          <label className={lbl}>SGQL Query</label>
+          <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder="email LIKE '%@example.com'" multiline nodeId={nodeId} />
+          <p className="text-[10px] text-zinc-600">SendGrid Query Language — e.g. email LIKE '%@acme.com' AND last_name = 'Doe'</p>
+        </div>
+      )}
+
+      {/* deleteContact */}
+      {operation === 'deleteContact' && (
+        <Field label="Contact ID" k="contactId" placeholder="xxxxxxxx-xxxx-..." />
+      )}
+
+      {/* createList */}
+      {operation === 'createList' && (
+        <Field label="List Name" k="listName" placeholder="Newsletter Subscribers" />
+      )}
+
+      {/* deleteList */}
+      {operation === 'deleteList' && (
+        <Field label="List ID" k="listId" placeholder="xxxxxxxx-xxxx-..." />
+      )}
+
+      {/* getTemplate */}
+      {operation === 'getTemplate' && (
+        <div className="flex flex-col gap-2">
+          <label className={lbl}>Template ID</label>
+          <input value={config.templateId || ''} onChange={(e) => updateConfig('templateId', e.target.value)} placeholder="d-XXXXXXXX..." className={`${inputCls} font-mono`} />
+        </div>
+      )}
+
+      {/* validateEmail */}
+      {operation === 'validateEmail' && (
+        <Field label="Email" k="email" placeholder="{{trigger.data.email}}" />
+      )}
+
+      {/* getStats */}
+      {operation === 'getStats' && (
+        <>
+          <div className="flex gap-3">
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>Start Date</label>
+              <input type="date" value={config.startDate || ''} onChange={(e) => updateConfig('startDate', e.target.value)} className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>End Date <span className="text-zinc-700">(optional)</span></label>
+              <input type="date" value={config.endDate || ''} onChange={(e) => updateConfig('endDate', e.target.value)} className={inputCls} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Aggregate By</label>
+            <div className="grid grid-cols-3 gap-2">
+              {['day', 'week', 'month'].map((g) => (
+                <button key={g} onClick={() => updateConfig('aggregatedBy', g)}
+                  className={`p-2 rounded-lg border text-xs font-bold capitalize transition-all ${
+                    (config.aggregatedBy || 'day') === g ? 'bg-[#1A82E2]/10 border-[#1A82E2]/40 text-[#1A82E2]' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
+                  }`}>{g}</button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* listSuppressions / deleteSuppression */}
+      {(operation === 'listSuppressions' || operation === 'deleteSuppression') && (
+        <div className="flex flex-col gap-2">
+          <label className={lbl}>Suppression Type</label>
+          <div className="grid grid-cols-2 gap-2">
+            {['bounces', 'blocks', 'spam_reports', 'invalid_emails', 'unsubscribes'].map((t) => (
+              <button key={t} onClick={() => updateConfig('suppressionType', t)}
+                className={`p-2 rounded-lg border text-xs font-bold transition-all ${
+                  (config.suppressionType || 'bounces') === t ? 'bg-[#1A82E2]/10 border-[#1A82E2]/40 text-[#1A82E2]' : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
+                }`}>{t.replace('_', ' ')}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      {operation === 'deleteSuppression' && (
+        <Field label="Email" k="email" placeholder="{{trigger.data.email}}" />
+      )}
+
+      {(operation === 'listLists' || operation === 'listTemplates') && (
+        <div className="flex flex-col gap-2">
+          <label className={lbl}>Max Results</label>
+          <input type="number" min={1} max={1000} value={config.maxResults || 50} onChange={(e) => updateConfig('maxResults', Number(e.target.value))} className={inputCls} />
+        </div>
       )}
 
       {/* Credential */}

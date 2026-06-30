@@ -767,10 +767,20 @@ export const NODE_ACTIONS = {
   sendgrid: [
     { name: "Send Email", description: "Send a transactional email via SendGrid" },
     { name: "Send Template Email", description: "Send an email using a dynamic template" },
-    { name: "Add Contact", description: "Add a contact to your SendGrid marketing list" },
-    { name: "Remove Contact", description: "Remove a contact from a marketing list" },
-    { name: "Get Email Stats", description: "Fetch open, click, and bounce statistics" },
+    { name: "Bulk Send", description: "Send a batch email to many recipients" },
+    { name: "Add Contact", description: "Add or update a marketing contact" },
+    { name: "Get Contact", description: "Fetch a contact by ID or email" },
+    { name: "Search Contacts", description: "Find contacts with an SGQL query" },
+    { name: "Delete Contact", description: "Remove a contact from marketing" },
+    { name: "List Lists", description: "List your marketing contact lists" },
+    { name: "Create List", description: "Create a new marketing list" },
+    { name: "Delete List", description: "Delete a marketing list" },
+    { name: "List Templates", description: "List your dynamic email templates" },
+    { name: "Get Template", description: "Fetch a dynamic template by ID" },
     { name: "Validate Email", description: "Check if an email address is valid" },
+    { name: "Get Email Stats", description: "Fetch open, click, and bounce statistics" },
+    { name: "List Suppressions", description: "List bounces, blocks, spam reports, or unsubscribes" },
+    { name: "Remove Suppression", description: "Remove an email from a suppression list" },
   ],
 
   // ── Integrations: Productivity ────────────────────────────────────────────────
