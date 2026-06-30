@@ -83,7 +83,7 @@ export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
                 type="number" min="15"
                 value={config.duration || 60}
                 onChange={(e) => updateConfig("duration", parseInt(e.target.value))}
-                className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
+                className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500"
               />
             </div>
           </div>

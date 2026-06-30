@@ -26,7 +26,7 @@ export default function GoogleCalendarTriggerNode({ config = {}, updateConfig })
           value={config.calendarId || "primary"}
           onChange={(e) => updateConfig("calendarId", e.target.value)}
           placeholder="primary  or  user@example.com"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
+          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500"
         />
       </div>
 
@@ -36,7 +36,7 @@ export default function GoogleCalendarTriggerNode({ config = {}, updateConfig })
           type="number" min="0" max="1440"
           value={config.minutesBefore ?? 0}
           onChange={(e) => updateConfig("minutesBefore", parseInt(e.target.value))}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
+          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500"
         />
         <p className="text-[9px] text-zinc-600">0 = fire when event starts, 15 = 15 minutes before</p>
       </div>
@@ -47,7 +47,7 @@ export default function GoogleCalendarTriggerNode({ config = {}, updateConfig })
           value={config.filterQuery || ""}
           onChange={(e) => updateConfig("filterQuery", e.target.value)}
           placeholder="standup  — only fire for events with this in title"
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
+          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500"
         />
       </div>
 
@@ -57,7 +57,7 @@ export default function GoogleCalendarTriggerNode({ config = {}, updateConfig })
           type="number" min="1" max="60"
           value={config.pollIntervalMinutes ?? 1}
           onChange={(e) => updateConfig("pollIntervalMinutes", parseInt(e.target.value))}
-          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/40"
+          className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-zinc-500"
         />
       </div>
     </div>

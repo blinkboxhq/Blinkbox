@@ -149,7 +149,7 @@ export default function WebhookTriggerNode({ config = {}, updateConfig, nodeId }
                   value={config.secret || ''}
                   onChange={(e) => updateConfig?.('secret', e.target.value)}
                   placeholder="Paste a strong secret…"
-                  className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                  className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors font-mono"
                 />
                 <p className="text-[9px] text-zinc-600">Keep this secret. Requests without it will be rejected with 401.</p>
               </div>
@@ -182,7 +182,7 @@ export default function WebhookTriggerNode({ config = {}, updateConfig, nodeId }
                       value={config.hmacSecret || ''}
                       onChange={(e) => updateConfig?.('hmacSecret', e.target.value)}
                       placeholder="Shared secret from provider…"
-                      className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                      className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors font-mono"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -203,7 +203,7 @@ export default function WebhookTriggerNode({ config = {}, updateConfig, nodeId }
                       <input
                         value={config.hmacHeader || 'x-hub-signature-256'}
                         onChange={(e) => updateConfig?.('hmacHeader', e.target.value)}
-                        className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                        className="w-full bg-[#111111] border border-[#222] rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors font-mono"
                       />
                     </div>
                   </div>
