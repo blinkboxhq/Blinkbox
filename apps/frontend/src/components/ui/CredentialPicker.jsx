@@ -259,7 +259,7 @@ export default function CredentialPicker({
     <div className="flex flex-col gap-2">
       {label && (
         <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono flex items-center gap-2">
-          <span className="w-[3px] h-[3px] rounded-full bg-[#6f97e8]" />
+          <span className="w-[3px] h-[3px] rounded-full bg-neutral-500" />
           {label}
         </label>
       )}
