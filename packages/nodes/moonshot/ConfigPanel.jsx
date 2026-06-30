@@ -152,210 +152,210 @@ function ModelPicker({ value, onChange, baseModels, credentialId }) {
   );
 }
 
-function MessageFields({ config, update, credentialId }) {
+function MessageFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">text / json out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Prompt" hint="Your instruction. Combined with the previous node's output.">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Summarize the input and list 3 action items..." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize the input and list 3 action items..." multiline nodeId={nodeId} />
       </Field>
       <Field label="System Prompt" hint="Optional — sets Kimi's persona / rules.">
-        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => update('systemPrompt', v)} placeholder="You are a helpful assistant..." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a helpful assistant..." multiline nodeId={nodeId} />
       </Field>
       <Field label="Output Format">
-        <Select value={config.outputFormat || 'text'} onChange={(v) => update('outputFormat', v)} options={[{ value: 'text', label: 'Text' }, { value: 'json', label: 'JSON' }]} />
+        <Select value={config.outputFormat || 'text'} onChange={(v) => updateConfig('outputFormat', v)} options={[{ value: 'text', label: 'Text' }, { value: 'json', label: 'JSON' }]} />
       </Field>
     </div>
   );
 }
 
-function CodeFields({ config, update, credentialId }) {
+function CodeFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">code out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CODE} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CODE} credentialId={credentialId} />
       <Field label="Instruction">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Write a Python function that..." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Write a Python function that..." multiline nodeId={nodeId} />
       </Field>
       <Field label="System Prompt" hint="Optional override.">
-        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => update('systemPrompt', v)} placeholder="You are an expert in Rust..." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are an expert in Rust..." multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function StructuredFields({ config, update, credentialId }) {
+function StructuredFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Extract name, email and company from the input." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract name, email and company from the input." multiline nodeId={nodeId} />
       </Field>
       <Field label="JSON Schema" hint="Optional — paste a JSON Schema to constrain the shape.">
-        <SmartVariableInput value={config.jsonSchema || ''} onChange={(v) => update('jsonSchema', v)} placeholder='{"type":"object","properties":{...}}' multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.jsonSchema || ''} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"type":"object","properties":{...}}' multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function FunctionFields({ config, update, credentialId }) {
+function FunctionFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">tool calls out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="What's the weather in Tokyo and should I bring an umbrella?" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Tokyo and should I bring an umbrella?" multiline nodeId={nodeId} />
       </Field>
       <Field label="Tools (JSON array)" hint="OpenAI-style function definitions.">
-        <SmartVariableInput value={config.tools || ''} onChange={(v) => update('tools', v)} placeholder='[{"name":"get_weather","description":"...","parameters":{...}}]' multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.tools || ''} onChange={(v) => updateConfig('tools', v)} placeholder='[{"name":"get_weather","description":"...","parameters":{...}}]' multiline nodeId={nodeId} />
       </Field>
       <Field label="Tool Choice" hint='Optional: "auto", "none", or {"type":"function","function":{"name":"..."}}'>
-        <SmartVariableInput value={config.toolChoice || ''} onChange={(v) => update('toolChoice', v)} placeholder="auto" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.toolChoice || ''} onChange={(v) => updateConfig('toolChoice', v)} placeholder="auto" nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function ReasoningFields({ config, update, credentialId }) {
+function ReasoningFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">answer + reasoning out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_THINK} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_THINK} credentialId={credentialId} />
       <Field label="Problem" hint="Kimi thinks step by step; reasoning is returned separately.">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="A train leaves at... solve and explain." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="A train leaves at... solve and explain." multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function ImageFields({ config, update, credentialId }) {
+function ImageFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">image url in</IOBadge><IOBadge kind="out">text out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_VISION} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_VISION} credentialId={credentialId} />
       <Field label="Image URL" hint="Public URL or data: URI. Falls back to input.imageUrl.">
-        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => update('imageUrl', v)} placeholder="https://... or {{ $json.imageUrl }}" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{ $json.imageUrl }}" nodeId={nodeId} />
       </Field>
       <Field label="Question">
-        <SmartVariableInput value={config.question || ''} onChange={(v) => update('question', v)} placeholder="What's in this image?" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.question || ''} onChange={(v) => updateConfig('question', v)} placeholder="What's in this image?" multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function DocumentFields({ config, update, credentialId }) {
+function DocumentFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">document text in</IOBadge><IOBadge kind="out">text out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Document Text" hint="Falls back to input.text / input.content. Kimi has very long context.">
-        <SmartVariableInput value={config.documentText || ''} onChange={(v) => update('documentText', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </Field>
       <Field label="Instruction">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Summarize and list key obligations." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize and list key obligations." multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function ExtractFields({ config, update, credentialId }) {
+function ExtractFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Text" hint="Falls back to input.text.">
-        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.text || ''} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </Field>
       <Field label="Fields to Extract" hint="Comma-separated, e.g. name, email, total. Leave blank to auto-extract.">
-        <SmartVariableInput value={config.fields || ''} onChange={(v) => update('fields', v)} placeholder="name, email, amount, date" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.fields || ''} onChange={(v) => updateConfig('fields', v)} placeholder="name, email, amount, date" nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function ClassifyFields({ config, update, credentialId }) {
+function ClassifyFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">label out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Text" hint="Falls back to input.text.">
-        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.text || ''} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </Field>
       <Field label="Labels" hint="Comma-separated categories.">
-        <SmartVariableInput value={config.labels || ''} onChange={(v) => update('labels', v)} placeholder="urgent, normal, spam" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.labels || ''} onChange={(v) => updateConfig('labels', v)} placeholder="urgent, normal, spam" nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function SummarizeFields({ config, update, credentialId }) {
+function SummarizeFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">summary out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Text" hint="Falls back to input.text / input.content.">
-        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.content }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.text || ''} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.content }}" multiline nodeId={nodeId} />
       </Field>
       <Field label="Style">
-        <Select value={config.style || 'concise'} onChange={(v) => update('style', v)} options={[
+        <Select value={config.style || 'concise'} onChange={(v) => updateConfig('style', v)} options={[
           { value: 'concise', label: 'Concise' }, { value: 'detailed', label: 'Detailed' }, { value: 'bullet points', label: 'Bullets' },
         ]} />
       </Field>
       <Field label="Max Words" hint="Optional length target.">
-        <SmartVariableInput value={config.maxWords || ''} onChange={(v) => update('maxWords', v)} placeholder="100" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.maxWords || ''} onChange={(v) => updateConfig('maxWords', v)} placeholder="100" nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function TranslateFields({ config, update, credentialId }) {
+function TranslateFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">translation out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Text">
-        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.text || ''} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </Field>
       <Field label="Target Language">
-        <SmartVariableInput value={config.targetLanguage || ''} onChange={(v) => update('targetLanguage', v)} placeholder="English" nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.targetLanguage || ''} onChange={(v) => updateConfig('targetLanguage', v)} placeholder="English" nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function SentimentFields({ config, update, credentialId }) {
+function SentimentFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">text in</IOBadge><IOBadge kind="out">json out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Text" hint="Falls back to input.text.">
-        <SmartVariableInput value={config.text || ''} onChange={(v) => update('text', v)} placeholder="{{ $json.text }}" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.text || ''} onChange={(v) => updateConfig('text', v)} placeholder="{{ $json.text }}" multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function GeneratePromptFields({ config, update, credentialId }) {
+function GeneratePromptFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">task in</IOBadge><IOBadge kind="out">prompt out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Task Description">
-        <SmartVariableInput value={config.task || ''} onChange={(v) => update('task', v)} placeholder="Classify support tickets by urgency" multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="Classify support tickets by urgency" multiline nodeId={nodeId} />
       </Field>
     </div>
   );
 }
 
-function ImprovePromptFields({ config, update, credentialId }) {
+function ImprovePromptFields({ config, updateConfig, nodeId, credentialId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2"><IOBadge kind="in">prompt in</IOBadge><IOBadge kind="out">prompt out</IOBadge></div>
-      <ModelPicker value={config.model} onChange={(v) => update('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
+      <ModelPicker value={config.model} onChange={(v) => updateConfig('model', v)} baseModels={MODELS_CHAT} credentialId={credentialId} />
       <Field label="Prompt to Improve">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => update('prompt', v)} placeholder="Paste a prompt to sharpen..." multiline nodeId={config.__nodeId} />
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste a prompt to sharpen..." multiline nodeId={nodeId} />
       </Field>
     </div>
   );
@@ -378,7 +378,7 @@ const OP_FIELDS = {
   improvePrompt: ImprovePromptFields,
 };
 
-function AdvancedSection({ config, update }) {
+function AdvancedSection({ config, updateConfig, nodeId }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-t border-zinc-800 pt-3">
@@ -394,22 +394,22 @@ function AdvancedSection({ config, update }) {
       {open && (
         <div className="grid grid-cols-2 gap-3 mt-3">
           <Field label="Temperature">
-            <SmartVariableInput value={config.temperature ?? ''} onChange={(v) => update('temperature', v)} placeholder="0.6" nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.temperature ?? ''} onChange={(v) => updateConfig('temperature', v)} placeholder="0.6" nodeId={nodeId} />
           </Field>
           <Field label="Max Tokens">
-            <SmartVariableInput value={config.maxTokens ?? ''} onChange={(v) => update('maxTokens', v)} placeholder="2000" nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.maxTokens ?? ''} onChange={(v) => updateConfig('maxTokens', v)} placeholder="2000" nodeId={nodeId} />
           </Field>
           <Field label="Top P">
-            <SmartVariableInput value={config.topP ?? ''} onChange={(v) => update('topP', v)} placeholder="1" nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.topP ?? ''} onChange={(v) => updateConfig('topP', v)} placeholder="1" nodeId={nodeId} />
           </Field>
           <Field label="Frequency Penalty">
-            <SmartVariableInput value={config.frequencyPenalty ?? ''} onChange={(v) => update('frequencyPenalty', v)} placeholder="0" nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.frequencyPenalty ?? ''} onChange={(v) => updateConfig('frequencyPenalty', v)} placeholder="0" nodeId={nodeId} />
           </Field>
           <Field label="Presence Penalty">
-            <SmartVariableInput value={config.presencePenalty ?? ''} onChange={(v) => update('presencePenalty', v)} placeholder="0" nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.presencePenalty ?? ''} onChange={(v) => updateConfig('presencePenalty', v)} placeholder="0" nodeId={nodeId} />
           </Field>
           <Field label="Stop Sequences" hint="One per line, max 4.">
-            <SmartVariableInput value={config.stop ?? ''} onChange={(v) => update('stop', v)} placeholder="###" multiline nodeId={config.__nodeId} />
+            <SmartVariableInput value={config.stop ?? ''} onChange={(v) => updateConfig('stop', v)} placeholder="###" multiline nodeId={nodeId} />
           </Field>
         </div>
       )}
@@ -465,9 +465,8 @@ function OperationPicker({ value, onChange }) {
   );
 }
 
-export default function MoonshotNode({ config = {}, onChange, nodeId }) {
+export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'message';
-  const update = (key, val) => onChange({ ...config, [key]: val, __nodeId: nodeId });
   const Fields = OP_FIELDS[operation] || MessageFields;
 
   return (
@@ -476,7 +475,7 @@ export default function MoonshotNode({ config = {}, onChange, nodeId }) {
       <div className="flex flex-col gap-4 p-4">
         <CredentialPicker
           value={config.credentialId}
-          onChange={(v) => update('credentialId', v)}
+          onChange={(v) => updateConfig('credentialId', v)}
           accentColor={ACCENT}
           credentialType="Moonshot"
           label="Moonshot (Kimi) API Key"
@@ -485,13 +484,13 @@ export default function MoonshotNode({ config = {}, onChange, nodeId }) {
 
         <div className="border-t border-zinc-800" />
 
-        <OperationPicker value={operation} onChange={(v) => update('operation', v)} />
+        <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
 
         <div className="border-t border-zinc-800" />
 
-        <Fields config={{ ...config, __nodeId: nodeId }} update={update} credentialId={config.credentialId} />
+        <Fields config={config} updateConfig={updateConfig} nodeId={nodeId} credentialId={config.credentialId} />
 
-        {ADVANCED_OPS.has(operation) && <AdvancedSection config={{ ...config, __nodeId: nodeId }} update={update} />}
+        {ADVANCED_OPS.has(operation) && <AdvancedSection config={config} updateConfig={updateConfig} nodeId={nodeId} />}
       </div>
     </div>
   );
