@@ -1,10 +1,8 @@
 /**
  * TWILIO NODE
  *
- * Operations:
- *   sendSms      — Send an SMS message (default)
- *   makeCall     — Initiate a voice call with TwiML URL
- *   lookupNumber — Look up carrier/line-type info for a phone number
+ * Operations: SMS/MMS/WhatsApp send, message get/list/delete, voice
+ *   call make/get/list/hangup, Verify send/check, number lookup/list.
  *
  * Auth: Twilio Account SID + Auth Token stored as "user:pass" in vault
  * Credential format: "ACXXXXXXXX:authtoken"
@@ -89,6 +87,134 @@ async function opMakeCall(config, { accountSid, authToken }) {
   };
 }
 
+async function opSendMms(config, { accountSid, authToken }) {
+  if (!config.to) return { success: false, error: "Twilio sendMms: 'to' is required.", skipped: true };
+  if (!config.from) return { success: false, error: "Twilio sendMms: 'from' is required.", skipped: true };
+  if (!config.mediaUrl) return { success: false, error: "Twilio sendMms: 'mediaUrl' is required.", skipped: true };
+  if (!/^https?:\/\//i.test(config.mediaUrl)) throw new Error("Twilio sendMms: 'mediaUrl' must be a valid https:// URL.");
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
+  const response = await axios.post(url, encodeForm({
+    To: config.to,
+    From: config.from,
+    Body: config.body || "",
+    MediaUrl: config.mediaUrl,
+  }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return { messageSid: response.data.sid, status: response.data.status, to: response.data.to, numMedia: response.data.num_media };
+}
+
+async function opSendWhatsApp(config, { accountSid, authToken }) {
+  if (!config.to) return { success: false, error: "Twilio sendWhatsApp: 'to' is required.", skipped: true };
+  if (!config.from) return { success: false, error: "Twilio sendWhatsApp: 'from' (your Twilio WhatsApp number) is required.", skipped: true };
+  if (!config.body) return { success: false, error: "Twilio sendWhatsApp: 'body' is required.", skipped: true };
+  const fmt = (n) => (String(n).startsWith("whatsapp:") ? n : `whatsapp:${n}`);
+  const payload = { To: fmt(config.to), From: fmt(config.from), Body: config.body };
+  if (config.mediaUrl) payload.MediaUrl = config.mediaUrl;
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
+  const response = await axios.post(url, encodeForm(payload), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return { messageSid: response.data.sid, status: response.data.status, to: response.data.to };
+}
+
+async function opGetMessage(config, { accountSid, authToken }) {
+  if (!config.messageSid) return { success: false, error: "Twilio getMessage: 'messageSid' is required.", skipped: true };
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages/${encodeURIComponent(config.messageSid)}.json`;
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  return {
+    messageSid: response.data.sid,
+    status: response.data.status,
+    to: response.data.to,
+    from: response.data.from,
+    body: response.data.body,
+    errorCode: response.data.error_code,
+    price: response.data.price,
+    dateSent: response.data.date_sent,
+  };
+}
+
+async function opListMessages(config, { accountSid, authToken }) {
+  const params = { PageSize: Math.min(config.maxResults || 20, 100) };
+  if (config.to) params.To = config.to;
+  if (config.from) params.From = config.from;
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 15000 });
+  return { messages: response.data.messages || [], count: (response.data.messages || []).length };
+}
+
+async function opDeleteMessage(config, { accountSid, authToken }) {
+  if (!config.messageSid) return { success: false, error: "Twilio deleteMessage: 'messageSid' is required.", skipped: true };
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages/${encodeURIComponent(config.messageSid)}.json`;
+  await axios.delete(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  return { messageSid: config.messageSid, deleted: true };
+}
+
+async function opGetCall(config, { accountSid, authToken }) {
+  if (!config.callSid) return { success: false, error: "Twilio getCall: 'callSid' is required.", skipped: true };
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls/${encodeURIComponent(config.callSid)}.json`;
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  return {
+    callSid: response.data.sid,
+    status: response.data.status,
+    to: response.data.to,
+    from: response.data.from,
+    duration: response.data.duration,
+    direction: response.data.direction,
+    price: response.data.price,
+  };
+}
+
+async function opListCalls(config, { accountSid, authToken }) {
+  const params = { PageSize: Math.min(config.maxResults || 20, 100) };
+  if (config.to) params.To = config.to;
+  if (config.from) params.From = config.from;
+  if (config.status) params.Status = config.status;
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls.json`;
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 15000 });
+  return { calls: response.data.calls || [], count: (response.data.calls || []).length };
+}
+
+async function opHangupCall(config, { accountSid, authToken }) {
+  if (!config.callSid) return { success: false, error: "Twilio hangupCall: 'callSid' is required.", skipped: true };
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls/${encodeURIComponent(config.callSid)}.json`;
+  const response = await axios.post(url, encodeForm({ Status: "completed" }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 10000,
+  });
+  return { callSid: response.data.sid, status: response.data.status };
+}
+
+async function opSendVerification(config, { accountSid, authToken }) {
+  if (!config.verifyServiceSid) return { success: false, error: "Twilio sendVerification: 'verifyServiceSid' (VAxxxx) is required.", skipped: true };
+  if (!config.to) return { success: false, error: "Twilio sendVerification: 'to' is required.", skipped: true };
+  const url = `https://verify.twilio.com/v2/Services/${encodeURIComponent(config.verifyServiceSid)}/Verifications`;
+  const response = await axios.post(url, encodeForm({ To: config.to, Channel: config.channel || "sms" }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return { verificationSid: response.data.sid, status: response.data.status, channel: response.data.channel, to: response.data.to };
+}
+
+async function opCheckVerification(config, { accountSid, authToken }) {
+  if (!config.verifyServiceSid) return { success: false, error: "Twilio checkVerification: 'verifyServiceSid' (VAxxxx) is required.", skipped: true };
+  if (!config.to) return { success: false, error: "Twilio checkVerification: 'to' is required.", skipped: true };
+  if (!config.code) return { success: false, error: "Twilio checkVerification: 'code' is required.", skipped: true };
+  const url = `https://verify.twilio.com/v2/Services/${encodeURIComponent(config.verifyServiceSid)}/VerificationCheck`;
+  const response = await axios.post(url, encodeForm({ To: config.to, Code: config.code }), {
+    auth: { username: accountSid, password: authToken },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 15000,
+  });
+  return { status: response.data.status, valid: response.data.valid, to: response.data.to };
+}
+
 async function opLookupNumber(config, { accountSid, authToken }) {
   if (!config.phoneNumber) return { success: false, error: "Twilio lookupNumber: 'phoneNumber' is required (E.164 format, e.g. +14155551234).", skipped: true };
   const encoded = encodeURIComponent(config.phoneNumber);
@@ -106,10 +232,36 @@ async function opLookupNumber(config, { accountSid, authToken }) {
   };
 }
 
+async function opListNumbers(config, { accountSid, authToken }) {
+  const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/IncomingPhoneNumbers.json`;
+  const response = await axios.get(url, {
+    auth: { username: accountSid, password: authToken },
+    params: { PageSize: Math.min(config.maxResults || 20, 100) },
+    timeout: 15000,
+  });
+  return {
+    numbers: (response.data.incoming_phone_numbers || []).map((n) => ({
+      sid: n.sid, phoneNumber: n.phone_number, friendlyName: n.friendly_name,
+      capabilities: n.capabilities,
+    })),
+  };
+}
+
 const OPERATIONS = {
   sendSms: opSendSms,
+  sendMms: opSendMms,
+  sendWhatsApp: opSendWhatsApp,
+  getMessage: opGetMessage,
+  listMessages: opListMessages,
+  deleteMessage: opDeleteMessage,
   makeCall: opMakeCall,
+  getCall: opGetCall,
+  listCalls: opListCalls,
+  hangupCall: opHangupCall,
+  sendVerification: opSendVerification,
+  checkVerification: opCheckVerification,
   lookupNumber: opLookupNumber,
+  listNumbers: opListNumbers,
 };
 
 export default {
