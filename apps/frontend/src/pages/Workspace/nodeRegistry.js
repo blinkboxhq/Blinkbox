@@ -218,7 +218,7 @@ import imgTikTok from "@nodes/tiktok/logo.svg";
 import imgLinkedIn from "@nodes/linkedin/logo.svg";
 import imgTavily from "../../assets/tavily.svg";
 import imgKimi from "@nodes/moonshot/logo.svg";
-import imgOpenRouter from "@nodes/openrouter/logo.svg";
+import imgOpenRouter from "@/assets/logos/openrouter.svg";
 import imgZai from "@/assets/logos/zai.svg";
 import imgMiniMax from "@/assets/logos/minimax-color.svg";
 import imgSakana from "@/assets/logos/sakana.svg";
