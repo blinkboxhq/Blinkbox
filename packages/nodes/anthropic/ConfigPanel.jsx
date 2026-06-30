@@ -6,9 +6,9 @@ import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } 
 // Black & white only. The brand logo is the sole colored element.
 const MONO = '#e5e5e5';
 
-const MODELS_CHAT     = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5', 'claude-3-5-sonnet-latest'];
-const MODELS_THINKING = ['claude-opus-4-8', 'claude-sonnet-4-6'];
-const MODELS_VISION   = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5'];
+const MODELS_CHAT     = ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-3-5-sonnet-latest'];
+const MODELS_THINKING = ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6'];
+const MODELS_VISION   = ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5'];
 
 const opt = (v) => v.map((s) => ({ value: s, label: s }));
 

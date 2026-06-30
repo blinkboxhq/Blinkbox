@@ -6,8 +6,8 @@ import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } 
 // Black & white only. The brand logo is the sole colored element.
 const MONO = '#e5e5e5';
 
-const MODELS_FLASH = ['gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash', 'gemini-2.5-flash'];
-const MODELS_PRO   = ['gemini-3.1-pro-preview', 'gemini-3.5-flash'];
+const MODELS_FLASH = ['gemini-3.5-flash', 'gemini-3.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash', 'gemini-2.5-flash'];
+const MODELS_PRO   = ['gemini-3.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.5-flash'];
 const MODELS_IMAGE = ['gemini-3.1-flash-image'];
 const MODELS_EMBED = ['gemini-embedding-001'];
 
@@ -64,7 +64,7 @@ function FunctionPanel({ config, updateConfig, nodeId }) {
 function ReasoningPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="gemini-3.1-pro-preview" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_PRO)} />
+      <Dropdown label="Model" value={config.model} fallback="gemini-3.5-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_PRO)} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Solve this step by step…" multiline nodeId={nodeId} />
       <Dropdown label="Reasoning Effort" value={config.reasoningEffort} fallback="medium" onChange={(v) => updateConfig('reasoningEffort', v)} options={[{ value: 'low', label: 'Low — fast' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High — deepest' }]} />
     </>

@@ -21,8 +21,8 @@ const TYPE_COLOR = {
 };
 
 const PILL_CLASS =
-  "inline-flex items-center gap-1 bg-blue-600/20 border border-blue-500/30 " +
-  "text-blue-300 rounded px-1.5 py-0.5 font-mono text-[11px] leading-none " +
+  "inline-flex items-center gap-1 bg-white/10 border border-white/15 " +
+  "text-zinc-200 rounded px-1.5 py-0.5 font-mono text-[11px] leading-none " +
   "select-none cursor-default whitespace-nowrap mx-0.5 align-baseline";
 
 /** Convert a contenteditable div's DOM back to a plain string with {{tokens}}. */
@@ -200,9 +200,9 @@ function NodeGroup({ nodeId, nodeSchema, onSelect, schemaGeneration }) {
         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-neutral-200 hover:bg-zinc-700/40 transition-colors rounded"
       >
         {open ? (
-          <ChevronDown className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          <ChevronDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
         ) : (
-          <ChevronRight className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
         )}
         <span className="truncate">{_label || nodeId}</span>
         <span className="ml-auto text-[10px] text-neutral-600 font-normal uppercase shrink-0">
@@ -277,7 +277,7 @@ function TokenPreviewPopover({ token, anchorRect, lastRunOutputs, onClose }) {
       }}
     >
       <div className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl p-3 min-w-[160px] max-w-[280px]">
-        <div className="text-[9px] font-bold uppercase tracking-widest text-blue-400 mb-1.5">{label}</div>
+        <div className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1.5">{label}</div>
         {preview !== null ? (
           <pre className="text-[10px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap break-all max-h-32 overflow-auto">
             {preview}
@@ -464,7 +464,7 @@ export default function SmartVariableInput({
                 "absolute right-2 p-1 rounded transition-colors",
                 multiline ? "top-2.5" : "top-1/2 -translate-y-1/2",
                 open
-                  ? "text-blue-400 bg-blue-500/10"
+                  ? "text-white bg-white/10"
                   : "text-neutral-600 hover:text-neutral-400",
               ].join(" ")}
               title="Insert variable"
@@ -496,7 +496,7 @@ export default function SmartVariableInput({
                 >
                   {/* Header */}
                   <div className="px-3 py-2 border-b border-zinc-800 flex items-center gap-2">
-                    <Variable className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <Variable className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                     <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider">
                       Available Variables
                     </span>
