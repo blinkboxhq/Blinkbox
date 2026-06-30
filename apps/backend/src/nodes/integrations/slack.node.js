@@ -263,17 +263,280 @@ async function opAddReaction(config, token) {
   return { ok: true, emoji, channel, timestamp };
 }
 
+async function opUpdateMessage(config, token) {
+  const channel = config.channel;
+  const ts = config.timestamp || config.ts;
+  const text = config.message || config.text;
+  if (!channel) return { success: false, error: "Slack updateMessage: 'channel' is required.", skipped: true };
+  if (!ts) return { success: false, error: "Slack updateMessage: 'timestamp' (ts) is required.", skipped: true };
+  if (!text && !config.blocks) return { success: false, error: "Slack updateMessage: 'text' or 'blocks' is required.", skipped: true };
+  const payload = { channel, ts };
+  if (text) payload.text = text;
+  if (config.blocks) payload.blocks = config.blocks;
+  const data = await slackCall(token, "chat.update", payload);
+  return { ok: true, ts: data.ts, channel: data.channel };
+}
+
+async function opDeleteMessage(config, token) {
+  const channel = config.channel;
+  const ts = config.timestamp || config.ts;
+  if (!channel) return { success: false, error: "Slack deleteMessage: 'channel' is required.", skipped: true };
+  if (!ts) return { success: false, error: "Slack deleteMessage: 'timestamp' (ts) is required.", skipped: true };
+  const data = await slackCall(token, "chat.delete", { channel, ts });
+  return { ok: true, ts: data.ts, channel: data.channel, deleted: true };
+}
+
+async function opScheduleMessage(config, token) {
+  const channel = config.channel;
+  const text = config.message || config.text;
+  const postAt = config.postAt;
+  if (!channel) return { success: false, error: "Slack scheduleMessage: 'channel' is required.", skipped: true };
+  if (!text) return { success: false, error: "Slack scheduleMessage: 'text' is required.", skipped: true };
+  if (!postAt) return { success: false, error: "Slack scheduleMessage: 'postAt' (unix timestamp) is required.", skipped: true };
+  const data = await slackCall(token, "chat.scheduleMessage", { channel, text, post_at: Number(postAt) });
+  return { ok: true, scheduledMessageId: data.scheduled_message_id, channel: data.channel, postAt: data.post_at };
+}
+
+async function opPostEphemeral(config, token) {
+  const channel = config.channel;
+  const user = config.userId || config.user;
+  const text = config.message || config.text;
+  if (!channel) return { success: false, error: "Slack postEphemeral: 'channel' is required.", skipped: true };
+  if (!user) return { success: false, error: "Slack postEphemeral: 'userId' is required.", skipped: true };
+  if (!text) return { success: false, error: "Slack postEphemeral: 'text' is required.", skipped: true };
+  const data = await slackCall(token, "chat.postEphemeral", { channel, user, text });
+  return { ok: true, messageTs: data.message_ts };
+}
+
+async function opReplyInThread(config, token) {
+  const channel = config.channel;
+  const threadTs = config.threadTs || config.timestamp || config.ts;
+  const text = config.message || config.text;
+  if (!channel) return { success: false, error: "Slack replyInThread: 'channel' is required.", skipped: true };
+  if (!threadTs) return { success: false, error: "Slack replyInThread: 'threadTs' (parent ts) is required.", skipped: true };
+  if (!text) return { success: false, error: "Slack replyInThread: 'text' is required.", skipped: true };
+  const payload = { channel, text, thread_ts: threadTs };
+  if (config.broadcast) payload.reply_broadcast = true;
+  const data = await slackCall(token, "chat.postMessage", payload);
+  return { ok: true, ts: data.ts, channel: data.channel, threadTs };
+}
+
+async function opGetPermalink(config, token) {
+  const channel = config.channel;
+  const ts = config.timestamp || config.ts;
+  if (!channel) return { success: false, error: "Slack getPermalink: 'channel' is required.", skipped: true };
+  if (!ts) return { success: false, error: "Slack getPermalink: 'timestamp' (ts) is required.", skipped: true };
+  const response = await axios.get(`${API}/chat.getPermalink`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { channel, message_ts: ts },
+    timeout: 10000,
+  });
+  if (!response.data.ok) throw new Error(`Slack getPermalink: ${response.data.error}`);
+  return { ok: true, permalink: response.data.permalink };
+}
+
+async function opRemoveReaction(config, token) {
+  const channel = config.channel;
+  const ts = config.timestamp || config.ts;
+  const emoji = (config.emoji || "").replace(/:/g, "");
+  if (!channel || !ts || !emoji) return { success: false, error: "Slack removeReaction: 'channel', 'timestamp' and 'emoji' are required.", skipped: true };
+  await slackCall(token, "reactions.remove", { channel, timestamp: ts, name: emoji });
+  return { ok: true, emoji, channel, timestamp: ts, removed: true };
+}
+
+async function opGetReactions(config, token) {
+  const channel = config.channel;
+  const ts = config.timestamp || config.ts;
+  if (!channel || !ts) return { success: false, error: "Slack getReactions: 'channel' and 'timestamp' are required.", skipped: true };
+  const response = await axios.get(`${API}/reactions.get`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { channel, timestamp: ts },
+    timeout: 10000,
+  });
+  if (!response.data.ok) throw new Error(`Slack getReactions: ${response.data.error}`);
+  const reactions = response.data.message?.reactions || [];
+  return { ok: true, reactions: reactions.map((r) => ({ name: r.name, count: r.count, users: r.users })) };
+}
+
+async function opArchiveChannel(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack archiveChannel: 'channel' is required.", skipped: true };
+  await slackCall(token, "conversations.archive", { channel });
+  return { ok: true, channel, archived: true };
+}
+
+async function opRenameChannel(config, token) {
+  const channel = config.channel;
+  const name = config.channelName || config.name;
+  if (!channel) return { success: false, error: "Slack renameChannel: 'channel' is required.", skipped: true };
+  if (!name) return { success: false, error: "Slack renameChannel: 'channelName' is required.", skipped: true };
+  const data = await slackCall(token, "conversations.rename", { channel, name: name.replace(/[^a-z0-9-_]/gi, "-").toLowerCase() });
+  return { ok: true, channelId: data.channel?.id, channelName: data.channel?.name };
+}
+
+async function opSetPurpose(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack setPurpose: 'channel' is required.", skipped: true };
+  if (!config.purpose) return { success: false, error: "Slack setPurpose: 'purpose' is required.", skipped: true };
+  const data = await slackCall(token, "conversations.setPurpose", { channel, purpose: config.purpose });
+  return { ok: true, purpose: data.purpose };
+}
+
+async function opKickFromChannel(config, token) {
+  const channel = config.channel;
+  const user = config.userId || config.user;
+  if (!channel || !user) return { success: false, error: "Slack kickFromChannel: 'channel' and 'userId' are required.", skipped: true };
+  await slackCall(token, "conversations.kick", { channel, user });
+  return { ok: true, channel, user, kicked: true };
+}
+
+async function opJoinChannel(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack joinChannel: 'channel' is required.", skipped: true };
+  const data = await slackCall(token, "conversations.join", { channel });
+  return { ok: true, channelId: data.channel?.id, channelName: data.channel?.name };
+}
+
+async function opLeaveChannel(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack leaveChannel: 'channel' is required.", skipped: true };
+  await slackCall(token, "conversations.leave", { channel });
+  return { ok: true, channel, left: true };
+}
+
+async function opListChannels(config, token) {
+  const response = await axios.get(`${API}/conversations.list`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: {
+      types: config.channelTypes || "public_channel,private_channel",
+      limit: Math.min(Number(config.limit) || 100, 1000),
+      exclude_archived: config.excludeArchived !== false,
+    },
+    timeout: 15000,
+  });
+  if (!response.data.ok) throw new Error(`Slack listChannels: ${response.data.error}`);
+  return {
+    ok: true,
+    count: (response.data.channels || []).length,
+    channels: (response.data.channels || []).map((c) => ({ id: c.id, name: c.name, isPrivate: c.is_private, isArchived: c.is_archived, memberCount: c.num_members })),
+  };
+}
+
+async function opGetChannelHistory(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack getChannelHistory: 'channel' is required.", skipped: true };
+  const response = await axios.get(`${API}/conversations.history`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { channel, limit: Math.min(Number(config.limit) || 50, 1000) },
+    timeout: 15000,
+  });
+  if (!response.data.ok) throw new Error(`Slack getChannelHistory: ${response.data.error}`);
+  return {
+    ok: true,
+    count: (response.data.messages || []).length,
+    messages: (response.data.messages || []).map((m) => ({ ts: m.ts, user: m.user, text: m.text, type: m.type })),
+  };
+}
+
+async function opGetChannelInfo(config, token) {
+  const channel = config.channel;
+  if (!channel) return { success: false, error: "Slack getChannelInfo: 'channel' is required.", skipped: true };
+  const response = await axios.get(`${API}/conversations.info`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { channel },
+    timeout: 10000,
+  });
+  if (!response.data.ok) throw new Error(`Slack getChannelInfo: ${response.data.error}`);
+  const c = response.data.channel;
+  return { ok: true, id: c?.id, name: c?.name, isPrivate: c?.is_private, topic: c?.topic?.value, purpose: c?.purpose?.value, memberCount: c?.num_members, created: c?.created };
+}
+
+async function opGetUserInfo(config, token) {
+  const user = config.userId || config.user;
+  if (!user) return { success: false, error: "Slack getUserInfo: 'userId' is required.", skipped: true };
+  const response = await axios.get(`${API}/users.info`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { user },
+    timeout: 10000,
+  });
+  if (!response.data.ok) throw new Error(`Slack getUserInfo: ${response.data.error}`);
+  const u = response.data.user;
+  return { ok: true, userId: u.id, name: u.real_name || u.name, email: u.profile?.email, displayName: u.profile?.display_name, isAdmin: u.is_admin, isBot: u.is_bot, tz: u.tz };
+}
+
+async function opListUsers(config, token) {
+  const response = await axios.get(`${API}/users.list`, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { limit: Math.min(Number(config.limit) || 100, 1000) },
+    timeout: 15000,
+  });
+  if (!response.data.ok) throw new Error(`Slack listUsers: ${response.data.error}`);
+  const members = (response.data.members || []).filter((m) => !m.deleted);
+  return { ok: true, count: members.length, users: members.map((u) => ({ id: u.id, name: u.real_name || u.name, email: u.profile?.email, isBot: u.is_bot, isAdmin: u.is_admin })) };
+}
+
+async function opOpenDM(config, token) {
+  const user = config.userId || config.user;
+  if (!user) return { success: false, error: "Slack openDM: 'userId' is required.", skipped: true };
+  const data = await slackCall(token, "conversations.open", { users: user });
+  return { ok: true, channelId: data.channel?.id };
+}
+
+async function opSendDM(config, token) {
+  const user = config.userId || config.user;
+  const text = config.message || config.text;
+  if (!user) return { success: false, error: "Slack sendDM: 'userId' is required.", skipped: true };
+  if (!text) return { success: false, error: "Slack sendDM: 'text' is required.", skipped: true };
+  const open = await slackCall(token, "conversations.open", { users: user });
+  const channel = open.channel?.id;
+  if (!channel) throw new Error("Slack sendDM: could not open a DM channel with this user.");
+  const data = await slackCall(token, "chat.postMessage", { channel, text });
+  return { ok: true, ts: data.ts, channel };
+}
+
+async function opSetStatus(config, token) {
+  const profile = {
+    status_text: config.statusText || "",
+    status_emoji: config.statusEmoji || "",
+    status_expiration: config.statusExpiration ? Number(config.statusExpiration) : 0,
+  };
+  const data = await slackCall(token, "users.profile.set", { profile });
+  return { ok: true, statusText: data.profile?.status_text, statusEmoji: data.profile?.status_emoji };
+}
+
 // ── Operations map ───────────────────────────────────────────────────────────
 
 const OPERATIONS = {
   postMessage: opPostMessage,
   postRichMessage: opPostRichMessage,
+  updateMessage: opUpdateMessage,
+  deleteMessage: opDeleteMessage,
+  scheduleMessage: opScheduleMessage,
+  postEphemeral: opPostEphemeral,
+  replyInThread: opReplyInThread,
+  getPermalink: opGetPermalink,
   uploadFile: opUploadFile,
-  getUser: opGetUser,
-  createChannel: opCreateChannel,
-  inviteToChannel: opInviteToChannel,
-  setTopic: opSetTopic,
   addReaction: opAddReaction,
+  removeReaction: opRemoveReaction,
+  getReactions: opGetReactions,
+  createChannel: opCreateChannel,
+  archiveChannel: opArchiveChannel,
+  renameChannel: opRenameChannel,
+  setTopic: opSetTopic,
+  setPurpose: opSetPurpose,
+  inviteToChannel: opInviteToChannel,
+  kickFromChannel: opKickFromChannel,
+  joinChannel: opJoinChannel,
+  leaveChannel: opLeaveChannel,
+  listChannels: opListChannels,
+  getChannelHistory: opGetChannelHistory,
+  getChannelInfo: opGetChannelInfo,
+  getUser: opGetUser,
+  getUserInfo: opGetUserInfo,
+  listUsers: opListUsers,
+  openDM: opOpenDM,
+  sendDM: opSendDM,
+  setStatus: opSetStatus,
 };
 
 export default {
