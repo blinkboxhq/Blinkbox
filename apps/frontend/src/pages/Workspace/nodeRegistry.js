@@ -426,27 +426,9 @@ import MailchimpNode from "@nodes/mailchimp/ConfigPanel.jsx";
 import FigmaNode from "@nodes/figma/ConfigPanel.jsx";
 import RedditNode from "@nodes/reddit/ConfigPanel.jsx";
 
-// OpenAI-compatible providers
-const PerplexityNode = makeOpenAICompatNode({
-  label: "Perplexity",
-  accent: "cyan",
-  subtitle: "Search-augmented AI",
-  models: [
-    { value: "llama-3-sonar-large-32k-online", label: "Sonar Large 32K" },
-    { value: "llama-3-sonar-small-32k-chat", label: "Sonar Small 32K" },
-  ],
-  defaultModel: "llama-3-sonar-large-32k-online",
-});
-const XAINode = makeOpenAICompatNode({
-  label: "xAI (Grok)",
-  accent: "zinc",
-  subtitle: "Grok models by xAI",
-  models: [
-    { value: "grok-beta", label: "Grok Beta" },
-    { value: "grok-2", label: "Grok 2" },
-  ],
-  defaultModel: "grok-beta",
-});
+// AI Model provider subject panels (multi-op, live model fetch)
+import PerplexityNode from "@nodes/perplexity/ConfigPanel.jsx";
+import XAINode from "@nodes/xai/ConfigPanel.jsx";
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [

@@ -4,9 +4,9 @@ import {
   Newspaper, Binary, Tags, FileText, Languages, FileSearch, PenLine, ChevronDown,
   RefreshCw,
 } from 'lucide-react';
-import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
-import CredentialPicker from '../../../../components/ui/CredentialPicker';
-import api from '../../../../lib/api';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import api from '@/lib/api';
 
 const ACCENT = 'sky';
 
