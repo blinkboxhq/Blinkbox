@@ -22,10 +22,11 @@ import { listModels as listAnthropicModels } from "../../nodes/integrations/anth
 import { listModels as listGeminiModels } from "../../nodes/integrations/gemini.node.js";
 import { listModels as listPerplexityModels } from "../../nodes/integrations/perplexity.node.js";
 import { listModels as listXAIModels } from "../../nodes/integrations/xai.node.js";
+import { listModels as listDeepSeekModels } from "../../nodes/integrations/deepseek.node.js";
 
 const router = express.Router();
 
-const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels };
+const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels, deepseek: listDeepSeekModels };
 
 async function modelListRateLimit(req, res, next) {
   try {
