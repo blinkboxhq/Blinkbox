@@ -26,10 +26,11 @@ import { listModels as listDeepSeekModels } from "../../nodes/integrations/deeps
 import { listModels as listNvidiaNimModels } from "../../nodes/integrations/nvidiaNim.node.js";
 import { listModels as listMoonshotModels } from "../../nodes/integrations/moonshot.node.js";
 import { listModels as listOpenRouterModels } from "../../nodes/integrations/openrouter.node.js";
+import { listModels as listZaiModels } from "../../nodes/integrations/zai.node.js";
 
 const router = express.Router();
 
-const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels, deepseek: listDeepSeekModels, nvidia_nim: listNvidiaNimModels, moonshot: listMoonshotModels, openrouter: listOpenRouterModels };
+const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels, deepseek: listDeepSeekModels, nvidia_nim: listNvidiaNimModels, moonshot: listMoonshotModels, openrouter: listOpenRouterModels, zai: listZaiModels };
 
 async function modelListRateLimit(req, res, next) {
   try {
