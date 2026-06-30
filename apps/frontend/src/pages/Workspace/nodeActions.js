@@ -111,6 +111,22 @@ export const NODE_ACTIONS = {
     { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
     { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
   ],
+  moonshot: [
+    { name: "Chat Completion", description: "Query Kimi for a conversational response" },
+    { name: "Code Generation", description: "Generate or explain code with Kimi-Code" },
+    { name: "Structured Output", description: "Return JSON matching a schema" },
+    { name: "Function Calling", description: "Let Kimi call your tools/functions" },
+    { name: "Reasoning", description: "Thinking mode for hard, multi-step problems" },
+    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
+    { name: "Analyze Document", description: "Answer questions about a long document" },
+    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
+    { name: "Classify", description: "Label text into one of your categories" },
+    { name: "Summarize", description: "Condense text in a chosen style" },
+    { name: "Translate", description: "Translate text into a target language" },
+    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
+    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
+    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
+  ],
 
   // ── AI Agent Building Blocks ────────────────────────────────────────────────
   ai_agent: [
