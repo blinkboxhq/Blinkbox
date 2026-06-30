@@ -130,6 +130,7 @@ import groq               from "./integrations/groq.node.js";
 import openrouter         from "./integrations/openrouter.node.js";
 import zai                from "./integrations/zai.node.js";
 import minimax            from "./integrations/minimax.node.js";
+import sakana             from "./integrations/sakana.node.js";
 import nvidiaNim          from "./integrations/nvidiaNim.node.js";
 import gemma              from "./integrations/gemma.node.js";
 import ollama             from "./integrations/ollama.node.js";
@@ -356,6 +357,7 @@ const rawNodeRegistry = {
   openrouter:       openrouter,
   zai:              zai,
   minimax:          minimax,
+  sakana:           sakana,
   nvidia_nim:       nvidiaNim,
   gemma:            gemma,
   ollama:           ollama,

@@ -28,10 +28,11 @@ import { listModels as listMoonshotModels } from "../../nodes/integrations/moons
 import { listModels as listOpenRouterModels } from "../../nodes/integrations/openrouter.node.js";
 import { listModels as listZaiModels } from "../../nodes/integrations/zai.node.js";
 import { listModels as listMiniMaxModels } from "../../nodes/integrations/minimax.node.js";
+import { listModels as listSakanaModels } from "../../nodes/integrations/sakana.node.js";
 
 const router = express.Router();
 
-const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels, deepseek: listDeepSeekModels, nvidia_nim: listNvidiaNimModels, moonshot: listMoonshotModels, openrouter: listOpenRouterModels, zai: listZaiModels, minimax: listMiniMaxModels };
+const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels, gemini: listGeminiModels, perplexity: listPerplexityModels, xai: listXAIModels, deepseek: listDeepSeekModels, nvidia_nim: listNvidiaNimModels, moonshot: listMoonshotModels, openrouter: listOpenRouterModels, zai: listZaiModels, minimax: listMiniMaxModels, sakana: listSakanaModels };
 
 async function modelListRateLimit(req, res, next) {
   try {

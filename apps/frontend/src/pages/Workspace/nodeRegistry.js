@@ -221,6 +221,7 @@ import imgKimi from "@nodes/moonshot/logo.svg";
 import imgOpenRouter from "@nodes/openrouter/logo.svg";
 import imgZai from "@nodes/zai/logo.svg";
 import imgMiniMax from "@nodes/minimax/logo.svg";
+import imgSakana from "@nodes/sakana/logo.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
@@ -287,6 +288,7 @@ import MoonshotNode from "@nodes/moonshot/ConfigPanel.jsx";
 import OpenRouterNode from "@nodes/openrouter/ConfigPanel.jsx";
 import ZaiNode from "@nodes/zai/ConfigPanel.jsx";
 import MiniMaxNode from "@nodes/minimax/ConfigPanel.jsx";
+import SakanaNode from "@nodes/sakana/ConfigPanel.jsx";
 import GoogleSheetsNode from "@nodes/google_sheets/ConfigPanel.jsx";
 import GmailNode from "@nodes/gmail/ConfigPanel.jsx";
 import NotionNode from "@nodes/notion/ConfigPanel.jsx";
@@ -738,6 +740,16 @@ export const NodeRegistry = {
     logoUrl: imgMiniMax,
     description: "MiniMax-M3 — multimodal, 1M context, frontier coding & agents",
     ConfigPanel: MiniMaxNode,
+    category: "ai_models",
+  },
+  sakana: {
+    label: "Sakana Fugu",
+    icon: Brain,
+    colorClass: "text-neutral-300",
+    accentColor: "229,229,229",
+    logoUrl: imgSakana,
+    description: "Sakana Fugu — multi-agent council served as one model",
+    ConfigPanel: SakanaNode,
     category: "ai_models",
   },
   ai_agent: {
