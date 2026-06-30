@@ -430,6 +430,39 @@ async function opGeneratePrompt(config, input, apiKey) {
   return { prompt: text, tokensUsed, model, provider: "gemini", operation: "generatePrompt" };
 }
 
+async function opCountTokens(config, input, apiKey) {
+  const { model = "gemini-3.5-flash" } = config;
+  const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
+  if (!source) return { success: false, error: "Gemini countTokens: provide text to count.", skipped: true };
+
+  const response = await axios.post(
+    `${MODELS_URL}/${model}:countTokens`,
+    { contents: [{ role: "user", parts: [{ text: String(source) }] }] },
+    { headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: 30000 },
+  );
+
+  return {
+    totalTokens: response.data.totalTokens || 0,
+    model, provider: "gemini", operation: "countTokens",
+  };
+}
+
+async function opListModels(config, input, apiKey) {
+  const response = await axios.get(MODELS_URL, {
+    headers: { "x-goog-api-key": apiKey }, timeout: 30000, params: { pageSize: 200 },
+  });
+  const models = (response.data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).some(x => x === "generateContent" || x === "embedContent"))
+    .map(m => ({
+      id: (m.name || "").replace(/^models\//, ""),
+      displayName: m.displayName,
+      inputTokenLimit: m.inputTokenLimit,
+      outputTokenLimit: m.outputTokenLimit,
+    }))
+    .filter(m => m.id);
+  return { models, count: models.length, provider: "gemini", operation: "listModels" };
+}
+
 // ── Live model list ─────────────────────────────────────────────────────────
 
 export async function listModels(credentialId, workspaceId) {
@@ -463,6 +496,8 @@ const OPERATIONS = {
   summarize: opSummarize,
   translate: opTranslate,
   generatePrompt: opGeneratePrompt,
+  countTokens: opCountTokens,
+  listModels: opListModels,
 };
 
 export default {
