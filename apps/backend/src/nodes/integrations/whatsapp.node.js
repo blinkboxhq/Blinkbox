@@ -190,14 +190,122 @@ async function opMarkRead(config, token) {
   return { ok: true, messageId, status: "read" };
 }
 
+async function opSendVideo(config, token) {
+  const { phoneNumberId, to, videoUrl } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendVideo: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendVideo: 'to' is required.", skipped: true };
+  if (!videoUrl && !config._mediaId) return { success: false, error: "WhatsApp sendVideo: 'videoUrl' or an attachment is required.", skipped: true };
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) throw new Error("WhatsApp sendVideo: 'videoUrl' must be an http/https URL.");
+
+  return send(phoneNumberId, token, {
+    messaging_product: "whatsapp", to, type: "video",
+    video: config._mediaId
+      ? { id: config._mediaId, caption: config.caption || undefined }
+      : { link: videoUrl, caption: config.caption || undefined },
+  });
+}
+
+async function opSendSticker(config, token) {
+  const { phoneNumberId, to, stickerUrl } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendSticker: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendSticker: 'to' is required.", skipped: true };
+  if (!stickerUrl && !config._mediaId) return { success: false, error: "WhatsApp sendSticker: 'stickerUrl' or an attachment is required.", skipped: true };
+  if (stickerUrl && !/^https?:\/\//i.test(stickerUrl)) throw new Error("WhatsApp sendSticker: 'stickerUrl' must be an http/https URL.");
+
+  return send(phoneNumberId, token, {
+    messaging_product: "whatsapp", to, type: "sticker",
+    sticker: config._mediaId ? { id: config._mediaId } : { link: stickerUrl },
+  });
+}
+
+async function opSendContact(config, token) {
+  const { phoneNumberId, to, contactName, contactPhone } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendContact: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendContact: 'to' is required.", skipped: true };
+  if (!contactName) return { success: false, error: "WhatsApp sendContact: 'contactName' is required.", skipped: true };
+  if (!contactPhone) return { success: false, error: "WhatsApp sendContact: 'contactPhone' is required.", skipped: true };
+
+  return send(phoneNumberId, token, {
+    messaging_product: "whatsapp", to, type: "contacts",
+    contacts: [{
+      name: { formatted_name: contactName, first_name: contactName },
+      phones: [{ phone: contactPhone, type: "CELL" }],
+      ...(config.contactEmail ? { emails: [{ email: config.contactEmail, type: "WORK" }] } : {}),
+    }],
+  });
+}
+
+async function opSendReaction(config, token) {
+  const { phoneNumberId, to, messageId, emoji } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendReaction: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendReaction: 'to' is required.", skipped: true };
+  if (!messageId) return { success: false, error: "WhatsApp sendReaction: 'messageId' is required.", skipped: true };
+
+  return send(phoneNumberId, token, {
+    messaging_product: "whatsapp", to, type: "reaction",
+    reaction: { message_id: messageId, emoji: emoji || "" },
+  });
+}
+
+async function opSendButtons(config, token) {
+  const { phoneNumberId, to, bodyText } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendButtons: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendButtons: 'to' is required.", skipped: true };
+  if (!bodyText) return { success: false, error: "WhatsApp sendButtons: 'bodyText' is required.", skipped: true };
+
+  const raw = Array.isArray(config.buttons) ? config.buttons : [];
+  const buttons = raw.filter((b) => b && (b.title || b.label)).slice(0, 3).map((b, i) => ({
+    type: "reply",
+    reply: { id: b.id || `btn_${i}`, title: String(b.title || b.label).substring(0, 20) },
+  }));
+  if (buttons.length === 0) return { success: false, error: "WhatsApp sendButtons: at least one button with a title is required.", skipped: true };
+
+  const interactive = { type: "button", body: { text: bodyText }, action: { buttons } };
+  if (config.headerText) interactive.header = { type: "text", text: config.headerText };
+  if (config.footerText) interactive.footer = { text: config.footerText };
+
+  return send(phoneNumberId, token, { messaging_product: "whatsapp", to, type: "interactive", interactive });
+}
+
+async function opSendList(config, token) {
+  const { phoneNumberId, to, bodyText, buttonText } = config;
+  if (!phoneNumberId) return { success: false, error: "WhatsApp sendList: 'phoneNumberId' is required.", skipped: true };
+  if (!to) return { success: false, error: "WhatsApp sendList: 'to' is required.", skipped: true };
+  if (!bodyText) return { success: false, error: "WhatsApp sendList: 'bodyText' is required.", skipped: true };
+
+  const raw = Array.isArray(config.rows) ? config.rows : [];
+  const rows = raw.filter((r) => r && (r.title || r.label)).slice(0, 10).map((r, i) => ({
+    id: r.id || `row_${i}`,
+    title: String(r.title || r.label).substring(0, 24),
+    ...(r.description ? { description: String(r.description).substring(0, 72) } : {}),
+  }));
+  if (rows.length === 0) return { success: false, error: "WhatsApp sendList: at least one row with a title is required.", skipped: true };
+
+  const interactive = {
+    type: "list",
+    body: { text: bodyText },
+    action: { button: (buttonText || "Choose").substring(0, 20), sections: [{ title: config.sectionTitle || "Options", rows }] },
+  };
+  if (config.headerText) interactive.header = { type: "text", text: config.headerText };
+  if (config.footerText) interactive.footer = { text: config.footerText };
+
+  return send(phoneNumberId, token, { messaging_product: "whatsapp", to, type: "interactive", interactive });
+}
+
 // ── Operations map ───────────────────────────────────────────────────────────
 
 const OPERATIONS = {
   sendMessage: opSendMessage,
   sendImage: opSendImage,
+  sendVideo: opSendVideo,
   sendDocument: opSendDocument,
   sendAudio: opSendAudio,
+  sendSticker: opSendSticker,
   sendLocation: opSendLocation,
+  sendContact: opSendContact,
+  sendReaction: opSendReaction,
+  sendButtons: opSendButtons,
+  sendList: opSendList,
   sendTemplate: opSendTemplate,
   markRead: opMarkRead,
 };
@@ -229,12 +337,12 @@ export default {
 
     // Allow forwarding attachments from previous node output (standalone canvas use)
     let resolvedConfig = config;
-    if (["sendImage", "sendDocument", "sendAudio"].includes(operation) && typeof config.attachmentIndex === "number") {
+    if (["sendImage", "sendVideo", "sendDocument", "sendAudio", "sendSticker"].includes(operation) && typeof config.attachmentIndex === "number") {
       const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
       if (att) {
         try {
           const mediaId = await uploadMedia(config.phoneNumberId, token, att);
-          const urlKey = operation === "sendImage" ? "imageUrl" : operation === "sendDocument" ? "documentUrl" : "audioUrl";
+          const urlKey = { sendImage: "imageUrl", sendVideo: "videoUrl", sendDocument: "documentUrl", sendAudio: "audioUrl", sendSticker: "stickerUrl" }[operation];
           resolvedConfig = { ...config, [urlKey]: undefined, _mediaId: mediaId };
         } catch (err) {
           console.warn("[whatsapp] Binary upload failed, falling back to URL mode:", err.message);

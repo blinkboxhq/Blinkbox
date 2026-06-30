@@ -1,4 +1,4 @@
-import { MessageSquare, Image, FileText, Music, MapPin, Layout, CheckCircle } from "lucide-react";
+import { MessageSquare, Image, Video, FileText, Music, Sticker, MapPin, User, Smile, MousePointerClick, List, Layout, CheckCircle, PlusCircle, Trash2 } from "lucide-react";
 import SmartVariableInput from "@/components/ui/SmartVariableInput";
 import CredentialPicker from "@/components/ui/CredentialPicker";
 
@@ -13,15 +13,27 @@ function WhatsAppIcon({ className }) {
 const OPERATIONS = [
   { value: 'sendMessage',  label: 'Send Text',     icon: MessageSquare },
   { value: 'sendImage',    label: 'Send Image',    icon: Image },
+  { value: 'sendVideo',    label: 'Send Video',    icon: Video },
   { value: 'sendDocument', label: 'Send Document', icon: FileText },
   { value: 'sendAudio',    label: 'Send Audio',    icon: Music },
+  { value: 'sendSticker',  label: 'Send Sticker',  icon: Sticker },
   { value: 'sendLocation', label: 'Send Location', icon: MapPin },
+  { value: 'sendContact',  label: 'Send Contact',  icon: User },
+  { value: 'sendReaction', label: 'Send Reaction', icon: Smile },
+  { value: 'sendButtons',  label: 'Reply Buttons', icon: MousePointerClick },
+  { value: 'sendList',     label: 'List Message',  icon: List },
   { value: 'sendTemplate', label: 'Use Template',  icon: Layout },
   { value: 'markRead',     label: 'Mark Read',     icon: CheckCircle },
 ];
 
+const lbl = "text-[10px] font-bold text-zinc-500 uppercase tracking-widest";
+const inputCls = "w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#25D366]/40 transition-colors";
+
 export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || "sendMessage";
+  const buttons = Array.isArray(config.buttons) ? config.buttons : [];
+  const rows = Array.isArray(config.rows) ? config.rows : [];
+  const setItems = (k, arr) => updateConfig(k, arr);
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -111,6 +123,28 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
+      {/* sendVideo */}
+      {operation === 'sendVideo' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Video URL</label>
+            <SmartVariableInput value={config.videoUrl || ''} onChange={(val) => updateConfig('videoUrl', val)} placeholder="https://example.com/clip.mp4" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Caption <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput value={config.caption || ''} onChange={(val) => updateConfig('caption', val)} placeholder="Watch this!" nodeId={nodeId} />
+          </div>
+        </>
+      )}
+
+      {/* sendSticker */}
+      {operation === 'sendSticker' && (
+        <div className="flex flex-col gap-2">
+          <label className={lbl}>Sticker URL <span className="text-zinc-700">(.webp)</span></label>
+          <SmartVariableInput value={config.stickerUrl || ''} onChange={(val) => updateConfig('stickerUrl', val)} placeholder="https://example.com/sticker.webp" nodeId={nodeId} />
+        </div>
+      )}
+
       {/* sendDocument */}
       {operation === 'sendDocument' && (
         <>
@@ -149,6 +183,129 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Location Name <span className="text-zinc-700">(optional)</span></label>
             <SmartVariableInput value={config.locationName || ''} onChange={(val) => updateConfig('locationName', val)} placeholder="Our Office" nodeId={nodeId} />
+          </div>
+        </>
+      )}
+
+      {/* sendContact */}
+      {operation === 'sendContact' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Contact Name</label>
+            <SmartVariableInput value={config.contactName || ''} onChange={(val) => updateConfig('contactName', val)} placeholder="Jane Doe" nodeId={nodeId} />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>Contact Phone</label>
+              <SmartVariableInput value={config.contactPhone || ''} onChange={(val) => updateConfig('contactPhone', val)} placeholder="+15551234567" nodeId={nodeId} />
+            </div>
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>Email <span className="text-zinc-700">(optional)</span></label>
+              <SmartVariableInput value={config.contactEmail || ''} onChange={(val) => updateConfig('contactEmail', val)} placeholder="jane@example.com" nodeId={nodeId} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* sendReaction */}
+      {operation === 'sendReaction' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Message ID <span className="text-zinc-700">(to react to)</span></label>
+            <SmartVariableInput value={config.messageId || ''} onChange={(val) => updateConfig('messageId', val)} placeholder="{{trigger.data.message.id}}" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Emoji</label>
+            <input value={config.emoji || ''} onChange={(e) => updateConfig('emoji', e.target.value)} placeholder="👍" className={inputCls} />
+          </div>
+        </>
+      )}
+
+      {/* sendButtons */}
+      {operation === 'sendButtons' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Header <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput value={config.headerText || ''} onChange={(val) => updateConfig('headerText', val)} placeholder="Quick question" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Body Text</label>
+            <SmartVariableInput value={config.bodyText || ''} onChange={(val) => updateConfig('bodyText', val)} placeholder="How can we help you today?" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Footer <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput value={config.footerText || ''} onChange={(val) => updateConfig('footerText', val)} placeholder="Powered by Blinkbox" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className={lbl}>Buttons <span className="text-zinc-700">(max 3)</span></label>
+              {buttons.length < 3 && (
+                <button type="button" onClick={() => setItems('buttons', [...buttons, { id: '', title: '' }])} className="flex items-center gap-1 text-[10px] font-bold text-[#25D366] hover:text-[#25D366]/80 transition-colors">
+                  <PlusCircle size={12} /> Add
+                </button>
+              )}
+            </div>
+            {buttons.map((btn, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <input value={btn.title || ''} onChange={(e) => setItems('buttons', buttons.map((b, j) => j === i ? { ...b, title: e.target.value } : b))} placeholder="Button label" className={inputCls} />
+                <input value={btn.id || ''} onChange={(e) => setItems('buttons', buttons.map((b, j) => j === i ? { ...b, id: e.target.value } : b))} placeholder="reply_id" className={inputCls} />
+                <button type="button" onClick={() => setItems('buttons', buttons.filter((_, j) => j !== i))} className="shrink-0 text-zinc-600 hover:text-rose-400 transition-colors">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+            {buttons.length === 0 && <p className="text-[10px] text-zinc-600">No buttons yet — add up to 3 reply buttons.</p>}
+          </div>
+        </>
+      )}
+
+      {/* sendList */}
+      {operation === 'sendList' && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Header <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput value={config.headerText || ''} onChange={(val) => updateConfig('headerText', val)} placeholder="Menu" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Body Text</label>
+            <SmartVariableInput value={config.bodyText || ''} onChange={(val) => updateConfig('bodyText', val)} placeholder="Pick an option below" nodeId={nodeId} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className={lbl}>Footer <span className="text-zinc-700">(optional)</span></label>
+            <SmartVariableInput value={config.footerText || ''} onChange={(val) => updateConfig('footerText', val)} placeholder="Powered by Blinkbox" nodeId={nodeId} />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>Button Text</label>
+              <input value={config.buttonText || ''} onChange={(e) => updateConfig('buttonText', e.target.value)} placeholder="View options" className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-2 flex-1">
+              <label className={lbl}>Section Title <span className="text-zinc-700">(optional)</span></label>
+              <input value={config.sectionTitle || ''} onChange={(e) => updateConfig('sectionTitle', e.target.value)} placeholder="Available items" className={inputCls} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className={lbl}>Rows <span className="text-zinc-700">(max 10)</span></label>
+              {rows.length < 10 && (
+                <button type="button" onClick={() => setItems('rows', [...rows, { id: '', title: '', description: '' }])} className="flex items-center gap-1 text-[10px] font-bold text-[#25D366] hover:text-[#25D366]/80 transition-colors">
+                  <PlusCircle size={12} /> Add
+                </button>
+              )}
+            </div>
+            {rows.map((row, i) => (
+              <div key={i} className="flex gap-2 items-start">
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <input value={row.title || ''} onChange={(e) => setItems('rows', rows.map((r, j) => j === i ? { ...r, title: e.target.value } : r))} placeholder="Row title" className={inputCls} />
+                  <input value={row.description || ''} onChange={(e) => setItems('rows', rows.map((r, j) => j === i ? { ...r, description: e.target.value } : r))} placeholder="Description (optional)" className={inputCls} />
+                  <input value={row.id || ''} onChange={(e) => setItems('rows', rows.map((r, j) => j === i ? { ...r, id: e.target.value } : r))} placeholder="row_id" className={inputCls} />
+                </div>
+                <button type="button" onClick={() => setItems('rows', rows.filter((_, j) => j !== i))} className="shrink-0 mt-2 text-zinc-600 hover:text-rose-400 transition-colors">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+            {rows.length === 0 && <p className="text-[10px] text-zinc-600">No rows yet — add up to 10 list items.</p>}
           </div>
         </>
       )}
