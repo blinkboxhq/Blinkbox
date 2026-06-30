@@ -1,61 +1,54 @@
+import { useState } from 'react';
 import {
-  MessageSquare, Image, FileText,
-  Sparkles, PenLine,
+  Sparkles, MessageSquare, Image, FileText, ShieldCheck, PenLine,
+  Braces, Wrench, Brain, Languages, Tags, AlignLeft, SmilePlus, FileSearch,
+  ScanText, ChevronDown, RefreshCw, FileUp,
 } from 'lucide-react';
 import SmartVariableInput from '../../../../components/ui/SmartVariableInput';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
+import api from '../../../../lib/api';
 
-const ACCENT = 'orange';
+const ACCENT = 'amber';
+
+// ── Operations (mirrors backend OPERATIONS map exactly) ─────────────────────
 
 const OPERATIONS = [
-  {
-    value: 'message',
-    label: 'Message a model',
-    icon: MessageSquare,
-    description: 'Chat with Claude — text or JSON output',
-  },
-  {
-    value: 'analyzeImage',
-    label: 'Analyze image',
-    icon: Image,
-    description: 'Describe or interrogate an image with Claude Vision',
-  },
-  {
-    value: 'analyzeDocument',
-    label: 'Analyze document',
-    icon: FileText,
-    description: 'Deep-read a long document or passage of text',
-  },
-  {
-    value: 'improvePrompt',
-    label: 'Improve a prompt',
-    icon: Sparkles,
-    description: 'Rewrite a prompt to be clearer and more effective',
-  },
-  {
-    value: 'generatePrompt',
-    label: 'Generate a prompt',
-    icon: PenLine,
-    description: 'Write an effective AI prompt for a described task',
-  },
+  { value: 'message',          label: 'Message Claude',      icon: MessageSquare, description: 'Send a prompt, get a text or JSON response' },
+  { value: 'structuredOutput', label: 'Structured output',   icon: Braces,        description: 'Force a strict JSON schema via tool use' },
+  { value: 'functionCalling',  label: 'Function calling',    icon: Wrench,        description: 'Let Claude pick & fill tools you define' },
+  { value: 'extendedThinking', label: 'Extended thinking',   icon: Brain,         description: 'Deep reasoning with a thinking-token budget' },
+  { value: 'analyzeImage',     label: 'Analyze image',       icon: Image,         description: 'Describe or ask questions about an image' },
+  { value: 'analyzePdf',       label: 'Analyze PDF',         icon: FileSearch,    description: 'Native PDF understanding from a file' },
+  { value: 'analyzeDocument',  label: 'Analyze document',    icon: FileText,      description: 'Ask questions about long pasted text' },
+  { value: 'extractData',      label: 'Extract data',        icon: ScanText,      description: 'Pull structured fields from text or an image' },
+  { value: 'classify',         label: 'Classify',            icon: Tags,          description: 'Sort input into one of your labels' },
+  { value: 'summarize',        label: 'Summarize',           icon: AlignLeft,     description: 'Condense text with length & style control' },
+  { value: 'translate',        label: 'Translate',           icon: Languages,     description: 'Translate text into a target language' },
+  { value: 'sentiment',        label: 'Sentiment',           icon: SmilePlus,     description: 'Detect sentiment, score & emotions' },
+  { value: 'moderateContent',  label: 'Moderate content',    icon: ShieldCheck,   description: 'Flag unsafe text against a safety policy' },
+  { value: 'generatePrompt',   label: 'Generate a prompt',   icon: PenLine,       description: 'Let Claude write a prompt for a task' },
+  { value: 'improvePrompt',    label: 'Improve a prompt',    icon: Sparkles,      description: 'Rewrite an existing prompt to be more effective' },
 ];
 
-const MODELS_CHAT = [
-  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-  { value: 'claude-opus-4-20250514',   label: 'Claude Opus 4' },
-  { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
-];
-const MODELS_VISION = [
-  { value: 'claude-opus-4-20250514',   label: 'Claude Opus 4 (best vision)' },
-  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-];
+// ── Latest models (June 2026) ───────────────────────────────────────────────
+
+const MODELS_CHAT     = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-haiku-4-5', 'claude-fable-5'];
+const MODELS_THINKING = ['claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-4-6', 'claude-fable-5'];
+const MODELS_VISION   = ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5'];
+const MODELS_FAST     = ['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-8'];
+
+const LENGTHS = [{ value: 'short', label: 'Short' }, { value: 'medium', label: 'Medium' }, { value: 'long', label: 'Long' }];
+const STYLES  = [{ value: 'paragraph', label: 'Paragraph' }, { value: 'bullets', label: 'Bullets' }, { value: 'tldr', label: 'TL;DR' }];
 
 // ── Shared primitives ──────────────────────────────────────────────────────
 
-function Field({ label, children }) {
+function Field({ label, hint, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
+        {hint && <span className="text-[10px] text-zinc-600 normal-case tracking-normal">{hint}</span>}
+      </div>
       {children}
     </div>
   );
@@ -70,16 +63,16 @@ function Select({ value, onChange, options }) {
         const active = value === val;
         return (
           <button
-            key={val}
+            key={val || 'auto'}
             type="button"
             onClick={() => onChange(val)}
             className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-150 ${
               active
-                ? 'bg-orange-500/10 border-orange-500/30 text-orange-300'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
                 : 'bg-[#0d0d0d] border-[#222] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
             }`}
           >
-            {lbl}
+            {lbl || 'Auto'}
           </button>
         );
       })}
@@ -87,7 +80,381 @@ function Select({ value, onChange, options }) {
   );
 }
 
-// ── Operation picker ───────────────────────────────────────────────────────
+function Toggle({ value, onChange, label }) {
+  return (
+    <button type="button" onClick={() => onChange(!value)} className="flex items-center gap-2.5 group">
+      <span className={`w-10 h-5 rounded-full p-0.5 transition-all duration-150 ${value ? 'bg-amber-500/80' : 'bg-zinc-700'}`}>
+        <span className={`block w-4 h-4 rounded-full bg-white transition-transform duration-150 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
+      </span>
+      <span className="text-[11px] font-semibold text-zinc-400 group-hover:text-zinc-200">{label}</span>
+    </button>
+  );
+}
+
+// ── Model picker with live "fetch latest" ───────────────────────────────────
+
+function ModelPicker({ value, onChange, fallback, credentialId }) {
+  const [live, setLive] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const options = live.length ? live : fallback;
+
+  async function fetchLatest() {
+    if (!credentialId) { setError('Select a credential first.'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await api.get(`/api/automation/models/anthropic?credentialId=${encodeURIComponent(credentialId)}`);
+      const ids = res.data?.models || [];
+      setLive(ids.length ? ids : fallback);
+      if (!ids.length) setError('No models returned.');
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Could not fetch models.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Field label="Model">
+      {options.length > 8 ? (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="bg-[#0d0d0d] border border-[#222] rounded-lg px-3 py-2 text-[12px] text-zinc-200 focus:outline-none focus:border-amber-500/40"
+        >
+          {!options.includes(value) && value && <option value={value}>{value}</option>}
+          {options.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      ) : (
+        <Select value={value} onChange={onChange} options={options} />
+      )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={fetchLatest}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-400/80 hover:text-amber-300 disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} strokeWidth={2} />
+          {loading ? 'Fetching…' : 'Fetch latest from API'}
+        </button>
+        {error && <span className="text-[10px] text-rose-400/80">{error}</span>}
+        {live.length > 0 && !error && <span className="text-[10px] text-zinc-600">{live.length} live models</span>}
+      </div>
+    </Field>
+  );
+}
+
+// ── File I/O badge ──────────────────────────────────────────────────────────
+
+function IOBadge({ label }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400/80">
+      <FileUp className="w-2.5 h-2.5" strokeWidth={2.25} />{label}
+    </span>
+  );
+}
+
+// ── Per-operation config fields ─────────────────────────────────────────────
+
+function MessageFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="Output format">
+        <Select
+          value={config.outputFormat || 'text'}
+          onChange={(v) => updateConfig('outputFormat', v)}
+          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'JSON Object' }]}
+        />
+      </Field>
+      <Field label="System prompt" hint="optional — sets Claude's persona">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Summarize the following data…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function StructuredOutputFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="System prompt" hint="optional">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a structured-data extraction engine…" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the order details from the input." multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Schema name" hint="identifier for the tool">
+        <SmartVariableInput value={config.schemaName || ''} onChange={(v) => updateConfig('schemaName', v)} placeholder="order_details" nodeId={nodeId} />
+      </Field>
+      <Field label="JSON schema" hint="Claude's input_schema">
+        <SmartVariableInput value={config.jsonSchema || ''} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{ "type":"object", "properties": { … }, "required": [ … ] }' multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function FunctionCallingFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="System prompt" hint="optional">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You can call the provided tools…" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Tokyo right now?" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Tools (JSON array)" hint="name · description · input_schema">
+        <SmartVariableInput value={config.tools || ''} onChange={(v) => updateConfig('tools', v)} placeholder='[ { "name":"get_weather", "description":"…", "input_schema": { … } } ]' multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Tool choice" hint="auto · required · none">
+        <Select
+          value={config.toolChoice || 'auto'}
+          onChange={(v) => updateConfig('toolChoice', v)}
+          options={[{ value: 'auto', label: 'Auto' }, { value: 'required', label: 'Required' }, { value: 'none', label: 'None' }]}
+        />
+      </Field>
+    </>
+  );
+}
+
+function ExtendedThinkingFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-opus-4-8'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_THINKING} credentialId={config.credentialId} />
+      <Field label="System prompt" hint="optional">
+        <SmartVariableInput value={config.systemPrompt || ''} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="Think step by step…" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Solve this multi-step problem…" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Thinking budget" hint="reasoning tokens — min 1024">
+        <SmartVariableInput value={config.thinkingBudget || ''} onChange={(v) => updateConfig('thinkingBudget', v)} placeholder="8000" nodeId={nodeId} />
+      </Field>
+      <Field label="Max output tokens" hint="must exceed thinking budget">
+        <SmartVariableInput value={config.maxTokens || ''} onChange={(v) => updateConfig('maxTokens', v)} placeholder="16000" nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function AnalyzeImageFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <div className="flex items-center gap-1.5"><IOBadge label="image in" /></div>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_VISION} credentialId={config.credentialId} />
+      <Field label="Image" hint="URL, data-URI, or base64 from a previous node">
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.dataUri}}" nodeId={nodeId} />
+      </Field>
+      <Field label="Question / Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function AnalyzePdfFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <div className="flex items-center gap-1.5"><IOBadge label="pdf in" /></div>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_VISION} credentialId={config.credentialId} />
+      <Field label="PDF file" hint="URL, data-URI, or base64 — application/pdf">
+        <SmartVariableInput value={config.fileInput || ''} onChange={(v) => updateConfig('fileInput', v)} placeholder="https://… or {{$node.dataUri}}" nodeId={nodeId} />
+      </Field>
+      <Field label="Question / Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="Output format">
+        <Select
+          value={config.outputFormat || 'text'}
+          onChange={(v) => updateConfig('outputFormat', v)}
+          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'JSON Object' }]}
+        />
+      </Field>
+      <Field label="Question / Prompt">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Document text" hint="optional — falls back to previous node output">
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}}" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function ExtractDataFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <div className="flex items-center gap-1.5"><IOBadge label="image in (opt)" /></div>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="Fields to extract" hint="describe what to pull out">
+        <SmartVariableInput value={config.fields || ''} onChange={(v) => updateConfig('fields', v)} placeholder="invoice number, total amount, due date, vendor name" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Source text" hint="optional — or pass from a previous node">
+        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}}" multiline nodeId={nodeId} />
+      </Field>
+      <Field label="Image" hint="optional — extract from a scan / photo">
+        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.dataUri}}" nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function ClassifyFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-haiku-4-5'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_FAST} credentialId={config.credentialId} />
+      <Field label="Labels" hint="comma-separated, at least 2">
+        <SmartVariableInput value={config.labels || ''} onChange={(v) => updateConfig('labels', v)} placeholder="urgent, normal, spam" nodeId={nodeId} />
+      </Field>
+      <Field label="Text to classify">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function SummarizeFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="Length">
+        <Select value={config.length || 'medium'} onChange={(v) => updateConfig('length', v)} options={LENGTHS} />
+      </Field>
+      <Field label="Style">
+        <Select value={config.style || 'paragraph'} onChange={(v) => updateConfig('style', v)} options={STYLES} />
+      </Field>
+      <Field label="Text to summarize">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.content}} or paste text directly…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function TranslateFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-sonnet-4-6'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_CHAT} credentialId={config.credentialId} />
+      <Field label="Target language">
+        <SmartVariableInput value={config.targetLanguage || ''} onChange={(v) => updateConfig('targetLanguage', v)} placeholder="Spanish" nodeId={nodeId} />
+      </Field>
+      <Field label="Text to translate">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function SentimentFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-haiku-4-5'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_FAST} credentialId={config.credentialId} />
+      <Field label="Text to analyze">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function ModerateContentFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-haiku-4-5'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_FAST} credentialId={config.credentialId} />
+      <Field label="Text to moderate">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function GeneratePromptFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-haiku-4-5'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_FAST} credentialId={config.credentialId} />
+      <Field label="Task description">
+        <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify support tickets by priority…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+function ImprovePromptFields({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <ModelPicker value={config.model || 'claude-haiku-4-5'} onChange={(v) => updateConfig('model', v)} fallback={MODELS_FAST} credentialId={config.credentialId} />
+      <Field label="Prompt to improve">
+        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here…" multiline nodeId={nodeId} />
+      </Field>
+    </>
+  );
+}
+
+const OP_FIELDS = {
+  message: MessageFields,
+  structuredOutput: StructuredOutputFields,
+  functionCalling: FunctionCallingFields,
+  extendedThinking: ExtendedThinkingFields,
+  analyzeImage: AnalyzeImageFields,
+  analyzePdf: AnalyzePdfFields,
+  analyzeDocument: AnalyzeDocumentFields,
+  extractData: ExtractDataFields,
+  classify: ClassifyFields,
+  summarize: SummarizeFields,
+  translate: TranslateFields,
+  sentiment: SentimentFields,
+  moderateContent: ModerateContentFields,
+  generatePrompt: GeneratePromptFields,
+  improvePrompt: ImprovePromptFields,
+};
+
+// Which ops accept the sampling/advanced block (free-form generation ops)
+const ADVANCED_OPS = new Set(['message', 'structuredOutput', 'functionCalling', 'analyzeImage', 'analyzePdf', 'analyzeDocument']);
+
+// ── Advanced (sampling) section ─────────────────────────────────────────────
+
+function AdvancedSection({ config, updateConfig, nodeId }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-[#222] pt-4">
+      <button type="button" onClick={() => setOpen(!open)} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest hover:text-zinc-300">
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? 'rotate-0' : '-rotate-90'}`} strokeWidth={2.25} />
+        Advanced settings
+      </button>
+      {open && (
+        <div className="flex flex-col gap-4 mt-4">
+          <Field label="Temperature" hint="0 = deterministic · 1 = creative">
+            <SmartVariableInput value={config.temperature ?? ''} onChange={(v) => updateConfig('temperature', v)} placeholder="0.7" nodeId={nodeId} />
+          </Field>
+          <Field label="Max tokens">
+            <SmartVariableInput value={config.maxTokens ?? ''} onChange={(v) => updateConfig('maxTokens', v)} placeholder="2000" nodeId={nodeId} />
+          </Field>
+          <Field label="Top P" hint="nucleus sampling 0–1">
+            <SmartVariableInput value={config.topP ?? ''} onChange={(v) => updateConfig('topP', v)} placeholder="1.0" nodeId={nodeId} />
+          </Field>
+          <Field label="Top K" hint="optional — sample from top K tokens">
+            <SmartVariableInput value={config.topK ?? ''} onChange={(v) => updateConfig('topK', v)} placeholder="40" nodeId={nodeId} />
+          </Field>
+          <Field label="Stop sequences" hint="one per line, max 4">
+            <SmartVariableInput value={config.stop ?? ''} onChange={(v) => updateConfig('stop', v)} placeholder={'###\nEND'} multiline nodeId={nodeId} />
+          </Field>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Operation picker ────────────────────────────────────────────────────────
 
 function OperationPicker({ value, onChange }) {
   return (
@@ -104,13 +471,13 @@ function OperationPicker({ value, onChange }) {
               onClick={() => onChange(op.value)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all duration-150
                 ${active
-                  ? 'bg-orange-500/10 border-orange-500/30'
-                  : 'bg-[#0d0d0d] border-[#222] hover:bg-zinc-800/60 hover:border-zinc-700/50'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'bg-[#0d0d0d] border-[#222] text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 hover:border-zinc-700/50'
                 }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-orange-400' : 'text-zinc-500'}`} strokeWidth={1.75} />
+              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-amber-400' : 'text-zinc-500'}`} strokeWidth={1.75} />
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold leading-tight ${active ? 'text-orange-300' : 'text-zinc-300'}`}>{op.label}</div>
+                <div className={`text-xs font-semibold leading-tight ${active ? 'text-amber-300' : 'text-zinc-300'}`}>{op.label}</div>
                 <div className="text-[10px] text-zinc-600 mt-0.5 leading-snug">{op.description}</div>
               </div>
             </button>
@@ -121,92 +488,7 @@ function OperationPicker({ value, onChange }) {
   );
 }
 
-// ── Per-operation config fields ────────────────────────────────────────────
-
-function MessageFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-sonnet-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_CHAT} />
-      </Field>
-      <Field label="Output format">
-        <Select
-          value={config.outputFormat || 'text'}
-          onChange={(v) => updateConfig('outputFormat', v)}
-          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]}
-        />
-      </Field>
-      <Field label="Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Analyze this dataset and extract key insights..." multiline />
-      </Field>
-    </>
-  );
-}
-
-function AnalyzeImageFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-opus-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_VISION} />
-      </Field>
-      <Field label="Image URL">
-        <SmartVariableInput nodeId={nodeId} value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline />
-      </Field>
-    </>
-  );
-}
-
-function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
-  return (
-    <>
-      <Field label="Model">
-        <Select value={config.model || 'claude-sonnet-4-20250514'} onChange={(v) => updateConfig('model', v)} options={MODELS_CHAT} />
-      </Field>
-      <Field label="Output format">
-        <Select
-          value={config.outputFormat || 'text'}
-          onChange={(v) => updateConfig('outputFormat', v)}
-          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]}
-        />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline />
-      </Field>
-      <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput nodeId={nodeId} value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline />
-      </Field>
-    </>
-  );
-}
-
-function ImprovePromptFields({ config, updateConfig, nodeId }) {
-  return (
-    <Field label="Prompt to improve">
-      <SmartVariableInput nodeId={nodeId} value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline />
-    </Field>
-  );
-}
-
-function GeneratePromptFields({ config, updateConfig, nodeId }) {
-  return (
-    <Field label="Task description">
-      <SmartVariableInput nodeId={nodeId} value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by urgency..." multiline />
-    </Field>
-  );
-}
-
-const OP_FIELDS = {
-  message: MessageFields,
-  analyzeImage: AnalyzeImageFields,
-  analyzeDocument: AnalyzeDocumentFields,
-  improvePrompt: ImprovePromptFields,
-  generatePrompt: GeneratePromptFields,
-};
-
-// ── Main component ─────────────────────────────────────────────────────────
+// ── Main component ──────────────────────────────────────────────────────────
 
 export default function AnthropicNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'message';
@@ -214,23 +496,25 @@ export default function AnthropicNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <div className="flex flex-col gap-5 w-full">
-      <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
-      <div className="border-t border-[#222]" />
-      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="orange"
+        accentColor={ACCENT}
         label="Anthropic API Key"
-        placeholder="Select Anthropic credential..."
+        placeholder="Select Anthropic credential…"
       />
-      <div className="p-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg">
-        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest block mb-0.5">Available as</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.result }}"} — response text</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.text }}"} — alias for result</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.model }}"} — model used</span>
-        <span className="text-[9px] font-mono text-zinc-500 block">{"{{ nodeId.tokensUsed }}"}</span>
-      </div>
+
+      <div className="border-t border-[#222]" />
+
+      <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
+
+      <div className="border-t border-[#222]" />
+
+      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
+
+      {ADVANCED_OPS.has(operation) && (
+        <AdvancedSection config={config} updateConfig={updateConfig} nodeId={nodeId} />
+      )}
     </div>
   );
 }

@@ -18,10 +18,11 @@ import { listCollaborators, addCollaborator, removeCollaborator } from "./collab
 import { testNode } from "./engine/testNode.controller.js";
 import { redis } from "../../infra/redis.client.js";
 import { listModels as listOpenAIModels } from "../../nodes/integrations/openai.node.js";
+import { listModels as listAnthropicModels } from "../../nodes/integrations/anthropic.node.js";
 
 const router = express.Router();
 
-const MODEL_PROVIDERS = { openai: listOpenAIModels };
+const MODEL_PROVIDERS = { openai: listOpenAIModels, anthropic: listAnthropicModels };
 
 async function modelListRateLimit(req, res, next) {
   try {
