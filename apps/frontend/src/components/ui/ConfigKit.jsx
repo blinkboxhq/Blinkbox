@@ -12,8 +12,8 @@ import { ChevronDown, Plus, Check, X } from 'lucide-react';
  * cursor approaches. Tailwind only.
  */
 
-export const BB_ACCENT = '#6f97e8';
-export const BB_ACCENT_HOT = '#a9c0ef';
+export const BB_ACCENT = '#737373';
+export const BB_ACCENT_HOT = '#a3a3a3';
 
 const FIELD = 'bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454]';
 
