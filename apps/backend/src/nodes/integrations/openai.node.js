@@ -603,6 +603,60 @@ async function opImprovePrompt(config, input, apiKey) {
   return { improvedPrompt: result, originalPrompt, tokensUsed: response.data.usage?.total_tokens || 0, provider: "openai", operation: "improvePrompt" };
 }
 
+async function opImageVariation(config, input, apiKey) {
+  const sourceRef = config.fileInput || config.imageUrl || input?.dataUri || input?.imageUrl || input?.url || input?.base64;
+  const imageBuffer = await resolveFileToBuffer(sourceRef, { label: "source image" });
+  const n = Math.min(Math.max(parseInt(config.n, 10) || 1, 1), 10);
+  const size = config.imageSize || "1024x1024";
+
+  const FormData = (await import("form-data")).default;
+  const form = new FormData();
+  form.append("image", imageBuffer, { filename: "source.png", contentType: "image/png" });
+  form.append("n", String(n));
+  form.append("size", size);
+
+  const response = await axios.post(`${BASE}/images/variations`, form, {
+    headers: { Authorization: `Bearer ${apiKey}`, ...form.getHeaders() },
+    timeout: 180000,
+  });
+
+  const images = (response.data.data || []).map((d, i) => ({
+    filename: `openai-variation-${Date.now()}-${i}.png`,
+    contentType: "image/png",
+    base64: d.b64_json,
+    dataUri: d.b64_json ? `data:image/png;base64,${d.b64_json}` : d.url,
+    imageUrl: d.url,
+  }));
+  return { images, count: images.length, ...images[0], provider: "openai", operation: "imageVariation" };
+}
+
+async function opListModels(config, input, apiKey) {
+  const response = await axios.get(`${BASE}/models`, {
+    headers: { Authorization: `Bearer ${apiKey}` }, timeout: 30000,
+  });
+  let ids = (response.data.data || []).map((m) => m.id).filter(Boolean);
+  const filter = config.filter || "all";
+  if (filter === "gpt") ids = ids.filter((id) => id.startsWith("gpt") || id.startsWith("o1") || id.startsWith("o3"));
+  else if (filter === "embedding") ids = ids.filter((id) => id.includes("embedding"));
+  else if (filter === "image") ids = ids.filter((id) => id.includes("image") || id.startsWith("dall-e"));
+  ids.sort();
+  return { models: ids, count: ids.length, provider: "openai", operation: "listModels" };
+}
+
+async function opFineTune(config, input, apiKey) {
+  const trainingFile = config.trainingFile || input?.trainingFile;
+  if (!trainingFile) return { success: false, error: "OpenAI fineTune: 'trainingFile' (uploaded file ID) is required.", skipped: true };
+  const body = { model: config.model || "gpt-4o-mini-2024-07-18", training_file: trainingFile };
+  if (config.validationFile) body.validation_file = config.validationFile;
+  if (config.suffix) body.suffix = config.suffix;
+
+  const response = await axios.post(`${BASE}/fine_tuning/jobs`, body, {
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000,
+  });
+  const job = response.data || {};
+  return { jobId: job.id, status: job.status, model: job.model, fineTunedModel: job.fine_tuned_model || null, provider: "openai", operation: "fineTune" };
+}
+
 // ── Main export ─────────────────────────────────────────────────────────────
 
 const OPERATIONS = {
@@ -621,6 +675,9 @@ const OPERATIONS = {
   analyzeDocument: opAnalyzeDocument,
   generatePrompt: opGeneratePrompt,
   improvePrompt: opImprovePrompt,
+  imageVariation: opImageVariation,
+  listModels: opListModels,
+  fineTune: opFineTune,
 };
 
 // Live model list for the "fetch latest" button. Resolves the saved credential

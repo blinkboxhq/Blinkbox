@@ -1,296 +1,246 @@
-import {
-  Sparkles, MessageSquare, Image, Mic, FileText,
-  ShieldCheck, Wand2, PenLine, ChevronDown,
-} from 'lucide-react';
+import { useEffect } from 'react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect } from '@/components/ui/ConfigKit';
 
-const ACCENT = 'emerald';
+// Black & white only. The brand logo is the sole colored element — every accent
+// here is neutral white/zinc so nothing competes with the logo.
+const MONO = '#e5e5e5';
 
-const OPERATIONS = [
-  {
-    value: 'message',
-    label: 'Message a model',
-    icon: MessageSquare,
-    description: 'Send a prompt, get a text or JSON response',
-  },
-  {
-    value: 'analyzeImage',
-    label: 'Analyze image',
-    icon: Image,
-    description: 'Describe or ask questions about an image (GPT-4o Vision)',
-  },
-  {
-    value: 'generateImage',
-    label: 'Generate image',
-    icon: Wand2,
-    description: 'Create an image from a text description (DALL-E 3)',
-  },
-  {
-    value: 'transcribeAudio',
-    label: 'Transcribe audio',
-    icon: Mic,
-    description: 'Convert speech to text from an audio URL (Whisper)',
-  },
-  {
-    value: 'analyzeDocument',
-    label: 'Analyze document',
-    icon: FileText,
-    description: 'Ask questions about a long document or text',
-  },
-  {
-    value: 'moderateContent',
-    label: 'Moderate content',
-    icon: ShieldCheck,
-    description: 'Check if text violates usage policies',
-  },
-  {
-    value: 'generatePrompt',
-    label: 'Generate a prompt',
-    icon: PenLine,
-    description: 'Let GPT write an effective AI prompt for a task',
-  },
-  {
-    value: 'improvePrompt',
-    label: 'Improve a prompt',
-    icon: Sparkles,
-    description: 'Rewrite an existing prompt to be clearer and more effective',
-  },
-];
+const MODELS_CHAT   = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1', 'gpt-4-turbo', 'gpt-3.5-turbo', 'o3-mini', 'o1'];
+const MODELS_VISION = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'];
+const MODELS_IMAGE  = ['gpt-image-1', 'dall-e-3', 'dall-e-2'];
+const MODELS_EMBED  = ['text-embedding-3-small', 'text-embedding-3-large', 'text-embedding-ada-002'];
+const MODELS_TTS    = ['tts-1', 'tts-1-hd', 'gpt-4o-mini-tts'];
+const MODELS_STT    = ['whisper-1', 'gpt-4o-transcribe', 'gpt-4o-mini-transcribe'];
+const MODELS_FT     = ['gpt-4o-mini-2024-07-18', 'gpt-4.1-mini-2025-04-14', 'gpt-3.5-turbo'];
 
-const MODELS_MESSAGE = ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'];
-const MODELS_VISION  = ['gpt-4o', 'gpt-4o-mini'];
-const MODELS_IMAGE   = ['dall-e-3', 'dall-e-2'];
-const IMAGE_SIZES    = ['1024x1024', '1792x1024', '1024x1792'];
+const IMAGE_SIZES   = ['1024x1024', '1792x1024', '1024x1792', '512x512', '256x256'];
+const TTS_VOICES    = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+const TTS_FORMATS   = ['mp3', 'opus', 'aac', 'flac', 'wav', 'pcm'];
 
-// ── Shared primitives ──────────────────────────────────────────────────────
+const opt = (v) => v.map((s) => ({ value: s, label: s }));
 
-function Field({ label, children }) {
+// ── Shared field primitives (all neutral) ───────────────────────────────────
+
+function Text({ label, value, onChange, placeholder, multiline, nodeId }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
-      {children}
+      <ConfigLabel>{label}</ConfigLabel>
+      <SmartVariableInput value={value || ''} onChange={onChange} placeholder={placeholder} multiline={multiline} nodeId={nodeId} />
     </div>
   );
 }
 
-function Select({ value, onChange, options, accent = ACCENT }) {
+function Dropdown({ label, value, fallback, onChange, options }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 pr-8 text-xs text-white font-semibold focus:outline-none focus:border-${accent}-500/50 transition-colors cursor-pointer appearance-none`}
-      >
-        {options.map((o) => (
-          <option key={typeof o === 'string' ? o : o.value} value={typeof o === 'string' ? o : o.value}>
-            {typeof o === 'string' ? o : o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-    </div>
+    <ConfigSelect
+      label={label}
+      value={value || fallback}
+      onChange={onChange}
+      options={options}
+      accentColor={MONO}
+    />
   );
 }
 
-// ── Operation picker ───────────────────────────────────────────────────────
+// ── 15 per-action panels ────────────────────────────────────────────────────
 
-function OperationPicker({ value, onChange }) {
-  const current = OPERATIONS.find((o) => o.value === value) || OPERATIONS[0];
-  const CurrentIcon = current.icon;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</span>
-      <div className="grid grid-cols-1 gap-1">
-        {OPERATIONS.map((op) => {
-          const Icon = op.icon;
-          const active = value === op.value;
-          return (
-            <button
-              key={op.value}
-              type="button"
-              onClick={() => onChange(op.value)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all duration-150
-                ${active
-                  ? `bg-emerald-500/10 border-emerald-500/30 text-emerald-300`
-                  : 'bg-[#0d0d0d] border-[#222] text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 hover:border-zinc-700/50'
-                }`}
-            >
-              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-emerald-400' : 'text-zinc-500'}`} strokeWidth={1.75} />
-              <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold leading-tight ${active ? 'text-emerald-300' : 'text-zinc-300'}`}>{op.label}</div>
-                <div className="text-[10px] text-zinc-600 mt-0.5 leading-snug">{op.description}</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Per-operation config fields ────────────────────────────────────────────
-
-function MessageFields({ config, updateConfig, nodeId }) {
+function ChatPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
-      </Field>
-      <Field label="Output format">
-        <Select
-          value={config.outputFormat || 'text'}
-          onChange={(v) => updateConfig('outputFormat', v)}
-          options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]}
-        />
-      </Field>
-      <Field label="Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="e.g. Summarize the following data..." multiline nodeId={nodeId} />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o-mini" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="System Instructions" value={config.system} onChange={(v) => updateConfig('system', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize the following data…" multiline nodeId={nodeId} />
+      <ConfigInput label="Temperature" type="number" value={config.temperature ?? '0.7'} onChange={(v) => updateConfig('temperature', v)} placeholder="0.7" />
     </>
   );
 }
 
-function AnalyzeImageFields({ config, updateConfig, nodeId }) {
+function StreamPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'gpt-4o'} onChange={(v) => updateConfig('model', v)} options={MODELS_VISION} />
-      </Field>
-      <Field label="Image URL">
-        <SmartVariableInput value={config.imageUrl || ''} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://... or {{$node.imageUrl}}" nodeId={nodeId} />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Write a story about…" multiline nodeId={nodeId} />
+      <Dropdown label="Emit Mode" value={config.streamMode} fallback="token" onChange={(v) => updateConfig('streamMode', v)} options={[{ value: 'token', label: 'Per token' }, { value: 'sentence', label: 'Per sentence' }, { value: 'final', label: 'Final only' }]} />
     </>
   );
 }
 
-function GenerateImageFields({ config, updateConfig, nodeId }) {
+function StructuredPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'dall-e-3'} onChange={(v) => updateConfig('model', v)} options={MODELS_IMAGE} />
-      </Field>
-      <Field label="Image description">
-        <SmartVariableInput value={config.imagePrompt || ''} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="A photorealistic cat in a spacesuit..." multiline nodeId={nodeId} />
-      </Field>
-      <Field label="Size">
-        <Select value={config.imageSize || '1024x1024'} onChange={(v) => updateConfig('imageSize', v)} options={IMAGE_SIZES} />
-      </Field>
-      <Field label="Quality">
-        <Select
-          value={config.imageQuality || 'standard'}
-          onChange={(v) => updateConfig('imageQuality', v)}
-          options={[{ value: 'standard', label: 'Standard' }, { value: 'hd', label: 'HD' }]}
-        />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o-mini" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the invoice fields…" multiline nodeId={nodeId} />
+      <Text label="JSON Schema" value={config.jsonSchema} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"name":"invoice","schema":{…}}' multiline nodeId={nodeId} />
     </>
   );
 }
 
-function TranscribeAudioFields({ config, updateConfig, nodeId }) {
+function FunctionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Audio URL">
-        <SmartVariableInput value={config.audioUrl || ''} onChange={(v) => updateConfig('audioUrl', v)} placeholder="https://... mp3/mp4/m4a/wav/webm" nodeId={nodeId} />
-      </Field>
-      <Field label="Language (optional)">
-        <SmartVariableInput value={config.language || ''} onChange={(v) => updateConfig('language', v)} placeholder="en  (leave blank for auto-detect)" nodeId={nodeId} />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Paris?" multiline nodeId={nodeId} />
+      <Text label="Tools (function definitions)" value={config.tools} onChange={(v) => updateConfig('tools', v)} placeholder='[{"type":"function","function":{…}}]' multiline nodeId={nodeId} />
+      <Dropdown label="Tool Choice" value={config.toolChoice} fallback="auto" onChange={(v) => updateConfig('toolChoice', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'required', label: 'Required' }, { value: 'none', label: 'None' }]} />
     </>
   );
 }
 
-function AnalyzeDocumentFields({ config, updateConfig, nodeId }) {
+function VisionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
-      </Field>
-      <Field label="Question / Prompt">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize this document." multiline nodeId={nodeId} />
-      </Field>
-      <Field label="Document text (optional — falls back to input)">
-        <SmartVariableInput value={config.documentText || ''} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank to use previous node output" multiline nodeId={nodeId} />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_VISION)} />
+      <Text label="Image URL" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.imageUrl}}" nodeId={nodeId} />
+      <Text label="Question" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
+      <Dropdown label="Detail" value={config.detail} fallback="auto" onChange={(v) => updateConfig('detail', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'low', label: 'Low' }, { value: 'high', label: 'High' }]} />
     </>
   );
 }
 
-function ModerateContentFields({ config, updateConfig, nodeId }) {
-  return (
-    <Field label="Text to moderate">
-      <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly..." multiline nodeId={nodeId} />
-    </Field>
-  );
-}
-
-function GeneratePromptFields({ config, updateConfig, nodeId }) {
+function GenerateImagePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
-      </Field>
-      <Field label="Task description">
-        <SmartVariableInput value={config.task || ''} onChange={(v) => updateConfig('task', v)} placeholder="e.g. Classify customer support tickets by priority..." multiline nodeId={nodeId} />
-      </Field>
+      <Dropdown label="Model" value={config.model} fallback="gpt-image-1" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_IMAGE)} />
+      <Text label="Image Description" value={config.imagePrompt} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="A photorealistic cat in a spacesuit…" multiline nodeId={nodeId} />
+      <Dropdown label="Size" value={config.imageSize} fallback="1024x1024" onChange={(v) => updateConfig('imageSize', v)} options={opt(IMAGE_SIZES)} />
+      <Dropdown label="Quality" value={config.imageQuality} fallback="standard" onChange={(v) => updateConfig('imageQuality', v)} options={[{ value: 'standard', label: 'Standard' }, { value: 'hd', label: 'HD' }]} />
     </>
   );
 }
 
-function ImprovePromptFields({ config, updateConfig, nodeId }) {
+function EditImagePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Field label="Model">
-        <Select value={config.model || 'gpt-4o-mini'} onChange={(v) => updateConfig('model', v)} options={MODELS_MESSAGE} />
-      </Field>
-      <Field label="Prompt to improve">
-        <SmartVariableInput value={config.prompt || ''} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste the existing prompt here..." multiline nodeId={nodeId} />
-      </Field>
+      <Text label="Source Image URL" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… PNG source image" nodeId={nodeId} />
+      <Text label="Mask URL (optional)" value={config.maskUrl} onChange={(v) => updateConfig('maskUrl', v)} placeholder="Transparent area = region to edit" nodeId={nodeId} />
+      <Text label="Edit Prompt" value={config.imagePrompt} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="Add a red hat to the cat…" multiline nodeId={nodeId} />
+      <Dropdown label="Size" value={config.imageSize} fallback="1024x1024" onChange={(v) => updateConfig('imageSize', v)} options={opt(IMAGE_SIZES)} />
     </>
   );
 }
 
-const OP_FIELDS = {
-  message: MessageFields,
-  analyzeImage: AnalyzeImageFields,
-  generateImage: GenerateImageFields,
-  transcribeAudio: TranscribeAudioFields,
-  analyzeDocument: AnalyzeDocumentFields,
-  moderateContent: ModerateContentFields,
-  generatePrompt: GeneratePromptFields,
-  improvePrompt: ImprovePromptFields,
+function ImageVariationPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Text label="Source Image URL" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… PNG source image" nodeId={nodeId} />
+      <ConfigInput label="Number of Variations" type="number" value={config.n ?? '1'} onChange={(v) => updateConfig('n', v)} placeholder="1" />
+      <Dropdown label="Size" value={config.imageSize} fallback="1024x1024" onChange={(v) => updateConfig('imageSize', v)} options={opt(IMAGE_SIZES)} />
+    </>
+  );
+}
+
+function TranscribePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="whisper-1" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_STT)} />
+      <Text label="Audio URL" value={config.audioUrl} onChange={(v) => updateConfig('audioUrl', v)} placeholder="https://… mp3/mp4/m4a/wav/webm" nodeId={nodeId} />
+      <Text label="Language (optional)" value={config.language} onChange={(v) => updateConfig('language', v)} placeholder="en  (blank = auto-detect)" nodeId={nodeId} />
+    </>
+  );
+}
+
+function TranslatePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Text label="Audio URL" value={config.audioUrl} onChange={(v) => updateConfig('audioUrl', v)} placeholder="https://… non-English audio" nodeId={nodeId} />
+      <Text label="Context Prompt (optional)" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Hint at names or jargon to keep accurate…" multiline nodeId={nodeId} />
+    </>
+  );
+}
+
+function SpeechPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="tts-1" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_TTS)} />
+      <Text label="Text" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="The text to speak aloud…" multiline nodeId={nodeId} />
+      <Dropdown label="Voice" value={config.voice} fallback="alloy" onChange={(v) => updateConfig('voice', v)} options={opt(TTS_VOICES)} />
+      <Dropdown label="Format" value={config.format} fallback="mp3" onChange={(v) => updateConfig('format', v)} options={opt(TTS_FORMATS)} />
+    </>
+  );
+}
+
+function EmbeddingPanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Model" value={config.model} fallback="text-embedding-3-small" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_EMBED)} />
+      <Text label="Text to Embed" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.content}} or paste text…" multiline nodeId={nodeId} />
+      <ConfigInput label="Dimensions (optional)" type="number" value={config.dimensions ?? ''} onChange={(v) => updateConfig('dimensions', v)} placeholder="1536" />
+    </>
+  );
+}
+
+function ModeratePanel({ config, updateConfig, nodeId }) {
+  return (
+    <Text label="Text to Moderate" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text directly…" multiline nodeId={nodeId} />
+  );
+}
+
+function ListModelsPanel({ config, updateConfig }) {
+  return (
+    <Dropdown label="Filter" value={config.filter} fallback="all" onChange={(v) => updateConfig('filter', v)} options={[{ value: 'all', label: 'All models' }, { value: 'gpt', label: 'Chat (GPT) only' }, { value: 'embedding', label: 'Embedding only' }, { value: 'image', label: 'Image only' }]} />
+  );
+}
+
+function FineTunePanel({ config, updateConfig, nodeId }) {
+  return (
+    <>
+      <Dropdown label="Base Model" value={config.model} fallback="gpt-4o-mini-2024-07-18" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_FT)} />
+      <Text label="Training File ID" value={config.trainingFile} onChange={(v) => updateConfig('trainingFile', v)} placeholder="file-abc123  (uploaded JSONL)" nodeId={nodeId} />
+      <Text label="Validation File ID (optional)" value={config.validationFile} onChange={(v) => updateConfig('validationFile', v)} placeholder="file-def456" nodeId={nodeId} />
+      <Text label="Suffix (optional)" value={config.suffix} onChange={(v) => updateConfig('suffix', v)} placeholder="my-custom-model" nodeId={nodeId} />
+    </>
+  );
+}
+
+// ── Action → panel + canonical operation key ────────────────────────────────
+
+const ACTIONS = {
+  'Chat Completion':   { op: 'message',          Panel: ChatPanel },
+  'Stream Chat':       { op: 'message',          Panel: StreamPanel },
+  'Structured Output': { op: 'structuredOutput', Panel: StructuredPanel },
+  'Function Calling':  { op: 'functionCalling',  Panel: FunctionPanel },
+  'Vision Analysis':   { op: 'analyzeImage',     Panel: VisionPanel },
+  'Generate Image':    { op: 'generateImage',    Panel: GenerateImagePanel },
+  'Edit Image':        { op: 'editImage',        Panel: EditImagePanel },
+  'Image Variation':   { op: 'imageVariation',   Panel: ImageVariationPanel },
+  'Transcribe Audio':  { op: 'transcribeAudio',  Panel: TranscribePanel },
+  'Translate Audio':   { op: 'translateAudio',   Panel: TranslatePanel },
+  'Text to Speech':    { op: 'textToSpeech',     Panel: SpeechPanel },
+  'Create Embedding':  { op: 'embeddings',       Panel: EmbeddingPanel },
+  'Moderate Content':  { op: 'moderateContent',  Panel: ModeratePanel },
+  'List Models':       { op: 'listModels',       Panel: ListModelsPanel },
+  'Fine-tune Model':   { op: 'fineTune',         Panel: FineTunePanel },
 };
 
-// ── Main component ─────────────────────────────────────────────────────────
+const DEFAULT_ACTION = 'Chat Completion';
+
+// ── Main component ──────────────────────────────────────────────────────────
 
 export default function OpenAINode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'message';
-  const OpFields = OP_FIELDS[operation] || MessageFields;
-  const needsCredential = operation !== 'generateImage' || true; // all ops need key
+  const action = config.selectedAction && ACTIONS[config.selectedAction] ? config.selectedAction : DEFAULT_ACTION;
+  const { op, Panel } = ACTIONS[action];
+
+  useEffect(() => {
+    if (config.operation !== op) updateConfig('operation', op);
+  }, [op, config.operation]);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* Operation picker */}
-      <OperationPicker value={operation} onChange={(v) => updateConfig('operation', v)} />
+    <ConfigSection>
+      <div className="flex flex-col gap-4 w-full">
+        <Panel config={config} updateConfig={updateConfig} nodeId={nodeId} />
 
-      {/* Divider */}
-      <div className="border-t border-[#222]" />
+        <div className="border-t border-[#222] my-1" />
 
-      {/* Operation-specific fields */}
-      <OpFields config={config} updateConfig={updateConfig} nodeId={nodeId} />
-
-      {/* Credential — always shown */}
-      <CredentialPicker
-        value={config.credentialId || ''}
-        onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="emerald"
-        label="OpenAI API Key"
-        placeholder="Select OpenAI credential..."
-      />
-    </div>
+        <CredentialPicker
+          value={config.credentialId || ''}
+          onChange={(id) => updateConfig('credentialId', id)}
+          accentColor="zinc"
+          label="OpenAI API Key"
+          placeholder="Select OpenAI credential…"
+        />
+      </div>
+    </ConfigSection>
   );
 }
