@@ -170,15 +170,129 @@ async function opCreateDatabase(config, token) {
   return { databaseId: response.data.id, url: response.data.url, title: config.title, created: true };
 }
 
+function parseJSON(raw, op, field) {
+  if (raw == null || typeof raw === "object") return raw;
+  try { return JSON.parse(raw); } catch { throw new Error(`Notion ${op}: '${field}' must be valid JSON.`); }
+}
+
+async function opGetDatabase(config, token) {
+  if (!config.databaseId) return { success: false, error: "Notion getDatabase: 'databaseId' is required.", skipped: true };
+  const response = await axios.get(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, { headers: headers(token), timeout: 15000 });
+  const d = response.data;
+  return { databaseId: d.id, url: d.url, title: (d.title || []).map((t) => t.plain_text).join(""), properties: d.properties };
+}
+
+async function opUpdateDatabase(config, token) {
+  if (!config.databaseId) return { success: false, error: "Notion updateDatabase: 'databaseId' is required.", skipped: true };
+  const body = {};
+  if (config.title) body.title = [{ type: "text", text: { content: config.title } }];
+  if (config.description) body.description = [{ type: "text", text: { content: config.description } }];
+  if (config.properties) body.properties = parseJSON(config.properties, "updateDatabase", "properties");
+  const response = await axios.patch(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, body, { headers: headers(token), timeout: 15000 });
+  return { databaseId: response.data.id, url: response.data.url, updated: true };
+}
+
+async function opGetBlockChildren(config, token) {
+  if (!config.blockId) return { success: false, error: "Notion getBlockChildren: 'blockId' (page or block ID) is required.", skipped: true };
+  const params = { page_size: Math.min(Number(config.pageSize) || 50, 100) };
+  if (config.startCursor) params.start_cursor = config.startCursor;
+  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}/children`, { headers: headers(token), params, timeout: 15000 });
+  return { results: response.data.results, hasMore: response.data.has_more, nextCursor: response.data.next_cursor, total: response.data.results?.length || 0 };
+}
+
+async function opGetBlock(config, token) {
+  if (!config.blockId) return { success: false, error: "Notion getBlock: 'blockId' is required.", skipped: true };
+  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 15000 });
+  return { block: response.data };
+}
+
+async function opUpdateBlock(config, token) {
+  if (!config.blockId) return { success: false, error: "Notion updateBlock: 'blockId' is required.", skipped: true };
+  let body;
+  if (config.blockJson) body = parseJSON(config.blockJson, "updateBlock", "blockJson");
+  else if (config.content) {
+    const blockType = config.blockType || "paragraph";
+    body = { [blockType]: { rich_text: [{ text: { content: config.content } }] } };
+  } else return { success: false, error: "Notion updateBlock: provide 'content' or 'blockJson'.", skipped: true };
+  const response = await axios.patch(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, body, { headers: headers(token), timeout: 15000 });
+  return { blockId: response.data.id, type: response.data.type, updated: true };
+}
+
+async function opDeleteBlock(config, token) {
+  if (!config.blockId) return { success: false, error: "Notion deleteBlock: 'blockId' is required.", skipped: true };
+  const response = await axios.delete(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 15000 });
+  return { blockId: response.data.id, archived: response.data.archived, deleted: true };
+}
+
+async function opRestorePage(config, token) {
+  if (!config.pageId) return { success: false, error: "Notion restorePage: 'pageId' is required.", skipped: true };
+  const response = await axios.patch(`${BASE}/pages/${encodeURIComponent(stripId(config.pageId))}`, { archived: false }, { headers: headers(token), timeout: 15000 });
+  return { pageId: response.data.id, archived: response.data.archived, restored: true };
+}
+
+async function opListUsers(config, token) {
+  const params = { page_size: Math.min(Number(config.pageSize) || 50, 100) };
+  if (config.startCursor) params.start_cursor = config.startCursor;
+  const response = await axios.get(`${BASE}/users`, { headers: headers(token), params, timeout: 15000 });
+  return {
+    users: (response.data.results || []).map((u) => ({ id: u.id, name: u.name, type: u.type, email: u.person?.email })),
+    hasMore: response.data.has_more, nextCursor: response.data.next_cursor,
+  };
+}
+
+async function opGetUser(config, token) {
+  if (!config.userId) return { success: false, error: "Notion getUser: 'userId' is required.", skipped: true };
+  const response = await axios.get(`${BASE}/users/${encodeURIComponent(config.userId)}`, { headers: headers(token), timeout: 15000 });
+  const u = response.data;
+  return { id: u.id, name: u.name, type: u.type, email: u.person?.email, avatar: u.avatar_url };
+}
+
+async function opCreateComment(config, token) {
+  if (!config.pageId && !config.discussionId)
+    return { success: false, error: "Notion createComment: 'pageId' or 'discussionId' is required.", skipped: true };
+  if (!config.content) return { success: false, error: "Notion createComment: 'content' is required.", skipped: true };
+  const body = { rich_text: [{ text: { content: config.content } }] };
+  if (config.discussionId) body.discussion_id = config.discussionId;
+  else body.parent = { page_id: stripId(config.pageId) };
+  const response = await axios.post(`${BASE}/comments`, body, { headers: headers(token), timeout: 15000 });
+  return { commentId: response.data.id, created: true };
+}
+
+async function opGetComments(config, token) {
+  if (!config.blockId && !config.pageId)
+    return { success: false, error: "Notion getComments: 'blockId' or 'pageId' is required.", skipped: true };
+  const params = { block_id: stripId(config.blockId || config.pageId), page_size: Math.min(Number(config.pageSize) || 50, 100) };
+  if (config.startCursor) params.start_cursor = config.startCursor;
+  const response = await axios.get(`${BASE}/comments`, { headers: headers(token), params, timeout: 15000 });
+  return {
+    comments: (response.data.results || []).map((c) => ({
+      id: c.id, discussionId: c.discussion_id,
+      text: (c.rich_text || []).map((t) => t.plain_text).join(""), createdTime: c.created_time,
+    })),
+    hasMore: response.data.has_more, nextCursor: response.data.next_cursor,
+  };
+}
+
 const OPERATIONS = {
   createPage: opCreatePage,
   updatePage: opUpdatePage,
-  queryDatabase: opQueryDatabase,
   getPage: opGetPage,
-  appendBlock: opAppendBlock,
-  searchPages: opSearchPages,
   deletePage: opDeletePage,
+  restorePage: opRestorePage,
+  queryDatabase: opQueryDatabase,
   createDatabase: opCreateDatabase,
+  getDatabase: opGetDatabase,
+  updateDatabase: opUpdateDatabase,
+  appendBlock: opAppendBlock,
+  getBlockChildren: opGetBlockChildren,
+  getBlock: opGetBlock,
+  updateBlock: opUpdateBlock,
+  deleteBlock: opDeleteBlock,
+  searchPages: opSearchPages,
+  listUsers: opListUsers,
+  getUser: opGetUser,
+  createComment: opCreateComment,
+  getComments: opGetComments,
 };
 
 export default {
