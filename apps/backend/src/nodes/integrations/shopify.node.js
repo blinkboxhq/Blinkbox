@@ -1,11 +1,11 @@
 /**
  * SHOPIFY NODE — slim entry. Resolves the Admin API access token from the
  * vault, builds the store's axios instance, and delegates to the modular
- * router in packages/nodes/shopify/backend/. Auth stays here; ops live there.
+ * router in _packaged/shopify/. Auth stays here; ops live there.
  */
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runShopify, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/shopify/backend/router.js";
-import { makeApi } from "../../../../../packages/nodes/shopify/backend/GenericFunctions.js";
+import { run as runShopify, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/shopify/router.js";
+import { makeApi } from "../_packaged/shopify/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {

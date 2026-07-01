@@ -3,8 +3,8 @@
  * Vercel REST API: deployments, projects, env vars, domains, DNS, aliases, teams, edge config.
  */
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runVercel, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/vercel/backend/router.js";
-import { makeApi } from "../../../../../packages/nodes/vercel/backend/GenericFunctions.js";
+import { run as runVercel, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/vercel/router.js";
+import { makeApi } from "../_packaged/vercel/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {

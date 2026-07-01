@@ -1,13 +1,13 @@
 /**
  * CALENDLY NODE — entry point.
  * Owns credentials/auth only. All 33 action handlers live in the co-located
- * package: packages/nodes/calendly/backend/ (router.js + v1/*Description.js).
+ * package: _packaged/calendly/ (router.js + v1/*Description.js).
  * Auth: Bearer personal access token / OAuth token. Base https://api.calendly.com
  */
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runCalendly, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/calendly/backend/router.js";
-import { BASE_URL } from "../../../../../packages/nodes/calendly/backend/GenericFunctions.js";
+import { run as runCalendly, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/calendly/router.js";
+import { BASE_URL } from "../_packaged/calendly/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {

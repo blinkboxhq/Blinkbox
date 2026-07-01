@@ -1,6 +1,6 @@
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runDatadog, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/datadog/backend/router.js";
-import { makeRequester } from "../../../../../packages/nodes/datadog/backend/GenericFunctions.js";
+import { run as runDatadog, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/datadog/router.js";
+import { makeRequester } from "../_packaged/datadog/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {

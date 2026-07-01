@@ -1,6 +1,6 @@
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runStripe, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/stripe/backend/router.js";
-import { makeReq } from "../../../../../packages/nodes/stripe/backend/GenericFunctions.js";
+import { run as runStripe, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/stripe/router.js";
+import { makeReq } from "../_packaged/stripe/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {

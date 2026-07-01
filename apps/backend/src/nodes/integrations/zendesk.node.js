@@ -7,7 +7,7 @@
  */
 import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
-import { run as runZendesk, OPERATIONS, DEFAULT_OPERATION } from "../../../../../packages/nodes/zendesk/backend/router.js";
+import { run as runZendesk, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/zendesk/router.js";
 
 async function getCreds(credentialId, workspaceId) {
   const raw = await getOAuthToken(credentialId, workspaceId, "Zendesk");
