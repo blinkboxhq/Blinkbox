@@ -1,47 +1,31 @@
-import axios from "axios";
-
-const TIMEOUT = 15000;
+/**
+ * VIRUSTOTAL NODE — slim entry. Resolves the API key into an x-apikey client, then
+ * delegates op dispatch to the modular router under _packaged/virustotal/.
+ * Preserves the monolith's contract EXACTLY: a missing API key THROWS
+ * ("virustotal: API key is required."), a 404 is a soft miss ({ found: false }),
+ * unknown operations THROW double-quoted, per-op validation SKIPS. Folds
+ * input?.url / input?.hash / input?.ip / input?.domain into config to keep the
+ * monolith's input-fallback behavior. Handlers receive (config, client).
+ */
+import { getClient, handleError } from "../_packaged/virustotal/GenericFunctions.js";
+import { run as runVirustotal, DEFAULT_OPERATION } from "../_packaged/virustotal/router.js";
 
 export default {
-  async run(config, input) {
-    const apiKey = config.apiKey || input?.apiKey;
-    const operation = config.operation || "scanUrl";
-    if (!apiKey) throw new Error("virustotal: API key is required.");
-
-    const headers = { "x-apikey": apiKey };
+  async run(config, input, context) {
+    const operation = config.operation || DEFAULT_OPERATION;
+    const merged = {
+      ...config,
+      operation,
+      url: config.url || input?.url,
+      hash: config.hash || input?.hash,
+      ip: config.ip || input?.ip,
+      domain: config.domain || input?.domain,
+    };
     try {
-      if (operation === "scanUrl") {
-        const url = config.url || input?.url;
-        if (!url) throw new Error("virustotal: 'url' is required.");
-        const encoded = Buffer.from(url).toString("base64url");
-        const res = await axios.get(`https://www.virustotal.com/api/v3/urls/${encoded}`, { headers, timeout: TIMEOUT });
-        const stats = res.data.data?.attributes?.last_analysis_stats || {};
-        return { url, malicious: stats.malicious, suspicious: stats.suspicious, harmless: stats.harmless, undetected: stats.undetected, stats };
-      }
-      if (operation === "getUrlReport") {
-        const url = config.url || input?.url;
-        const encoded = Buffer.from(url).toString("base64url");
-        const res = await axios.get(`https://www.virustotal.com/api/v3/urls/${encoded}`, { headers, timeout: TIMEOUT });
-        return res.data.data?.attributes || {};
-      }
-      if (operation === "scanFile") {
-        const hash = config.hash || input?.hash;
-        if (!hash) throw new Error("virustotal: 'hash' is required.");
-        const res = await axios.get(`https://www.virustotal.com/api/v3/files/${hash}`, { headers, timeout: TIMEOUT });
-        const stats = res.data.data?.attributes?.last_analysis_stats || {};
-        return { hash, malicious: stats.malicious, suspicious: stats.suspicious, harmless: stats.harmless, stats };
-      }
-      if (operation === "getIpReport") {
-        const ip = config.ip || input?.ip;
-        if (!ip) throw new Error("virustotal: 'ip' is required.");
-        const res = await axios.get(`https://www.virustotal.com/api/v3/ip_addresses/${ip}`, { headers, timeout: TIMEOUT });
-        const stats = res.data.data?.attributes?.last_analysis_stats || {};
-        return { ip, malicious: stats.malicious, suspicious: stats.suspicious, harmless: stats.harmless, stats };
-      }
-      throw new Error(`virustotal: Unknown operation "${operation}".`);
+      const client = getClient(config, { ...context, input });
+      return await runVirustotal(merged, client);
     } catch (err) {
-      if (err.response?.status === 404) return { found: false, error: "Resource not found in VirusTotal" };
-      throw new Error(`[virustotal] ${err.message}`);
+      return handleError(err);
     }
   },
 };
