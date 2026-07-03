@@ -1,0 +1,41 @@
+/**
+ * Airtable — operation router. Merges record, bulk, and meta maps (order
+ * preserved from the monolith), then dispatches. Exposes NO_BASE_OPS /
+ * NO_TABLE_OPS so the slim entry can apply the same field-gate exemptions.
+ */
+import { handleError } from "./GenericFunctions.js";
+import { recordOperations } from "./v1/RecordDescription.js";
+import { bulkOperations } from "./v1/BulkDescription.js";
+import { metaOperations } from "./v1/MetaDescription.js";
+
+export const OPERATIONS = {
+  create: recordOperations.create,
+  read: recordOperations.read,
+  update: recordOperations.update,
+  delete: recordOperations.delete,
+  bulkDelete: bulkOperations.bulkDelete,
+  getRecord: recordOperations.getRecord,
+  search: recordOperations.search,
+  bulkCreate: bulkOperations.bulkCreate,
+  bulkUpdate: bulkOperations.bulkUpdate,
+  listBases: metaOperations.listBases,
+  listTables: metaOperations.listTables,
+  createTable: metaOperations.createTable,
+  createField: metaOperations.createField,
+};
+
+export const NO_TABLE_OPS = new Set(["listBases", "listTables", "createTable", "createField"]);
+export const NO_BASE_OPS = new Set(["listBases"]);
+
+export const DEFAULT_OPERATION = "create";
+
+export async function run(config, req) {
+  const op = config.operation || DEFAULT_OPERATION;
+  const handler = OPERATIONS[op];
+  if (!handler) return { success: false, error: `Airtable: Unknown operation "${op}". Valid: ${Object.keys(OPERATIONS).join(", ")}`, skipped: true };
+  try {
+    return await handler(config, req);
+  } catch (err) {
+    handleError(err);
+  }
+}
