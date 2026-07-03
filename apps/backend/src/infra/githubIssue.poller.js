@@ -105,8 +105,11 @@ export async function pollRepo(automationId, triggerNodeId, credentialId, worksp
     for (const i of items) nextSnap[i.number] = { state: i.state, comments: i.comments, reactions: i.reactions };
     await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
 
-    const createdOnce = ["new_issue", "new_pr", "title_contains", "by_author", "has_label", "is_assigned", "milestone_set"];
-    if (firstSync && (spec.needsPrev || createdOnce.includes(evType))) return;
+    // Only "new_issue"/"new_pr" need to skip the first sync — every item in that
+    // initial pull would otherwise look "new". Content predicates (title_contains,
+    // has_label, milestone_set, etc.) describe the item itself, not its novelty, so
+    // they fire on first sync too.
+    if (firstSync && (spec.needsPrev || evType === "new_issue" || evType === "new_pr")) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });

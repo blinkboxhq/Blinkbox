@@ -103,8 +103,11 @@ export async function pollHackerNews(automationId, triggerNodeId, cfg) {
     for (const s of stories) nextSnap[s.id] = { points: s.points, numComments: s.numComments, onFrontPage: s.onFrontPage };
     await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
 
-    const createdOnce = ["new_story", "title_contains", "by_author", "domain_is", "ask_hn", "show_hn", "job_post"];
-    if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
+    // Only "new_story" needs to skip the first sync — every story in that initial
+    // pull would otherwise look "new". Content predicates (title_contains, ask_hn,
+    // domain_is, etc.) describe the story itself, not its novelty, so they fire on
+    // first sync too.
+    if (firstSync && (spec.needsPrev || eventType === "new_story")) return;
 
     const seenKey = `bb:hn:seen:${scope}:${eventType}`;
     for (const story of stories) {

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Config Panel · Concept 1 — Liquid Glass</title>
+<style>
+  :root{
+    --bb-surface-0:#0f0f0f; --bb-surface-1:#1b1b1b; --bb-surface-2:#262626; --bb-surface-3:#303030;
+    --bb-border-subtle:#2b2b2b; --bb-border:#3b3b3b; --bb-border-strong:#545454;
+    --bb-text-hi:#fafafa; --bb-text-mid:#b6b6b6; --bb-text-lo:#8c8c8c; --bb-text-dim:#6d6d6d;
+    --bb-accent:#6f97e8; --bb-accent-soft:rgba(111,151,232,.14); --bb-accent-hot:#a9c0ef; --bb-accent-ring:rgba(111,151,232,.40);
+    --r:14px; --r-sm:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+    background:radial-gradient(1200px 800px at 70% -10%, #18181b 0%, #0b0b0c 55%, #060607 100%);
+    color:var(--bb-text-mid); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:40px 20px;
+  }
+  .panel{
+    width:380px; border-radius:18px; padding:0; overflow:hidden;
+    background:linear-gradient(180deg, rgba(255,255,255,.035) 0%, rgba(255,255,255,.008) 18%, transparent 46%), rgba(23,23,25,.72);
+    backdrop-filter:blur(30px) saturate(120%); -webkit-backdrop-filter:blur(30px) saturate(120%);
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:0 24px 70px -24px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.02) inset;
+  }
+  .head{
+    display:flex; align-items:center; gap:12px; padding:18px 18px 16px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    background:linear-gradient(180deg, rgba(111,151,232,.06), transparent);
+  }
+  .head .ic{
+    width:38px; height:38px; border-radius:11px; display:grid; place-items:center; flex:none;
+    background:rgba(111,151,232,.12); color:var(--bb-accent-hot);
+    box-shadow:inset 0 0 0 1px rgba(111,151,232,.22);
+  }
+  .head h1{font-size:15px; font-weight:700; color:var(--bb-text-hi); letter-spacing:-.01em}
+  .head p{font-size:11px; color:var(--bb-text-dim); margin-top:1px}
+  .body{display:flex; flex-direction:column; gap:18px; padding:18px}
+  .field{display:flex; flex-direction:column; gap:8px}
+  label.k{font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--bb-text-dim)}
+
+  /* glow surface */
+  .glow{position:relative; --gx:-200px; --gy:-200px; --gi:0; border-radius:var(--r-sm)}
+  .glow::before{
+    content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.4px; pointer-events:none;
+    opacity:var(--gi); transition:opacity .15s linear;
+    background:radial-gradient(160px circle at var(--gx) var(--gy), rgba(169,192,239,1), rgba(169,192,239,.5) 42%, transparent 72%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+  }
+
+  .oauthrow{display:flex; align-items:center; gap:12px}
+  .signin{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:10px;
+    background:#fff; color:#1f2937; font-size:13px; font-weight:600;
+    padding:11px 14px; border-radius:12px; cursor:pointer; border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 6px 18px -10px rgba(0,0,0,.6); transition:transform .1s, background .15s;
+  }
+  .signin:hover{background:#f3f4f6}
+  .signin:active{transform:translateY(1px)}
+  .signin svg{width:18px; height:18px}
+  .manual{font-size:12px; color:var(--bb-text-lo); text-decoration:underline; text-underline-offset:3px; text-decoration-color:#444; cursor:pointer; white-space:nowrap}
+  .manual:hover{color:var(--bb-text-mid)}
+
+  .control{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(13,13,15,.7); border:1px solid var(--bb-border-subtle);
+    padding:11px 13px; border-radius:var(--r-sm); font-size:13px; color:var(--bb-text-mid); cursor:pointer;
+  }
+  .control.sel{color:var(--bb-text-hi)}
+  .control .ph{color:var(--bb-text-dim)}
+  .chev{width:14px; height:14px; color:var(--bb-text-dim)}
+  .inp{
+    width:100%; background:rgba(13,13,15,.7); border:1px solid var(--bb-border-subtle);
+    padding:11px 13px; border-radius:var(--r-sm); font-size:13px; color:var(--bb-text-hi); outline:none;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .inp::placeholder{color:var(--bb-text-dim); font-family:inherit}
+  .hint{font-size:10px; color:var(--bb-text-dim); line-height:1.5}
+
+  /* dropdown (low-color, premium) */
+  .menu{
+    position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30;
+    background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), rgba(20,20,22,.95);
+    backdrop-filter:blur(24px); border:1px solid var(--bb-border); border-radius:12px;
+    box-shadow:0 18px 50px -16px rgba(0,0,0,.8); padding:6px; overflow:hidden;
+    display:none;
+  }
+  .menu.open{display:block}
+  .opt{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13px; color:var(--bb-text-mid); cursor:pointer}
+  .opt:hover{background:rgba(255,255,255,.05)}
+  .opt.on{background:rgba(111,151,232,.10); color:var(--bb-text-hi)}
+  .opt .dot{width:6px; height:6px; border-radius:50%; background:var(--bb-text-dim)}
+  .opt.on .dot{background:var(--bb-accent-hot); box-shadow:0 0 8px var(--bb-accent-ring)}
+  .opt .tick{margin-left:auto; color:var(--bb-accent-hot); opacity:0}
+  .opt.on .tick{opacity:1}
+
+  .pills{display:flex; gap:8px}
+  .pill{
+    flex:1; text-align:center; padding:8px 10px; border-radius:9px; font-size:12px; font-weight:600;
+    background:rgba(13,13,15,.6); border:1px solid var(--bb-border-subtle); color:var(--bb-text-lo); cursor:pointer;
+  }
+  .pill.on{background:var(--bb-accent-soft); border-color:var(--bb-accent-ring); color:var(--bb-accent-hot)}
+
+  .tag{font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--bb-text-dim); position:absolute; top:14px; right:16px}
+</style>
+</head>
+<body>
+  <span class="tag">Concept 1 · Liquid Glass</span>
+  <div class="panel" id="panel">
+    <div class="head">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zm4.5-4.772H7.91V9.68h7.91V7.773zm0 9.545H7.91v1.91h7.91v-1.91zm0-4.773H12.41v1.91h3.41v-1.91zM6 3v18l1.5 1.5 1.5-1.5V3L7.5 1.5 6 3zM18 3v18l1.5 1.5 1.5-1.5V3L19.5 1.5 18 3z"/></svg>
+      </div>
+      <div><h1>Google Sheets</h1><p>Read &amp; write spreadsheet data</p></div>
+    </div>
+
+    <div class="body">
+      <!-- credential -->
+      <div class="field">
+        <label class="k">Credential</label>
+        <div class="oauthrow">
+          <button class="signin glow">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.245c0-.905-.075-1.565-.236-2.25H12.255v4.083h6.187c-.124 1.014-.797 2.542-2.294 3.569l-.021.136 3.332 2.53.23.022C21.779 18.417 23 15.593 23 12.245z"/><path fill="#34A853" d="M12.255 23c3.01 0 5.535-.99 7.38-2.7l-3.514-2.7c-.94.654-2.2 1.11-3.866 1.11-2.948 0-5.45-1.94-6.34-4.62l-.13.01-3.466 2.66-.045.124C3.913 20.46 7.79 23 12.255 23z"/><path fill="#FBBC05" d="M5.915 14.09a6.78 6.78 0 01-.38-2.09c0-.728.137-1.434.366-2.09l-.006-.14L2.38 7.06l-.114.054A11 11 0 001 12c0 1.77.435 3.444 1.265 4.927l3.65-2.837z"/><path fill="#EB4335" d="M12.255 5.29c2.09 0 3.5.892 4.305 1.638l3.142-3.044C17.78 2.184 15.265 1 12.255 1 7.79 1 3.913 3.54 2.15 7.073l3.65 2.837c.9-2.68 3.402-4.62 6.455-4.62z"/></svg>
+            Sign in with Google
+          </button>
+          <span class="manual">or setup manually</span>
+        </div>
+      </div>
+
+      <!-- operation -->
+      <div class="field" style="position:relative">
+        <label class="k">Operation</label>
+        <div class="control sel glow" onclick="this.parentNode.querySelector('.menu').classList.toggle('open')">
+          <span>Read Range</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="menu">
+          <div class="opt on"><span class="dot"></span>Read Range<svg class="tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="opt"><span class="dot"></span>Write Range</div>
+          <div class="opt"><span class="dot"></span>Append Row</div>
+          <div class="opt"><span class="dot"></span>Clear Range</div>
+          <div class="opt"><span class="dot"></span>Get Metadata</div>
+        </div>
+      </div>
+
+      <!-- spreadsheet id -->
+      <div class="field">
+        <label class="k">Spreadsheet ID</label>
+        <input class="inp glow" placeholder="1BxiMVs0XRA5nFMdKvBdBZ…" />
+        <span class="hint">Found in the spreadsheet URL between /d/ and /edit</span>
+      </div>
+
+      <!-- range -->
+      <div class="field">
+        <label class="k">Range</label>
+        <input class="inp glow" placeholder="Sheet1!A1:D10" />
+      </div>
+
+      <!-- value input -->
+      <div class="field">
+        <label class="k">Value Input</label>
+        <div class="pills">
+          <div class="pill on">Parsed</div>
+          <div class="pill">Raw Input</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const RANGE=200;
+  function move(e){
+    document.querySelectorAll('.glow').forEach(el=>{
+      const r=el.getBoundingClientRect();
+      const cx=Math.max(r.left,Math.min(e.clientX,r.right));
+      const cy=Math.max(r.top,Math.min(e.clientY,r.bottom));
+      const d=Math.hypot(e.clientX-cx,e.clientY-cy);
+      const gi=d>=RANGE?0:1-d/RANGE;
+      el.style.setProperty('--gi',gi.toFixed(3));
+      if(gi>0){el.style.setProperty('--gx',(e.clientX-r.left)+'px');el.style.setProperty('--gy',(e.clientY-r.top)+'px');}
+    });
+  }
+  window.addEventListener('pointermove',move,{passive:true});
+</script>
+</body>
+</html>

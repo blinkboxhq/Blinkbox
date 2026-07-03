@@ -81,8 +81,11 @@ export async function pollSlack(automationId, triggerNodeId, cfg) {
     for (const m of messages) nextSnap[m.ts] = { reactionCount: m.reactionCount, replyCount: m.replyCount };
     await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
 
-    const createdOnce = ["new_message", "from_user", "text_contains", "mentions", "has_link", "has_file", "thread_reply", "bot_message", "human_message"];
-    if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
+    // Only "new_message" needs to skip the first sync — every message in that
+    // initial history pull would otherwise look "new". Content predicates
+    // (has_link, text_contains, mentions, etc.) describe the message itself,
+    // not its novelty, so they should fire on first sync too.
+    if (firstSync && (spec.needsPrev || eventType === "new_message")) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });

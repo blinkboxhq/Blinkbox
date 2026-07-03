@@ -98,8 +98,11 @@ export async function pollProductHunt(automationId, triggerNodeId, cfg) {
     for (const p of posts) nextSnap[p.id] = { votesCount: p.votesCount, commentsCount: p.commentsCount };
     await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
 
-    const createdOnce = ["new_launch", "name_contains", "tagline_contains", "by_maker", "in_topic", "ai_product", "has_website"];
-    if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
+    // Only "new_launch" needs to skip the first sync — every post in that initial
+    // pull would otherwise look "new". Content predicates (name_contains, by_maker,
+    // ai_product, etc.) describe the post itself, not its novelty, so they fire on
+    // first sync too.
+    if (firstSync && (spec.needsPrev || eventType === "new_launch")) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
 

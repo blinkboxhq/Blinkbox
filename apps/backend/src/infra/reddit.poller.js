@@ -89,8 +89,11 @@ export async function pollSubreddit(automationId, triggerNodeId, cfg) {
     for (const p of posts) nextSnap[p.id] = { score: p.score, numComments: p.numComments };
     await redis.set(snapKey, JSON.stringify(nextSnap), "EX", SNAP_TTL);
 
-    const createdOnce = ["new_post", "self_post", "link_post", "title_contains", "body_contains", "by_author", "flair_is", "is_nsfw"];
-    if (firstSync && (spec.needsPrev || createdOnce.includes(eventType))) return;
+    // Only "new_post" needs to skip the first sync — every post in that initial
+    // pull would otherwise look "new". Content predicates (self_post, title_contains,
+    // is_nsfw, etc.) describe the post itself, not its novelty, so they fire on
+    // first sync too.
+    if (firstSync && (spec.needsPrev || eventType === "new_post")) return;
 
     const { executeAutomation } = await import("../modules/automation/automation.executor.js");
     const automation = await Automation.findOne({ _id: automationId, active: true });
