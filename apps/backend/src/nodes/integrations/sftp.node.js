@@ -1,82 +1,39 @@
-import { getOAuthToken } from "../../utils/getOAuthToken.js";
+/**
+ * SFTP NODE — slim entry. Resolves the connection credential, hardens the target
+ * host, defensively loads the OPTIONAL ssh2-sftp-client package, opens the
+ * connection, and delegates op dispatch to the modular router under
+ * _packaged/sftp/. Preserves the original node's contract EXACTLY: op aliases
+ * (upload/download/list/delete/mkdir), silent credential fall-through, a missing
+ * host SKIPS, a missing package SKIPS, an unknown operation SKIPS (double-quoted),
+ * per-op validation SKIPS, and the connection is always closed in `finally`.
+ * Handlers receive (config, ctx) where ctx is { sftp, remotePath, input }.
+ */
+import {
+  OP_ALIAS,
+  resolveConnection,
+  loadClient,
+  connect,
+  guardHost,
+} from "../_packaged/sftp/GenericFunctions.js";
+import { run as runSftp, DEFAULT_OPERATION } from "../_packaged/sftp/router.js";
 
 export default {
-  async run(config, input, context = {}) {
-    const OP_ALIAS = { upload: "uploadFile", download: "downloadFile", list: "listFiles", delete: "deleteFile", mkdir: "makeDirectory" };
-    const operation = OP_ALIAS[config.operation] || config.operation || "listFiles";
+  async run(config, input = {}, context = {}) {
+    const operation = OP_ALIAS[config.operation] || config.operation || DEFAULT_OPERATION;
 
-    // Resolve credentials — credential stores "host:port:username:password" or JSON
-    let host = config.host || input.host || "";
-    let username = config.username || input.username || "";
-    let password = config.password || input.password || "";
-    let privateKey = config.privateKey;
+    const conn = await resolveConnection(config, input, context);
+    if (!conn.host) return { success: false, error: "SFTP: 'host' is required.", skipped: true };
 
-    if (config.credentialId && context.workspaceId) {
-      try {
-        const raw = await getOAuthToken(config.credentialId, context.workspaceId, "SFTP");
-        try {
-          const parsed = JSON.parse(raw);
-          host = parsed.host || host;
-          username = parsed.username || username;
-          password = parsed.password || password;
-          if (parsed.privateKey) privateKey = parsed.privateKey;
-        } catch {
-          // If not JSON, treat as "host:username:password"
-          const parts = raw.split(":");
-          if (parts.length >= 3) { host = parts[0]; username = parts[1]; password = parts.slice(2).join(":"); }
-        }
-      } catch { /* fall through to raw config */ }
-    }
+    const hostSkip = guardHost(conn.host);
+    if (hostSkip) return hostSkip;
 
-    if (!host) return { success: false, error: "SFTP: 'host' is required.", skipped: true };
+    const SftpClient = await loadClient();
+    if (!SftpClient) return { success: false, error: "SFTP: ssh2-sftp-client package not installed. Run: npm i ssh2-sftp-client in the backend.", skipped: true };
 
-    let SftpClient;
-    try { SftpClient = (await import("ssh2-sftp-client")).default; }
-    catch { return { success: false, error: "SFTP: ssh2-sftp-client package not installed. Run: npm i ssh2-sftp-client in the backend.", skipped: true }; }
-
-    const sftp = new SftpClient();
-    const connConfig = {
-      host,
-      port: parseInt(config.port) || 22,
-      username,
-      ...(privateKey ? { privateKey } : { password }),
-    };
-
+    const sftp = await connect(SftpClient, conn);
     try {
-      await sftp.connect(connConfig);
       const remotePath = config.remotePath || "/";
-
-      switch (operation) {
-        case "listFiles": {
-          const files = await sftp.list(remotePath);
-          return { files: files.map(f => ({ name: f.name, size: f.size, type: f.type, modified: new Date(f.modifyTime * 1000).toISOString() })), count: files.length, path: remotePath };
-        }
-        case "downloadFile": {
-          const content = await sftp.get(remotePath);
-          return { content: content.toString("utf8"), path: remotePath };
-        }
-        case "uploadFile": {
-          const fileContent = config.content || input.content || "";
-          await sftp.put(Buffer.from(fileContent), remotePath);
-          return { success: true, path: remotePath, size: fileContent.length };
-        }
-        case "deleteFile": {
-          await sftp.delete(remotePath);
-          return { success: true, deleted: remotePath };
-        }
-        case "makeDirectory": {
-          await sftp.mkdir(remotePath, true);
-          return { success: true, created: remotePath };
-        }
-        case "renameFile": {
-          const destPath = config.destPath || input.destPath || "";
-          if (!destPath) return { success: false, error: "SFTP renameFile: 'destPath' required.", skipped: true };
-          await sftp.rename(remotePath, destPath);
-          return { success: true, from: remotePath, to: destPath };
-        }
-        default:
-          return { success: false, error: `SFTP: Unknown operation "${operation}".`, skipped: true };
-      }
+      return await runSftp({ ...config, operation }, { sftp, remotePath, input });
     } finally {
       sftp.end().catch(() => {});
     }
