@@ -1,31 +1,24 @@
-import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
-
-async function getKey(credentialId, workspaceId, type) {
-  const cred = await resolveCredential(credentialId, workspaceId, type);
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
+/**
+ * GOOGLE FORMS NODE — slim entry. Resolves the Google OAuth access token into a
+ * Bearer client, then delegates op dispatch to the modular router under
+ * _packaged/googleForms/. Preserves the monolith's contract EXACTLY: a missing
+ * token THROWS ("google_forms: Google OAuth access token required."), a missing
+ * formId SKIPS (after the token check), unknown operations THROW double-quoted,
+ * per-op validation SKIPS. Handlers receive (config, client).
+ */
+import { getClient, handleError } from "../_packaged/googleForms/GenericFunctions.js";
+import { run as runGoogleForms, DEFAULT_OPERATION } from "../_packaged/googleForms/router.js";
 
 export default {
   async run(config, input, context) {
-    const operation = config.operation || "getResponses";
+    const operation = config.operation || DEFAULT_OPERATION;
     const formId = config.formId || input?.formId;
-    const token = config.accessToken || (config.credentialId && await getKey(config.credentialId, context?.workspaceId, "Google"));
-    if (!token) throw new Error("google_forms: Google OAuth access token required.");
-    if (!formId) return { success: false, error: "google_forms: 'formId' is required.", skipped: true };
-
-    const headers = { Authorization: `Bearer ${token}` };
-
-    if (operation === "getResponses") {
-      const res = await axios.get(`https://forms.googleapis.com/v1/forms/${formId}/responses`, { headers });
-      const responses = (res.data.responses || []).map((r) => ({ responseId: r.responseId, createTime: r.createTime, answers: r.answers }));
-      return { responses, count: responses.length, formId };
+    try {
+      const client = await getClient(config, { ...context, input });
+      if (!formId) return { success: false, error: "google_forms: 'formId' is required.", skipped: true };
+      return await runGoogleForms({ ...config, operation, formId }, client);
+    } catch (err) {
+      return handleError(err);
     }
-    if (operation === "getForm") {
-      const res = await axios.get(`https://forms.googleapis.com/v1/forms/${formId}`, { headers });
-      return { formId, title: res.data.info?.title, description: res.data.info?.description, questions: res.data.items?.length || 0 };
-    }
-    throw new Error(`google_forms: Unknown operation "${operation}".`);
   },
 };
