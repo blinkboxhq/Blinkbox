@@ -1,28 +1,16 @@
 /**
- * WEB SEARCH NODE
- *
- * Queries the live internet via the Tavily Search API and returns
- * structured JSON results. No browser needed — pure API call.
- *
- * Config:
- *   credentialId   — Vault reference to Tavily API key (type: "api_key")
- *   query          — Search query string (already expression-resolved)
- *   searchDepth    — "basic" (default, fast) | "advanced" (deeper, slower)
- *   maxResults     — Number of results (default: 5, max: 20)
- *   includeAnswer  — Include AI-generated summary answer (default: true)
- *   includeDomains — Array of domains to restrict search to (optional)
- *   excludeDomains — Array of domains to exclude (optional)
- *   topic          — "general" (default) | "news" | "finance"
- *
- * Output:
- *   { answer, results: [{ title, url, content, score }], query, responseTime }
+ * WEB SEARCH NODE — slim entry. Queries the live internet via the Tavily API and
+ * returns structured JSON. Delegates to the modular router under
+ * _packaged/webSearch/. Preserves the original single-op contract EXACTLY: for
+ * the default search-family ops a missing 'query' SKIPS first (before the cred
+ * check), then an absent credential SKIPS, then a failed resolution SKIPS. The
+ * AI-agent `toolDefinition` export is preserved verbatim. Extra ops (qnaSearch,
+ * searchContext, extract) run their own per-op validation inside their handlers.
  */
+import { run as runWebSearch, DEFAULT_OPERATION } from "../_packaged/webSearch/router.js";
+import { getApiKey } from "../_packaged/webSearch/GenericFunctions.js";
 
-import axios from "axios";
-import { getOAuthToken } from "../../utils/getOAuthToken.js";
-
-const API_URL = "https://api.tavily.com/search";
-const MAX_RESULTS_LIMIT = 20;
+const QUERY_FIRST_OPS = new Set(["search", "qnaSearch", "searchContext"]);
 
 export default {
   toolDefinition: {
@@ -41,60 +29,22 @@ export default {
   },
 
   async run(config, input, context = {}) {
-    const {
-      credentialId,
-      query: searchQuery,
-      searchDepth = "basic",
-      maxResults = 5,
-      includeAnswer = true,
-      includeDomains = [],
-      excludeDomains = [],
-      topic = "general",
-    } = config;
+    const operation = config.operation || DEFAULT_OPERATION;
 
-    if (!searchQuery) return { success: false, error: "Web Search: 'query' is required.", skipped: true };
-    if (!credentialId) return { success: false, error: "Web Search: No credential selected — pick a Tavily API key credential.", skipped: true };
+    if (QUERY_FIRST_OPS.has(operation) && !config.query) {
+      return { success: false, error: "Web Search: 'query' is required.", skipped: true };
+    }
+    if (!config.credentialId) {
+      return { success: false, error: "Web Search: No credential selected — pick a Tavily API key credential.", skipped: true };
+    }
+
     let apiKey;
     try {
-      apiKey = await getOAuthToken(credentialId, context.workspaceId, "Web Search");
+      apiKey = await getApiKey(config.credentialId, context.workspaceId);
     } catch (e) {
       return { success: false, error: `Web Search: Could not resolve credential — ${e.message}`, skipped: true };
     }
 
-    const payload = {
-      api_key: apiKey,
-      query: searchQuery,
-      search_depth: searchDepth,
-      max_results: Math.min(maxResults, MAX_RESULTS_LIMIT),
-      include_answer: includeAnswer,
-      topic,
-    };
-
-    if (includeDomains.length > 0) payload.include_domains = includeDomains;
-    if (excludeDomains.length > 0) payload.exclude_domains = excludeDomains;
-
-    try {
-      const response = await axios.post(API_URL, payload, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 30000,
-        maxContentLength: 5 * 1024 * 1024,
-      });
-
-      return {
-        answer: response.data.answer || null,
-        results: (response.data.results || []).map((r) => ({
-          title: r.title,
-          url: r.url,
-          content: r.content,
-          score: r.score,
-        })),
-        query: response.data.query,
-        responseTime: response.data.response_time,
-      };
-    } catch (err) {
-      if (err.response?.status === 401) throw new Error("Web Search: Invalid Tavily API key.");
-      if (err.response?.status === 429) throw new Error("Web Search: Rate limit exceeded. Retry later.");
-      throw new Error(`Web Search failed: ${err.response?.status || err.code} — ${err.message}`);
-    }
+    return runWebSearch({ ...config, operation }, { apiKey });
   },
 };
