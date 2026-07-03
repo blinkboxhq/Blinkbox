@@ -1,37 +1,26 @@
-import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+/**
+ * FIGMA NODE — slim entry. Resolves the Figma PAT into a client, then delegates
+ * file-op dispatch to the modular router under _packaged/figma/. Preserves the
+ * monolith's contract EXACTLY: a missing token THROWS ("figma: … required."),
+ * a missing `fileKey` SKIPS (after the token check), unknown operations THROW
+ * double-quoted, per-op validation SKIPS. Handlers receive (config, client).
+ */
+import { getClient, makeHandleError } from "../_packaged/figma/GenericFunctions.js";
+import { run as runFigma, DEFAULT_OPERATION } from "../_packaged/figma/router.js";
 
-async function getKey(credentialId, workspaceId, type) {
-  const cred = await resolveCredential(credentialId, workspaceId, type);
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
+const handleError = makeHandleError("figma:");
 
 export default {
   async run(config, input, context) {
-    const operation = config.operation || "getFile";
+    const operation = config.operation || DEFAULT_OPERATION;
     const fileKey = config.fileKey || input?.fileKey;
-    const token = config.apiToken || (config.credentialId && await getKey(config.credentialId, context?.workspaceId, "Figma"));
-    if (!token) throw new Error("figma: Figma Personal Access Token required.");
-    if (!fileKey) return { success: false, error: "figma: 'fileKey' is required.", skipped: true };
-
-    const headers = { "X-Figma-Token": token };
-    const base = "https://api.figma.com/v1";
-
-    if (operation === "getFile") {
-      const res = await axios.get(`${base}/files/${fileKey}`, { headers, params: { depth: config.depth || 2 } });
-      return { name: res.data.name, lastModified: res.data.lastModified, thumbnailUrl: res.data.thumbnailUrl, version: res.data.version, pages: res.data.document?.children?.map((c) => ({ id: c.id, name: c.name })) };
+    const nodeId = config.nodeId || input?.nodeId;
+    try {
+      const client = await getClient(config, context, "figma:");
+      if (!fileKey) return { success: false, error: "figma: 'fileKey' is required.", skipped: true };
+      return await runFigma({ ...config, operation, fileKey, nodeId }, client);
+    } catch (err) {
+      return handleError(err);
     }
-    if (operation === "getComponents") {
-      const res = await axios.get(`${base}/files/${fileKey}/components`, { headers });
-      return { components: res.data.meta?.components || [], count: (res.data.meta?.components || []).length };
-    }
-    if (operation === "exportImage") {
-      const nodeId = config.nodeId || input?.nodeId;
-      if (!nodeId) return { success: false, error: "figma exportImage: 'nodeId' required.", skipped: true };
-      const res = await axios.get(`${base}/images/${fileKey}`, { headers, params: { ids: nodeId, format: config.format || "png", scale: config.scale || 2 } });
-      return { images: res.data.images, err: res.data.err };
-    }
-    throw new Error(`figma: Unknown operation "${operation}".`);
   },
 };

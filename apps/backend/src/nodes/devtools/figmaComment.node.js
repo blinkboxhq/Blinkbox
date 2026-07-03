@@ -1,42 +1,27 @@
-import axios from "axios";
-import { resolveCredential } from "../../utils/resolveCredential.js";
-import { decrypt } from "../../utils/crypto.js";
+/**
+ * FIGMA COMMENT NODE — slim entry. Resolves the Figma PAT into a client, then
+ * delegates comment dispatch (keyed on `mode`) to the modular commentRouter
+ * under _packaged/figma/. Preserves the monolith's contract EXACTLY: a missing
+ * token THROWS ("figma_comment: … required."), a missing `fileKey` SKIPS (after
+ * the token check), an unknown mode THROWS double-quoted. Handlers receive
+ * (config, client).
+ */
+import { getClient, makeHandleError } from "../_packaged/figma/GenericFunctions.js";
+import { run as runComment, DEFAULT_MODE } from "../_packaged/figma/commentRouter.js";
 
-async function getKey(credentialId, workspaceId, type) {
-  const cred = await resolveCredential(credentialId, workspaceId, type);
-  return decrypt(cred.encryptedData, cred.iv, cred.authTag);
-}
+const handleError = makeHandleError("figma_comment:");
 
 export default {
   async run(config, input, context) {
-    const mode = config.mode || "post";
+    const mode = config.mode || DEFAULT_MODE;
     const fileKey = config.fileKey || input?.fileKey;
-    const token = config.apiToken || (config.credentialId && await getKey(config.credentialId, context?.workspaceId, "Figma"));
-    if (!token) throw new Error("figma_comment: Figma Personal Access Token required.");
-    if (!fileKey) return { success: false, error: "figma_comment: 'fileKey' is required.", skipped: true };
-
-    const headers = { "X-Figma-Token": token, "Content-Type": "application/json" };
-    const base = `https://api.figma.com/v1/files/${fileKey}/comments`;
-
-    if (mode === "list") {
-      const res = await axios.get(base, { headers });
-      const comments = (res.data.comments || []).map((c) => ({ id: c.id, message: c.message, author: c.user?.handle, resolved: !!c.resolved_at, createdAt: c.created_at }));
-      return { comments, count: comments.length };
+    const message = config.message || input?.message;
+    try {
+      const client = await getClient(config, context, "figma_comment:");
+      if (!fileKey) return { success: false, error: "figma_comment: 'fileKey' is required.", skipped: true };
+      return await runComment({ ...config, mode, fileKey, message }, client);
+    } catch (err) {
+      return handleError(err);
     }
-    if (mode === "post") {
-      const body = { message: config.message || input?.message };
-      if (config.nodeId) body.client_meta = { node_id: config.nodeId, node_offset: { x: parseFloat(config.x || 0), y: parseFloat(config.y || 0) } };
-      const res = await axios.post(base, body, { headers });
-      return { commentId: res.data.id, message: res.data.message, createdAt: res.data.created_at, fileKey };
-    }
-    if (mode === "reply") {
-      const res = await axios.post(base, { message: config.message, comment_id: config.commentId }, { headers });
-      return { commentId: res.data.id, parentId: config.commentId, message: res.data.message, createdAt: res.data.created_at };
-    }
-    if (mode === "resolve") {
-      await axios.delete(`${base}/${config.commentId}`, { headers });
-      return { commentId: config.commentId, resolved: true };
-    }
-    throw new Error(`figma_comment: Unknown mode "${mode}".`);
   },
 };
