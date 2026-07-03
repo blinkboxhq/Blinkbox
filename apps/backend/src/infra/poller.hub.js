@@ -236,12 +236,13 @@ const POLL_REGISTRY = {
       credentialId: cfg.credentialId,
       workspaceId: automation.workspaceId,
       owner: cfg.owner, repo: cfg.repo,
-      type: cfg.type || cfg.eventType, labelFilter: cfg.labelFilter,
+      type: cfg.type || "both", labelFilter: cfg.labelFilter,
+      eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "ghissue",
-    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter }) => {
-      await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter);
+    run: async ({ automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter, eventType, targetValue }) => {
+      await pollRepo(automationId, triggerNodeId, credentialId, workspaceId, owner, repo, type, labelFilter, eventType, targetValue);
     },
   },
 
