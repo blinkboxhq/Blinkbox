@@ -20,6 +20,19 @@ import {
 import {
   unregisterTelegramWebhook,
 } from "../../../infra/telegram.webhook.js";
+import {
+  registerShopifyWebhook,
+  unregisterShopifyWebhook,
+} from "../../../infra/shopify.webhook.js";
+import {
+  registerLinearWebhook,
+  unregisterLinearWebhook,
+} from "../../../infra/linear.webhook.js";
+import {
+  registerTypeformWebhook,
+  unregisterTypeformWebhook,
+} from "../../../infra/typeform.webhook.js";
+import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 import { snapshotBeforeSave } from "../version.routes.js";
 import { resolveCredential } from "../../../utils/resolveCredential.js";
 import { decrypt } from "../../../utils/crypto.js";
@@ -223,6 +236,40 @@ export async function activateAutomation(req, res) {
           );
       }
 
+      if (trigger === "shopify_trigger") {
+        const shop = cfg.shop;
+        const eventType = cfg.eventType || cfg.watchType || "order_created";
+        if (!shop) throw new Error("Shopify trigger requires a shop (*.myshopify.com).");
+        if (!cfg.credentialId) throw new Error("Shopify trigger requires a connected Shopify account.");
+        if (!cfg.webhookRegistered) {
+          const token = await getOAuthToken(cfg.credentialId, automation.workspaceId, "Shopify trigger");
+          await registerShopifyWebhook(automation._id.toString(), shop, eventType, token, entry.nodeId);
+          const refreshed = await Automation.findById(automation._id);
+          if (refreshed) Object.assign(automation, refreshed.toObject());
+        }
+      }
+
+      if (trigger === "linear_trigger") {
+        const eventType = cfg.eventType || cfg.watchType || "issue_created";
+        if (!cfg.apiKey) throw new Error("Linear trigger requires a Linear API key.");
+        if (!cfg.webhookRegistered) {
+          await registerLinearWebhook(automation._id.toString(), eventType, cfg.teamId, cfg.apiKey, entry.nodeId);
+          const refreshed = await Automation.findById(automation._id);
+          if (refreshed) Object.assign(automation, refreshed.toObject());
+        }
+      }
+
+      if (trigger === "typeform_trigger") {
+        if (!cfg.formId) throw new Error("Typeform trigger requires a form.");
+        if (!cfg.credentialId) throw new Error("Typeform trigger requires a connected Typeform account.");
+        if (!cfg.webhookRegistered) {
+          const token = await getOAuthToken(cfg.credentialId, automation.workspaceId, "Typeform trigger");
+          await registerTypeformWebhook(automation._id.toString(), cfg.formId, token, entry.nodeId);
+          const refreshed = await Automation.findById(automation._id);
+          if (refreshed) Object.assign(automation, refreshed.toObject());
+        }
+      }
+
       triggerTypesSeen.add(trigger);
     }
 
@@ -302,6 +349,43 @@ export async function deactivateAutomation(req, res) {
             })
             .catch((e) => console.error("[Telegram] Teardown failed:", e.message));
         }
+      }
+
+      if (entry.type === "shopify_trigger" && cfg.shopifyWebhookId && cfg.shop) {
+        getOAuthToken(cfg.credentialId, automation.workspaceId, "Shopify trigger")
+          .then((token) =>
+            unregisterShopifyWebhook(
+              automation._id.toString(),
+              cfg.shop,
+              cfg.shopifyWebhookId,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[Shopify] Teardown failed:", e.message));
+      }
+
+      if (entry.type === "linear_trigger" && cfg.linearWebhookId && cfg.apiKey) {
+        unregisterLinearWebhook(
+          automation._id.toString(),
+          cfg.linearWebhookId,
+          cfg.apiKey,
+          entry.nodeId,
+        ).catch((e) => console.error("[Linear] Teardown failed:", e.message));
+      }
+
+      if (entry.type === "typeform_trigger" && cfg.typeformWebhookTag && cfg.typeformFormId) {
+        getOAuthToken(cfg.credentialId, automation.workspaceId, "Typeform trigger")
+          .then((token) =>
+            unregisterTypeformWebhook(
+              automation._id.toString(),
+              cfg.typeformFormId,
+              cfg.typeformWebhookTag,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[Typeform] Teardown failed:", e.message));
       }
     }
 
@@ -471,6 +555,42 @@ export async function deleteAutomation(req, res) {
           cfg.stripeKeyCredential,
           entry.nodeId,
         ).catch((e) => console.error("[Stripe] Cleanup failed:", e.message));
+      }
+      if (entry.type === "shopify_trigger" && cfg.shopifyWebhookId && cfg.shop) {
+        getOAuthToken(cfg.credentialId, automation.workspaceId, "Shopify trigger")
+          .catch(() => null)
+          .then((token) =>
+            unregisterShopifyWebhook(
+              automation._id.toString(),
+              cfg.shop,
+              cfg.shopifyWebhookId,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[Shopify] Cleanup failed:", e.message));
+      }
+      if (entry.type === "linear_trigger" && cfg.linearWebhookId && cfg.apiKey) {
+        unregisterLinearWebhook(
+          automation._id.toString(),
+          cfg.linearWebhookId,
+          cfg.apiKey,
+          entry.nodeId,
+        ).catch((e) => console.error("[Linear] Cleanup failed:", e.message));
+      }
+      if (entry.type === "typeform_trigger" && cfg.typeformWebhookTag && cfg.typeformFormId) {
+        getOAuthToken(cfg.credentialId, automation.workspaceId, "Typeform trigger")
+          .catch(() => null)
+          .then((token) =>
+            unregisterTypeformWebhook(
+              automation._id.toString(),
+              cfg.typeformFormId,
+              cfg.typeformWebhookTag,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[Typeform] Cleanup failed:", e.message));
       }
     }
 

@@ -941,6 +941,11 @@ export async function syncPollerHub(filterTriggerType = null) {
       for (const node of getTriggerNodesOfType(automation, entry.triggerName)) {
         const cfg = getTriggerConfig(node);
 
+        // Webhook-capable triggers register a native push webhook on activation.
+        // Once registered, the node is delivered in real time — skip polling it
+        // entirely so there's no duplicate delivery and no needless load.
+        if (cfg.webhookRegistered) continue;
+
         const missing = entry.required.filter((f) => !cfg[f]);
         if (missing.length) {
           console.warn(`[PollHub] ${automation._id} node ${node.id} (${triggerType}) missing: ${missing.join(", ")} — skipping`);
