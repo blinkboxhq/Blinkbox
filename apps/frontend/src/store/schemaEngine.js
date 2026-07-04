@@ -275,7 +275,6 @@ export const DEFAULT_SCHEMAS = {
   vector_memory: { memories: "array", count: "number", namespace: "string", query: "string", memoryId: "string", memoryKey: "string", text: "string" },
   ai_decision: { decision: "string", confidence: "number", reasoning: "string", scores: "object", factors: "array", recommended_action: "string", risks: "array", alternatives: "array" },
   notification_hub: { sent: "number", failed: "number", total: "number", results: "array", fallbackUsed: "boolean", deduped: "boolean", message: "string" },
-  browser_agent: { success: "boolean", result: "string", finalUrl: "string", title: "string", screenshot: "string", steps: "array", stepCount: "number" },
 
   // New Integrations
   elevenlabs: { audioBase64: "string", mimeType: "string", voiceId: "string", model: "string", characterCount: "number" },
@@ -428,7 +427,6 @@ const EXPECTED_INPUT_TYPES = {
   vector_memory: { text: "string" },
   ai_decision: { scenario: "string" },
   notification_hub: { message: "string" },
-  browser_agent: { url: "string", goal: "string" },
   data_diff: { before: "object", after: "object" },
 };
 

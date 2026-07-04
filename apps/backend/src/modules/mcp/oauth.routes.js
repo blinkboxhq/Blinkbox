@@ -37,11 +37,11 @@ import { record } from "./mcp.routes.js";
 
 const router = Router();
 
-// Temporary: trace OAuth/discovery hits into the same ring the /api/mcp endpoint
-// uses, so the full login → token → reconnect sequence is visible at
-// GET /api/mcp/_recent. Scoped to connector paths only — this router is mounted
-// at "/", so without the filter the dashboard's own traffic floods the ring.
-// Remove once the Claude connection is fixed.
+// Trace OAuth/discovery hits into the same in-process ring the /api/mcp endpoint
+// uses, so the full login → token → reconnect sequence is captured. No route
+// exposes the ring; only non-secret flags (has_pkce/has_verifier/…) are stored,
+// never the token/code/verifier. Scoped to connector paths only — this router is
+// mounted at "/", so without the filter the dashboard's own traffic floods it.
 const TRACE_RE = /^\/(oauth\/|\.well-known\/)/;
 router.use((req, res, next) => {
   if (!TRACE_RE.test(req.path)) return next();
@@ -73,9 +73,8 @@ router.use((req, res, next) => {
   next();
 });
 
-// Temporary: let a handler annotate WHY it returned the status it did, written
-// into the same ring entry so GET /api/mcp/_recent shows the exact failure
-// branch. Remove with the rest of the trace once the connector is verified.
+// Let a handler annotate WHY it returned the status it did, written into the
+// same ring entry as the exact failure branch.
 function dbg(req, reason) {
   if (req._traceEntry) req._traceEntry.dbg = reason;
 }

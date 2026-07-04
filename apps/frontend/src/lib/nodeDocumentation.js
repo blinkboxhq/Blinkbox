@@ -169,17 +169,6 @@ export const NODE_DOCS = {
       { name: "sent", type: "number", desc: "Number of successful deliveries" },
     ],
   },
-  browser_agent: {
-    description: "Autonomous browser automation for navigating, clicking, and extracting data from websites.",
-    inputs: [
-      { name: "url", type: "string", desc: "Starting URL" },
-      { name: "goal", type: "string", desc: "What the agent should achieve" },
-    ],
-    outputs: [
-      { name: "result", type: "string", desc: "Final answer or status" },
-      { name: "screenshot", type: "string", desc: "Base64 page screenshot" },
-    ],
-  },
   data_diff: {
     description: "Deep structural comparison of two objects or arrays to find what changed.",
     inputs: [

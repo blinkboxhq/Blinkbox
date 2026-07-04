@@ -48,7 +48,7 @@ export const NODE_TYPES = [
   // Social
   "twitter", "elevenlabs", "zoom",
   // Agent / Computer
-  "browser_agent", "virtual_computer", "coding_agent",
+  "virtual_computer", "coding_agent",
   "claude_code", "codex", "gemini_cli", "ollama", "lm_studio", "github_copilot",
   // Flow Control
   "approval", "sub_workflow",

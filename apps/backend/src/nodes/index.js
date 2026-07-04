@@ -109,7 +109,6 @@ import aggregate       from "./aggregate.node.js";
 import pdfGenerator    from "./pdfGenerator.node.js";
 import emailParser     from "./emailParser.node.js";
 import vectorMemory    from "./vectorMemory.node.js";
-import browserAgent    from "./browserAgent.node.js";
 import ocr             from "./ocr.node.js";
 import urlParser       from "./urlParser.node.js";
 import translation     from "./translation.node.js";
@@ -336,7 +335,6 @@ const rawNodeRegistry = {
   pdf_generator:     pdfGenerator,
   email_parser:      emailParser,
   vector_memory:     vectorMemory,
-  browser_agent:     browserAgent,
   ocr:               ocr,
   url_parser:        urlParser,
   translation:       translation,

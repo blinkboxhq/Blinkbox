@@ -45,16 +45,21 @@ function buildServer(userId) {
   return server;
 }
 
-// In-memory ring of the last 30 /api/mcp requests so we can inspect what each
-// chat client actually sends without relying on the platform log view. Read it
-// at GET /api/mcp-debug/recent. Temporary — remove once the Claude 405 is fixed.
+// In-memory ring of the last 60 /api/mcp requests, kept only for the running
+// process. Not exposed over any route — the API key rides in the URL path
+// (/api/mcp/<key>) or ?key=<key>, so anything stored here is redacted first.
 const RECENT = [];
 export function record(entry) {
   RECENT.push(entry);
   if (RECENT.length > 60) RECENT.shift();
 }
-export function recentMcpRequests() {
-  return RECENT.slice().reverse();
+
+// The MCP key can appear as the last path segment or as ?key=. Strip both so a
+// secret never lands in the ring buffer.
+function redactUrl(rawUrl) {
+  return String(rawUrl || "")
+    .replace(/(\/api\/mcp\/)[^/?#]+/i, "$1<redacted>")
+    .replace(/([?&]key=)[^&#]+/i, "$1<redacted>");
 }
 
 // Record every /api/mcp hit BEFORE auth runs, so failed-auth requests (401) are
@@ -67,7 +72,7 @@ function recordHit(req, res, next) {
   const entry = {
     at: new Date().toISOString(),
     method: req.method,
-    path: req.originalUrl,
+    path: redactUrl(req.originalUrl),
     accept: req.headers["accept"] || null,
     sid: req.headers["mcp-session-id"] || null,
     proto: req.headers["mcp-protocol-version"] || null,
@@ -148,13 +153,6 @@ async function handle(req, res) {
 // messages. That stream sitting open with no events is correct, not a hang —
 // answering the GET with 405 makes Claude's relay treat the server as dead and
 // show "Couldn't connect." So GET goes to the SDK transport like POST/DELETE.
-// Temporary, unauthenticated read of the recent-request ring (no secrets in it).
-// Lets us see exactly what method/status each chat client got, bypassing the
-// platform log view. Remove once the Claude 405 is diagnosed.
-router.get("/_recent", (_req, res) => {
-  res.json({ count: RECENT.length, requests: recentMcpRequests() });
-});
-
 router.post("/", recordHit, verifyMcpAuth, handle);
 router.post("/:token", recordHit, verifyMcpAuth, handle);
 router.get("/", recordHit, verifyMcpAuth, handle);

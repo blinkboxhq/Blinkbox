@@ -132,7 +132,6 @@ const NODE_COSTS = {
 
   // ── Heavy compute (15) ─────────────────────────────────────────────────────
   web_scraper: 15, advanced_scraper: 15, informer: 15,
-  browser_agent: 15,
   ocr: 15, image_resize: 10, qr_code: 2, pdf_generator: 5,
 };
 

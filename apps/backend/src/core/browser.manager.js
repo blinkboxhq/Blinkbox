@@ -9,7 +9,7 @@
  *   - CONCURRENCY_CONTEXT: Each task gets its own browser context (isolated cookies/storage)
  *   - maxConcurrency: 4 simultaneous pages
  *   - retryLimit: 1 (auto-retry failed tasks once)
- *   - timeout: 10 min per task (matches browserAgent.timeoutMs — long ai_goal runs)
+ *   - timeout: 10 min per task (long-running scrape/informer runs)
  *   - Stealth plugin defeats basic bot detection
  */
 

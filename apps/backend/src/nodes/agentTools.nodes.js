@@ -14,8 +14,6 @@ import axios from "axios";
 import crypto from "crypto";
 import { execute as containerExecute, executeCustom as containerExecuteCustom } from "../infra/container.pool.js";
 import { dispatchAction as _vcDispatch } from "./VirtualComputer.js";
-import { exec } from "child_process";
-import { promisify } from "util";
 import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
@@ -37,8 +35,6 @@ async function safeUrl(rawUrl) {
   return u;
 }
 
-const execAsync = promisify(exec);
-
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,18 +45,6 @@ function td(name, description, properties = {}, required = []) {
     description,
     parameters: { type: "object", properties, required },
   };
-}
-
-async function safeExec(cmd, timeoutMs = 10000) {
-  try {
-    const { stdout, stderr } = await execAsync(cmd, {
-      timeout: timeoutMs,
-      maxBuffer: 1024 * 1024 * 4,
-    });
-    return { stdout: stdout.trim(), stderr: stderr.trim() };
-  } catch (err) {
-    return { stdout: "", stderr: err.message, exitCode: err.code };
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

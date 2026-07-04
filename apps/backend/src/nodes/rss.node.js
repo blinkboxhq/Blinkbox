@@ -1,4 +1,5 @@
 import axios from "axios";
+import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 export default {
   async run(config, input) {
@@ -7,10 +8,28 @@ export default {
 
     const limit = Math.min(config.limit || 20, 100);
 
-    const { data } = await axios.get(feedUrl, {
-      headers: { "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*", "User-Agent": "BlinkBox/1.0 RSS Reader" },
-      timeout: 15000,
-    });
+    await assertSafeUrlResolved(feedUrl);
+
+    // Follow redirects manually so every hop is SSRF-checked before we fetch it —
+    // a public feed URL can 30x to an internal host, which axios would otherwise
+    // follow blindly.
+    let currentUrl = feedUrl;
+    let res;
+    for (let hop = 0; hop < 5; hop++) {
+      res = await axios.get(currentUrl, {
+        headers: { "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*", "User-Agent": "BlinkBox/1.0 RSS Reader" },
+        timeout: 15000,
+        maxRedirects: 0,
+        validateStatus: (s) => (s >= 200 && s < 300) || (s >= 300 && s < 400),
+      });
+      if (res.status < 300) break;
+      const location = res.headers?.location;
+      if (!location) break;
+      currentUrl = new URL(location, currentUrl).toString();
+      await assertSafeUrlResolved(currentUrl);
+      if (hop === 4) throw new Error("RSS: too many redirects.");
+    }
+    const data = res.data;
 
     const items = [];
 

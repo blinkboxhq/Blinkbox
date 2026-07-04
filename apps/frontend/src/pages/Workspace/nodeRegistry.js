@@ -318,7 +318,6 @@ import PDFGeneratorNode from "@nodes/pdf_generator/ConfigPanel.jsx";
 import EmailParserNode from "@nodes/email_parser/ConfigPanel.jsx";
 import VectorMemoryNode from "@nodes/vector_memory/ConfigPanel.jsx";
 
-import BrowserAgentNode from "@nodes/browser_agent/ConfigPanel.jsx";
 import ElevenLabsNode from "@nodes/elevenlabs/ConfigPanel.jsx";
 import PineconeNode from "@nodes/pinecone/ConfigPanel.jsx";
 import ZoomNode from "@nodes/zoom/ConfigPanel.jsx";
@@ -2210,7 +2209,6 @@ export const NodeRegistry = {
     category: "data",
   },
   vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
-  browser_agent:     { label: "Browser Agent",    icon: Monitor,                          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: BrowserAgentNode,    category: "ai_agent", description: "Autonomous Puppeteer agent that browses and extracts web data" },
   resend: {
     label: "Resend",
     icon: Mail,

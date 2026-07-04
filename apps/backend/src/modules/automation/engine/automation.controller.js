@@ -60,6 +60,8 @@ export async function saveAutomation(req, res) {
       // Do NOT let an editor overwrite collaborators (privilege escalation).
       delete req.body.workspaceId;
       delete req.body.collaborators;
+      delete req.body._id;
+      delete req.body.__v;
 
       const accessFilter = {
         _id: req.params.id,
@@ -80,7 +82,12 @@ export async function saveAutomation(req, res) {
         { returnDocument: "after" },
       );
     } else {
-      // Creating a brand new automation — inject current user as owner
+      // Creating a brand new automation — inject current user as owner.
+      // Strip client-controlled ownership/identity fields so the request body
+      // can't seed arbitrary collaborators or forge _id/__v (mass assignment).
+      delete req.body._id;
+      delete req.body.__v;
+      delete req.body.collaborators;
       req.body.workspaceId = req.user.id;
       automation = await Automation.create(req.body);
     }
