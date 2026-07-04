@@ -22,8 +22,8 @@ import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } f
 import { getOAuthToken } from "../utils/getOAuthToken.js";
 import { resolveSecret } from "../utils/resolveSecret.js";
 import { assertSafeHost } from "../utils/ssrf.js";
-import { TELEGRAM_EVENTS, shape as telegramShape } from "./telegram.poller.js";
-import { MESSAGE_EVENTS, messageShape, memberShape } from "./discord.poller.js";
+import { TELEGRAM_EVENTS } from "./telegram.poller.js";
+import { MESSAGE_EVENTS } from "./discord.poller.js";
 import { SLACK_EVENTS } from "./slack.poller.js";
 import { pollMailbox } from "./imap.poller.js";
 
@@ -34,9 +34,18 @@ const lc = (s) => String(s ?? "").toLowerCase();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const tokenHash = (t) => crypto.createHash("sha1").update(String(t)).digest("hex").slice(0, 16);
 
-async function fire(sub, payload, idempotencyKey) {
+// The node handlers (triggers/*.js) all read `input?.body ?? input` and then
+// parse the RAW provider payload (telegram update, discord message, slack
+// envelope). The webhook path feeds them `{ body: rawProviderPayload }`, so the
+// realtime path must use the exact same contract — passing a pre-shaped object
+// makes the handler re-parse already-shaped data into an empty result (and, if
+// chat/user filters are set, return null → the whole execution aborts and the
+// next node never runs). We therefore hand `fire()` the raw payload here and
+// wrap it as `{ body }` before executing.
+async function fire(sub, rawPayload, idempotencyKey) {
   const automation = await Automation.findOne({ _id: sub.automationId, active: true });
   if (!automation) return;
+  const payload = { body: rawPayload, headers: {}, query: {}, method: "POST" };
   const { executeAutomation } = await import("../modules/automation/automation.executor.js");
   try {
     await executeAutomation(automation, payload, {
@@ -70,7 +79,7 @@ async function dispatchTelegramUpdate(u, subscribers) {
     if (m === undefined) continue;
     if (!spec.match(u, m, { targetValue: sub.cfg.targetValue })) continue;
     const scope = sub.nodeId || sub.automationId;
-    await fire(sub, telegramShape(u, eventType), `telegram:${scope}:${eventType}:${u.update_id}`);
+    await fire(sub, u, `telegram:${scope}:${eventType}:${u.update_id}`);
   }
 }
 
@@ -172,7 +181,7 @@ async function onDiscordMessage(d, subscribers) {
     const added = await redis.sadd(seenKey, d.id);
     if (!added) continue;
     await redis.expire(seenKey, SEEN_TTL);
-    await fire(sub, messageShape(d, d.channel_id), `discord:${scope}:${eventType}:${d.id}`);
+    await fire(sub, d, `discord:${scope}:${eventType}:${d.id}`);
   }
 }
 
@@ -187,11 +196,7 @@ async function onDiscordThread(d, subscribers) {
     const added = await redis.sadd(seenKey, d.id);
     if (!added) continue;
     await redis.expire(seenKey, SEEN_TTL);
-    await fire(
-      sub,
-      { id: d.id, type: "thread", threadName: d.name, parentId: d.parent_id, ownerId: d.owner_id, guildId: d.guild_id },
-      `discord:${scope}:thread_created:${d.id}`,
-    );
+    await fire(sub, d, `discord:${scope}:thread_created:${d.id}`);
   }
 }
 
@@ -210,7 +215,7 @@ async function onDiscordMember(d, subscribers) {
     const added = await redis.sadd(seenKey, d.user.id);
     if (!added) continue;
     await redis.expire(seenKey, SEEN_TTL);
-    await fire(sub, memberShape(d, d.guild_id), `discord:${scope}:member_joined:${d.user.id}`);
+    await fire(sub, d, `discord:${scope}:member_joined:${d.user.id}`);
   }
 }
 
@@ -381,11 +386,7 @@ async function onSlackEvent(ev, subscribers) {
     const fresh = await redis.sadd(seenKey, dedup);
     if (!fresh) continue;
     await redis.expire(seenKey, SEEN_TTL);
-    await fire(sub, {
-      ts: m.ts, text: m.text, user: m.user, channel: ev.channel,
-      isBot: m.isBot, threadTs: m.threadTs, replyCount: m.replyCount,
-      reactionCount: m.reactionCount, reactions: m.reactions, hasFile: m.hasFile,
-    }, `slack:${scope}:${eventType}:${dedup}`);
+    await fire(sub, ev, `slack:${scope}:${eventType}:${dedup}`);
   }
 }
 

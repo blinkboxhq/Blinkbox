@@ -364,12 +364,19 @@ function SuccessFailedOutputHandles({ cardHeight, successConnected, failedConnec
 // ─── Spinning border overlay (n8n-style live execution ring) ─────────────────
 // Renders behind the card. The inner mask div recreates the card background so
 // only a 4px rim of the rotating conic-gradient is visible.
+// radius: a single number (uniform square/circle) OR a CSS border-radius string
+// for asymmetric shapes like the trigger's D ("33px 8px 8px 33px"). The outer
+// mask needs each corner grown by 4px so the visible rim hugs the card shape.
+function growRadius(radius, by) {
+  if (typeof radius === "number") return radius + by;
+  return radius.replace(/(\d+(?:\.\d+)?)px/g, (_, n) => `${parseFloat(n) + by}px`);
+}
 function SpinBorder({ radius, w, h, slow = false, color1 = "#3b82f6", color2 = "#93c5fd" }) {
   const grad = `conic-gradient(from 0deg, transparent 0deg, transparent 145deg, rgba(59,130,246,0.45) 180deg, ${color1} 235deg, ${color2} 262deg, ${color1} 288deg, rgba(59,130,246,0.35) 322deg, transparent 358deg)`;
   return (
     <div
       className="absolute pointer-events-none"
-      style={{ top: -4, left: -4, width: w + 8, height: h + 8, borderRadius: radius + 4, overflow: "hidden", zIndex: 0 }}
+      style={{ top: -4, left: -4, width: w + 8, height: h + 8, borderRadius: growRadius(radius, 4), overflow: "hidden", zIndex: 0 }}
     >
       <div
         className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
@@ -580,7 +587,7 @@ function CustomNode({ id, data, selected }) {
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 54 }}>
         {toolbar}
-        {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
+        {status === "running" && <SpinBorder radius={triggerRadius} w={cardW} h={cardH} />}
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={isChatTrigger ? handleOpenConfig : handlePlay}
           className={`bb-card absolute flex flex-col items-center justify-center transition-all duration-300 ${isRunning ? "cursor-wait" : "cursor-pointer"}`}
