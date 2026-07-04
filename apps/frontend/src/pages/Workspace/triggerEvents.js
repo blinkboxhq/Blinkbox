@@ -27,7 +27,7 @@ const notionBaseFields = [
     hint: '// create an internal integration at notion.so/my-integrations, then share the database with it' },
   { type: 'text', key: 'databaseId', label: 'Database ID', placeholder: '32-char id from the database URL',
     hint: '// open the database as a full page — the id is the part before ?v= in the URL' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: NOTION_POLL },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *', options: NOTION_POLL },
 ];
 const notionVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -51,6 +51,7 @@ const notionStatusField = (value) => ({
 });
 
 const HUBSPOT_POLL = [
+  { value: '* * * * *', label: 'Every minute' },
   { value: '*/2 * * * *', label: 'Every 2 minutes' },
   { value: '*/5 * * * *', label: 'Every 5 minutes' },
   { value: '*/15 * * * *', label: 'Every 15 minutes' },
@@ -60,7 +61,7 @@ const HUBSPOT_POLL = [
 const hubspotBaseFields = [
   { type: 'credential', key: 'apiKey', label: 'HubSpot Private App Token', credType: 'hubspot',
     hint: '// Settings → Integrations → Private Apps → create one with crm.objects.*.read scopes' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: HUBSPOT_POLL },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *', options: HUBSPOT_POLL },
 ];
 const hubspotVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -97,7 +98,7 @@ const trelloBaseFields = [
     hint: '// click "Token" on the app-key page and authorize read access' },
   { type: 'text', key: 'boardId', label: 'Board ID', placeholder: '24-char id from the board URL',
     hint: '// add .json to a board URL, or copy the id segment after /b/' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: TRELLO_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: TRELLO_POLL },
 ];
 const trelloVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -119,6 +120,7 @@ const trelloEvent = (id, label, description, icon, varsExtra = [], includeListFi
 });
 
 const PIPEDRIVE_POLL = [
+  { value: '1', label: 'Every minute' },
   { value: '2', label: 'Every 2 minutes' },
   { value: '5', label: 'Every 5 minutes' },
   { value: '15', label: 'Every 15 minutes' },
@@ -128,7 +130,7 @@ const PIPEDRIVE_POLL = [
 const pipedriveBaseFields = [
   { type: 'credential', key: 'apiToken', label: 'Pipedrive API Token', credType: 'pipedrive',
     hint: '// Settings → Personal preferences → API → copy your personal token' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: PIPEDRIVE_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: PIPEDRIVE_POLL },
 ];
 const pipedriveVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -147,6 +149,7 @@ const pipedriveEvent = (id, label, description, icon, varsExtra = [], fields = [
 });
 
 const ASANA_POLL = [
+  { value: '1', label: 'Every minute' },
   { value: '2', label: 'Every 2 minutes' },
   { value: '5', label: 'Every 5 minutes' },
   { value: '15', label: 'Every 15 minutes' },
@@ -158,7 +161,7 @@ const asanaBaseFields = [
     hint: '// Asana → My Settings → Apps → Manage Developer Apps → Personal access token' },
   { type: 'text', key: 'projectId', label: 'Project ID', placeholder: '1201234567890123',
     hint: '// the long number in your project URL: app.asana.com/0/<PROJECT_ID>/list' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: ASANA_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: ASANA_POLL },
 ];
 const asanaVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -187,7 +190,7 @@ const GMAIL_POLL = [
 const gmailBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Gmail Account', provider: 'google',
     hint: '// connect the Gmail account to watch (OAuth — no password stored)' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: GMAIL_POLL },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *', options: GMAIL_POLL },
 ];
 const gmailVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -217,7 +220,7 @@ const OUTLOOK_POLL = [
 const outlookBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Outlook Account', provider: 'microsoft',
     hint: '// connect the Microsoft 365 / Outlook account to watch (OAuth)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: OUTLOOK_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: OUTLOOK_POLL },
 ];
 const outlookVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -248,7 +251,7 @@ const mastodonBaseFields = [
     hint: '// your Mastodon server, e.g. mastodon.social or fosstodon.org' },
   { type: 'credential', key: 'accessToken', label: 'Access Token', credType: 'mastodon',
     hint: '// Preferences → Development → New application → copy the access token' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: MASTODON_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: MASTODON_POLL },
 ];
 const mastodonVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -276,7 +279,7 @@ const GDRIVE_POLL = [
 const gdriveBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Google Account', provider: 'google',
     hint: '// connect the Google account whose Drive you want to watch (OAuth)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GDRIVE_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: GDRIVE_POLL },
 ];
 const gdriveFolderField = { type: 'text', key: 'folderId', label: 'Limit To Folder (optional)', placeholder: 'folder id from the Drive URL',
   hint: '// optional — only fire for files directly inside this folder id' };
@@ -309,7 +312,7 @@ const gcalBaseFields = [
     hint: '// connect the Google account whose calendar you want to watch (OAuth)' },
   { type: 'text', key: 'calendarId', label: 'Calendar', default: 'primary', placeholder: 'primary',
     hint: '// leave as "primary" for your main calendar, or paste another calendar id' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GCAL_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: GCAL_POLL },
 ];
 const gcalLeadField = { type: 'text', key: 'minutesBefore', label: 'Minutes Before Start', default: '0', placeholder: '0',
   hint: '// fire this many minutes before the event begins (0 = right as it starts)' };
@@ -343,7 +346,7 @@ const ONEDRIVE_POLL = [
 const onedriveBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Microsoft Account', provider: 'microsoft',
     hint: '// connect the Microsoft account whose OneDrive you want to watch (OAuth)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: ONEDRIVE_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: ONEDRIVE_POLL },
 ];
 const onedriveFolderField = { type: 'text', key: 'folderId', label: 'Limit To Folder (optional)', placeholder: 'OneDrive folder item id',
   hint: '// optional — only watch changes inside this folder item id' };
@@ -409,7 +412,7 @@ const sharepointBaseFields = [
     hint: '// the Graph site id of the SharePoint site' },
   { type: 'text', key: 'listId', label: 'List ID', placeholder: 'list guid',
     hint: '// the id of the list (or library) whose items you want to watch' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: SHAREPOINT_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: SHAREPOINT_POLL },
 ];
 const sharepointColumnField = { type: 'text', key: 'columnName', label: 'Column Name', placeholder: 'e.g. Status',
   hint: '// the internal name of the list column to inspect' };
@@ -442,7 +445,7 @@ const docsBaseFields = [
     hint: '// connect the Google account that can open the doc (OAuth)' },
   { type: 'text', key: 'docId', label: 'Document ID', placeholder: 'the id from the doc URL',
     hint: '// the long id between /d/ and /edit in the document URL' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: DOCS_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: DOCS_POLL },
 ];
 const docsVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -473,7 +476,7 @@ const formsBaseFields = [
     hint: '// connect the Google account that owns the form (OAuth)' },
   { type: 'text', key: 'formId', label: 'Form ID', placeholder: 'the id from the form edit URL',
     hint: '// the long id in the form URL after /forms/d/' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: FORMS_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: FORMS_POLL },
 ];
 const formsQuestionField = { type: 'text', key: 'questionTitle', label: 'Question', placeholder: 'exact question title',
   hint: '// type the question label exactly as it appears on the form' };
@@ -509,7 +512,7 @@ const sheetsBaseFields = [
     hint: '// a tab name like Sheet1, or a range like Sheet1!A:F' },
   { type: 'switch-row', key: 'hasHeader', label: 'First Row Is A Header', default: true,
     hint: '// on = use row 1 as column names so variables read like $trigger.Email' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: SHEETS_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: SHEETS_POLL },
 ];
 const sheetsColumnField = { type: 'text', key: 'columnName', label: 'Column', placeholder: 'e.g. Status (header name, A, or 0)',
   hint: '// which column to watch — a header name, an A1 letter, or a 0-based index' };
@@ -542,7 +545,7 @@ const teamsBaseFields = [
     hint: '// the team (group) id — copy it from the Teams channel link' },
   { type: 'text', key: 'channelId', label: 'Channel ID', placeholder: '19:xxxxx@thread.tacv2',
     hint: '// the channel id from the channel link (the 19:… value)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2', options: TEAMS_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: TEAMS_POLL },
 ];
 const teamsVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -571,7 +574,7 @@ const datadogBaseFields = [
     hint: '// Organization Settings → Application Keys → copy a key (needed to read events)' },
   { type: 'text', key: 'tags', label: 'Tag Filter (optional)', placeholder: 'env:prod,service:api',
     hint: '// only pull events with these tags — leave blank for all' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2', options: TEAMS_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: TEAMS_POLL },
 ];
 const datadogTargetField = (label, placeholder, hint) =>
   ({ type: 'text', key: 'targetValue', label, placeholder, hint });
@@ -601,8 +604,9 @@ const datadogEvent = (id, label, description, icon, extraFields = [], varsExtra 
 const instagramBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Instagram Account', credType: 'instagram',
     oauthProvider: 'instagram', hint: '// connect your Instagram professional account' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
       { value: '60', label: 'Every hour' },
@@ -676,7 +680,7 @@ const discordBaseFields = [
     hint: '// right-click a channel → Copy Channel ID (needs Developer Mode)' },
   { type: 'text', key: 'guildId', label: 'Server ID', placeholder: '(optional)',
     hint: '// required for member, thread and boost events' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '2',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '2', label: 'Every 2 minutes' },
@@ -711,8 +715,9 @@ const azureBaseFields = [
     hint: '// the project name inside the organization' },
   { type: 'credential', key: 'pat', label: 'Personal Access Token', credType: 'azure_devops',
     hint: '// User Settings → Personal Access Tokens (needs Read scopes)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '2', label: 'Every 2 minutes' },
       { value: '3', label: 'Every 3 minutes' },
       { value: '5', label: 'Every 5 minutes' },
@@ -742,8 +747,9 @@ const figmaBaseFields = [
     hint: '// the key in figma.com/file/{KEY}/...' },
   { type: 'credential', key: 'token', label: 'Personal Access Token', credType: 'figma',
     hint: '// Figma → Settings → Personal access tokens' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '3',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '2', label: 'Every 2 minutes' },
       { value: '3', label: 'Every 3 minutes' },
       { value: '5', label: 'Every 5 minutes' },
@@ -800,7 +806,7 @@ const priceBaseFields = [
       { value: 'inr', label: 'INR' },
       { value: 'btc', label: 'BTC' },
     ] },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -910,7 +916,7 @@ const sshBaseFields = [
     hint: '// only if the private key is encrypted' },
   { type: 'textarea', key: 'command', label: 'Command', placeholder: 'systemctl is-active nginx',
     hint: '// the command run on each poll' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Run Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Run Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -943,7 +949,7 @@ const sslBaseFields = [
     hint: '// the hostname whose certificate we inspect' },
   { type: 'text', key: 'port', label: 'Port', placeholder: '443',
     hint: '// TLS port — defaults to 443' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '360',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60',
     options: [
       { value: '60', label: 'Every hour' },
       { value: '360', label: 'Every 6 hours' },
@@ -972,8 +978,9 @@ const sslEvent = (id, label, description, icon, extraFields = [], varsExtra = []
 const dnsBaseFields = [
   { type: 'text', key: 'domain', label: 'Domain', placeholder: 'example.com',
     hint: '// the domain whose DNS records we watch' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
       { value: '60', label: 'Every hour' },
@@ -1030,8 +1037,9 @@ const ghIssueBaseFields = [
     hint: '// the user or org that owns the repo' },
   { type: 'text', key: 'repo', label: 'Repository', placeholder: 'react',
     hint: '// the repo name (without the owner)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '2', label: 'Every 2 minutes' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
@@ -1062,8 +1070,9 @@ const ghIssueEvent = (id, label, description, icon, extraFields = [], varsExtra 
 const hnBaseFields = [
   { type: 'text', key: 'query', label: 'Keyword', placeholder: 'rust (optional)',
     hint: '// narrows the feed to matching stories — leave blank for all' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
       { value: '30', label: 'Every 30 minutes' },
@@ -1096,7 +1105,7 @@ const phBaseFields = [
     hint: '// your Product Hunt developer token' },
   { type: 'text', key: 'category', label: 'Topic', placeholder: 'artificial-intelligence (optional)',
     hint: '// limit to one topic slug — leave blank for all' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
     options: [
       { value: '15', label: 'Every 15 minutes' },
       { value: '30', label: 'Every 30 minutes' },
@@ -1129,8 +1138,9 @@ const rssBaseFields = [
     hint: '// the RSS or Atom feed to watch' },
   { type: 'switch-row', key: 'onlyNew', label: 'Only New Items', default: true,
     hint: '// skip items already seen on earlier checks' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/15 * * * *',
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *',
     options: [
+      { value: '* * * * *', label: 'Every minute' },
       { value: '*/5 * * * *', label: 'Every 5 minutes' },
       { value: '*/15 * * * *', label: 'Every 15 minutes' },
       { value: '*/30 * * * *', label: 'Every 30 minutes' },
@@ -1168,8 +1178,9 @@ const redditBaseFields = [
       { value: 'top', label: 'Top' },
       { value: 'rising', label: 'Rising' },
     ] },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '10',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '10', label: 'Every 10 minutes' },
       { value: '30', label: 'Every 30 minutes' },
@@ -1202,7 +1213,7 @@ const slackBaseFields = [
     oauthProvider: 'slack', hint: '// connect your Slack workspace' },
   { type: 'text', key: 'channel', label: 'Channel ID', placeholder: 'C0123456789',
     hint: '// the channel to watch — copy its ID from Slack' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1231,8 +1242,9 @@ const slackEvent = (id, label, description, icon, extraFields = [], varsExtra = 
 const tiktokBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'TikTok Account', credType: 'tiktok',
     oauthProvider: 'tiktok', hint: '// connect your TikTok creator account' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '15',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
+      { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
       { value: '60', label: 'Every hour' },
@@ -1267,7 +1279,7 @@ const vercelBaseFields = [
     hint: '// limit to one project — leave blank for all' },
   { type: 'text', key: 'teamId', label: 'Team ID', placeholder: 'team_... (optional)',
     hint: '// only if the project lives under a team' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1301,7 +1313,7 @@ const netlifyBaseFields = [
     hint: '// connect with a Personal Access Token' },
   { type: 'text', key: 'siteId', label: 'Site ID', placeholder: 'a1b2c3d4-...',
     hint: '// the site to watch — its API id' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1335,7 +1347,7 @@ const pagerdutyBaseFields = [
     hint: '// connect with a REST API key' },
   { type: 'text', key: 'serviceId', label: 'Service ID (optional)', placeholder: 'PXXXXXX',
     hint: '// limit to one service — leave blank for all' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1369,7 +1381,7 @@ const mailchimpBaseFields = [
     hint: '// connect with an API key (key-dcXX)' },
   { type: 'text', key: 'listId', label: 'Audience ID', placeholder: 'a1b2c3d4e5',
     hint: '// the audience/list to watch' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1403,7 +1415,7 @@ const typeformBaseFields = [
     hint: '// connect with a personal access token' },
   { type: 'text', key: 'formId', label: 'Form ID', placeholder: 'AbC123',
     hint: '// the form to watch — its id from the share URL' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1435,7 +1447,7 @@ const typeformEvent = (id, label, description, icon, extraFields = [], varsExtra
 const calendlyBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Calendly Account', credType: 'calendly',
     hint: '// connect with a personal access token or OAuth' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1467,7 +1479,7 @@ const calendlyEvent = (id, label, description, icon, extraFields = [], varsExtra
 const intercomBaseFields = [
   { type: 'credential', key: 'credentialId', label: 'Intercom Account', credType: 'intercom',
     hint: '// connect the workspace (access token or OAuth)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1501,7 +1513,7 @@ const zendeskBaseFields = [
     hint: '// connect the account (agent email + API token)' },
   { type: 'text', key: 'subdomain', label: 'Subdomain', placeholder: 'acme',
     hint: '// the acme in acme.zendesk.com' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1535,7 +1547,7 @@ const mondayBaseFields = [
     hint: '// paste a monday.com API v2 token (or connect via OAuth)' },
   { type: 'text', key: 'boardId', label: 'Board ID', placeholder: '1234567890',
     hint: '// the board to watch — copy the id from the board URL' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1569,7 +1581,7 @@ const wooBaseFields = [
     hint: '// connect the store (REST API consumer key + secret)' },
   { type: 'text', key: 'storeUrl', label: 'Store URL', placeholder: 'https://mystore.com',
     hint: '// your WordPress site URL (no trailing slash needed)' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1604,7 +1616,7 @@ const shopifyBaseFields = [
     hint: '// connect the store (Admin API access token or OAuth)' },
   { type: 'text', key: 'shop', label: 'Store Domain', placeholder: 'mystore.myshopify.com',
     hint: '// your *.myshopify.com domain' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1641,7 +1653,7 @@ const sentryBaseFields = [
     hint: '// your org slug — found in the Sentry URL after /organizations/' },
   { type: 'text', key: 'project', label: 'Project (optional)', placeholder: 'backend-api',
     hint: '// leave blank to watch every project in the org' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1673,7 +1685,7 @@ const clickupBaseFields = [
     hint: '// connect the ClickUp account (Personal API token or OAuth)' },
   { type: 'text', key: 'listId', label: 'List ID', placeholder: '901100000000',
     hint: '// the List to watch — open the list and copy the id from its URL' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1',
     options: [
       { value: '1', label: 'Every minute' },
       { value: '5', label: 'Every 5 minutes' },
@@ -1716,7 +1728,7 @@ const imapBaseFields = [
     hint: '// when on, only unseen messages are considered' },
   { type: 'switch-row', key: 'markRead', label: 'Mark as Read', default: true,
     hint: '// flag matched messages \\Seen after firing' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *',
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *',
     options: [
       { value: '* * * * *', label: 'Every minute' },
       { value: '*/5 * * * *', label: 'Every 5 minutes' },
@@ -1757,8 +1769,9 @@ const vtBaseFields = [
   { type: 'select', key: 'scanType', label: 'Target Type', default: 'file', options: VT_TYPE_OPTIONS },
   { type: 'text', key: 'scanTarget', label: 'Target', placeholder: '44d88612fea8a8f36de82e1278abb02f',
     hint: '// the file hash (SHA-256/MD5), full URL, or IP address to watch' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '60',
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5',
     options: [
+      { value: '5', label: 'Every 5 minutes' },
       { value: '15', label: 'Every 15 minutes' },
       { value: '30', label: 'Every 30 minutes' },
       { value: '60', label: 'Every hour' },
@@ -1798,7 +1811,7 @@ const airtableBaseFields = [
     hint: '// the app… id from the base API docs (airtable.com/api)' },
   { type: 'text', key: 'tableId', label: 'Table', placeholder: 'Table name or tbl… id',
     hint: '// the table name exactly as shown, or its tbl… id' },
-  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '*/5 * * * *', options: AIRTABLE_POLL },
+  { type: 'select', key: 'pollInterval', label: 'Check Every', default: '* * * * *', options: AIRTABLE_POLL },
 ];
 const airtableFieldInput = {
   type: 'text', key: 'filterField', label: 'Field Name', placeholder: 'e.g. Status',
@@ -1834,7 +1847,7 @@ const linearBaseFields = [
     hint: '// scope this trigger to one team; blank = your whole workspace' },
   { type: 'text', key: 'labelFilter', label: 'Label (optional)', placeholder: 'e.g. Frontend',
     hint: '// only fire on issues carrying this label' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: LINEAR_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: LINEAR_POLL },
 ];
 const linearVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -1867,7 +1880,7 @@ const jiraBaseFields = [
     hint: '// the email of the Jira account the API token belongs to' },
   { type: 'credential', key: 'token', label: 'API Token', credType: 'jira',
     hint: '// create one at id.atlassian.com/manage-profile/security/api-tokens' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: JIRA_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: JIRA_POLL },
 ];
 const jiraVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
@@ -1907,7 +1920,7 @@ const gitlabBaseFields = [
     hint: '// a Personal/Project token with read_api scope — store it once, we keep it encrypted' },
   { type: 'text', key: 'host', label: 'Host (self-managed only)', default: 'gitlab.com', placeholder: 'gitlab.com',
     hint: '// leave as gitlab.com unless you self-host' },
-  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '5', options: GITLAB_POLL },
+  { type: 'select', key: 'pollIntervalMinutes', label: 'Check Every', default: '1', options: GITLAB_POLL },
 ];
 const gitlabVars = (extra = []) => ({
   type: 'vars', label: 'Output Variables', rows: [
