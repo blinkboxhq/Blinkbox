@@ -205,7 +205,7 @@ const POLL_REGISTRY = {
     triggerName: "dns_trigger",
     required: ["domain"],
     extract: (cfg) => ({
-      cfg: { domain: cfg.domain || cfg.hostname, recordType: cfg.recordType },
+      cfg: { domain: cfg.domain || cfg.hostname, recordType: cfg.recordType, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => {
       const min = Math.max(1, Math.round(
@@ -222,7 +222,7 @@ const POLL_REGISTRY = {
     triggerName: "docker_trigger",
     required: ["host"],
     extract: (cfg) => ({
-      cfg: { host: cfg.host, eventType: cfg.eventType, containerFilter: cfg.containerFilter },
+      cfg: { host: cfg.host, eventType: cfg.eventType || cfg.watchType, containerFilter: cfg.containerFilter },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
     jobPrefix: "docker",
@@ -598,7 +598,7 @@ const POLL_REGISTRY = {
     triggerName: "hackernews_trigger",
     required: [],
     extract: (cfg) => ({
-      cfg: { query: cfg.query || cfg.keyword, storyType: cfg.storyType || cfg.feedType, minPoints: cfg.minPoints },
+      cfg: { query: cfg.query || cfg.keyword, storyType: cfg.storyType || cfg.feedType, minPoints: cfg.minPoints, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 15} * * * *` }),
     jobPrefix: "hn",
@@ -609,7 +609,7 @@ const POLL_REGISTRY = {
     triggerName: "http_monitor_trigger",
     required: ["url"],
     extract: (cfg) => ({
-      cfg: { url: cfg.url, expectedKeyword: cfg.expectedKeyword, alertOn: cfg.alertOn, maxResponseMs: cfg.maxResponseMs },
+      cfg: { url: cfg.url, expectedKeyword: cfg.expectedKeyword, alertOn: cfg.alertOn, maxResponseMs: cfg.maxResponseMs, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ every: (parseInt(cfg.pollIntervalSeconds) || 60) * 1000 }),
     jobPrefix: "httpmon",
@@ -669,7 +669,7 @@ const POLL_REGISTRY = {
     triggerName: "port_monitor_trigger",
     required: ["host", "port"],
     extract: (cfg) => ({
-      cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn },
+      cfg: { host: cfg.host, port: cfg.port, alertOn: cfg.alertOn, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ every: (parseInt(cfg.pollIntervalSeconds) || 60) * 1000 }),
     jobPrefix: "port",
@@ -680,7 +680,7 @@ const POLL_REGISTRY = {
     triggerName: "price_alert_trigger",
     required: ["coinId"],
     extract: (cfg) => ({
-      cfg: { coinId: cfg.coinId, currency: cfg.currency, condition: cfg.condition, threshold: cfg.threshold },
+      cfg: { coinId: cfg.coinId, currency: cfg.currency, condition: cfg.condition, threshold: cfg.threshold, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
     jobPrefix: "pa",
@@ -691,7 +691,7 @@ const POLL_REGISTRY = {
     triggerName: "reddit_trigger",
     required: ["subreddit"],
     extract: (cfg) => ({
-      cfg: { subreddit: cfg.subreddit, searchQuery: cfg.searchQuery, sort: cfg.sort, minScore: cfg.minScore },
+      cfg: { subreddit: cfg.subreddit, searchQuery: cfg.searchQuery, sort: cfg.sort, minScore: cfg.minScore, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 10} * * * *` }),
     jobPrefix: "reddit",
@@ -701,10 +701,10 @@ const POLL_REGISTRY = {
   rss_trigger: {
     triggerName: "rss_trigger",
     required: ["feedUrl"],
-    extract: (cfg) => ({ feedUrl: cfg.feedUrl, onlyNew: cfg.onlyNew !== false, keyword: cfg.keyword || "", matchAll: !!cfg.matchAll }),
+    extract: (cfg) => ({ feedUrl: cfg.feedUrl, onlyNew: cfg.onlyNew !== false, keyword: cfg.keyword || "", matchAll: !!cfg.matchAll, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue || "" }),
     repeat: (cfg) => ({ pattern: cfg.pollInterval || "*/15 * * * *" }),
     jobPrefix: "rss",
-    run: async ({ automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll }) => { await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll); },
+    run: async ({ automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue }) => { await pollFeed(automationId, triggerNodeId, feedUrl, onlyNew, keyword, matchAll, eventType, targetValue); },
   },
 
   ssh_trigger: {
@@ -715,6 +715,7 @@ const POLL_REGISTRY = {
         host: cfg.host, port: cfg.port, username: cfg.username,
         password: cfg.password, privateKey: cfg.privateKey, passphrase: cfg.passphrase,
         authMethod: cfg.authMethod, command: cfg.command, onlyOnChange: cfg.onlyOnChange,
+        eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue,
       },
     }),
     repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 5} * * * *` }),
@@ -726,7 +727,7 @@ const POLL_REGISTRY = {
     triggerName: "ssl_trigger",
     required: ["host"],
     extract: (cfg) => ({
-      cfg: { host: cfg.host || cfg.hostname, port: cfg.port, warnDays: cfg.warnDays || cfg.warningDays },
+      cfg: { host: cfg.host || cfg.hostname, port: cfg.port, warnDays: cfg.warnDays || cfg.warningDays, eventType: cfg.eventType || cfg.watchType, targetValue: cfg.targetValue },
     }),
     repeat: () => ({ every: 12 * 60 * 60 * 1000 }),
     jobPrefix: "ssl",
