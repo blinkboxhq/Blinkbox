@@ -263,6 +263,7 @@ import AIAgentNode from "@nodes/ai_agent/ConfigPanel.jsx";
 import AgentLLMNode from "@nodes/agent_llm/ConfigPanel.jsx";
 import AgentMemoryNode from "@nodes/agent_memory/ConfigPanel.jsx";
 import AgentToolNode from "@nodes/agent_tool/ConfigPanel.jsx";
+import AgentSkillNode from "@nodes/agent_skill/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
 import OllamaConfigPanel from "@nodes/agent_ollama/ConfigPanel.jsx";
 import LmStudioConfigPanel from "@nodes/agent_lmstudio/ConfigPanel.jsx";
@@ -792,6 +793,16 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "A capability the AI Agent can invoke",
+  },
+  agent_skill: {
+    label: "Skill",
+    icon: Sparkles,
+    colorClass: "text-pink-400",
+    accentColor: "244,114,182",
+    ConfigPanel: AgentSkillNode,
+    category: "ai_agent",
+    agentOnly: true,
+    description: "A Claude-style skill file the agent loads on demand",
   },
 
   // ── Dedicated Agent Model Nodes (agentOnly — only usable inside an AI Agent) ──

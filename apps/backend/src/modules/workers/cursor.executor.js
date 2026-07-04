@@ -333,6 +333,18 @@ export async function processCursor({ executionId, cursorId }) {
                 alias: sourceNode.data.alias || "",
               });
             }
+          } else if (handle === "skills") {
+            const sourceNode = automation.nodes.find((n) => n.id === edge.source);
+            const skillCfg = sourceNode?.data?.config || sourceNode?.data;
+            if (skillCfg?.content || skillCfg?.name) {
+              if (!handleDeps._skills) handleDeps._skills = [];
+              handleDeps._skills.push({
+                name: skillCfg.name || sourceNode?.data?.label || "Skill",
+                description: skillCfg.description || "",
+                content: skillCfg.fileType === "zip" ? "" : (skillCfg.content || ""),
+                fileName: skillCfg.fileName || "",
+              });
+            }
           }
         }
       }

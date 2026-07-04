@@ -134,6 +134,16 @@ const AGENT_BOTTOM_SLOTS = [
     single: false,
     showPlus: true,
   },
+  {
+    id: "skills",
+    label: "Skills",
+    icon: Sparkles,
+    color: "#f472b6",
+    accentColor: "244,114,182",
+    allowedTypes: ["agent_skill"],
+    single: false,
+    showPlus: true,
+  },
 ];
 
 // ─── Agent sub-node — top input and bottom output handles ───────────────────
@@ -631,7 +641,7 @@ function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 188;
+    const cardW = 248;
     const cardH = 94;
     const n = AGENT_BOTTOM_SLOTS.length;
 

@@ -428,6 +428,7 @@ const agentNode = {
       _memory,
       _tools,
       _platformTools,
+      _skills,
 
       // Built-in tools (toggled from config panel)
       builtinWebSearch = false,
@@ -577,6 +578,21 @@ const agentNode = {
 
     if (systemPrompt) {
       system += `\n\n--- User Instructions ---\n${systemPrompt}`;
+    }
+
+    if (Array.isArray(_skills) && _skills.length > 0) {
+      const MAX_SKILL_BYTES = 24 * 1024;
+      system +=
+        `\n\n--- Skills ---\n` +
+        `You have ${_skills.length} skill(s) available. A skill is a set of expert instructions for a specific kind of task. ` +
+        `Read each skill's description; when the user's goal matches one, follow that skill's instructions closely. Ignore skills that don't apply.`;
+      for (const sk of _skills) {
+        const body = (sk.content || "").slice(0, MAX_SKILL_BYTES);
+        system +=
+          `\n\n### Skill: ${sk.name}` +
+          (sk.description ? `\nWhen to use: ${sk.description}` : "") +
+          (body ? `\nInstructions:\n${body}` : "");
+      }
     }
 
     if (tools.length > 0) {

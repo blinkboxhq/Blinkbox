@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Brain, Database, Wrench, ArrowLeft, X, Search, Code2, Globe, FileText,
   Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch,
-  Bot, Plug, CheckCircle2, Plus, ChevronRight } from "lucide-react";
+  Bot, Plug, Sparkles, CheckCircle2, Plus, ChevronRight } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -28,6 +28,7 @@ const AGENT_CATEGORIES = [
   { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory_window","agent_memory_redis","agent_memory_mongodb","agent_memory_postgres","agent_memory_pinecone","agent_memory_supabase","agent_memory_zep"] },
   { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        subCategories: TOOL_SUBCATEGORIES },
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["agent_integration_slack","agent_integration_gmail","agent_integration_discord","agent_integration_telegram","agent_integration_notion","agent_integration_airtable","agent_integration_google_sheets","agent_integration_google_calendar","agent_integration_google_drive","agent_integration_outlook","agent_integration_github","agent_integration_linear","agent_integration_hubspot","agent_integration_jira","agent_integration_asana","agent_integration_stripe","agent_integration_shopify","agent_integration_clickup","agent_integration_twilio","agent_integration_mongodb","agent_integration_postgres","agent_integration_redis"] },
+  { id: "skills",       label: "Skills",       icon: Sparkles,slotId: "skills",       nodes: ["agent_skill"] },
 ];
 
 const SLOT_OFFSETS = {
@@ -35,6 +36,7 @@ const SLOT_OFFSETS = {
   memory:      { x: 30,   y: 160 },
   integration: { x: 90,   y: 160 },
   tools:       { x: 150,  y: 160 },
+  skills:      { x: 210,  y: 160 },
 };
 
 export default function AgentPicker() {
