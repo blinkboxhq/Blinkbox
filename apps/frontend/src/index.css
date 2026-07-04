@@ -332,6 +332,27 @@ body {
   color: #fff;
 }
 
+/* ── Canvas box-select (white → blue) ──────────────────────────────────────── */
+.react-flow__selection {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  animation: bbSelectWhiteBlue 0.5s ease-out forwards;
+}
+
+@keyframes bbSelectWhiteBlue {
+  0% {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+  100% {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.95);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+  }
+}
+
 /* ── Scroll Reveal ─────────────────────────────────────────────────────────── */
 .reveal-on-scroll {
   opacity: 0;
