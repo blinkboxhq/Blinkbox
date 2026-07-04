@@ -7,6 +7,7 @@ import { validateAutomation } from "./automation.validator.js";
 import { executeAutomation } from "../automation.executor.js";
 import { syncCronJobs } from "../../../infra/cron.scheduler.js";
 import { syncPollerHub } from "../../../infra/poller.hub.js";
+import { syncRealtimeHub } from "../../../infra/realtime.hub.js";
 import { emitToCollabRoom } from "../../../infra/socket.server.js";
 import {
   registerGitHubWebhook,
@@ -227,6 +228,7 @@ export async function activateAutomation(req, res) {
     // cron runs on its own scheduler.
     if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
     syncPollerHub().catch(console.error);
+    syncRealtimeHub().catch(console.error);
 
     res.json({ success: true, automation });
   } catch (err) {
@@ -307,6 +309,7 @@ export async function deactivateAutomation(req, res) {
     const triggerTypesSeen = new Set(triggerEntries.map((e) => e.type));
     if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
     syncPollerHub().catch(console.error);
+    syncRealtimeHub().catch(console.error);
 
     res.json({ success: true, automation: target });
   } catch (err) {

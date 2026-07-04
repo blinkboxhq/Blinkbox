@@ -1220,6 +1220,8 @@ const slackBaseFields = [
       { value: '15', label: 'Every 15 minutes' },
       { value: '60', label: 'Every hour' },
     ] },
+  { type: 'text', key: 'appToken', label: 'App-Level Token (Instant Mode)', placeholder: 'xapp-1-...',
+    hint: '// optional — add a Socket Mode app token and messages trigger instantly instead of on the poll timer' },
 ];
 const slackTargetField = (label, placeholder, hint) =>
   ({ type: 'text', key: 'targetValue', label, placeholder, hint });

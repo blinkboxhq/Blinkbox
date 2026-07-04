@@ -41,7 +41,7 @@ const hasLink = (t) => /<https?:\/\/|https?:\/\//i.test(t);
 // (`p`, may be null), and config (`c`). `changeAware` events dedup on a changing
 // token so they re-fire as reactions/replies grow; `needsPrev` events stay quiet
 // until a baseline snapshot exists.
-const SLACK_EVENTS = {
+export const SLACK_EVENTS = {
   new_message:     { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, p) => !p && !m.isThreadReply },
   from_user:       { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => lc(m.user) === lc(c.targetValue) },
   text_contains:   { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => lc(m.text).includes(lc(c.targetValue)) },

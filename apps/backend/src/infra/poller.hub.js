@@ -909,6 +909,10 @@ async function dispatch(job) {
 
 // ── Sync ───────────────────────────────────────────────────────────────────────
 
+// Telegram getUpdates permits a single consumer — the realtime hub long-polls it,
+// so the poll hub must never schedule it or the two would steal updates.
+const REALTIME_OWNED = new Set(["telegram_trigger"]);
+
 export async function syncPollerHub(filterTriggerType = null) {
   if (!hubQueue) return;
 
@@ -924,9 +928,8 @@ export async function syncPollerHub(filterTriggerType = null) {
     for (const job of existing) await hubQueue.removeRepeatableByKey(job.key);
   }
 
-  const typesToSync = filterTriggerType
-    ? [filterTriggerType]
-    : Object.keys(POLL_REGISTRY);
+  const typesToSync = (filterTriggerType ? [filterTriggerType] : Object.keys(POLL_REGISTRY))
+    .filter((t) => !REALTIME_OWNED.has(t));
 
   let total = 0;
 

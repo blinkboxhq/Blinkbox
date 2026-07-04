@@ -6,6 +6,7 @@ import { startWebhookWorker } from "../modules/workers/webhook.worker.js";
 import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
 import { startPollerHub } from "../infra/poller.hub.js";
+import { startRealtimeHub } from "../infra/realtime.hub.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -32,6 +33,10 @@ export async function startServer() {
 
   // 4a–4e. Start unified poller hub (replaces 27 individual poller instances)
   await startPollerHub();
+
+  // 4f. Start realtime hub (telegram long-poll, discord gateway, slack socket
+  // mode, imap idle — push delivery instead of the 1-min poll where possible)
+  await startRealtimeHub();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

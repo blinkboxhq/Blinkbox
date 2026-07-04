@@ -31,7 +31,7 @@ async function discordGet(path, botToken) {
   return res.json();
 }
 
-function messageShape(m, channelId) {
+export function messageShape(m, channelId) {
   return {
     id: m.id,
     type: "message",
@@ -51,7 +51,7 @@ function messageShape(m, channelId) {
   };
 }
 
-function memberShape(mem, guildId) {
+export function memberShape(mem, guildId) {
   return {
     id: mem.user?.id,
     type: "member",
@@ -66,7 +66,7 @@ function memberShape(mem, guildId) {
 }
 
 // channel-message events: pull recent messages once and classify each.
-const MESSAGE_EVENTS = {
+export const MESSAGE_EVENTS = {
   message_created:    (m) => true,
   message_with_link:  (m) => /https?:\/\/\S+/i.test(m.content || ""),
   message_with_file:  (m) => (m.attachments || []).length > 0,

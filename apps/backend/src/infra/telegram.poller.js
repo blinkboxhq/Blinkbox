@@ -31,7 +31,7 @@ function msgText(m) { return m?.text || m?.caption || ""; }
 // Each event is a predicate over a single update (`u`) and config (`c`).
 // The classifier picks the message-bearing field, so message / channel_post /
 // edited variants all map onto the same content predicates.
-const TELEGRAM_EVENTS = {
+export const TELEGRAM_EVENTS = {
   message:          { msg: (u) => u.message,         match: () => true },
   edited_message:   { msg: (u) => u.edited_message,  match: (u) => !!u.edited_message },
   channel_post:     { msg: (u) => u.channel_post,    match: (u) => !!u.channel_post },
@@ -47,7 +47,7 @@ const TELEGRAM_EVENTS = {
   my_chat_member:   { msg: () => null,               match: (u) => !!u.my_chat_member },
 };
 
-function shape(u, eventType) {
+export function shape(u, eventType) {
   const m = u.message || u.edited_message || u.channel_post || u.callback_query?.message || {};
   const from = u.message?.from || u.edited_message?.from || u.callback_query?.from || {};
   return {
