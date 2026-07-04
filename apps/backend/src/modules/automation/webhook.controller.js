@@ -7,6 +7,23 @@ import { webhookQueue } from "../../infra/webhook.queue.js";
 import { sanitizeAndLog } from "../../utils/errors.js";
 import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
 import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
+import { resolveSecret } from "../../utils/resolveSecret.js";
+
+// Config fields whose value is a CredentialPicker id (or legacy literal) that must
+// be decrypted to the real secret before any HMAC/token comparison. The config
+// panels store a credential `_id`, so comparing against it raw makes every
+// signature check fail → the provider's event is rejected 401 and the trigger
+// never fires. Resolve them up-front so the verify blocks see the real secret.
+const CREDENTIAL_SECRET_FIELDS = [
+  "slackSigningSecret", "shopifyWebhookSecret", "linearWebhookSecret",
+  "typeformWebhookSecret", "gitlabWebhookSecret", "pagerdutyWebhookSecret",
+  "calendlyWebhookSecret", "figmaWebhookPasscode", "mailchimpWebhookSecret",
+  "telegramSecretToken", "hmacSecret", "secret", "metaVerifyToken",
+  "metaAppSecret", "woocommerceWebhookSecret", "clickupWebhookSecret",
+  "zendeskWebhookSecret", "vercelWebhookSecret", "netlifyWebhookSecret",
+  "airtableWebhookSecret", "asanaWebhookSecret", "stripeWebhookSecret",
+  "githubWebhookSecret",
+];
 
 // Header fingerprint → the externally-registered trigger type that owns it.
 // Used to disambiguate which trigger node an inbound webhook belongs to.
@@ -114,6 +131,17 @@ export async function handlePublicWebhook(req, res) {
     );
     const entryNodeId = entryNode?.id || automation.entryNodeId;
     let isWhatsapp = false;
+
+    // Decrypt any credential-picker secrets in place so the signature/token checks
+    // below compare against the REAL secret, not the stored credential id.
+    const wsId = automation.workspaceId?.toString();
+    await Promise.all(
+      CREDENTIAL_SECRET_FIELDS.map(async (field) => {
+        if (triggerConfig[field]) {
+          triggerConfig[field] = await resolveSecret(triggerConfig[field], wsId, field);
+        }
+      }),
+    );
 
     // ── Registration handshakes (answered before any auth / signature check) ──
     // Asana: echo the X-Hook-Secret header back on the confirmation request and
