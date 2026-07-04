@@ -32,6 +32,11 @@ import {
   registerTypeformWebhook,
   unregisterTypeformWebhook,
 } from "../../../infra/typeform.webhook.js";
+import {
+  WEBHOOK_APPS,
+  registerWebhook,
+  unregisterWebhook,
+} from "../../../infra/webhook.registry.js";
 import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 import { snapshotBeforeSave } from "../version.routes.js";
 import { resolveCredential } from "../../../utils/resolveCredential.js";
@@ -270,6 +275,27 @@ export async function activateAutomation(req, res) {
         }
       }
 
+      if (WEBHOOK_APPS[trigger] && !cfg.webhookRegistered) {
+        await registerWebhook(trigger, automation._id.toString(), cfg, automation.workspaceId, entry.nodeId);
+        const refreshed = await Automation.findById(automation._id);
+        if (refreshed) Object.assign(automation, refreshed.toObject());
+      }
+
+      if (trigger === "github_issue_trigger" && !cfg.webhookRegistered) {
+        if (!cfg.owner || !cfg.repo) throw new Error("GitHub issue trigger requires owner and repo.");
+        const token = await resolveGitHubToken(cfg.credentialId || cfg.githubToken, automation.workspaceId);
+        if (!token) throw new Error("GitHub issue trigger requires a connected GitHub account.");
+        await registerGitHubWebhook(
+          automation._id.toString(),
+          `${cfg.owner}/${cfg.repo}`,
+          ["issues", "issue_comment"],
+          token,
+          entry.nodeId,
+        );
+        const refreshed = await Automation.findById(automation._id);
+        if (refreshed) Object.assign(automation, refreshed.toObject());
+      }
+
       triggerTypesSeen.add(trigger);
     }
 
@@ -386,6 +412,26 @@ export async function deactivateAutomation(req, res) {
             ),
           )
           .catch((e) => console.error("[Typeform] Teardown failed:", e.message));
+      }
+
+      if (WEBHOOK_APPS[entry.type] && cfg.webhookRegistered) {
+        await unregisterWebhook(entry.type, automation._id.toString(), cfg, automation.workspaceId, entry.nodeId)
+          .catch((e) => console.error(`[Webhook] ${entry.type} teardown failed:`, e.message));
+      }
+
+      if (entry.type === "github_issue_trigger" && cfg.githubWebhookId && cfg.owner && cfg.repo) {
+        resolveGitHubToken(cfg.credentialId || cfg.githubToken, automation.workspaceId)
+          .catch(() => null)
+          .then((token) =>
+            unregisterGitHubWebhook(
+              automation._id.toString(),
+              `${cfg.owner}/${cfg.repo}`,
+              cfg.githubWebhookId,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[GitHub Issue] Teardown failed:", e.message));
       }
     }
 
@@ -591,6 +637,24 @@ export async function deleteAutomation(req, res) {
             ),
           )
           .catch((e) => console.error("[Typeform] Cleanup failed:", e.message));
+      }
+      if (WEBHOOK_APPS[entry.type] && cfg.webhookRegistered) {
+        unregisterWebhook(entry.type, automation._id.toString(), cfg, automation.workspaceId, entry.nodeId)
+          .catch((e) => console.error(`[Webhook] ${entry.type} cleanup failed:`, e.message));
+      }
+      if (entry.type === "github_issue_trigger" && cfg.githubWebhookId && cfg.owner && cfg.repo) {
+        resolveGitHubToken(cfg.credentialId || cfg.githubToken, automation.workspaceId)
+          .catch(() => null)
+          .then((token) =>
+            unregisterGitHubWebhook(
+              automation._id.toString(),
+              `${cfg.owner}/${cfg.repo}`,
+              cfg.githubWebhookId,
+              token,
+              entry.nodeId,
+            ),
+          )
+          .catch((e) => console.error("[GitHub Issue] Cleanup failed:", e.message));
       }
     }
 

@@ -911,7 +911,14 @@ async function dispatch(job) {
 
 // Telegram getUpdates permits a single consumer — the realtime hub long-polls it,
 // so the poll hub must never schedule it or the two would steal updates.
-const REALTIME_OWNED = new Set(["telegram_trigger"]);
+// Trigger types delivered in real time by realtime.hub.js (push connections),
+// so the poller must never also enqueue them — that would double-deliver.
+const REALTIME_OWNED = new Set([
+  "telegram_trigger",
+  "discord_trigger",
+  "slack_trigger",
+  "imap_trigger",
+]);
 
 export async function syncPollerHub(filterTriggerType = null) {
   if (!hubQueue) return;

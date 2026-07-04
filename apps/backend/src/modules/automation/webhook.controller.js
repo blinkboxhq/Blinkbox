@@ -18,7 +18,30 @@ const WEBHOOK_HEADER_SIGNATURES = [
   { header: "x-shopify-hmac-sha256", type: "shopify_trigger" },
   { header: "linear-signature", type: "linear_trigger" },
   { header: "typeform-signature", type: "typeform_trigger" },
+  { header: "x-gitlab-token", type: "gitlab_trigger" },
+  { header: "x-wc-webhook-signature", type: "woocommerce_trigger" },
+  { header: "calendly-webhook-signature", type: "calendly_trigger" },
+  { header: "x-signature", type: "clickup_trigger" },
+  { header: "x-zendesk-webhook-signature", type: "zendesk_trigger" },
+  { header: "x-pagerduty-signature", type: "pagerduty_trigger" },
+  { header: "x-vercel-signature", type: "vercel_trigger" },
+  { header: "x-webhook-signature", type: "netlify_trigger" },
+  { header: "x-airtable-content-mac", type: "airtable_trigger" },
+  { header: "x-hook-signature", type: "asana_trigger" },
 ];
+
+// HMAC-verified apps registered via webhook.registry.js. Each maps the trigger
+// type → { header it signs with, config key holding the secret, digest encoding,
+// optional prefix }. timingSafe-compared in the generic verify block below.
+const HMAC_WEBHOOK_APPS = {
+  woocommerce_trigger: { header: "x-wc-webhook-signature", secretKey: "woocommerceWebhookSecret", enc: "base64" },
+  clickup_trigger:     { header: "x-signature", secretKey: "clickupWebhookSecret", enc: "hex" },
+  zendesk_trigger:     { header: "x-zendesk-webhook-signature", secretKey: "zendeskWebhookSecret", enc: "base64" },
+  vercel_trigger:      { header: "x-vercel-signature", secretKey: "vercelWebhookSecret", enc: "hex" },
+  netlify_trigger:     { header: "x-webhook-signature", secretKey: "netlifyWebhookSecret", enc: "hex" },
+  airtable_trigger:    { header: "x-airtable-content-mac", secretKey: "airtableWebhookSecret", enc: "base64", prefix: "hmac-sha256=", secretIsBase64: true },
+  asana_trigger:       { header: "x-hook-signature", secretKey: "asanaWebhookSecret", enc: "hex" },
+};
 
 /**
  * Pick which trigger node an inbound webhook belongs to.
@@ -91,6 +114,23 @@ export async function handlePublicWebhook(req, res) {
     );
     const entryNodeId = entryNode?.id || automation.entryNodeId;
     let isWhatsapp = false;
+
+    // ── Registration handshakes (answered before any auth / signature check) ──
+    // Asana: echo the X-Hook-Secret header back on the confirmation request and
+    // remember it as the HMAC secret for future X-Hook-Signature deliveries.
+    const asanaHookSecret = req.headers["x-hook-secret"];
+    if (asanaHookSecret) {
+      try {
+        entryNode.data.config.asanaWebhookSecret = asanaHookSecret;
+        await automation.save();
+      } catch { /* best-effort persist */ }
+      res.set("X-Hook-Secret", asanaHookSecret);
+      return res.status(200).json({});
+    }
+    // Monday: reply to the one-time URL verification challenge.
+    if (req.body?.challenge && !req.body?.event) {
+      return res.status(200).json({ challenge: req.body.challenge });
+    }
 
     if (triggerConfig.allowedMethods && triggerConfig.allowedMethods.length > 0) {
       if (!triggerConfig.allowedMethods.includes(req.method)) {
@@ -190,6 +230,92 @@ export async function handlePublicWebhook(req, res) {
         return res.status(401).json({ error: "Invalid Typeform webhook signature" });
       }
     }
+
+    // ── GitLab: plaintext secret token compare (X-Gitlab-Token) ──────────────
+    if (triggerConfig.gitlabWebhookSecret) {
+      const provided = req.headers["x-gitlab-token"] || "";
+      const secret = triggerConfig.gitlabWebhookSecret;
+      const pBuf = Buffer.from(provided.padEnd(secret.length));
+      const sBuf = Buffer.from(secret);
+      if (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf)) {
+        return res.status(401).json({ error: "Invalid GitLab webhook token" });
+      }
+    }
+
+    // ── PagerDuty: X-PagerDuty-Signature (v1=<hex>, may list multiple) ───────
+    if (triggerConfig.pagerdutyWebhookSecret) {
+      const provided = req.headers["x-pagerduty-signature"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = crypto.createHmac("sha256", triggerConfig.pagerdutyWebhookSecret)
+        .update(rawBody).digest("hex");
+      const sigs = provided.split(",").map((s) => s.trim().replace(/^v1=/, ""));
+      if (!sigs.some((s) => s.length === expected.length &&
+        crypto.timingSafeEqual(Buffer.from(s), Buffer.from(expected)))) {
+        return res.status(401).json({ error: "Invalid PagerDuty webhook signature" });
+      }
+    }
+
+    // ── Calendly: Calendly-Webhook-Signature "t=<ts>,v1=<hex>" over `${t}.${body}` ─
+    if (triggerConfig.calendlyWebhookSecret) {
+      const provided = req.headers["calendly-webhook-signature"] || "";
+      const parts = Object.fromEntries(
+        provided.split(",").map((p) => p.trim().split("=").map((s) => s.trim())),
+      );
+      const rawBody = (req.rawBody || Buffer.from(JSON.stringify(req.body))).toString("utf8");
+      const expected = crypto.createHmac("sha256", triggerConfig.calendlyWebhookSecret)
+        .update(`${parts.t}.${rawBody}`).digest("hex");
+      const got = parts.v1 || "";
+      const gBuf = Buffer.from(got.padEnd(expected.length));
+      const eBuf = Buffer.from(expected);
+      if (!parts.t || gBuf.length !== eBuf.length || !crypto.timingSafeEqual(gBuf, eBuf)) {
+        return res.status(401).json({ error: "Invalid Calendly webhook signature" });
+      }
+    }
+
+    // ── Generic HMAC-signed apps (webhook.registry.js registrations) ─────────
+    for (const [type, spec] of Object.entries(HMAC_WEBHOOK_APPS)) {
+      const secret = triggerConfig[spec.secretKey];
+      if (!secret) continue;
+      const provided = req.headers[spec.header] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const key = spec.secretIsBase64 ? Buffer.from(secret, "base64") : secret;
+      let expected = crypto.createHmac("sha256", key).update(rawBody).digest(spec.enc);
+      if (spec.prefix) expected = spec.prefix + expected;
+      const gBuf = Buffer.from(provided.padEnd(expected.length));
+      const eBuf = Buffer.from(expected);
+      if (gBuf.length !== eBuf.length || !crypto.timingSafeEqual(gBuf, eBuf)) {
+        return res.status(401).json({ error: `Invalid ${type.replace("_trigger", "")} webhook signature` });
+      }
+    }
+
+    // ── Figma: passcode echoed in the POST body (no HMAC) ────────────────────
+    if (triggerConfig.figmaWebhookPasscode) {
+      const provided = req.body?.passcode || "";
+      const secret = triggerConfig.figmaWebhookPasscode;
+      const pBuf = Buffer.from(String(provided).padEnd(secret.length));
+      const sBuf = Buffer.from(secret);
+      // Figma also sends a PING event on creation — let it through to confirm.
+      if (req.body?.event_type !== "PING" &&
+        (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf))) {
+        return res.status(401).json({ error: "Invalid Figma webhook passcode" });
+      }
+    }
+
+    // ── Mailchimp: no HMAC — we verify the ?bbsecret=<secret> we set at register ─
+    if (triggerConfig.mailchimpWebhookSecret) {
+      const provided = String(req.query.bbsecret || "");
+      const secret = triggerConfig.mailchimpWebhookSecret;
+      const pBuf = Buffer.from(provided.padEnd(secret.length));
+      const sBuf = Buffer.from(secret);
+      // Mailchimp sends a GET to validate the URL on creation — let it through.
+      if (req.method !== "GET" &&
+        (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf))) {
+        return res.status(401).json({ error: "Invalid Mailchimp webhook secret" });
+      }
+    }
+
+    // ── Azure DevOps service hooks carry no signature; auth is the per-automation
+    //    URL + stored subscription id. No inbound check to fake here.
 
     // ── Meta WhatsApp: hub.verify_token challenge (GET requests) ─────────────
     if (triggerConfig.metaVerifyToken && req.method === "GET") {
