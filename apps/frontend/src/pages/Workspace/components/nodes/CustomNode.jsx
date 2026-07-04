@@ -372,29 +372,43 @@ function growRadius(radius, by) {
   return radius.replace(/(\d+(?:\.\d+)?)px/g, (_, n) => `${parseFloat(n) + by}px`);
 }
 function SpinBorder({ radius, w, h, slow = false, color1 = "#3b82f6", color2 = "#93c5fd" }) {
+  // RING = visible rim thickness. The glow fills a box grown by RING on every side; an
+  // inner div carrying the card's EXACT `radius` masks out the interior via
+  // mask-composite:exclude, so the glow only survives as a rim that hugs the card shape
+  // (including the trigger's asymmetric D). No opaque center fill → nothing to bleed
+  // through the translucent card as a mismatched square.
+  const RING = 4;
   const grad = `conic-gradient(from 0deg, transparent 0deg, transparent 145deg, rgba(59,130,246,0.45) 180deg, ${color1} 235deg, ${color2} 262deg, ${color1} 288deg, rgba(59,130,246,0.35) 322deg, transparent 358deg)`;
-  return (
+  const glow = (blur) => (
+    <div
+      className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
+      style={{ position: "absolute", width: "200%", height: "200%", top: "-50%", left: "-50%",
+        background: grad, ...(blur ? { filter: "blur(3px)", opacity: 0.75 } : null) }}
+    />
+  );
+  const spinLayer = (blur) => (
     <div
       className="absolute pointer-events-none"
-      style={{ top: -4, left: -4, width: w + 8, height: h + 8, borderRadius: growRadius(radius, 4), overflow: "hidden", zIndex: 0 }}
+      style={{
+        top: -RING, left: -RING, width: w + RING * 2, height: h + RING * 2,
+        borderRadius: growRadius(radius, RING), overflow: "hidden", zIndex: 0,
+        padding: RING, boxSizing: "border-box",
+        WebkitMaskImage: "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
+        maskImage: "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
+        WebkitMaskClip: "content-box, border-box",
+        maskClip: "content-box, border-box",
+        WebkitMaskComposite: "xor",
+        maskComposite: "exclude",
+      }}
     >
-      <div
-        className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
-        style={{ position: "absolute", width: "200%", height: "200%", top: "-50%", left: "-50%",
-          background: grad, filter: "blur(3px)", opacity: 0.75 }}
-      />
-      <div
-        className={slow ? "bb-spin-border-slow" : "bb-spin-border"}
-        style={{ position: "absolute", width: "200%", height: "200%", top: "-50%", left: "-50%",
-          background: grad }}
-      />
-      <div style={{
-        position: "absolute",
-        top: 4, left: 4, width: w, height: h,
-        borderRadius: radius,
-        background: "linear-gradient(145deg, #232328 0%, #1C1C20 50%, #19191D 100%)",
-      }} />
+      {glow(blur)}
     </div>
+  );
+  return (
+    <>
+      {spinLayer(true)}
+      {spinLayer(false)}
+    </>
   );
 }
 
