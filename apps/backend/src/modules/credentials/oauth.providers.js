@@ -57,6 +57,13 @@ const providers = {
       "users:read",
       "files:write",
       "reactions:write",
+      "app_mentions:read",
+      "im:history",
+      "im:read",
+      "mpim:history",
+      "reactions:read",
+      "files:read",
+      "team:read",
     ],
     mapTokens(data) {
       return {
