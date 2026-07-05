@@ -42,12 +42,12 @@ const hasLink = (t) => /<https?:\/\/|https?:\/\//i.test(t);
 // token so they re-fire as reactions/replies grow; `needsPrev` events stay quiet
 // until a baseline snapshot exists.
 export const SLACK_EVENTS = {
-  new_message:     { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, p) => !p && !m.isThreadReply },
+  new_message:     { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, p) => !p && !m.isThreadReply && !m.isBot },
   from_user:       { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => lc(m.user) === lc(c.targetValue) },
-  text_contains:   { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => lc(m.text).includes(lc(c.targetValue)) },
-  mentions:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => lc(m.text).includes(`@${lc(c.targetValue).replace(/^@/, "")}`) || lc(m.text).includes(lc(c.targetValue)) },
-  has_link:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => hasLink(m.text) },
-  has_file:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => m.hasFile },
+  text_contains:   { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => !m.isBot && lc(m.text).includes(lc(c.targetValue)) },
+  mentions:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m, _p, c) => !m.isBot && (lc(m.text).includes(`@${lc(c.targetValue).replace(/^@/, "")}`) || lc(m.text).includes(lc(c.targetValue))) },
+  has_link:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => !m.isBot && hasLink(m.text) },
+  has_file:        { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => !m.isBot && m.hasFile },
   thread_reply:    { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => m.isThreadReply },
   bot_message:     { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => m.isBot },
   human_message:   { needsPrev: false, dedup: (m) => `${m.ts}`, match: (m) => !m.isBot && !m.subtype },

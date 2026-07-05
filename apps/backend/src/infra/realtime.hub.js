@@ -363,6 +363,7 @@ async function onSlackEvent(ev, subscribers) {
   }
   if (ev?.type !== "message") return;
   if (ev.subtype === "message_changed" || ev.subtype === "message_deleted") return;
+  if (ev.subtype === "channel_join" || ev.subtype === "channel_leave") return;
   const m = {
     ts: String(ev.ts || ""),
     text: ev.text || "",
