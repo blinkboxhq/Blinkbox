@@ -358,6 +358,9 @@ async function syncDiscord() {
 const slackConns = new Map();
 
 async function onSlackEvent(ev, subscribers) {
+  if (process.env.SLACK_TRIGGER_DEBUG) {
+    console.log(`[RealtimeHub/slack] event type=${ev?.type} subtype=${ev?.subtype || "-"} channel=${ev?.channel} subs=${subscribers.length} subChannels=${subscribers.map((s) => s.cfg.channel).join(",")}`);
+  }
   if (ev?.type !== "message") return;
   if (ev.subtype === "message_changed" || ev.subtype === "message_deleted") return;
   const m = {
@@ -373,20 +376,34 @@ async function onSlackEvent(ev, subscribers) {
     reactions: [],
     hasFile: Array.isArray(ev.files) && ev.files.length > 0,
   };
+  const dbg = process.env.SLACK_TRIGGER_DEBUG;
   for (const sub of subscribers) {
     const cfg = sub.cfg;
-    if (!cfg.channel || cfg.channel !== ev.channel) continue;
+    if (!cfg.channel || cfg.channel !== ev.channel) {
+      if (dbg) console.log(`[RealtimeHub/slack] skip: channel mismatch cfg=${cfg.channel} ev=${ev.channel}`);
+      continue;
+    }
     const eventType = cfg.eventType || cfg.watchType || "new_message";
     const spec = SLACK_EVENTS[eventType];
     // reaction/reply-count events need snapshot diffs — the poller keeps those.
-    if (!spec || spec.needsPrev || spec.changeAware) continue;
-    if (!spec.match(m, null, cfg)) continue;
+    if (!spec || spec.needsPrev || spec.changeAware) {
+      if (dbg) console.log(`[RealtimeHub/slack] skip: event "${eventType}" is snapshot-based (poller-only) or unknown`);
+      continue;
+    }
+    if (!spec.match(m, null, cfg)) {
+      if (dbg) console.log(`[RealtimeHub/slack] skip: "${eventType}" predicate did not match text="${m.text}"`);
+      continue;
+    }
     const dedup = spec.dedup(m);
     const scope = sub.nodeId || sub.automationId;
     const seenKey = `bb:slack:seen:${scope}:${eventType}`;
     const fresh = await redis.sadd(seenKey, dedup);
-    if (!fresh) continue;
+    if (!fresh) {
+      if (dbg) console.log(`[RealtimeHub/slack] skip: dedup already seen ${dedup}`);
+      continue;
+    }
     await redis.expire(seenKey, SEEN_TTL);
+    if (dbg) console.log(`[RealtimeHub/slack] FIRE automation=${sub.automationId} event=${eventType}`);
     await fire(sub, ev, `slack:${scope}:${eventType}:${dedup}`);
   }
 }
@@ -415,7 +432,10 @@ async function runSlackSocket(appToken, conn) {
       await new Promise((resolve) => {
         const sock = new WebSocket(data.url);
         conn.ws = sock;
-        sock.on("open", () => { backoff = 2000; });
+        sock.on("open", () => {
+          backoff = 2000;
+          console.log(`[RealtimeHub/slack] Socket Mode connected — ${conn.subscribers.length} subscriber(s), channels: ${conn.subscribers.map((s) => s.cfg.channel).join(", ")}`);
+        });
         sock.on("message", (raw) => {
           let env;
           try { env = JSON.parse(raw); } catch { return; }
