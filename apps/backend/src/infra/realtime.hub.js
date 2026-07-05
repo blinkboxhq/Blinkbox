@@ -21,6 +21,7 @@ import Automation from "../models/automation.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 import { getOAuthToken } from "../utils/getOAuthToken.js";
 import { resolveSecret } from "../utils/resolveSecret.js";
+import { SLACK_APP_TOKEN } from "../config/env.js";
 import { assertSafeHost } from "../utils/ssrf.js";
 import { TELEGRAM_EVENTS } from "./telegram.poller.js";
 import { MESSAGE_EVENTS } from "./discord.poller.js";
@@ -451,9 +452,10 @@ async function syncSlack() {
   for (const automation of automations) {
     for (const node of getTriggerNodesOfType(automation, "slack_trigger")) {
       const cfg = getTriggerConfig(node);
-      if (!cfg.appToken || !cfg.channel) continue;
+      if (!cfg.channel) continue;
       const workspaceId = automation.workspaceId?.toString();
-      let appToken = cfg.appToken;
+      let appToken = cfg.appToken || SLACK_APP_TOKEN;
+      if (!appToken) continue;
       if (!String(appToken).startsWith("xapp-")) {
         try {
           appToken = await resolveSecret(cfg.appToken, workspaceId, "Slack Socket Mode");
