@@ -439,6 +439,9 @@ async function runSlackSocket(appToken, conn) {
         sock.on("message", (raw) => {
           let env;
           try { env = JSON.parse(raw); } catch { return; }
+          if (process.env.SLACK_TRIGGER_DEBUG) {
+            console.log(`[RealtimeHub/slack] socket frame type=${env.type} payloadEvent=${env.payload?.event?.type || "-"}`);
+          }
           // Socket Mode requires an ack within 3s or Slack redelivers.
           if (env.envelope_id && sock.readyState === 1) {
             sock.send(JSON.stringify({ envelope_id: env.envelope_id }));
