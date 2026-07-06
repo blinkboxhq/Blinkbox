@@ -22,6 +22,7 @@ import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
+import { handleSlackEvents } from "../modules/automation/slackEvents.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
 import { MCP_HOST } from "../config/env.js";
@@ -217,6 +218,9 @@ app.get("/health", async (_req, res) => {
     ...checks,
   });
 });
+
+// ── Shared Slack app Events API (must precede the :automationId param route) ──
+app.post("/webhook/slack/events", handleSlackEvents);
 
 // ── Public webhook endpoint (no auth required) ────────────────────────────────
 // Supports both POST (form/JSON payloads) and GET (query-param triggers)

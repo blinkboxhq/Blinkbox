@@ -32,6 +32,7 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || null;
 export const SLACK_CLIENT_ID      = process.env.SLACK_CLIENT_ID      || null;
 export const SLACK_CLIENT_SECRET  = process.env.SLACK_CLIENT_SECRET  || null;
 export const SLACK_APP_TOKEN      = process.env.SLACK_APP_TOKEN      || null;
+export const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET || null;
 export const MICROSOFT_CLIENT_ID     = process.env.MICROSOFT_CLIENT_ID     || null;
 export const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET || null;
 export const GITHUB_CLIENT_ID     = process.env.GITHUB_CLIENT_ID     || null;

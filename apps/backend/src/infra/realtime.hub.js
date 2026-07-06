@@ -18,6 +18,7 @@
 import crypto from "node:crypto";
 import { redis } from "./redis.client.js";
 import Automation from "../models/automation.model.js";
+import Credential from "../models/credential.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 import { getOAuthToken } from "../utils/getOAuthToken.js";
 import { resolveSecret } from "../utils/resolveSecret.js";
@@ -660,4 +661,31 @@ export async function stopRealtimeHub() {
     try { conn.client?.close(); } catch { /* noop */ }
   }
   imapConns.clear();
+}
+
+// Events API (HTTP) delivery for the shared Blinkbox Slack app. Slack posts every
+// installed workspace's events to one URL; we route by team_id → the workspace
+// that owns the matching Slack credential → its active slack_trigger automations.
+// Automations that carry their OWN app token are served by Socket Mode instead,
+// so they are skipped here to avoid double-firing.
+export async function dispatchSlackEvent(teamId, event) {
+  if (!teamId || !event) return;
+  const cred = await Credential.findOne({ provider: "slack", "metadata.teamId": teamId })
+    .select("workspaceId")
+    .lean();
+  if (!cred?.workspaceId) return;
+  const workspaceId = cred.workspaceId.toString();
+
+  const automations = await findAutomationsWithTrigger("slack_trigger");
+  const subscribers = [];
+  for (const automation of automations) {
+    if (automation.workspaceId?.toString() !== workspaceId) continue;
+    for (const node of getTriggerNodesOfType(automation, "slack_trigger")) {
+      const cfg = getTriggerConfig(node);
+      if (!cfg.channel) continue;
+      if (cfg.appToken) continue; // BYO-app automations are handled by Socket Mode
+      subscribers.push({ automationId: automation._id.toString(), nodeId: node.id, cfg });
+    }
+  }
+  if (subscribers.length) await onSlackEvent(event, subscribers);
 }
