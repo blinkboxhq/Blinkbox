@@ -9,6 +9,19 @@ import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNode
 import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
 import { resolveSecret } from "../../utils/resolveSecret.js";
 
+// Constant-time string compare that never throws. The naive pattern
+// (`a.length !== b.length` + `timingSafeEqual(Buffer.from(a), Buffer.from(b))`)
+// compares UTF-16 code-unit length but builds UTF-8 byte buffers — a multibyte
+// header slips past the length guard and makes timingSafeEqual throw RangeError,
+// surfacing as a 500 instead of a clean 401. Comparing byte buffers directly and
+// bailing on any length mismatch removes both the throw and the timing leak.
+function safeEqual(provided, expected) {
+  const p = Buffer.from(String(provided ?? ""), "utf8");
+  const e = Buffer.from(String(expected ?? ""), "utf8");
+  if (p.length !== e.length) return false;
+  return crypto.timingSafeEqual(p, e);
+}
+
 // Config fields whose value is a CredentialPicker id (or legacy literal) that must
 // be decrypted to the real secret before any HMAC/token comparison. The config
 // panels store a credential `_id`, so comparing against it raw makes every
@@ -144,12 +157,26 @@ export async function handlePublicWebhook(req, res) {
     );
 
     // ── Registration handshakes (answered before any auth / signature check) ──
-    // Asana: echo the X-Hook-Secret header back on the confirmation request and
+    // Asana: echo the X-Hook-Secret header back on the confirmation handshake and
     // remember it as the HMAC secret for future X-Hook-Signature deliveries.
+    // SECURITY: the handshake is unauthenticated by nature, so accept it ONLY
+    // while we're expecting one — the node must be an Asana trigger AND flagged
+    // `asanaAwaitingHandshake` (set when we create the subscription). We never
+    // overwrite an already-established secret; otherwise anyone could POST an
+    // X-Hook-Secret of their choice, learn the HMAC key, and forge signed events.
     const asanaHookSecret = req.headers["x-hook-secret"];
     if (asanaHookSecret) {
+      const isAsanaNode = entryNode?.data?.config
+        && (entryNode.type === "asana_trigger" || entryNode.data.type === "asana_trigger");
+      const awaiting = isAsanaNode
+        && entryNode.data.config.asanaAwaitingHandshake === true
+        && !entryNode.data.config.asanaWebhookSecret;
+      if (!awaiting) {
+        return res.status(401).json({ error: "Unexpected handshake" });
+      }
       try {
         entryNode.data.config.asanaWebhookSecret = asanaHookSecret;
+        entryNode.data.config.asanaAwaitingHandshake = false;
         await automation.save();
       } catch { /* best-effort persist */ }
       res.set("X-Hook-Secret", asanaHookSecret);
@@ -183,21 +210,29 @@ export async function handlePublicWebhook(req, res) {
       const expectedSig = `${algorithm}=` + crypto.createHmac(algorithm, triggerConfig.hmacSecret)
         .update(rawBody).digest("hex");
 
-      if (
-        receivedSig.length !== expectedSig.length ||
-        !crypto.timingSafeEqual(Buffer.from(receivedSig), Buffer.from(expectedSig))
-      ) {
+      if (!safeEqual(receivedSig, expectedSig)) {
         return res.status(401).json({ error: "Webhook signature verification failed" });
+      }
+    }
+
+    // ── GitHub: X-Hub-Signature-256 = sha256=<hex HMAC of rawBody> ────────────
+    // The branded GitHub trigger stores its secret in githubWebhookSecret; verify
+    // it here so a normally-configured GitHub trigger is signature-checked even
+    // when the user never flips the generic hmacEnabled toggle.
+    if (triggerConfig.githubWebhookSecret) {
+      const provided = req.headers["x-hub-signature-256"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.githubWebhookSecret)
+        .update(rawBody).digest("hex");
+      if (!safeEqual(provided, expected)) {
+        return res.status(401).json({ error: "Invalid GitHub webhook signature" });
       }
     }
 
     // ── Telegram: X-Telegram-Bot-Api-Secret-Token header ─────────────────────
     if (triggerConfig.telegramSecretToken) {
       const provided = req.headers["x-telegram-bot-api-secret-token"] || "";
-      const expected = triggerConfig.telegramSecretToken;
-      const providedBuf = Buffer.from(provided.padEnd(expected.length));
-      const expectedBuf = Buffer.from(expected);
-      if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+      if (!safeEqual(provided, triggerConfig.telegramSecretToken)) {
         return res.status(401).json({ error: "Invalid Telegram secret token" });
       }
     }
@@ -217,9 +252,7 @@ export async function handlePublicWebhook(req, res) {
       const sigBase = `v0:${ts}:${rawBody.toString()}`;
       const computed = "v0=" + crypto.createHmac("sha256", triggerConfig.slackSigningSecret)
         .update(sigBase).digest("hex");
-      const sigBuf = Buffer.from(slackSig.padEnd(computed.length));
-      const expBuf = Buffer.from(computed);
-      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      if (!safeEqual(slackSig, computed)) {
         return res.status(401).json({ error: "Invalid Slack signature" });
       }
     }
@@ -230,7 +263,7 @@ export async function handlePublicWebhook(req, res) {
       const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
       const expected = crypto.createHmac("sha256", triggerConfig.shopifyWebhookSecret)
         .update(rawBody).digest("base64");
-      if (provided !== expected) {
+      if (!safeEqual(provided, expected)) {
         return res.status(401).json({ error: "Invalid Shopify webhook signature" });
       }
     }
@@ -241,7 +274,7 @@ export async function handlePublicWebhook(req, res) {
       const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
       const expected = crypto.createHmac("sha256", triggerConfig.linearWebhookSecret)
         .update(rawBody).digest("hex");
-      if (provided !== expected) {
+      if (!safeEqual(provided, expected)) {
         return res.status(401).json({ error: "Invalid Linear webhook signature" });
       }
     }
@@ -252,9 +285,7 @@ export async function handlePublicWebhook(req, res) {
       const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
       const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.typeformWebhookSecret)
         .update(rawBody).digest("base64");
-      const pBuf = Buffer.from(provided.padEnd(expected.length));
-      const eBuf = Buffer.from(expected);
-      if (pBuf.length !== eBuf.length || !crypto.timingSafeEqual(pBuf, eBuf)) {
+      if (!safeEqual(provided, expected)) {
         return res.status(401).json({ error: "Invalid Typeform webhook signature" });
       }
     }
@@ -262,10 +293,7 @@ export async function handlePublicWebhook(req, res) {
     // ── GitLab: plaintext secret token compare (X-Gitlab-Token) ──────────────
     if (triggerConfig.gitlabWebhookSecret) {
       const provided = req.headers["x-gitlab-token"] || "";
-      const secret = triggerConfig.gitlabWebhookSecret;
-      const pBuf = Buffer.from(provided.padEnd(secret.length));
-      const sBuf = Buffer.from(secret);
-      if (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf)) {
+      if (!safeEqual(provided, triggerConfig.gitlabWebhookSecret)) {
         return res.status(401).json({ error: "Invalid GitLab webhook token" });
       }
     }
@@ -277,8 +305,7 @@ export async function handlePublicWebhook(req, res) {
       const expected = crypto.createHmac("sha256", triggerConfig.pagerdutyWebhookSecret)
         .update(rawBody).digest("hex");
       const sigs = provided.split(",").map((s) => s.trim().replace(/^v1=/, ""));
-      if (!sigs.some((s) => s.length === expected.length &&
-        crypto.timingSafeEqual(Buffer.from(s), Buffer.from(expected)))) {
+      if (!sigs.some((s) => safeEqual(s, expected))) {
         return res.status(401).json({ error: "Invalid PagerDuty webhook signature" });
       }
     }
@@ -293,9 +320,7 @@ export async function handlePublicWebhook(req, res) {
       const expected = crypto.createHmac("sha256", triggerConfig.calendlyWebhookSecret)
         .update(`${parts.t}.${rawBody}`).digest("hex");
       const got = parts.v1 || "";
-      const gBuf = Buffer.from(got.padEnd(expected.length));
-      const eBuf = Buffer.from(expected);
-      if (!parts.t || gBuf.length !== eBuf.length || !crypto.timingSafeEqual(gBuf, eBuf)) {
+      if (!parts.t || !safeEqual(got, expected)) {
         return res.status(401).json({ error: "Invalid Calendly webhook signature" });
       }
     }
@@ -309,9 +334,7 @@ export async function handlePublicWebhook(req, res) {
       const key = spec.secretIsBase64 ? Buffer.from(secret, "base64") : secret;
       let expected = crypto.createHmac("sha256", key).update(rawBody).digest(spec.enc);
       if (spec.prefix) expected = spec.prefix + expected;
-      const gBuf = Buffer.from(provided.padEnd(expected.length));
-      const eBuf = Buffer.from(expected);
-      if (gBuf.length !== eBuf.length || !crypto.timingSafeEqual(gBuf, eBuf)) {
+      if (!safeEqual(provided, expected)) {
         return res.status(401).json({ error: `Invalid ${type.replace("_trigger", "")} webhook signature` });
       }
     }
@@ -319,12 +342,9 @@ export async function handlePublicWebhook(req, res) {
     // ── Figma: passcode echoed in the POST body (no HMAC) ────────────────────
     if (triggerConfig.figmaWebhookPasscode) {
       const provided = req.body?.passcode || "";
-      const secret = triggerConfig.figmaWebhookPasscode;
-      const pBuf = Buffer.from(String(provided).padEnd(secret.length));
-      const sBuf = Buffer.from(secret);
       // Figma also sends a PING event on creation — let it through to confirm.
       if (req.body?.event_type !== "PING" &&
-        (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf))) {
+        !safeEqual(provided, triggerConfig.figmaWebhookPasscode)) {
         return res.status(401).json({ error: "Invalid Figma webhook passcode" });
       }
     }
@@ -332,12 +352,9 @@ export async function handlePublicWebhook(req, res) {
     // ── Mailchimp: no HMAC — we verify the ?bbsecret=<secret> we set at register ─
     if (triggerConfig.mailchimpWebhookSecret) {
       const provided = String(req.query.bbsecret || "");
-      const secret = triggerConfig.mailchimpWebhookSecret;
-      const pBuf = Buffer.from(provided.padEnd(secret.length));
-      const sBuf = Buffer.from(secret);
       // Mailchimp sends a GET to validate the URL on creation — let it through.
       if (req.method !== "GET" &&
-        (pBuf.length !== sBuf.length || !crypto.timingSafeEqual(pBuf, sBuf))) {
+        !safeEqual(provided, triggerConfig.mailchimpWebhookSecret)) {
         return res.status(401).json({ error: "Invalid Mailchimp webhook secret" });
       }
     }
@@ -350,10 +367,7 @@ export async function handlePublicWebhook(req, res) {
       const mode  = req.query["hub.mode"];
       const token = req.query["hub.verify_token"];
       const challenge = req.query["hub.challenge"];
-      const mv = triggerConfig.metaVerifyToken;
-      const tokenBuf = Buffer.from((token || "").padEnd(mv.length));
-      const mvBuf = Buffer.from(mv);
-      if (mode === "subscribe" && tokenBuf.length === mvBuf.length && crypto.timingSafeEqual(tokenBuf, mvBuf)) {
+      if (mode === "subscribe" && safeEqual(token, triggerConfig.metaVerifyToken)) {
         return res.status(200).type("text/plain").send(String(challenge));
       }
       return res.status(403).json({ error: "Meta webhook verification failed" });
@@ -361,16 +375,17 @@ export async function handlePublicWebhook(req, res) {
 
     // ── Meta WhatsApp: app-secret signature + per-event classification (POST) ─
     if (triggerConfig.metaVerifyToken && req.method === "POST") {
-      if (triggerConfig.metaAppSecret) {
-        const provided = req.headers["x-hub-signature-256"] || "";
-        const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
-        const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.metaAppSecret)
-          .update(rawBody).digest("hex");
-        const pBuf = Buffer.from(provided.padEnd(expected.length));
-        const eBuf = Buffer.from(expected);
-        if (pBuf.length !== eBuf.length || !crypto.timingSafeEqual(pBuf, eBuf)) {
-          return res.status(401).json({ error: "Invalid Meta webhook signature" });
-        }
+      // WhatsApp is nuclear-priority: require the app-secret signature. Without a
+      // configured metaAppSecret we cannot authenticate the sender, so refuse.
+      if (!triggerConfig.metaAppSecret) {
+        return res.status(401).json({ error: "Meta app secret not configured" });
+      }
+      const provided = req.headers["x-hub-signature-256"] || "";
+      const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const expected = "sha256=" + crypto.createHmac("sha256", triggerConfig.metaAppSecret)
+        .update(rawBody).digest("hex");
+      if (!safeEqual(provided, expected)) {
+        return res.status(401).json({ error: "Invalid Meta webhook signature" });
       }
       // Meta sends every subscribed change to one URL; drop payloads that don't
       // match the selected event so each trigger only fires on its own event.
