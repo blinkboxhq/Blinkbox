@@ -2,6 +2,16 @@ import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyf
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import { CONFIG_SCHEMAS } from "../configSchemas";
+
+// Declared output-field count for schema-driven nodes (the "Returns: a, b, c"
+// string). Falls back to 1 — every node passes a single output object
+// downstream even when we have no field-level declaration for it.
+function declaredOutputCount(backendType) {
+  const out = CONFIG_SCHEMAS[backendType]?.output;
+  if (!out) return 1;
+  return out.split(",").filter((s) => s.trim()).length || 1;
+}
 
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
 export const EDGE_ARROW_ID = "blinkbox-arrow";
@@ -53,12 +63,12 @@ export default function ConfigurableEdge({
   const sourceOutput = useWorkspaceStore((s) => s.lastRunOutputs?.[source]);
   const { deleteElements } = useReactFlow();
 
-  // Count the output variables the source node produced — top-level keys of its
-  // output object (array/scalar outputs count as 1). Shown on the thread so the
-  // user sees how many variables are available downstream without opening a node.
-  const varCount = (() => {
+  // Output-variable count shown on the thread. Prefer the real key-count from the
+  // last run; before any run, fall back to the source node's declared output count
+  // so the label is always visible.
+  const outputCount = (() => {
     const out = sourceOutput?.__loopFanOut ? (sourceOutput.items?.[0] ?? sourceOutput.__loopItems?.[0]) : sourceOutput;
-    if (out == null) return null;
+    if (out == null) return declaredOutputCount(srcType);
     if (Array.isArray(out)) return out.length ? 1 : 0;
     if (typeof out === "object") return Object.keys(out).length;
     return 1;
@@ -165,8 +175,8 @@ export default function ConfigurableEdge({
 
       {/* ── Midpoint buttons (+ and trash, shown on hover) ─────────────────── */}
       <EdgeLabelRenderer>
-        {/* Output-variable count — sits at midpoint, yields to the hover buttons */}
-        {!isAgentEdge && varCount != null && (
+        {/* Output count — sits at midpoint, yields to the hover buttons */}
+        {!isAgentEdge && outputCount != null && (
           <div
             style={{
               position: "absolute",
@@ -174,10 +184,10 @@ export default function ConfigurableEdge({
               pointerEvents: "none",
             }}
             className={`nodrag nopan flex items-center gap-1 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 text-zinc-400 text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded-full transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
-            title={`${varCount} output variable${varCount === 1 ? "" : "s"} available`}
+            title={`${outputCount} output${outputCount === 1 ? "" : "s"} available downstream`}
           >
-            <span className="text-zinc-200">{varCount}</span>
-            <span className="text-zinc-500">var{varCount === 1 ? "" : "s"}</span>
+            <span className="text-zinc-200">{outputCount}</span>
+            <span className="text-zinc-500">output{outputCount === 1 ? "" : "s"}</span>
           </div>
         )}
         <div
