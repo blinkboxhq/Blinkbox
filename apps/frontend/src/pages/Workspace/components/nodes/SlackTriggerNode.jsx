@@ -6,13 +6,13 @@ import imgSlack from '../../../../assets/slack.png';
 import CredentialPicker from '../../../../components/ui/CredentialPicker';
 
 const SLACK_EVENTS = [
-  { value: 'message',             label: 'New Message',        desc: 'Any message posted in a channel' },
-  { value: 'app_mention',         label: 'App Mention',        desc: 'Someone @mentions your bot' },
-  { value: 'message.im',          label: 'DM to Bot',          desc: 'Direct message sent to your app' },
-  { value: 'channel_created',     label: 'Channel Created',    desc: 'New public channel created' },
-  { value: 'member_joined_channel', label: 'Member Joined',    desc: 'User joins a channel' },
-  { value: 'reaction_added',      label: 'Reaction Added',     desc: 'Emoji reaction added to a message' },
-  { value: 'file_shared',         label: 'File Shared',        desc: 'File uploaded to a channel' },
+  { value: 'message',             label: 'New Message',        desc: 'Any message posted in a channel', slackEvent: 'message',          scope: 'channels:history' },
+  { value: 'app_mention',         label: 'App Mention',        desc: 'Someone @mentions your bot',      slackEvent: 'app_mention',      scope: 'app_mentions:read' },
+  { value: 'message.im',          label: 'DM to Bot',          desc: 'Direct message sent to your app', slackEvent: 'message.im',       scope: 'im:history' },
+  { value: 'channel_created',     label: 'Channel Created',    desc: 'New public channel created',      slackEvent: 'channel_created',  scope: 'channels:read' },
+  { value: 'member_joined_channel', label: 'Member Joined',    desc: 'User joins a channel',            slackEvent: 'member_joined_channel', scope: 'channels:read' },
+  { value: 'reaction_added',      label: 'Reaction Added',     desc: 'Emoji reaction added to a message', slackEvent: 'reaction_added', scope: 'reactions:read' },
+  { value: 'file_shared',         label: 'File Shared',        desc: 'File uploaded to a channel',      slackEvent: 'file_shared',      scope: 'files:read' },
 ];
 
 export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) {
@@ -69,6 +69,23 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
               <p className="text-[9px] text-zinc-600">Paste this into your Slack App → Event Subscriptions → Request URL.</p>
             </div>
 
+            <div className="flex flex-col gap-1.5 p-2.5 bg-[#E01E5A]/[0.06] border border-[#E01E5A]/20 rounded-lg">
+              <div className="flex items-center gap-1.5">
+                <Info className="w-3 h-3 text-[#E01E5A] shrink-0" />
+                <span className="text-[9px] font-bold text-[#E01E5A] uppercase tracking-widest">Activate in Slack (required)</span>
+              </div>
+              <p className="text-[9px] text-zinc-500 leading-relaxed">
+                Slack won't send anything until you finish setup in the Slack App dashboard —
+                the trigger stays silent otherwise:
+              </p>
+              <ol className="text-[9px] text-zinc-400 leading-relaxed list-decimal pl-3.5 flex flex-col gap-0.5">
+                <li>Event Subscriptions → toggle <span className="font-semibold text-zinc-300">On</span>, paste the Request URL above (wait for <span className="text-emerald-400">Verified</span>).</li>
+                <li>Subscribe to bot events → add the <span className="font-semibold text-zinc-300">event names</span> for your selected events (Events tab).</li>
+                <li>OAuth &amp; Permissions → add the required <span className="font-semibold text-zinc-300">scopes</span> (Events tab), then <span className="font-semibold text-zinc-300">Reinstall</span> the app.</li>
+                <li>Invite the bot to the channel: <span className="font-mono text-zinc-300">/invite @yourbot</span>.</li>
+              </ol>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <CredentialPicker
                 label="Signing Secret"
@@ -114,7 +131,7 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Subscribe to Events</label>
             <p className="text-[9px] text-zinc-600">Also add these in Slack App → Event Subscriptions → Subscribe to bot events.</p>
             <div className="flex flex-col gap-1 mt-1">
-              {SLACK_EVENTS.map(({ value, label, desc }) => {
+              {SLACK_EVENTS.map(({ value, label, desc, slackEvent, scope }) => {
                 const on = selectedEvents.includes(value);
                 return (
                   <button key={value} onClick={() => toggleEvent(value)}
@@ -122,9 +139,15 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
                     <div className={`w-3.5 h-3.5 rounded border mt-0.5 shrink-0 flex items-center justify-center transition-all ${on ? 'bg-[#E01E5A] border-[#E01E5A]' : 'border-zinc-600'}`}>
                       {on && <div className="w-1.5 h-1 bg-white rounded-sm" />}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className={`text-[10px] font-semibold block ${on ? 'text-zinc-200' : 'text-zinc-500'}`}>{label}</span>
                       <span className="text-[9px] text-zinc-600">{desc}</span>
+                      {on && (
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="text-[8px] font-mono text-zinc-400 bg-[#111] border border-[#222] rounded px-1 py-0.5">event: {slackEvent}</span>
+                          <span className="text-[8px] font-mono text-zinc-400 bg-[#111] border border-[#222] rounded px-1 py-0.5">scope: {scope}</span>
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
