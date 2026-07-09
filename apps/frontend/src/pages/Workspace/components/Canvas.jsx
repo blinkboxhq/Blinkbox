@@ -399,6 +399,7 @@ export default function Canvas() {
         snapToGrid
         snapGrid={[20, 20]}
         minZoom={0.01}
+        maxZoom={4}
         panOnDrag={[1]}
         selectionOnDrag
         panActivationKeyCode="Space"
