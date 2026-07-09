@@ -428,7 +428,7 @@ function SuggestionGhostNode({ data }) {
   const Icon = nodeDef.icon;
   const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
   const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
-  const cardW = 94, cardH = 94;
+  const cardW = 80, cardH = 80;
 
   return (
     <motion.div
@@ -459,10 +459,10 @@ function SuggestionGhostNode({ data }) {
           boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
         }}>
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-11 h-11 object-contain"
+          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-10 h-10 object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-11 h-11 text-white" strokeWidth={1} />
+          <Icon className="w-10 h-10 text-white" strokeWidth={1} />
         )}
       </div>
 
@@ -599,7 +599,7 @@ function CustomNode({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 94, cardH = 94;
+    const cardW = 80, cardH = 80;
     const triggerRadius = `33px ${EDGE_RADIUS}px ${EDGE_RADIUS}px 33px`;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -618,9 +618,9 @@ function CustomNode({ id, data, selected }) {
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: triggerRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
-            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-11 h-11 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
+            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-11 h-11 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className="w-10 h-10 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
@@ -641,8 +641,8 @@ function CustomNode({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 248;
-    const cardH = 94;
+    const cardW = 212;
+    const cardH = 80;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -707,7 +707,7 @@ function CustomNode({ id, data, selected }) {
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
   if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
-    const d = 58;
+    const d = 50;
     const models = nodeDef.models || [];
     const selectedModel = data.config?.model || nodeDef.defaultModel || "";
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;
@@ -787,8 +787,8 @@ function CustomNode({ id, data, selected }) {
   if (data.backendType === "distributor") {
     const workers = data.config?.workers || 3;
     const strategy = data.config?.strategy || "parallel";
-    const cardW = 190;
-    const cardH = Math.max(100, workers * 24 + 24);
+    const cardW = 164;
+    const cardH = Math.max(86, workers * 22 + 22);
 
     return (
       <div className="relative group" style={{ width: cardW, height: cardH + 28 }}>
@@ -833,7 +833,7 @@ function CustomNode({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 94, cardH = 94;
+  const cardW = 80, cardH = 80;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -867,9 +867,9 @@ function CustomNode({ id, data, selected }) {
           </div>
         )}
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={data.label} className="w-11 h-11 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
+          <img src={nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-11 h-11 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+          <Icon className="w-10 h-10 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
         )}
       </motion.div>
 
