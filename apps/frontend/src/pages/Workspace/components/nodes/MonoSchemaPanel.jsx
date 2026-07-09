@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Copy, Check } from 'lucide-react';
 import { API_URL } from '@/lib/api';
-import { ConfigSection, ConfigInput, ConfigSelect, ConfigPills } from '@/components/ui/ConfigKit';
+import { ConfigSection, ConfigInput, ConfigSelect, ConfigPills, ConfigHeader, ConfigBadge, ConfigToggle, ConfigTabs, ConfigTextarea } from '@/components/ui/ConfigKit';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 
 // Renders a declarative trigger schema (triggerSchemas.js) as a bordered-mono
@@ -33,38 +33,11 @@ function Label({ children, icon: Icon, accent }) {
   );
 }
 
-function Toggle({ on, onClick, accent }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-9 h-5 rounded-full p-0.5 transition-colors shrink-0"
-      style={{ backgroundColor: on ? accent : '#3b3b3b' }}
-    >
-      <div className={`w-4 h-4 bg-white rounded-full transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
-    </button>
-  );
-}
-
 function HeaderBadge({ badge, config, accent }) {
   if (!badge) return null;
   if (badge.showWhen && !matchesShowWhen(badge.showWhen, config)) return null;
   const label = typeof badge.label === 'function' ? badge.label(config) : badge.label;
-  if (badge.tone === 'live') {
-    return (
-      <span className="ml-auto flex items-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shrink-0">
-        <span className="w-[5px] h-[5px] rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
-        {label}
-      </span>
-    );
-  }
-  if (badge.tone === 'code') {
-    return <span className="ml-auto text-[10px] font-mono text-neutral-400 bg-[#0f0f0f] border border-[#2b2b2b] rounded px-2 py-1 shrink-0">{label}</span>;
-  }
-  return (
-    <span className="ml-auto text-[8px] font-bold uppercase tracking-[0.18em] font-mono px-2 py-1 rounded border shrink-0"
-      style={{ color: accent, backgroundColor: `${accent}1f`, borderColor: `${accent}66` }}>{label}</span>
-  );
+  return <ConfigBadge label={label} tone={badge.tone} accentColor={accent} />;
 }
 
 function UrlDisplay({ field, config, accent, automationId }) {
@@ -117,19 +90,8 @@ function Field({ field, config, set, accent, automationId }) {
       );
 
     case 'textarea':
-      return (
-        <div className="flex flex-col">
-          <Label icon={field.icon} accent={accent}>{field.label}</Label>
-          <textarea
-            value={v(field.key, '')}
-            onChange={(e) => set(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            rows={field.rows || 5}
-            className="bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454] resize-none leading-relaxed placeholder-neutral-600"
-          />
-          {field.hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>}
-        </div>
-      );
+      return <ConfigTextarea label={field.label} icon={field.icon} value={v(field.key, '')} placeholder={field.placeholder}
+        rows={field.rows || 5} hint={field.hint} onChange={(val) => set(field.key, val)} />;
 
     case 'select':
       return <ConfigSelect label={field.label} icon={field.icon} value={v(field.key, field.default)} options={field.options} accentColor={accent}
@@ -181,7 +143,7 @@ function Field({ field, config, set, accent, automationId }) {
             <span className="text-[11px] font-semibold text-neutral-200 font-mono block">{field.label}</span>
             {field.desc && <span className="text-[9px] text-neutral-600 mt-1 block leading-relaxed font-mono">{field.desc}</span>}
           </div>
-          <Toggle on={!!v(field.key, field.default ?? false)} onClick={() => set(field.key, !v(field.key, field.default ?? false))} accent={accent} />
+          <ConfigToggle on={!!v(field.key, field.default ?? false)} onClick={() => set(field.key, !v(field.key, field.default ?? false))} accentColor={accent} />
         </div>
       );
 
@@ -231,38 +193,13 @@ export default function MonoSchemaPanel({ schema, config = {}, updateConfig }) {
 
   return (
     <ConfigSection className="gap-5">
-      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
-        {logoUrl ? (
-          <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
-            <img src={logoUrl} alt={schema.title} className="w-[26px] h-[26px] object-contain"
-              style={schema.imgFilter ? { filter: schema.imgFilter } : undefined} />
-          </div>
-        ) : Icon && (
-          <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
-            <Icon className="w-5 h-5" />
-          </div>
-        )}
-        <div className="flex flex-col">
-          <span className="text-[13px] font-bold text-neutral-100 font-mono tracking-wide">{schema.title}</span>
-          {schema.subtitle && <span className="text-[10px] text-neutral-500 font-mono">{schema.subtitle}</span>}
-        </div>
-        <HeaderBadge badge={schema.badge} config={config} accent={accent} />
-      </div>
+      <ConfigHeader
+        icon={Icon} logoUrl={logoUrl} imgFilter={schema.imgFilter}
+        title={schema.title} subtitle={schema.subtitle}
+        badge={<HeaderBadge badge={schema.badge} config={config} accent={accent} />}
+      />
 
-      {tabs && (
-        <div className="flex gap-1 -mt-1">
-          {tabs.map((t) => {
-            const on = tab === t.id;
-            return (
-              <button key={t.id} type="button" onClick={() => setTab(t.id)}
-                className="flex-1 py-2 text-[9px] font-bold uppercase tracking-[0.18em] font-mono rounded-md border transition-colors"
-                style={on ? { color: accent, backgroundColor: `${accent}1f`, borderColor: `${accent}66` } : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {tabs && <ConfigTabs tabs={tabs} value={tab} onChange={setTab} accentColor={accent} />}
 
       {visible.map((f, i) => (
         <Field key={f.key || `${f.type}-${i}`} field={f} config={config} set={set} accent={accent} automationId={automationId} />

@@ -203,3 +203,125 @@ export function RemovableRow({ children, onRemove }) {
     </div>
   );
 }
+
+// ── Header block (icon/logo + title/subtitle + optional badge) ──────────────
+export function ConfigHeader({ icon: Icon, logoUrl, imgFilter, title, subtitle, badge }) {
+  return (
+    <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
+      {logoUrl ? (
+        <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
+          <img src={logoUrl} alt="" className="w-[26px] h-[26px] object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
+        </div>
+      ) : Icon && (
+        <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
+          <Icon className="w-5 h-5" />
+        </div>
+      )}
+      <div className="flex flex-col min-w-0">
+        <span className="text-[13px] font-bold text-neutral-100 font-mono tracking-wide truncate">{title}</span>
+        {subtitle && <span className="text-[10px] text-neutral-500 font-mono">{subtitle}</span>}
+      </div>
+      {badge}
+    </div>
+  );
+}
+
+// ── Header badge (live / code / accent tones) ───────────────────────────────
+export function ConfigBadge({ label, tone = 'accent', accentColor = BB_ACCENT }) {
+  if (!label) return null;
+  if (tone === 'live') {
+    return (
+      <span className="ml-auto flex items-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shrink-0">
+        <span className="w-[5px] h-[5px] rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
+        {label}
+      </span>
+    );
+  }
+  if (tone === 'code') {
+    return <span className="ml-auto text-[10px] font-mono text-neutral-400 bg-[#0f0f0f] border border-[#2b2b2b] rounded px-2 py-1 shrink-0">{label}</span>;
+  }
+  return (
+    <span className="ml-auto text-[8px] font-bold uppercase tracking-[0.18em] font-mono px-2 py-1 rounded border shrink-0"
+      style={{ color: accentColor, backgroundColor: `${accentColor}1f`, borderColor: `${accentColor}66` }}>{label}</span>
+  );
+}
+
+// ── Toggle switch (sliding knob) ────────────────────────────────────────────
+export function ConfigToggle({ on, onClick, accentColor = BB_ACCENT }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-9 h-5 rounded-full p-0.5 transition-colors shrink-0"
+      style={{ backgroundColor: on ? accentColor : '#3b3b3b' }}
+    >
+      <div className={`w-4 h-4 bg-white rounded-full transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+  );
+}
+
+// ── Switch row (label + description + toggle) ────────────────────────────────
+export function ConfigToggleRow({ label, desc, icon: Icon, on, onChange, accentColor = BB_ACCENT }) {
+  return (
+    <div className="bb-glow-border flex items-start gap-3 p-3 rounded-md bg-[#0f0f0f] border border-[#2b2b2b]">
+      {Icon && <Icon className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />}
+      <div className="flex-1 min-w-0">
+        <span className="text-[11px] font-semibold text-neutral-200 font-mono block">{label}</span>
+        {desc && <span className="text-[9px] text-neutral-600 mt-1 block leading-relaxed font-mono">{desc}</span>}
+      </div>
+      <ConfigToggle on={!!on} onClick={() => onChange?.(!on)} accentColor={accentColor} />
+    </div>
+  );
+}
+
+// ── Mono textarea with label + hint ─────────────────────────────────────────
+export function ConfigTextarea({ label, icon, value, onChange, placeholder, rows = 5, hint }) {
+  return (
+    <div className="flex flex-col">
+      {label && <ConfigLabel icon={icon}>{label}</ConfigLabel>}
+      <textarea
+        value={value ?? ''}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className="bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454] resize-none leading-relaxed placeholder-neutral-600"
+      />
+      {hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{hint}</p>}
+    </div>
+  );
+}
+
+// ── Pill tab bar ────────────────────────────────────────────────────────────
+export function ConfigTabs({ tabs = [], value, onChange, accentColor = BB_ACCENT }) {
+  return (
+    <div className="flex gap-1 -mt-1">
+      {tabs.map((t) => {
+        const on = value === t.id;
+        return (
+          <button key={t.id} type="button" onClick={() => onChange?.(t.id)}
+            className="flex-1 py-2 text-[9px] font-bold uppercase tracking-[0.18em] font-mono rounded-md border transition-colors"
+            style={on ? { color: accentColor, backgroundColor: `${accentColor}1f`, borderColor: `${accentColor}66` } : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Info / returns banner (muted mono strip) ────────────────────────────────
+export function ConfigBanner({ children, tone = 'info' }) {
+  if (tone === 'warn') {
+    return (
+      <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 text-[10px] font-mono tracking-wide"
+        style={{ color: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.20)', borderWidth: 1 }}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 bg-[#0f0f0f] border border-[#2b2b2b] text-[10px] font-mono text-neutral-500 tracking-wide">
+      {children}
+    </div>
+  );
+}

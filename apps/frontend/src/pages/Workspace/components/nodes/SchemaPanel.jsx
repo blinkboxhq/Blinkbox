@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
-import { ConfigSection, ConfigLabel, ConfigSelect, ConfigPills } from "../../../../components/ui/ConfigKit";
+import { ConfigSection, ConfigLabel, ConfigSelect, ConfigPills, ConfigHeader, ConfigToggle, ConfigBanner } from "../../../../components/ui/ConfigKit";
 
 // Renders a declarative action schema (configSchemas.js) in the bordered-mono
 // signature style — same house look as MonoSchemaPanel (triggers). One renderer,
@@ -26,19 +26,6 @@ function isVisible(field, config, schema) {
   });
 }
 
-function Toggle({ on, onClick, accent }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-9 h-5 rounded-full p-0.5 transition-colors shrink-0"
-      style={{ backgroundColor: on ? accent : '#3b3b3b' }}
-    >
-      <div className={`w-4 h-4 bg-white rounded-full transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
-    </button>
-  );
-}
-
 function Field({ field, config, updateConfig, nodeId, accent }) {
   const value = config[field.key] ?? field.default ?? "";
 
@@ -50,7 +37,7 @@ function Field({ field, config, updateConfig, nodeId, accent }) {
           <span className="text-[11px] font-semibold text-neutral-200 font-mono block">{field.label}</span>
           {field.hint && <span className="text-[9px] text-neutral-600 mt-1 block leading-relaxed font-mono">{field.hint}</span>}
         </div>
-        <Toggle on={on} onClick={() => updateConfig(field.key, !on)} accent={accent} />
+        <ConfigToggle on={on} onClick={() => updateConfig(field.key, !on)} accentColor={accent} />
       </div>
     );
   }
@@ -120,21 +107,10 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
 
   return (
     <ConfigSection className="gap-5">
-      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
-        {def?.logoUrl ? (
-          <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
-            <img src={def.logoUrl} alt="" className="w-[26px] h-[26px] object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
-          </div>
-        ) : Icon ? (
-          <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
-            <Icon className="w-5 h-5" />
-          </div>
-        ) : null}
-        <div className="flex flex-col min-w-0">
-          <span className="text-[13px] font-bold text-neutral-100 font-mono tracking-wide truncate">{def?.label || "Configure"}</span>
-          {schema.subtitle && <span className="text-[10px] text-neutral-500 font-mono">{schema.subtitle}</span>}
-        </div>
-      </div>
+      <ConfigHeader
+        icon={Icon} logoUrl={def?.logoUrl} imgFilter={def?.imgFilter}
+        title={def?.label || "Configure"} subtitle={schema.subtitle}
+      />
 
       {schema.credential && (
         <CredentialPicker
@@ -150,10 +126,9 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
       )}
 
       {locked && (
-        <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 text-[10px] font-mono tracking-wide"
-          style={{ color: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.20)', borderWidth: 1 }}>
+        <ConfigBanner tone="warn">
           Connect your account above to unlock the rest of this node.
-        </div>
+        </ConfigBanner>
       )}
 
       <div className={`flex flex-col gap-5 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}>
@@ -206,9 +181,7 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
         )}
 
         {schema.output && (
-          <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 bg-[#0f0f0f] border border-[#2b2b2b] text-[10px] font-mono text-neutral-500 tracking-wide">
-            Returns: <span className="text-neutral-300">{schema.output}</span>
-          </div>
+          <ConfigBanner>Returns: <span className="text-neutral-300">{schema.output}</span></ConfigBanner>
         )}
       </div>
     </ConfigSection>
