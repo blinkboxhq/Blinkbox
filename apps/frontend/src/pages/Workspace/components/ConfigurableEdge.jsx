@@ -94,10 +94,11 @@ export default function ConfigurableEdge({
   // are short agent connectors that shouldn't reroute).
   const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
 
-  // Curvy by default; only long-haul / wrap-around edges (or ones that must skirt
-  // a node) switch to the orthogonal stepped look from the reference.
-  const isLongHaul = dx > 520 || dy > 260;
-  const useStep = !isSlotEdge && (obstacleBottom != null || isLongHaul);
+  // Curvy by default. The stepped orthogonal look is reserved for edges that drop
+  // downward and wrap back (a big vertical delta) or must skirt a node underneath —
+  // long horizontal runs stay curvy so only "going down" gets the clean box path.
+  const isWrapDown = dy > 200;
+  const useStep = !isSlotEdge && (obstacleBottom != null || isWrapDown);
 
   let edgePath, labelX, labelY;
   if (useStep) {
@@ -205,19 +206,18 @@ export default function ConfigurableEdge({
         </>
       )}
 
-      {/* Directional arrow at the edge midpoint — points from source toward target */}
+      {/* Directional arrow at the edge midpoint — points along the edge */}
       {!isAgentEdge && !isRunning && (
         <g
-          transform={`translate(${labelX}, ${labelY}) rotate(${(Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI})`}
-          className={`transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
+          transform={`translate(${labelX}, ${labelY}) rotate(${useStep ? 0 : (Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI})`}
+          className={`transition-opacity duration-100 ${hovered ? "opacity-0" : "opacity-100"}`}
           style={{ pointerEvents: "none" }}
         >
           <path
-            d="M -3 -4.5 L 4.5 0 L -3 4.5"
-            fill="none"
-            stroke={hovered ? "#a1a1aa" : "#71717a"}
-            strokeWidth={2.2}
-            strokeLinecap="round"
+            d="M -4 -6 L 6 0 L -4 6 Z"
+            fill={isFailed ? "#ef4444" : "#a1a1aa"}
+            stroke="#0d0d0f"
+            strokeWidth={1.5}
             strokeLinejoin="round"
           />
         </g>
