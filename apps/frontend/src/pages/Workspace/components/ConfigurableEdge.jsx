@@ -87,29 +87,35 @@ export default function ConfigurableEdge({
 
   // Soft cursive curvature — gentle bend that avoids going under nodes
   const dx = Math.abs(targetX - sourceX);
+  const dy = Math.abs(targetY - sourceY);
   const curvature = isSlotEdge ? Math.max(0.12, Math.min(0.28, dx / 1200)) : Math.max(0.25, Math.min(0.5, dx / 800));
 
   // Detour around any node the straight span would cross (skip slot edges — those
   // are short agent connectors that shouldn't reroute).
   const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
 
+  // Curvy by default; only long-haul / wrap-around edges (or ones that must skirt
+  // a node) switch to the orthogonal stepped look from the reference.
+  const isLongHaul = dx > 520 || dy > 260;
+  const useStep = !isSlotEdge && (obstacleBottom != null || isLongHaul);
+
   let edgePath, labelX, labelY;
-  if (isSlotEdge) {
-    // Agent slot connectors keep the soft dashed bezier.
-    const [p, lx, ly] = getBezierPath({
-      sourceX, sourceY, sourcePosition,
-      targetX, targetY, targetPosition,
-      curvature,
-    });
-    edgePath = p; labelX = lx; labelY = ly;
-  } else {
+  if (useStep) {
     // Orthogonal step routing with rounded elbows (n8n-style). When an obstacle
     // sits under the span, force the vertical run below it.
     const [p, lx, ly] = getSmoothStepPath({
       sourceX, sourceY, sourcePosition,
       targetX, targetY, targetPosition,
-      borderRadius: 12,
+      borderRadius: 16,
       ...(obstacleBottom != null ? { centerY: obstacleBottom + CLEARANCE } : {}),
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  } else {
+    // Short/direct edges keep the soft bezier curve.
+    const [p, lx, ly] = getBezierPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      curvature,
     });
     edgePath = p; labelX = lx; labelY = ly;
   }
