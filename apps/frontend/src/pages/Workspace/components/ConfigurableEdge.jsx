@@ -184,7 +184,7 @@ export default function ConfigurableEdge({
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "none",
-              background: "radial-gradient(ellipse 60% 55% at center, #0a0a0b 55%, transparent 100%)",
+              backgroundColor: "#0d0d0f",
             }}
             className={`nodrag nopan flex items-center gap-1 text-[11px] font-medium transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
             title={`${outputCount} output${outputCount === 1 ? "" : "s"} available downstream`}
