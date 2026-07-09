@@ -2,25 +2,19 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import SmartVariableInput from "../../../../components/ui/SmartVariableInput";
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
+import { ConfigSection, ConfigLabel, ConfigSelect, ConfigPills } from "../../../../components/ui/ConfigKit";
 
-const ACCENT_STYLES = {
-  violet: { box: "bg-violet-500/10 border-violet-500/20",   icon: "text-violet-400",  pill: "bg-violet-500/15 border-violet-500/40 text-violet-300" },
-  blue:   { box: "bg-blue-500/10 border-blue-500/20",       icon: "text-blue-400",    pill: "bg-blue-500/15 border-blue-500/40 text-blue-300" },
-  green:  { box: "bg-emerald-500/10 border-emerald-500/20", icon: "text-emerald-400", pill: "bg-emerald-500/15 border-emerald-500/40 text-emerald-300" },
-  emerald:{ box: "bg-emerald-500/10 border-emerald-500/20", icon: "text-emerald-400", pill: "bg-emerald-500/15 border-emerald-500/40 text-emerald-300" },
-  red:    { box: "bg-red-500/10 border-red-500/20",         icon: "text-red-400",     pill: "bg-red-500/15 border-red-500/40 text-red-300" },
-  rose:   { box: "bg-rose-500/10 border-rose-500/20",       icon: "text-rose-400",    pill: "bg-rose-500/15 border-rose-500/40 text-rose-300" },
-  orange: { box: "bg-orange-500/10 border-orange-500/20",   icon: "text-orange-400",  pill: "bg-orange-500/15 border-orange-500/40 text-orange-300" },
-  amber:  { box: "bg-amber-500/10 border-amber-500/20",     icon: "text-amber-400",   pill: "bg-amber-500/15 border-amber-500/40 text-amber-300" },
-  sky:    { box: "bg-sky-500/10 border-sky-500/20",         icon: "text-sky-400",     pill: "bg-sky-500/15 border-sky-500/40 text-sky-300" },
-  indigo: { box: "bg-indigo-500/10 border-indigo-500/20",   icon: "text-indigo-400",  pill: "bg-indigo-500/15 border-indigo-500/40 text-indigo-300" },
-  pink:   { box: "bg-pink-500/10 border-pink-500/20",       icon: "text-pink-400",    pill: "bg-pink-500/15 border-pink-500/40 text-pink-300" },
-  purple: { box: "bg-purple-500/10 border-purple-500/20",   icon: "text-purple-400",  pill: "bg-purple-500/15 border-purple-500/40 text-purple-300" },
+// Renders a declarative action schema (configSchemas.js) in the bordered-mono
+// signature style — same house look as MonoSchemaPanel (triggers). One renderer,
+// every schema-driven action node. Keeps action-only features: operation picker,
+// root credential + lock gate, advanced disclosure, output banner. Dynamic text
+// fields use SmartVariableInput so {{ $json.x }} variables keep working.
+
+const ACCENT_HEX = {
+  violet: '#8b7cf6', blue: '#6f97e8', green: '#34d399', emerald: '#34d399',
+  red: '#f87171', rose: '#fb7185', orange: '#fb923c', amber: '#fbbf24',
+  sky: '#38bdf8', indigo: '#818cf8', pink: '#f472b6', purple: '#c084fc',
 };
-
-const INPUT_CLS = "bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500 w-full";
-const LABEL_CLS = "text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block";
-const PILL_IDLE = "bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500";
 
 function isVisible(field, config, schema) {
   if (!field.showWhen) return true;
@@ -32,12 +26,16 @@ function isVisible(field, config, schema) {
   });
 }
 
-function FieldLabel({ field }) {
+function Toggle({ on, onClick, accent }) {
   return (
-    <span className={LABEL_CLS}>
-      {field.label}
-      {field.required && <span className="text-rose-400 ml-0.5">*</span>}
-    </span>
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-9 h-5 rounded-full p-0.5 transition-colors shrink-0"
+      style={{ backgroundColor: on ? accent : '#3b3b3b' }}
+    >
+      <div className={`w-4 h-4 bg-white rounded-full transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
   );
 }
 
@@ -47,14 +45,12 @@ function Field({ field, config, updateConfig, nodeId, accent }) {
   if (field.type === "toggle") {
     const on = Boolean(config[field.key] ?? field.default ?? false);
     return (
-      <div className="flex items-center justify-between">
-        <span className={LABEL_CLS + " mb-0"}>{field.label}</span>
-        <button
-          onClick={() => updateConfig(field.key, !on)}
-          className={`w-10 h-5 rounded-full transition-all duration-150 relative shrink-0 ${on ? "bg-emerald-500" : "bg-zinc-700"}`}
-        >
-          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-150 ${on ? "left-[22px]" : "left-0.5"}`} />
-        </button>
+      <div className="bb-glow-border flex items-start gap-3 p-3 rounded-md bg-[#0f0f0f] border border-[#2b2b2b]">
+        <div className="flex-1 min-w-0">
+          <span className="text-[11px] font-semibold text-neutral-200 font-mono block">{field.label}</span>
+          {field.hint && <span className="text-[9px] text-neutral-600 mt-1 block leading-relaxed font-mono">{field.hint}</span>}
+        </div>
+        <Toggle on={on} onClick={() => updateConfig(field.key, !on)} accent={accent} />
       </div>
     );
   }
@@ -64,30 +60,17 @@ function Field({ field, config, updateConfig, nodeId, accent }) {
     if (options.length <= 5) {
       return (
         <div className="flex flex-col">
-          <FieldLabel field={field} />
-          <div className="flex flex-wrap gap-1.5">
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => updateConfig(field.key, opt.value)}
-                className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-all duration-150 ${value === opt.value ? accent.pill : PILL_IDLE}`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
+          <ConfigLabel>{field.label}{field.required && <span style={{ color: accent }} className="ml-0.5">*</span>}</ConfigLabel>
+          <ConfigPills value={value} onChange={(val) => updateConfig(field.key, val)} options={options} accentColor={accent} />
+          {field.hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>}
         </div>
       );
     }
     return (
       <div className="flex flex-col">
-        <FieldLabel field={field} />
-        <select value={value} onChange={(e) => updateConfig(field.key, e.target.value)} className={INPUT_CLS}>
-          <option value="">Select…</option>
-          {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-        </select>
-        {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
+        <ConfigLabel>{field.label}{field.required && <span style={{ color: accent }} className="ml-0.5">*</span>}</ConfigLabel>
+        <ConfigSelect value={value} onChange={(val) => updateConfig(field.key, val)} options={options} accentColor={accent} />
+        {field.hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>}
       </div>
     );
   }
@@ -95,22 +78,22 @@ function Field({ field, config, updateConfig, nodeId, accent }) {
   if (field.type === "number") {
     return (
       <div className="flex flex-col">
-        <FieldLabel field={field} />
+        <ConfigLabel>{field.label}{field.required && <span style={{ color: accent }} className="ml-0.5">*</span>}</ConfigLabel>
         <input
           type="number"
           value={value}
           onChange={(e) => updateConfig(field.key, e.target.value)}
           placeholder={field.placeholder || ""}
-          className={INPUT_CLS}
+          className="bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454] placeholder-neutral-600"
         />
-        {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
+        {field.hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col">
-      <FieldLabel field={field} />
+      <ConfigLabel>{field.label}{field.required && <span style={{ color: accent }} className="ml-0.5">*</span>}</ConfigLabel>
       <SmartVariableInput
         value={config[field.key] ?? field.default ?? ""}
         onChange={(val) => updateConfig(field.key, val)}
@@ -118,13 +101,13 @@ function Field({ field, config, updateConfig, nodeId, accent }) {
         nodeId={nodeId}
         multiline={field.type === "textarea"}
       />
-      {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
+      {field.hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>}
     </div>
   );
 }
 
 export default function SchemaPanel({ schema, def, config, updateConfig, nodeId }) {
-  const accent = ACCENT_STYLES[schema.accent] || ACCENT_STYLES.violet;
+  const accent = ACCENT_HEX[schema.accent] || ACCENT_HEX.violet;
   const opKey = schema.operationKey || "operation";
   const operation = config[opKey] || schema.defaultOperation;
   const locked = Boolean(schema.credential) && !config.credentialId;
@@ -136,18 +119,20 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
   const Icon = def?.icon;
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${accent.box}`}>
-          {def?.logoUrl ? (
-            <img src={def.logoUrl} alt="" className="w-[18px] h-[18px]" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
-          ) : Icon ? (
-            <Icon className={`w-4 h-4 ${accent.icon}`} />
-          ) : null}
-        </div>
-        <div className="min-w-0">
-          <div className="text-[15px] font-semibold text-zinc-100 truncate">{def?.label || "Configure"}</div>
-          {schema.subtitle && <div className="text-[11px] text-zinc-500">{schema.subtitle}</div>}
+    <ConfigSection className="gap-5">
+      <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
+        {def?.logoUrl ? (
+          <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
+            <img src={def.logoUrl} alt="" className="w-[26px] h-[26px] object-contain" style={def.imgFilter ? { filter: def.imgFilter } : undefined} />
+          </div>
+        ) : Icon ? (
+          <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
+            <Icon className="w-5 h-5" />
+          </div>
+        ) : null}
+        <div className="flex flex-col min-w-0">
+          <span className="text-[13px] font-bold text-neutral-100 font-mono tracking-wide truncate">{def?.label || "Configure"}</span>
+          {schema.subtitle && <span className="text-[10px] text-neutral-500 font-mono">{schema.subtitle}</span>}
         </div>
       </div>
 
@@ -165,25 +150,33 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
       )}
 
       {locked && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] px-3 py-2 rounded-lg">
+        <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 text-[10px] font-mono tracking-wide"
+          style={{ color: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.20)', borderWidth: 1 }}>
           Connect your account above to unlock the rest of this node.
         </div>
       )}
 
-      <div className={`flex flex-col gap-4 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}>
+      <div className={`flex flex-col gap-5 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}>
         {schema.operations?.length > 0 && (
           <div className="flex flex-col">
-            <span className={LABEL_CLS}>Operation</span>
+            <ConfigLabel>Operation</ConfigLabel>
             <div className="grid grid-cols-2 gap-1.5">
-              {schema.operations.map((op) => (
-                <button
-                  key={op.value}
-                  onClick={() => updateConfig(opKey, op.value)}
-                  className={`px-3 py-2 rounded-lg border text-[12px] font-medium transition-all duration-150 text-left ${operation === op.value ? accent.pill : PILL_IDLE}`}
-                >
-                  {op.label}
-                </button>
-              ))}
+              {schema.operations.map((op) => {
+                const on = operation === op.value;
+                return (
+                  <button
+                    key={op.value}
+                    type="button"
+                    onClick={() => updateConfig(opKey, op.value)}
+                    className="bb-glow-border px-3 py-2 rounded-md text-[11.5px] font-mono font-medium border transition-colors text-left"
+                    style={on
+                      ? { color: accent, backgroundColor: `${accent}1f`, borderColor: `${accent}66` }
+                      : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}
+                  >
+                    {op.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -195,14 +188,15 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
         {advFields.length > 0 && (
           <div className="flex flex-col">
             <button
+              type="button"
               onClick={() => setShowAdvanced((v) => !v)}
-              className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-all duration-150 w-fit"
+              className="flex items-center gap-1.5 text-[9px] font-bold text-neutral-500 uppercase tracking-[0.18em] font-mono hover:text-neutral-300 transition-colors w-fit"
             >
-              <ChevronDown className={`w-3.5 h-3.5 transition-all duration-150 ${showAdvanced ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${showAdvanced ? "rotate-180" : ""}`} />
               Advanced
             </button>
             {showAdvanced && (
-              <div className="flex flex-col gap-4 mt-3">
+              <div className="flex flex-col gap-5 mt-4">
                 {advFields.map((f, i) => (
                   <Field key={`${f.key}-${i}`} field={f} config={config} updateConfig={updateConfig} nodeId={nodeId} accent={accent} />
                 ))}
@@ -212,11 +206,11 @@ export default function SchemaPanel({ schema, def, config, updateConfig, nodeId 
         )}
 
         {schema.output && (
-          <div className="bg-zinc-900 border border-zinc-800 text-zinc-500 text-[11px] px-3 py-2 rounded-lg">
-            Returns: <span className="text-zinc-300">{schema.output}</span>
+          <div className="bb-glow-border flex items-center gap-2 rounded-md px-3 py-2.5 bg-[#0f0f0f] border border-[#2b2b2b] text-[10px] font-mono text-neutral-500 tracking-wide">
+            Returns: <span className="text-neutral-300">{schema.output}</span>
           </div>
         )}
       </div>
-    </div>
+    </ConfigSection>
   );
 }
