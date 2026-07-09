@@ -94,19 +94,22 @@ export default function ConfigurableEdge({
   const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
 
   let edgePath, labelX, labelY;
-  if (obstacleBottom != null) {
-    const [p, lx, ly] = getSmoothStepPath({
-      sourceX, sourceY, sourcePosition,
-      targetX, targetY, targetPosition,
-      borderRadius: 16,
-      centerY: obstacleBottom + CLEARANCE,
-    });
-    edgePath = p; labelX = lx; labelY = ly;
-  } else {
+  if (isSlotEdge) {
+    // Agent slot connectors keep the soft dashed bezier.
     const [p, lx, ly] = getBezierPath({
       sourceX, sourceY, sourcePosition,
       targetX, targetY, targetPosition,
       curvature,
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  } else {
+    // Orthogonal step routing with rounded elbows (n8n-style). When an obstacle
+    // sits under the span, force the vertical run below it.
+    const [p, lx, ly] = getSmoothStepPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      borderRadius: 12,
+      ...(obstacleBottom != null ? { centerY: obstacleBottom + CLEARANCE } : {}),
     });
     edgePath = p; labelX = lx; labelY = ly;
   }
