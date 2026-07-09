@@ -1,17 +1,39 @@
-import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyflow/react";
+import { getBezierPath, getSmoothStepPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 
-// Number of output variables a node exposes downstream — the same field list the
-// variable drawer shows (DEFAULT_SCHEMAS is that drawer's source of truth). Count
-// top-level keys, matching what the drawer surfaces at the node's root. Falls back
-// to 1 for node types with no declared schema (a single passthrough object).
-function declaredOutputCount(backendType) {
-  const schema = DEFAULT_SCHEMAS[backendType];
-  if (!schema) return 1;
-  return Object.keys(schema).filter((k) => !k.startsWith("_")).length || 1;
+// ── Obstacle avoidance ──────────────────────────────────────────────────────
+// A near-horizontal edge whose straight span passes under a node routes around
+// it instead of drawing through its face. We detect any node whose bounding box
+// the direct source→target segment would intersect (excluding the two endpoints'
+// own nodes) and, if found, fall back to an orthogonal smooth-step path that
+// dips below the obstacle.
+const NODE_W = 108;   // canvas card footprint (see Canvas node sizing)
+const NODE_H = 108;
+const CLEARANCE = 28; // gap kept between edge and a node it routes around
+
+function segmentHitsNodes(sx, sy, tx, ty, nodes, sourceId, targetId) {
+  const minX = Math.min(sx, tx);
+  const maxX = Math.max(sx, tx);
+  let lowestBottom = null;
+  for (const n of nodes) {
+    if (n.id === sourceId || n.id === targetId) continue;
+    if (!n.position) continue;
+    const w = n.width || n.measured?.width || NODE_W;
+    const h = n.height || n.measured?.height || NODE_H;
+    const nx = n.position.x;
+    const ny = n.position.y;
+    // Horizontal overlap with the edge span, plus vertical straddle of the line's band
+    const bandTop = Math.min(sy, ty) - CLEARANCE;
+    const bandBottom = Math.max(sy, ty) + CLEARANCE;
+    const overlapsX = nx < maxX - 4 && nx + w > minX + 4;
+    const overlapsY = ny < bandBottom && ny + h > bandTop;
+    if (overlapsX && overlapsY) {
+      lowestBottom = lowestBottom == null ? ny + h : Math.max(lowestBottom, ny + h);
+    }
+  }
+  return lowestBottom;
 }
 
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
@@ -61,34 +83,33 @@ export default function ConfigurableEdge({
     || tgtType?.startsWith("agent_integration_");
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
-  const sourceOutput = useWorkspaceStore((s) => s.lastRunOutputs?.[source]);
   const { deleteElements } = useReactFlow();
-
-  // Output-variable count shown on the thread — the number of variables this node
-  // exposes downstream, matching the variable drawer. Use the node's declared output
-  // schema (drawer's source of truth); after a run, prefer the live key-count only
-  // when the real output reveals MORE fields (dynamic nodes like set_fields).
-  const outputCount = (() => {
-    const declared = declaredOutputCount(srcType);
-    const out = sourceOutput?.__loopFanOut ? (sourceOutput.items?.[0] ?? sourceOutput.__loopItems?.[0]) : sourceOutput;
-    if (out == null || typeof out !== "object" || Array.isArray(out)) return declared;
-    const liveKeys = Object.keys(out).filter((k) => !k.startsWith("__")).length;
-    return Math.max(declared, liveKeys);
-  })();
 
   // Soft cursive curvature — gentle bend that avoids going under nodes
   const dx = Math.abs(targetX - sourceX);
   const curvature = isSlotEdge ? Math.max(0.12, Math.min(0.28, dx / 1200)) : Math.max(0.25, Math.min(0.5, dx / 800));
 
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    curvature,
-  });
+  // Detour around any node the straight span would cross (skip slot edges — those
+  // are short agent connectors that shouldn't reroute).
+  const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
+
+  let edgePath, labelX, labelY;
+  if (obstacleBottom != null) {
+    const [p, lx, ly] = getSmoothStepPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      borderRadius: 16,
+      centerY: obstacleBottom + CLEARANCE,
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  } else {
+    const [p, lx, ly] = getBezierPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      curvature,
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  }
 
   // ── Status-driven styling ────────────────────────────────────────────────────
   const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
@@ -175,24 +196,26 @@ export default function ConfigurableEdge({
         </>
       )}
 
+      {/* Directional arrow at the edge midpoint — points from source toward target */}
+      {!isAgentEdge && !isRunning && (
+        <g
+          transform={`translate(${labelX}, ${labelY}) rotate(${(Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI})`}
+          className={`transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
+          style={{ pointerEvents: "none" }}
+        >
+          <path
+            d="M -3 -4.5 L 4.5 0 L -3 4.5"
+            fill="none"
+            stroke={hovered ? "#a1a1aa" : "#71717a"}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
+      )}
+
       {/* ── Midpoint buttons (+ and trash, shown on hover) ─────────────────── */}
       <EdgeLabelRenderer>
-        {/* Output count — sits at midpoint, yields to the hover buttons */}
-        {!isAgentEdge && outputCount != null && (
-          <div
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: "none",
-              backgroundColor: "#0d0d0f",
-            }}
-            className={`nodrag nopan flex items-center gap-1 text-[11px] font-medium transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
-            title={`${outputCount} output${outputCount === 1 ? "" : "s"} available downstream`}
-          >
-            <span className="text-zinc-300">{outputCount}</span>
-            <span className="text-zinc-500">output{outputCount === 1 ? "" : "s"}</span>
-          </div>
-        )}
         <div
           style={{
             position: "absolute",
