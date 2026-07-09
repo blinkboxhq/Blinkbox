@@ -2,15 +2,16 @@ import { getBezierPath, EdgeLabelRenderer, useReactFlow, MarkerType } from "@xyf
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import { CONFIG_SCHEMAS } from "../configSchemas";
+import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 
-// Declared output-field count for schema-driven nodes (the "Returns: a, b, c"
-// string). Falls back to 1 — every node passes a single output object
-// downstream even when we have no field-level declaration for it.
+// Number of output variables a node exposes downstream — the same field list the
+// variable drawer shows (DEFAULT_SCHEMAS is that drawer's source of truth). Count
+// top-level keys, matching what the drawer surfaces at the node's root. Falls back
+// to 1 for node types with no declared schema (a single passthrough object).
 function declaredOutputCount(backendType) {
-  const out = CONFIG_SCHEMAS[backendType]?.output;
-  if (!out) return 1;
-  return out.split(",").filter((s) => s.trim()).length || 1;
+  const schema = DEFAULT_SCHEMAS[backendType];
+  if (!schema) return 1;
+  return Object.keys(schema).filter((k) => !k.startsWith("_")).length || 1;
 }
 
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
@@ -63,15 +64,16 @@ export default function ConfigurableEdge({
   const sourceOutput = useWorkspaceStore((s) => s.lastRunOutputs?.[source]);
   const { deleteElements } = useReactFlow();
 
-  // Output-variable count shown on the thread. Prefer the real key-count from the
-  // last run; before any run, fall back to the source node's declared output count
-  // so the label is always visible.
+  // Output-variable count shown on the thread — the number of variables this node
+  // exposes downstream, matching the variable drawer. Use the node's declared output
+  // schema (drawer's source of truth); after a run, prefer the live key-count only
+  // when the real output reveals MORE fields (dynamic nodes like set_fields).
   const outputCount = (() => {
+    const declared = declaredOutputCount(srcType);
     const out = sourceOutput?.__loopFanOut ? (sourceOutput.items?.[0] ?? sourceOutput.__loopItems?.[0]) : sourceOutput;
-    if (out == null) return declaredOutputCount(srcType);
-    if (Array.isArray(out)) return out.length ? 1 : 0;
-    if (typeof out === "object") return Object.keys(out).length;
-    return 1;
+    if (out == null || typeof out !== "object" || Array.isArray(out)) return declared;
+    const liveKeys = Object.keys(out).filter((k) => !k.startsWith("__")).length;
+    return Math.max(declared, liveKeys);
   })();
 
   // Soft cursive curvature — gentle bend that avoids going under nodes
