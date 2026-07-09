@@ -85,20 +85,17 @@ export default function ConfigurableEdge({
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const { deleteElements } = useReactFlow();
 
-  // Soft cursive curvature — gentle bend that avoids going under nodes
+  // Slot-edge (agent connector) curvature — only bezier path left in use.
   const dx = Math.abs(targetX - sourceX);
-  const dy = Math.abs(targetY - sourceY);
-  const curvature = isSlotEdge ? Math.max(0.12, Math.min(0.28, dx / 1200)) : Math.max(0.25, Math.min(0.5, dx / 800));
+  const curvature = Math.max(0.12, Math.min(0.28, dx / 1200));
 
   // Detour around any node the straight span would cross (skip slot edges — those
   // are short agent connectors that shouldn't reroute).
   const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
 
-  // Curvy by default. The stepped orthogonal look is reserved for edges that drop
-  // downward and wrap back (a big vertical delta) or must skirt a node underneath —
-  // long horizontal runs stay curvy so only "going down" gets the clean box path.
-  const isWrapDown = dy > 200;
-  const useStep = !isSlotEdge && (obstacleBottom != null || isWrapDown);
+  // All normal edges use the clean orthogonal stepped path — no curves.
+  // Slot edges (agent connectors) stay bezier.
+  const useStep = !isSlotEdge;
 
   let edgePath, labelX, labelY;
   if (useStep) {
