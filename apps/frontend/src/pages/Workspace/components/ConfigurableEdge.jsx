@@ -185,10 +185,10 @@ export default function ConfigurableEdge({
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "none",
             }}
-            className={`nodrag nopan flex items-center gap-1 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 text-zinc-400 text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded-full transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
+            className={`nodrag nopan flex items-center gap-1 text-[11px] font-medium transition-opacity duration-75 ${hovered ? "opacity-0" : "opacity-100"}`}
             title={`${outputCount} output${outputCount === 1 ? "" : "s"} available downstream`}
           >
-            <span className="text-zinc-200">{outputCount}</span>
+            <span className="text-zinc-300">{outputCount}</span>
             <span className="text-zinc-500">output{outputCount === 1 ? "" : "s"}</span>
           </div>
         )}
