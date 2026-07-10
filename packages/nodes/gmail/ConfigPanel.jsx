@@ -1,3 +1,4 @@
+import imgGmail from './logo.png';
 import {
   Send, Reply, Forward, Mail, Search, FileText, ListChecks, MailCheck,
   BookOpen, MailX, Star, StarOff, Archive, Trash2, RotateCcw, Tag,
@@ -6,6 +7,11 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigBanner,
+} from '@/components/ui/ConfigKit';
+
+const ACCENT = '#4d7cff';
 
 function GmailIcon({ className }) {
   return (
@@ -15,56 +21,35 @@ function GmailIcon({ className }) {
   );
 }
 
-const GROUPS = [
-  {
-    name: 'Compose',
-    ops: [
-      { value: 'sendEmail', label: 'Send Email', icon: Send },
-      { value: 'replyToEmail', label: 'Reply', icon: Reply },
-      { value: 'forwardEmail', label: 'Forward', icon: Forward },
-    ],
-  },
-  {
-    name: 'Read',
-    ops: [
-      { value: 'readEmail', label: 'Read Email', icon: Mail },
-      { value: 'searchEmails', label: 'Search', icon: Search },
-      { value: 'getThread', label: 'Get Thread', icon: MessagesSquare },
-      { value: 'listThreads', label: 'List Threads', icon: ListChecks },
-      { value: 'getProfile', label: 'Get Profile', icon: User },
-    ],
-  },
-  {
-    name: 'Drafts',
-    ops: [
-      { value: 'createDraft', label: 'Create Draft', icon: FileText },
-      { value: 'listDrafts', label: 'List Drafts', icon: ListChecks },
-      { value: 'sendDraft', label: 'Send Draft', icon: MailCheck },
-      { value: 'deleteDraft', label: 'Delete Draft', icon: Trash2 },
-    ],
-  },
-  {
-    name: 'Organize',
-    ops: [
-      { value: 'markRead', label: 'Mark Read', icon: BookOpen },
-      { value: 'markUnread', label: 'Mark Unread', icon: MailX },
-      { value: 'starEmail', label: 'Star', icon: Star },
-      { value: 'unstarEmail', label: 'Unstar', icon: StarOff },
-      { value: 'archiveEmail', label: 'Archive', icon: Archive },
-      { value: 'deleteEmail', label: 'Trash', icon: Trash2 },
-      { value: 'untrashEmail', label: 'Untrash', icon: RotateCcw },
-    ],
-  },
-  {
-    name: 'Labels',
-    ops: [
-      { value: 'addLabel', label: 'Add Label', icon: Tag },
-      { value: 'removeLabel', label: 'Remove Label', icon: TagsIcon },
-      { value: 'listLabels', label: 'List Labels', icon: ListChecks },
-      { value: 'createLabel', label: 'Create Label', icon: Plus },
-      { value: 'deleteLabel', label: 'Delete Label', icon: Trash2 },
-    ],
-  },
+const OPERATIONS = [
+  { value: 'sendEmail',    label: 'Send Email',   icon: Send,           group: 'Compose' },
+  { value: 'replyToEmail', label: 'Reply',        icon: Reply,          group: 'Compose' },
+  { value: 'forwardEmail', label: 'Forward',      icon: Forward,        group: 'Compose' },
+
+  { value: 'readEmail',    label: 'Read Email',   icon: Mail,           group: 'Read' },
+  { value: 'searchEmails', label: 'Search',       icon: Search,         group: 'Read' },
+  { value: 'getThread',    label: 'Get Thread',   icon: MessagesSquare, group: 'Read' },
+  { value: 'listThreads',  label: 'List Threads', icon: ListChecks,     group: 'Read' },
+  { value: 'getProfile',   label: 'Get Profile',  icon: User,           group: 'Read' },
+
+  { value: 'createDraft',  label: 'Create Draft', icon: FileText,       group: 'Drafts' },
+  { value: 'listDrafts',   label: 'List Drafts',  icon: ListChecks,     group: 'Drafts' },
+  { value: 'sendDraft',    label: 'Send Draft',   icon: MailCheck,      group: 'Drafts' },
+  { value: 'deleteDraft',  label: 'Delete Draft', icon: Trash2,         group: 'Drafts' },
+
+  { value: 'markRead',     label: 'Mark Read',    icon: BookOpen,       group: 'Organize' },
+  { value: 'markUnread',   label: 'Mark Unread',  icon: MailX,          group: 'Organize' },
+  { value: 'starEmail',    label: 'Star',         icon: Star,           group: 'Organize' },
+  { value: 'unstarEmail',  label: 'Unstar',       icon: StarOff,        group: 'Organize' },
+  { value: 'archiveEmail', label: 'Archive',      icon: Archive,        group: 'Organize' },
+  { value: 'deleteEmail',  label: 'Trash',        icon: Trash2,         group: 'Organize' },
+  { value: 'untrashEmail', label: 'Untrash',      icon: RotateCcw,      group: 'Organize' },
+
+  { value: 'addLabel',     label: 'Add Label',    icon: Tag,            group: 'Labels' },
+  { value: 'removeLabel',  label: 'Remove Label', icon: TagsIcon,       group: 'Labels' },
+  { value: 'listLabels',   label: 'List Labels',  icon: ListChecks,     group: 'Labels' },
+  { value: 'createLabel',  label: 'Create Label', icon: Plus,           group: 'Labels' },
+  { value: 'deleteLabel',  label: 'Delete Label', icon: Trash2,         group: 'Labels' },
 ];
 
 const COMPOSE_OPS = ['sendEmail', 'replyToEmail', 'forwardEmail', 'createDraft'];
@@ -72,137 +57,119 @@ const MSG_ID_OPS = ['readEmail', 'forwardEmail', 'markRead', 'markUnread', 'star
 const LABEL_ID_OPS = ['addLabel', 'removeLabel', 'deleteLabel'];
 const DRAFT_ID_OPS = ['sendDraft', 'deleteDraft'];
 
-const lbl = 'text-[10px] font-bold text-zinc-500 uppercase tracking-widest';
-const inputCls = 'w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#EA4335]/40 transition-colors';
+function Field({ label, hint, optional, children }) {
+  return (
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}
+          {optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+          {hint && <span className="text-neutral-700 normal-case tracking-normal"> {hint}</span>}
+        </ConfigLabel>
+      )}
+      {children}
+    </div>
+  );
+}
 
 export default function GmailNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'sendEmail';
+  const currentOp = OPERATIONS.find((o) => o.value === operation);
   const isCompose = COMPOSE_OPS.includes(operation);
   const needsMsgId = MSG_ID_OPS.includes(operation);
   const needsLabelId = LABEL_ID_OPS.includes(operation);
   const needsDraftId = DRAFT_ID_OPS.includes(operation);
 
-  const Field = ({ label, hint, k, placeholder, multiline }) => (
-    <div className="flex flex-col gap-2">
-      <label className={lbl}>{label}{hint && <span className="text-zinc-700"> {hint}</span>}</label>
+  const field = (label, k, { placeholder, multiline, hint, optional } = {}) => (
+    <Field label={label} hint={hint} optional={optional}>
       <SmartVariableInput value={config[k] || ''} onChange={(val) => updateConfig(k, val)} placeholder={placeholder} multiline={multiline} nodeId={nodeId} />
-    </div>
+    </Field>
   );
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-[#EA4335]/5 border border-[#EA4335]/20 rounded-xl">
-        <div className="p-2 bg-[#EA4335]/10 rounded-lg text-[#EA4335] shrink-0">
-          <GmailIcon className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#EA4335]">Gmail</span>
-          <span className="text-[10px] text-zinc-500">Send, read, label & manage emails</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgGmail} title="Gmail" subtitle={currentOp?.label || 'Send, read, label & manage emails'} />
 
-      {/* Operations */}
-      <div className="flex flex-col gap-3">
-        {GROUPS.map((group) => (
-          <div key={group.name} className="flex flex-col gap-2">
-            <label className={lbl}>{group.name}</label>
-            <div className="grid grid-cols-2 gap-2">
-              {group.ops.map((op) => {
-                const Icon = op.icon;
-                return (
-                  <button key={op.value} onClick={() => updateConfig('operation', op.value)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                      operation === op.value
-                        ? 'bg-[#EA4335]/10 border-[#EA4335]/40 text-[#EA4335]'
-                        : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                    }`}>
-                    <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConfigSelect
+        label="Action"
+        value={operation}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
-      {/* Compose fields */}
       {isCompose && (
         <>
-          {operation !== 'forwardEmail' && (
-            <Field label="To" k="to" placeholder="recipient@example.com" />
-          )}
-          {operation === 'forwardEmail' && (
-            <Field label="Forward To" k="to" placeholder="recipient@example.com" />
-          )}
-          <Field label="From" hint="(optional — defaults to your account)" k="from" placeholder="Your Name <you@gmail.com>" />
-          <Field label="Reply-To" hint="(optional)" k="replyTo" placeholder="replies@example.com" />
-          <Field label="Subject" hint={operation === 'forwardEmail' ? '(optional — defaults to Fwd:)' : ''} k="subject" placeholder="Hello from BlinkBox!" />
-          {operation === 'replyToEmail' && (
-            <Field label="Thread ID" k="threadId" placeholder="{{trigger.data.threadId}}" />
-          )}
-          <Field label={operation === 'forwardEmail' ? 'Note' : 'Body'} hint={operation === 'forwardEmail' ? '(optional intro)' : ''} k="body" placeholder="Hello {{trigger.data.name}}, ..." multiline />
+          {operation !== 'forwardEmail' && field('To', 'to', { placeholder: 'recipient@example.com' })}
+          {operation === 'forwardEmail' && field('Forward To', 'to', { placeholder: 'recipient@example.com' })}
+          {field('From', 'from', { hint: '(optional — defaults to your account)', placeholder: 'Your Name <you@gmail.com>' })}
+          {field('Reply-To', 'replyTo', { optional: true, placeholder: 'replies@example.com' })}
+          {field('Subject', 'subject', {
+            hint: operation === 'forwardEmail' ? '(optional — defaults to Fwd:)' : '',
+            placeholder: 'Hello from BlinkBox!',
+          })}
+          {operation === 'replyToEmail' && field('Thread ID', 'threadId', { placeholder: '{{trigger.data.threadId}}' })}
+          {field(operation === 'forwardEmail' ? 'Note' : 'Body', 'body', {
+            hint: operation === 'forwardEmail' ? '(optional intro)' : '',
+            placeholder: 'Hello {{trigger.data.name}}, ...',
+            multiline: true,
+          })}
         </>
       )}
 
-      {/* Message ID */}
-      {needsMsgId && (
-        <Field label="Message ID" k="messageId" placeholder="{{trigger.data.messageId}}" />
-      )}
+      {needsMsgId && field('Message ID', 'messageId', { placeholder: '{{trigger.data.messageId}}' })}
 
-      {/* Label ID for add/remove/delete label */}
-      {needsLabelId && (
-        <Field label="Label ID" k="labelId" placeholder="Label_12345 or STARRED, IMPORTANT" />
-      )}
+      {needsLabelId && field('Label ID', 'labelId', { placeholder: 'Label_12345 or STARRED, IMPORTANT' })}
 
-      {/* Draft ID */}
-      {needsDraftId && (
-        <Field label="Draft ID" k="draftId" placeholder="{{steps.createDraft.draftId}}" />
-      )}
+      {needsDraftId && field('Draft ID', 'draftId', { placeholder: '{{steps.createDraft.draftId}}' })}
 
-      {/* Create Label */}
-      {operation === 'createLabel' && (
-        <Field label="Label Name" k="labelName" placeholder="Invoices" />
-      )}
+      {operation === 'createLabel' && field('Label Name', 'labelName', { placeholder: 'Invoices' })}
 
-      {/* Get Thread */}
-      {operation === 'getThread' && (
-        <Field label="Thread ID" k="threadId" placeholder="{{trigger.data.threadId}}" />
-      )}
+      {operation === 'getThread' && field('Thread ID', 'threadId', { placeholder: '{{trigger.data.threadId}}' })}
 
-      {/* Search / List threads */}
       {(operation === 'searchEmails' || operation === 'listThreads') && (
         <>
-          <div className="flex flex-col gap-2">
-            <label className={lbl}>Query{operation === 'listThreads' && <span className="text-zinc-700"> (optional)</span>}</label>
-            <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder='from:user@example.com is:unread' nodeId={nodeId} />
-            <p className="text-[10px] text-zinc-600">Gmail search syntax — from:, subject:, is:unread, after:2024/01/01, label:work, etc.</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className={lbl}>Max Results</label>
-            <input type="number" min={1} max={100} value={config.maxResults || 10} onChange={(e) => updateConfig('maxResults', Number(e.target.value))} className={inputCls} />
-          </div>
+          <Field label="Query" optional={operation === 'listThreads'} hint="Gmail search syntax">
+            <SmartVariableInput value={config.query || ''} onChange={(val) => updateConfig('query', val)} placeholder="from:user@example.com is:unread" nodeId={nodeId} />
+          </Field>
+          <ConfigInput
+            label="Max Results"
+            type="number"
+            value={config.maxResults || 10}
+            onChange={(v) => updateConfig('maxResults', Number(v))}
+          />
         </>
       )}
 
-      {/* List drafts max */}
       {operation === 'listDrafts' && (
-        <div className="flex flex-col gap-2">
-          <label className={lbl}>Max Results</label>
-          <input type="number" min={1} max={100} value={config.maxResults || 10} onChange={(e) => updateConfig('maxResults', Number(e.target.value))} className={inputCls} />
-        </div>
+        <ConfigInput
+          label="Max Results"
+          type="number"
+          value={config.maxResults || 10}
+          onChange={(v) => updateConfig('maxResults', Number(v))}
+        />
       )}
 
       {operation === 'getProfile' && (
-        <p className="text-[10px] text-zinc-600 bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5">Returns the connected account's email address and total message/thread counts. No parameters needed.</p>
+        <ConfigBanner>Returns the connected account's email address and total message/thread counts. No parameters needed.</ConfigBanner>
       )}
 
-      {/* Auth */}
-      <OAuthConnectButton provider="google" providerLabel="Google" accentColor="red"
-        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} icon={GmailIcon} />
-      <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
-      <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="red" label="Google OAuth Token" placeholder="Select Google credential..." />
-    </div>
+      <OAuthConnectButton
+        provider="google"
+        providerLabel="Google"
+        accentColor="red"
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        icon={GmailIcon}
+      />
+      <p className="text-[10px] text-neutral-600 -mt-3 font-mono">Or use an existing credential:</p>
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="rose"
+        label="Google OAuth Token"
+        placeholder="Select Google credential..."
+      />
+    </ConfigSection>
   );
 }

@@ -1,65 +1,65 @@
-import SmartVariableInput from "@/components/ui/SmartVariableInput";
-import CredentialPicker from "@/components/ui/CredentialPicker";
-import OAuthConnectButton from "@/components/ui/OAuthConnectButton";
+import imgCalendar from './logo.svg';
 import {
   CalendarDays, CalendarPlus, CalendarClock, CalendarX2, Eye, Plus, Pencil, Trash2,
   Zap, MoveRight, Check, Repeat, Download, Settings2, CalendarRange, Eraser,
   BookOpen, BookmarkMinus, Users, UserPlus, UserMinus, CalendarSearch, Palette,
-} from "lucide-react";
+} from 'lucide-react';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigTextarea,
+  ConfigPills, ConfigToggleRow,
+} from '@/components/ui/ConfigKit';
 
-const ACCENT = "#4285F4";
+const ACCENT = '#4d7cff';
 
-const GROUPS = [
-  {
-    title: "Events",
-    ops: [
-      { value: "listEvents", label: "List Events", icon: CalendarDays },
-      { value: "getEvent", label: "Get Event", icon: Eye },
-      { value: "createEvent", label: "Create Event", icon: CalendarPlus },
-      { value: "updateEvent", label: "Update Event", icon: CalendarClock },
-      { value: "deleteEvent", label: "Delete Event", icon: CalendarX2 },
-      { value: "quickAddEvent", label: "Quick Add", icon: Zap },
-      { value: "moveEvent", label: "Move Event", icon: MoveRight },
-      { value: "respondToEvent", label: "RSVP", icon: Check },
-      { value: "listInstances", label: "List Instances", icon: Repeat },
-      { value: "importEvent", label: "Import Event", icon: Download },
-    ],
-  },
-  {
-    title: "Calendars",
-    ops: [
-      { value: "listCalendars", label: "List Calendars", icon: CalendarRange },
-      { value: "getCalendar", label: "Get Calendar", icon: Eye },
-      { value: "createCalendar", label: "Create Calendar", icon: Plus },
-      { value: "updateCalendar", label: "Update Calendar", icon: Settings2 },
-      { value: "deleteCalendar", label: "Delete Calendar", icon: Trash2 },
-      { value: "clearCalendar", label: "Clear Calendar", icon: Eraser },
-      { value: "addCalendarToList", label: "Subscribe", icon: BookOpen },
-      { value: "removeCalendarFromList", label: "Unsubscribe", icon: BookmarkMinus },
-    ],
-  },
-  {
-    title: "Sharing & Availability",
-    ops: [
-      { value: "listAcl", label: "List Access", icon: Users },
-      { value: "shareCalendar", label: "Share", icon: UserPlus },
-      { value: "unshareCalendar", label: "Unshare", icon: UserMinus },
-      { value: "freeBusy", label: "Free/Busy", icon: CalendarSearch },
-      { value: "getColors", label: "Get Colors", icon: Palette },
-    ],
-  },
+const OPERATIONS = [
+  { value: 'listEvents',    label: 'List Events',    icon: CalendarDays,  group: 'Events' },
+  { value: 'getEvent',      label: 'Get Event',      icon: Eye,           group: 'Events' },
+  { value: 'createEvent',   label: 'Create Event',   icon: CalendarPlus,  group: 'Events' },
+  { value: 'updateEvent',   label: 'Update Event',   icon: CalendarClock, group: 'Events' },
+  { value: 'deleteEvent',   label: 'Delete Event',   icon: CalendarX2,    group: 'Events' },
+  { value: 'quickAddEvent', label: 'Quick Add',      icon: Zap,           group: 'Events' },
+  { value: 'moveEvent',     label: 'Move Event',     icon: MoveRight,     group: 'Events' },
+  { value: 'respondToEvent',label: 'RSVP',           icon: Check,         group: 'Events' },
+  { value: 'listInstances', label: 'List Instances', icon: Repeat,        group: 'Events' },
+  { value: 'importEvent',   label: 'Import Event',   icon: Download,      group: 'Events' },
+  { value: 'listCalendars', label: 'List Calendars', icon: CalendarRange, group: 'Calendars' },
+  { value: 'getCalendar',   label: 'Get Calendar',   icon: Eye,           group: 'Calendars' },
+  { value: 'createCalendar',label: 'Create Calendar',icon: Plus,          group: 'Calendars' },
+  { value: 'updateCalendar',label: 'Update Calendar',icon: Settings2,     group: 'Calendars' },
+  { value: 'deleteCalendar',label: 'Delete Calendar',icon: Trash2,        group: 'Calendars' },
+  { value: 'clearCalendar', label: 'Clear Calendar', icon: Eraser,        group: 'Calendars' },
+  { value: 'addCalendarToList',      label: 'Subscribe',   icon: BookOpen,       group: 'Calendars' },
+  { value: 'removeCalendarFromList', label: 'Unsubscribe', icon: BookmarkMinus,  group: 'Calendars' },
+  { value: 'listAcl',        label: 'List Access',  icon: Users,          group: 'Sharing & Availability' },
+  { value: 'shareCalendar',  label: 'Share',        icon: UserPlus,       group: 'Sharing & Availability' },
+  { value: 'unshareCalendar',label: 'Unshare',      icon: UserMinus,      group: 'Sharing & Availability' },
+  { value: 'freeBusy',       label: 'Free/Busy',    icon: CalendarSearch, group: 'Sharing & Availability' },
+  { value: 'getColors',      label: 'Get Colors',   icon: Palette,        group: 'Sharing & Availability' },
 ];
-
-const lbl = "text-[10px] font-bold text-zinc-500 uppercase tracking-widest";
-const inputCls = "w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#4285F4]/40";
 
 const RESPONSE = [
-  { value: "accepted", label: "Accept" },
-  { value: "declined", label: "Decline" },
-  { value: "tentative", label: "Tentative" },
+  { value: 'accepted', label: 'Accept' },
+  { value: 'declined', label: 'Decline' },
+  { value: 'tentative', label: 'Tentative' },
 ];
 
-const NO_CALENDAR_ID_OPS = ["listCalendars", "createCalendar", "getColors"];
+const ROLE_OPTIONS = [
+  { value: 'reader', label: 'See all event details (reader)' },
+  { value: 'freeBusyReader', label: 'See free/busy only' },
+  { value: 'writer', label: 'Make changes (writer)' },
+  { value: 'owner', label: 'Make changes & manage sharing (owner)' },
+];
+
+const SEND_UPDATES = [
+  { value: 'none', label: 'None' },
+  { value: 'all', label: 'All guests' },
+  { value: 'externalOnly', label: 'External only' },
+];
+
+const NO_CALENDAR_ID_OPS = ['listCalendars', 'createCalendar', 'getColors'];
 
 function CalIcon({ className }) {
   return (
@@ -71,223 +71,169 @@ function CalIcon({ className }) {
 
 function Field({ label, hint, children }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className={lbl}>{label}</label>
+    <div className="flex flex-col">
+      {label && <ConfigLabel>{label}</ConfigLabel>}
       {children}
-      {hint && <p className="text-[10px] text-zinc-600">{hint}</p>}
+      {hint && <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{hint}</p>}
     </div>
   );
 }
 
 export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || "listEvents";
+  const op = config.operation || 'listEvents';
+  const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const showCalId = !NO_CALENDAR_ID_OPS.includes(op);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <div className="flex items-center gap-3 p-4 bg-[#4285F4]/5 border border-[#4285F4]/20 rounded-xl">
-        <div className="p-2 bg-[#4285F4]/10 rounded-lg text-[#4285F4] shrink-0">
-          <CalIcon className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#4285F4]">Google Calendar</span>
-          <span className="text-[10px] text-zinc-500">Events, calendars, sharing & availability</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgCalendar} title="Google Calendar" subtitle={currentOp?.label || 'Events, calendars, sharing & availability'} />
 
-      <div className="flex flex-col gap-3">
-        <label className={lbl}>Operation</label>
-        {GROUPS.map((group) => (
-          <div key={group.title} className="flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.title}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {group.ops.map((o) => {
-                const Icon = o.icon;
-                const active = op === o.value;
-                return (
-                  <button key={o.value} onClick={() => updateConfig("operation", o.value)}
-                    className={`flex items-center gap-2 py-2 px-2.5 rounded-lg border text-[11px] font-bold transition-all ${active ? "bg-[#4285F4]/10 border-[#4285F4]/40 text-[#4285F4]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{o.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConfigSelect
+        label="Operation"
+        value={op}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
       {showCalId && (
         <Field label="Calendar ID" hint='"primary" for the default calendar, or a specific calendar ID'>
-          <SmartVariableInput value={config.calendarId || "primary"} onChange={set("calendarId")} placeholder="primary" />
+          <SmartVariableInput value={config.calendarId || 'primary'} onChange={set('calendarId')} placeholder="primary" nodeId={nodeId} />
         </Field>
       )}
 
-      {op === "createCalendar" && (
+      {op === 'createCalendar' && (
         <>
-          <Field label="Name"><SmartVariableInput value={config.summary || ""} onChange={set("summary")} placeholder="Project Deadlines" /></Field>
-          <Field label="Description (optional)"><SmartVariableInput value={config.description || ""} onChange={set("description")} placeholder="" /></Field>
-          <Field label="Timezone"><input value={config.timeZone || "UTC"} onChange={(e) => updateConfig("timeZone", e.target.value)} className={inputCls} /></Field>
+          <Field label="Name"><SmartVariableInput value={config.summary || ''} onChange={set('summary')} placeholder="Project Deadlines" nodeId={nodeId} /></Field>
+          <Field label="Description (optional)"><SmartVariableInput value={config.description || ''} onChange={set('description')} placeholder="" nodeId={nodeId} /></Field>
+          <ConfigInput label="Timezone" value={config.timeZone || 'UTC'} onChange={(v) => updateConfig('timeZone', v)} />
         </>
       )}
 
-      {op === "updateCalendar" && (
+      {op === 'updateCalendar' && (
         <>
-          <Field label="New Name (optional)"><SmartVariableInput value={config.summary || ""} onChange={set("summary")} placeholder="" /></Field>
-          <Field label="Description (optional)"><SmartVariableInput value={config.description || ""} onChange={set("description")} placeholder="" /></Field>
-          <Field label="Timezone (optional)"><input value={config.timeZone || ""} onChange={(e) => updateConfig("timeZone", e.target.value)} placeholder="UTC" className={inputCls} /></Field>
+          <Field label="New Name (optional)"><SmartVariableInput value={config.summary || ''} onChange={set('summary')} placeholder="" nodeId={nodeId} /></Field>
+          <Field label="Description (optional)"><SmartVariableInput value={config.description || ''} onChange={set('description')} placeholder="" nodeId={nodeId} /></Field>
+          <ConfigInput label="Timezone (optional)" value={config.timeZone || ''} onChange={(v) => updateConfig('timeZone', v)} placeholder="UTC" />
         </>
       )}
 
-      {["addCalendarToList", "removeCalendarFromList"].includes(op) && (
+      {['addCalendarToList', 'removeCalendarFromList'].includes(op) && (
         <Field label="Calendar ID to subscribe/unsubscribe" hint="The shared calendar's ID (e.g. team@group.calendar.google.com)">
-          <SmartVariableInput value={config.calendarId || ""} onChange={set("calendarId")} placeholder="..." />
+          <SmartVariableInput value={config.calendarId || ''} onChange={set('calendarId')} placeholder="..." nodeId={nodeId} />
         </Field>
       )}
 
-      {op === "listEvents" && (
+      {op === 'listEvents' && (
         <>
-          <Field label="From (ISO datetime)"><SmartVariableInput value={config.timeMin || ""} onChange={set("timeMin")} placeholder="{{$now}}  (blank = now)" /></Field>
-          <Field label="To (ISO datetime, optional)"><SmartVariableInput value={config.timeMax || ""} onChange={set("timeMax")} placeholder="2024-12-31T23:59:59Z" /></Field>
-          <Field label="Search Query (optional)"><SmartVariableInput value={config.query || ""} onChange={set("query")} placeholder="standup" /></Field>
-          <Field label="Max Results">
-            <input type="number" min="1" max="2500" value={config.limit || 20} onChange={(e) => updateConfig("limit", Number(e.target.value))} className={inputCls} />
-          </Field>
+          <Field label="From (ISO datetime)"><SmartVariableInput value={config.timeMin || ''} onChange={set('timeMin')} placeholder="{{$now}}  (blank = now)" nodeId={nodeId} /></Field>
+          <Field label="To (ISO datetime, optional)"><SmartVariableInput value={config.timeMax || ''} onChange={set('timeMax')} placeholder="2024-12-31T23:59:59Z" nodeId={nodeId} /></Field>
+          <Field label="Search Query (optional)"><SmartVariableInput value={config.query || ''} onChange={set('query')} placeholder="standup" nodeId={nodeId} /></Field>
+          <ConfigInput label="Max Results" type="number" value={config.limit || 20} onChange={(v) => updateConfig('limit', Number(v))} />
         </>
       )}
 
-      {op === "listInstances" && (
+      {op === 'listInstances' && (
         <>
-          <Field label="Recurring Event ID"><SmartVariableInput value={config.eventId || ""} onChange={set("eventId")} placeholder="{{n1.id}}" /></Field>
+          <Field label="Recurring Event ID"><SmartVariableInput value={config.eventId || ''} onChange={set('eventId')} placeholder="{{n1.id}}" nodeId={nodeId} /></Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="From (optional)"><SmartVariableInput value={config.timeMin || ""} onChange={set("timeMin")} placeholder="" /></Field>
-            <Field label="To (optional)"><SmartVariableInput value={config.timeMax || ""} onChange={set("timeMax")} placeholder="" /></Field>
+            <Field label="From (optional)"><SmartVariableInput value={config.timeMin || ''} onChange={set('timeMin')} placeholder="" nodeId={nodeId} /></Field>
+            <Field label="To (optional)"><SmartVariableInput value={config.timeMax || ''} onChange={set('timeMax')} placeholder="" nodeId={nodeId} /></Field>
           </div>
         </>
       )}
 
-      {["getEvent", "deleteEvent", "moveEvent", "respondToEvent"].includes(op) && (
-        <Field label="Event ID"><SmartVariableInput value={config.eventId || ""} onChange={set("eventId")} placeholder="{{n1.id}}" /></Field>
+      {['getEvent', 'deleteEvent', 'moveEvent', 'respondToEvent'].includes(op) && (
+        <Field label="Event ID"><SmartVariableInput value={config.eventId || ''} onChange={set('eventId')} placeholder="{{n1.id}}" nodeId={nodeId} /></Field>
       )}
 
-      {op === "moveEvent" && (
-        <Field label="Destination Calendar ID"><SmartVariableInput value={config.destinationCalendarId || ""} onChange={set("destinationCalendarId")} placeholder="other@group.calendar.google.com" /></Field>
+      {op === 'moveEvent' && (
+        <Field label="Destination Calendar ID"><SmartVariableInput value={config.destinationCalendarId || ''} onChange={set('destinationCalendarId')} placeholder="other@group.calendar.google.com" nodeId={nodeId} /></Field>
       )}
 
-      {op === "respondToEvent" && (
+      {op === 'respondToEvent' && (
         <>
-          <Field label="Response">
-            <div className="grid grid-cols-3 gap-1.5">
-              {RESPONSE.map((r) => (
-                <button key={r.value} onClick={() => updateConfig("responseStatus", r.value)}
-                  className={`py-2 rounded-lg border text-[11px] font-bold transition-all ${config.responseStatus === r.value ? "bg-[#4285F4]/10 border-[#4285F4]/40 text-[#4285F4]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Attendee Email (optional)" hint="Defaults to your own attendee record"><SmartVariableInput value={config.attendeeEmail || ""} onChange={set("attendeeEmail")} placeholder="you@example.com" /></Field>
+          <ConfigPills label="Response" value={config.responseStatus} onChange={(v) => updateConfig('responseStatus', v)} options={RESPONSE} accentColor={ACCENT} />
+          <Field label="Attendee Email (optional)" hint="Defaults to your own attendee record"><SmartVariableInput value={config.attendeeEmail || ''} onChange={set('attendeeEmail')} placeholder="you@example.com" nodeId={nodeId} /></Field>
         </>
       )}
 
-      {op === "quickAddEvent" && (
+      {op === 'quickAddEvent' && (
         <Field label="Natural Language" hint='e.g. "Lunch with Sam tomorrow at 1pm"'>
-          <SmartVariableInput value={config.text || ""} onChange={set("text")} placeholder="Dinner Friday 7pm at Nopa" />
+          <SmartVariableInput value={config.text || ''} onChange={set('text')} placeholder="Dinner Friday 7pm at Nopa" nodeId={nodeId} />
         </Field>
       )}
 
-      {op === "importEvent" && (
-        <Field label="iCalUID"><SmartVariableInput value={config.iCalUID || ""} onChange={set("iCalUID")} placeholder="abc123@example.com" /></Field>
+      {op === 'importEvent' && (
+        <Field label="iCalUID"><SmartVariableInput value={config.iCalUID || ''} onChange={set('iCalUID')} placeholder="abc123@example.com" nodeId={nodeId} /></Field>
       )}
 
-      {["createEvent", "updateEvent", "importEvent"].includes(op) && (
+      {['createEvent', 'updateEvent', 'importEvent'].includes(op) && (
         <>
-          <Field label={op === "updateEvent" ? "Title (optional)" : "Title"}><SmartVariableInput value={config.summary || ""} onChange={set("summary")} placeholder="Team standup" /></Field>
+          <Field label={op === 'updateEvent' ? 'Title (optional)' : 'Title'}><SmartVariableInput value={config.summary || ''} onChange={set('summary')} placeholder="Team standup" nodeId={nodeId} /></Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Start Time (ISO)"><SmartVariableInput value={config.startTime || ""} onChange={set("startTime")} placeholder="2024-06-01T10:00:00" /></Field>
-            <Field label="End Time (ISO)"><SmartVariableInput value={config.endTime || ""} onChange={set("endTime")} placeholder="2024-06-01T11:00:00" /></Field>
+            <Field label="Start Time (ISO)"><SmartVariableInput value={config.startTime || ''} onChange={set('startTime')} placeholder="2024-06-01T10:00:00" nodeId={nodeId} /></Field>
+            <Field label="End Time (ISO)"><SmartVariableInput value={config.endTime || ''} onChange={set('endTime')} placeholder="2024-06-01T11:00:00" nodeId={nodeId} /></Field>
           </div>
-          <div className="flex items-center justify-between bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5">
-            <span className="text-[11px] font-bold text-zinc-400">All-day event</span>
-            <button onClick={() => updateConfig("allDay", !config.allDay)}
-              className={`w-10 h-5 rounded-full transition-all relative ${config.allDay ? "bg-[#4285F4]" : "bg-[#333]"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${config.allDay ? "left-[22px]" : "left-0.5"}`} />
-            </button>
-          </div>
-          <Field label="Location (optional)"><SmartVariableInput value={config.location || ""} onChange={set("location")} placeholder="Room 4B / Zoom" /></Field>
-          <Field label="Description (optional)"><SmartVariableInput value={config.description || ""} onChange={set("description")} placeholder="" /></Field>
-          <Field label="Timezone"><input value={config.timeZone || "UTC"} onChange={(e) => updateConfig("timeZone", e.target.value)} className={inputCls} /></Field>
+          <ConfigToggleRow label="All-day event" on={config.allDay} onChange={(v) => updateConfig('allDay', v)} accentColor={ACCENT} />
+          <Field label="Location (optional)"><SmartVariableInput value={config.location || ''} onChange={set('location')} placeholder="Room 4B / Zoom" nodeId={nodeId} /></Field>
+          <Field label="Description (optional)"><SmartVariableInput value={config.description || ''} onChange={set('description')} placeholder="" nodeId={nodeId} /></Field>
+          <ConfigInput label="Timezone" value={config.timeZone || 'UTC'} onChange={(v) => updateConfig('timeZone', v)} />
         </>
       )}
 
-      {["createEvent", "updateEvent"].includes(op) && (
+      {['createEvent', 'updateEvent'].includes(op) && (
         <>
-          <Field label="Attendees (comma-separated emails)"><SmartVariableInput value={config.attendees || ""} onChange={set("attendees")} placeholder="alice@example.com, bob@example.com" /></Field>
-          <Field label="Reminder (minutes before, optional)">
-            <input type="number" min="0" value={config.reminderMinutes ?? ""} onChange={(e) => updateConfig("reminderMinutes", e.target.value)} placeholder="10" className={inputCls} />
-          </Field>
+          <Field label="Attendees (comma-separated emails)"><SmartVariableInput value={config.attendees || ''} onChange={set('attendees')} placeholder="alice@example.com, bob@example.com" nodeId={nodeId} /></Field>
+          <ConfigInput label="Reminder (minutes before, optional)" type="number" value={config.reminderMinutes ?? ''} onChange={(v) => updateConfig('reminderMinutes', v)} placeholder="10" />
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Color ID (optional)"><input value={config.colorId || ""} onChange={(e) => updateConfig("colorId", e.target.value)} placeholder="1–11" className={inputCls} /></Field>
-            <Field label="Notify Guests">
-              <select value={config.sendUpdates || "none"} onChange={(e) => updateConfig("sendUpdates", e.target.value)} className={inputCls}>
-                <option value="none">None</option>
-                <option value="all">All guests</option>
-                <option value="externalOnly">External only</option>
-              </select>
-            </Field>
+            <ConfigInput label="Color ID (optional)" value={config.colorId || ''} onChange={(v) => updateConfig('colorId', v)} placeholder="1–11" />
+            <ConfigSelect label="Notify Guests" value={config.sendUpdates || 'none'} onChange={(v) => updateConfig('sendUpdates', v)} options={SEND_UPDATES} accentColor={ACCENT} />
           </div>
         </>
       )}
 
-      {op === "createEvent" && (
+      {op === 'createEvent' && (
         <>
-          <Field label="Recurrence (RRULE, one per line, optional)" hint="e.g. RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR">
-            <textarea value={config.recurrence || ""} onChange={(e) => updateConfig("recurrence", e.target.value)} rows={2} placeholder="RRULE:FREQ=DAILY;COUNT=5" className={inputCls} />
-          </Field>
-          <div className="flex items-center justify-between bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5">
-            <span className="text-[11px] font-bold text-zinc-400">Add Google Meet link</span>
-            <button onClick={() => updateConfig("addMeetLink", !config.addMeetLink)}
-              className={`w-10 h-5 rounded-full transition-all relative ${config.addMeetLink ? "bg-[#4285F4]" : "bg-[#333]"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${config.addMeetLink ? "left-[22px]" : "left-0.5"}`} />
-            </button>
-          </div>
+          <ConfigTextarea
+            label="Recurrence (RRULE, one per line, optional)"
+            value={config.recurrence || ''}
+            onChange={(v) => updateConfig('recurrence', v)}
+            rows={2}
+            placeholder="RRULE:FREQ=DAILY;COUNT=5"
+            hint="e.g. RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"
+          />
+          <ConfigToggleRow label="Add Google Meet link" on={config.addMeetLink} onChange={(v) => updateConfig('addMeetLink', v)} accentColor={ACCENT} />
         </>
       )}
 
-      {op === "shareCalendar" && (
+      {op === 'shareCalendar' && (
         <>
-          <Field label="Share With (email)"><SmartVariableInput value={config.shareEmail || ""} onChange={set("shareEmail")} placeholder="teammate@example.com" /></Field>
-          <Field label="Role">
-            <select value={config.role || "reader"} onChange={(e) => updateConfig("role", e.target.value)} className={inputCls}>
-              <option value="reader">See all event details (reader)</option>
-              <option value="freeBusyReader">See free/busy only</option>
-              <option value="writer">Make changes (writer)</option>
-              <option value="owner">Make changes & manage sharing (owner)</option>
-            </select>
-          </Field>
+          <Field label="Share With (email)"><SmartVariableInput value={config.shareEmail || ''} onChange={set('shareEmail')} placeholder="teammate@example.com" nodeId={nodeId} /></Field>
+          <ConfigSelect label="Role" value={config.role || 'reader'} onChange={(v) => updateConfig('role', v)} options={ROLE_OPTIONS} accentColor={ACCENT} />
         </>
       )}
 
-      {op === "unshareCalendar" && (
-        <Field label="ACL Rule ID" hint="From a List Access run"><SmartVariableInput value={config.ruleId || ""} onChange={set("ruleId")} placeholder="user:teammate@example.com" /></Field>
+      {op === 'unshareCalendar' && (
+        <Field label="ACL Rule ID" hint="From a List Access run"><SmartVariableInput value={config.ruleId || ''} onChange={set('ruleId')} placeholder="user:teammate@example.com" nodeId={nodeId} /></Field>
       )}
 
-      {op === "freeBusy" && (
+      {op === 'freeBusy' && (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="From (ISO)"><SmartVariableInput value={config.timeMin || ""} onChange={set("timeMin")} placeholder="2024-06-01T00:00:00Z" /></Field>
-            <Field label="To (ISO)"><SmartVariableInput value={config.timeMax || ""} onChange={set("timeMax")} placeholder="2024-06-02T00:00:00Z" /></Field>
+            <Field label="From (ISO)"><SmartVariableInput value={config.timeMin || ''} onChange={set('timeMin')} placeholder="2024-06-01T00:00:00Z" nodeId={nodeId} /></Field>
+            <Field label="To (ISO)"><SmartVariableInput value={config.timeMax || ''} onChange={set('timeMax')} placeholder="2024-06-02T00:00:00Z" nodeId={nodeId} /></Field>
           </div>
-          <Field label="Calendar IDs (comma-separated, optional)" hint="Blank = the Calendar ID above"><SmartVariableInput value={config.calendarIds || ""} onChange={set("calendarIds")} placeholder="primary, team@group.calendar.google.com" /></Field>
+          <Field label="Calendar IDs (comma-separated, optional)" hint="Blank = the Calendar ID above"><SmartVariableInput value={config.calendarIds || ''} onChange={set('calendarIds')} placeholder="primary, team@group.calendar.google.com" nodeId={nodeId} /></Field>
         </>
       )}
 
       <OAuthConnectButton provider="google" providerLabel="Google" accentColor="blue"
-        value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)} icon={CalIcon} />
+        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} icon={CalIcon} />
       <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
-      <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
+      <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
         accentColor="blue" label="Google OAuth Token" placeholder="Select Google credential..." />
-    </div>
+    </ConfigSection>
   );
 }

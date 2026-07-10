@@ -1,29 +1,30 @@
-import { Settings2, PlusCircle, Search, Pencil, Trash2, Download, Layers, Copy, Database, Table2, Columns3 } from 'lucide-react';
+import imgAirtable from './logo.svg';
+import {
+  PlusCircle, Search, Pencil, Trash2, Download, Layers, Copy, Database, Table2, Columns3,
+} from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
-import imgAirtable from '@/assets/Airtable--Streamline-Svg-Logos.svg';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigBanner, AddRow, RemovableRow,
+} from '@/components/ui/ConfigKit';
 
-const GROUPS = [
-  { title: 'Records', ops: [
-    { value: 'create',     label: 'Create Record',  icon: PlusCircle },
-    { value: 'read',       label: 'Read Records',   icon: Search },
-    { value: 'update',     label: 'Update Record',  icon: Pencil },
-    { value: 'delete',     label: 'Delete Record',  icon: Trash2 },
-    { value: 'getRecord',  label: 'Get Record',     icon: Download },
-    { value: 'search',     label: 'Search Records', icon: Search },
-  ]},
-  { title: 'Bulk', ops: [
-    { value: 'bulkCreate', label: 'Bulk Create', icon: Layers },
-    { value: 'bulkUpdate', label: 'Bulk Update', icon: Copy },
-    { value: 'bulkDelete', label: 'Bulk Delete', icon: Trash2 },
-  ]},
-  { title: 'Schema (Meta API)', ops: [
-    { value: 'listBases',   label: 'List Bases',   icon: Database },
-    { value: 'listTables',  label: 'List Tables',  icon: Table2 },
-    { value: 'createTable', label: 'Create Table', icon: Table2 },
-    { value: 'createField', label: 'Create Field', icon: Columns3 },
-  ]},
+const ACCENT = '#4d7cff';
+
+const OPERATIONS = [
+  { value: 'create',      label: 'Create Record',  icon: PlusCircle, group: 'Records' },
+  { value: 'read',        label: 'Read Records',   icon: Search,     group: 'Records' },
+  { value: 'update',      label: 'Update Record',  icon: Pencil,     group: 'Records' },
+  { value: 'delete',      label: 'Delete Record',  icon: Trash2,     group: 'Records' },
+  { value: 'getRecord',   label: 'Get Record',     icon: Download,   group: 'Records' },
+  { value: 'search',      label: 'Search Records', icon: Search,     group: 'Records' },
+  { value: 'bulkCreate',  label: 'Bulk Create',    icon: Layers,     group: 'Bulk' },
+  { value: 'bulkUpdate',  label: 'Bulk Update',    icon: Copy,       group: 'Bulk' },
+  { value: 'bulkDelete',  label: 'Bulk Delete',    icon: Trash2,     group: 'Bulk' },
+  { value: 'listBases',   label: 'List Bases',     icon: Database,   group: 'Schema' },
+  { value: 'listTables',  label: 'List Tables',    icon: Table2,     group: 'Schema' },
+  { value: 'createTable', label: 'Create Table',   icon: Table2,     group: 'Schema' },
+  { value: 'createField', label: 'Create Field',   icon: Columns3,   group: 'Schema' },
 ];
 
 const FIELD_TYPES = [
@@ -32,8 +33,22 @@ const FIELD_TYPES = [
   'multipleSelects', 'rating', 'duration',
 ];
 
+function Field({ label, optional, children }) {
+  return (
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
+      {children}
+    </div>
+  );
+}
+
 export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
   const operation = config.operation || 'create';
+  const currentOp = OPERATIONS.find((o) => o.value === operation);
   const fields = config.fields || {};
   const fieldEntries = Object.entries(fields);
 
@@ -53,146 +68,80 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
   const noBase = operation === 'listBases';
   const noTable = ['listBases', 'listTables', 'createTable', 'createField'].includes(operation);
 
+  const text = (label, key, opts = {}) => (
+    <Field label={label} optional={opts.optional}>
+      <SmartVariableInput
+        value={config[key] || ''}
+        onChange={(val) => updateConfig(key, val)}
+        placeholder={opts.placeholder || ''}
+        multiline={opts.multiline}
+        nodeId={nodeId}
+      />
+    </Field>
+  );
+
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
-        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-          <img src={imgAirtable} alt="Airtable" className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-yellow-400">Airtable</span>
-          <span className="text-[10px] text-zinc-500 mt-0.5">Read & write Airtable records</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgAirtable} title="Airtable" subtitle={currentOp?.label || 'Read & write Airtable records'} />
 
-      {/* Connection */}
-      {!noBase && (
-        <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl shadow-inner">
-          <div className="flex items-center gap-2 pb-3 border-b border-[#222]">
-            <Settings2 className="w-4 h-4 text-yellow-500" />
-            <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Connection</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-zinc-500 w-16 shrink-0">Base ID</span>
-            <div className="flex-1">
-              <SmartVariableInput nodeId={nodeId} value={config.baseId || ''} onChange={(val) => updateConfig('baseId', val)} placeholder="appXXXXXXXXXXXXXX" />
-            </div>
-          </div>
-          {!noTable && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-zinc-500 w-16 shrink-0">Table</span>
-              <div className="flex-1">
-                <SmartVariableInput nodeId={nodeId} value={config.tableName || ''} onChange={(val) => updateConfig('tableName', val)} placeholder="Table name or ID" />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <ConfigSelect
+        label="Operation"
+        value={operation}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
-      {/* Operation */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Operation</label>
-        {GROUPS.map((group) => (
-          <div key={group.title} className="flex flex-col gap-1.5">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.title}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {group.ops.map((op) => {
-                const Icon = op.icon;
-                return (
-                  <button key={op.value} onClick={() => updateConfig('operation', op.value)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                      operation === op.value
-                        ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400'
-                        : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      {!noBase && text('Base ID', 'baseId', { placeholder: 'appXXXXXXXXXXXXXX' })}
+      {!noBase && !noTable && text('Table', 'tableName', { placeholder: 'Table name or ID' })}
 
-      {/* Record ID */}
-      {needsRecordId && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Record ID</label>
-          <SmartVariableInput nodeId={nodeId} value={config.recordId || ''} onChange={(val) => updateConfig('recordId', val)} placeholder="recXXXXXXXXXXXXXX" />
-        </div>
-      )}
+      {needsRecordId && text('Record ID', 'recordId', { placeholder: 'recXXXXXXXXXXXXXX' })}
 
-      {/* Field mapping (create/update) */}
       {needsFields && (
-        <div className="flex flex-col gap-3 bg-[#0a0a0a] p-4 border border-[#222] rounded-xl shadow-inner">
-          <div className="flex items-center justify-between border-b border-[#222] pb-3">
-            <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Field Mapping</span>
-            <button onClick={addField} className="flex items-center gap-1 text-[10px] font-bold text-yellow-400 hover:text-yellow-300 uppercase">
-              <PlusCircle className="w-3 h-3" /> Add
-            </button>
-          </div>
-          {fieldEntries.length === 0 ? (
-            <div className="text-center py-4 text-xs text-zinc-600">No fields mapped. Click Add.</div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {fieldEntries.map(([k, v], i) => (
-                <div key={i} className="flex items-center gap-2 group">
-                  <input value={k} onChange={(e) => updateField(k, e.target.value, v)} placeholder="Column Name"
-                    className="w-1/3 bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-500 transition-colors" />
-                  <div className="flex-1">
-                    <SmartVariableInput nodeId={nodeId} value={v} onChange={(val) => updateField(k, k, val)} placeholder="Value" />
+        <Field label={<>Field Mapping</>}>
+          <div className="flex flex-col gap-2">
+            {fieldEntries.length === 0 ? (
+              <ConfigBanner>No fields mapped yet.</ConfigBanner>
+            ) : (
+              fieldEntries.map(([k, v], i) => (
+                <RemovableRow key={i} onRemove={() => removeField(k)}>
+                  <div className="flex items-center gap-2">
+                    <input value={k} onChange={(e) => updateField(k, e.target.value, v)} placeholder="Column"
+                      className="w-1/3 bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-2.5 py-2 text-[12px] text-neutral-100 font-mono outline-none focus:border-[#545454] transition-colors" />
+                    <div className="flex-1">
+                      <SmartVariableInput nodeId={nodeId} value={v} onChange={(val) => updateField(k, k, val)} placeholder="Value" />
+                    </div>
                   </div>
-                  <button onClick={() => removeField(k)} className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                </RemovableRow>
+              ))
+            )}
+            <AddRow label="Add Field" onClick={addField} accentColor={ACCENT} />
+          </div>
+        </Field>
       )}
 
-      {/* Filter (read) */}
       {needsFilter && (
         <>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filter Formula <span className="text-zinc-700">(optional)</span></label>
-            <SmartVariableInput nodeId={nodeId} value={config.filterFormula || ''} onChange={(val) => updateConfig('filterFormula', val)} placeholder='{Status} = "Active"' />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Max Records</label>
-            <input type="number" min={1} max={1000} value={config.maxRecords || 100} onChange={(e) => updateConfig('maxRecords', Number(e.target.value))}
-              className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-yellow-500/50 transition-colors" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">View <span className="text-zinc-700">(optional)</span></label>
-            <SmartVariableInput nodeId={nodeId} value={config.view || ''} onChange={(val) => updateConfig('view', val)} placeholder="Grid view" />
-          </div>
+          {text('Filter Formula', 'filterFormula', { optional: true, placeholder: '{Status} = "Active"' })}
+          <ConfigInput
+            label="Max Records"
+            type="number"
+            value={config.maxRecords ?? 100}
+            onChange={(val) => updateConfig('maxRecords', Number(val))}
+          />
+          {text('View', 'view', { optional: true, placeholder: 'Grid view' })}
         </>
       )}
 
-      {/* Search */}
       {operation === 'search' && (
         <>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Field</label>
-            <SmartVariableInput nodeId={nodeId} value={config.searchField || ''} onChange={(val) => updateConfig('searchField', val)} placeholder="Email" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Value</label>
-            <SmartVariableInput nodeId={nodeId} value={config.searchValue || ''} onChange={(val) => updateConfig('searchValue', val)} placeholder="{{trigger.data.email}}" />
-          </div>
+          {text('Search Field', 'searchField', { placeholder: 'Email' })}
+          {text('Search Value', 'searchValue', { placeholder: '{{trigger.data.email}}' })}
         </>
       )}
 
-      {/* Bulk records (create/update) */}
       {isBulkRecords && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Records <span className="text-zinc-700">(array, max 10)</span>
-          </label>
+        <Field label={<>Records <span className="text-neutral-700 normal-case tracking-normal">(array, max 10)</span></>}>
           <SmartVariableInput
             nodeId={nodeId}
             value={typeof config.records === 'string' ? config.records : (config.records ? JSON.stringify(config.records, null, 2) : '')}
@@ -202,84 +151,54 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
               : '[{"id":"recXXX","fields":{"Status":"Done"}}]'}
             multiline
           />
-          <p className="text-[10px] text-zinc-600">
+          <ConfigBanner>
             {operation === 'bulkCreate' ? 'Array of field objects.' : 'Array of {id, fields} objects.'}
-          </p>
-        </div>
+          </ConfigBanner>
+        </Field>
       )}
 
-      {/* Bulk delete */}
       {operation === 'bulkDelete' && (
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-            Record IDs <span className="text-zinc-700">(comma-separated, max 10)</span>
-          </label>
+        <Field label={<>Record IDs <span className="text-neutral-700 normal-case tracking-normal">(comma-separated, max 10)</span></>}>
           <SmartVariableInput nodeId={nodeId}
             value={typeof config.recordIds === 'string' ? config.recordIds : (Array.isArray(config.recordIds) ? config.recordIds.join(', ') : '')}
             onChange={(val) => updateConfig('recordIds', val)}
             placeholder="recXXX, recYYY, recZZZ" />
-        </div>
+        </Field>
       )}
 
-      {/* Create Table */}
       {operation === 'createTable' && (
         <>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">New Table Name</label>
-            <SmartVariableInput nodeId={nodeId} value={config.newTableName || ''} onChange={(val) => updateConfig('newTableName', val)} placeholder="Customers" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Description <span className="text-zinc-700">(optional)</span></label>
-            <SmartVariableInput nodeId={nodeId} value={config.tableDescription || ''} onChange={(val) => updateConfig('tableDescription', val)} placeholder="What this table stores" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              Fields <span className="text-zinc-700">(array, optional — defaults to one "Name" text field)</span>
-            </label>
+          {text('New Table Name', 'newTableName', { placeholder: 'Customers' })}
+          {text('Description', 'tableDescription', { optional: true, placeholder: 'What this table stores' })}
+          <Field label={<>Fields <span className="text-neutral-700 normal-case tracking-normal">(array, optional — defaults to one "Name" text field)</span></>}>
             <SmartVariableInput nodeId={nodeId}
               value={typeof config.tableFields === 'string' ? config.tableFields : (config.tableFields ? JSON.stringify(config.tableFields, null, 2) : '')}
               onChange={(val) => { try { updateConfig('tableFields', JSON.parse(val)); } catch { updateConfig('tableFields', val); } }}
               placeholder='[{"name":"Name","type":"singleLineText"},{"name":"Score","type":"number","options":{"precision":0}}]'
               multiline />
-          </div>
+          </Field>
         </>
       )}
 
-      {/* Create Field */}
       {operation === 'createField' && (
         <>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Table ID</label>
-            <SmartVariableInput nodeId={nodeId} value={config.tableId || ''} onChange={(val) => updateConfig('tableId', val)} placeholder="tblXXXXXXXXXXXXXX" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Field Name</label>
-            <SmartVariableInput nodeId={nodeId} value={config.fieldName || ''} onChange={(val) => updateConfig('fieldName', val)} placeholder="Priority" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Field Type</label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {FIELD_TYPES.map((t) => (
-                <button key={t} onClick={() => updateConfig('fieldType', t)}
-                  className={`px-2 py-1.5 rounded-md border text-[10px] font-semibold transition-all ${
-                    (config.fieldType || 'singleLineText') === t
-                      ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400'
-                      : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                  }`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
+          {text('Table ID', 'tableId', { placeholder: 'tblXXXXXXXXXXXXXX' })}
+          {text('Field Name', 'fieldName', { placeholder: 'Priority' })}
+          <ConfigSelect
+            label="Field Type"
+            value={config.fieldType || 'singleLineText'}
+            onChange={(val) => updateConfig('fieldType', val)}
+            options={FIELD_TYPES}
+            accentColor={ACCENT}
+          />
         </>
       )}
 
-      {/* Authorization */}
       <OAuthConnectButton provider="airtable" providerLabel="Airtable" accentColor="yellow"
         value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} />
       <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
       <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
         accentColor="yellow" label="Airtable Token" placeholder="Select Airtable credential..." />
-    </div>
+    </ConfigSection>
   );
 }

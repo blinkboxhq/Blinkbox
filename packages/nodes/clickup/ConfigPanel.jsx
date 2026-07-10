@@ -1,148 +1,128 @@
-import SmartVariableInput from "@/components/ui/SmartVariableInput";
-import CredentialPicker from "@/components/ui/CredentialPicker";
+import imgClickUp from './logo.svg';
+import {
+  Plus, Pencil, Trash2, Eye, List, MessageSquarePlus, FolderPlus, Layers, Folder, ListChecks,
+} from 'lucide-react';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner,
+} from '@/components/ui/ConfigKit';
+
+const ACCENT = '#4d7cff';
 
 const OPERATIONS = [
-  { value: "createTask",  label: "Create Task" },
-  { value: "updateTask",  label: "Update Task" },
-  { value: "deleteTask",  label: "Delete Task" },
-  { value: "getTask",     label: "Get Task" },
-  { value: "listTasks",   label: "List Tasks" },
-  { value: "addComment",  label: "Add Comment" },
-  { value: "createFolder",label: "Create Folder" },
-  { value: "listSpaces",  label: "List Spaces" },
-  { value: "listFolders", label: "List Folders" },
-  { value: "listLists",   label: "List Lists" },
+  { value: 'createTask',   label: 'Create Task',   icon: Plus },
+  { value: 'updateTask',   label: 'Update Task',   icon: Pencil },
+  { value: 'deleteTask',   label: 'Delete Task',   icon: Trash2 },
+  { value: 'getTask',      label: 'Get Task',      icon: Eye },
+  { value: 'listTasks',    label: 'List Tasks',    icon: List },
+  { value: 'addComment',   label: 'Add Comment',   icon: MessageSquarePlus },
+  { value: 'createFolder', label: 'Create Folder', icon: FolderPlus },
+  { value: 'listSpaces',   label: 'List Spaces',   icon: Layers },
+  { value: 'listFolders',  label: 'List Folders',  icon: Folder },
+  { value: 'listLists',    label: 'List Lists',    icon: ListChecks },
 ];
 
 const PRIORITIES = [
-  { value: 1, label: "Urgent" },
-  { value: 2, label: "High" },
-  { value: 3, label: "Normal" },
-  { value: 4, label: "Low" },
+  { value: 1, label: 'Urgent' },
+  { value: 2, label: 'High' },
+  { value: 3, label: 'Normal' },
+  { value: 4, label: 'Low' },
 ];
 
+function Field({ label, optional, children }) {
+  return (
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
+      {children}
+    </div>
+  );
+}
+
 export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || "createTask";
+  const op = config.operation || 'createTask';
+  const currentOp = OPERATIONS.find((o) => o.value === op);
+
+  const text = (label, key, opts = {}) => (
+    <Field label={label} optional={opts.optional}>
+      <SmartVariableInput
+        value={config[key] || ''}
+        onChange={(val) => updateConfig(key, val)}
+        placeholder={opts.placeholder || ''}
+        multiline={opts.multiline}
+        nodeId={nodeId}
+      />
+    </Field>
+  );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[#7B68EE]/10 border border-[#7B68EE]/30 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#7B68EE">
-            <path d="M2.085 16.086l2.528-1.92c1.648 2.166 3.28 3.226 5.023 3.226 1.73 0 3.336-1.048 4.947-3.2l2.557 1.88C14.773 18.96 12.382 20.5 9.636 20.5c-2.762 0-5.17-1.55-7.551-4.414zM9.635 3.5L3.5 9.06l1.874 2.068 4.26-3.86 4.24 3.86L15.749 9z"/>
-          </svg>
-        </div>
-        <div>
-          <div className="text-[13px] font-bold text-zinc-100">ClickUp</div>
-          <div className="text-[11px] text-zinc-500">Tasks, lists, folders, comments</div>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgClickUp} title="ClickUp" subtitle={currentOp?.label || 'Tasks, lists, folders, comments'} />
 
-      <div>
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Operation</label>
-        <div className="grid grid-cols-2 gap-1">
-          {OPERATIONS.map((o) => (
-            <button key={o.value} onClick={() => updateConfig("operation", o.value)}
-              className={`py-1.5 px-2 rounded-lg border text-[11px] font-bold transition-all text-left ${op === o.value ? "bg-[#7B68EE]/10 border-[#7B68EE]/40 text-[#7B68EE]" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700"}`}>
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ConfigSelect
+        label="Operation"
+        value={op}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
-      {["createTask","listTasks"].includes(op) && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">List ID</label>
-          <SmartVariableInput value={config.listId || ""} onChange={(v) => updateConfig("listId", v)} placeholder="ClickUp list ID" />
-        </div>
-      )}
+      {['createTask', 'listTasks'].includes(op) &&
+        text('List ID', 'listId', { placeholder: 'ClickUp list ID' })}
 
-      {["updateTask","deleteTask","getTask","addComment"].includes(op) && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Task ID</label>
-          <SmartVariableInput value={config.taskId || ""} onChange={(v) => updateConfig("taskId", v)} placeholder="{{ $json.id }}" />
-        </div>
-      )}
+      {['updateTask', 'deleteTask', 'getTask', 'addComment'].includes(op) &&
+        text('Task ID', 'taskId', { placeholder: '{{ $json.id }}' })}
 
-      {(op === "createTask" || op === "updateTask") && (
+      {(op === 'createTask' || op === 'updateTask') && (
         <>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Task Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Review {{ $json.client }} contract" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Description</label>
-            <SmartVariableInput value={config.description || ""} onChange={(v) => updateConfig("description", v)} placeholder="Task details..." multiline />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Priority</label>
-            <div className="flex gap-1.5">
-              {PRIORITIES.map((p) => (
-                <button key={p.value} onClick={() => updateConfig("priority", p.value)}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${config.priority === p.value ? "bg-[#7B68EE]/10 border-[#7B68EE]/40 text-[#7B68EE]" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700"}`}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Due Date (timestamp or ISO)</label>
-            <SmartVariableInput value={config.dueDate || ""} onChange={(v) => updateConfig("dueDate", v)} placeholder="{{ $json.deadline }}" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Assignees (user IDs, comma-sep)</label>
-            <SmartVariableInput value={config.assignees || ""} onChange={(v) => updateConfig("assignees", v)} placeholder="123,456" />
-          </div>
+          {text('Task Name', 'name', { placeholder: 'Review {{ $json.client }} contract' })}
+          {text('Description', 'description', { placeholder: 'Task details...', multiline: true })}
+          <ConfigPills
+            label="Priority"
+            value={config.priority}
+            onChange={(val) => updateConfig('priority', val)}
+            options={PRIORITIES}
+            accentColor={ACCENT}
+          />
+          {text('Due Date (timestamp or ISO)', 'dueDate', { placeholder: '{{ $json.deadline }}' })}
+          {text('Assignees (user IDs, comma-sep)', 'assignees', { placeholder: '123,456' })}
         </>
       )}
 
-      {op === "addComment" && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Comment</label>
-          <SmartVariableInput value={config.comment || ""} onChange={(v) => updateConfig("comment", v)} placeholder="{{ $json.note }}" multiline />
-        </div>
-      )}
+      {op === 'addComment' &&
+        text('Comment', 'comment', { placeholder: '{{ $json.note }}', multiline: true })}
 
-      {op === "createFolder" && (
+      {op === 'createFolder' && (
         <>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Space ID</label>
-            <SmartVariableInput value={config.spaceId || ""} onChange={(v) => updateConfig("spaceId", v)} placeholder="ClickUp space ID" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Folder Name</label>
-            <SmartVariableInput value={config.name || ""} onChange={(v) => updateConfig("name", v)} placeholder="Q3 Projects" />
-          </div>
+          {text('Space ID', 'spaceId', { placeholder: 'ClickUp space ID' })}
+          {text('Folder Name', 'name', { placeholder: 'Q3 Projects' })}
         </>
       )}
 
-      {op === "listSpaces" && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Team / Workspace ID</label>
-          <SmartVariableInput value={config.teamId || ""} onChange={(v) => updateConfig("teamId", v)} placeholder="ClickUp team ID" />
-        </div>
-      )}
+      {op === 'listSpaces' &&
+        text('Team / Workspace ID', 'teamId', { placeholder: 'ClickUp team ID' })}
 
-      {op === "listFolders" && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Space ID</label>
-          <SmartVariableInput value={config.spaceId || ""} onChange={(v) => updateConfig("spaceId", v)} placeholder="{{ $json.space.id }}" />
-        </div>
-      )}
+      {op === 'listFolders' &&
+        text('Space ID', 'spaceId', { placeholder: '{{ $json.space.id }}' })}
 
-      {op === "listLists" && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Folder ID</label>
-          <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="{{ $json.folder.id }}" />
-        </div>
-      )}
+      {op === 'listLists' &&
+        text('Folder ID', 'folderId', { placeholder: '{{ $json.folder.id }}' })}
 
-      <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="violet" label="ClickUp API Token" placeholder="Select ClickUp credential..." />
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="violet"
+        label="ClickUp API Token"
+        placeholder="Select ClickUp credential..."
+      />
 
-      <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
-        Returns: <span className="text-zinc-300">id, name, url, status, priority</span>
-      </div>
-    </div>
+      <ConfigBanner>
+        Returns: <span className="text-neutral-300 ml-1">id, name, url, status, priority</span>
+      </ConfigBanner>
+    </ConfigSection>
   );
 }
