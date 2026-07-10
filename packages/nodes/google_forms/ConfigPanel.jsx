@@ -1,5 +1,5 @@
 import imgGoogleForms from './logo.svg';
-import { FileText, ListChecks, FileSearch, FilePlus, CirclePlus } from 'lucide-react';
+import { FileText, ListChecks, FileSearch, FilePlus, PlusCircle } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
@@ -13,7 +13,7 @@ const OPERATIONS = [
   { value: 'listResponses', label: 'List Responses', icon: ListChecks },
   { value: 'getResponse',   label: 'Get Response',   icon: FileSearch },
   { value: 'createForm',    label: 'Create Form',    icon: FilePlus },
-  { value: 'addQuestion',   label: 'Add Question',   icon: CirclePlus },
+  { value: 'addQuestion',   label: 'Add Question',   icon: PlusCircle },
 ];
 
 const QUESTION_TYPES = [
