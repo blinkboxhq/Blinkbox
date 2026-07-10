@@ -86,11 +86,15 @@ export default function ConfigurableEdge({
   const dx = Math.abs(targetX - sourceX);
   const curvature = Math.max(0.12, Math.min(0.28, dx / 1200));
 
-  // Curvy by default. Only when a node's box sits under the span do we drop to
-  // the orthogonal step path that routes below it (n8n-style). Slot edges (agent
-  // connectors) are short and never reroute.
+  // Curvy by default. Drop to the orthogonal step path (n8n-style) when either:
+  //   1. a node's box sits under the span → route below it, or
+  //   2. the edge runs backward — target handle is behind the source handle, so
+  //      a bezier would cross back over itself in an ugly S. Step routing wraps
+  //      it in clean right angles instead.
+  // Slot edges (agent connectors) are short and never reroute.
   const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
-  const useStep = obstacleBottom != null;
+  const isBackward = !isSlotEdge && targetX < sourceX + 40;
+  const useStep = obstacleBottom != null || isBackward;
 
   let edgePath, labelX, labelY;
   if (useStep) {
@@ -98,7 +102,7 @@ export default function ConfigurableEdge({
       sourceX, sourceY, sourcePosition,
       targetX, targetY, targetPosition,
       borderRadius: 16,
-      centerY: obstacleBottom + CLEARANCE,
+      ...(obstacleBottom != null ? { centerY: obstacleBottom + CLEARANCE } : {}),
     });
     edgePath = p; labelX = lx; labelY = ly;
   } else {
