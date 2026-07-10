@@ -305,6 +305,7 @@ export default function SmartVariableInput({
   const [hoveredToken, setHoveredToken] = useState(null);
   const [tokenAnchorRect, setTokenAnchorRect] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(!(value || "").length);
   const editableRef = useRef(null);
   const isComposing = useRef(false);
 
@@ -324,7 +325,7 @@ export default function SmartVariableInput({
     const el = editableRef.current;
     if (!el) return;
     const current = serializeContent(el);
-    el.dataset.empty = (value || "").length === 0 ? "true" : "false";
+    setIsEmpty(!(value || "").length);
     if (current !== value) {
       el.innerHTML = buildHTML(value);
       // Move caret to end on external value change
@@ -341,8 +342,9 @@ export default function SmartVariableInput({
     if (isComposing.current) return;
     const el = editableRef.current;
     if (!el) return;
-    el.dataset.empty = serializeContent(el).length === 0 ? "true" : "false";
-    onChange(serializeContent(el));
+    const next = serializeContent(el);
+    setIsEmpty(!next.length);
+    onChange(next);
   }, [onChange]);
 
   const handleKeyDown = useCallback(
@@ -446,18 +448,24 @@ export default function SmartVariableInput({
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            data-placeholder={placeholder}
-            data-empty="true"
             className={[
               "w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 pr-9",
               "text-xs text-white font-mono focus:outline-none focus:border-[#545454]",
-              "transition-colors data-[empty=true]:before:content-[attr(data-placeholder)]",
-              "data-[empty=true]:before:text-neutral-700 data-[empty=true]:before:pointer-events-none",
-              "min-h-[38px] resize-none",
+              "transition-colors min-h-[38px] resize-none",
               multiline ? "leading-relaxed" : "whitespace-nowrap overflow-x-auto",
               isDragOver ? "ring-2 ring-violet-500/40 bg-violet-500/5" : "",
             ].join(" ")}
           />
+          {isEmpty && placeholder && (
+            <span
+              className={[
+                "absolute left-3 top-2.5 text-xs font-mono text-neutral-600 pointer-events-none select-none",
+                multiline ? "whitespace-pre-line" : "truncate max-w-[calc(100%-2.75rem)]",
+              ].join(" ")}
+            >
+              {placeholder}
+            </span>
+          )}
 
           {/* Trigger button */}
           <Popover.Trigger asChild>
