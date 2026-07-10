@@ -13,7 +13,7 @@ import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggle, ConfigToggleRow,
 } from '@/components/ui/ConfigKit';
 
-const ACCENT = '#e5e5e5';
+const ACCENT = '#4d7cff';
 
 const OPERATIONS = [
   { value: 'sendMessage',           label: 'Send Message',       icon: Send,        group: 'Messaging' },
@@ -330,7 +330,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="indigo"
         label="Bot Token"
         placeholder="Select Telegram bot token..."
       />
