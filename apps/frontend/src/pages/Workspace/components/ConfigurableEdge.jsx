@@ -1,7 +1,37 @@
-import { getBezierPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
+import { getBezierPath, getSmoothStepPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
+
+// ── Obstacle avoidance (n8n-style) ──────────────────────────────────────────
+// Edges are curvy (bezier) by default. But when a node's bounding box sits
+// under the edge's span, the edge switches to an orthogonal step path with
+// rounded elbows that routes *below* the obstacle — the same behaviour as n8n.
+const NODE_W = 108;   // canvas card footprint (see Canvas node sizing)
+const NODE_H = 108;
+const CLEARANCE = 28; // gap kept between edge and a node it routes around
+
+function segmentHitsNodes(sx, sy, tx, ty, nodes, sourceId, targetId) {
+  const minX = Math.min(sx, tx);
+  const maxX = Math.max(sx, tx);
+  let lowestBottom = null;
+  for (const n of nodes) {
+    if (n.id === sourceId || n.id === targetId) continue;
+    if (!n.position) continue;
+    const w = n.width || n.measured?.width || NODE_W;
+    const h = n.height || n.measured?.height || NODE_H;
+    const nx = n.position.x;
+    const ny = n.position.y;
+    const bandTop = Math.min(sy, ty) - CLEARANCE;
+    const bandBottom = Math.max(sy, ty) + CLEARANCE;
+    const overlapsX = nx < maxX - 4 && nx + w > minX + 4;
+    const overlapsY = ny < bandBottom && ny + h > bandTop;
+    if (overlapsX && overlapsY) {
+      lowestBottom = lowestBottom == null ? ny + h : Math.max(lowestBottom, ny + h);
+    }
+  }
+  return lowestBottom;
+}
 
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
 export const EDGE_ARROW_ID = "blinkbox-arrow";
@@ -56,16 +86,30 @@ export default function ConfigurableEdge({
   const dx = Math.abs(targetX - sourceX);
   const curvature = Math.max(0.12, Math.min(0.28, dx / 1200));
 
-  // All edges use a soft bezier curve. Slot edges (agent connectors) keep their
-  // own tight curvature; normal edges use a distance-scaled curve so long spans
-  // bow gently rather than snapping into hard elbows.
-  const bezierCurvature = isSlotEdge ? curvature : Math.max(0.25, Math.min(0.5, dx / 600));
+  // Curvy by default. Only when a node's box sits under the span do we drop to
+  // the orthogonal step path that routes below it (n8n-style). Slot edges (agent
+  // connectors) are short and never reroute.
+  const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
+  const useStep = obstacleBottom != null;
 
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX, sourceY, sourcePosition,
-    targetX, targetY, targetPosition,
-    curvature: bezierCurvature,
-  });
+  let edgePath, labelX, labelY;
+  if (useStep) {
+    const [p, lx, ly] = getSmoothStepPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      borderRadius: 16,
+      centerY: obstacleBottom + CLEARANCE,
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  } else {
+    const bezierCurvature = isSlotEdge ? curvature : Math.max(0.25, Math.min(0.5, dx / 600));
+    const [p, lx, ly] = getBezierPath({
+      sourceX, sourceY, sourcePosition,
+      targetX, targetY, targetPosition,
+      curvature: bezierCurvature,
+    });
+    edgePath = p; labelX = lx; labelY = ly;
+  }
 
   // ── Status-driven styling ────────────────────────────────────────────────────
   const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
