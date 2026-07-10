@@ -361,13 +361,6 @@ export const NODE_ACTIONS = {
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
-  filter_array: [
-    { name: "Filter by Condition", description: "Keep only items matching a condition" },
-    { name: "Remove Nulls", description: "Filter out null, undefined, or empty values" },
-    { name: "Filter by Key Exists", description: "Keep items that have a specific field" },
-    { name: "Filter by Date Range", description: "Keep items where a date field is in range" },
-    { name: "Deduplicate by Field", description: "Remove duplicates based on a field value" },
-  ],
   sort_array: [
     { name: "Sort Ascending", description: "Sort items by a field from low to high" },
     { name: "Sort Descending", description: "Sort items by a field from high to low" },
