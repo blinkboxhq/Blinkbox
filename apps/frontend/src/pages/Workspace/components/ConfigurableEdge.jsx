@@ -1,40 +1,7 @@
-import { getBezierPath, getSmoothStepPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
+import { getBezierPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
-
-// ── Obstacle avoidance ──────────────────────────────────────────────────────
-// A near-horizontal edge whose straight span passes under a node routes around
-// it instead of drawing through its face. We detect any node whose bounding box
-// the direct source→target segment would intersect (excluding the two endpoints'
-// own nodes) and, if found, fall back to an orthogonal smooth-step path that
-// dips below the obstacle.
-const NODE_W = 108;   // canvas card footprint (see Canvas node sizing)
-const NODE_H = 108;
-const CLEARANCE = 28; // gap kept between edge and a node it routes around
-
-function segmentHitsNodes(sx, sy, tx, ty, nodes, sourceId, targetId) {
-  const minX = Math.min(sx, tx);
-  const maxX = Math.max(sx, tx);
-  let lowestBottom = null;
-  for (const n of nodes) {
-    if (n.id === sourceId || n.id === targetId) continue;
-    if (!n.position) continue;
-    const w = n.width || n.measured?.width || NODE_W;
-    const h = n.height || n.measured?.height || NODE_H;
-    const nx = n.position.x;
-    const ny = n.position.y;
-    // Horizontal overlap with the edge span, plus vertical straddle of the line's band
-    const bandTop = Math.min(sy, ty) - CLEARANCE;
-    const bandBottom = Math.max(sy, ty) + CLEARANCE;
-    const overlapsX = nx < maxX - 4 && nx + w > minX + 4;
-    const overlapsY = ny < bandBottom && ny + h > bandTop;
-    if (overlapsX && overlapsY) {
-      lowestBottom = lowestBottom == null ? ny + h : Math.max(lowestBottom, ny + h);
-    }
-  }
-  return lowestBottom;
-}
 
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
 export const EDGE_ARROW_ID = "blinkbox-arrow";
@@ -85,38 +52,20 @@ export default function ConfigurableEdge({
   const isExecutionLive = useWorkspaceStore((s) => s.isExecutionLive);
   const { deleteElements } = useReactFlow();
 
-  // Slot-edge (agent connector) curvature — only bezier path left in use.
+  // Slot-edge (agent connector) curvature.
   const dx = Math.abs(targetX - sourceX);
   const curvature = Math.max(0.12, Math.min(0.28, dx / 1200));
 
-  // Detour around any node the straight span would cross (skip slot edges — those
-  // are short agent connectors that shouldn't reroute).
-  const obstacleBottom = isSlotEdge ? null : segmentHitsNodes(sourceX, sourceY, targetX, targetY, nodes, source, target);
+  // All edges use a soft bezier curve. Slot edges (agent connectors) keep their
+  // own tight curvature; normal edges use a distance-scaled curve so long spans
+  // bow gently rather than snapping into hard elbows.
+  const bezierCurvature = isSlotEdge ? curvature : Math.max(0.25, Math.min(0.5, dx / 600));
 
-  // All normal edges use the clean orthogonal stepped path — no curves.
-  // Slot edges (agent connectors) stay bezier.
-  const useStep = !isSlotEdge;
-
-  let edgePath, labelX, labelY;
-  if (useStep) {
-    // Orthogonal step routing with rounded elbows (n8n-style). When an obstacle
-    // sits under the span, force the vertical run below it.
-    const [p, lx, ly] = getSmoothStepPath({
-      sourceX, sourceY, sourcePosition,
-      targetX, targetY, targetPosition,
-      borderRadius: 16,
-      ...(obstacleBottom != null ? { centerY: obstacleBottom + CLEARANCE } : {}),
-    });
-    edgePath = p; labelX = lx; labelY = ly;
-  } else {
-    // Short/direct edges keep the soft bezier curve.
-    const [p, lx, ly] = getBezierPath({
-      sourceX, sourceY, sourcePosition,
-      targetX, targetY, targetPosition,
-      curvature,
-    });
-    edgePath = p; labelX = lx; labelY = ly;
-  }
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX, sourceY, sourcePosition,
+    targetX, targetY, targetPosition,
+    curvature: bezierCurvature,
+  });
 
   // ── Status-driven styling ────────────────────────────────────────────────────
   const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
@@ -206,7 +155,7 @@ export default function ConfigurableEdge({
       {/* Directional arrow at the edge midpoint — points along the edge */}
       {!isAgentEdge && !isRunning && (
         <g
-          transform={`translate(${labelX}, ${labelY}) rotate(${useStep ? 0 : (Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI})`}
+          transform={`translate(${labelX}, ${labelY})`}
           className={`transition-opacity duration-100 ${hovered ? "opacity-0" : "opacity-100"}`}
           style={{ pointerEvents: "none" }}
         >
