@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import imgTelegram from './logo.png';
 import {
   Send, Hash, BellOff, Image, FileText, Film, Music, Mic, Sticker, MapPin,
   Building2, Contact, BarChart2, Dice5, Images, Copy, Forward, Pencil, Captions,
@@ -90,9 +91,6 @@ function Field({ label, optional, children }) {
 export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   const operation = resolveOperation(config);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
-  const CurrentIcon = currentOp?.icon || Send;
-  const [showPicker, setShowPicker] = useState(false);
-  const selectOp = (val) => { updateConfig('operation', val); setShowPicker(false); };
 
   // Persist the slug the backend reads: when the node arrives from the action
   // picker with only selectedAction, write the resolved operation once so the
@@ -116,52 +114,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader icon={Send} title="Telegram" subtitle="Telegram Bot API" />
-
-      {/* Action — collapsed current op with expandable grid */}
-      <div className="flex flex-col">
-        <ConfigLabel>Action</ConfigLabel>
-        <button
-          type="button"
-          onClick={() => setShowPicker((v) => !v)}
-          className="bb-glow-border flex items-center gap-2.5 p-3 rounded-md border text-[12.5px] font-mono font-semibold transition-colors"
-          style={{ color: '#f5f5f5', backgroundColor: '#0a0a0a', borderColor: '#3b3b3b' }}
-        >
-          <CurrentIcon className="w-4 h-4 shrink-0" />
-          <span className="flex-1 text-left">{currentOp?.label || 'Select action'}</span>
-          <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-500">Change</span>
-          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`} />
-        </button>
-
-        {showPicker && (
-          <div className="flex flex-col gap-3 mt-3">
-            {GROUPS.map((g) => (
-              <div key={g} className="flex flex-col gap-1.5">
-                <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-[0.2em] font-mono">{g}</span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {OPERATIONS.filter((o) => o.group === g).map((op) => {
-                    const Icon = op.icon;
-                    const on = operation === op.value;
-                    return (
-                      <button
-                        key={op.value}
-                        type="button"
-                        onClick={() => selectOp(op.value)}
-                        className="bb-glow-border flex items-center gap-2 px-3 py-2 rounded-md text-[11.5px] font-mono font-medium border transition-colors text-left"
-                        style={on
-                          ? { color: '#f5f5f5', backgroundColor: '#161616', borderColor: '#4b4b4b' }
-                          : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}
-                      >
-                        <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <ConfigHeader logoUrl={imgTelegram} title="Telegram" subtitle={currentOp?.label || 'Telegram Bot API'} />
 
       {!NO_CHAT_OPS.includes(operation) && (
         <Field label={<><Hash className="w-3 h-3 inline mr-1" style={{ color: '#6d6d6d' }} />Chat ID</>}>
