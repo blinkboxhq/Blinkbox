@@ -12,7 +12,7 @@ import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggle, ConfigToggleRow,
 } from '@/components/ui/ConfigKit';
 
-const ACCENT = '#6f97e8';
+const ACCENT = '#e5e5e5';
 
 const OPERATIONS = [
   { value: 'sendMessage',           label: 'Send Message',       icon: Send,        group: 'Messaging' },
@@ -89,10 +89,6 @@ function Field({ label, optional, children }) {
 
 export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   const operation = resolveOperation(config);
-  const currentOp = OPERATIONS.find((o) => o.value === operation);
-  const [showPicker, setShowPicker] = useState(false);
-  const CurrentIcon = currentOp?.icon || Send;
-  const selectOp = (val) => { updateConfig('operation', val); setShowPicker(false); };
 
   // Persist the slug the backend reads: when the node arrives from the action
   // picker with only selectedAction, write the resolved operation once so the
@@ -125,7 +121,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
           type="button"
           onClick={() => setShowPicker((v) => !v)}
           className="bb-glow-border flex items-center gap-2.5 p-3 rounded-md border text-[12.5px] font-mono font-semibold transition-colors"
-          style={{ color: ACCENT, backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` }}
+          style={{ color: '#f5f5f5', backgroundColor: '#0a0a0a', borderColor: '#3b3b3b' }}
         >
           <CurrentIcon className="w-4 h-4 shrink-0" />
           <span className="flex-1 text-left">{currentOp?.label || 'Select action'}</span>
@@ -149,7 +145,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
                         onClick={() => selectOp(op.value)}
                         className="bb-glow-border flex items-center gap-2 px-3 py-2 rounded-md text-[11.5px] font-mono font-medium border transition-colors text-left"
                         style={on
-                          ? { color: ACCENT, backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` }
+                          ? { color: '#f5f5f5', backgroundColor: '#161616', borderColor: '#4b4b4b' }
                           : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}
                       >
                         <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
@@ -164,7 +160,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       </div>
 
       {!NO_CHAT_OPS.includes(operation) && (
-        <Field label={<><Hash className="w-3 h-3 inline mr-1" style={{ color: ACCENT }} />Chat ID</>}>
+        <Field label={<><Hash className="w-3 h-3 inline mr-1" style={{ color: '#6d6d6d' }} />Chat ID</>}>
           <SmartVariableInput
             value={config.chatId || ''}
             onChange={(val) => updateConfig('chatId', val)}
@@ -377,7 +373,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="zinc"
         label="Bot Token"
         placeholder="Select Telegram bot token..."
       />
