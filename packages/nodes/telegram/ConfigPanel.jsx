@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react';
 import {
   Send, Hash, BellOff, Image, FileText, Film, Music, Mic, Sticker, MapPin,
   Building2, Contact, BarChart2, Dice5, Images, Copy, Forward, Pencil, Captions,
   Trash2, Pin, PinOff, Loader, Info, Users, UserCheck, Shield, Type, AlignLeft,
   LogOut, Ban, UserPlus, UserMinus, Lock, ArrowUpCircle, Link2, LinkIcon,
-  Smile, Bot,
+  Smile, Bot, ChevronDown,
 } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
@@ -53,6 +54,13 @@ const OPERATIONS = [
 const GROUPS = ['Messaging', 'Manage', 'Chat', 'Moderation', 'Invites', 'Bot'];
 const NO_CHAT_OPS = ['getMe'];
 
+// Action picker drops config.selectedAction as a display label ("Send Photo").
+// Resolve it to the operation slug so the panel opens on the chosen action
+// instead of re-asking. Label match is 1:1 with OPERATIONS[].label.
+const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+const resolveOperation = (config) =>
+  config.operation || LABEL_TO_OP[config.selectedAction] || 'sendMessage';
+
 const lbl = 'text-[10px] font-bold text-zinc-500 uppercase tracking-widest';
 
 function Field({ label, optional, children }) {
@@ -80,7 +88,19 @@ function Toggle({ label, on, onClick }) {
 }
 
 export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendMessage';
+  const operation = resolveOperation(config);
+  const currentOp = OPERATIONS.find((o) => o.value === operation);
+  const [showPicker, setShowPicker] = useState(false);
+  const CurrentIcon = currentOp?.icon || Send;
+  const selectOp = (val) => { updateConfig('operation', val); setShowPicker(false); };
+
+  // Persist the slug the backend reads: when the node arrives from the action
+  // picker with only selectedAction, write the resolved operation once so the
+  // executor doesn't fail on a missing config.operation.
+  useEffect(() => {
+    if (!config.operation && operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const text = (label, key, opts = {}) => (
     <Field label={label} optional={opts.optional}>
       <SmartVariableInput
@@ -107,7 +127,17 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
 
       <div className="flex flex-col gap-3">
         <label className={lbl}>Action</label>
-        {GROUPS.map((g) => (
+        <button
+          onClick={() => setShowPicker((v) => !v)}
+          className="flex items-center gap-2.5 p-3 rounded-lg border border-sky-500/40 bg-sky-500/10 text-sky-400 text-xs font-bold transition-all hover:border-sky-500/60"
+        >
+          <CurrentIcon className="w-4 h-4 shrink-0" />
+          <span className="flex-1 text-left">{currentOp?.label || 'Select action'}</span>
+          <span className="text-[10px] font-medium text-sky-400/60">Change</span>
+          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${showPicker ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showPicker && GROUPS.map((g) => (
           <div key={g} className="flex flex-col gap-1.5">
             <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{g}</span>
             <div className="grid grid-cols-2 gap-2">
@@ -116,7 +146,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
                 return (
                   <button
                     key={op.value}
-                    onClick={() => updateConfig('operation', op.value)}
+                    onClick={() => selectOp(op.value)}
                     className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
                       operation === op.value
                         ? 'bg-sky-500/10 border-sky-500/40 text-sky-400'
