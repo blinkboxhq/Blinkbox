@@ -324,6 +324,7 @@ export default function SmartVariableInput({
     const el = editableRef.current;
     if (!el) return;
     const current = serializeContent(el);
+    el.dataset.empty = (value || "").length === 0 ? "true" : "false";
     if (current !== value) {
       el.innerHTML = buildHTML(value);
       // Move caret to end on external value change
@@ -340,6 +341,7 @@ export default function SmartVariableInput({
     if (isComposing.current) return;
     const el = editableRef.current;
     if (!el) return;
+    el.dataset.empty = serializeContent(el).length === 0 ? "true" : "false";
     onChange(serializeContent(el));
   }, [onChange]);
 
@@ -445,11 +447,12 @@ export default function SmartVariableInput({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             data-placeholder={placeholder}
+            data-empty="true"
             className={[
               "w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 pr-9",
               "text-xs text-white font-mono focus:outline-none focus:border-[#545454]",
-              "transition-colors empty:before:content-[attr(data-placeholder)]",
-              "empty:before:text-neutral-700 empty:before:pointer-events-none",
+              "transition-colors data-[empty=true]:before:content-[attr(data-placeholder)]",
+              "data-[empty=true]:before:text-neutral-700 data-[empty=true]:before:pointer-events-none",
               "min-h-[38px] resize-none",
               multiline ? "leading-relaxed" : "whitespace-nowrap overflow-x-auto",
               isDragOver ? "ring-2 ring-violet-500/40 bg-violet-500/5" : "",
