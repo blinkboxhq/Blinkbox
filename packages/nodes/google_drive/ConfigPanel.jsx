@@ -1,60 +1,51 @@
-import SmartVariableInput from "@/components/ui/SmartVariableInput";
-import CredentialPicker from "@/components/ui/CredentialPicker";
-import OAuthConnectButton from "@/components/ui/OAuthConnectButton";
+import imgDrive from './logo.svg';
 import {
   Files, Search, Eye, FolderPlus, Upload, Download, FileOutput, Copy, Pencil,
   FilePenLine, MoveRight, Trash2, Trash, RotateCcw, Star, Share2, Link2, Users,
   UserCog, UserMinus, HardDrive, Gauge,
-} from "lucide-react";
+} from 'lucide-react';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigInput, ConfigToggleRow, ConfigBanner,
+} from '@/components/ui/ConfigKit';
 
-const ACCENT = "#FBBC04";
+const ACCENT = '#4d7cff';
 
-const GROUPS = [
-  {
-    title: "Files & Folders",
-    ops: [
-      { value: "listFiles", label: "List Files", icon: Files },
-      { value: "search", label: "Search", icon: Search },
-      { value: "getFile", label: "Get File", icon: Eye },
-      { value: "createFolder", label: "Create Folder", icon: FolderPlus },
-      { value: "uploadText", label: "Upload Text", icon: Upload },
-      { value: "downloadText", label: "Download Text", icon: Download },
-      { value: "exportFile", label: "Export (Docs)", icon: FileOutput },
-      { value: "copyFile", label: "Copy File", icon: Copy },
-      { value: "renameFile", label: "Rename File", icon: Pencil },
-      { value: "updateFileContent", label: "Update Content", icon: FilePenLine },
-      { value: "moveFile", label: "Move File", icon: MoveRight },
-      { value: "starFile", label: "Star / Unstar", icon: Star },
-    ],
-  },
-  {
-    title: "Trash",
-    ops: [
-      { value: "deleteFile", label: "Delete Forever", icon: Trash2 },
-      { value: "trashFile", label: "Move to Trash", icon: Trash },
-      { value: "restoreFile", label: "Restore", icon: RotateCcw },
-      { value: "emptyTrash", label: "Empty Trash", icon: Trash2 },
-    ],
-  },
-  {
-    title: "Sharing & Account",
-    ops: [
-      { value: "shareFile", label: "Share File", icon: Share2 },
-      { value: "createSharedLink", label: "Shared Link", icon: Link2 },
-      { value: "listPermissions", label: "List Access", icon: Users },
-      { value: "updatePermission", label: "Update Access", icon: UserCog },
-      { value: "removePermission", label: "Remove Access", icon: UserMinus },
-      { value: "listDrives", label: "List Drives", icon: HardDrive },
-      { value: "getAbout", label: "Storage Info", icon: Gauge },
-    ],
-  },
+const OPERATIONS = [
+  { value: 'listFiles',         label: 'List Files',     icon: Files },
+  { value: 'search',            label: 'Search',         icon: Search },
+  { value: 'getFile',           label: 'Get File',       icon: Eye },
+  { value: 'createFolder',      label: 'Create Folder',  icon: FolderPlus },
+  { value: 'uploadText',        label: 'Upload Text',    icon: Upload },
+  { value: 'downloadText',      label: 'Download Text',  icon: Download },
+  { value: 'exportFile',        label: 'Export (Docs)',  icon: FileOutput },
+  { value: 'copyFile',          label: 'Copy File',      icon: Copy },
+  { value: 'renameFile',        label: 'Rename File',    icon: Pencil },
+  { value: 'updateFileContent', label: 'Update Content', icon: FilePenLine },
+  { value: 'moveFile',          label: 'Move File',      icon: MoveRight },
+  { value: 'starFile',          label: 'Star / Unstar',  icon: Star },
+  { value: 'deleteFile',        label: 'Delete Forever', icon: Trash2 },
+  { value: 'trashFile',         label: 'Move to Trash',  icon: Trash },
+  { value: 'restoreFile',       label: 'Restore',        icon: RotateCcw },
+  { value: 'emptyTrash',        label: 'Empty Trash',    icon: Trash2 },
+  { value: 'shareFile',         label: 'Share File',     icon: Share2 },
+  { value: 'createSharedLink',  label: 'Shared Link',    icon: Link2 },
+  { value: 'listPermissions',   label: 'List Access',    icon: Users },
+  { value: 'updatePermission',  label: 'Update Access',  icon: UserCog },
+  { value: 'removePermission',  label: 'Remove Access',  icon: UserMinus },
+  { value: 'listDrives',        label: 'List Drives',    icon: HardDrive },
+  { value: 'getAbout',          label: 'Storage Info',   icon: Gauge },
 ];
 
-const lbl = "text-[10px] font-bold text-zinc-500 uppercase tracking-widest";
-const inputCls = "w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#FBBC04]/40";
-
-const FILE_ID_OPS = ["getFile", "downloadText", "exportFile", "copyFile", "renameFile", "updateFileContent", "deleteFile", "trashFile", "restoreFile", "starFile", "shareFile", "createSharedLink", "listPermissions", "updatePermission", "removePermission"];
-const ROLES = ["reader", "commenter", "writer", "owner"];
+const FILE_ID_OPS = ['getFile', 'downloadText', 'exportFile', 'copyFile', 'renameFile', 'updateFileContent', 'deleteFile', 'trashFile', 'restoreFile', 'starFile', 'shareFile', 'createSharedLink', 'listPermissions', 'updatePermission', 'removePermission'];
+const ROLE_PILLS = [
+  { value: 'reader', label: 'Reader' },
+  { value: 'commenter', label: 'Commenter' },
+  { value: 'writer', label: 'Writer' },
+  { value: 'owner', label: 'Owner' },
+];
 
 function DriveIcon({ className }) {
   return (
@@ -64,213 +55,188 @@ function DriveIcon({ className }) {
   );
 }
 
-function Field({ label, hint, children }) {
+function Field({ label, optional, hint, children }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className={lbl}>{label}</label>
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
       {children}
-      {hint && <p className="text-[10px] text-zinc-600">{hint}</p>}
+      {hint && <p className="text-[10px] text-neutral-600 mt-1.5">{hint}</p>}
     </div>
   );
 }
 
 export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || "listFiles";
+  const op = config.operation || 'listFiles';
+  const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
 
+  const text = (label, key, opts = {}) => (
+    <Field label={label} optional={opts.optional} hint={opts.hint}>
+      <SmartVariableInput
+        value={config[key] || ''}
+        onChange={set(key)}
+        placeholder={opts.placeholder || ''}
+        multiline={opts.multiline}
+        nodeId={nodeId}
+      />
+    </Field>
+  );
+
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <div className="flex items-center gap-3 p-4 bg-[#0F9D58]/5 border border-[#0F9D58]/20 rounded-xl">
-        <div className="p-2 bg-[#0F9D58]/10 rounded-lg text-[#FBBC04] shrink-0">
-          <DriveIcon className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#FBBC04]">Google Drive</span>
-          <span className="text-[10px] text-zinc-500">Files, folders, trash, sharing & account</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgDrive} title="Google Drive" subtitle={currentOp?.label || 'Files, folders, trash, sharing & account'} />
 
-      <div className="flex flex-col gap-3">
-        <label className={lbl}>Operation</label>
-        {GROUPS.map((group) => (
-          <div key={group.title} className="flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.title}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {group.ops.map((o) => {
-                const Icon = o.icon;
-                const active = op === o.value;
-                return (
-                  <button key={o.value} onClick={() => updateConfig("operation", o.value)}
-                    className={`flex items-center gap-2 py-2 px-2.5 rounded-lg border text-[11px] font-bold transition-all ${active ? "bg-[#FBBC04]/10 border-[#FBBC04]/40 text-[#FBBC04]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{o.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConfigSelect
+        label="Operation"
+        value={op}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
-      {op === "listFiles" && (
+      {op === 'listFiles' && (
         <>
-          <Field label="Folder ID (optional)" hint='Blank = "My Drive" root'><SmartVariableInput value={config.folderId || ""} onChange={set("folderId")} placeholder="root" /></Field>
-          <Field label="MIME Type Filter (optional)"><SmartVariableInput value={config.mimeType || ""} onChange={set("mimeType")} placeholder="application/pdf" /></Field>
-          <Field label="Limit">
-            <input type="number" min="1" max="1000" value={config.limit || 50} onChange={(e) => updateConfig("limit", Number(e.target.value))} className={inputCls} />
-          </Field>
+          {text('Folder ID', 'folderId', { optional: true, placeholder: 'root', hint: 'Blank = "My Drive" root' })}
+          {text('MIME Type Filter', 'mimeType', { optional: true, placeholder: 'application/pdf' })}
+          <ConfigInput label="Limit" type="number" value={config.limit ?? 50} onChange={(v) => updateConfig('limit', Number(v))} />
         </>
       )}
 
-      {op === "search" && (
+      {op === 'search' && (
         <>
-          <Field label="Query"><SmartVariableInput value={config.query || ""} onChange={set("query")} placeholder="quarterly report" /></Field>
-          <div className="flex items-center justify-between bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5">
-            <span className="text-[11px] font-bold text-zinc-400">Search inside file contents</span>
-            <button onClick={() => updateConfig("searchContent", !config.searchContent)}
-              className={`w-10 h-5 rounded-full transition-all relative ${config.searchContent ? "bg-[#FBBC04]" : "bg-[#333]"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${config.searchContent ? "left-[22px]" : "left-0.5"}`} />
-            </button>
-          </div>
-          <Field label="Limit">
-            <input type="number" min="1" max="1000" value={config.limit || 50} onChange={(e) => updateConfig("limit", Number(e.target.value))} className={inputCls} />
-          </Field>
+          {text('Query', 'query', { placeholder: 'quarterly report' })}
+          <ConfigToggleRow
+            label="Search inside file contents"
+            on={!!config.searchContent}
+            onChange={(v) => updateConfig('searchContent', v)}
+            accentColor={ACCENT}
+          />
+          <ConfigInput label="Limit" type="number" value={config.limit ?? 50} onChange={(v) => updateConfig('limit', Number(v))} />
         </>
       )}
 
-      {FILE_ID_OPS.includes(op) && (
-        <Field label="File ID"><SmartVariableInput value={config.fileId || ""} onChange={set("fileId")} placeholder="{{n1.id}}" /></Field>
-      )}
+      {FILE_ID_OPS.includes(op) && text('File ID', 'fileId', { placeholder: '{{n1.id}}' })}
 
-      {op === "createFolder" && (
+      {op === 'createFolder' && (
         <>
-          <Field label="Folder Name"><SmartVariableInput value={config.name || ""} onChange={set("name")} placeholder="Reports 2024" /></Field>
-          <Field label="Parent Folder ID (optional)"><SmartVariableInput value={config.parentId || ""} onChange={set("parentId")} placeholder="root" /></Field>
+          {text('Folder Name', 'name', { placeholder: 'Reports 2024' })}
+          {text('Parent Folder ID', 'parentId', { optional: true, placeholder: 'root' })}
         </>
       )}
 
-      {op === "uploadText" && (
+      {op === 'uploadText' && (
         <>
-          <Field label="File Name"><SmartVariableInput value={config.name || ""} onChange={set("name")} placeholder="report.csv" /></Field>
-          <Field label="Content"><SmartVariableInput value={config.content || ""} onChange={set("content")} placeholder="{{n1.csv}}" multiline /></Field>
-          <Field label="MIME Type (optional)"><input value={config.mimeType || ""} onChange={(e) => updateConfig("mimeType", e.target.value)} placeholder="text/csv" className={inputCls} /></Field>
-          <Field label="Folder ID (optional)"><SmartVariableInput value={config.folderId || ""} onChange={set("folderId")} placeholder="root" /></Field>
+          {text('File Name', 'name', { placeholder: 'report.csv' })}
+          {text('Content', 'content', { placeholder: '{{n1.csv}}', multiline: true })}
+          {text('MIME Type', 'mimeType', { optional: true, placeholder: 'text/csv' })}
+          {text('Folder ID', 'folderId', { optional: true, placeholder: 'root' })}
         </>
       )}
 
-      {op === "updateFileContent" && (
+      {op === 'updateFileContent' && (
         <>
-          <Field label="New Content"><SmartVariableInput value={config.content || ""} onChange={set("content")} placeholder="{{n1.text}}" multiline /></Field>
-          <Field label="MIME Type (optional)"><input value={config.mimeType || ""} onChange={(e) => updateConfig("mimeType", e.target.value)} placeholder="text/plain" className={inputCls} /></Field>
+          {text('New Content', 'content', { placeholder: '{{n1.text}}', multiline: true })}
+          {text('MIME Type', 'mimeType', { optional: true, placeholder: 'text/plain' })}
         </>
       )}
 
-      {op === "exportFile" && (
-        <Field label="Export MIME Type" hint="e.g. application/pdf, text/plain, text/csv">
-          <input value={config.exportMimeType || ""} onChange={(e) => updateConfig("exportMimeType", e.target.value)} placeholder="application/pdf" className={inputCls} />
-        </Field>
-      )}
+      {op === 'exportFile' &&
+        text('Export MIME Type', 'exportMimeType', { placeholder: 'application/pdf', hint: 'e.g. application/pdf, text/plain, text/csv' })}
 
-      {op === "copyFile" && (
+      {op === 'copyFile' && (
         <>
-          <Field label="New Name (optional)"><SmartVariableInput value={config.name || ""} onChange={set("name")} placeholder="Copy of report" /></Field>
-          <Field label="Destination Folder ID (optional)"><SmartVariableInput value={config.parentId || ""} onChange={set("parentId")} placeholder="root" /></Field>
+          {text('New Name', 'name', { optional: true, placeholder: 'Copy of report' })}
+          {text('Destination Folder ID', 'parentId', { optional: true, placeholder: 'root' })}
         </>
       )}
 
-      {op === "renameFile" && (
-        <Field label="New Name"><SmartVariableInput value={config.name || ""} onChange={set("name")} placeholder="final-report.pdf" /></Field>
-      )}
+      {op === 'renameFile' && text('New Name', 'name', { placeholder: 'final-report.pdf' })}
 
-      {op === "moveFile" && (
+      {op === 'moveFile' && (
         <>
-          <Field label="File ID"><SmartVariableInput value={config.fileId || ""} onChange={set("fileId")} placeholder="{{n1.id}}" /></Field>
-          <Field label="Target Folder ID"><SmartVariableInput value={config.targetFolderId || ""} onChange={set("targetFolderId")} placeholder="{{n1.folderId}}" /></Field>
+          {text('File ID', 'fileId', { placeholder: '{{n1.id}}' })}
+          {text('Target Folder ID', 'targetFolderId', { placeholder: '{{n1.folderId}}' })}
         </>
       )}
 
-      {op === "starFile" && (
-        <div className="flex items-center justify-between bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5">
-          <span className="text-[11px] font-bold text-zinc-400">Starred</span>
-          <button onClick={() => updateConfig("starred", config.starred === false)}
-            className={`w-10 h-5 rounded-full transition-all relative ${config.starred !== false ? "bg-[#FBBC04]" : "bg-[#333]"}`}>
-            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${config.starred !== false ? "left-[22px]" : "left-0.5"}`} />
-          </button>
-        </div>
+      {op === 'starFile' && (
+        <ConfigToggleRow
+          label="Starred"
+          on={config.starred !== false}
+          onChange={(v) => updateConfig('starred', v)}
+          accentColor={ACCENT}
+        />
       )}
 
-      {op === "shareFile" && (
+      {op === 'shareFile' && (
         <>
-          <Field label="Share With">
-            <div className="grid grid-cols-4 gap-1.5">
-              {["user", "group", "domain", "anyone"].map((t) => (
-                <button key={t} onClick={() => updateConfig("shareType", t)}
-                  className={`py-2 rounded-lg border text-[11px] font-bold capitalize transition-all ${(config.shareType || "user") === t ? "bg-[#FBBC04]/10 border-[#FBBC04]/40 text-[#FBBC04]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </Field>
-          {["user", "group"].includes(config.shareType || "user") && (
-            <Field label="Email"><SmartVariableInput value={config.email || ""} onChange={set("email")} placeholder="colleague@example.com" /></Field>
-          )}
-          {(config.shareType === "domain") && (
-            <Field label="Domain"><input value={config.domain || ""} onChange={(e) => updateConfig("domain", e.target.value)} placeholder="example.com" className={inputCls} /></Field>
-          )}
-          <Field label="Role">
-            <div className="grid grid-cols-4 gap-1.5">
-              {ROLES.map((r) => (
-                <button key={r} onClick={() => updateConfig("role", r)}
-                  className={`py-2 rounded-lg border text-[11px] font-bold capitalize transition-all ${(config.role || "reader") === r ? "bg-[#FBBC04]/10 border-[#FBBC04]/40 text-[#FBBC04]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                  {r}
-                </button>
-              ))}
-            </div>
-          </Field>
+          <ConfigPills
+            label="Share With"
+            value={config.shareType || 'user'}
+            onChange={(v) => updateConfig('shareType', v)}
+            options={[
+              { value: 'user', label: 'User' },
+              { value: 'group', label: 'Group' },
+              { value: 'domain', label: 'Domain' },
+              { value: 'anyone', label: 'Anyone' },
+            ]}
+            accentColor={ACCENT}
+          />
+          {['user', 'group'].includes(config.shareType || 'user') &&
+            text('Email', 'email', { placeholder: 'colleague@example.com' })}
+          {config.shareType === 'domain' && text('Domain', 'domain', { placeholder: 'example.com' })}
+          <ConfigPills
+            label="Role"
+            value={config.role || 'reader'}
+            onChange={(v) => updateConfig('role', v)}
+            options={ROLE_PILLS}
+            accentColor={ACCENT}
+          />
         </>
       )}
 
-      {op === "createSharedLink" && (
-        <Field label="Link Role">
-          <div className="grid grid-cols-3 gap-1.5">
-            {["reader", "commenter", "writer"].map((r) => (
-              <button key={r} onClick={() => updateConfig("role", r)}
-                className={`py-2 rounded-lg border text-[11px] font-bold capitalize transition-all ${(config.role || "reader") === r ? "bg-[#FBBC04]/10 border-[#FBBC04]/40 text-[#FBBC04]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                {r}
-              </button>
-            ))}
-          </div>
-        </Field>
+      {op === 'createSharedLink' && (
+        <ConfigPills
+          label="Link Role"
+          value={config.role || 'reader'}
+          onChange={(v) => updateConfig('role', v)}
+          options={[
+            { value: 'reader', label: 'Reader' },
+            { value: 'commenter', label: 'Commenter' },
+            { value: 'writer', label: 'Writer' },
+          ]}
+          accentColor={ACCENT}
+        />
       )}
 
-      {["updatePermission", "removePermission"].includes(op) && (
-        <Field label="Permission ID" hint="From a List Access run"><SmartVariableInput value={config.permissionId || ""} onChange={set("permissionId")} placeholder="{{n1.permissions[0].id}}" /></Field>
+      {['updatePermission', 'removePermission'].includes(op) &&
+        text('Permission ID', 'permissionId', { placeholder: '{{n1.permissions[0].id}}', hint: 'From a List Access run' })}
+
+      {op === 'updatePermission' && (
+        <ConfigPills
+          label="New Role"
+          value={config.role || 'reader'}
+          onChange={(v) => updateConfig('role', v)}
+          options={ROLE_PILLS}
+          accentColor={ACCENT}
+        />
       )}
 
-      {op === "updatePermission" && (
-        <Field label="New Role">
-          <div className="grid grid-cols-4 gap-1.5">
-            {ROLES.map((r) => (
-              <button key={r} onClick={() => updateConfig("role", r)}
-                className={`py-2 rounded-lg border text-[11px] font-bold capitalize transition-all ${(config.role || "reader") === r ? "bg-[#FBBC04]/10 border-[#FBBC04]/40 text-[#FBBC04]" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"}`}>
-                {r}
-              </button>
-            ))}
-          </div>
-        </Field>
-      )}
-
-      {op === "emptyTrash" && (
-        <div className="text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
+      {op === 'emptyTrash' && (
+        <ConfigBanner tone="warn">
           Permanently deletes every file in trash. This cannot be undone.
-        </div>
+        </ConfigBanner>
       )}
 
       <OAuthConnectButton provider="google" providerLabel="Google" accentColor="yellow"
-        value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)} icon={DriveIcon} />
-      <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
-      <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="yellow" label="Google OAuth Token" placeholder="Select Google credential..." />
-    </div>
+        value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} icon={DriveIcon} />
+      <p className="text-[10px] text-neutral-600 -mt-3">Or use an existing credential:</p>
+      <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="amber" label="Google OAuth Token" placeholder="Select Google credential..." />
+    </ConfigSection>
   );
 }

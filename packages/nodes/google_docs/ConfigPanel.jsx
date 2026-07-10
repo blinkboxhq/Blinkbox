@@ -1,125 +1,128 @@
-import SmartVariableInput from "@/components/ui/SmartVariableInput";
-import CredentialPicker from "@/components/ui/CredentialPicker";
+import imgGoogleDocs from './logo.svg';
+import { FilePlus, FileText, PlusSquare, Replace, Table, List, Download } from 'lucide-react';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigToggleRow, ConfigBanner,
+} from '@/components/ui/ConfigKit';
+
+const ACCENT = '#4d7cff';
 
 const OPERATIONS = [
-  { value: "createDoc",      label: "Create Document" },
-  { value: "getDoc",         label: "Get Document" },
-  { value: "appendText",     label: "Append Text" },
-  { value: "replaceText",    label: "Find & Replace" },
-  { value: "insertTable",    label: "Insert Table" },
-  { value: "listDocs",       label: "List Documents" },
-  { value: "exportDoc",      label: "Export as PDF / DOCX" },
+  { value: 'createDoc',   label: 'Create Document',      icon: FilePlus },
+  { value: 'getDoc',      label: 'Get Document',         icon: FileText },
+  { value: 'appendText',  label: 'Append Text',          icon: PlusSquare },
+  { value: 'replaceText', label: 'Find & Replace',       icon: Replace },
+  { value: 'insertTable', label: 'Insert Table',         icon: Table },
+  { value: 'listDocs',    label: 'List Documents',       icon: List },
+  { value: 'exportDoc',   label: 'Export as PDF / DOCX', icon: Download },
 ];
 
+const FORMATS = [
+  { value: 'pdf', label: 'PDF' },
+  { value: 'docx', label: 'DOCX' },
+  { value: 'txt', label: 'TXT' },
+  { value: 'html', label: 'HTML' },
+];
+
+function Field({ label, optional, children }) {
+  return (
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
+      {children}
+    </div>
+  );
+}
+
 export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || "createDoc";
+  const op = config.operation || 'createDoc';
+  const currentOp = OPERATIONS.find((o) => o.value === op);
+
+  const text = (label, key, opts = {}) => (
+    <Field label={label} optional={opts.optional}>
+      <SmartVariableInput
+        value={config[key] || ''}
+        onChange={(val) => updateConfig(key, val)}
+        placeholder={opts.placeholder || ''}
+        multiline={opts.multiline}
+        nodeId={nodeId}
+      />
+    </Field>
+  );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[#4285F4]/10 border border-[#4285F4]/30 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#4285F4">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
-          </svg>
-        </div>
-        <div>
-          <div className="text-[13px] font-bold text-zinc-100">Google Docs</div>
-          <div className="text-[11px] text-zinc-500">Create, read, edit Google Docs</div>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgGoogleDocs} title="Google Docs" subtitle={currentOp?.label || 'Create, read, edit Google Docs'} />
 
-      <div>
-        <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Operation</label>
-        <div className="grid grid-cols-2 gap-1">
-          {OPERATIONS.map((o) => (
-            <button key={o.value} onClick={() => updateConfig("operation", o.value)}
-              className={`py-1.5 px-2 rounded-lg border text-[11px] font-bold transition-all text-left ${op === o.value ? "bg-[#4285F4]/10 border-[#4285F4]/40 text-[#4285F4]" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700"}`}>
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ConfigSelect
+        label="Operation"
+        value={op}
+        onChange={(val) => updateConfig('operation', val)}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
 
-      {["getDoc","appendText","replaceText","insertTable","exportDoc"].includes(op) && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Document ID</label>
-          <SmartVariableInput value={config.docId || ""} onChange={(v) => updateConfig("docId", v)} placeholder="{{ $json.docId }} or from Drive URL" />
-        </div>
-      )}
+      {['getDoc', 'appendText', 'replaceText', 'insertTable', 'exportDoc'].includes(op) &&
+        text('Document ID', 'docId', { placeholder: '{{ $json.docId }} or from Drive URL' })}
 
-      {op === "createDoc" && (
+      {op === 'createDoc' && (
         <>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Document Title</label>
-            <SmartVariableInput value={config.title || ""} onChange={(v) => updateConfig("title", v)} placeholder="Weekly Report — {{ $json.week }}" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Initial Content (optional)</label>
-            <SmartVariableInput value={config.content || ""} onChange={(v) => updateConfig("content", v)} placeholder="# Report\n\n{{ $json.summary }}" multiline />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Parent Folder ID (optional)</label>
-            <SmartVariableInput value={config.folderId || ""} onChange={(v) => updateConfig("folderId", v)} placeholder="Drive folder ID" />
-          </div>
+          {text('Document Title', 'title', { placeholder: 'Weekly Report — {{ $json.week }}' })}
+          {text('Initial Content', 'content', { optional: true, placeholder: '# Report\n\n{{ $json.summary }}', multiline: true })}
+          {text('Parent Folder ID', 'folderId', { optional: true, placeholder: 'Drive folder ID' })}
         </>
       )}
 
-      {op === "appendText" && (
+      {op === 'appendText' && (
         <>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Text to Append</label>
-            <SmartVariableInput value={config.text || ""} onChange={(v) => updateConfig("text", v)} placeholder="{{ $json.entry }}" multiline />
-          </div>
-          <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-            <p className="text-[12px] font-semibold text-zinc-300">Add timestamp prefix</p>
-            <button onClick={() => updateConfig("addTimestamp", !config.addTimestamp)}
-              className={`w-10 h-5 rounded-full border transition-all relative ${config.addTimestamp ? "bg-[#4285F4] border-blue-400" : "bg-zinc-700 border-zinc-600"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${config.addTimestamp ? "left-5" : "left-0.5"}`} />
-            </button>
-          </div>
+          {text('Text to Append', 'text', { placeholder: '{{ $json.entry }}', multiline: true })}
+          <ConfigToggleRow
+            label="Add timestamp prefix"
+            on={!!config.addTimestamp}
+            onChange={(v) => updateConfig('addTimestamp', v)}
+            accentColor={ACCENT}
+          />
         </>
       )}
 
-      {op === "replaceText" && (
+      {op === 'replaceText' && (
         <>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Find Text</label>
-            <SmartVariableInput value={config.find || ""} onChange={(v) => updateConfig("find", v)} placeholder="{{PLACEHOLDER}}" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Replace With</label>
-            <SmartVariableInput value={config.replace || ""} onChange={(v) => updateConfig("replace", v)} placeholder="{{ $json.value }}" />
-          </div>
-          <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-            <p className="text-[12px] font-semibold text-zinc-300">Replace all occurrences</p>
-            <button onClick={() => updateConfig("replaceAll", !config.replaceAll)}
-              className={`w-10 h-5 rounded-full border transition-all relative ${config.replaceAll !== false ? "bg-[#4285F4] border-blue-400" : "bg-zinc-700 border-zinc-600"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${config.replaceAll !== false ? "left-5" : "left-0.5"}`} />
-            </button>
-          </div>
+          {text('Find Text', 'find', { placeholder: '{{PLACEHOLDER}}' })}
+          {text('Replace With', 'replace', { placeholder: '{{ $json.value }}' })}
+          <ConfigToggleRow
+            label="Replace all occurrences"
+            on={config.replaceAll !== false}
+            onChange={(v) => updateConfig('replaceAll', v)}
+            accentColor={ACCENT}
+          />
         </>
       )}
 
-      {op === "exportDoc" && (
-        <div>
-          <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Export Format</label>
-          <div className="flex gap-1.5">
-            {["pdf","docx","txt","html"].map((f) => (
-              <button key={f} onClick={() => updateConfig("format", f)}
-                className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all uppercase ${(config.format||"pdf") === f ? "bg-[#4285F4]/10 border-[#4285F4]/40 text-[#4285F4]" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700"}`}>
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
+      {op === 'exportDoc' && (
+        <ConfigPills
+          label="Export Format"
+          value={config.format || 'pdf'}
+          onChange={(val) => updateConfig('format', val)}
+          options={FORMATS}
+          accentColor={ACCENT}
+        />
       )}
 
-      <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="blue" label="Google OAuth" placeholder="Select Google credential..." />
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="sky"
+        label="Google OAuth"
+        placeholder="Select Google credential..."
+      />
 
-      <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
-        Returns: <span className="text-zinc-300">documentId, title, body, revisionId</span>
-      </div>
-    </div>
+      <ConfigBanner>
+        Returns: <span className="text-neutral-300 ml-1">documentId, title, body, revisionId</span>
+      </ConfigBanner>
+    </ConfigSection>
   );
 }

@@ -1,526 +1,313 @@
+import imgShopify from './logo.svg';
 import {
   Package, Boxes, Tag, Layers, Warehouse, MapPin, ShoppingCart, Truck,
   RefreshCcw, Receipt, Users, User, FileText, Percent, Ticket, Hash,
-  Webhook, Store, Search, Plus, Pencil, Trash2, List, ShoppingBag,
-} from "lucide-react";
-import SmartVariableInput from "@/components/ui/SmartVariableInput";
-import CredentialPicker from "@/components/ui/CredentialPicker";
+  Webhook, Store, Search, Plus, Pencil, Trash2, List,
+} from 'lucide-react';
+import SmartVariableInput from '@/components/ui/SmartVariableInput';
+import CredentialPicker from '@/components/ui/CredentialPicker';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigToggleRow, ConfigBanner,
+} from '@/components/ui/ConfigKit';
 
-const ACCENT = "#95BF47";
+const ACCENT = '#4d7cff';
 
-const GROUPS = [
-  {
-    title: "Products",
-    ops: [
-      { value: "listProducts", label: "List Products", icon: List },
-      { value: "getProduct", label: "Get Product", icon: Package },
-      { value: "createProduct", label: "Create Product", icon: Plus },
-      { value: "updateProduct", label: "Update Product", icon: Pencil },
-      { value: "deleteProduct", label: "Delete Product", icon: Trash2 },
-      { value: "countProducts", label: "Count Products", icon: Hash },
-    ],
-  },
-  {
-    title: "Variants",
-    ops: [
-      { value: "listVariants", label: "List Variants", icon: Boxes },
-      { value: "createVariant", label: "Create Variant", icon: Plus },
-      { value: "updateVariant", label: "Update Variant", icon: Pencil },
-      { value: "deleteVariant", label: "Delete Variant", icon: Trash2 },
-    ],
-  },
-  {
-    title: "Collections",
-    ops: [
-      { value: "listCustomCollections", label: "Custom Collections", icon: Layers },
-      { value: "listSmartCollections", label: "Smart Collections", icon: Layers },
-      { value: "createCollection", label: "Create Collection", icon: Plus },
-      { value: "addProductToCollection", label: "Add To Collection", icon: Tag },
-    ],
-  },
-  {
-    title: "Inventory",
-    ops: [
-      { value: "getInventoryLevels", label: "Inventory Levels", icon: Warehouse },
-      { value: "setInventoryLevel", label: "Set Inventory", icon: Warehouse },
-      { value: "adjustInventoryLevel", label: "Adjust Inventory", icon: Warehouse },
-      { value: "listLocations", label: "List Locations", icon: MapPin },
-    ],
-  },
-  {
-    title: "Orders",
-    ops: [
-      { value: "listOrders", label: "List Orders", icon: List },
-      { value: "getOrder", label: "Get Order", icon: ShoppingCart },
-      { value: "createOrder", label: "Create Order", icon: Plus },
-      { value: "updateOrder", label: "Update Order", icon: Pencil },
-      { value: "cancelOrder", label: "Cancel Order", icon: Trash2 },
-      { value: "closeOrder", label: "Close Order", icon: Receipt },
-      { value: "countOrders", label: "Count Orders", icon: Hash },
-    ],
-  },
-  {
-    title: "Fulfillment & Refunds",
-    ops: [
-      { value: "listFulfillments", label: "List Fulfillments", icon: Truck },
-      { value: "createFulfillment", label: "Create Fulfillment", icon: Truck },
-      { value: "listTransactions", label: "List Transactions", icon: Receipt },
-      { value: "createRefund", label: "Create Refund", icon: RefreshCcw },
-    ],
-  },
-  {
-    title: "Customers",
-    ops: [
-      { value: "listCustomers", label: "List Customers", icon: Users },
-      { value: "getCustomer", label: "Get Customer", icon: User },
-      { value: "createCustomer", label: "Create Customer", icon: Plus },
-      { value: "updateCustomer", label: "Update Customer", icon: Pencil },
-      { value: "deleteCustomer", label: "Delete Customer", icon: Trash2 },
-      { value: "searchCustomers", label: "Search Customers", icon: Search },
-    ],
-  },
-  {
-    title: "Draft Orders",
-    ops: [
-      { value: "listDraftOrders", label: "List Draft Orders", icon: FileText },
-      { value: "createDraftOrder", label: "Create Draft Order", icon: Plus },
-      { value: "completeDraftOrder", label: "Complete Draft", icon: Receipt },
-    ],
-  },
-  {
-    title: "Discounts",
-    ops: [
-      { value: "listPriceRules", label: "List Price Rules", icon: Percent },
-      { value: "createPriceRule", label: "Create Price Rule", icon: Percent },
-      { value: "createDiscountCode", label: "Create Discount", icon: Ticket },
-    ],
-  },
-  {
-    title: "Metafields, Webhooks & Shop",
-    ops: [
-      { value: "listMetafields", label: "List Metafields", icon: Hash },
-      { value: "createMetafield", label: "Create Metafield", icon: Plus },
-      { value: "listWebhooks", label: "List Webhooks", icon: Webhook },
-      { value: "createWebhook", label: "Create Webhook", icon: Webhook },
-      { value: "deleteWebhook", label: "Delete Webhook", icon: Trash2 },
-      { value: "getShop", label: "Get Shop Info", icon: Store },
-    ],
-  },
+const OPERATIONS = [
+  { value: 'listProducts', label: 'List Products', icon: List },
+  { value: 'getProduct', label: 'Get Product', icon: Package },
+  { value: 'createProduct', label: 'Create Product', icon: Plus },
+  { value: 'updateProduct', label: 'Update Product', icon: Pencil },
+  { value: 'deleteProduct', label: 'Delete Product', icon: Trash2 },
+  { value: 'countProducts', label: 'Count Products', icon: Hash },
+  { value: 'listVariants', label: 'List Variants', icon: Boxes },
+  { value: 'createVariant', label: 'Create Variant', icon: Plus },
+  { value: 'updateVariant', label: 'Update Variant', icon: Pencil },
+  { value: 'deleteVariant', label: 'Delete Variant', icon: Trash2 },
+  { value: 'listCustomCollections', label: 'Custom Collections', icon: Layers },
+  { value: 'listSmartCollections', label: 'Smart Collections', icon: Layers },
+  { value: 'createCollection', label: 'Create Collection', icon: Plus },
+  { value: 'addProductToCollection', label: 'Add To Collection', icon: Tag },
+  { value: 'getInventoryLevels', label: 'Inventory Levels', icon: Warehouse },
+  { value: 'setInventoryLevel', label: 'Set Inventory', icon: Warehouse },
+  { value: 'adjustInventoryLevel', label: 'Adjust Inventory', icon: Warehouse },
+  { value: 'listLocations', label: 'List Locations', icon: MapPin },
+  { value: 'listOrders', label: 'List Orders', icon: List },
+  { value: 'getOrder', label: 'Get Order', icon: ShoppingCart },
+  { value: 'createOrder', label: 'Create Order', icon: Plus },
+  { value: 'updateOrder', label: 'Update Order', icon: Pencil },
+  { value: 'cancelOrder', label: 'Cancel Order', icon: Trash2 },
+  { value: 'closeOrder', label: 'Close Order', icon: Receipt },
+  { value: 'countOrders', label: 'Count Orders', icon: Hash },
+  { value: 'listFulfillments', label: 'List Fulfillments', icon: Truck },
+  { value: 'createFulfillment', label: 'Create Fulfillment', icon: Truck },
+  { value: 'listTransactions', label: 'List Transactions', icon: Receipt },
+  { value: 'createRefund', label: 'Create Refund', icon: RefreshCcw },
+  { value: 'listCustomers', label: 'List Customers', icon: Users },
+  { value: 'getCustomer', label: 'Get Customer', icon: User },
+  { value: 'createCustomer', label: 'Create Customer', icon: Plus },
+  { value: 'updateCustomer', label: 'Update Customer', icon: Pencil },
+  { value: 'deleteCustomer', label: 'Delete Customer', icon: Trash2 },
+  { value: 'searchCustomers', label: 'Search Customers', icon: Search },
+  { value: 'listDraftOrders', label: 'List Draft Orders', icon: FileText },
+  { value: 'createDraftOrder', label: 'Create Draft Order', icon: Plus },
+  { value: 'completeDraftOrder', label: 'Complete Draft', icon: Receipt },
+  { value: 'listPriceRules', label: 'List Price Rules', icon: Percent },
+  { value: 'createPriceRule', label: 'Create Price Rule', icon: Percent },
+  { value: 'createDiscountCode', label: 'Create Discount', icon: Ticket },
+  { value: 'listMetafields', label: 'List Metafields', icon: Hash },
+  { value: 'createMetafield', label: 'Create Metafield', icon: Plus },
+  { value: 'listWebhooks', label: 'List Webhooks', icon: Webhook },
+  { value: 'createWebhook', label: 'Create Webhook', icon: Webhook },
+  { value: 'deleteWebhook', label: 'Delete Webhook', icon: Trash2 },
+  { value: 'getShop', label: 'Get Shop Info', icon: Store },
 ];
 
-const lbl = "text-[10px] font-bold text-zinc-500 uppercase tracking-widest";
-const inputCls =
-  "w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#95BF47]/40";
+const LIST_OPS = [
+  'listProducts', 'listVariants', 'listCustomCollections', 'listSmartCollections',
+  'listOrders', 'listCustomers', 'listDraftOrders', 'listPriceRules', 'listMetafields',
+];
+
+function Field({ label, optional, hint, children }) {
+  return (
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
+      {children}
+      {hint && <p className="text-[10px] text-neutral-600 mt-1.5">{hint}</p>}
+    </div>
+  );
+}
 
 export default function ShopifyNode({ config = {}, updateConfig }) {
-  const op = config.operation || "listOrders";
+  const op = config.operation || 'listOrders';
+  const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const show = (...ops) => ops.includes(op);
 
-  const Field = ({ label, hint, children }) => (
-    <div className="flex flex-col gap-2">
-      <label className={lbl}>{label}</label>
-      {children}
-      {hint && <span className="text-[10px] text-zinc-600">{hint}</span>}
-    </div>
-  );
-
-  const Var = ({ k, placeholder, multiline, def }) => (
-    <SmartVariableInput
-      value={config[k] ?? def ?? ""}
-      onChange={set(k)}
-      placeholder={placeholder}
-      multiline={multiline}
-      className={inputCls}
-    />
-  );
-
-  const Pills = ({ k, items, def }) => (
-    <div className="grid grid-cols-3 gap-1.5">
-      {items.map((it) => {
-        const v = typeof it === "string" ? it : it.value;
-        const label = typeof it === "string" ? it : it.label;
-        const active = (config[k] ?? def) === v;
-        return (
-          <button
-            key={v}
-            onClick={() => updateConfig(k, v)}
-            className={`py-2 rounded-lg border text-[11px] font-bold capitalize transition-all ${
-              active
-                ? "text-[#95BF47] border-[#95BF47]/40 bg-[#95BF47]/10"
-                : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"
-            }`}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
+  const text = (label, key, opts = {}) => (
+    <Field label={label} optional={opts.optional} hint={opts.hint}>
+      <SmartVariableInput
+        value={config[key] ?? opts.def ?? ''}
+        onChange={set(key)}
+        placeholder={opts.placeholder || ''}
+        multiline={opts.multiline}
+      />
+    </Field>
   );
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <div className="flex items-center gap-3 p-4 bg-[#95BF47]/5 border border-[#95BF47]/20 rounded-xl">
-        <div className="w-8 h-8 rounded-lg bg-[#95BF47]/10 border border-[#95BF47]/25 flex items-center justify-center shrink-0">
-          <ShoppingBag className="w-4 h-4 text-[#95BF47]" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#95BF47]">Shopify</span>
-          <span className="text-[10px] text-zinc-500">Products, orders, inventory, customers & more</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader logoUrl={imgShopify} title="Shopify" subtitle={currentOp?.label || 'Products, orders, inventory, customers & more'} />
 
-      <Field label="Shop Domain" hint="Your store's myshopify.com domain">
-        <input
-          value={config.shop || ""}
-          onChange={(e) => updateConfig("shop", e.target.value)}
-          placeholder="mystore.myshopify.com"
-          className={inputCls}
+      {text('Shop Domain', 'shop', { placeholder: 'mystore.myshopify.com', hint: "Your store's myshopify.com domain" })}
+
+      <ConfigSelect
+        label="Operation"
+        value={op}
+        onChange={set('operation')}
+        options={OPERATIONS}
+        accentColor={ACCENT}
+      />
+
+      {show('getProduct', 'updateProduct', 'deleteProduct', 'listVariants', 'createVariant', 'addProductToCollection', 'listMetafields', 'createMetafield') &&
+        text('Product ID', 'productId', { placeholder: '{{n1.id}}' })}
+
+      {show('createProduct', 'updateProduct') && (
+        <>
+          {text('Title', 'title', { placeholder: 'Premium Widget' })}
+          {text('Description (HTML)', 'description', { placeholder: '<p>Best widget ever</p>', multiline: true })}
+          <div className="grid grid-cols-2 gap-2">
+            {text('Vendor', 'vendor', { placeholder: 'Acme' })}
+            {text('Product Type', 'productType', { placeholder: 'Widgets' })}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {text('Price', 'price', { placeholder: '29.99' })}
+            {text('Tags (comma-sep)', 'tags', { placeholder: 'sale, featured' })}
+          </div>
+          <ConfigPills
+            label="Status"
+            value={config.status ?? 'draft'}
+            onChange={set('status')}
+            options={[{ value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }, { value: 'archived', label: 'Archived' }]}
+            accentColor={ACCENT}
+          />
+        </>
+      )}
+
+      {show('updateVariant', 'deleteVariant') && text('Variant ID', 'variantId', { placeholder: '{{n1.variantId}}' })}
+
+      {show('createVariant', 'updateVariant') && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            {text('Option / Title', 'option', { placeholder: 'Large / Blue' })}
+            {text('Price', 'price', { placeholder: '29.99' })}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {text('SKU', 'sku', { placeholder: 'WIDGET-L-BLU' })}
+            {text('Barcode', 'barcode', { placeholder: '0123456789012' })}
+          </div>
+        </>
+      )}
+
+      {show('createCollection') && text('Collection Title', 'title', { placeholder: 'Summer Sale' })}
+      {show('addProductToCollection') && text('Collection ID', 'collectionId', { placeholder: '{{n1.collectionId}}' })}
+
+      {show('getInventoryLevels', 'setInventoryLevel', 'adjustInventoryLevel') && (
+        <>
+          {show('getInventoryLevels') && text('Inventory Item IDs (comma-sep)', 'inventoryItemIds', { placeholder: '123, 456' })}
+          {show('setInventoryLevel', 'adjustInventoryLevel') && text('Inventory Item ID', 'inventoryItemId', { placeholder: '{{n1.inventory_item_id}}' })}
+          {text('Location ID', 'locationId', { placeholder: '{{n1.location_id}}' })}
+          {show('setInventoryLevel') && text('Available Quantity', 'available', { placeholder: '100' })}
+          {show('adjustInventoryLevel') && text('Adjustment (+/-)', 'adjustment', { placeholder: '-5' })}
+        </>
+      )}
+
+      {show('getOrder', 'updateOrder', 'cancelOrder', 'closeOrder', 'listFulfillments', 'createFulfillment', 'listTransactions', 'createRefund') &&
+        text('Order ID', 'orderId', { placeholder: '{{n1.id}}' })}
+
+      {show('listOrders') && (
+        <>
+          <ConfigPills
+            label="Status Filter"
+            value={config.status ?? 'any'}
+            onChange={set('status')}
+            options={[{ value: 'any', label: 'Any' }, { value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' }]}
+            accentColor={ACCENT}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            {text('Financial Status', 'financialStatus', { placeholder: 'paid' })}
+            {text('Fulfillment Status', 'fulfillmentStatus', { placeholder: 'unfulfilled' })}
+          </div>
+        </>
+      )}
+
+      {show('createOrder', 'createDraftOrder') && (
+        <>
+          {text('Line Items (JSON array)', 'lineItems', { placeholder: '[{"variant_id":123,"quantity":1}]', multiline: true, hint: '[{"variant_id":123,"quantity":1}]' })}
+          {text('Customer Email', 'email', { placeholder: '{{n1.email}}' })}
+          {text('Note', 'note', { placeholder: 'Gift wrap requested' })}
+        </>
+      )}
+
+      {show('cancelOrder') && (
+        <ConfigPills
+          label="Cancel Reason"
+          value={config.reason ?? 'other'}
+          onChange={set('reason')}
+          options={['customer', 'inventory', 'fraud', 'declined', 'other']}
+          accentColor={ACCENT}
         />
-      </Field>
-
-      <div className="flex flex-col gap-3">
-        <span className={lbl}>Operation</span>
-        {GROUPS.map((group) => (
-          <div key={group.title} className="flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.title}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {group.ops.map((o) => {
-                const Icon = o.icon;
-                const active = op === o.value;
-                return (
-                  <button
-                    key={o.value}
-                    onClick={() => updateConfig("operation", o.value)}
-                    style={active ? { backgroundColor: `${ACCENT}1a`, borderColor: `${ACCENT}66`, color: ACCENT } : undefined}
-                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all ${
-                      active ? "" : "bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]"
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="text-[11px] font-semibold truncate">{o.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {show("getProduct", "updateProduct", "deleteProduct", "listVariants", "createVariant", "addProductToCollection", "listMetafields", "createMetafield") && (
-        <Field label="Product ID">
-          <Var k="productId" placeholder="{{n1.id}}" />
-        </Field>
       )}
 
-      {show("createProduct", "updateProduct") && (
+      {show('createFulfillment') && (
         <>
-          <Field label="Title">
-            <Var k="title" placeholder="Premium Widget" />
-          </Field>
-          <Field label="Description (HTML)">
-            <Var k="description" placeholder="<p>Best widget ever</p>" multiline />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Vendor">
-              <Var k="vendor" placeholder="Acme" />
-            </Field>
-            <Field label="Product Type">
-              <Var k="productType" placeholder="Widgets" />
-            </Field>
+          {text('Fulfillment Order ID', 'fulfillmentOrderId', { placeholder: '{{n1.fulfillment_order_id}}' })}
+          <div className="grid grid-cols-2 gap-2">
+            {text('Tracking Number', 'trackingNumber', { placeholder: '1Z999AA1...' })}
+            {text('Tracking Company', 'trackingCompany', { placeholder: 'UPS' })}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Price">
-              <Var k="price" placeholder="29.99" />
-            </Field>
-            <Field label="Tags (comma-sep)">
-              <Var k="tags" placeholder="sale, featured" />
-            </Field>
-          </div>
-          <Field label="Status">
-            <Pills k="status" items={["active", "draft", "archived"]} def="draft" />
-          </Field>
+          {text('Tracking URL', 'trackingUrl', { placeholder: 'https://track...' })}
+          <ConfigToggleRow label="Notify customer" on={!!config.notifyCustomer} onChange={set('notifyCustomer')} accentColor={ACCENT} />
         </>
       )}
 
-      {show("updateVariant", "deleteVariant") && (
-        <Field label="Variant ID">
-          <Var k="variantId" placeholder="{{n1.variantId}}" />
-        </Field>
+      {show('createRefund') && (
+        <>
+          {text('Amount', 'amount', { placeholder: '19.99' })}
+          <ConfigToggleRow label="Notify customer" on={config.notifyCustomer !== false} onChange={set('notifyCustomer')} accentColor={ACCENT} />
+        </>
       )}
 
-      {show("createVariant", "updateVariant") && (
+      {show('getCustomer', 'updateCustomer', 'deleteCustomer') && text('Customer ID', 'customerId', { placeholder: '{{n1.id}}' })}
+
+      {show('createCustomer', 'updateCustomer') && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Option / Title">
-              <Var k="option" placeholder="Large / Blue" />
-            </Field>
-            <Field label="Price">
-              <Var k="price" placeholder="29.99" />
-            </Field>
+          <div className="grid grid-cols-2 gap-2">
+            {text('First Name', 'firstName', { placeholder: 'Jane' })}
+            {text('Last Name', 'lastName', { placeholder: 'Doe' })}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="SKU">
-              <Var k="sku" placeholder="WIDGET-L-BLU" />
-            </Field>
-            <Field label="Barcode">
-              <Var k="barcode" placeholder="0123456789012" />
-            </Field>
+          {text('Email', 'email', { placeholder: '{{n1.email}}' })}
+          <div className="grid grid-cols-2 gap-2">
+            {text('Phone', 'phone', { placeholder: '+15551234567' })}
+            {text('Tags (comma-sep)', 'tags', { placeholder: 'vip, wholesale' })}
           </div>
         </>
       )}
 
-      {show("createCollection") && (
-        <Field label="Collection Title">
-          <Var k="title" placeholder="Summer Sale" />
-        </Field>
-      )}
+      {show('searchCustomers') && text('Search Query', 'query', { placeholder: 'email:jane@example.com', hint: 'e.g. email:jane@x.com or country:US' })}
 
-      {show("addProductToCollection") && (
-        <Field label="Collection ID">
-          <Var k="collectionId" placeholder="{{n1.collectionId}}" />
-        </Field>
-      )}
+      {show('completeDraftOrder') && text('Draft Order ID', 'draftOrderId', { placeholder: '{{n1.id}}' })}
 
-      {show("getInventoryLevels", "setInventoryLevel", "adjustInventoryLevel") && (
+      {show('createPriceRule', 'createDiscountCode') && (
         <>
-          {show("getInventoryLevels") && (
-            <Field label="Inventory Item IDs (comma-sep)">
-              <Var k="inventoryItemIds" placeholder="123, 456" />
-            </Field>
-          )}
-          {show("setInventoryLevel", "adjustInventoryLevel") && (
-            <Field label="Inventory Item ID">
-              <Var k="inventoryItemId" placeholder="{{n1.inventory_item_id}}" />
-            </Field>
-          )}
-          <Field label="Location ID">
-            <Var k="locationId" placeholder="{{n1.location_id}}" />
-          </Field>
-          {show("setInventoryLevel") && (
-            <Field label="Available Quantity">
-              <Var k="available" placeholder="100" />
-            </Field>
-          )}
-          {show("adjustInventoryLevel") && (
-            <Field label="Adjustment (+/-)">
-              <Var k="adjustment" placeholder="-5" />
-            </Field>
-          )}
-        </>
-      )}
-
-      {show("getOrder", "updateOrder", "cancelOrder", "closeOrder", "listFulfillments", "createFulfillment", "listTransactions", "createRefund") && (
-        <Field label="Order ID">
-          <Var k="orderId" placeholder="{{n1.id}}" />
-        </Field>
-      )}
-
-      {show("listOrders") && (
-        <>
-          <Field label="Status Filter">
-            <Pills k="status" items={["any", "open", "closed"]} def="any" />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Financial Status">
-              <Var k="financialStatus" placeholder="paid" />
-            </Field>
-            <Field label="Fulfillment Status">
-              <Var k="fulfillmentStatus" placeholder="unfulfilled" />
-            </Field>
-          </div>
-        </>
-      )}
-
-      {show("createOrder", "createDraftOrder") && (
-        <>
-          <Field label="Line Items (JSON array)" hint='[{"variant_id":123,"quantity":1}]'>
-            <Var k="lineItems" placeholder='[{"variant_id":123,"quantity":1}]' multiline />
-          </Field>
-          <Field label="Customer Email">
-            <Var k="email" placeholder="{{n1.email}}" />
-          </Field>
-          <Field label="Note">
-            <Var k="note" placeholder="Gift wrap requested" />
-          </Field>
-        </>
-      )}
-
-      {show("cancelOrder") && (
-        <Field label="Cancel Reason">
-          <Pills k="reason" items={["customer", "inventory", "fraud", "declined", "other"]} def="other" />
-        </Field>
-      )}
-
-      {show("createFulfillment") && (
-        <>
-          <Field label="Fulfillment Order ID">
-            <Var k="fulfillmentOrderId" placeholder="{{n1.fulfillment_order_id}}" />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Tracking Number">
-              <Var k="trackingNumber" placeholder="1Z999AA1..." />
-            </Field>
-            <Field label="Tracking Company">
-              <Var k="trackingCompany" placeholder="UPS" />
-            </Field>
-          </div>
-          <Field label="Tracking URL">
-            <Var k="trackingUrl" placeholder="https://track..." />
-          </Field>
-          <label className="flex items-center gap-2 text-xs text-zinc-400">
-            <input type="checkbox" checked={!!config.notifyCustomer} onChange={(e) => updateConfig("notifyCustomer", e.target.checked)} />
-            Notify customer
-          </label>
-        </>
-      )}
-
-      {show("createRefund") && (
-        <>
-          <Field label="Amount">
-            <Var k="amount" placeholder="19.99" />
-          </Field>
-          <label className="flex items-center gap-2 text-xs text-zinc-400">
-            <input type="checkbox" checked={config.notifyCustomer !== false} onChange={(e) => updateConfig("notifyCustomer", e.target.checked)} />
-            Notify customer
-          </label>
-        </>
-      )}
-
-      {show("getCustomer", "updateCustomer", "deleteCustomer") && (
-        <Field label="Customer ID">
-          <Var k="customerId" placeholder="{{n1.id}}" />
-        </Field>
-      )}
-
-      {show("createCustomer", "updateCustomer") && (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="First Name">
-              <Var k="firstName" placeholder="Jane" />
-            </Field>
-            <Field label="Last Name">
-              <Var k="lastName" placeholder="Doe" />
-            </Field>
-          </div>
-          <Field label="Email">
-            <Var k="email" placeholder="{{n1.email}}" />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Phone">
-              <Var k="phone" placeholder="+15551234567" />
-            </Field>
-            <Field label="Tags (comma-sep)">
-              <Var k="tags" placeholder="vip, wholesale" />
-            </Field>
-          </div>
-        </>
-      )}
-
-      {show("searchCustomers") && (
-        <Field label="Search Query" hint="e.g. email:jane@x.com or country:US">
-          <Var k="query" placeholder="email:jane@example.com" />
-        </Field>
-      )}
-
-      {show("completeDraftOrder") && (
-        <Field label="Draft Order ID">
-          <Var k="draftOrderId" placeholder="{{n1.id}}" />
-        </Field>
-      )}
-
-      {show("createPriceRule", "createDiscountCode") && (
-        <>
-          {show("createDiscountCode") && (
-            <Field label="Price Rule ID">
-              <Var k="priceRuleId" placeholder="{{n1.id}}" />
-            </Field>
-          )}
-          <Field label="Title / Code">
-            <Var k="title" placeholder="SUMMER20" />
-          </Field>
-          {show("createDiscountCode") && (
-            <Field label="Discount Code">
-              <Var k="code" placeholder="SUMMER20" />
-            </Field>
-          )}
-          {show("createPriceRule") && (
+          {show('createDiscountCode') && text('Price Rule ID', 'priceRuleId', { placeholder: '{{n1.id}}' })}
+          {text('Title / Code', 'title', { placeholder: 'SUMMER20' })}
+          {show('createDiscountCode') && text('Discount Code', 'code', { placeholder: 'SUMMER20' })}
+          {show('createPriceRule') && (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Value Type">
-                  <Pills k="valueType" items={["percentage", "fixed_amount"]} def="percentage" />
-                </Field>
-                <Field label="Value">
-                  <Var k="value" placeholder="-20.0" />
-                </Field>
+              <div className="grid grid-cols-2 gap-2">
+                <ConfigPills
+                  label="Value Type"
+                  value={config.valueType ?? 'percentage'}
+                  onChange={set('valueType')}
+                  options={[{ value: 'percentage', label: 'Percentage' }, { value: 'fixed_amount', label: 'Fixed' }]}
+                  accentColor={ACCENT}
+                />
+                {text('Value', 'value', { placeholder: '-20.0' })}
               </div>
-              <Field label="Starts At (ISO)">
-                <Var k="startsAt" placeholder="2026-07-01T00:00:00Z" />
-              </Field>
+              {text('Starts At (ISO)', 'startsAt', { placeholder: '2026-07-01T00:00:00Z' })}
             </>
           )}
         </>
       )}
 
-      {show("createMetafield", "listMetafields") && (
-        <Field label="Owner Resource">
-          <Pills k="ownerResource" items={["product", "order", "customer"]} def="product" />
-        </Field>
+      {show('createMetafield', 'listMetafields') && (
+        <ConfigPills
+          label="Owner Resource"
+          value={config.ownerResource ?? 'product'}
+          onChange={set('ownerResource')}
+          options={['product', 'order', 'customer']}
+          accentColor={ACCENT}
+        />
       )}
 
-      {show("createMetafield") && (
+      {show('createMetafield') && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Namespace">
-              <Var k="namespace" placeholder="custom" />
-            </Field>
-            <Field label="Key">
-              <Var k="key" placeholder="warranty" />
-            </Field>
+          <div className="grid grid-cols-2 gap-2">
+            {text('Namespace', 'namespace', { placeholder: 'custom' })}
+            {text('Key', 'key', { placeholder: 'warranty' })}
           </div>
-          <Field label="Value">
-            <Var k="value" placeholder="2 years" />
-          </Field>
-          <Field label="Type">
-            <Var k="metafieldType" placeholder="single_line_text_field" />
-          </Field>
+          {text('Value', 'value', { placeholder: '2 years' })}
+          {text('Type', 'metafieldType', { placeholder: 'single_line_text_field' })}
         </>
       )}
 
-      {show("createWebhook") && (
+      {show('createWebhook') && (
         <>
-          <Field label="Topic" hint="e.g. orders/create, products/update">
-            <Var k="topic" placeholder="orders/create" />
-          </Field>
-          <Field label="Callback URL" hint="Must be a public https:// endpoint">
-            <Var k="address" placeholder="https://your-app.com/webhooks/shopify" />
-          </Field>
+          {text('Topic', 'topic', { placeholder: 'orders/create', hint: 'e.g. orders/create, products/update' })}
+          {text('Callback URL', 'address', { placeholder: 'https://your-app.com/webhooks/shopify', hint: 'Must be a public https:// endpoint' })}
         </>
       )}
 
-      {show("deleteWebhook") && (
-        <Field label="Webhook ID">
-          <Var k="webhookId" placeholder="{{n1.id}}" />
-        </Field>
-      )}
+      {show('deleteWebhook') && text('Webhook ID', 'webhookId', { placeholder: '{{n1.id}}' })}
 
-      {show(
-        "listProducts", "listVariants", "listCustomCollections", "listSmartCollections",
-        "listOrders", "listCustomers", "listDraftOrders", "listPriceRules", "listMetafields",
-      ) && (
-        <Field label="Limit" hint="Max 250 per page">
-          <Var k="limit" placeholder="50" def="50" />
-        </Field>
-      )}
+      {LIST_OPS.includes(op) && text('Limit', 'limit', { placeholder: '50', def: '50', hint: 'Max 250 per page' })}
 
       <CredentialPicker
         provider="shopify"
-        value={config.credentialId || ""}
-        onChange={set("credentialId")}
-        accentColor={ACCENT}
+        value={config.credentialId || ''}
+        onChange={set('credentialId')}
+        accentColor="zinc"
         label="Shopify Admin API Token"
         placeholder="Select Shopify credential..."
       />
-    </div>
+
+      <ConfigBanner>
+        Returns: <span className="text-neutral-300 ml-1">products[ ], orders[ ], customers[ ], id, count</span>
+      </ConfigBanner>
+    </ConfigSection>
   );
 }
