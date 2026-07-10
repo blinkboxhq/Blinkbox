@@ -111,6 +111,7 @@ import emailParser     from "./emailParser.node.js";
 import vectorMemory    from "./vectorMemory.node.js";
 import ocr             from "./ocr.node.js";
 import urlParser       from "./urlParser.node.js";
+import jsonTransform   from "./jsonTransform.node.js";
 import translation     from "./translation.node.js";
 import speechToText    from "./speechToText.node.js";
 import textToSpeech    from "./textToSpeech.node.js";
@@ -337,6 +338,7 @@ const rawNodeRegistry = {
   vector_memory:     vectorMemory,
   ocr:               ocr,
   url_parser:        urlParser,
+  json_transform:    jsonTransform,
   translation:       translation,
   speech_to_text:    speechToText,
   text_to_speech:    textToSpeech,

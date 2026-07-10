@@ -135,6 +135,7 @@ import {
   Network,
   Wrench,
   Monitor,
+  Braces,
 } from "lucide-react";
 
 // Local asset icons
@@ -381,6 +382,7 @@ import HttpMonitorNode from "@nodes/http_monitor/ConfigPanel.jsx";
 import TextFormatNode from "@nodes/text_format/ConfigPanel.jsx";
 import RegexMatchNode from "@nodes/regex_match/ConfigPanel.jsx";
 import UrlParserNode from "@nodes/url_parser/ConfigPanel.jsx";
+import JsonTransformNode from "@nodes/json_transform/ConfigPanel.jsx";
 import MathExpressionNode from "@nodes/math_expression/ConfigPanel.jsx";
 import ConditionNode from "@nodes/condition/ConfigPanel.jsx";
 import RetryNode from "@nodes/retry/ConfigPanel.jsx";
@@ -1886,6 +1888,7 @@ export const NodeRegistry = {
   text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "data", description: "Trim, truncate, slugify, case-convert and pad strings" },
   regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "data", description: "Test, capture and replace with regular expressions" },
   url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "data", description: "Parse URLs into protocol, host, path, query and hash" },
+  json_transform:    { label: "JSON Transform",      icon: Braces,         colorClass: "text-emerald-400",accentColor: "52,211,153",  ConfigPanel: JsonTransformNode,    category: "data", description: "Parse, stringify, or extract values from JSON without code" },
   math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "data", description: "Evaluate math expressions, formulas and unit conversions" },
 
   // Research
