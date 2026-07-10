@@ -1,51 +1,123 @@
 /**
  * FILTER ARRAY NODE
- * Filters an array by a condition on each item's field.
+ * Keeps only the items in an array that match a condition on a per-item field.
  *
  * Config:
- *   arrayPath   — dot-path to the array in input (blank = use input directly)
- *   field       — dot-path to the field within each item to test
- *   operator    — equals | notEquals | contains | notContains | gt | gte | lt | lte |
- *                 startsWith | endsWith | isEmpty | isNotEmpty | exists
+ *   arrayPath   — dot-path to the array in input (blank = use input directly).
+ *                 Supports bracket indexes: results.data[0].rows
+ *   field       — dot-path to the field within each item to test (blank = test the item itself)
+ *   operator    — equals | notEquals | contains | notContains | startsWith | endsWith |
+ *                 gt | gte | lt | lte | isEmpty | isNotEmpty | exists | notExists
  *   value       — comparison value (string / number / boolean)
  *   outputKey   — key under which to return the filtered array (default: "items")
+ *
+ * Returns: { [outputKey]: [...], filteredCount, totalCount }
  */
 
+const NEEDS_VALUE = new Set([
+  "equals", "notEquals", "contains", "notContains",
+  "startsWith", "endsWith", "gt", "gte", "lt", "lte",
+]);
+
 function getPath(obj, path) {
+  if (obj == null) return undefined;
   if (!path) return obj;
-  return path.split(".").reduce((acc, k) => acc?.[k], obj);
+  const parts = String(path)
+    .replace(/\[(\w+)\]/g, ".$1")
+    .split(".")
+    .filter(Boolean);
+  let acc = obj;
+  for (const key of parts) {
+    if (acc == null) return undefined;
+    acc = acc[key];
+  }
+  return acc;
+}
+
+function isEmptyVal(v) {
+  if (v == null) return true;
+  if (typeof v === "string") return v.trim() === "";
+  if (Array.isArray(v)) return v.length === 0;
+  if (typeof v === "object") return Object.keys(v).length === 0;
+  return false;
+}
+
+function toNumber(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  if (v == null) return NaN;
+  return Number(String(v).trim());
+}
+
+function looseEquals(actual, value) {
+  if (actual === value) return true;
+  if (actual == null || value == null) return actual == value;
+  const an = toNumber(actual);
+  const vn = toNumber(value);
+  if (!Number.isNaN(an) && !Number.isNaN(vn)) return an === vn;
+  const norm = (x) => String(x).trim().toLowerCase();
+  return norm(actual) === norm(value);
 }
 
 function test(item, field, operator, value) {
   const actual = getPath(item, field);
+  const aStr = actual == null ? "" : String(actual);
+  const vStr = value == null ? "" : String(value);
+
   switch (operator) {
-    case "equals":        return String(actual) === String(value);
-    case "notEquals":     return String(actual) !== String(value);
-    case "contains":      return String(actual ?? "").includes(String(value));
-    case "notContains":   return !String(actual ?? "").includes(String(value));
-    case "startsWith":    return String(actual ?? "").startsWith(String(value));
-    case "endsWith":      return String(actual ?? "").endsWith(String(value));
-    case "gt":            return Number(actual) > Number(value);
-    case "gte":           return Number(actual) >= Number(value);
-    case "lt":            return Number(actual) < Number(value);
-    case "lte":           return Number(actual) <= Number(value);
-    case "isEmpty":       return actual == null || actual === "" || (Array.isArray(actual) && actual.length === 0);
-    case "isNotEmpty":    return actual != null && actual !== "" && !(Array.isArray(actual) && actual.length === 0);
-    case "exists":        return actual !== undefined && actual !== null;
-    case "notExists":     return actual === undefined || actual === null;
-    default:              return true;
+    case "equals":       return looseEquals(actual, value);
+    case "notEquals":    return !looseEquals(actual, value);
+    case "contains":     return aStr.toLowerCase().includes(vStr.toLowerCase());
+    case "notContains":  return !aStr.toLowerCase().includes(vStr.toLowerCase());
+    case "startsWith":   return aStr.toLowerCase().startsWith(vStr.toLowerCase());
+    case "endsWith":     return aStr.toLowerCase().endsWith(vStr.toLowerCase());
+    case "gt":           return toNumber(actual) > toNumber(value);
+    case "gte":          return toNumber(actual) >= toNumber(value);
+    case "lt":           return toNumber(actual) < toNumber(value);
+    case "lte":          return toNumber(actual) <= toNumber(value);
+    case "isEmpty":      return isEmptyVal(actual);
+    case "isNotEmpty":   return !isEmptyVal(actual);
+    case "exists":       return actual !== undefined && actual !== null;
+    case "notExists":    return actual === undefined || actual === null;
+    default:             return true;
   }
 }
 
 export default {
-  async run(config, input) {
-    const { arrayPath, field = "", operator = "exists", value, outputKey = "items" } = config;
+  async run(config = {}, input) {
+    const {
+      arrayPath = "",
+      field = "",
+      operator = "equals",
+      value,
+      outputKey = "items",
+    } = config;
+
+    if (NEEDS_VALUE.has(operator) && (value === undefined || value === "")) {
+      throw new Error(`[filterArray] operator "${operator}" requires a value to compare against.`);
+    }
 
     const src = arrayPath ? getPath(input, arrayPath) : input;
+
+    if (src == null) {
+      throw new Error(`[filterArray] no array found at path "${arrayPath || "(input)"}".`);
+    }
+
     const arr = Array.isArray(src) ? src : [src];
+    const key = String(outputKey || "items").trim() || "items";
 
-    const filtered = arr.filter((item) => test(item, field, operator, value));
+    const filtered = arr.filter((item) => {
+      try {
+        return test(item, field, operator, value);
+      } catch {
+        return false;
+      }
+    });
 
-    return { [outputKey]: filtered, count: filtered.length, total: arr.length };
+    return {
+      [key]: filtered,
+      filteredCount: filtered.length,
+      totalCount: arr.length,
+    };
   },
 };

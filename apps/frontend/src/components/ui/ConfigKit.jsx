@@ -213,8 +213,8 @@ export function ConfigHeader({ icon: Icon, logoUrl, imgFilter, title, subtitle, 
           <img src={logoUrl} alt="" className="w-[26px] h-[26px] object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
         </div>
       ) : Icon && (
-        <div className="w-9 h-9 rounded-md bg-[#262626] border border-[#3b3b3b] flex items-center justify-center shrink-0 text-white">
-          <Icon className="w-5 h-5" />
+        <div className="w-9 h-9 flex items-center justify-center shrink-0 text-white">
+          <Icon className="w-[26px] h-[26px]" strokeWidth={1.75} />
         </div>
       )}
       <div className="flex flex-col min-w-0">

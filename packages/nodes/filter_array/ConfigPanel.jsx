@@ -1,32 +1,32 @@
 import { Filter } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigPills, ConfigBanner,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigBanner,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#f472b6';
 
-const COMPARE_OPS = [
-  { value: 'equals',      label: '=' },
-  { value: 'notEquals',   label: '≠' },
-  { value: 'contains',    label: 'contains' },
-  { value: 'notContains', label: '!contains' },
-  { value: 'startsWith',  label: 'starts' },
-  { value: 'endsWith',    label: 'ends' },
-  { value: 'gt',          label: '>' },
-  { value: 'gte',         label: '≥' },
-  { value: 'lt',          label: '<' },
-  { value: 'lte',         label: '≤' },
+const OPERATORS = [
+  { value: 'equals',      label: 'Equals' },
+  { value: 'notEquals',   label: 'Not equals' },
+  { value: 'contains',    label: 'Contains' },
+  { value: 'notContains', label: 'Does not contain' },
+  { value: 'startsWith',  label: 'Starts with' },
+  { value: 'endsWith',    label: 'Ends with' },
+  { value: 'gt',          label: 'Greater than' },
+  { value: 'gte',         label: 'Greater or equal' },
+  { value: 'lt',          label: 'Less than' },
+  { value: 'lte',         label: 'Less or equal' },
+  { value: 'isEmpty',     label: 'Is empty' },
+  { value: 'isNotEmpty',  label: 'Is not empty' },
+  { value: 'exists',      label: 'Exists' },
+  { value: 'notExists',   label: 'Does not exist' },
 ];
 
-const EXISTENCE_OPS = [
-  { value: 'isEmpty',    label: 'empty' },
-  { value: 'isNotEmpty', label: '!empty' },
-  { value: 'exists',     label: 'exists' },
-  { value: 'notExists',  label: '!exists' },
-];
-
-const NEEDS_VALUE = new Set(COMPARE_OPS.map((o) => o.value));
+const NEEDS_VALUE = new Set([
+  'equals', 'notEquals', 'contains', 'notContains',
+  'startsWith', 'endsWith', 'gt', 'gte', 'lt', 'lte',
+]);
 
 function Field({ label, optional, hint, children }) {
   return (
@@ -76,19 +76,11 @@ export default function FilterArrayNode({ config = {}, updateConfig, nodeId }) {
         hint: 'Dot-path within each item, e.g. user.role',
       })}
 
-      <ConfigPills
-        label="Comparison"
+      <ConfigSelect
+        label="Condition"
         value={operator}
         onChange={(val) => updateConfig('operator', val)}
-        options={COMPARE_OPS}
-        accentColor={ACCENT}
-      />
-
-      <ConfigPills
-        label="Existence"
-        value={operator}
-        onChange={(val) => updateConfig('operator', val)}
-        options={EXISTENCE_OPS}
+        options={OPERATORS}
         accentColor={ACCENT}
       />
 
