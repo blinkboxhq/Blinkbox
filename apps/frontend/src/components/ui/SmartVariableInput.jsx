@@ -447,10 +447,10 @@ export default function SmartVariableInput({
             data-placeholder={placeholder}
             className={[
               "w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 pr-9",
-              "text-[12.5px] text-neutral-100 font-mono focus:outline-none focus:border-[#545454]",
+              "text-xs text-white font-mono focus:outline-none focus:border-[#545454]",
               "transition-colors empty:before:content-[attr(data-placeholder)]",
-              "empty:before:text-neutral-600 empty:before:pointer-events-none",
-              "min-h-[38px]",
+              "empty:before:text-neutral-700 empty:before:pointer-events-none",
+              "min-h-[38px] resize-none",
               multiline ? "leading-relaxed" : "whitespace-nowrap overflow-x-auto",
               isDragOver ? "ring-2 ring-violet-500/40 bg-violet-500/5" : "",
             ].join(" ")}
