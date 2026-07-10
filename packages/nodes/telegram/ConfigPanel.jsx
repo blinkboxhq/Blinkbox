@@ -89,6 +89,10 @@ function Field({ label, optional, children }) {
 
 export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   const operation = resolveOperation(config);
+  const currentOp = OPERATIONS.find((o) => o.value === operation);
+  const CurrentIcon = currentOp?.icon || Send;
+  const [showPicker, setShowPicker] = useState(false);
+  const selectOp = (val) => { updateConfig('operation', val); setShowPicker(false); };
 
   // Persist the slug the backend reads: when the node arrives from the action
   // picker with only selectedAction, write the resolved operation once so the
