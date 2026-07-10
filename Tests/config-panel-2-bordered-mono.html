@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Config Panel · Concept 2 — Bordered Mono</title>
+<style>
+  :root{
+    --s0:#0f0f0f; --s1:#1b1b1b; --s2:#262626; --s3:#303030;
+    --bsub:#2b2b2b; --b:#3b3b3b; --bstr:#545454;
+    --hi:#fafafa; --mid:#b6b6b6; --lo:#8c8c8c; --dim:#6d6d6d;
+    --acc:#6f97e8; --acc-soft:rgba(111,151,232,.14); --acc-hot:#a9c0ef; --acc-ring:rgba(111,151,232,.40);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+    background:#0a0a0a; color:var(--mid); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:40px 20px;
+    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.025) 1px, transparent 0);
+    background-size:22px 22px;
+  }
+  .panel{
+    width:380px; background:var(--s1); border:1px solid var(--bsub); border-radius:4px; overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.9);
+  }
+  .head{display:flex; align-items:center; gap:11px; padding:16px; border-bottom:1px solid var(--bsub); background:var(--s0)}
+  .head .ic{width:34px; height:34px; border:1px solid var(--b); border-radius:4px; display:grid; place-items:center; color:var(--acc-hot); flex:none; background:var(--s1)}
+  .head h1{font-size:13px; font-weight:600; color:var(--hi); letter-spacing:.02em}
+  .head p{font-size:10px; color:var(--dim); margin-top:2px; letter-spacing:.02em}
+  .body{display:flex; flex-direction:column}
+  .field{padding:16px; border-bottom:1px solid var(--bsub); display:flex; flex-direction:column; gap:9px; position:relative}
+  .field:last-child{border-bottom:none}
+  label.k{font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); display:flex; align-items:center; gap:7px}
+  label.k::before{content:""; width:3px; height:3px; background:var(--acc); border-radius:50%}
+
+  /* glow surface — sharp/bordered variant */
+  .glow{position:relative; --gx:-200px; --gy:-200px; --gi:0}
+  .glow::before{
+    content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none;
+    opacity:var(--gi); transition:opacity .12s linear;
+    background:radial-gradient(140px circle at var(--gx) var(--gy), var(--acc-hot), rgba(169,192,239,.35) 45%, transparent 70%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+  }
+
+  .signin{
+    width:100%; display:flex; align-items:center; gap:10px;
+    background:transparent; border:1px solid var(--b); border-radius:4px;
+    padding:11px 13px; cursor:pointer; color:var(--hi); font-size:12px; font-weight:600; font-family:inherit;
+    transition:border-color .15s, background .15s;
+  }
+  .signin:hover{border-color:var(--bstr); background:rgba(255,255,255,.02)}
+  .signin .g{width:20px; height:20px; flex:none}
+  .signin .arrow{margin-left:auto; color:var(--dim)}
+  .manual{font-size:10px; color:var(--lo); cursor:pointer; align-self:flex-start; border-bottom:1px dashed var(--b); padding-bottom:1px}
+  .manual:hover{color:var(--mid)}
+
+  .control,.inp{
+    width:100%; background:var(--s0); border:1px solid var(--b); border-radius:4px;
+    padding:11px 13px; font-size:12px; color:var(--hi); font-family:inherit; outline:none;
+  }
+  .control{display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer}
+  .control .chev{width:13px; height:13px; color:var(--dim)}
+  .inp::placeholder{color:var(--dim)}
+  .hint{font-size:9px; color:var(--dim); letter-spacing:.03em}
+
+  .menu{
+    position:absolute; left:16px; right:16px; top:calc(100% - 8px); z-index:30;
+    background:var(--s2); border:1px solid var(--b); border-radius:4px;
+    box-shadow:0 20px 50px -16px rgba(0,0,0,.85); padding:4px; display:none;
+  }
+  .menu.open{display:block}
+  .opt{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:3px; font-size:12px; color:var(--mid); cursor:pointer; font-family:inherit}
+  .opt:hover{background:rgba(255,255,255,.04)}
+  .opt.on{color:var(--hi); background:rgba(111,151,232,.08)}
+  .opt .idx{font-size:9px; color:var(--dim); width:14px}
+  .opt.on .idx{color:var(--acc-hot)}
+  .opt .tick{margin-left:auto; color:var(--acc-hot); opacity:0}
+  .opt.on .tick{opacity:1}
+
+  /* repeatable add rows */
+  .rows{display:flex; flex-direction:column; gap:7px}
+  .row{display:flex; align-items:center; gap:7px}
+  .row .inp{flex:1}
+  .row .rm{width:30px; height:36px; flex:none; border:1px solid var(--b); border-radius:4px; background:var(--s0); color:var(--dim); display:grid; place-items:center; cursor:pointer}
+  .row .rm:hover{color:#f87171; border-color:#7f1d1d}
+  .add{
+    display:flex; align-items:center; gap:8px; padding:9px 12px; border:1px dashed var(--b); border-radius:4px;
+    background:transparent; color:var(--lo); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; letter-spacing:.04em;
+  }
+  .add:hover{border-color:var(--acc-ring); color:var(--acc-hot)}
+
+  .tag{position:absolute; top:14px; right:16px; font-size:8px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:var(--dim)}
+</style>
+</head>
+<body>
+  <span class="tag">Concept 2 · Bordered Mono</span>
+  <div class="panel">
+    <div class="head">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zm4.5-4.772H7.91V9.68h7.91V7.773zm0 9.545H7.91v1.91h7.91v-1.91zm0-4.773H12.41v1.91h3.41v-1.91zM6 3v18l1.5 1.5 1.5-1.5V3L7.5 1.5 6 3zM18 3v18l1.5 1.5 1.5-1.5V3L19.5 1.5 18 3z"/></svg>
+      </div>
+      <div><h1>GOOGLE_SHEETS</h1><p>read &amp; write spreadsheet data</p></div>
+    </div>
+
+    <div class="body">
+      <!-- credential -->
+      <div class="field">
+        <label class="k">Credential</label>
+        <button class="signin glow">
+          <img class="g" src="../apps/frontend/src/assets/credentials/google-color.svg" alt="" />
+          Sign in with Google
+          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <span class="manual">or setup manually →</span>
+      </div>
+
+      <!-- operation -->
+      <div class="field">
+        <label class="k">Operation</label>
+        <div class="control glow" onclick="this.parentNode.querySelector('.menu').classList.toggle('open')">
+          <span>readRange</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="menu">
+          <div class="opt on"><span class="idx">01</span>readRange<svg class="tick" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="opt"><span class="idx">02</span>writeRange</div>
+          <div class="opt"><span class="idx">03</span>appendRow</div>
+          <div class="opt"><span class="idx">04</span>clearRange</div>
+          <div class="opt"><span class="idx">05</span>getMetadata</div>
+        </div>
+      </div>
+
+      <!-- spreadsheet id -->
+      <div class="field">
+        <label class="k">Spreadsheet ID</label>
+        <input class="inp glow" placeholder="1BxiMVs0XRA5nFMdKvBdBZ…" />
+        <span class="hint">// from the URL, between /d/ and /edit</span>
+      </div>
+
+      <!-- range -->
+      <div class="field">
+        <label class="k">Range</label>
+        <input class="inp glow" placeholder="Sheet1!A1:D10" />
+      </div>
+
+      <!-- repeatable rows -->
+      <div class="field">
+        <label class="k">Query Params</label>
+        <div class="rows">
+          <div class="row"><input class="inp glow" placeholder="key" /><input class="inp glow" placeholder="value" /><button class="rm glow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+          <div class="row"><input class="inp glow" placeholder="key" /><input class="inp glow" placeholder="value" /><button class="rm glow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+        </div>
+        <button class="add glow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>ADD PARAM</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const RANGE=200;
+  window.addEventListener('pointermove',e=>{
+    document.querySelectorAll('.glow').forEach(el=>{
+      const r=el.getBoundingClientRect();
+      const cx=Math.max(r.left,Math.min(e.clientX,r.right));
+      const cy=Math.max(r.top,Math.min(e.clientY,r.bottom));
+      const d=Math.hypot(e.clientX-cx,e.clientY-cy);
+      const gi=d>=RANGE?0:1-d/RANGE;
+      el.style.setProperty('--gi',gi.toFixed(3));
+      if(gi>0){el.style.setProperty('--gx',(e.clientX-r.left)+'px');el.style.setProperty('--gy',(e.clientY-r.top)+'px');}
+    });
+  },{passive:true});
+</script>
+</body>
+</html>

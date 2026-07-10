@@ -446,7 +446,7 @@ export default function SmartVariableInput({
             onDrop={handleDrop}
             data-placeholder={placeholder}
             className={[
-              "bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 pr-9",
+              "w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 pr-9",
               "text-[12.5px] text-neutral-100 font-mono focus:outline-none focus:border-[#545454]",
               "transition-colors empty:before:content-[attr(data-placeholder)]",
               "empty:before:text-neutral-600 empty:before:pointer-events-none",
