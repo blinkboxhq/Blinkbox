@@ -8,6 +8,11 @@ import {
 } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import {
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggle, ConfigToggleRow,
+} from '@/components/ui/ConfigKit';
+
+const ACCENT = '#6f97e8';
 
 const OPERATIONS = [
   { value: 'sendMessage',           label: 'Send Message',       icon: Send,        group: 'Messaging' },
@@ -61,29 +66,24 @@ const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value])
 const resolveOperation = (config) =>
   config.operation || LABEL_TO_OP[config.selectedAction] || 'sendMessage';
 
-const lbl = 'text-[10px] font-bold text-zinc-500 uppercase tracking-widest';
+const PARSE_MODES = [
+  { value: 'MarkdownV2', label: 'Markdown' },
+  { value: 'HTML', label: 'HTML' },
+  { value: 'plain', label: 'Plain Text' },
+];
+const CHAT_ACTIONS = ['typing', 'upload_photo', 'record_video', 'upload_video', 'record_voice', 'upload_voice', 'upload_document', 'choose_sticker', 'find_location']
+  .map((a) => ({ value: a, label: a }));
 
 function Field({ label, optional, children }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className={lbl}>
-        {label} {optional && <span className="text-zinc-700">(optional)</span>}
-      </label>
+    <div className="flex flex-col">
+      {label && (
+        <ConfigLabel>
+          {label}{optional && <span className="text-neutral-700 normal-case tracking-normal"> (optional)</span>}
+        </ConfigLabel>
+      )}
       {children}
     </div>
-  );
-}
-
-function Toggle({ label, on, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex-1 py-2 rounded-lg border text-xs font-bold transition-all ${
-        on ? 'bg-sky-500/10 border-sky-500/40 text-sky-400' : 'bg-[#0a0a0a] border-[#222] text-zinc-500'
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -101,6 +101,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
     if (!config.operation && operation) updateConfig('operation', operation);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const text = (label, key, opts = {}) => (
     <Field label={label} optional={opts.optional}>
       <SmartVariableInput
@@ -114,56 +115,56 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   );
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      <div className="flex items-center gap-3 p-4 bg-sky-500/5 border border-sky-500/20 rounded-xl">
-        <div className="p-2 bg-sky-500/10 border border-sky-500/20 rounded-lg text-sky-400 shrink-0">
-          <Send className="w-5 h-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-sky-400">Telegram</span>
-          <span className="text-[10px] text-zinc-500 mt-0.5">Telegram Bot API</span>
-        </div>
-      </div>
+    <ConfigSection className="gap-5">
+      <ConfigHeader icon={Send} title="Telegram" subtitle="Telegram Bot API" />
 
-      <div className="flex flex-col gap-3">
-        <label className={lbl}>Action</label>
+      {/* Action — collapsed current op with expandable grid */}
+      <div className="flex flex-col">
+        <ConfigLabel>Action</ConfigLabel>
         <button
+          type="button"
           onClick={() => setShowPicker((v) => !v)}
-          className="flex items-center gap-2.5 p-3 rounded-lg border border-sky-500/40 bg-sky-500/10 text-sky-400 text-xs font-bold transition-all hover:border-sky-500/60"
+          className="bb-glow-border flex items-center gap-2.5 p-3 rounded-md border text-[12.5px] font-mono font-semibold transition-colors"
+          style={{ color: ACCENT, backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` }}
         >
           <CurrentIcon className="w-4 h-4 shrink-0" />
           <span className="flex-1 text-left">{currentOp?.label || 'Select action'}</span>
-          <span className="text-[10px] font-medium text-sky-400/60">Change</span>
-          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${showPicker ? 'rotate-180' : ''}`} />
+          <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-500">Change</span>
+          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`} />
         </button>
 
-        {showPicker && GROUPS.map((g) => (
-          <div key={g} className="flex flex-col gap-1.5">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{g}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {OPERATIONS.filter((o) => o.group === g).map((op) => {
-                const Icon = op.icon;
-                return (
-                  <button
-                    key={op.value}
-                    onClick={() => selectOp(op.value)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-bold transition-all ${
-                      operation === op.value
-                        ? 'bg-sky-500/10 border-sky-500/40 text-sky-400'
-                        : 'bg-[#0a0a0a] border-[#222] text-zinc-400 hover:border-[#333]'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
-                  </button>
-                );
-              })}
-            </div>
+        {showPicker && (
+          <div className="flex flex-col gap-3 mt-3">
+            {GROUPS.map((g) => (
+              <div key={g} className="flex flex-col gap-1.5">
+                <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-[0.2em] font-mono">{g}</span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {OPERATIONS.filter((o) => o.group === g).map((op) => {
+                    const Icon = op.icon;
+                    const on = operation === op.value;
+                    return (
+                      <button
+                        key={op.value}
+                        type="button"
+                        onClick={() => selectOp(op.value)}
+                        className="bb-glow-border flex items-center gap-2 px-3 py-2 rounded-md text-[11.5px] font-mono font-medium border transition-colors text-left"
+                        style={on
+                          ? { color: ACCENT, backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` }
+                          : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" /> {op.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {!NO_CHAT_OPS.includes(operation) && (
-        <Field label={<><Hash className="w-3.5 h-3.5 text-sky-400 inline" /> Chat ID</>}>
+        <Field label={<><Hash className="w-3 h-3 inline mr-1" style={{ color: ACCENT }} />Chat ID</>}>
           <SmartVariableInput
             value={config.chatId || ''}
             onChange={(val) => updateConfig('chatId', val)}
@@ -177,23 +178,24 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
         <>
           {text('Message', 'text', { placeholder: 'Type your message...', multiline: true })}
           <div className="flex gap-3">
-            <div className="flex flex-col gap-2 flex-1">
-              <label className={lbl}>Format</label>
-              <select
+            <div className="flex-1">
+              <ConfigSelect
+                label="Format"
                 value={config.parseMode || 'MarkdownV2'}
-                onChange={(e) => updateConfig('parseMode', e.target.value)}
-                className="bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-sky-500/50 cursor-pointer appearance-none"
-              >
-                <option value="MarkdownV2">Markdown</option>
-                <option value="HTML">HTML</option>
-                <option value="plain">Plain Text</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className={`${lbl} flex items-center gap-1`}><BellOff className="w-3 h-3" /> Silent</label>
-              <Toggle label={config.silent ? 'On' : 'Off'} on={config.silent} onClick={() => updateConfig('silent', !config.silent)} />
+                onChange={(val) => updateConfig('parseMode', val)}
+                options={PARSE_MODES}
+                accentColor={ACCENT}
+              />
             </div>
           </div>
+          <ConfigToggleRow
+            label="Silent"
+            desc="Deliver without a notification sound"
+            icon={BellOff}
+            on={config.silent}
+            onChange={(v) => updateConfig('silent', v)}
+            accentColor={ACCENT}
+          />
         </>
       )}
 
@@ -236,7 +238,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'sendPoll' && (
         <>
           {text('Question', 'question', { placeholder: 'What do you think?' })}
-          <Field label={<>Options <span className="text-zinc-700">(one per line, min 2)</span></>}>
+          <Field label={<>Options <span className="text-neutral-700 normal-case tracking-normal">(one per line, min 2)</span></>}>
             <SmartVariableInput
               value={Array.isArray(config.options) ? config.options.join('\n') : (config.options || '')}
               onChange={(val) => updateConfig('options', typeof val === 'string' ? val.split('\n').filter(Boolean) : val)}
@@ -245,25 +247,28 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
               nodeId={nodeId}
             />
           </Field>
-          <div className="flex gap-3">
-            <Toggle label="Anonymous" on={config.isAnonymous !== false} onClick={() => updateConfig('isAnonymous', config.isAnonymous === false ? true : false)} />
-            <Toggle label="Multi-Answer" on={config.allowsMultiple} onClick={() => updateConfig('allowsMultiple', !config.allowsMultiple)} />
-          </div>
+          <ConfigToggleRow label="Anonymous" on={config.isAnonymous !== false} onChange={(v) => updateConfig('isAnonymous', v)} accentColor={ACCENT} />
+          <ConfigToggleRow label="Multiple Answers" on={config.allowsMultiple} onChange={(v) => updateConfig('allowsMultiple', v)} accentColor={ACCENT} />
         </>
       )}
 
       {operation === 'sendDice' && (
         <Field label="Emoji">
-          <div className="grid grid-cols-3 gap-2">
-            {['🎲', '🎯', '🏀', '⚽', '🎳', '🎰'].map((e) => (
-              <button key={e} onClick={() => updateConfig('emoji', e)} className={`py-2 rounded-lg border text-lg transition-all ${(config.emoji || '🎲') === e ? 'bg-sky-500/10 border-sky-500/40' : 'bg-[#0a0a0a] border-[#222]'}`}>{e}</button>
-            ))}
+          <div className="grid grid-cols-3 gap-1.5">
+            {['🎲', '🎯', '🏀', '⚽', '🎳', '🎰'].map((e) => {
+              const on = (config.emoji || '🎲') === e;
+              return (
+                <button key={e} type="button" onClick={() => updateConfig('emoji', e)}
+                  className="bb-glow-border py-2 rounded-md border text-lg transition-colors"
+                  style={on ? { backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` } : { backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>{e}</button>
+              );
+            })}
           </div>
         </Field>
       )}
 
       {operation === 'sendMediaGroup' && (
-        <Field label={<>Media items <span className="text-zinc-700">(JSON array, 2–10)</span></>}>
+        <Field label={<>Media items <span className="text-neutral-700 normal-case tracking-normal">(JSON array, 2–10)</span></>}>
           <SmartVariableInput
             value={typeof config.media === 'string' ? config.media : (config.media ? JSON.stringify(config.media, null, 2) : '')}
             onChange={(val) => updateConfig('media', val)}
@@ -290,26 +295,29 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'setMessageReaction' && (
         <>
           <Field label="Reaction Emoji">
-            <div className="grid grid-cols-6 gap-2">
-              {['👍', '❤️', '🔥', '🎉', '👏', '😁'].map((e) => (
-                <button key={e} onClick={() => updateConfig('reactionEmoji', e)} className={`py-2 rounded-lg border text-base transition-all ${config.reactionEmoji === e ? 'bg-sky-500/10 border-sky-500/40' : 'bg-[#0a0a0a] border-[#222]'}`}>{e}</button>
-              ))}
+            <div className="grid grid-cols-6 gap-1.5">
+              {['👍', '❤️', '🔥', '🎉', '👏', '😁'].map((e) => {
+                const on = config.reactionEmoji === e;
+                return (
+                  <button key={e} type="button" onClick={() => updateConfig('reactionEmoji', e)}
+                    className="bb-glow-border py-2 rounded-md border text-base transition-colors"
+                    style={on ? { backgroundColor: `${ACCENT}1f`, borderColor: `${ACCENT}66` } : { backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>{e}</button>
+                );
+              })}
             </div>
           </Field>
-          <div className="flex gap-3"><Toggle label="Big Reaction" on={config.bigReaction} onClick={() => updateConfig('bigReaction', !config.bigReaction)} /></div>
+          <ConfigToggleRow label="Big Reaction" on={config.bigReaction} onChange={(v) => updateConfig('bigReaction', v)} accentColor={ACCENT} />
         </>
       )}
 
       {operation === 'sendChatAction' && (
-        <Field label="Action">
-          <select
-            value={config.action || 'typing'}
-            onChange={(e) => updateConfig('action', e.target.value)}
-            className="bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-sky-500/50 cursor-pointer appearance-none"
-          >
-            {['typing', 'upload_photo', 'record_video', 'upload_video', 'record_voice', 'upload_voice', 'upload_document', 'choose_sticker', 'find_location'].map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </Field>
+        <ConfigSelect
+          label="Action"
+          value={config.action || 'typing'}
+          onChange={(val) => updateConfig('action', val)}
+          options={CHAT_ACTIONS}
+          accentColor={ACCENT}
+        />
       )}
 
       {operation === 'getChatMember' && text('User ID', 'userId', { placeholder: 'Telegram user ID' })}
@@ -320,7 +328,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
         <>
           {text('User ID', 'userId', { placeholder: 'Telegram user ID' })}
           {text('Until (unix ts)', 'untilDate', { optional: true, placeholder: 'blank = permanent' })}
-          <div className="flex gap-3"><Toggle label="Delete their messages" on={config.revokeMessages} onClick={() => updateConfig('revokeMessages', !config.revokeMessages)} /></div>
+          <ConfigToggleRow label="Delete their messages" on={config.revokeMessages} onChange={(v) => updateConfig('revokeMessages', v)} accentColor={ACCENT} />
         </>
       )}
       {operation === 'unbanChatMember' && text('User ID', 'userId', { placeholder: 'Telegram user ID' })}
@@ -329,11 +337,11 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
         <>
           {text('User ID', 'userId', { placeholder: 'Telegram user ID' })}
           <Field label="Permissions">
-            <div className="grid grid-cols-2 gap-2">
-              <Toggle label="Send Messages" on={config.canSendMessages} onClick={() => updateConfig('canSendMessages', !config.canSendMessages)} />
-              <Toggle label="Send Media" on={config.canSendMedia} onClick={() => updateConfig('canSendMedia', !config.canSendMedia)} />
-              <Toggle label="Send Polls" on={config.canSendPolls} onClick={() => updateConfig('canSendPolls', !config.canSendPolls)} />
-              <Toggle label="Add Previews" on={config.canAddPreviews} onClick={() => updateConfig('canAddPreviews', !config.canAddPreviews)} />
+            <div className="flex flex-col gap-1.5">
+              <ConfigToggleRow label="Send Messages" on={config.canSendMessages} onChange={(v) => updateConfig('canSendMessages', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Send Media" on={config.canSendMedia} onChange={(v) => updateConfig('canSendMedia', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Send Polls" on={config.canSendPolls} onChange={(v) => updateConfig('canSendPolls', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Add Previews" on={config.canAddPreviews} onChange={(v) => updateConfig('canAddPreviews', v)} accentColor={ACCENT} />
             </div>
           </Field>
         </>
@@ -343,14 +351,14 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
         <>
           {text('User ID', 'userId', { placeholder: 'Telegram user ID' })}
           <Field label="Admin Rights">
-            <div className="grid grid-cols-2 gap-2">
-              <Toggle label="Manage Chat" on={config.canManageChat} onClick={() => updateConfig('canManageChat', !config.canManageChat)} />
-              <Toggle label="Delete Msgs" on={config.canDeleteMessages} onClick={() => updateConfig('canDeleteMessages', !config.canDeleteMessages)} />
-              <Toggle label="Restrict" on={config.canRestrictMembers} onClick={() => updateConfig('canRestrictMembers', !config.canRestrictMembers)} />
-              <Toggle label="Promote" on={config.canPromoteMembers} onClick={() => updateConfig('canPromoteMembers', !config.canPromoteMembers)} />
-              <Toggle label="Change Info" on={config.canChangeInfo} onClick={() => updateConfig('canChangeInfo', !config.canChangeInfo)} />
-              <Toggle label="Invite Users" on={config.canInviteUsers} onClick={() => updateConfig('canInviteUsers', !config.canInviteUsers)} />
-              <Toggle label="Pin Messages" on={config.canPinMessages} onClick={() => updateConfig('canPinMessages', !config.canPinMessages)} />
+            <div className="flex flex-col gap-1.5">
+              <ConfigToggleRow label="Manage Chat" on={config.canManageChat} onChange={(v) => updateConfig('canManageChat', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Delete Messages" on={config.canDeleteMessages} onChange={(v) => updateConfig('canDeleteMessages', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Restrict Members" on={config.canRestrictMembers} onChange={(v) => updateConfig('canRestrictMembers', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Promote Members" on={config.canPromoteMembers} onChange={(v) => updateConfig('canPromoteMembers', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Change Info" on={config.canChangeInfo} onChange={(v) => updateConfig('canChangeInfo', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Invite Users" on={config.canInviteUsers} onChange={(v) => updateConfig('canInviteUsers', v)} accentColor={ACCENT} />
+              <ConfigToggleRow label="Pin Messages" on={config.canPinMessages} onChange={(v) => updateConfig('canPinMessages', v)} accentColor={ACCENT} />
             </div>
           </Field>
         </>
@@ -361,7 +369,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
           {text('Name', 'inviteName', { optional: true, placeholder: 'e.g. Newsletter link' })}
           {text('Expire (unix ts)', 'expireDate', { optional: true, placeholder: 'blank = never' })}
           {text('Member Limit', 'memberLimit', { optional: true, placeholder: '0 = unlimited' })}
-          <div className="flex gap-3"><Toggle label="Require Join Request" on={config.createsJoinRequest} onClick={() => updateConfig('createsJoinRequest', !config.createsJoinRequest)} /></div>
+          <ConfigToggleRow label="Require Join Request" on={config.createsJoinRequest} onChange={(v) => updateConfig('createsJoinRequest', v)} accentColor={ACCENT} />
         </>
       )}
       {operation === 'revokeInviteLink' && text('Invite Link', 'inviteLink', { placeholder: 'https://t.me/+...' })}
@@ -373,6 +381,6 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
         label="Bot Token"
         placeholder="Select Telegram bot token..."
       />
-    </div>
+    </ConfigSection>
   );
 }
