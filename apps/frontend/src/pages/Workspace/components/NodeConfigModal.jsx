@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap, GripVertical, Split } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -68,25 +68,124 @@ function formatValue(v) {
   return String(v);
 }
 
-function flattenKeys(obj, prefix = "", depth = 0) {
-  if (!obj || typeof obj !== "object" || depth > 2) return [];
-  const out = [];
-  for (const [k, v] of Object.entries(obj)) {
-    if (k.startsWith("_")) continue;
-    const path = prefix ? `${prefix}.${k}` : k;
-    out.push({ key: k, path, value: v });
-    if (v && typeof v === "object" && !Array.isArray(v) && depth < 1) {
-      out.push(...flattenKeys(v, path, depth + 1));
-    }
-  }
-  return out;
+// ── Value → JSON type label ──────────────────────────────────────────────────
+function valueType(v) {
+  if (v === null || v === undefined) return "null";
+  if (Array.isArray(v)) return "array";
+  return typeof v; // "string" | "number" | "boolean" | "object"
 }
 
-// ── Panel 1: Input ────────────────────────────────────────────────────────────
-function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
-  const [expanded, setExpanded] = useState(null);
-  const [copied, setCopied]    = useState(null);
+const TYPE_TINT = {
+  string: "text-emerald-400/70",
+  number: "text-orange-400/70",
+  boolean: "text-amber-400/70",
+  object: "text-violet-400/70",
+  array: "text-sky-400/70",
+  null: "text-neutral-600",
+};
+
+// Every key of an object — and every index of an array — is a variable. A node
+// with array output exposes `{{node.0.field}}`, `{{node.1.field}}`, and so on.
+function childEntries(value) {
+  if (Array.isArray(value)) return value.map((v, i) => [String(i), v]);
+  if (value && typeof value === "object") {
+    return Object.entries(value).filter(([k]) => !k.startsWith("_"));
+  }
+  return [];
+}
+
+// ── File-tree row: one JSON node (leaf or branch), fully recursive ────────────
+function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied }) {
+  const type = valueType(value);
+  const isBranch = type === "object" || type === "array";
+  const [open, setOpen] = useState(depth < 1);
+  const ref = `{{${nodeId}${path ? "." + path : ""}}}`;
+  const isDragging = dragging === ref;
+  const isCopied = copied === ref;
+
+  const onDragStart = (e) => {
+    e.stopPropagation();
+    e.dataTransfer.setData("text/plain", ref);
+    e.dataTransfer.effectAllowed = "copy";
+    setDragging(ref);
+  };
+
+  const children = isBranch ? childEntries(value) : [];
+
+  return (
+    <div className="flex flex-col">
+      <div
+        draggable
+        onDragStart={onDragStart}
+        onDragEnd={() => setDragging(null)}
+        onClick={() => (isBranch ? setOpen((o) => !o) : copy(ref))}
+        title={ref}
+        className={`bb-nav-item flex items-center gap-1.5 pr-2 py-[5px] rounded-md transition-colors group cursor-grab ${isDragging ? "opacity-50" : ""}`}
+        style={{ paddingLeft: 8 + depth * 12 }}
+      >
+        {isBranch ? (
+          <ChevronRight className={`w-3 h-3 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+        ) : (
+          <span className="w-3 shrink-0 text-center text-neutral-700 text-[10px] leading-none">·</span>
+        )}
+        <span className="text-[11px] font-mono font-medium text-neutral-300 group-hover:text-white transition-colors truncate">{label}</span>
+        {!isBranch && value !== null && value !== undefined && (
+          <span className="text-[10px] text-neutral-600 font-mono truncate ml-1 min-w-0">{formatValue(value)}</span>
+        )}
+        <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider shrink-0 ${TYPE_TINT[type]}`}>
+          {isBranch ? (type === "array" ? `[${children.length}]` : `{${children.length}}`) : type}
+        </span>
+        {isCopied && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
+      </div>
+
+      {isBranch && open && (
+        children.length === 0 ? (
+          <p className="text-[10px] text-neutral-700 italic py-1" style={{ paddingLeft: 8 + (depth + 1) * 12 }}>empty</p>
+        ) : (
+          <div className="border-l border-white/[0.05]" style={{ marginLeft: 8 + depth * 12 }}>
+            {children.map(([k, v]) => (
+              <VarTreeRow
+                key={k}
+                nodeId={nodeId}
+                path={path ? `${path}.${k}` : k}
+                label={k}
+                value={v}
+                depth={depth + 1}
+                dragging={dragging}
+                setDragging={setDragging}
+                copy={copy}
+                copied={copied}
+              />
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+// Turn a stored schema (types-only, e.g. { body: { user: "string" } }) into a
+// value-shaped object so the same tree renderer works before any live run.
+function schemaToShape(schema) {
+  if (schema === null || schema === undefined) return null;
+  if (typeof schema === "string") return schema; // leaf: show the type as the value
+  if (Array.isArray(schema)) return schema.map(schemaToShape);
+  if (typeof schema === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(schema)) {
+      if (k.startsWith("_")) continue;
+      out[k] = schemaToShape(v);
+    }
+    return out;
+  }
+  return schema;
+}
+
+// ── Panel 1: Input (variables from directly-connected upstream nodes only) ────
+function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
+  const [copied, setCopied]     = useState(null);
   const [dragging, setDragging] = useState(null);
+  const [openNode, setOpenNode] = useState({});
 
   const copy = (text) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -94,57 +193,45 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
     setTimeout(() => setCopied(null), 1600);
   };
 
-  const others = canvasNodes.filter((n) => n.id !== currentNodeId);
+  // ONLY nodes wired into THIS node's input — direct incoming edges, not output.
+  const sourceIds = [];
+  for (const e of edges || []) {
+    if (e.target === currentNodeId && !sourceIds.includes(e.source)) sourceIds.push(e.source);
+  }
+  const inputNodes = sourceIds
+    .map((id) => canvasNodes.find((n) => n.id === id))
+    .filter(Boolean);
 
   return (
     <div className="bb-modal-side bb-liquid bb-panel-glow flex flex-col h-full">
       <div className="shrink-0 flex flex-col justify-center px-5 border-b border-white/[0.06]" style={{ height: PANEL_HEADER_H }}>
-        <p className="text-[13px] font-semibold text-white">Input</p>
+        <p className="text-[13px] font-semibold text-white">Variables</p>
         <p className="text-[10px] text-neutral-500 mt-0.5">Drag a field into any input, or click to copy</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
-        {others.length === 0 ? (
+        {inputNodes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-5">
             <Zap className="w-5 h-5 text-neutral-700 mb-2" />
-            <p className="text-[12px] text-neutral-600">No other nodes on canvas yet</p>
+            <p className="text-[12px] text-neutral-600">No nodes connected to this input</p>
+            <p className="text-[10px] text-neutral-700 mt-1">Wire a node into this one to use its data</p>
           </div>
-        ) : others.map((n) => {
+        ) : inputNodes.map((n) => {
           const def = NodeRegistry[n.data.backendType];
           const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
-          const isOpen = expanded === n.id;
+          const isOpen = openNode[n.id] !== false; // default expanded
 
-          const slug = (n.data.config?.customLabel || def?.label || n.data.backendType || "node")
-            .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-
-          // Prefer live run output; fall back to DEFAULT_SCHEMAS
           const liveOutput = allRunOutputs[n.id];
           const hasLiveData = liveOutput && typeof liveOutput === "object";
-          const schema = DEFAULT_SCHEMAS[n.data.backendType];
-
-          let vars;
-          if (hasLiveData) {
-            vars = flattenKeys(liveOutput).map(({ path, value }) => ({
-              key: path,
-              ref: `{{${slug}.${path}}}`,
-              value: formatValue(value),
-              isLive: true,
-            }));
-          } else if (schema) {
-            vars = Object.entries(schema)
-              .filter(([k]) => !(k.startsWith("_") && !k.startsWith("__")))
-              .map(([k]) => ({ key: k, ref: `{{${slug}.${k}}}`, value: null, isLive: false }));
-          } else {
-            vars = [
-              { key: "output",  ref: `{{${slug}.output}}`,  value: null, isLive: false },
-              { key: "success", ref: `{{${slug}.success}}`, value: null, isLive: false },
-            ];
-          }
+          const shape = hasLiveData
+            ? liveOutput
+            : schemaToShape(DEFAULT_SCHEMAS[n.data.backendType]) || { output: "any", success: "boolean" };
+          const rows = childEntries(shape);
 
           return (
             <div key={n.id} className="flex flex-col">
               <button
-                onClick={() => setExpanded(isOpen ? null : n.id)}
+                onClick={() => setOpenNode((s) => ({ ...s, [n.id]: !isOpen }))}
                 className="bb-nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors group text-left"
               >
                 <div className="w-8 h-8 shrink-0 flex items-center justify-center">
@@ -165,39 +252,23 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
               </button>
 
               {isOpen && (
-                <div className="pl-2 pr-1 pt-1 pb-1 flex flex-col gap-1">
-                  {vars.map(({ key, ref, value, isLive }) => {
-                    const isCopied = copied === ref;
-                    const isDraggingThis = dragging === ref;
-                    return (
-                      <button
-                        key={key}
-                        draggable
-                        onClick={() => copy(ref)}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("text/plain", ref);
-                          e.dataTransfer.effectAllowed = "copy";
-                          setDragging(ref);
-                        }}
-                        onDragEnd={() => setDragging(null)}
-                        className={`bb-nav-item flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors group text-left ${isDraggingThis ? "opacity-50" : ""}`}
-                      >
-                        <GripVertical className="w-3 h-3 text-neutral-700 group-hover:text-neutral-400 shrink-0 transition-colors cursor-grab" />
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[11px] font-semibold text-neutral-300 group-hover:text-white transition-colors block truncate">{key}</span>
-                          {isLive && value !== null ? (
-                            <span className="text-[10px] text-emerald-400/80 font-mono truncate block">{value}</span>
-                          ) : (
-                            <span className="text-[10px] text-neutral-600 font-mono truncate block">{ref}</span>
-                          )}
-                        </div>
-                        {isCopied
-                          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          : <Copy className="w-3 h-3 text-neutral-700 group-hover:text-neutral-400 shrink-0 transition-colors" />
-                        }
-                      </button>
-                    );
-                  })}
+                <div className="pl-1 pr-1 pt-0.5 pb-1 flex flex-col">
+                  {rows.length === 0 ? (
+                    <p className="px-3 py-1.5 text-[11px] text-neutral-700 italic">No fields</p>
+                  ) : rows.map(([k, v]) => (
+                    <VarTreeRow
+                      key={k}
+                      nodeId={n.id}
+                      path={k}
+                      label={k}
+                      value={v}
+                      depth={0}
+                      dragging={dragging}
+                      setDragging={setDragging}
+                      copy={copy}
+                      copied={copied}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -476,6 +547,7 @@ export default function NodeConfigModal() {
   const selectedNodeId    = useWorkspaceStore((s) => s.selectedNodeId);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
   const nodes             = useWorkspaceStore((s) => s.nodes);
+  const edges             = useWorkspaceStore((s) => s.edges);
   const updateNodeConfig  = useWorkspaceStore((s) => s.updateNodeConfig);
   const renameNode        = useWorkspaceStore((s) => s.renameNode);
   const lastOutput        = useWorkspaceStore((s) => s.lastRunOutputs?.[s.selectedNodeId] ?? null);
@@ -581,7 +653,7 @@ export default function NodeConfigModal() {
           {/* Three resizable panels */}
           <div ref={containerRef} className="flex-1 flex flex-row overflow-hidden select-none">
             <div style={{ width: `${pw[0]}%` }} className="overflow-hidden">
-              <InputPanel canvasNodes={nodes} currentNodeId={selectedNodeId} allRunOutputs={allRunOutputs} />
+              <InputPanel canvasNodes={nodes} edges={edges} currentNodeId={selectedNodeId} allRunOutputs={allRunOutputs} />
             </div>
 
             <Divider onMouseDown={(e) => startDrag(0, e)} />
