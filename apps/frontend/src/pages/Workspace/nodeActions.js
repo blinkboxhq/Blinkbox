@@ -361,13 +361,6 @@ export const NODE_ACTIONS = {
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
-  sort_array: [
-    { name: "Sort Ascending", description: "Sort items by a field from low to high" },
-    { name: "Sort Descending", description: "Sort items by a field from high to low" },
-    { name: "Sort by Date", description: "Sort items chronologically by a date field" },
-    { name: "Alphabetical Sort", description: "Sort strings alphabetically" },
-    { name: "Custom Sort", description: "Sort with a custom comparator expression" },
-  ],
   deduplicate: [
     { name: "Deduplicate by Field", description: "Remove duplicate items based on a key field" },
     { name: "Deduplicate Entire Object", description: "Remove fully identical objects from an array" },
