@@ -306,8 +306,10 @@ function AgentInHandle() {
 // ─── Condition dual output handles ───────────────────────────────────────────
 function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topColor, botColor, topConnected, botConnected, onAdd }) {
   const connecting = useIsConnecting();
-  const plusBtn = (y, handleId, label, labelColor) => (
+  const plusBtn = (y, handleId, label, labelColor, dotColor) => (
     <>
+      <div className="absolute z-[4] nodrag pointer-events-none !w-4 !h-4 !rounded-full"
+        style={{ boxShadow: "none", background: dotColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: y, right: 0, transform: "translate(50%, -50%)" }} />
       <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
         <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
       </div>
@@ -336,7 +338,7 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCol
             <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: topColor || "#fff" }}>{topLabel}</span>
           </div>
         </>
-      ) : plusBtn(topY, topId, topLabel, topColor || HANDLE_BORDER)}
+      ) : plusBtn(topY, topId, topLabel, topColor || HANDLE_BORDER, topColor)}
 
       {botConnected ? (
         <>
@@ -347,7 +349,7 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCol
             <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: botColor || "#fff" }}>{botLabel}</span>
           </div>
         </>
-      ) : plusBtn(botY, botId, botLabel, botColor || HANDLE_BORDER)}
+      ) : plusBtn(botY, botId, botLabel, botColor || HANDLE_BORDER, botColor)}
     </>
   );
 }
