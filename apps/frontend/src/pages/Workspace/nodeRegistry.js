@@ -303,6 +303,7 @@ import ApprovalNode from "@nodes/approval/ConfigPanel.jsx";
 import FilterArrayNode from "@nodes/filter_array/ConfigPanel.jsx";
 import SortArrayNode from "@nodes/sort_array/ConfigPanel.jsx";
 import DeduplicateNode from "@nodes/deduplicate/ConfigPanel.jsx";
+import imgDeduplicate from "../../assets/logos/deduplicate.svg";
 import BatchSplitNode from "@nodes/batch_split/ConfigPanel.jsx";
 import CSVParserNode from "@nodes/csv_parser/ConfigPanel.jsx";
 import DateTimeNode from "@nodes/date_time/ConfigPanel.jsx";
@@ -1843,6 +1844,7 @@ export const NodeRegistry = {
   deduplicate: {
     label: "Deduplicate",
     icon: Layers,
+    logoUrl: imgDeduplicate,
     colorClass: "text-white",
     accentColor: "139,92,246",
     ConfigPanel: DeduplicateNode,

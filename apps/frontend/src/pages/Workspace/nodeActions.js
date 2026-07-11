@@ -361,12 +361,6 @@ export const NODE_ACTIONS = {
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
-  deduplicate: [
-    { name: "Deduplicate by Field", description: "Remove duplicate items based on a key field" },
-    { name: "Deduplicate Entire Object", description: "Remove fully identical objects from an array" },
-    { name: "Keep First Occurrence", description: "When duplicates exist, keep only the first" },
-    { name: "Keep Last Occurrence", description: "When duplicates exist, keep only the last" },
-  ],
   batch_split: [
     { name: "Split into Batches", description: "Divide an array into N-item chunks" },
     { name: "Process in Parallel", description: "Run batches concurrently for speed" },
