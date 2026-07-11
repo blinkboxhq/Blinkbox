@@ -19,10 +19,10 @@ const UNIT_OPS = [
 ];
 
 const PRESETS = [
-  { label: '15s', amount: 15, unit: 'seconds' },
-  { label: '1m',  amount: 1,  unit: 'minutes' },
-  { label: '15m', amount: 15, unit: 'minutes' },
-  { label: '1h',  amount: 1,  unit: 'hours' },
+  { value: '15s', label: '15s', amount: 15, unit: 'seconds' },
+  { value: '1m',  label: '1m',  amount: 1,  unit: 'minutes' },
+  { value: '15m', label: '15m', amount: 15, unit: 'minutes' },
+  { value: '1h',  label: '1h',  amount: 1,  unit: 'hours' },
 ];
 
 function Field({ label, optional, hint, children }) {
@@ -43,7 +43,13 @@ export default function DelayNode({ config = {}, updateConfig, nodeId }) {
   const mode = config.mode || 'duration';
   const unit = config.unit || 'seconds';
 
-  const applyPreset = (p) => {
+  const activePreset = PRESETS.find(
+    (p) => String(config.amount) === String(p.amount) && (config.unit || 'seconds') === p.unit,
+  )?.value;
+
+  const applyPreset = (val) => {
+    const p = PRESETS.find((x) => x.value === val);
+    if (!p) return;
     updateConfig('mode', 'duration');
     updateConfig('amount', p.amount);
     updateConfig('unit', p.unit);
@@ -85,21 +91,13 @@ export default function DelayNode({ config = {}, updateConfig, nodeId }) {
             />
           </div>
 
-          <div className="flex flex-col">
-            <ConfigLabel>Quick presets</ConfigLabel>
-            <div className="flex gap-2">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => applyPreset(p)}
-                  className="flex-1 py-1.5 rounded-lg text-[12px] font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 hover:text-white hover:border-neutral-700 transition-all duration-150"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ConfigPills
+            label="Quick presets"
+            value={activePreset}
+            onChange={applyPreset}
+            options={PRESETS}
+            accentColor={ACCENT}
+          />
         </>
       ) : (
         <Field
