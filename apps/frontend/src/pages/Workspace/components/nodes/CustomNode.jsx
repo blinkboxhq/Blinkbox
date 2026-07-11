@@ -318,13 +318,13 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCol
         style={{ left: "100%", marginLeft: 30, top: y - 14, transform: "translateX(-50%)" }}>
         <span className="text-[8px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: labelColor }}>{label}</span>
       </div>
-      <button
+      <Handle type="source" position={Position.Right} id={handleId}
         onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
-        className={`group/plus absolute nodrag nopan flex items-center justify-center w-6 h-6 rounded-full cursor-pointer transition-all duration-500 hover:bg-zinc-800 hover:border-white/40 ${connecting ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        className={`group/plus !flex !items-center !justify-center !w-6 !h-6 !rounded-full !shadow-none touch-none nodrag nopan cursor-pointer transition-all duration-500 hover:!bg-zinc-800 hover:!border-white/40 ${connecting ? "opacity-0" : "opacity-100"}`}
         style={{ top: y, left: "100%", marginLeft: 72, transform: "translate(0, -50%)", zIndex: 3, background: "#18181b", border: `1.5px solid ${HANDLE_BORDER}` }}
-        title={`${label} · click to add step`}>
+        title={`${label} · drag to connect or click to add step`}>
         <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
-      </button>
+      </Handle>
     </>
   );
 
