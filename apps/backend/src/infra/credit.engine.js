@@ -56,7 +56,7 @@ const NODE_COSTS = {
   switch: 1, stop_error: 1, retry: 1, rate_limiter: 1,
   delay: 1, merge: 1, loop: 1, code: 1, respond_webhook: 1,
   sub_workflow: 1, wait_for_event: 1, approval: 1,
-  filter_array: 1, sort_array: 1, deduplicate: 1, batch_split: 1,
+  filter_array: 1, sort_array: 1, deduplicate: 1,
   csv_parser: 1, date_time: 1, crypto_utils: 1,
   text_splitter: 1, template_renderer: 1, json_validator: 1,
   aggregate: 1, data_diff: 1, url_parser: 1,

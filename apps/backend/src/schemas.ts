@@ -24,7 +24,7 @@ export const NODE_TYPES = [
   // Supporting
   "code", "delay", "loop", "merge", "respond_webhook",
   // Utility
-  "filter_array", "sort_array", "deduplicate", "batch_split", "csv_parser",
+  "filter_array", "sort_array", "deduplicate", "csv_parser",
   "date_time", "crypto_utils", "data_diff", "aggregate", "set_fields",
   "qr_code", "image_resize", "pdf_generator", "text_splitter",
   "template_renderer", "json_validator", "switch",

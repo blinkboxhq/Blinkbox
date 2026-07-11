@@ -361,11 +361,6 @@ export const NODE_ACTIONS = {
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
-  batch_split: [
-    { name: "Split into Batches", description: "Divide an array into N-item chunks" },
-    { name: "Process in Parallel", description: "Run batches concurrently for speed" },
-    { name: "Sequential Batches", description: "Process batches one at a time in order" },
-  ],
   csv_parser: [
     { name: "Parse CSV String", description: "Convert a CSV text into an array of objects" },
     { name: "CSV to JSON", description: "Transform CSV data into JSON format" },
@@ -496,11 +491,6 @@ export const NODE_ACTIONS = {
     { name: "Switch on Value", description: "Route to the matching case branch" },
     { name: "Default Fallthrough", description: "Catch unmatched cases in the default branch" },
     { name: "Range-based Routing", description: "Route based on numeric ranges" },
-  ],
-  delay: [
-    { name: "Wait N Seconds", description: "Pause execution for a fixed number of seconds" },
-    { name: "Wait Until Time", description: "Pause until a specific datetime" },
-    { name: "Random Delay", description: "Add a random delay between a min and max range" },
   ],
   loop: [
     { name: "Loop Over Array", description: "Iterate over each item in an array" },

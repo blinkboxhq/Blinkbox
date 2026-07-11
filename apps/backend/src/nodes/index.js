@@ -98,7 +98,6 @@ import switchNode      from "./switch.node.js";
 import filterArray     from "./filterArray.node.js";
 import sortArray       from "./sortArray.node.js";
 import deduplicate     from "./deduplicate.node.js";
-import batchSplit      from "./batchSplit.node.js";
 import csvParser       from "./csvParser.node.js";
 import dateTime        from "./dateTime.node.js";
 import cryptoUtils     from "./cryptoUtils.node.js";
@@ -325,7 +324,6 @@ const rawNodeRegistry = {
   filter_array:      filterArray,
   sort_array:        sortArray,
   deduplicate:       deduplicate,
-  batch_split:       batchSplit,
   csv_parser:        csvParser,
   date_time:         dateTime,
   crypto_utils:      cryptoUtils,

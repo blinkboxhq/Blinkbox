@@ -304,7 +304,6 @@ import FilterArrayNode from "@nodes/filter_array/ConfigPanel.jsx";
 import SortArrayNode from "@nodes/sort_array/ConfigPanel.jsx";
 import DeduplicateNode from "@nodes/deduplicate/ConfigPanel.jsx";
 import imgDeduplicate from "../../assets/logos/deduplicate.svg";
-import BatchSplitNode from "@nodes/batch_split/ConfigPanel.jsx";
 import CSVParserNode from "@nodes/csv_parser/ConfigPanel.jsx";
 import DateTimeNode from "@nodes/date_time/ConfigPanel.jsx";
 import CryptoUtilsNode from "@nodes/crypto_utils/ConfigPanel.jsx";
@@ -1848,14 +1847,6 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "139,92,246",
     ConfigPanel: DeduplicateNode,
-    category: "logic",
-  },
-  batch_split: {
-    label: "Batch Split",
-    icon: LayoutGrid,
-    colorClass: "text-white",
-    accentColor: "251,146,60",
-    ConfigPanel: BatchSplitNode,
     category: "logic",
   },
   csv_parser: {

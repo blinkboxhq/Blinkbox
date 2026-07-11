@@ -281,20 +281,14 @@ export const NODE_KB = {
       { k: "field", t: "string", r: true, ex: "email", d: "Field to deduplicate on" },
     ],
   },
-  batch_split: {
-    label: "Batch Split",
-    out: ["batch", "batchIndex", "totalBatches"],
-    fields: [
-      { k: "arrayPath", t: "string", r: true, ex: "{{$json.items}}", d: "Array to split into batches" },
-      { k: "batchSize", t: "number", r: true, ex: 10, d: "Items per batch" },
-    ],
-  },
   delay: {
     label: "Delay",
-    out: [],
+    out: ["delayed", "resumeAfter"],
     fields: [
-      { k: "amount", t: "number", r: true, ex: 5, d: "Duration amount" },
-      { k: "unit", t: "select", r: true, ex: "minutes", d: "seconds|minutes|hours|days" },
+      { k: "mode", t: "select", r: false, ex: "duration", d: "duration|until" },
+      { k: "amount", t: "number", r: false, ex: 5, d: "Duration amount (mode=duration)" },
+      { k: "unit", t: "select", r: false, ex: "minutes", d: "seconds|minutes|hours|days" },
+      { k: "until", t: "string", r: false, ex: "2026-07-12T09:00:00Z", d: "ISO datetime (mode=until)" },
     ],
   },
   approval: {
