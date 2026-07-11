@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link2, Loader2, CheckCircle2, AlertCircle, Unlink } from 'lucide-react';
 import { API_URL } from '../../lib/api';
-import api from '../../lib/api';
+import useCredentialsStore from '../../store/credentialsStore';
 
 /**
  * OAuthConnectButton — opens an OAuth popup for a given provider.
@@ -24,33 +24,28 @@ export default function OAuthConnectButton({
 }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
-  const [connectedCred, setConnectedCred] = useState(null);
+
+  const credentials = useCredentialsStore((s) => s.credentials);
+  const ensureFresh = useCredentialsStore((s) => s.ensureFresh);
+  const upsertCredential = useCredentialsStore((s) => s.upsert);
 
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; });
   const hasAutoSelected = useRef(false);
 
-  // Fetch credential info when value changes; auto-select first matching credential when empty
+  useEffect(() => { ensureFresh(); }, [ensureFresh]);
+
+  const connectedCred = value ? credentials.find((c) => c._id === value) || null : null;
+
+  // Auto-select first matching credential when none chosen yet
   useEffect(() => {
-    if (!value) {
-      setConnectedCred(null);
-      if (provider && !hasAutoSelected.current) {
-        api.get('/api/credentials').then((res) => {
-          const creds = res.data.credentials || [];
-          const match = creds.find((c) => c.type === 'oauth' && c.provider === provider);
-          if (match) {
-            hasAutoSelected.current = true;
-            onChangeRef.current(match._id);
-          }
-        }).catch(() => {});
-      }
-      return;
+    if (value || !provider || hasAutoSelected.current) return;
+    const match = credentials.find((c) => c.type === 'oauth' && c.provider === provider);
+    if (match) {
+      hasAutoSelected.current = true;
+      onChangeRef.current(match._id);
     }
-    api.get('/api/credentials').then((res) => {
-      const cred = (res.data.credentials || []).find((c) => c._id === value);
-      setConnectedCred(cred || null);
-    }).catch(() => {});
-  }, [value, provider]);
+  }, [value, provider, credentials]);
 
   // Listen for postMessage from OAuth popup
   const handleMessage = useCallback(
@@ -70,11 +65,11 @@ export default function OAuthConnectButton({
 
       if (payload?.success && payload?.credential?._id) {
         setError(null);
-        setConnectedCred(payload.credential);
+        upsertCredential(payload.credential);
         onChange(payload.credential._id);
       }
     },
-    [onChange],
+    [onChange, upsertCredential],
   );
 
   useEffect(() => {
@@ -116,7 +111,6 @@ export default function OAuthConnectButton({
 
   const handleDisconnect = () => {
     onChange('');
-    setConnectedCred(null);
   };
 
   const isConnected = !!value && !!connectedCred;

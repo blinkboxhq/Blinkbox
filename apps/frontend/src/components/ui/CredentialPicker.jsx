@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
+import useCredentialsStore from '../../store/credentialsStore';
 
 import logoGoogle from '../../assets/credentials/google-color.svg';
 import logoGithub from '../../assets/credentials/github.svg';
@@ -79,8 +80,12 @@ export default function CredentialPicker({
   oauthProvider,   // "google" | "slack" | "github" | "airtable" | "notion" | "microsoft" | "meta"
   hint,
 }) {
-  const [credentials, setCredentials] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const credentials = useCredentialsStore((s) => s.credentials);
+  const storeLoading = useCredentialsStore((s) => s.isLoading);
+  const loadedOnce = useCredentialsStore((s) => s.loadedOnce);
+  const ensureFresh = useCredentialsStore((s) => s.ensureFresh);
+  const upsertCredential = useCredentialsStore((s) => s.upsert);
+  const isLoading = storeLoading && !loadedOnce;
   const [showCreate, setShowCreate] = useState(false);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -101,16 +106,7 @@ export default function CredentialPicker({
   const ac = ACCENT[accentColor] || DEFAULT_ACCENT;
   const oauthMeta = oauthProvider ? OAUTH_META[oauthProvider] : null;
 
-  const fetchCredentials = useCallback(async () => {
-    try {
-      const res = await api.get('/api/credentials');
-      setCredentials(res.data.credentials || []);
-    } catch { /* silent */ } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchCredentials(); }, [fetchCredentials]);
+  useEffect(() => { ensureFresh(); }, [ensureFresh]);
 
   useEffect(() => {
     if (!open) return;
@@ -174,14 +170,10 @@ export default function CredentialPicker({
 
       if (payload?.success && payload?.credential?._id) {
         const cred = payload.credential;
-        setCredentials((prev) => {
-          const already = prev.find((c) => c._id === cred._id);
-          return already ? prev : [cred, ...prev];
-        });
+        upsertCredential(cred);
         onChange(cred._id);
         setManual(false);
         setOpen(false);
-        fetchCredentials();
       }
     };
 
@@ -232,7 +224,7 @@ export default function CredentialPicker({
         type: credentialType || 'api_key',
       });
       const created = res.data.credential;
-      setCredentials((prev) => [created, ...prev]);
+      upsertCredential(created);
       onChange(created._id);
       setNewName(''); setNewSecret(''); setShowCreate(false);
     } catch (err) {

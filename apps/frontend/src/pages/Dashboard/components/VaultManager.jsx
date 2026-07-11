@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil, Link2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { getSocket } from '../../../lib/socket';
+import useCredentialsStore from '../../../store/credentialsStore';
 
 import logoGoogle from '../../../assets/credentials/google-color.svg';
 import logoGithub from '../../../assets/credentials/github.svg';
@@ -32,8 +33,13 @@ const OAUTH_APPS = [
 const APP_BY_PROVIDER = Object.fromEntries(OAUTH_APPS.map(a => [a.provider, a]));
 
 export default function VaultManager() {
-  const [credentials, setCredentials] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const credentials = useCredentialsStore((s) => s.credentials);
+  const storeLoading = useCredentialsStore((s) => s.isLoading);
+  const loadedOnce = useCredentialsStore((s) => s.loadedOnce);
+  const refreshCredentials = useCredentialsStore((s) => s.refresh);
+  const upsertCredential = useCredentialsStore((s) => s.upsert);
+  const removeCredential = useCredentialsStore((s) => s.remove);
+  const isLoading = storeLoading && !loadedOnce;
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showOAuth, setShowOAuth] = useState(true);
@@ -66,41 +72,22 @@ export default function VaultManager() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const fetchCredentials = useCallback(async () => {
-    try {
-      const res = await api.get('/api/credentials');
-      setCredentials(res.data.credentials || []);
-    } catch {
-      // silent
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchCredentials();
-  }, [fetchCredentials]);
+    refreshCredentials();
+  }, [refreshCredentials]);
 
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
-    const onCreated = ({ credential }) => {
-      if (!credential?._id) return;
-      setCredentials((prev) =>
-        prev.some((c) => c._id === credential._id) ? prev : [credential, ...prev],
-      );
-    };
-    const onDeleted = ({ id }) => {
-      if (!id) return;
-      setCredentials((prev) => prev.filter((c) => c._id !== id));
-    };
+    const onCreated = ({ credential }) => upsertCredential(credential);
+    const onDeleted = ({ id }) => removeCredential(id);
     socket.on('credential:created', onCreated);
     socket.on('credential:deleted', onDeleted);
     return () => {
       socket.off('credential:created', onCreated);
       socket.off('credential:deleted', onDeleted);
     };
-  }, []);
+  }, [upsertCredential, removeCredential]);
 
   const connectOAuth = (provider) => {
     const token = localStorage.getItem('blinkbox_token');
@@ -128,7 +115,7 @@ export default function VaultManager() {
       if (payload?.success && payload?.credential) {
         toast.success(`${payload.credential.name} connected successfully`);
         // Re-fetch the full list so the new credential renders with all server-side fields
-        fetchCredentials();
+        refreshCredentials();
       } else if (payload?.error) {
         toast.error(payload.error);
       }
@@ -159,7 +146,7 @@ export default function VaultManager() {
     setError(null);
     try {
       const res = await api.post('/api/credentials', { name: name.trim(), type, secret });
-      setCredentials([res.data.credential, ...credentials]);
+      upsertCredential(res.data.credential);
       setName(''); setType('bearer'); setSecret(''); setShowForm(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create credential.');
@@ -184,7 +171,7 @@ export default function VaultManager() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/api/credentials/${id}`);
-      setCredentials(credentials.filter((c) => c._id !== id));
+      removeCredential(id);
       toast.success('Credential deleted');
     } catch {
       toast.error('Failed to delete credential');
