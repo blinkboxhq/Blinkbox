@@ -267,6 +267,9 @@ export const DEFAULT_SCHEMAS = {
   switch: { value: "string", matchedCase: "string", isDefault: "boolean" },
   image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },
   aggregate: { items: "array", count: "number", sessionId: "string", completedAt: "string" },
+  filter_array: { items: "array", filteredCount: "number", totalCount: "number" },
+  sort_array: { items: "array", count: "number" },
+  json_transform: { _meta: "object", _dynamic: true },
   pdf_generator: { pdf: "string", filename: "string", sizeBytes: "number", mimeType: "string" },
   data_diff: { hasChanges: "boolean", changeCount: "number", summary: "object", operation: "string", changes: "array", newItems: "array", removedItems: "array", changedItems: "array" },
 
