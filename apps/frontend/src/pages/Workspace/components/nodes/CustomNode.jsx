@@ -570,6 +570,11 @@ function CustomNode({ id, data, selected }) {
   const hasSuccessConnection = edges.some(e => e.source === id && e.sourceHandle === "success");
   const hasFailedConnection  = edges.some(e => e.source === id && e.sourceHandle === "failed");
 
+  // Nodes that already own their output routing can't be split into success/fail.
+  const NO_SPLIT = new Set(["condition", "success_failed", "loop", "merge"]);
+  const canSplit = data.type !== "trigger" && !NO_SPLIT.has(data.backendType);
+  const splitOutputs = canSplit && !!data.config?.splitOutputs;
+
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
   const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
   const handleOpenConfig = e => { e.stopPropagation(); setSelectedNodeId(id); };
@@ -902,12 +907,12 @@ function CustomNode({ id, data, selected }) {
 
       {data.backendType === "condition" ? (
         <ConditionOutputHandles cardHeight={cardH} trueConnected={hasTrueConnection} falseConnected={hasFalseConnection} onAdd={handleAddNext} />
-      ) : data.backendType === "success_failed" ? (
+      ) : (data.backendType === "success_failed" || splitOutputs) ? (
         <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       )}
-      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && (
+      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
         <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
           <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
             {outputCount} item{outputCount !== 1 ? 's' : ''}
@@ -915,14 +920,15 @@ function CustomNode({ id, data, selected }) {
         </div>
       )}
 
-      {/* Error/onFailure output handle — shown when error path is configured or connected */}
-      {(hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
+      {/* Error/onFailure output handle — shown when error path is configured or connected.
+          Suppressed under splitOutputs, which owns the dedicated Failed handle. */}
+      {!splitOutputs && (hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
         <Handle type="source" position={Position.Right} id="onFailure"
           className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
           style={{ backgroundColor: hasErrorConnection ? "#ef4444" : "#7f1d1d", top: cardH * 0.72, right: -7 }}
         />
       )}
-      {(hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
+      {!splitOutputs && (hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
         <span className="absolute text-[7px] font-bold text-red-600 select-none pointer-events-none"
           style={{ right: 14, top: cardH * 0.72, transform: "translateY(-50%)" }}>ERR</span>
       )}
@@ -936,6 +942,22 @@ function CustomNode({ id, data, selected }) {
         )}
         {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
       </div>
+
+      {canSplit && (
+        <button
+          onClick={e => { e.stopPropagation(); updateNodeConfig(id, "splitOutputs", !splitOutputs); }}
+          title={splitOutputs ? "Merge back to single output" : "Split into success / failure outputs"}
+          className={`nodrag absolute left-1/2 -translate-x-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[8px] font-bold uppercase tracking-wider transition-all duration-150 ${
+            splitOutputs
+              ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 opacity-100"
+              : "bg-neutral-900 border-[#333] text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white hover:border-neutral-600"
+          }`}
+          style={{ top: cardH + (configHint || data.config?.selectedAction ? 40 : 26) }}
+        >
+          <Split className="w-2.5 h-2.5" strokeWidth={2.5} />
+          Split
+        </button>
+      )}
     </div>
   );
 }
