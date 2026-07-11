@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap, GripVertical } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, Copy, ChevronDown, Zap, GripVertical, Split } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -10,6 +10,7 @@ import { getTriggerSchema } from "../triggerSchemas";
 import { getTriggerEvent, getTriggerEvents } from "../triggerEvents";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
+import { ConfigToggleRow } from "../../../components/ui/ConfigKit";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
@@ -227,6 +228,8 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
+  const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
+  const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 
   const currentName = config.customLabel || selectedAction || def?.label || node?.data.label || "";
   const [editing, setEditing] = useState(false);
@@ -311,6 +314,19 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">
               <p className="text-[13px] text-neutral-600">No configuration needed.</p>
+            </div>
+          )}
+
+          {canSplitOutputs && (
+            <div className="px-4 pt-1 pb-3 mt-2 border-t border-white/[0.06]">
+              <ConfigToggleRow
+                label="Split outputs"
+                desc="Add separate success and failure outputs — route by whether this node succeeds or errors."
+                icon={Split}
+                on={!!config.splitOutputs}
+                onChange={(val) => updateConfig(node.id, "splitOutputs", val)}
+                accentColor="#34d399"
+              />
             </div>
           )}
         </div>

@@ -943,21 +943,6 @@ function CustomNode({ id, data, selected }) {
         {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
       </div>
 
-      {canSplit && (
-        <button
-          onClick={e => { e.stopPropagation(); updateNodeConfig(id, "splitOutputs", !splitOutputs); }}
-          title={splitOutputs ? "Merge back to single output" : "Split into success / failure outputs"}
-          className={`nodrag absolute left-1/2 -translate-x-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[8px] font-bold uppercase tracking-wider transition-all duration-150 ${
-            splitOutputs
-              ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 opacity-100"
-              : "bg-neutral-900 border-[#333] text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white hover:border-neutral-600"
-          }`}
-          style={{ top: cardH + (configHint || data.config?.selectedAction ? 40 : 26) }}
-        >
-          <Split className="w-2.5 h-2.5" strokeWidth={2.5} />
-          Split
-        </button>
-      )}
     </div>
   );
 }
