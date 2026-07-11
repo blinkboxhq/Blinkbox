@@ -122,6 +122,7 @@ export default function Canvas() {
   const onConnect = useWorkspaceStore((s) => s.onConnect);
   const isValidConnection = useWorkspaceStore((s) => s.isValidConnection);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
   const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
@@ -252,6 +253,7 @@ export default function Canvas() {
 
   // Multi-select
   const [ctxMenu, setCtxMenu] = useState(null); // { x, y, nodeId, nodeLabel }
+  const connectStart = useRef(null); // { nodeId, handleId } captured on drag-from-handle
 
   // Fullscreen
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -387,8 +389,19 @@ export default function Canvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         connectionLineComponent={PullConnectionLine}
-        onConnectStart={() => setConnecting(true)}
-        onConnectEnd={() => setConnecting(false)}
+        onConnectStart={(_, { nodeId, handleId, handleType }) => {
+          setConnecting(true);
+          connectStart.current = handleType === "source" ? { nodeId, handleId: handleId || "output" } : null;
+        }}
+        onConnectEnd={(event) => {
+          setConnecting(false);
+          const start = connectStart.current;
+          connectStart.current = null;
+          const droppedOnPane = event.target?.classList?.contains("react-flow__pane");
+          if (droppedOnPane && start?.nodeId) {
+            setAddNodeSource(start.nodeId, start.handleId);
+          }
+        }}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
           const isEmpty = useWorkspaceStore.getState().nodes.length === 0;
