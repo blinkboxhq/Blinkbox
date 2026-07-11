@@ -862,10 +862,16 @@ function CustomNode({ id, data, selected }) {
           const gap = 24;
           const top = cardH / 2 + (i - (mergeInputs - 1) / 2) * gap;
           return (
-            <Handle key={i} type="target" position={Position.Left}
-              id={i === 0 ? "input" : `input-${i}`}
-              className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-              style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+            <div key={i}>
+              <Handle type="target" position={Position.Left}
+                id={i === 0 ? "input" : `input-${i}`}
+                className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+              <span className="absolute pointer-events-none select-none"
+                style={{ top, left: -12, transform: "translate(-100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
+                Input {i + 1}
+              </span>
+            </div>
           );
         })
       ) : (
