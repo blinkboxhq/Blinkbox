@@ -327,25 +327,27 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCol
 
   return (
     <>
-      <Handle type="source" position={Position.Right} id={topId}
-        className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", background: topColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: topY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
-      {topConnected
-        ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
+      {topConnected ? (
+        <>
+          <Handle type="source" position={Position.Right} id={topId}
+            className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+            style={{ boxShadow: "none", background: topColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: topY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
+          <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: topColor || "#fff" }}>{topLabel}</span>
           </div>
-        : plusBtn(topY, topId, topLabel, topColor || HANDLE_BORDER)
-      }
+        </>
+      ) : plusBtn(topY, topId, topLabel, topColor || HANDLE_BORDER)}
 
-      <Handle type="source" position={Position.Right} id={botId}
-        className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", background: botColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: botY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
-      {botConnected
-        ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
+      {botConnected ? (
+        <>
+          <Handle type="source" position={Position.Right} id={botId}
+            className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+            style={{ boxShadow: "none", background: botColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: botY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
+          <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
             <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: botColor || "#fff" }}>{botLabel}</span>
           </div>
-        : plusBtn(botY, botId, botLabel, botColor || HANDLE_BORDER)
-      }
+        </>
+      ) : plusBtn(botY, botId, botLabel, botColor || HANDLE_BORDER)}
     </>
   );
 }
