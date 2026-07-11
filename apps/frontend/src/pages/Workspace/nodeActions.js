@@ -492,12 +492,6 @@ export const NODE_ACTIONS = {
     { name: "Default Fallthrough", description: "Catch unmatched cases in the default branch" },
     { name: "Range-based Routing", description: "Route based on numeric ranges" },
   ],
-  merge: [
-    { name: "Merge All Branches", description: "Wait for all branches and combine their outputs" },
-    { name: "First Wins", description: "Continue with whichever branch completes first" },
-    { name: "Concatenate Arrays", description: "Merge multiple arrays into one flat array" },
-    { name: "Deep Merge Objects", description: "Deep-merge two or more objects together" },
-  ],
   approval: [
     { name: "Wait for Human Approval", description: "Pause and send an approval request email" },
     { name: "Require Comment", description: "Pause until a reviewer leaves a comment" },

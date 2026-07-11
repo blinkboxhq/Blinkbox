@@ -159,7 +159,7 @@ export const DEFAULT_SCHEMAS = {
   code: { result: "object" },
   delay: { delayed: "boolean", resumeAfter: "string" },
   loop: { __loopIndex: "number", __loopTotal: "number", _dynamic: true },
-  merge: { _passthrough: true },
+  merge: { __mergedFrom: "number", _dynamic: true },
   // AI Hub
   openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
   anthropic: { result: "string", model: "string", tokensUsed: "number", provider: "string" },
