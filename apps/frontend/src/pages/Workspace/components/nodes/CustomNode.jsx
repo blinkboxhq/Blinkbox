@@ -858,12 +858,16 @@ function CustomNode({ id, data, selected }) {
       {/* Input handle(s) — styled identically to OutputHandle's source dot.
           Merge renders one handle per branch, evenly spaced down the left edge. */}
       {mergeInputs > 0 ? (
-        Array.from({ length: mergeInputs }, (_, i) => (
-          <Handle key={i} type="target" position={Position.Left}
-            id={i === 0 ? "input" : `input-${i}`}
-            className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-            style={{ boxShadow: "none", top: cardH * (i + 0.5) / mergeInputs, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
-        ))
+        Array.from({ length: mergeInputs }, (_, i) => {
+          const gap = 24;
+          const top = cardH / 2 + (i - (mergeInputs - 1) / 2) * gap;
+          return (
+            <Handle key={i} type="target" position={Position.Left}
+              id={i === 0 ? "input" : `input-${i}`}
+              className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+              style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+          );
+        })
       ) : (
         <Handle type="target" position={Position.Left} id="input"
           className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
