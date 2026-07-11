@@ -131,7 +131,7 @@ function InputPanel({ canvasNodes, currentNodeId, allRunOutputs }) {
             }));
           } else if (schema) {
             vars = Object.entries(schema)
-              .filter(([k]) => !k.startsWith("_"))
+              .filter(([k]) => !(k.startsWith("_") && !k.startsWith("__")))
               .map(([k]) => ({ key: k, ref: `{{${slug}.${k}}}`, value: null, isLive: false }));
           } else {
             vars = [

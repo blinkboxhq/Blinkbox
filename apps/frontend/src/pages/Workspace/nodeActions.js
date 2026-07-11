@@ -492,12 +492,6 @@ export const NODE_ACTIONS = {
     { name: "Default Fallthrough", description: "Catch unmatched cases in the default branch" },
     { name: "Range-based Routing", description: "Route based on numeric ranges" },
   ],
-  loop: [
-    { name: "Loop Over Array", description: "Iterate over each item in an array" },
-    { name: "Loop N Times", description: "Repeat a fixed number of times" },
-    { name: "While Condition", description: "Repeat while a condition is true" },
-    { name: "For Each Batch", description: "Process items in chunks with a loop" },
-  ],
   merge: [
     { name: "Merge All Branches", description: "Wait for all branches and combine their outputs" },
     { name: "First Wins", description: "Continue with whichever branch completes first" },

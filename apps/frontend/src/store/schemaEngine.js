@@ -158,7 +158,7 @@ export const DEFAULT_SCHEMAS = {
   // Supporting nodes
   code: { result: "object" },
   delay: { delayed: "boolean", resumeAfter: "string" },
-  loop: { items: "array", index: "number", item: "object" },
+  loop: { __loopIndex: "number", __loopTotal: "number", _dynamic: true },
   merge: { _passthrough: true },
   // AI Hub
   openai: { result: "string", model: "string", tokensUsed: "number", provider: "string" },

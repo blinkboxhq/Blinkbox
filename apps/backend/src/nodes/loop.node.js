@@ -19,7 +19,7 @@ export default {
     const {
       arrayPath = "",
       indexKey = "__loopIndex",
-      maxIterations = 200,
+      maxIterations = 1000,
       breakCondition,
       fanOut = true,
     } = config;
