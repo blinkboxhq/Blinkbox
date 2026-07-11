@@ -304,18 +304,22 @@ function AgentInHandle() {
 }
 
 // ─── Condition dual output handles ───────────────────────────────────────────
-function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topConnected, botConnected, onAdd }) {
+function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topColor, botColor, topConnected, botConnected, onAdd }) {
   const connecting = useIsConnecting();
-  const plusBtn = (y, handleId) => (
+  const plusBtn = (y, handleId, label, labelColor) => (
     <>
       <div className={`absolute z-[2] nodrag flex items-center pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`} style={{ left: "100%", top: y, transform: "translateY(-50%)" }}>
         <span className="h-[3px] w-[72px] shrink-0 rounded-full" style={{ background: HANDLE_BORDER }} />
+      </div>
+      <div className={`absolute z-[3] nodrag pointer-events-none transition-opacity duration-500 ${connecting ? "opacity-0" : "opacity-100"}`}
+        style={{ left: "100%", marginLeft: 30, top: y - 14, transform: "translateX(-50%)" }}>
+        <span className="text-[8px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: labelColor }}>{label}</span>
       </div>
       <Handle type="source" position={Position.Right} id={handleId}
         onClick={e => { e.stopPropagation(); onAdd(e, handleId); }}
         className={`group/plus !flex !items-center !justify-center !w-6 !h-6 !rounded-full !shadow-none touch-none nodrag nopan cursor-pointer transition-all duration-500 hover:!bg-zinc-800 hover:!border-white/40 ${connecting ? "opacity-0" : "opacity-100"}`}
         style={{ top: y, left: "100%", marginLeft: 72, transform: "translate(0, -50%)", zIndex: 3, background: "#18181b", border: `1.5px solid ${HANDLE_BORDER}` }}
-        title="Drag to connect · click to add step">
+        title={`${label} · drag to connect or click to add step`}>
         <Plus className="w-3.5 h-3.5 text-zinc-300 group-hover/plus:text-white pointer-events-none" strokeWidth={3} />
       </Handle>
     </>
@@ -325,22 +329,22 @@ function DualOutputHandle({ topY, botY, topId, botId, topLabel, botLabel, topCon
     <>
       <Handle type="source" position={Position.Right} id={topId}
         className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: topY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
+        style={{ boxShadow: "none", background: topColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: topY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
       {topConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -46, top: topY, transform: "translateY(-50%)" }}>
-            <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{topLabel}</span>
+            <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: topColor || "#fff" }}>{topLabel}</span>
           </div>
-        : plusBtn(topY, topId)
+        : plusBtn(topY, topId, topLabel, topColor || HANDLE_BORDER)
       }
 
       <Handle type="source" position={Position.Right} id={botId}
         className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: botY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
+        style={{ boxShadow: "none", background: botColor || EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, top: botY, right: 0, transform: "translate(50%, -50%)", zIndex: 5 }} />
       {botConnected
         ? <div className="absolute z-10 nodrag pointer-events-none" style={{ right: -50, top: botY, transform: "translateY(-50%)" }}>
-            <span className="text-[9px] font-semibold text-white uppercase tracking-wider">{botLabel}</span>
+            <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: botColor || "#fff" }}>{botLabel}</span>
           </div>
-        : plusBtn(botY, botId)
+        : plusBtn(botY, botId, botLabel, botColor || HANDLE_BORDER)
       }
     </>
   );
@@ -352,6 +356,7 @@ function ConditionOutputHandles({ cardHeight, trueConnected, falseConnected, onA
       topY={cardHeight * 0.33} botY={cardHeight * 0.67}
       topId="true" botId="false"
       topLabel="True" botLabel="False"
+      topColor="#34d399" botColor="#f43f5e"
       topConnected={trueConnected} botConnected={falseConnected}
       onAdd={onAdd}
     />
@@ -365,6 +370,7 @@ function SuccessFailedOutputHandles({ cardHeight, successConnected, failedConnec
       topY={cardHeight * 0.33} botY={cardHeight * 0.67}
       topId="success" botId="failed"
       topLabel="Success" botLabel="Failed"
+      topColor="#34d399" botColor="#f43f5e"
       topConnected={successConnected} botConnected={failedConnected}
       onAdd={onAdd}
     />
@@ -576,7 +582,7 @@ function CustomNode({ id, data, selected }) {
   const splitOutputs = canSplit && !!data.config?.splitOutputs;
 
   const handlePlay = e => { e.stopPropagation(); if (!isRunning && automationId) runEngine(automationId); };
-  const handleAddNext = e => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id); };
+  const handleAddNext = (e, sourceHandle = "output") => { e.stopPropagation(); e.preventDefault(); setAddNodeSource(id, sourceHandle); };
   const handleOpenConfig = e => { e.stopPropagation(); setSelectedNodeId(id); };
   const handleDuplicate = e => { e.stopPropagation(); if (duplicateNode) duplicateNode(id); };
   const handleDelete = e => { e.stopPropagation(); deleteElements({ nodes: [{ id }] }); };

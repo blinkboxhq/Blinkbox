@@ -39,6 +39,7 @@ export default function AddNodeSidebar() {
 
   const addNode           = useWorkspaceStore((s) => s.addNode);
   const addNodeSource     = useWorkspaceStore((s) => s.addNodeSource);
+  const addNodeSourceHandle = useWorkspaceStore((s) => s.addNodeSourceHandle);
   const nodes             = useWorkspaceStore((s) => s.nodes);
   const edges             = useWorkspaceStore((s) => s.edges);
   const clearAddNodeModal = useWorkspaceStore((s) => s.clearAddNodeModal);
@@ -67,13 +68,13 @@ export default function AddNodeSidebar() {
     const newId = `${nodeDef.key}-${crypto.randomUUID()}`;
     addNode({ id: newId, type: "custom", position: pos, data: { backendType: nodeDef.key, label: selectedAction || nodeDef.label, type: "action", config: selectedAction ? { selectedAction } : {} } });
     if (addNodeSource && addNodeSource !== "__edge__") {
-      const already = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
-      if (!already) onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
+      const already = edges.some((e) => e.source === addNodeSource && e.sourceHandle === addNodeSourceHandle);
+      if (!already) onConnect({ source: addNodeSource, target: newId, sourceHandle: addNodeSourceHandle, targetHandle: null });
     }
     playNodeLand();
     close();
     setSelectedNodeId(newId);
-  }, [addNode, addNodeSource, edges, onConnect, basePosition, close, setSelectedNodeId]);
+  }, [addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId]);
 
   const commitAll = useCallback(() => {
     if (selected.size === 0) return;
@@ -86,8 +87,8 @@ export default function AddNodeSidebar() {
       const newId = `${key}-${crypto.randomUUID()}`;
       addNode({ id: newId, type: "custom", position: { x: base.x + i * 320, y: base.y }, data: { backendType: key, label: def.label, type: "action", config: {} } });
       if (i === 0 && addNodeSource && addNodeSource !== "__edge__") {
-        const already = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
-        if (!already) onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
+        const already = edges.some((e) => e.source === addNodeSource && e.sourceHandle === addNodeSourceHandle);
+        if (!already) onConnect({ source: addNodeSource, target: newId, sourceHandle: addNodeSourceHandle, targetHandle: null });
       }
       lastId = newId;
       i++;
@@ -95,7 +96,7 @@ export default function AddNodeSidebar() {
     playNodeLand();
     close();
     if (lastId) setSelectedNodeId(lastId);
-  }, [selected, addNode, addNodeSource, edges, onConnect, basePosition, close, setSelectedNodeId]);
+  }, [selected, addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId]);
 
   const toggleSelect = (nodeDef) => {
     setSelected((prev) => {

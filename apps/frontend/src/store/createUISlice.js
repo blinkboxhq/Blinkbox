@@ -31,6 +31,7 @@ export const createUISlice = (set, get) => ({
   isActivating: false,
   isLoading: true,
   addNodeSource: null,
+  addNodeSourceHandle: "output",
   insertEdgeId: null,
   isAgentPickerOpen: false,
   agentPickerParentId: null,
@@ -51,11 +52,11 @@ export const createUISlice = (set, get) => ({
     return { panels: { ...s.panels, [key]: opening } };
   }),
   setWorkflowName: (name) => set({ workflowName: name }),
-  setAddNodeSource: (nodeId) =>
-    set({ addNodeSource: nodeId, insertEdgeId: null, isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
+  setAddNodeSource: (nodeId, sourceHandle = "output") =>
+    set({ addNodeSource: nodeId, addNodeSourceHandle: sourceHandle, insertEdgeId: null, isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
   setInsertOnEdge: (edgeId) =>
     set({ insertEdgeId: edgeId, addNodeSource: "__edge__", isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
-  clearAddNodeModal: () => set({ addNodeSource: null, insertEdgeId: null, isAddNodeOpen: false }),
+  clearAddNodeModal: () => set({ addNodeSource: null, addNodeSourceHandle: "output", insertEdgeId: null, isAddNodeOpen: false }),
   openAgentPicker: (parentId) => set({ isAgentPickerOpen: true, agentPickerParentId: parentId, isAddNodeOpen: false, isTriggerPickerOpen: false }),
   closeAgentPicker: () => set({ isAgentPickerOpen: false, agentPickerParentId: null }),
   setSuggestionNode: (node) => set({ suggestionNode: node }),

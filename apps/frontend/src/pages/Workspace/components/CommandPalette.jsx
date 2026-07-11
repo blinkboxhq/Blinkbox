@@ -22,6 +22,7 @@ export default function CommandPalette() {
 
   const addNode           = useWorkspaceStore((s) => s.addNode);
   const addNodeSource     = useWorkspaceStore((s) => s.addNodeSource);
+  const addNodeSourceHandle = useWorkspaceStore((s) => s.addNodeSourceHandle);
   const nodes             = useWorkspaceStore((s) => s.nodes);
   const edges             = useWorkspaceStore((s) => s.edges);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
@@ -108,9 +109,9 @@ export default function CommandPalette() {
     });
 
     if (addNodeSource && addNodeSource !== "__edge__") {
-      const alreadyConnected = edges.some((e) => e.source === addNodeSource && e.sourceHandle === "output");
+      const alreadyConnected = edges.some((e) => e.source === addNodeSource && e.sourceHandle === addNodeSourceHandle);
       if (!alreadyConnected) {
-        onConnect({ source: addNodeSource, target: newId, sourceHandle: "output", targetHandle: null });
+        onConnect({ source: addNodeSource, target: newId, sourceHandle: addNodeSourceHandle, targetHandle: null });
       }
     }
 
@@ -119,7 +120,7 @@ export default function CommandPalette() {
     setPending(null);
     setQuery("");
     setSelectedNodeId(newId);
-  }, [nodes, edges, addNodeSource, addNode, onConnect, setSelectedNodeId]);
+  }, [nodes, edges, addNodeSource, addNodeSourceHandle, addNode, onConnect, setSelectedNodeId]);
 
   const selectItem = (item) => {
     if (item.type === "node") {
