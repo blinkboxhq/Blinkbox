@@ -557,7 +557,7 @@ function CustomNode({ id, data, selected }) {
 
   // Action cards use EDGE_RADIUS on all four corners, matching the trigger
   // card's top-right / bottom-right corners exactly.
-  const EDGE_RADIUS = 8;
+  const EDGE_RADIUS = 7;
   const shapeRadius = EDGE_RADIUS;
   const configHint = getConfigHint(data, edges, id);
 
@@ -798,12 +798,12 @@ function CustomNode({ id, data, selected }) {
           style={{ top: cardH / 2 }} />
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
           onClick={handleOpenConfig} className="bb-card relative cursor-pointer overflow-visible"
-          style={{ width: cardW, height: cardH, borderRadius: 12,
+          style={{ width: cardW, height: cardH, borderRadius: 11,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
             border: selected ? "1.5px solid rgba(255,255,255,0.65)" : "1.5px solid rgba(255,255,255,0.28)",
             boxShadow: GLASS_SHADOW(isHovered, selected) }}>
-          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 11, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 10, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
             <div className="flex items-center gap-2">
               <Split className="w-5 h-5 text-violet-400 shrink-0" strokeWidth={1.75} />

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Config Panel · Concept 3 — Soft Cards</title>
+<style>
+  :root{
+    --s0:#0f0f0f; --s1:#1b1b1b; --s2:#262626; --s3:#303030;
+    --bsub:#2b2b2b; --b:#3b3b3b; --bstr:#545454;
+    --hi:#fafafa; --mid:#b6b6b6; --lo:#8c8c8c; --dim:#6d6d6d;
+    --acc:#6f97e8; --acc-soft:rgba(111,151,232,.14); --acc-hot:#a9c0ef; --acc-ring:rgba(111,151,232,.40);
+    --r:14px; --r-sm:11px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    background:#0c0c0d; color:var(--mid); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:40px 20px;
+  }
+  .panel{width:380px; display:flex; flex-direction:column; gap:10px}
+  .card{
+    background:var(--s1); border:1px solid var(--bsub); border-radius:var(--r); padding:15px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 14px 40px -22px rgba(0,0,0,.8);
+  }
+  .head{display:flex; align-items:center; gap:12px; padding:6px 4px 2px}
+  .head .ic{
+    width:42px; height:42px; border-radius:12px; display:grid; place-items:center; flex:none;
+    background:linear-gradient(160deg, rgba(111,151,232,.18), rgba(111,151,232,.05)); color:var(--acc-hot);
+    box-shadow:inset 0 0 0 1px rgba(111,151,232,.2);
+  }
+  .head h1{font-size:15px; font-weight:700; color:var(--hi); letter-spacing:-.01em}
+  .head p{font-size:11px; color:var(--dim); margin-top:2px}
+
+  label.k{font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); display:block; margin-bottom:9px}
+
+  /* glow surface — soft rounded variant */
+  .glow{position:relative; --gx:-200px; --gy:-200px; --gi:0}
+  .glow::before{
+    content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.4px; pointer-events:none;
+    opacity:var(--gi); transition:opacity .15s linear;
+    background:radial-gradient(180px circle at var(--gx) var(--gy), var(--acc-hot), rgba(169,192,239,.4) 45%, transparent 72%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+  }
+  .card.glow::before{border-radius:var(--r)}
+
+  /* connected credential chip style (this concept shows the post-connect state) */
+  .cred{
+    display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:var(--r-sm);
+    background:var(--s0); border:1px solid var(--bsub);
+  }
+  .cred .avatar{width:30px; height:30px; border-radius:8px; background:#fff; display:grid; place-items:center; flex:none}
+  .cred .avatar svg{width:18px; height:18px}
+  .cred .meta{display:flex; flex-direction:column; min-width:0}
+  .cred .meta .n{font-size:12px; color:var(--hi); font-weight:600}
+  .cred .meta .e{font-size:10px; color:var(--dim)}
+  .cred .status{margin-left:auto; display:flex; align-items:center; gap:6px; font-size:10px; font-weight:600; color:#4ade80}
+  .cred .status .dot{width:6px; height:6px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px rgba(74,222,128,.6)}
+  .cred .swap{margin-left:auto; font-size:10px; color:var(--lo); cursor:pointer; text-decoration:underline; text-underline-offset:2px}
+
+  .signin{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;
+    background:#fff; color:#1f2937; font-size:13px; font-weight:600;
+    padding:11px; border-radius:var(--r-sm); cursor:pointer; border:none;
+    box-shadow:0 8px 22px -12px rgba(0,0,0,.7);
+  }
+  .signin svg{width:18px; height:18px}
+
+  .seg{display:flex; gap:6px; background:var(--s0); padding:4px; border-radius:var(--r-sm); border:1px solid var(--bsub)}
+  .seg button{
+    flex:1; padding:8px; border:none; background:transparent; border-radius:8px; cursor:pointer;
+    font-size:11px; font-weight:600; color:var(--lo); font-family:inherit; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .seg button.on{background:var(--acc-soft); color:var(--acc-hot); box-shadow:inset 0 0 0 1px var(--acc-ring)}
+
+  .control,.inp{
+    width:100%; background:var(--s0); border:1px solid var(--bsub); border-radius:var(--r-sm);
+    padding:11px 13px; font-size:13px; color:var(--hi); font-family:inherit; outline:none;
+  }
+  .control{display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer}
+  .control .chev{width:14px; height:14px; color:var(--dim)}
+  .inp::placeholder{color:var(--dim)}
+  .hint{font-size:10px; color:var(--dim); margin-top:8px; line-height:1.5}
+
+  .menu{
+    position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30;
+    background:var(--s2); border:1px solid var(--b); border-radius:12px;
+    box-shadow:0 20px 50px -16px rgba(0,0,0,.85); padding:6px; display:none;
+  }
+  .menu.open{display:block}
+  .opt{display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; font-size:13px; color:var(--mid); cursor:pointer}
+  .opt:hover{background:rgba(255,255,255,.05)}
+  .opt.on{color:var(--hi); background:rgba(111,151,232,.1)}
+  .opt .oi{width:26px; height:26px; border-radius:7px; background:var(--s3); display:grid; place-items:center; color:var(--lo); flex:none}
+  .opt.on .oi{background:var(--acc-soft); color:var(--acc-hot)}
+  .opt .tick{margin-left:auto; color:var(--acc-hot); opacity:0}
+  .opt.on .tick{opacity:1}
+
+  .add{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:9px;
+    padding:10px; border:1px solid var(--bsub); border-radius:var(--r-sm); background:var(--s0);
+    color:var(--lo); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .add:hover{color:var(--acc-hot); border-color:var(--acc-ring)}
+  .add svg{color:var(--acc)}
+
+  .tag{position:fixed; top:18px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:var(--dim)}
+</style>
+</head>
+<body>
+  <span class="tag">Concept 3 · Soft Cards</span>
+  <div class="panel">
+
+    <!-- header card -->
+    <div class="card glow head">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zm4.5-4.772H7.91V9.68h7.91V7.773zm0 9.545H7.91v1.91h7.91v-1.91zm0-4.773H12.41v1.91h3.41v-1.91zM6 3v18l1.5 1.5 1.5-1.5V3L7.5 1.5 6 3zM18 3v18l1.5 1.5 1.5-1.5V3L19.5 1.5 18 3z"/></svg>
+      </div>
+      <div><h1>Google Sheets</h1><p>Read &amp; write spreadsheet data</p></div>
+    </div>
+
+    <!-- credential card (shows connected state + reconnect) -->
+    <div class="card glow">
+      <label class="k">Credential</label>
+      <div class="cred glow">
+        <div class="avatar">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.245c0-.905-.075-1.565-.236-2.25H12.255v4.083h6.187c-.124 1.014-.797 2.542-2.294 3.569l-.021.136 3.332 2.53.23.022C21.779 18.417 23 15.593 23 12.245z"/><path fill="#34A853" d="M12.255 23c3.01 0 5.535-.99 7.38-2.7l-3.514-2.7c-.94.654-2.2 1.11-3.866 1.11-2.948 0-5.45-1.94-6.34-4.62l-.13.01-3.466 2.66-.045.124C3.913 20.46 7.79 23 12.255 23z"/><path fill="#FBBC05" d="M5.915 14.09a6.78 6.78 0 01-.38-2.09c0-.728.137-1.434.366-2.09l-.006-.14L2.38 7.06l-.114.054A11 11 0 001 12c0 1.77.435 3.444 1.265 4.927l3.65-2.837z"/><path fill="#EB4335" d="M12.255 5.29c2.09 0 3.5.892 4.305 1.638l3.142-3.044C17.78 2.184 15.265 1 12.255 1 7.79 1 3.913 3.54 2.15 7.073l3.65 2.837c.9-2.68 3.402-4.62 6.455-4.62z"/></svg>
+        </div>
+        <div class="meta"><span class="n">Sukham — Google</span><span class="e">blinkbox.co.in@gmail.com</span></div>
+        <div class="status"><span class="dot"></span>Connected</div>
+      </div>
+      <button class="signin glow">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.245c0-.905-.075-1.565-.236-2.25H12.255v4.083h6.187c-.124 1.014-.797 2.542-2.294 3.569l-.021.136 3.332 2.53.23.022C21.779 18.417 23 15.593 23 12.245z"/><path fill="#34A853" d="M12.255 23c3.01 0 5.535-.99 7.38-2.7l-3.514-2.7c-.94.654-2.2 1.11-3.866 1.11-2.948 0-5.45-1.94-6.34-4.62l-.13.01-3.466 2.66-.045.124C3.913 20.46 7.79 23 12.255 23z"/><path fill="#FBBC05" d="M5.915 14.09a6.78 6.78 0 01-.38-2.09c0-.728.137-1.434.366-2.09l-.006-.14L2.38 7.06l-.114.054A11 11 0 001 12c0 1.77.435 3.444 1.265 4.927l3.65-2.837z"/><path fill="#EB4335" d="M12.255 5.29c2.09 0 3.5.892 4.305 1.638l3.142-3.044C17.78 2.184 15.265 1 12.255 1 7.79 1 3.913 3.54 2.15 7.073l3.65 2.837c.9-2.68 3.402-4.62 6.455-4.62z"/></svg>
+        Use a different account
+      </button>
+    </div>
+
+    <!-- config card -->
+    <div class="card glow" style="display:flex; flex-direction:column; gap:16px">
+      <!-- operation -->
+      <div style="position:relative">
+        <label class="k">Operation</label>
+        <div class="control glow" onclick="this.parentNode.querySelector('.menu').classList.toggle('open')">
+          <span>Read Range</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="menu">
+          <div class="opt on"><span class="oi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span>Read Range<svg class="tick" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="opt"><span class="oi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span>Write Range</div>
+          <div class="opt"><span class="oi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>Append Row</div>
+          <div class="opt"><span class="oi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></span>Clear Range</div>
+        </div>
+      </div>
+
+      <!-- segmented value-input -->
+      <div>
+        <label class="k">Value Input</label>
+        <div class="seg">
+          <button class="on">Parsed</button>
+          <button>Raw Input</button>
+        </div>
+      </div>
+
+      <!-- spreadsheet id -->
+      <div>
+        <label class="k">Spreadsheet ID</label>
+        <input class="inp glow" placeholder="1BxiMVs0XRA5nFMdKvBdBZ…" />
+        <p class="hint">Found in the spreadsheet URL between /d/ and /edit</p>
+      </div>
+
+      <!-- range + add -->
+      <div>
+        <label class="k">Ranges</label>
+        <input class="inp glow" placeholder="Sheet1!A1:D10" />
+        <button class="add glow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Add another range</button>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const RANGE=200;
+  window.addEventListener('pointermove',e=>{
+    document.querySelectorAll('.glow').forEach(el=>{
+      const r=el.getBoundingClientRect();
+      const cx=Math.max(r.left,Math.min(e.clientX,r.right));
+      const cy=Math.max(r.top,Math.min(e.clientY,r.bottom));
+      const d=Math.hypot(e.clientX-cx,e.clientY-cy);
+      const gi=d>=RANGE?0:1-d/RANGE;
+      el.style.setProperty('--gi',gi.toFixed(3));
+      if(gi>0){el.style.setProperty('--gx',(e.clientX-r.left)+'px');el.style.setProperty('--gy',(e.clientY-r.top)+'px');}
+    });
+  },{passive:true});
+</script>
+</body>
+</html>
