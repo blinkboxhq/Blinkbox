@@ -4,7 +4,7 @@ import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner,
 } from '@/components/ui/ConfigKit';
 
-const ACCENT = '#2dd4bf';
+const ACCENT = '#34d399';
 
 const MODE_OPS = [
   { value: 'combine', label: 'Combine',      desc: 'Shallow-merge all branch fields into one object' },

@@ -5,7 +5,7 @@ import {
   ConfigToggleRow, ConfigBanner, RemovableRow,
 } from '@/components/ui/ConfigKit';
 
-const ACCENT = '#fbbf24';
+const ACCENT = '#a78bfa';
 
 const OPERATORS = [
   { value: 'equals',     label: 'equals' },
