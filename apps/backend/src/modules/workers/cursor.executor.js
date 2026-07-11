@@ -23,6 +23,11 @@ const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
 const MAX_CURSORS_PER_EXECUTION = 500;
 
+// A data-flow edge feeds the standard input array (vs. agent slots: llm/memory/tools).
+// The merge node exposes numbered handles (input, input-1, input-2, …) so each parallel
+// branch lands on its own port; all of them still count as data flow.
+const isDataFlowHandle = (h) => !h || h === "input" || h.startsWith("input-");
+
 /**
  * Classify an error and generate a human-readable fix hint.
  */
@@ -246,7 +251,7 @@ export async function processCursor({ executionId, cursorId }) {
     // Agent slot edges (llm, memory, tools) are excluded — they feed handleDeps,
     // not the data-flow input array.
     const incomingEdges = automation.edges.filter((e) => e.target === node.id);
-    const dataFlowEdges = incomingEdges.filter((e) => !e.targetHandle || e.targetHandle === "input");
+    const dataFlowEdges = incomingEdges.filter((e) => isDataFlowHandle(e.targetHandle));
     let inputItems = [];
 
     // LOOP FAN-OUT: cursor carries a specific item snapshot — use it exclusively
@@ -355,6 +360,23 @@ export async function processCursor({ executionId, cursorId }) {
 
     // KERNEL EXECUTION: Run node with timeout guard (handler.timeoutMs overrides; 0 = unlimited, heartbeat keeps the cursor alive)
     const nodeTimeoutMs = handler.timeoutMs !== undefined ? handler.timeoutMs : NODE_TIMEOUT_MS;
+
+    // MERGE: needs every branch at once, not one item per run. Collapse all
+    // collected inputs into a single array argument and run the handler once.
+    if (node.type === "merge") {
+      let resolvedConfig;
+      try {
+        resolvedConfig = resolveConfig(node.data, inputItems[0]?.json || {}, dynamicContext, 0);
+      } catch (configErr) {
+        throw new Error(`Config resolution failed: ${configErr.message}. Check {{ expressions }} in this node's settings.`);
+      }
+      const branches = inputItems.map((it) => it.json);
+      const rawOutput = await withTimeout(
+        handler.run(resolvedConfig, branches, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
+        nodeTimeoutMs,
+      );
+      finalOutputs.push(...(Array.isArray(rawOutput) ? rawOutput.map((r) => (r.json ? r : { json: r })) : [{ json: rawOutput }]));
+    } else
     for (let i = 0; i < inputItems.length; i++) {
       const item = inputItems[i];
 
@@ -679,7 +701,7 @@ async function routeEdges(
       // edges (llm, memory, tools) connect sub-nodes that never execute, so
       // they must never block the merge-readiness check.
       const allIncoming = automation.edges.filter(
-        (e) => e.target === targetNodeId && (!e.targetHandle || e.targetHandle === "input"),
+        (e) => e.target === targetNodeId && isDataFlowHandle(e.targetHandle),
       );
 
       if (allIncoming.length > 1) {

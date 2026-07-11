@@ -834,7 +834,13 @@ function CustomNode({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 80, cardH = 80;
+  const cardW = 80;
+  // Merge exposes one input handle per branch; the card grows to keep the
+  // handles from crowding once there are more than two.
+  const mergeInputs = data.backendType === "merge"
+    ? Math.max(2, Math.min(10, Number(data.config?.inputs) || 2))
+    : 0;
+  const cardH = mergeInputs > 2 ? 80 + (mergeInputs - 2) * 26 : 80;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -849,10 +855,20 @@ function CustomNode({ id, data, selected }) {
       {toolbar}
       {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
-      {/* Input handle — styled identically to OutputHandle's source dot */}
-      <Handle type="target" position={Position.Left} id="input"
-        className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+      {/* Input handle(s) — styled identically to OutputHandle's source dot.
+          Merge renders one handle per branch, evenly spaced down the left edge. */}
+      {mergeInputs > 0 ? (
+        Array.from({ length: mergeInputs }, (_, i) => (
+          <Handle key={i} type="target" position={Position.Left}
+            id={i === 0 ? "input" : `input-${i}`}
+            className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+            style={{ boxShadow: "none", top: cardH * (i + 0.5) / mergeInputs, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+        ))
+      ) : (
+        <Handle type="target" position={Position.Left} id="input"
+          className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+          style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+      )}
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={handleOpenConfig} className="bb-card relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
