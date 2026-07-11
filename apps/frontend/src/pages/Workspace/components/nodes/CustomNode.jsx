@@ -510,6 +510,7 @@ function CustomNode({ id, data, selected }) {
   const eventDef = (variantDef && data.config?.eventId) ? getTriggerEvent(data.config.triggerVariant, data.config.eventId) : null;
   const Icon = (variantDef || nodeDef).icon;
   const accent = (variantDef?.accentColor || nodeDef.accentColor) || "161,161,170";
+  const iconColorClass = nodeDef.colorClass || "text-white";
 
   const isExecutionLive = useWorkspaceStore(s => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore(s => s.getNodeStatus);
@@ -620,7 +621,7 @@ function CustomNode({ id, data, selected }) {
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
             <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-10 h-10 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className={`w-10 h-10 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
@@ -769,7 +770,7 @@ function CustomNode({ id, data, selected }) {
             <img src={nodeDef.logoUrl} alt={data.label} className="w-7 h-7 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className="w-7 h-7 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+            <Icon className={`w-7 h-7 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
 
@@ -869,7 +870,7 @@ function CustomNode({ id, data, selected }) {
         {nodeDef.logoUrl ? (
           <img src={nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-10 h-10 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-300" strokeWidth={1.4} />
+          <Icon className={`w-10 h-10 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
         )}
       </motion.div>
 
