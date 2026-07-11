@@ -1918,7 +1918,7 @@ export const NodeRegistry = {
   loop: {
     label: "Loop",
     icon: Repeat,
-    colorClass: "text-white",
+    colorClass: "text-amber-400",
     accentColor: "251,191,36",
     ConfigPanel: LoopNode,
     category: "logic",
@@ -1926,7 +1926,7 @@ export const NodeRegistry = {
   merge: {
     label: "Merge",
     icon: Merge,
-    colorClass: "text-white",
+    colorClass: "text-teal-400",
     accentColor: "45,212,191",
     ConfigPanel: MergeNode,
     category: "logic",
