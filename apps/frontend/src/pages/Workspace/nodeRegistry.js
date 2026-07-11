@@ -305,8 +305,6 @@ import SortArrayNode from "@nodes/sort_array/ConfigPanel.jsx";
 import DeduplicateNode from "@nodes/deduplicate/ConfigPanel.jsx";
 import imgDeduplicate from "../../assets/logos/deduplicate.svg";
 import imgDelay from "../../assets/logos/delay.svg";
-import imgLoop from "../../assets/logos/loop.svg";
-import imgMerge from "../../assets/logos/merge.svg";
 import CSVParserNode from "@nodes/csv_parser/ConfigPanel.jsx";
 import DateTimeNode from "@nodes/date_time/ConfigPanel.jsx";
 import CryptoUtilsNode from "@nodes/crypto_utils/ConfigPanel.jsx";
@@ -1920,7 +1918,6 @@ export const NodeRegistry = {
   loop: {
     label: "Loop",
     icon: Repeat,
-    logoUrl: imgLoop,
     colorClass: "text-white",
     accentColor: "251,191,36",
     ConfigPanel: LoopNode,
@@ -1929,7 +1926,6 @@ export const NodeRegistry = {
   merge: {
     label: "Merge",
     icon: Merge,
-    logoUrl: imgMerge,
     colorClass: "text-white",
     accentColor: "45,212,191",
     ConfigPanel: MergeNode,

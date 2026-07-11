@@ -1,4 +1,4 @@
-import imgLoop from '@/assets/logos/loop.svg';
+import { Repeat } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigInput, ConfigSelect,
@@ -53,7 +53,7 @@ export default function LoopNode({ config = {}, updateConfig, nodeId }) {
   return (
     <ConfigSection className="gap-5">
       <ConfigHeader
-        logoUrl={imgLoop}
+        icon={Repeat}
         title="Loop"
         subtitle="Run every downstream node once per array item"
       />

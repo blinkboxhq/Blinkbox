@@ -1,4 +1,4 @@
-import imgMerge from '@/assets/logos/merge.svg';
+import { GitMerge } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner,
@@ -40,7 +40,7 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
   return (
     <ConfigSection className="gap-5">
       <ConfigHeader
-        logoUrl={imgMerge}
+        icon={GitMerge}
         title="Merge"
         subtitle="Wait for parallel branches, then combine their outputs"
       />
