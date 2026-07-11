@@ -356,7 +356,6 @@ function ConditionOutputHandles({ cardHeight, trueConnected, falseConnected, onA
       topY={cardHeight * 0.33} botY={cardHeight * 0.67}
       topId="true" botId="false"
       topLabel="True" botLabel="False"
-      topColor="#34d399" botColor="#f43f5e"
       topConnected={trueConnected} botConnected={falseConnected}
       onAdd={onAdd}
     />
@@ -370,7 +369,6 @@ function SuccessFailedOutputHandles({ cardHeight, successConnected, failedConnec
       topY={cardHeight * 0.33} botY={cardHeight * 0.67}
       topId="success" botId="failed"
       topLabel="Success" botLabel="Failed"
-      topColor="#34d399" botColor="#f43f5e"
       topConnected={successConnected} botConnected={failedConnected}
       onAdd={onAdd}
     />
