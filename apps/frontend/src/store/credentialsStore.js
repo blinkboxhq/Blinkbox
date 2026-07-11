@@ -1,16 +1,19 @@
 import { create } from "zustand";
 import api from "../lib/api";
+import { getSocket } from "../lib/socket";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Credentials Store — one shared list for every consumer.
 //
 // CredentialPicker, OAuthConnectButton and VaultManager all read from here, so
 // creating/updating/deleting a credential anywhere is reflected everywhere with
-// no page refresh. Any mutation should call ensureFresh()/refresh() or push the
-// returned entity through the local upsert/remove helpers below.
+// no page refresh. It also subscribes to the server's `credential:*` socket
+// events and to window focus, so changes made in another tab, on another device,
+// or by a collaborator show up live too.
 // ─────────────────────────────────────────────────────────────────────────────
 
 let inFlight = null;
+let liveWired = false;
 
 const useCredentialsStore = create((set, get) => ({
   credentials: [],
@@ -36,6 +39,7 @@ const useCredentialsStore = create((set, get) => ({
 
   // Fetch once on first mount; later mounts reuse the cached list.
   ensureFresh: () => {
+    get().wireLive();
     if (get().loadedOnce || inFlight) return;
     get().refresh();
   },
@@ -52,6 +56,23 @@ const useCredentialsStore = create((set, get) => ({
     }),
 
   remove: (id) => set((s) => ({ credentials: s.credentials.filter((c) => c._id !== id) })),
+
+  // Keep the shared list live across tabs, devices and collaborators. Wired once.
+  wireLive: () => {
+    if (liveWired) return;
+    liveWired = true;
+    try {
+      const socket = getSocket();
+      socket.on("credential:created", ({ credential }) => get().upsert(credential));
+      socket.on("credential:updated", ({ credential }) => get().upsert(credential));
+      socket.on("credential:deleted", ({ id }) => get().remove(id));
+    } catch { /* socket unavailable */ }
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", () => {
+        if (get().loadedOnce) get().refresh();
+      });
+    }
+  },
 }));
 
 export default useCredentialsStore;

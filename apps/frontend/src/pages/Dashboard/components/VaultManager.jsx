@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Key, Plus, Trash2, Shield, Loader2, Copy, CheckCheck, Pencil, Link2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
-import { getSocket } from '../../../lib/socket';
 import useCredentialsStore from '../../../store/credentialsStore';
 
 import logoGoogle from '../../../assets/credentials/google-color.svg';
@@ -75,19 +74,6 @@ export default function VaultManager() {
   useEffect(() => {
     refreshCredentials();
   }, [refreshCredentials]);
-
-  useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-    const onCreated = ({ credential }) => upsertCredential(credential);
-    const onDeleted = ({ id }) => removeCredential(id);
-    socket.on('credential:created', onCreated);
-    socket.on('credential:deleted', onDeleted);
-    return () => {
-      socket.off('credential:created', onCreated);
-      socket.off('credential:deleted', onDeleted);
-    };
-  }, [upsertCredential, removeCredential]);
 
   const connectOAuth = (provider) => {
     const token = localStorage.getItem('blinkbox_token');

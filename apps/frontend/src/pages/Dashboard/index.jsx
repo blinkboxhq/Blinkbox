@@ -254,11 +254,17 @@ export default function Dashboard() {
 
   useEffect(() => { fetchWorkflows(); }, [fetchWorkflows]);
 
-  // Re-fetch when a collab invite is accepted elsewhere (NotificationBell fires this)
+  // Re-sync when a collab invite is accepted elsewhere (NotificationBell fires
+  // this) and when the tab regains focus, so changes made in another tab or by a
+  // collaborator show up without a manual refresh.
   useEffect(() => {
     const handler = () => fetchWorkflows();
     window.addEventListener('blinkbox:workflows:refresh', handler);
-    return () => window.removeEventListener('blinkbox:workflows:refresh', handler);
+    window.addEventListener('focus', handler);
+    return () => {
+      window.removeEventListener('blinkbox:workflows:refresh', handler);
+      window.removeEventListener('focus', handler);
+    };
   }, [fetchWorkflows]);
 
   useEffect(() => {

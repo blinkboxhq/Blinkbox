@@ -122,6 +122,12 @@ export default function ConnectMCP() {
 
   useEffect(() => { fetchKeys(); }, [fetchKeys]);
 
+  useEffect(() => {
+    const onFocus = () => fetchKeys();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchKeys]);
+
   const handleRevoke = async (id) => {
     try {
       await api.delete(`/api/keys/${id}`);
