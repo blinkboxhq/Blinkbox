@@ -54,6 +54,7 @@ export default function LoopNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader
         icon={Repeat}
+        iconColor={ACCENT}
         title="Loop"
         subtitle="Run every downstream node once per array item"
       />
