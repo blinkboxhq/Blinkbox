@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx src/index.js",
     "start": "tsx src/index.js",
-    "test": "node --test \"src/**/*.test.js\"",
+    "test": "node --experimental-test-module-mocks --test \"src/**/*.test.js\" \"e2e/**/*.test.js\"",
     "typecheck": "tsc --noEmit",
     "eval": "node evals/run.js",
     "eval:vc": "node evals/run.js --vc",
@@ -62,6 +62,8 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^7.0.11",
+    "ioredis-mock": "^8.13.1",
+    "mongodb-memory-server": "^11.2.0",
     "typescript": "^5.7.0"
   }
 }
