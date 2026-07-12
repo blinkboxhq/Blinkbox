@@ -919,9 +919,17 @@ function CustomNode({ id, data, selected }) {
       ) : (data.backendType === "success_failed" || splitOutputs) ? (
         <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
-        <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
+        <>
+          <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
+          {mergeInputs > 0 && (
+            <span className="absolute pointer-events-none select-none"
+              style={{ top: cardH / 2, right: -12, transform: "translate(100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
+              Output
+            </span>
+          )}
+        </>
       )}
-      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
+      {outputCount != null && mergeInputs === 0 && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
         <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
           <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
             {outputCount} item{outputCount !== 1 ? 's' : ''}
