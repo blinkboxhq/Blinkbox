@@ -43,8 +43,8 @@ BlinkBox replaces Zapier, Make, and n8n for teams that need AI agents, headless 
 ### 1. Clone
 
 ```bash
-git clone https://github.com/yourorg/blinkbox.git
-cd blinkbox
+git clone https://github.com/blinkboxhq/Blinkbox.git
+cd Blinkbox
 npm install
 ```
 
