@@ -51,6 +51,9 @@ export async function createCredential(req, res) {
     res.status(201).json({ credential: credPayload });
   } catch (err) {
     console.error("[Credentials] Create error:", err.message);
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ message: err.message });
+    }
     res.status(500).json({ message: "Failed to create credential." });
   }
 }

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import imgSlack from './logo.png';
 import {
   MessageSquare, Layout, Pencil, Trash2, Clock, EyeOff, CornerDownRight, Link2,
@@ -7,21 +6,12 @@ import {
   MessageCircle, Activity,
 } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
-import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigTabs, ConfigToggleRow,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigToggleRow,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
-
-function SlackIcon({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.124 2.521a2.528 2.528 0 0 1 2.52-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.52V8.834zm-1.271 0a2.528 2.528 0 0 1-2.521 2.521 2.528 2.528 0 0 1-2.521-2.521V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zm-2.521 10.124a2.528 2.528 0 0 1 2.521 2.52A2.528 2.528 0 0 1 15.166 24a2.528 2.528 0 0 1-2.521-2.522v-2.52h2.521zm0-1.271a2.528 2.528 0 0 1-2.521-2.521 2.528 2.528 0 0 1 2.521-2.521h6.312A2.528 2.528 0 0 1 24 15.166a2.528 2.528 0 0 1-2.522 2.521h-6.312z" />
-    </svg>
-  );
-}
 
 const OPERATIONS = [
   { value: 'postMessage',       label: 'Post Message',        icon: MessageSquare,   group: 'Messaging' },
@@ -82,12 +72,10 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function SlackNode({ config = {}, updateConfig, nodeId }) {
-  const [authMode, setAuthMode] = useState(config.credentialId ? 'oauth' : 'webhook');
   const operation = config.operation || 'postMessage';
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
-  const isWebhookOp = operation === 'postMessage' && authMode === 'webhook';
-  const needsChannel = CHANNEL_OPS.includes(operation) && !isWebhookOp;
+  const needsChannel = CHANNEL_OPS.includes(operation);
 
   const svi = (k, { placeholder, multiline, alias } = {}) => (
     <SmartVariableInput
@@ -103,6 +91,26 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader logoUrl={imgSlack} title="Slack" subtitle={currentOp?.label || 'Slack Web API'} />
 
+      <div className="flex flex-col gap-2 rounded-md bg-[#4d7cff]/[0.06] border border-[#4d7cff]/20 px-3 py-2.5">
+        <p className="text-[10px] font-semibold text-[#8fb0ff] uppercase tracking-wider">Connect your own Slack app</p>
+        <ol className="text-[10px] text-neutral-400 leading-relaxed font-mono list-decimal list-inside space-y-0.5">
+          <li>Create an app at <span className="text-[#8fb0ff]">api.slack.com/apps</span></li>
+          <li>Add bot scopes under <span className="text-neutral-300">OAuth &amp; Permissions</span> (e.g. chat:write, channels:read)</li>
+          <li>Install to your workspace, copy the <span className="text-neutral-300">Bot User OAuth Token</span> (<span className="text-neutral-300">xoxb-…</span>)</li>
+          <li>Save it below as a credential — reuse it across every Slack step</li>
+        </ol>
+      </div>
+
+      <CredentialPicker
+        value={config.credentialId || ''}
+        onChange={(id) => updateConfig('credentialId', id)}
+        accentColor="blue"
+        label="Slack Bot Token"
+        credentialType="slack"
+        placeholder="Select or add a Slack credential…"
+        hint="Paste your app's Bot User OAuth Token (xoxb-…). Stored encrypted in your Vault."
+      />
+
       <ConfigSelect
         label="Action"
         value={operation}
@@ -110,21 +118,6 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
         options={OPERATIONS}
         accentColor={ACCENT}
       />
-
-      {operation === 'postMessage' && (
-        <ConfigTabs
-          tabs={[{ id: 'oauth', label: 'Bot Token' }, { id: 'webhook', label: 'Webhook URL' }]}
-          value={authMode}
-          onChange={setAuthMode}
-          accentColor={ACCENT}
-        />
-      )}
-
-      {isWebhookOp && (
-        <Field label="Webhook URL" hint="api.slack.com/apps → Incoming Webhooks">
-          {svi('webhookUrl', { placeholder: 'https://hooks.slack.com/services/T00/B00/xxx' })}
-        </Field>
-      )}
 
       {needsChannel && (
         <Field label="Channel" hint="#general or C01ABCDEF">
@@ -306,26 +299,6 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      {!isWebhookOp && (
-        <>
-          <OAuthConnectButton
-            provider="slack"
-            providerLabel="Slack"
-            accentColor="purple"
-            value={config.credentialId || ''}
-            onChange={(id) => updateConfig('credentialId', id)}
-            icon={SlackIcon}
-          />
-          <p className="text-[10px] text-neutral-600 -mt-3 font-mono">Or select an existing credential:</p>
-          <CredentialPicker
-            value={config.credentialId || ''}
-            onChange={(id) => updateConfig('credentialId', id)}
-            accentColor="purple"
-            label="Slack Bot Token"
-            placeholder="Select Slack credential..."
-          />
-        </>
-      )}
     </ConfigSection>
   );
 }

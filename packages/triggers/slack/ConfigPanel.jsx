@@ -72,6 +72,7 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
             <div className="flex flex-col gap-1.5">
               <CredentialPicker
                 label="Signing Secret"
+                credentialType="slack"
                 value={config.slackSigningSecret || ''}
                 onChange={(v) => updateConfig?.('slackSigningSecret', v)}
                 placeholder="Select signing secret credential…"
@@ -82,6 +83,7 @@ export default function SlackTriggerNode({ config = {}, updateConfig, nodeId }) 
             <div className="flex flex-col gap-1.5">
               <CredentialPicker
                 label="Bot OAuth Token (optional)"
+                credentialType="slack"
                 value={config.botToken || ''}
                 onChange={(v) => updateConfig?.('botToken', v)}
                 placeholder="Select bot token credential…"

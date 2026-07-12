@@ -4,10 +4,15 @@ const CredentialSchema = new mongoose.Schema(
   {
     workspaceId: { type: String, required: true, index: true },
     name: { type: String, required: true },
+    // Free-form service/kind label ("slack", "telegram", "api_key", "oauth", …).
+    // Config panels pass the provider name, so this must not be enum-restricted —
+    // a mismatch silently 500s credential creation.
     type: {
       type: String,
-      enum: ["bearer", "api_key", "basic", "oauth"],
       required: true,
+      default: "api_key",
+      trim: true,
+      maxlength: 60,
     },
 
     // The locked vault (stores API key / token / OAuth access token)
