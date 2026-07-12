@@ -1,0 +1,108 @@
+import { test, before, after } from "node:test";
+import assert from "node:assert/strict";
+import {
+  startDb,
+  stopDb,
+  seed,
+  processCursor,
+  Execution,
+  enqueued,
+} from "./executor.testkit.js";
+
+before(startDb);
+after(stopDb);
+
+test("__conditionResult:false routes to false-handle edges without failing the execution", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_condition_false", data: {} },
+      { id: "nTrue", type: "stub_ok", data: {} },
+      { id: "nFalse", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "nTrue", sourceHandle: "true" },
+      { id: "e2", source: "n1", target: "nFalse", sourceHandle: "false" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  let fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.id(cursorId).status, "completed", "condition cursor must not fail");
+  const spawned = fresh.cursors.filter((c) => !c._id.equals(cursorId));
+  assert.equal(spawned.length, 1, "only the false branch spawns");
+  assert.equal(spawned[0].nodeId, "nFalse");
+  assert.notEqual(fresh.status, "failed");
+
+  await processCursor({ executionId: execution._id, cursorId: spawned[0]._id });
+  fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.status, "executed", "false path finishes as a successful execution");
+});
+
+test("__loopFanOut spawns one child cursor per item with _loopItemOverride", async () => {
+  const items = [{ json: { i: 1 } }, { json: { i: 2 } }, { json: { i: 3 } }];
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "loop", type: "stub_fanout", data: { items } },
+      { id: "child", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "loop", target: "child" }],
+    cursorNode: "loop",
+  });
+
+  const enqueuedBefore = enqueued.length;
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  const children = fresh.cursors.filter((c) => c.nodeId === "child");
+  assert.equal(children.length, 3);
+  assert.deepEqual(
+    children.map((c) => c._loopItemOverride),
+    [{ i: 1 }, { i: 2 }, { i: 3 }],
+  );
+  assert.ok(children.every((c) => c.status === "pending"));
+  assert.equal(enqueued.length - enqueuedBefore, 3, "each child cursor is enqueued");
+});
+
+test("routeEdges refuses to spawn once the execution is at MAX_CURSORS_PER_EXECUTION", async () => {
+  const filler = Array.from({ length: 499 }, () => ({ nodeId: "child", status: "completed" }));
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_ok", data: {} },
+      { id: "child", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "n1", target: "child" }],
+    cursorNode: "n1",
+    extraCursors: filler,
+  });
+
+  const enqueuedBefore = enqueued.length;
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.length, 500, "no cursor added beyond the cap");
+  assert.equal(enqueued.length, enqueuedBefore, "nothing enqueued at the cap");
+  assert.equal(fresh.cursors.id(cursorId).status, "completed");
+});
+
+test("loop fan-out is sliced to the remaining cursor slots", async () => {
+  const items = Array.from({ length: 10 }, (_, i) => ({ json: { i } }));
+  const filler = Array.from({ length: 497 }, () => ({ nodeId: "child", status: "completed" }));
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "loop", type: "stub_fanout", data: { items } },
+      { id: "child", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "loop", target: "child" }],
+    cursorNode: "loop",
+    extraCursors: filler,
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.length, 500, "fan-out fills up to the cap and stops");
+  const children = fresh.cursors.filter((c) => c._loopItemOverride != null);
+  assert.equal(children.length, 2, "only slotsLeft items spawn (500 - 498 running)");
+});

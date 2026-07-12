@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx src/index.js",
     "start": "tsx src/index.js",
-    "test": "node --experimental-test-module-mocks --test \"src/**/*.test.js\" \"e2e/**/*.test.js\"",
+    "test": "node --import tsx --experimental-test-module-mocks --test \"src/**/*.test.js\" \"e2e/**/*.test.js\"",
     "typecheck": "tsc --noEmit",
     "eval": "node evals/run.js",
     "eval:vc": "node evals/run.js --vc",
