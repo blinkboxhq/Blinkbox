@@ -138,6 +138,8 @@ function TypingCycle() {
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN AUTH COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
+const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(false);
   const [name, setName] = useState('');
@@ -534,8 +536,8 @@ export default function Auth() {
             </button>
           </form>
 
-          {/* Divider + Google — hidden on reset-password route */}
-          {!resetToken && (
+          {/* Divider + Google — hidden on reset-password route and when no client ID is configured */}
+          {!resetToken && GOOGLE_ENABLED && (
             <>
           <div className="my-5 relative">
             <div className="absolute inset-0 flex items-center">
