@@ -1,7 +1,8 @@
-import { Merge, Plus, Minus } from 'lucide-react';
+import { Merge, GripVertical } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import {
   ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner,
+  AddRow, ConfigDivider,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#34d399';
@@ -34,14 +35,48 @@ function Field({ label, optional, hint, children }) {
   );
 }
 
+// Merge branches aren't "one var of a node" — each parallel input is its own
+// value. So we render a labeled value field per branch, not a flat var list.
+// `config.branches` is the source of truth; `config.inputs` mirrors its length
+// so the canvas draws the matching number of input handles.
+function normalizeBranches(config) {
+  const raw = Array.isArray(config.branches) ? config.branches : null;
+  let branches = raw
+    ? raw.map((b, i) => ({ label: b?.label || `Input ${i + 1}`, value: b?.value || '' }))
+    : Array.from({ length: Math.max(MIN_INPUTS, Math.min(MAX_INPUTS, Number(config.inputs) || 2)) },
+        (_, i) => ({ label: `Input ${i + 1}`, value: '' }));
+  if (branches.length < MIN_INPUTS) {
+    branches = [
+      ...branches,
+      ...Array.from({ length: MIN_INPUTS - branches.length }, (_, i) => ({ label: `Input ${branches.length + i + 1}`, value: '' })),
+    ];
+  }
+  return branches.slice(0, MAX_INPUTS);
+}
+
 export default function MergeNode({ config = {}, updateConfig, nodeId }) {
   const mode = config.mode || 'combine';
   const conflict = config.conflict || 'last';
   const showConflict = mode === 'combine' || mode === 'deep';
-  const inputs = Math.max(MIN_INPUTS, Math.min(MAX_INPUTS, Number(config.inputs) || 2));
+  const branches = normalizeBranches(config);
 
-  const setInputs = (n) =>
-    updateConfig('inputs', Math.max(MIN_INPUTS, Math.min(MAX_INPUTS, n)));
+  const commit = (next) => {
+    updateConfig('branches', next);
+    updateConfig('inputs', next.length);
+  };
+
+  const setBranch = (idx, key, val) =>
+    commit(branches.map((b, i) => (i === idx ? { ...b, [key]: val } : b)));
+
+  const addBranch = () => {
+    if (branches.length >= MAX_INPUTS) return;
+    commit([...branches, { label: `Input ${branches.length + 1}`, value: '' }]);
+  };
+
+  const removeBranch = (idx) => {
+    if (branches.length <= MIN_INPUTS) return;
+    commit(branches.filter((_, i) => i !== idx));
+  };
 
   return (
     <ConfigSection className="gap-5">
@@ -54,30 +89,49 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
 
       <Field
         label="Input Branches"
-        hint="Number of parallel branches this node waits for. Adds a handle on the canvas per branch."
+        hint="One row per parallel branch. Each adds an input handle on the canvas; drop a variable or type the value this branch should contribute."
       >
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setInputs(inputs - 1)}
-            disabled={inputs <= MIN_INPUTS}
-            className="w-8 h-8 flex items-center justify-center rounded-md bg-[#111] border border-[#333] text-neutral-300 hover:border-neutral-500 disabled:opacity-30 disabled:hover:border-[#333] transition-all duration-150"
-          >
-            <Minus className="w-4 h-4" strokeWidth={2} />
-          </button>
-          <span className="min-w-[2ch] text-center text-[15px] font-mono font-bold" style={{ color: ACCENT }}>
-            {inputs}
-          </span>
-          <button
-            type="button"
-            onClick={() => setInputs(inputs + 1)}
-            disabled={inputs >= MAX_INPUTS}
-            className="w-8 h-8 flex items-center justify-center rounded-md bg-[#111] border border-[#333] text-neutral-300 hover:border-neutral-500 disabled:opacity-30 disabled:hover:border-[#333] transition-all duration-150"
-          >
-            <Plus className="w-4 h-4" strokeWidth={2} />
-          </button>
+        <div className="flex flex-col gap-2.5">
+          {branches.map((branch, idx) => (
+            <div key={idx} className="bb-glow-border flex flex-col gap-2 rounded-md p-2.5 bg-[#0f0f0f] border border-[#2b2b2b]">
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-3.5 h-3.5 text-neutral-700 shrink-0" />
+                <input
+                  value={branch.label}
+                  onChange={(e) => setBranch(idx, 'label', e.target.value)}
+                  placeholder={`Input ${idx + 1}`}
+                  className="flex-1 min-w-0 bg-transparent text-[11px] font-mono font-semibold uppercase tracking-wider focus:outline-none placeholder:text-neutral-700"
+                  style={{ color: ACCENT }}
+                />
+                <span className="text-[9px] font-mono text-neutral-700 shrink-0">
+                  {idx === 0 ? 'input' : `input-${idx}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeBranch(idx)}
+                  disabled={branches.length <= MIN_INPUTS}
+                  className="text-neutral-600 hover:text-red-400 disabled:opacity-25 disabled:hover:text-neutral-600 transition-colors shrink-0 text-[15px] leading-none px-1"
+                  title={branches.length <= MIN_INPUTS ? 'Merge needs at least 2 inputs' : 'Remove input'}
+                >
+                  ×
+                </button>
+              </div>
+              <SmartVariableInput
+                value={branch.value}
+                onChange={(val) => setBranch(idx, 'value', val)}
+                placeholder="Drop a variable or type a value…"
+                nodeId={nodeId}
+              />
+            </div>
+          ))}
+
+          {branches.length < MAX_INPUTS && (
+            <AddRow label="Add input" onClick={addBranch} accentColor={ACCENT} />
+          )}
         </div>
       </Field>
+
+      <ConfigDivider label="How to merge" />
 
       <ConfigSelect
         label="Merge Mode"
