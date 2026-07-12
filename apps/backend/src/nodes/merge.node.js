@@ -11,6 +11,10 @@
  *                  "first"   keeps only the first non-empty branch.
  *   key          — output key for the collected array in "array" mode (default "merged").
  *   conflict     — for combine/deep on key collisions: "last" (default) | "first".
+ *   branches     — per-input rows [{ label, value }]. A branch's `value` (already
+ *                  {{ }}-resolved by the executor) overrides the live wired input
+ *                  for that slot; empty value falls back to the live input. Lets a
+ *                  merge contribute typed/dropped values even for unwired handles.
  *
  * Every mode returns a consistent envelope so downstream nodes always have a
  * concrete, predictable output:
@@ -20,6 +24,44 @@
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+function coerceBranchValue(raw) {
+  if (raw == null) return undefined;
+  if (typeof raw !== "string") return raw;
+  const s = raw.trim();
+  if (s === "") return undefined;
+  if (s[0] === "{" || s[0] === "[") {
+    try {
+      return JSON.parse(s);
+    } catch {
+      // not JSON — fall through to the raw string
+    }
+  }
+  return raw;
+}
+
+// Overlay configured per-branch values onto the live wired inputs, by slot, and
+// carry each slot's label. A non-empty branch value wins for its slot; empty
+// falls back to the live input. Extra configured branches (unwired handles) are
+// appended so their typed value still contributes. Returns [{ label, value }].
+function applyBranchValues(inputs, configBranches) {
+  const cfg = Array.isArray(configBranches) ? configBranches : [];
+  const count = Math.max(inputs.length, cfg.length);
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const label = cfg[i]?.label || `Input ${i + 1}`;
+    const override = coerceBranchValue(cfg[i]?.value);
+    if (override !== undefined) out.push({ label, value: override });
+    else if (i < inputs.length) out.push({ label, value: inputs[i] });
+  }
+  return out;
+}
+
+// For object-merge modes (combine/deep) a scalar branch has no keys of its own,
+// so key it under the branch's label. Objects merge by their own keys as before.
+function asMergeObject(branch) {
+  return isPlainObject(branch.value) ? branch.value : { [branch.label]: branch.value };
 }
 
 function deepMerge(target, source, conflict) {
@@ -42,14 +84,16 @@ export default {
   async run(config = {}, input) {
     const { mode = "combine", key = "merged", conflict = "last" } = config;
 
-    const branches = Array.isArray(input) ? input : [input];
-    const nonEmpty = branches.filter((b) => b != null && (!isPlainObject(b) || Object.keys(b).length > 0));
+    const liveInputs = Array.isArray(input) ? input : [input];
+    const labeled = applyBranchValues(liveInputs, config.branches);
+    const values = labeled.map((b) => b.value);
+    const nonEmpty = values.filter((b) => b != null && (!isPlainObject(b) || Object.keys(b).length > 0));
     const branchCount = nonEmpty.length;
 
     switch (mode) {
       case "array": {
         const outKey = String(key || "merged").trim() || "merged";
-        return { [outKey]: branches, __mergedFrom: branchCount };
+        return { [outKey]: values, __mergedFrom: branchCount };
       }
 
       case "first": {
@@ -60,8 +104,8 @@ export default {
       }
 
       case "deep": {
-        const merged = branches.reduce(
-          (acc, item) => (isPlainObject(item) ? deepMerge(acc, item, conflict) : acc),
+        const merged = labeled.reduce(
+          (acc, b) => deepMerge(acc, asMergeObject(b), conflict),
           {},
         );
         return { ...merged, __mergedFrom: branchCount };
@@ -69,9 +113,9 @@ export default {
 
       case "combine":
       default: {
-        const ordered = conflict === "first" ? [...branches].reverse() : branches;
+        const ordered = conflict === "first" ? [...labeled].reverse() : labeled;
         const merged = ordered.reduce(
-          (acc, item) => (isPlainObject(item) ? { ...acc, ...item } : acc),
+          (acc, b) => ({ ...acc, ...asMergeObject(b) }),
           {},
         );
         return { ...merged, __mergedFrom: branchCount };
