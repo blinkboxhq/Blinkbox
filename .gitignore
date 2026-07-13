@@ -4,19 +4,59 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Build output
 dist/
 build/
+*.tsbuildinfo
+.vite/
 
-# Env Files
+# Env files — never commit secrets (.env.example is the only allowed template)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# OS Files
+# Test & coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Databases & caches
+.cache/
+.mongodb-binaries/
+dump/
+*.rdb
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# Keys & certificates
 *.pem
+*.key
+*.p12
+*.pfx
+
+# Misc
+*.tgz
+.eslintcache
+.turbo/
+tmp/
+temp/
