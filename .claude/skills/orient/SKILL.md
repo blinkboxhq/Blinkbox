@@ -1,3 +1,8 @@
+---
+name: orient
+description: Quickly orient yourself at the start of a session — recent commits, working tree state, recommended next step.
+---
+
 # orient
 
 Quickly orient yourself at the start of a session.

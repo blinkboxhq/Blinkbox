@@ -23,7 +23,7 @@ import imgAirtable from '../assets/Airtable--Streamline-Svg-Logos.svg';
 import imgZoom from '../assets/zoom.svg';
 import imgTwilio from '../assets/Twilio-Icon--Streamline-Svg-Logos.svg';
 import imgTypeform from '../assets/typeform.svg';
-import imgDiscord from '../assets/discord-n8n.svg';
+import imgDiscord from '../assets/discord.svg';
 import imgTelegram from '../assets/telegram.png';
 import imgAsana from '../assets/asana.svg';
 import imgClickup from '../assets/clickup.svg';

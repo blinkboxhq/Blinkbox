@@ -2,6 +2,12 @@
 
 > Automation platform replacing n8n/Make/Zapier. Ship fast, clean, polished.
 
+## Context Index
+- `.claude/context/architecture.md` — full system map (modules, engine flow, models, deploy)
+- `.claude/rules/` — scoped rules (backend nodes, registry, frontend UI, canvas, git, boundaries, efficiency)
+- `.claude/skills/` — invocable skills (omnious conductor, add-node, audit-registry, ui-ux-*, …)
+- Root: `LICENSE` (proprietary), `SECURITY.md`, `ATTRIBUTIONS.md` (logo/trademark notices)
+
 ## Stack
 - Frontend: React+Vite+Tailwind @ port 5174 → `apps/frontend/src/`
 - Backend: Node+Express @ port 3000 → `apps/backend/src/`

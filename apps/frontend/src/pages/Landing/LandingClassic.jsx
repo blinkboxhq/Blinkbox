@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { DottedSurface } from '@/components/ui/dotted-surface';
 import logo from '../../assets/logo.svg';
-import heroScreenshot from '../../assets/logos/landingpage-hero-screenshot.png';
+import heroScreenshot from '../../assets/landing-hero.png';
 
 import imgSlack from '../../assets/slack.png';
 import imgGmail from '../../assets/gmail.png';
