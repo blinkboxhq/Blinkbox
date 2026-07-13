@@ -11,19 +11,38 @@ export async function executeAutomation(
 ) {
   const {
     executionId = null,
-    idempotencyKey = null,
     workspaceId = "default",
     entryNodeId = automation.entryNodeId,
   } = options;
+
+  // The unique index on {automationId, idempotencyKey, workspaceId} indexes
+  // null keys too (compound sparse indexes skip a doc only when ALL fields
+  // are missing), so a stored null collides on the second keyless run —
+  // synthesize a unique key instead of ever persisting null.
+  const callerKey = options.idempotencyKey || null;
+  const idempotencyKey = callerKey || crypto.randomUUID();
 
   // Normalize the incoming Webhook/API payload
   const triggerItems = Array.isArray(payload)
     ? payload.map((item) => (item.json ? item : { json: item }))
     : [{ json: payload }];
 
-  const execution = executionId
-    ? await Execution.findById(executionId)
-    : await Execution.create({
+  let execution;
+  if (executionId) {
+    execution = await Execution.findById(executionId);
+  } else {
+    const dedupeQuery = callerKey
+      ? { automationId: automation._id, idempotencyKey: callerKey, workspaceId }
+      : null;
+
+    if (dedupeQuery) {
+      const existing = await Execution.findOne(dedupeQuery);
+      // The winner of the race already enqueued its cursor — don't re-run
+      if (existing) return existing;
+    }
+
+    try {
+      execution = await Execution.create({
         automationId: automation._id,
         workspaceId,
         name: automation.name,
@@ -42,18 +61,22 @@ export async function executeAutomation(
           },
         ],
       });
+    } catch (err) {
+      if (err.code === 11000 && dedupeQuery) {
+        const existing = await Execution.findOne(dedupeQuery);
+        if (existing) return existing;
+      }
+      throw err;
+    }
+  }
 
   if (!execution) {
     throw new Error("Execution not found or failed to create");
   }
 
-  // 🛡️ Save the trigger data safely to the Vault, NOT the main document
-  // 🛡️ THE FIX: Dynamically link the payload to the EXACT ID of the entry node
-  // 🛡️ Save the trigger data safely to the Vault, NOT the main document
-  // 🛡️ THE FIX: Dynamically link the payload to the EXACT ID of the entry node
-  // 🛡️ Save the trigger data safely to the Vault, NOT the main document
-  // We use findOneAndUpdate so the payload is ALWAYS safely injected,
-  // even if the API Controller pre-created the Execution ID!
+  // Trigger data goes to the ExecutionData vault, not the main document.
+  // findOneAndUpdate so the payload is injected even when the API
+  // controller pre-created the Execution ID.
   await ExecutionData.findOneAndUpdate(
     { executionId: execution._id, nodeId: entryNodeId },
     {
