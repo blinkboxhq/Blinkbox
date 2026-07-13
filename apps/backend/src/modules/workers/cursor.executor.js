@@ -8,7 +8,7 @@ import { evaluateCondition } from "../../modules/automation/engine/condition.eva
 import { emitExecutionEvent } from "../execution/execution.events.js";
 import { resolveConfig } from "../../modules/automation/engine/expression.parser.js";
 
-import { acquireLock, releaseLock } from "../../infra/redis.lock.js";
+import { acquireLock, releaseLock, renewLock } from "../../infra/redis.lock.js";
 import { emitExecutionUpdate, emitNodeStatus } from "../../infra/socket.server.js";
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
@@ -455,6 +455,12 @@ export async function processCursor({ executionId, cursorId }) {
     return;
   }
 
+  // Slow merges (large fan-outs, cold Mongo) can outlive the 30s TTL and let
+  // a second cursor enter the gate — keep the lock alive until release.
+  const lockHeartbeat = setInterval(() => {
+    renewLock(lockKey, lockOwner, 30).catch(() => {});
+  }, 10_000);
+
   try {
     const latestExecution = await Execution.findById(executionId);
     const latestCursor = latestExecution.cursors.id(cursorId);
@@ -638,6 +644,7 @@ export async function processCursor({ executionId, cursorId }) {
       completedAt: latestExecution.completedAt,
     });
   } finally {
+    clearInterval(lockHeartbeat);
     await releaseLock(lockKey, lockOwner);
 
     if (global.gc && performance.now() - startTime > 5000) global.gc();
