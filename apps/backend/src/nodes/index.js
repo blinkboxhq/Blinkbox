@@ -452,6 +452,7 @@ const rawNodeRegistry = {
   // ── Network / infra nodes (from network/) ────────────────────────────────
   ...networkNodes,
   port_monitor: networkNodes.port_monitor,
+  ssl_check: networkNodes.ssl,
 
   // ── Research / public API nodes (from research/) ─────────────────────────
   ...researchNodes,

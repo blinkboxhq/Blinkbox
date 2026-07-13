@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Node registry drift check
+        run: node scripts/check-node-registry.mjs --strict
+
       - name: Cache node_modules
         id: node-modules-cache
         uses: actions/cache@v4

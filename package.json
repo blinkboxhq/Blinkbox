@@ -1,10 +1,22 @@
 {
   "name": "blinkbox",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "build:frontend": "npm run build --workspace=apps/frontend",
+    "test:backend": "npm test --workspace=apps/backend",
+    "typecheck:backend": "npm run typecheck --workspace=apps/backend",
+    "registry:check": "node scripts/check-node-registry.mjs",
+    "check": "npm run registry:check && npm run typecheck:backend"
+  },
   "dependencies": {
     "claude": "^0.1.1",
     "ioredis": "^5.9.2",
