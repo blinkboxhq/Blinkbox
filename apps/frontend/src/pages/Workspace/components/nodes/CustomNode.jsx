@@ -502,9 +502,14 @@ function SuggestionGhostNode({ data }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN NODE COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
-function CustomNode({ id, data, selected }) {
-  if (data.isSuggestion) return <SuggestionGhostNode id={id} data={data} />;
+function CustomNode(props) {
+  // Split component so hooks below never run conditionally: if isSuggestion
+  // flips on the same node id, React remounts instead of shifting hook order.
+  if (props.data.isSuggestion) return <SuggestionGhostNode id={props.id} data={props.data} />;
+  return <CustomNodeImpl {...props} />;
+}
 
+function CustomNodeImpl({ id, data, selected }) {
   const [isHovered, setIsHovered] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 

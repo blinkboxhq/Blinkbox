@@ -26,9 +26,7 @@ export const DEFAULT_SCHEMAS = {
   },
   chat_trigger: { message: "string", sessionId: "string", attachments: "array", triggeredAt: "string" },
   cron_trigger: { scheduledAt: "string", cronExpression: "string" },
-  imap_trigger: { subject: "string", from: "string", to: "string", body: "string", date: "string", messageId: "string", attachments: "array" },
   rss_trigger: { title: "string", link: "string", guid: "string", description: "string", content: "string", pubDate: "string", isoDate: "string", author: "string", categories: "array", enclosure: "object", thumbnail: "string", feedUrl: "string", feed: { title: "string", description: "string", link: "string", language: "string" } },
-  db_trigger: { row: "object", table: "string", operation: "string", timestamp: "string" },
   telegram_trigger: {
     text: "string",
     from: { id: "number", first_name: "string", last_name: "string", username: "string", is_bot: "boolean", language_code: "string" },

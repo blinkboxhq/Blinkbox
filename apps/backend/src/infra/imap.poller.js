@@ -87,6 +87,11 @@ export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
     logger: false,
   });
 
+  // Declared outside the try so the finally can release; only release if acquired,
+  // otherwise a skipped tick would free the lock the other worker still holds.
+  const pollLockKey = `bb:imap:lock:${scope}`;
+  let pollLocked = false;
+
   await client.connect();
 
   try {
@@ -96,8 +101,7 @@ export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
     // Use a per-automation lock so concurrent workers don't both read the same
     // watermark and double-process the same messages.
     const uidKey = `bb:imap:uid:${scope}`;
-    const pollLockKey = `bb:imap:lock:${scope}`;
-    const pollLocked = await acquireLock(pollLockKey, "poller", 120);
+    pollLocked = await acquireLock(pollLockKey, "poller", 120);
     if (!pollLocked) {
       console.warn(`[IMAP] Automation ${automationId} already polling, skipping concurrent tick`);
       return;
@@ -174,7 +178,7 @@ export async function pollMailbox(automationId, triggerNodeId, cfg, password) {
     }
   } finally {
     await client.logout().catch(() => {});
-    await releaseLock(pollLockKey, "poller");
+    if (pollLocked) await releaseLock(pollLockKey, "poller");
   }
 }
 
