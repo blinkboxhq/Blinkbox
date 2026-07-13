@@ -32,6 +32,10 @@ import { dirname, join } from "node:path";
 
 const app = express();
 
+// Behind Railway's proxy: derive req.ip from the proxy-appended X-Forwarded-For
+// hop so IP rate limiters can't be bypassed with a client-forged header.
+app.set("trust proxy", 1);
+
 // Read the brand mark once at boot so both api. and mcp. hosts can serve a
 // favicon. These are JSON API hosts with no HTML, so connector cards and
 // browsers fetch /favicon.ico directly — a 404 there is what makes the domain

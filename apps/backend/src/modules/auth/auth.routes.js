@@ -7,7 +7,9 @@ const router = Router();
 function makeRateLimiter({ key, max, windowSecs, message }) {
   return async (req, res, next) => {
     try {
-      const ip = (req.headers["x-forwarded-for"] || req.ip || "unknown").toString().split(",")[0].trim();
+      // req.ip is proxy-derived via trust proxy — reading the first
+      // X-Forwarded-For entry directly would let clients forge their IP.
+      const ip = req.ip || "unknown";
       const k = `${key}:${ip}`;
       const current = await redis.incr(k);
       if (current === 1) await redis.expire(k, windowSecs);
@@ -28,6 +30,6 @@ router.post("/google", googleRateLimit, googleLogin);
 router.post("/verify-email", makeRateLimiter({ key: 'bb:rl:verify', max: 10, windowSecs: 3600, message: 'Too many verification attempts. Try again later.' }), verifyEmail);
 router.post("/resend-verification", makeRateLimiter({ key: 'bb:rl:resend', max: 5, windowSecs: 3600, message: 'Too many resend attempts. Try again in 1 hour.' }), resendVerification);
 router.post("/forgot-password", makeRateLimiter({ key: 'bb:rl:forgot', max: 3, windowSecs: 3600, message: 'Too many reset attempts. Try again in 1 hour.' }), forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", makeRateLimiter({ key: 'bb:rl:reset', max: 10, windowSecs: 3600, message: 'Too many reset attempts. Try again in 1 hour.' }), resetPassword);
 
 export default router;
