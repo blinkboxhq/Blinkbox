@@ -34,7 +34,7 @@ mock.module("../../modules/automation/engine/expression.parser.js", {
   namedExports: { resolveConfig: (data) => ({ ...(data || {}) }) },
 });
 mock.module("../../infra/redis.lock.js", {
-  namedExports: { acquireLock: async () => true, releaseLock: noop },
+  namedExports: { acquireLock: async () => true, renewLock: async () => true, releaseLock: noop },
 });
 mock.module("../../infra/socket.server.js", {
   namedExports: { emitExecutionUpdate: () => {}, emitNodeStatus: () => {} },
