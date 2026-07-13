@@ -39,5 +39,8 @@ jobs:
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
       - name: Run backend tests
         run: npm test --workspace=apps/backend

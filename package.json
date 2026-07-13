@@ -15,7 +15,8 @@
     "test:backend": "npm test --workspace=apps/backend",
     "typecheck:backend": "npm run typecheck --workspace=apps/backend",
     "registry:check": "node scripts/check-node-registry.mjs",
-    "check": "npm run registry:check && npm run typecheck:backend"
+    "lint": "eslint .",
+    "check": "npm run registry:check && npm run typecheck:backend && npm run lint"
   },
   "dependencies": {
     "claude": "^0.1.1",
@@ -23,7 +24,12 @@
     "motion-dom": "^12.36.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.7.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18"
   }
