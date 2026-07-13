@@ -360,35 +360,6 @@ export const createGraphSlice = (set, get) => ({
   // ── Mutations ────────────────────────────────────────────────────────────
   addNode: (node) => set({ ...pushHistory(get), nodes: [...get().nodes, node], suggestionNode: null }),
 
-  duplicateNode: (nodeId) => {
-    const { nodes, edges, nodeOutputSchemas } = get();
-    const original = nodes.find((n) => n.id === nodeId);
-    if (!original) return;
-
-    const newId = `${original.data.backendType}-${crypto.randomUUID()}`;
-    const clone = {
-      ...original,
-      id: newId,
-      position: {
-        x: original.position.x + 50,
-        y: original.position.y + 60,
-      },
-      data: {
-        ...original.data,
-        config: { ...original.data.config },
-      },
-      selected: false,
-    };
-
-    const newNodes = [...nodes, clone];
-    const newVars = calculateAllAvailableVariables(newNodes, edges, nodeOutputSchemas);
-    set({
-      nodes: newNodes,
-      availableVariables: newVars,
-      mappingWarnings: validateAllNodeMappings(newNodes, newVars),
-    });
-  },
-
   renameNode: (nodeId, customLabel) => {
     const state = get();
     set({
