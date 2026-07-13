@@ -11,7 +11,16 @@ import crypto from "crypto";
 import { validateAutomation } from "../automation/engine/automation.validator.js";
 import { executeAutomation } from "../automation/automation.executor.js";
 
-const USE_TEMPORAL = !!process.env.TEMPORAL_ADDRESS;
+// The Temporal activities have no checkCredits/deductCredits calls, so routing
+// production runs through Temporal would bypass billing entirely — force the
+// BullMQ engine in production until the Temporal path reaches credit parity.
+const TEMPORAL_CONFIGURED = !!process.env.TEMPORAL_ADDRESS;
+const USE_TEMPORAL = TEMPORAL_CONFIGURED && process.env.NODE_ENV !== "production";
+if (TEMPORAL_CONFIGURED && !USE_TEMPORAL) {
+  console.error(
+    "[ExecutionService] TEMPORAL_ADDRESS is set but the Temporal path skips credit metering — ignoring it in production, all runs use the BullMQ engine.",
+  );
+}
 
 async function getTemporalClient() {
   const { getTemporalClient: _get } = await import("../../temporal/client.js");
