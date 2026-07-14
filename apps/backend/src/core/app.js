@@ -21,7 +21,7 @@ import mcpOauthRoutes from "../modules/mcp/oauth.routes.js";
 import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
-import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
+import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
 import { handleSlackEvents } from "../modules/automation/slackEvents.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
@@ -226,6 +226,9 @@ app.get("/health", async (_req, res) => {
 
 // ── Shared Slack app Events API (must precede the :automationId param route) ──
 app.post("/webhook/slack/events", handleSlackEvents);
+
+// ── Google Cloud Pub/Sub push subscription (Gmail + Forms watches) ────────────
+app.post("/webhook/pubsub/google", handleGooglePubSub);
 
 // ── Public webhook endpoint (no auth required) ────────────────────────────────
 // Supports both POST (form/JSON payloads) and GET (query-param triggers)

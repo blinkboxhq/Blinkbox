@@ -3,6 +3,7 @@ import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } f
 import { WEBHOOK_APPS, registerWebhook, unregisterWebhook } from "./webhook.registry.js";
 import { syncPollerHub } from "./poller.hub.js";
 import { redis } from "./redis.client.js";
+import { GOOGLE_PUBSUB_TOPIC } from "../config/env.js";
 
 const INTERVAL_MS = 6 * 60 * 60 * 1000;
 const LOCK_KEY = "bb:push:renewal:lock";
@@ -53,6 +54,61 @@ async function renewSheets() {
   return fellBack;
 }
 
+// Gmail watches expire after 7 days and re-calling watch extends in place
+// (Google recommends re-watching daily), so every cycle just re-watches
+async function renewGmail() {
+  const automations = await findAutomationsWithTrigger("gmail_trigger");
+  let fellBack = false;
+
+  for (const automation of automations) {
+    if (!automation.active) continue;
+    for (const node of getTriggerNodesOfType(automation, "gmail_trigger")) {
+      const cfg = getTriggerConfig(node);
+      if (!cfg.webhookRegistered || !cfg.gmail_trigger_webhookId) continue;
+      try {
+        const token = await WEBHOOK_APPS.gmail_trigger.resolveToken(cfg, automation.workspaceId);
+        const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/watch", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ topicName: GOOGLE_PUBSUB_TOPIC }),
+        });
+        if (!res.ok) throw new Error(`Gmail re-watch → ${res.status}`);
+      } catch (err) {
+        console.warn(`[PushRenewal] gmail ${automation._id}: ${err.message} — recreating`);
+        fellBack = (await recreate("gmail_trigger", automation, node, cfg)) || fellBack;
+      }
+    }
+  }
+  return fellBack;
+}
+
+// Forms watches expire after 7 days; :renew extends the existing one
+async function renewForms() {
+  const automations = await findAutomationsWithTrigger("google_forms_trigger");
+  let fellBack = false;
+
+  for (const automation of automations) {
+    if (!automation.active) continue;
+    for (const node of getTriggerNodesOfType(automation, "google_forms_trigger")) {
+      const cfg = getTriggerConfig(node);
+      const watchId = cfg.google_forms_trigger_webhookId;
+      if (!cfg.webhookRegistered || !watchId) continue;
+      try {
+        const token = await WEBHOOK_APPS.google_forms_trigger.resolveToken(cfg, automation.workspaceId);
+        const res = await fetch(
+          `https://forms.googleapis.com/v1/forms/${encodeURIComponent(cfg.formId)}/watches/${watchId}:renew`,
+          { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) throw new Error(`Forms renew → ${res.status}`);
+      } catch (err) {
+        console.warn(`[PushRenewal] forms ${automation._id}: ${err.message} — recreating`);
+        fellBack = (await recreate("google_forms_trigger", automation, node, cfg)) || fellBack;
+      }
+    }
+  }
+  return fellBack;
+}
+
 // returns true when the node ended up unregistered (poller must take over)
 async function recreate(type, automation, node, cfg) {
   const id = automation._id.toString();
@@ -78,6 +134,8 @@ async function runRenewal() {
   try {
     if (await renewOutlook()) await syncPollerHub("outlook_trigger");
     if (await renewSheets()) await syncPollerHub("google_sheets_trigger");
+    if (await renewGmail()) await syncPollerHub("gmail_trigger");
+    if (await renewForms()) await syncPollerHub("google_forms_trigger");
   } catch (err) {
     console.error("[PushRenewal] cycle failed:", err.message);
   } finally {

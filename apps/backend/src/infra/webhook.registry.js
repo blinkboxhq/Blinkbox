@@ -20,7 +20,7 @@
  */
 
 import crypto from "crypto";
-import { BACKEND_URL } from "../config/env.js";
+import { BACKEND_URL, GOOGLE_PUBSUB_TOPIC, PUBSUB_PUSH_TOKEN } from "../config/env.js";
 import Automation from "../models/automation.model.js";
 import { getOAuthToken } from "../utils/getOAuthToken.js";
 
@@ -553,6 +553,66 @@ export const WEBHOOK_APPS = {
       url: "https://www.googleapis.com/drive/v3/channels/stop",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: { id: webhookId, resourceId: cfg.driveResourceId },
+    }),
+  },
+
+  // Gmail/Forms watches publish to the user's Pub/Sub topic, not to a URL —
+  // Pub/Sub pushes to the global /webhook/pubsub/google endpoint (verified by
+  // PUBSUB_PUSH_TOKEN there, so no per-node secret). Both are `optional`: when
+  // the topic/token env vars are unset, registration throws and polling stays.
+  gmail_trigger: {
+    optional: true,
+    resolveToken: oauth("Gmail trigger"),
+    // watch is deliberately unfiltered — with the poller off, a label-only
+    // filter would silently drop mail that skips INBOX; the poll check applies
+    // the user's query filters instead
+    create: ({ token }) => {
+      if (!GOOGLE_PUBSUB_TOPIC || !PUBSUB_PUSH_TOKEN) {
+        throw new Error("GOOGLE_PUBSUB_TOPIC / PUBSUB_PUSH_TOKEN not configured");
+      }
+      return {
+        method: "POST",
+        url: "https://gmail.googleapis.com/gmail/v1/users/me/watch",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: { topicName: GOOGLE_PUBSUB_TOPIC },
+      };
+    },
+    // watch returns no subscription id — historyId stands in; stop needs nothing
+    extractId: (j) => j.historyId || "watch",
+    storeExtra: (j) => ({ gmailWatchExpiresAt: j?.expiration ? Number(j.expiration) : 0 }),
+    deletePath: ({ token }) => ({
+      method: "POST",
+      url: "https://gmail.googleapis.com/gmail/v1/users/me/stop",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  },
+  google_forms_trigger: {
+    optional: true,
+    resolveToken: oauth("Google Forms trigger"),
+    // all Forms event variants classify responses at poll time, so the watch
+    // eventType is always RESPONSES
+    create: ({ cfg, token }) => {
+      if (!GOOGLE_PUBSUB_TOPIC || !PUBSUB_PUSH_TOKEN) {
+        throw new Error("GOOGLE_PUBSUB_TOPIC / PUBSUB_PUSH_TOKEN not configured");
+      }
+      return {
+        method: "POST",
+        url: `https://forms.googleapis.com/v1/forms/${encodeURIComponent(cfg.formId)}/watches`,
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: {
+          watch: {
+            target: { topic: { topicName: GOOGLE_PUBSUB_TOPIC } },
+            eventType: "RESPONSES",
+          },
+        },
+      };
+    },
+    extractId: (j) => j.id,
+    storeExtra: (j) => ({ formsWatchExpiresAt: j?.expireTime ? Date.parse(j.expireTime) : 0 }),
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "DELETE",
+      url: `https://forms.googleapis.com/v1/forms/${encodeURIComponent(cfg.formId)}/watches/${webhookId}`,
+      headers: { Authorization: `Bearer ${token}` },
     }),
   },
 };

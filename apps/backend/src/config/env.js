@@ -171,6 +171,13 @@ export const TWITCH_ACCESS_TOKEN    = process.env.TWITCH_ACCESS_TOKEN    || null
 export const OLLAMA_HOST        = process.env.OLLAMA_HOST        || "http://127.0.0.1:11434";
 export const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL || "http://127.0.0.1:1234";
 
+// ── Google Cloud Pub/Sub (Gmail + Forms push delivery) ───────────────────────
+// Gmail/Forms watch APIs only push to Pub/Sub. Topic must grant Publisher to
+// gmail-api-push@system.gserviceaccount.com and forms-notifications@system.gserviceaccount.com.
+// The push subscription endpoint is /webhook/pubsub/google?token=PUBSUB_PUSH_TOKEN
+export const GOOGLE_PUBSUB_TOPIC = process.env.GOOGLE_PUBSUB_TOPIC || null;
+export const PUBSUB_PUSH_TOKEN   = process.env.PUBSUB_PUSH_TOKEN   || null;
+
 // ── Internal / Infrastructure ─────────────────────────────────────────────────
 export const CORS_ORIGINS       = process.env.CORS_ORIGINS       || null;
 export const BRIAN_WEBHOOK_URL  = process.env.BRIAN_WEBHOOK_URL  || null;

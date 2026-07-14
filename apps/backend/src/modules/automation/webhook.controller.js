@@ -5,7 +5,8 @@ import { validateAutomation } from "./engine/automation.validator.js";
 import { redis } from "../../infra/redis.client.js";
 import { webhookQueue } from "../../infra/webhook.queue.js";
 import { sanitizeAndLog } from "../../utils/errors.js";
-import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
+import { getTriggerConfig, getTriggerNodesOfType, findAutomationsWithTrigger } from "../../infra/triggerNodes.util.js";
+import { PUBSUB_PUSH_TOKEN } from "../../config/env.js";
 import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
 import { resolveSecret } from "../../utils/resolveSecret.js";
 import { pollTriggerNow, syncPollerHub } from "../../infra/poller.hub.js";
@@ -548,5 +549,56 @@ export async function handlePublicWebhook(req, res) {
   } catch (err) {
     sanitizeAndLog(err, "Webhook Controller");
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+// ── Google Cloud Pub/Sub push (Gmail + Forms) ─────────────────────────────────
+// One push subscription delivers every Gmail/Forms watch notification here.
+// The message is a wake-up ping, not a payload — verify the URL token, ack,
+// then re-run the matching triggers' normal poll checks (same push-triggered
+// poll model as Graph/Drive). Forms pings carry formId in attributes; Gmail
+// pings identify only the mailbox, and watch registration stores no per-node
+// email, so every push-registered Gmail trigger is polled — the poll check
+// dedups, and this is still far cheaper than the per-minute cron it replaces.
+export async function handleGooglePubSub(req, res) {
+  if (!PUBSUB_PUSH_TOKEN || !safeEqual(String(req.query.token || ""), PUBSUB_PUSH_TOKEN)) {
+    return res.status(401).json({ error: "Invalid Pub/Sub token" });
+  }
+  res.status(204).end();
+
+  try {
+    const msg = req.body?.message || {};
+    const attrs = msg.attributes || {};
+    let data = {};
+    try {
+      data = JSON.parse(Buffer.from(msg.data || "", "base64").toString("utf8"));
+    } catch { /* Forms pings have no JSON data */ }
+
+    if (attrs.formId) {
+      for (const automation of await findAutomationsWithTrigger("google_forms_trigger")) {
+        if (!automation.active) continue;
+        for (const node of getTriggerNodesOfType(automation, "google_forms_trigger")) {
+          const cfg = getTriggerConfig(node);
+          if (!cfg.webhookRegistered || cfg.formId !== attrs.formId) continue;
+          pollTriggerNow("google_forms_trigger", automation._id.toString(), node.id)
+            .catch((err) => sanitizeAndLog(err, `PubSub forms ${automation._id}`));
+        }
+      }
+      return;
+    }
+
+    if (data.emailAddress || data.historyId) {
+      for (const automation of await findAutomationsWithTrigger("gmail_trigger")) {
+        if (!automation.active) continue;
+        for (const node of getTriggerNodesOfType(automation, "gmail_trigger")) {
+          const cfg = getTriggerConfig(node);
+          if (!cfg.webhookRegistered) continue;
+          pollTriggerNow("gmail_trigger", automation._id.toString(), node.id)
+            .catch((err) => sanitizeAndLog(err, `PubSub gmail ${automation._id}`));
+        }
+      }
+    }
+  } catch (err) {
+    sanitizeAndLog(err, "PubSub push");
   }
 }
