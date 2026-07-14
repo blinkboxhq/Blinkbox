@@ -15,6 +15,7 @@ import discordTrigger         from "../triggers/discord.js";
 import shopifyTrigger         from "../triggers/shopify.js";
 import linearTrigger          from "../triggers/linear.js";
 import typeformTrigger        from "../triggers/typeform.js";
+import jotformTrigger         from "../triggers/jotform.js";
 import whatsappTrigger        from "../triggers/whatsapp.js";
 import gmailTrigger           from "../triggers/gmail.js";
 import airtableTrigger        from "../triggers/airtable.js";
@@ -248,6 +249,7 @@ const rawNodeRegistry = {
   shopify_trigger:          shopifyTrigger,
   linear_trigger:           linearTrigger,
   typeform_trigger:         typeformTrigger,
+  jotform_trigger:          jotformTrigger,
   whatsapp_trigger:         whatsappTrigger,
   gmail_trigger:            gmailTrigger,
   airtable_trigger:         airtableTrigger,

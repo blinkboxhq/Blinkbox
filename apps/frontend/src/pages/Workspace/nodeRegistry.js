@@ -18,6 +18,7 @@ import {
   Layers,
   LayoutGrid,
   FileText,
+  ClipboardList,
   Calendar,
   Shield,
   Tags,
@@ -256,6 +257,7 @@ import HubSpotTriggerNode from "@triggers/hubspot/ConfigPanel.jsx";
 import ShopifyTriggerNode from "@triggers/shopify/ConfigPanel.jsx";
 import LinearTriggerNode from "@triggers/linear/ConfigPanel.jsx";
 import TypeformTriggerNode from "@triggers/typeform/ConfigPanel.jsx";
+import JotformTriggerNode from "@triggers/jotform/ConfigPanel.jsx";
 import WhatsAppTriggerNode from "@triggers/whatsapp/ConfigPanel.jsx";
 import HttpRequestNode from "@nodes/http_request/ConfigPanel.jsx";
 import DelayNode from "@nodes/delay/ConfigPanel.jsx";
@@ -603,6 +605,14 @@ export const NodeRegistry = {
     accentColor: "212,212,216",
     logoUrl: imgTypeform,
     ConfigPanel: TypeformTriggerNode,
+    category: "trigger",
+  },
+  jotform_trigger: {
+    label: "Jotform Trigger",
+    icon: ClipboardList,
+    colorClass: "text-[#FF6100]",
+    accentColor: "255,97,0",
+    ConfigPanel: JotformTriggerNode,
     category: "trigger",
   },
   whatsapp_trigger: {

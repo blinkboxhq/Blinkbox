@@ -18,6 +18,7 @@ import {
   TrendingUp,
   MessageSquarePlus,
   Calendar,
+  ClipboardList,
 } from "lucide-react";
 
 import TriggerNode         from "@triggers/manual/ConfigPanel.jsx";
@@ -42,6 +43,7 @@ import HubSpotTriggerNode  from "@triggers/hubspot/ConfigPanel.jsx";
 import ShopifyTriggerNode  from "@triggers/shopify/ConfigPanel.jsx";
 import LinearTriggerNode   from "@triggers/linear/ConfigPanel.jsx";
 import TypeformTriggerNode from "@triggers/typeform/ConfigPanel.jsx";
+import JotformTriggerNode  from "@triggers/jotform/ConfigPanel.jsx";
 import WhatsAppTriggerNode from "@triggers/whatsapp/ConfigPanel.jsx";
 import YouTubeTriggerNode        from "@triggers/youtube/ConfigPanel.jsx";
 import PriceAlertTriggerNode     from "@triggers/price_alert/ConfigPanel.jsx";
@@ -313,6 +315,14 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-zinc-300",
     accentColor: "212,212,216",
     ConfigPanel: TypeformTriggerNode,
+  },
+  jotform: {
+    backendType: "jotform_trigger",
+    icon: ClipboardList,
+    label: "On Jotform Submission",
+    colorClass: "text-[#FF6100]",
+    accentColor: "255,97,0",
+    ConfigPanel: JotformTriggerNode,
   },
 
   // ── New triggers ────────────────────────────────────────────────────────────

@@ -467,14 +467,39 @@ export const WEBHOOK_APPS = {
       url: `https://api.trello.com/1/webhooks/${webhookId}?key=${encodeURIComponent(token.key)}&token=${encodeURIComponent(token.token)}`,
     }),
   },
+
+  jotform_trigger: {
+    resolveToken: oauth("Jotform trigger"),
+    secretKey: "jotformWebhookSecret",
+    genSecret: true,
+    // Jotform sends no signature header — secret rides the callback URL as ?s= and is checked on receive
+    create: ({ url, secret, cfg, token }) => ({
+      method: "POST",
+      url: `https://api.jotform.com/form/${encodeURIComponent(cfg.formId)}/webhooks`,
+      headers: { APIKEY: token, "Content-Type": "application/x-www-form-urlencoded" },
+      form: { webhookURL: `${url}?s=${secret}` },
+    }),
+    // content is an index→URL map; the new hook is the highest index
+    extractId: (j) => {
+      const keys = Object.keys(j.content || {});
+      return keys.length ? keys[keys.length - 1] : undefined;
+    },
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "DELETE",
+      url: `https://api.jotform.com/form/${encodeURIComponent(cfg.formId)}/webhooks/${webhookId}`,
+      headers: { APIKEY: token },
+    }),
+  },
 };
 
 async function callApi(spec) {
   const body = spec.graphql
     ? JSON.stringify(spec.graphql)
-    : spec.body
-      ? JSON.stringify(spec.body)
-      : undefined;
+    : spec.form
+      ? new URLSearchParams(spec.form).toString()
+      : spec.body
+        ? JSON.stringify(spec.body)
+        : undefined;
   const res = await fetch(spec.url, { method: spec.method, headers: spec.headers || {}, body });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.errors) {

@@ -298,6 +298,13 @@ export async function handlePublicWebhook(req, res) {
       }
     }
 
+    // ── Jotform: no signature support — per-automation secret in ?s= query ───
+    if (triggerConfig.jotformWebhookSecret) {
+      if (!safeEqual(String(req.query.s || ""), triggerConfig.jotformWebhookSecret)) {
+        return res.status(401).json({ error: "Invalid Jotform webhook secret" });
+      }
+    }
+
     // ── PagerDuty: X-PagerDuty-Signature (v1=<hex>, may list multiple) ───────
     if (triggerConfig.pagerdutyWebhookSecret) {
       const provided = req.headers["x-pagerduty-signature"] || "";

@@ -22,6 +22,7 @@ import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook } from "../modules/automation/webhook.controller.js";
+import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
 import { handleSlackEvents } from "../modules/automation/slackEvents.controller.js";
 import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
@@ -228,7 +229,7 @@ app.post("/webhook/slack/events", handleSlackEvents);
 
 // ── Public webhook endpoint (no auth required) ────────────────────────────────
 // Supports both POST (form/JSON payloads) and GET (query-param triggers)
-app.post("/webhook/:automationId", handlePublicWebhook);
+app.post("/webhook/:automationId", parseMultipartFields, handlePublicWebhook);
 app.get("/webhook/:automationId", handlePublicWebhook);
 
 // ── Public approval signal endpoint (no auth — the workflowId is the capability token)

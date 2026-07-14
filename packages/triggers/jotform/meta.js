@@ -1,0 +1,1 @@
+export default { label: "On Jotform Submission", description: "Fires when a Jotform form is submitted", category: "triggers", colorClass: "text-[#FF6100]", accentColor: "255,97,0", backendType: "jotform_trigger" };
