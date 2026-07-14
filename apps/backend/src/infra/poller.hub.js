@@ -907,6 +907,39 @@ async function dispatch(job) {
   await entry.run({ automationId, triggerNodeId, ...payload });
 }
 
+// ── Push-triggered poll ────────────────────────────────────────────────────────
+// Graph/Drive push notifications are wake-up pings with no usable payload. The
+// webhook receive path acks fast and calls this to run the node's normal poll
+// check immediately — reusing all fetch/snapshot-diff/classify/dedup logic.
+const inFlightPushPolls = new Set();
+
+export async function pollTriggerNow(triggerType, automationId, nodeId = null) {
+  const entry = POLL_REGISTRY[triggerType];
+  if (!entry) return;
+
+  const key = `${triggerType}:${automationId}:${nodeId || "all"}`;
+  if (inFlightPushPolls.has(key)) return;
+  inFlightPushPolls.add(key);
+
+  try {
+    const automation = await Automation.findById(automationId);
+    if (!automation?.active) return;
+
+    for (const node of getTriggerNodesOfType(automation, entry.triggerName)) {
+      if (nodeId && node.id !== nodeId) continue;
+      const cfg = getTriggerConfig(node);
+      if (entry.required.some((f) => !cfg[f])) continue;
+      await entry.run({
+        automationId: automation._id.toString(),
+        triggerNodeId: node.id,
+        ...entry.extract(cfg, automation),
+      });
+    }
+  } finally {
+    inFlightPushPolls.delete(key);
+  }
+}
+
 // ── Sync ───────────────────────────────────────────────────────────────────────
 
 // Telegram getUpdates permits a single consumer — the realtime hub long-polls it,

@@ -7,6 +7,7 @@ import { startDelayScheduler } from "../infra/delay.scheduler.js";
 import { startCronScheduler } from "../infra/cron.scheduler.js";
 import { startPollerHub } from "../infra/poller.hub.js";
 import { startRealtimeHub } from "../infra/realtime.hub.js";
+import { startPushRenewal } from "../infra/push.renewal.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
@@ -37,6 +38,9 @@ export async function startServer() {
   // 4f. Start realtime hub (telegram long-poll, discord gateway, slack socket
   // mode, imap idle — push delivery instead of the 1-min poll where possible)
   await startRealtimeHub();
+
+  // 4g. Renew Graph subscriptions / swap Drive channels so push stays alive
+  startPushRenewal();
 
   // 5. Start crash recovery resumer
   startExecutionResumer();

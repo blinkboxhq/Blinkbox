@@ -8,6 +8,7 @@ import { sanitizeAndLog } from "../../utils/errors.js";
 import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
 import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
 import { resolveSecret } from "../../utils/resolveSecret.js";
+import { pollTriggerNow } from "../../infra/poller.hub.js";
 
 // Constant-time string compare that never throws. The naive pattern
 // (`a.length !== b.length` + `timingSafeEqual(Buffer.from(a), Buffer.from(b))`)
@@ -305,6 +306,33 @@ export async function handlePublicWebhook(req, res) {
       }
     }
 
+    // ── Microsoft Graph (Outlook): endpoint validation + clientState check ───
+    // Graph POSTs ?validationToken= DURING subscription create — before the
+    // secret exists in config — so the echo is gated on node type only (the
+    // Asana-handshake model). The echo fires nothing and reveals nothing.
+    const entryNodeType = entryNode?.type || entryNode?.data?.type;
+    if (entryNodeType === "outlook_trigger" && req.query.validationToken) {
+      return res.status(200).type("text/plain").send(String(req.query.validationToken));
+    }
+    if (triggerConfig.outlookWebhookSecret) {
+      const items = Array.isArray(req.body?.value) ? req.body.value : [];
+      if (!items.some((v) => safeEqual(String(v.clientState || ""), triggerConfig.outlookWebhookSecret))) {
+        return res.status(401).json({ error: "Invalid Graph clientState" });
+      }
+    }
+
+    // ── Google Drive (Sheets): channel token check ────────────────────────────
+    // The "sync" ping arrives during channel create, before the secret is
+    // stored — ack it by node type without firing anything.
+    if (entryNodeType === "google_sheets_trigger" && req.headers["x-goog-resource-state"] === "sync") {
+      return res.status(200).json({ ok: true });
+    }
+    if (triggerConfig.sheetsWebhookSecret) {
+      if (!safeEqual(String(req.headers["x-goog-channel-token"] || ""), triggerConfig.sheetsWebhookSecret)) {
+        return res.status(401).json({ error: "Invalid Drive channel token" });
+      }
+    }
+
     // ── PagerDuty: X-PagerDuty-Signature (v1=<hex>, may list multiple) ───────
     if (triggerConfig.pagerdutyWebhookSecret) {
       const provided = req.headers["x-pagerduty-signature"] || "";
@@ -401,6 +429,15 @@ export async function handlePublicWebhook(req, res) {
         return res.status(200).json({ ignored: true });
       }
       isWhatsapp = true;
+    }
+
+    // Push pings (Graph/Drive) carry no payload — ack fast, then run the
+    // node's normal poll check immediately for instant-but-proven delivery.
+    if (triggerConfig.pushPollType && triggerConfig.webhookRegistered) {
+      res.status(202).json({ accepted: true });
+      pollTriggerNow(triggerConfig.pushPollType, automation._id.toString(), entryNodeId)
+        .catch((err) => sanitizeAndLog(err, `PushPoll ${automation._id}`));
+      return;
     }
 
     // WhatsApp triggers run on a flattened payload so $trigger.text / $trigger.from

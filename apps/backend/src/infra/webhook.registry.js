@@ -490,6 +490,71 @@ export const WEBHOOK_APPS = {
       headers: { APIKEY: token },
     }),
   },
+
+  // Graph/Drive push notifications carry no payload — they wake the receive
+  // path, which re-runs the node's normal poll check (pushPollType). Both are
+  // `optional`: registration fails on non-HTTPS/localhost, and the activation
+  // controller must fall back to polling instead of failing the activation.
+  outlook_trigger: {
+    optional: true,
+    resolveToken: oauth("Outlook trigger"),
+    secretKey: "outlookWebhookSecret",
+    genSecret: true,
+    // resource is all messages — folder/sender filters are applied by the poll
+    // check itself, so the subscription never needs recreating on config edits
+    create: ({ url, secret, token }) => ({
+      method: "POST",
+      url: "https://graph.microsoft.com/v1.0/subscriptions",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        changeType: "created",
+        notificationUrl: url,
+        resource: "me/messages",
+        expirationDateTime: new Date(Date.now() + 4230 * 60 * 1000).toISOString(),
+        clientState: secret,
+      },
+    }),
+    extractId: (j) => j.id,
+    storeExtra: () => ({ pushPollType: "outlook_trigger" }),
+    deletePath: ({ webhookId, token }) => ({
+      method: "DELETE",
+      url: `https://graph.microsoft.com/v1.0/subscriptions/${webhookId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  },
+
+  google_sheets_trigger: {
+    optional: true,
+    resolveToken: oauth("Google Sheets trigger"),
+    secretKey: "sheetsWebhookSecret",
+    genSecret: true,
+    create: ({ url, secret, cfg, token, automationId }) => ({
+      method: "POST",
+      url: `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(cfg.spreadsheetId)}/watch`,
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        id: `bb-${automationId}-${Date.now()}`,
+        type: "web_hook",
+        address: url,
+        token: secret,
+        expiration: String(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    }),
+    extractId: (j) => j.id,
+    // Drive channels cannot be renewed — push.renewal.js swaps in a fresh one
+    // before driveExpiresAt; channels/stop needs the resourceId
+    storeExtra: (j) => ({
+      pushPollType: "google_sheets_trigger",
+      driveResourceId: j?.resourceId || "",
+      driveExpiresAt: j?.expiration ? Number(j.expiration) : 0,
+    }),
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "POST",
+      url: "https://www.googleapis.com/drive/v3/channels/stop",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: { id: webhookId, resourceId: cfg.driveResourceId },
+    }),
+  },
 };
 
 async function callApi(spec) {

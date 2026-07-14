@@ -276,7 +276,14 @@ export async function activateAutomation(req, res) {
       }
 
       if (WEBHOOK_APPS[trigger] && !cfg.webhookRegistered) {
-        await registerWebhook(trigger, automation._id.toString(), cfg, automation.workspaceId, entry.nodeId);
+        try {
+          await registerWebhook(trigger, automation._id.toString(), cfg, automation.workspaceId, entry.nodeId);
+        } catch (err) {
+          // optional push registrars (Graph/Drive need public HTTPS) fall back
+          // to polling instead of failing the whole activation
+          if (!WEBHOOK_APPS[trigger].optional) throw err;
+          console.warn(`[Webhook] Optional ${trigger} push registration failed — polling stays on: ${err.message}`);
+        }
         const refreshed = await Automation.findById(automation._id);
         if (refreshed) Object.assign(automation, refreshed.toObject());
       }
