@@ -8,7 +8,7 @@ import { sanitizeAndLog } from "../../utils/errors.js";
 import { getTriggerConfig, getTriggerNodesOfType } from "../../infra/triggerNodes.util.js";
 import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp.classify.js";
 import { resolveSecret } from "../../utils/resolveSecret.js";
-import { pollTriggerNow } from "../../infra/poller.hub.js";
+import { pollTriggerNow, syncPollerHub } from "../../infra/poller.hub.js";
 
 // Constant-time string compare that never throws. The naive pattern
 // (`a.length !== b.length` + `timingSafeEqual(Buffer.from(a), Buffer.from(b))`)
@@ -72,6 +72,7 @@ const HMAC_WEBHOOK_APPS = {
   netlify_trigger:     { header: "x-webhook-signature", secretKey: "netlifyWebhookSecret", enc: "hex" },
   airtable_trigger:    { header: "x-airtable-content-mac", secretKey: "airtableWebhookSecret", enc: "base64", prefix: "hmac-sha256=", secretIsBase64: true },
   asana_trigger:       { header: "x-hook-signature", secretKey: "asanaWebhookSecret", enc: "hex" },
+  notion_trigger:      { header: "x-notion-signature", secretKey: "notionWebhookSecret", enc: "hex", prefix: "sha256=" },
 };
 
 /**
@@ -182,6 +183,28 @@ export async function handlePublicWebhook(req, res) {
       } catch { /* best-effort persist */ }
       res.set("X-Hook-Secret", asanaHookSecret);
       return res.status(200).json({});
+    }
+    // Notion: subscriptions are created by the user in the integration
+    // dashboard; Notion then POSTs a one-time verification_token here. Same
+    // security model as the Asana handshake — accept only for a Notion trigger
+    // node with no secret yet, never overwrite. The token is surfaced in the
+    // config panel so the user can paste it back into Notion's verify dialog,
+    // and it becomes the HMAC key for X-Notion-Signature on future events.
+    const notionVerificationToken = req.body?.verification_token;
+    if (notionVerificationToken) {
+      const isNotionNode = entryNode?.data?.config
+        && (entryNode.type === "notion_trigger" || entryNode.data.type === "notion_trigger");
+      if (!isNotionNode || entryNode.data.config.notionWebhookSecret) {
+        return res.status(401).json({ error: "Unexpected handshake" });
+      }
+      try {
+        entryNode.data.config.notionWebhookSecret = String(notionVerificationToken);
+        entryNode.data.config.pushPollType = "notion_trigger";
+        entryNode.data.config.webhookRegistered = true;
+        await automation.save();
+        syncPollerHub("notion_trigger").catch(() => {});
+      } catch { /* best-effort persist */ }
+      return res.status(200).json({ ok: true });
     }
     // Monday: reply to the one-time URL verification challenge.
     if (req.body?.challenge && !req.body?.event) {

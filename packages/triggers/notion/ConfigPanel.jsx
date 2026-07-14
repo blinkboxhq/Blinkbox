@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Info, RefreshCw } from 'lucide-react';
+import { Check, Copy, RefreshCw } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { API_URL } from '@/lib/api';
 import imgNotion from '@/assets/Notion-Logo--Streamline-Radix.svg';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 
@@ -12,7 +14,16 @@ const POLL_INTERVALS = [
 ];
 
 export default function NotionTriggerNode({ config = {}, updateConfig, nodeId }) {
+  const { id: automationId } = useParams();
   const [activeTab, setActiveTab] = useState('setup');
+  const [copied, setCopied] = useState('');
+
+  const webhookUrl = `${API_URL}/webhook/${automationId}`;
+  const copy = (key, text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(''), 1500);
+  };
 
   return (
     <div className="flex flex-col">
@@ -81,6 +92,38 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
                 onClick={() => updateConfig?.('triggerOnUpdate', !config.triggerOnUpdate)}>
                 <div className={`w-3 h-3 rounded-full transition-transform shadow-sm ${config.triggerOnUpdate ? 'bg-black translate-x-4' : 'bg-white translate-x-0'}`} />
               </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Instant Delivery (optional)</label>
+              {config.webhookRegistered && config.notionWebhookSecret ? (
+                <>
+                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-2">
+                    <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span className="text-[10px] text-emerald-400">Webhook connected — events arrive instantly. If Notion asks to verify, paste this token.</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input readOnly value={config.notionWebhookSecret}
+                      className="flex-1 bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-[10px] text-zinc-400 font-mono focus:outline-none" />
+                    <button onClick={() => copy('token', config.notionWebhookSecret)}
+                      className="p-1.5 bg-[#111] border border-[#222] rounded-md text-zinc-500 hover:text-white transition-colors shrink-0">
+                      {copied === 'token' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <input readOnly value={webhookUrl}
+                      className="flex-1 bg-[#111] border border-[#222] rounded-md px-2.5 py-1.5 text-[10px] text-zinc-400 font-mono focus:outline-none" />
+                    <button onClick={() => copy('url', webhookUrl)}
+                      className="p-1.5 bg-[#111] border border-[#222] rounded-md text-zinc-500 hover:text-white transition-colors shrink-0">
+                      {copied === 'url' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-zinc-600">Add this URL as a webhook on your integration at notion.so/profile/integrations. Notion sends a verification token — reopen this panel, copy it from here, and paste it into Notion's verify dialog. Polling keeps working until then.</p>
+                </>
+              )}
             </div>
           </>
         )}
