@@ -661,8 +661,8 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 212;
-    const cardH = 80;
+    const cardW = 192;
+    const cardH = 72;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "2px solid transparent"
