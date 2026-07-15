@@ -3,6 +3,7 @@ import { Copy, Check, Info } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { API_URL } from '@/lib/api';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import logoTypeform from './logo.svg';
 
 export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId }) {
   const { id: automationId } = useParams();
@@ -21,7 +22,7 @@ export default function TypeformTriggerNode({ config = {}, updateConfig, nodeId 
     <div className="flex flex-col">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[#2A2A2A] bg-[#111111] rounded-t-xl">
         <div className="p-1 bg-[#222] rounded-md border border-[#333]">
-          <span className="text-[10px] font-black text-zinc-300">T</span>
+          <img src={logoTypeform} alt="Typeform" className="w-3.5 h-3.5 object-contain" />
         </div>
         <span className="text-[11px] font-semibold text-zinc-200 tracking-wide">Typeform</span>
         <span className="ml-auto text-[9px] font-bold text-zinc-400 bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded">TRIGGER</span>

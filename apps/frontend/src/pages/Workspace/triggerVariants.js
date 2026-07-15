@@ -79,6 +79,7 @@ import imgHubSpot        from "@triggers/hubspot/logo.svg";
 import imgShopify        from "@triggers/shopify/logo.svg";
 import imgLinear         from "@triggers/linear/logo.svg";
 import imgTypeform       from "@triggers/typeform/logo.svg";
+import imgJotform        from "@triggers/jotform/logo.svg";
 import imgYouTube        from "@triggers/youtube/logo.png";
 import imgReddit         from "@triggers/reddit/logo.svg";
 import imgGoogleCalendar from "@triggers/google_calendar/logo.svg";
@@ -331,6 +332,7 @@ export const TRIGGER_VARIANTS = {
     backendType: "jotform_trigger",
     instant: true,
     icon: ClipboardList,
+    logoUrl: imgJotform,
     label: "On Jotform Submission",
     colorClass: "text-[#FF6100]",
     accentColor: "255,97,0",
