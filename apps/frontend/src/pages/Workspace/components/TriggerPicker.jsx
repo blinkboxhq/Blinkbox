@@ -17,7 +17,7 @@ const TRIGGER_CATEGORIES = [
     keys: [
       "imap", "rss", "database",
       "http_monitor", "port_monitor", "dns", "ssl",
-      "price_alert", "ssh", "docker", "virustotal",
+      "price_alert", "ssh", "docker",
     ],
   },
   {
@@ -28,19 +28,17 @@ const TRIGGER_CATEGORIES = [
     accent: "#38bdf8",
     keys: [
       "slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams",
-      "github", "github_issue", "gitlab", "stripe", "shopify", "notion", "airtable",
-      "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms",
-      "hubspot", "linear", "jira", "trello", "asana", "pipedrive",
-      "clickup", "monday", "typeform", "figma",
-      "sentry", "vercel", "netlify", "pagerduty", "datadog",
-      "zendesk", "calendly", "mailchimp", "intercom", "woocommerce",
-      "azure_devops", "onedrive", "sharepoint",
-      "instagram", "tiktok", "mastodon", "youtube", "reddit", "hackernews", "producthunt",
+      "github", "stripe", "shopify", "notion", "airtable",
+      "google_sheets", "google_forms",
+      "jira", "trello", "asana",
+      "typeform", "jotform",
     ],
   },
 ];
 
 const ALL_TRIGGERS  = Object.entries(TRIGGER_VARIANTS).map(([key, v]) => ({ id: key, ...v }));
+const VISIBLE_KEYS  = new Set([...CORE_KEYS, ...TRIGGER_CATEGORIES.flatMap((c) => c.keys)]);
+const VISIBLE_TRIGGERS = ALL_TRIGGERS.filter((t) => VISIBLE_KEYS.has(t.id));
 const CORE_TRIGGERS = CORE_KEYS.map((k) => ALL_TRIGGERS.find((t) => t.id === k)).filter(Boolean);
 
 export default function TriggerPicker() {
@@ -85,7 +83,7 @@ export default function TriggerPicker() {
 
   const baseTriggers = currentCat
     ? currentCat.keys.map((k) => ALL_TRIGGERS.find((t) => t.id === k)).filter(Boolean)
-    : ALL_TRIGGERS;
+    : VISIBLE_TRIGGERS;
 
   const eventList = page === "events_of" && eventTrigger ? getTriggerEvents(eventTrigger.id)?.events ?? [] : null;
 
@@ -93,7 +91,7 @@ export default function TriggerPicker() {
   const visibleTriggers = eventList
     ? null
     : query
-    ? ALL_TRIGGERS.filter((t) => t.label.toLowerCase().includes(query) || t.backendType?.includes(query))
+    ? VISIBLE_TRIGGERS.filter((t) => t.label.toLowerCase().includes(query) || t.backendType?.includes(query))
     : page === "home"
     ? CORE_TRIGGERS
     : baseTriggers;
@@ -230,7 +228,7 @@ export default function TriggerPicker() {
         {/* Footer */}
         <div className="shrink-0 px-5 py-3.5 border-t border-white/[0.06] flex items-center gap-2">
           <Zap size={12} className="text-neutral-600" />
-          <span className="text-[12px] text-neutral-600">{ALL_TRIGGERS.length} triggers</span>
+          <span className="text-[12px] text-neutral-600">{VISIBLE_TRIGGERS.length} triggers</span>
           <span className="text-[11px] text-neutral-700 ml-auto">ESC {page !== "home" ? "back" : "close"}</span>
         </div>
       </div>
