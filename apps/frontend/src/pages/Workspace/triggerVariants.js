@@ -221,6 +221,7 @@ export const TRIGGER_VARIANTS = {
   // ── Integration triggers ────────────────────────────────────────────────────
   telegram: {
     backendType: "telegram_trigger",
+    instant: true,
     icon: MessageSquare,
     logoUrl: imgTelegram,
     label: "On Telegram Message",
@@ -250,6 +251,7 @@ export const TRIGGER_VARIANTS = {
   },
   whatsapp: {
     backendType: "whatsapp_trigger",
+    instant: true,
     icon: MessageSquare,
     logoUrl: imgWhatsApp,
     label: "On WhatsApp Message",
