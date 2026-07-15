@@ -437,7 +437,7 @@ function SuggestionGhostNode({ data }) {
   const Icon = nodeDef.icon;
   const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
   const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
-  const cardW = 80, cardH = 80;
+  const cardW = 72, cardH = 72;
 
   return (
     <motion.div
@@ -468,10 +468,10 @@ function SuggestionGhostNode({ data }) {
           boxShadow: '0 0 28px rgba(139,92,246,0.12), 0 12px 40px rgba(0,0,0,0.7)',
         }}>
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-12 h-12 object-contain"
+          <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-10 h-10 object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className="w-12 h-12 text-white" strokeWidth={1} />
+          <Icon className="w-10 h-10 text-white" strokeWidth={1} />
         )}
       </div>
 
@@ -619,7 +619,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 80, cardH = 80;
+    const cardW = 72, cardH = 72;
     const triggerRadius = `33px ${EDGE_RADIUS}px ${EDGE_RADIUS}px 33px`;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -638,9 +638,9 @@ function CustomNodeImpl({ id, data, selected }) {
           style={{ top: 0, left: 0, width: cardW, height: cardH, borderRadius: triggerRadius, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}>
           {badge}
           {(variantDef?.logoUrl || nodeDef.logoUrl) ? (
-            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
+            <img src={variantDef?.logoUrl || nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={(variantDef?.imgFilter || nodeDef.imgFilter) ? { filter: variantDef?.imgFilter || nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className={`w-12 h-12 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+            <Icon className={`w-10 h-10 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
@@ -786,10 +786,10 @@ function CustomNodeImpl({ id, data, selected }) {
         >
           {badge}
           {nodeDef.logoUrl ? (
-            <img src={nodeDef.logoUrl} alt={data.label} className="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+            <img src={nodeDef.logoUrl} alt={data.label} className="w-7 h-7 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (
-            <Icon className={`w-8 h-8 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+            <Icon className={`w-7 h-7 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
           )}
         </motion.div>
 
@@ -853,13 +853,13 @@ function CustomNodeImpl({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 80;
+  const cardW = 72;
   // Merge exposes one input handle per branch; the card grows to keep the
   // handles from crowding once there are more than two.
   const mergeInputs = data.backendType === "merge"
     ? Math.max(2, Math.min(10, Number(data.config?.inputs) || 2))
     : 0;
-  const cardH = mergeInputs > 2 ? 80 + (mergeInputs - 2) * 26 : 80;
+  const cardH = mergeInputs > 2 ? 72 + (mergeInputs - 2) * 26 : 72;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -913,9 +913,9 @@ function CustomNodeImpl({ id, data, selected }) {
           </div>
         )}
         {nodeDef.logoUrl ? (
-          <img src={nodeDef.logoUrl} alt={data.label} className="w-12 h-12 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
+          <img src={nodeDef.logoUrl} alt={data.label} className="w-10 h-10 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon className={`w-12 h-12 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
+          <Icon className={`w-10 h-10 ${iconColorClass} opacity-80 group-hover:opacity-100 transition-opacity duration-300`} strokeWidth={1.4} />
         )}
       </motion.div>
 
