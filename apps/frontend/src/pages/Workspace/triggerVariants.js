@@ -199,6 +199,7 @@ export const TRIGGER_VARIANTS = {
   },
   github: {
     backendType: "github_trigger",
+    instant: true,
     icon: Github,
     logoUrl: imgGitHub,
     label: "On GitHub Event",
@@ -208,6 +209,7 @@ export const TRIGGER_VARIANTS = {
   },
   stripe: {
     backendType: "stripe_trigger",
+    instant: true,
     icon: CreditCard,
     logoUrl: imgStripe,
     label: "On Stripe Event",
@@ -228,6 +230,7 @@ export const TRIGGER_VARIANTS = {
   },
   slack: {
     backendType: "slack_trigger",
+    instant: true,
     icon: MessageSquare,
     logoUrl: imgSlack,
     label: "On Slack Event",
@@ -237,6 +240,7 @@ export const TRIGGER_VARIANTS = {
   },
   discord: {
     backendType: "discord_trigger",
+    instant: true,
     icon: MessageSquare,
     logoUrl: imgDiscord,
     label: "On Discord Event",
@@ -255,6 +259,7 @@ export const TRIGGER_VARIANTS = {
   },
   gmail: {
     backendType: "gmail_trigger",
+    instant: true,
     icon: Mail,
     logoUrl: imgGmail,
     label: "On Gmail Email",
@@ -264,6 +269,7 @@ export const TRIGGER_VARIANTS = {
   },
   airtable: {
     backendType: "airtable_trigger",
+    instant: true,
     icon: Database,
     logoUrl: imgAirtable,
     label: "On Airtable Record",
@@ -273,6 +279,7 @@ export const TRIGGER_VARIANTS = {
   },
   notion: {
     backendType: "notion_trigger",
+    instant: true,
     icon: Database,
     logoUrl: imgNotion,
     label: "On Notion Page",
@@ -291,6 +298,7 @@ export const TRIGGER_VARIANTS = {
   },
   shopify: {
     backendType: "shopify_trigger",
+    instant: true,
     icon: ShoppingBag,
     logoUrl: imgShopify,
     label: "On Shopify Event",
@@ -309,6 +317,7 @@ export const TRIGGER_VARIANTS = {
   },
   typeform: {
     backendType: "typeform_trigger",
+    instant: true,
     icon: FileText,
     logoUrl: imgTypeform,
     label: "On Typeform Submission",
@@ -318,6 +327,7 @@ export const TRIGGER_VARIANTS = {
   },
   jotform: {
     backendType: "jotform_trigger",
+    instant: true,
     icon: ClipboardList,
     label: "On Jotform Submission",
     colorClass: "text-[#FF6100]",
@@ -391,6 +401,7 @@ export const TRIGGER_VARIANTS = {
   },
   jira: {
     backendType: "jira_trigger",
+    instant: true,
     icon: Github,
     logoUrl: imgJira,
     label: "On Jira Issue",
@@ -400,6 +411,7 @@ export const TRIGGER_VARIANTS = {
   },
   trello: {
     backendType: "trello_trigger",
+    instant: true,
     icon: Github,
     logoUrl: imgTrello,
     label: "On Trello Card",
@@ -409,6 +421,7 @@ export const TRIGGER_VARIANTS = {
   },
   google_sheets: {
     backendType: "google_sheets_trigger",
+    instant: true,
     icon: Github,
     logoUrl: imgGoogleSheets,
     label: "On Google Sheets Row",
@@ -418,6 +431,7 @@ export const TRIGGER_VARIANTS = {
   },
   outlook: {
     backendType: "outlook_trigger",
+    instant: true,
     icon: Github,
     logoUrl: imgOutlook,
     label: "On Outlook Email",
@@ -499,6 +513,7 @@ export const TRIGGER_VARIANTS = {
   },
   asana: {
     backendType: "asana_trigger",
+    instant: true,
     icon: Circle,
     logoUrl: imgAsana,
     label: "On Asana Task",
@@ -528,6 +543,7 @@ export const TRIGGER_VARIANTS = {
   },
   google_forms: {
     backendType: "google_forms_trigger",
+    instant: true,
     icon: Webhook,
     logoUrl: imgGoogleForms,
     label: "On Google Forms Response",

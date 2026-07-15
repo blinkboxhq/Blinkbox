@@ -277,6 +277,12 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
           <div className="text-[12px] text-neutral-500 mt-0.5 truncate">{trigger.description}</div>
         )}
       </div>
+      {trigger.instant && (
+        <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 shrink-0">
+          <Zap size={9} className="fill-current" />
+          Instant
+        </span>
+      )}
       <ChevronRight size={16} className="text-neutral-700 shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-neutral-400 transition-all" />
     </button>
   );
