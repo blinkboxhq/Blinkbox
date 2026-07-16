@@ -114,7 +114,7 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
               <option value="gpt-4o-mini">GPT-4o Mini</option>
               <option value="gpt-4o">GPT-4o</option>
-              <option value="claude-haiku-4-5-20251001">Claude Haiku</option>
+              <option value="claude-haiku-4-5">Claude Haiku</option>
             </select>
           </div>
           <div className="flex-1">

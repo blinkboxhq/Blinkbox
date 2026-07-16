@@ -30,7 +30,7 @@ export default function InvoiceParserNode({ config = {}, updateConfig, nodeId })
 
   const MODELS = {
     openai:    ['gpt-4o', 'gpt-4o-mini'],
-    anthropic: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001'],
+    anthropic: ['claude-sonnet-5', 'claude-haiku-4-5'],
     google:    ['gemini-2.0-flash', 'gemini-1.5-pro'],
   };
 

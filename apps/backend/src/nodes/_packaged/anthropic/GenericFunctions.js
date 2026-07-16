@@ -13,9 +13,9 @@ export const MODELS_URL = "https://api.anthropic.com/v1/models";
 export const ANTHROPIC_VERSION = "2023-06-01";
 export const HEADERS_BASE = { "anthropic-version": ANTHROPIC_VERSION, "Content-Type": "application/json" };
 
-export const DEFAULT_MODEL = "claude-sonnet-4-6";
+export const DEFAULT_MODEL = "claude-sonnet-5";
 export const DEFAULT_FAST_MODEL = "claude-haiku-4-5";
-export const DEFAULT_VISION_MODEL = "claude-sonnet-4-6";
+export const DEFAULT_VISION_MODEL = "claude-sonnet-5";
 export const DEFAULT_THINKING_MODEL = "claude-opus-4-8";
 
 export async function getApiKey(credentialId, workspaceId) {

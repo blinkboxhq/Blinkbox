@@ -2,7 +2,7 @@ import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 const PROVIDERS = [
   { id: "openai",      label: "OpenAI",      models: ["gpt-4o","gpt-4o-mini","gpt-4-turbo","gpt-3.5-turbo"], color: "#10A37F", credential: "openai" },
-  { id: "anthropic",   label: "Anthropic",   models: ["claude-opus-4-7","claude-sonnet-4-6","claude-haiku-4-5-20251001"], color: "#D4C1B3", credential: "anthropic" },
+  { id: "anthropic",   label: "Anthropic",   models: ["claude-opus-4-8","claude-sonnet-5","claude-haiku-4-5"], color: "#D4C1B3", credential: "anthropic" },
   { id: "gemini",      label: "Gemini",      models: ["gemini-2.0-flash","gemini-1.5-pro","gemini-1.5-flash"], color: "#4285F4", credential: "gemini" },
   { id: "deepseek",    label: "DeepSeek",    models: ["deepseek-chat","deepseek-reasoner"], color: "#4D9BF8", credential: "deepseek" },
   { id: "openrouter",  label: "OpenRouter",  models: ["meta-llama/llama-3.3-70b-instruct","mistralai/mistral-large","google/gemini-2.0-flash-001"], color: "#6366f1", credential: "openrouter" },

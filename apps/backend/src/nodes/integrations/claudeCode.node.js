@@ -2,7 +2,7 @@ import axios from "axios";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
-const MODELS = ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-haiku-4-5-20251001"];
+const MODELS = ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"];
 
 export default {
   async run(config, _input, context = {}) {

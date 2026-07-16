@@ -41,7 +41,7 @@ export default {
 
     if (provider === "anthropic") {
       const { data } = await axios.post("https://api.anthropic.com/v1/messages",
-        { model: config.model || "claude-haiku-4-5-20251001", max_tokens: 2048, messages: [{ role: "user", content: `Translate the following text to ${target}. Return ONLY the translated text, nothing else:\n\n${text}` }] },
+        { model: config.model || "claude-haiku-4-5", max_tokens: 2048, messages: [{ role: "user", content: `Translate the following text to ${target}. Return ONLY the translated text, nothing else:\n\n${text}` }] },
         { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, timeout: 30000 }
       );
       return { translatedText: data.content[0].text.trim(), targetLanguage: target, provider: "anthropic" };
