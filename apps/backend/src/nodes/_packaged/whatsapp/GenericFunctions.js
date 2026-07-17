@@ -52,6 +52,14 @@ export async function send(phoneNumberId, token, payload) {
   };
 }
 
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+export function attachmentTooLarge(base64, op) {
+  const bytes = Math.floor((String(base64).length * 3) / 4);
+  if (bytes <= MAX_UPLOAD_BYTES) return null;
+  return { success: false, error: `WhatsApp ${op}: attachment is ~${Math.round(bytes / 1048576)}MB — over the ${MAX_UPLOAD_BYTES / 1048576}MB upload limit.`, skipped: true };
+}
+
 export async function uploadMedia(phoneNumberId, token, attachment) {
   const base64Data = attachment.dataUrl.includes(",") ? attachment.dataUrl.split(",")[1] : attachment.dataUrl;
   const mimeType = attachment.mimeType || "application/octet-stream";

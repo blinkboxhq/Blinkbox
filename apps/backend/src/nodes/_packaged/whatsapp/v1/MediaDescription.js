@@ -55,14 +55,14 @@ async function opSendAudio(config, token) {
   const { phoneNumberId, to, audioUrl } = config;
   if (!phoneNumberId) return { success: false, error: "WhatsApp sendAudio: 'phoneNumberId' is required.", skipped: true };
   if (!to) return { success: false, error: "WhatsApp sendAudio: 'to' is required.", skipped: true };
-  if (!audioUrl) return { success: false, error: "WhatsApp sendAudio: 'audioUrl' is required.", skipped: true };
-  if (!/^https?:\/\//i.test(audioUrl)) throw new Error("WhatsApp sendAudio: 'audioUrl' must be an http/https URL.");
+  if (!audioUrl && !config._mediaId) return { success: false, error: "WhatsApp sendAudio: 'audioUrl' or an attachment is required.", skipped: true };
+  if (audioUrl && !/^https?:\/\//i.test(audioUrl)) throw new Error("WhatsApp sendAudio: 'audioUrl' must be an http/https URL.");
 
   return send(phoneNumberId, token, {
     messaging_product: "whatsapp",
     to,
     type: "audio",
-    audio: { link: audioUrl },
+    audio: config._mediaId ? { id: config._mediaId } : { link: audioUrl },
   });
 }
 

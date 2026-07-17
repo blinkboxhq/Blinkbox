@@ -9,6 +9,14 @@ import axios from "axios";
 
 export const API = "https://slack.com/api";
 
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+export function attachmentTooLarge(base64, op) {
+  const bytes = Math.floor((String(base64).length * 3) / 4);
+  if (bytes <= MAX_UPLOAD_BYTES) return null;
+  return { success: false, error: `Slack ${op}: attachment is ~${Math.round(bytes / 1048576)}MB — over the ${MAX_UPLOAD_BYTES / 1048576}MB upload limit.`, skipped: true };
+}
+
 export async function slackCall(token, method, payload) {
   let response;
   try {

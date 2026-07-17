@@ -7,8 +7,10 @@
  *              to the modular router in _packaged/discord/. 24 operations.
  */
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
+import { resolveCredential } from "../../utils/resolveCredential.js";
+import { decrypt } from "../../utils/crypto.js";
 import { run as runDiscord, OPERATIONS, DEFAULT_OPERATION, WEBHOOK_OPS } from "../_packaged/discord/router.js";
-import { makeReq } from "../_packaged/discord/GenericFunctions.js";
+import { makeReq, DISCORD_WEBHOOK_RE } from "../_packaged/discord/GenericFunctions.js";
 
 export default {
   async run(config, input, context = {}) {
@@ -17,9 +19,16 @@ export default {
 
     if (WEBHOOK_OPS.has(op)) {
       let resolvedConfig = { ...config };
-      if (config.credentialId && context.getCredential) {
-        const cred = await context.getCredential(config.credentialId);
-        resolvedConfig.webhookUrl = cred?.token || cred?.url || cred?.webhookUrl || cred?.value || config.webhookUrl;
+      if (config.credentialId) {
+        // Falls back to the pasted webhookUrl on any resolution failure — the raw
+        // URL path is the only one live automations have ever used; never break it.
+        try {
+          const cred = await resolveCredential(config.credentialId, context.workspaceId, "Discord");
+          const secret = decrypt(cred.encryptedData, cred.iv, cred.authTag);
+          if (DISCORD_WEBHOOK_RE.test(secret)) resolvedConfig.webhookUrl = secret;
+        } catch {
+          resolvedConfig.webhookUrl = config.webhookUrl;
+        }
       }
       if (op === "sendFile" && typeof config.attachmentIndex === "number" && !config._inlineAttachment) {
         const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;

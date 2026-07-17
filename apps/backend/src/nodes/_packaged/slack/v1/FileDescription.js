@@ -2,7 +2,7 @@
  * Slack — file operations. Handlers receive `(config, token)`.
  */
 import axios from "axios";
-import { API, slackCall } from "../GenericFunctions.js";
+import { API, MAX_UPLOAD_BYTES, attachmentTooLarge, slackCall } from "../GenericFunctions.js";
 
 async function opUploadFile(config, token) {
   const channel = config.channel;
@@ -15,6 +15,8 @@ async function opUploadFile(config, token) {
 
   if (attachment?.dataUrl) {
     const base64Data = attachment.dataUrl.includes(",") ? attachment.dataUrl.split(",")[1] : attachment.dataUrl;
+    const tooBig = attachmentTooLarge(base64Data, "uploadFile");
+    if (tooBig) return tooBig;
     const binaryBuffer = Buffer.from(base64Data, "base64");
     const filename = attachment.name || config.filename || "file";
     const mimeType = attachment.mimeType || "application/octet-stream";
@@ -31,7 +33,7 @@ async function opUploadFile(config, token) {
     await axios.post(uploadUrl, binaryBuffer, {
       headers: { "Content-Type": mimeType },
       timeout: 60000,
-      maxBodyLength: Infinity,
+      maxBodyLength: MAX_UPLOAD_BYTES,
     });
 
     const completeRes = await axios.post(`${API}/files.completeUploadExternal`, {

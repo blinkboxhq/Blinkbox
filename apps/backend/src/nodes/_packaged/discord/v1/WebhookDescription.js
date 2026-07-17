@@ -3,11 +3,11 @@
  * Handlers receive `(config)` only — no bot token; the webhook URL carries auth.
  */
 import axios from "axios";
-import { validateWebhook, webhookId, post, buildEmbed } from "../GenericFunctions.js";
+import { attachmentTooLarge, validateWebhook, webhookId, post, buildEmbed } from "../GenericFunctions.js";
 
 async function opSendMessage(config) {
   const { webhookUrl, message, username, avatarUrl } = config;
-  validateWebhook(webhookUrl);
+  const invalid = validateWebhook(webhookUrl); if (invalid) return invalid;
   if (!message) return { success: false, error: "Discord sendMessage: 'message' is required (max 2000 chars).", skipped: true };
   if (message.length > 2000) throw new Error("Discord sendMessage: message exceeds 2000 characters.");
 
@@ -21,7 +21,7 @@ async function opSendMessage(config) {
 
 async function opSendEmbed(config) {
   const { webhookUrl, username, avatarUrl } = config;
-  validateWebhook(webhookUrl);
+  const invalid = validateWebhook(webhookUrl); if (invalid) return invalid;
 
   const embed = buildEmbed(config);
   if (!embed.title && !embed.description && !embed.fields)
@@ -38,7 +38,7 @@ async function opSendEmbed(config) {
 
 async function opSendFile(config) {
   const { webhookUrl, username } = config;
-  validateWebhook(webhookUrl);
+  const invalid = validateWebhook(webhookUrl); if (invalid) return invalid;
 
   const form = new FormData();
   if (config.message) form.append("content", config.message);
@@ -47,6 +47,8 @@ async function opSendFile(config) {
   if (config._inlineAttachment?.dataUrl) {
     const { dataUrl, mimeType, name } = config._inlineAttachment;
     const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const tooBig = attachmentTooLarge(base64Data, "sendFile");
+    if (tooBig) return tooBig;
     form.append("file", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "application/octet-stream" }), name || "file");
   } else {
     const content = config.content || config.fileContent || config.text;

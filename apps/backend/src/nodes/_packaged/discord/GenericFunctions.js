@@ -10,6 +10,22 @@ import axios from "axios";
 export const API = "https://discord.com/api/v10";
 export const DISCORD_WEBHOOK_RE = /^https:\/\/discord\.com\/api\/webhooks\//;
 
+// Encodes interpolated values only — keeps literal "/" separators, kills path traversal.
+export function p(strings, ...values) {
+  return strings.reduce(
+    (acc, s, i) => acc + s + (i < values.length ? encodeURIComponent(String(values[i])) : ""),
+    ""
+  );
+}
+
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+export function attachmentTooLarge(base64, op) {
+  const bytes = Math.floor((String(base64).length * 3) / 4);
+  if (bytes <= MAX_UPLOAD_BYTES) return null;
+  return { success: false, error: `Discord ${op}: attachment is ~${Math.round(bytes / 1048576)}MB — over the ${MAX_UPLOAD_BYTES / 1048576}MB upload limit.`, skipped: true };
+}
+
 export function validateWebhook(url) {
   if (!url) return { success: false, error: "Discord: 'webhookUrl' is required.", skipped: true };
   if (!DISCORD_WEBHOOK_RE.test(url))

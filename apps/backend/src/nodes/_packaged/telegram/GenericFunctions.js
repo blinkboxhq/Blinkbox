@@ -8,11 +8,24 @@ import axios from "axios";
 
 export const BASE_URL = "https://api.telegram.org/bot";
 
+// Bot API URLs embed the token (`/bot<token>/method`); axios errors echo the URL.
+export function redactToken(msg) {
+  return String(msg ?? "").replace(/\/bot[^/\s"']+/g, "/bot<redacted>");
+}
+
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+export function attachmentTooLarge(base64, op) {
+  const bytes = Math.floor((String(base64).length * 3) / 4);
+  if (bytes <= MAX_UPLOAD_BYTES) return null;
+  return { success: false, error: `Telegram ${op}: attachment is ~${Math.round(bytes / 1048576)}MB — over the ${MAX_UPLOAD_BYTES / 1048576}MB upload limit.`, skipped: true };
+}
+
 export function handleError(err) {
   if (err.message.startsWith("Telegram")) throw err;
   if (err.response?.status === 401) throw new Error("Telegram: Invalid Bot Token.");
   if (err.response?.status === 400)
-    throw new Error(`Telegram: Bad request — ${err.response?.data?.description || err.message}`);
+    throw new Error(`Telegram: Bad request — ${redactToken(err.response?.data?.description || err.message)}`);
   if (err.response?.status === 403)
     throw new Error("Telegram: Bot is not a member of this chat or was blocked.");
   if (err.response?.status === 404)
@@ -20,7 +33,7 @@ export function handleError(err) {
   if (err.response?.status === 429) throw new Error("Telegram: Rate limit exceeded. Retry later.");
   if (err.response?.status === 500) throw new Error("Telegram: Telegram server error (500). Retry later.");
   if (err.code === "ECONNABORTED") throw new Error("Telegram: Request timed out.");
-  throw new Error(`Telegram failed: ${err.response?.status || err.code} — ${err.message}`);
+  throw new Error(`Telegram failed: ${err.response?.status || err.code} — ${redactToken(err.message)}`);
 }
 
 export function msgResult(data) {
@@ -45,7 +58,7 @@ export async function call(token, method, payload) {
   const data = response.data;
   if (!data.ok) {
     const code = data.error_code;
-    const desc = data.description || "Unknown error";
+    const desc = redactToken(data.description || "Unknown error");
     if (code === 401) throw new Error("Telegram: Invalid Bot Token.");
     if (code === 400) throw new Error(`Telegram: Bad request — ${desc}`);
     if (code === 403) throw new Error(`Telegram: Forbidden — ${desc}`);
@@ -69,6 +82,8 @@ export async function sendMediaByUrlOrInline(config, token, method, field, mimeD
   if (config._inlineAttachment?.dataUrl) {
     const { dataUrl, mimeType, name } = config._inlineAttachment;
     const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const tooBig = attachmentTooLarge(base64Data, method);
+    if (tooBig) return tooBig;
     const form = new FormData();
     form.append("chat_id", chatId);
     form.append(field, new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || mimeDefault }), name || fileNameDefault);

@@ -4,7 +4,7 @@
  * path: for media ops, an incoming `attachmentIndex` uploads the binary via
  * the Graph media endpoint and swaps in a `_mediaId` before the handler runs.
  */
-import { handleError, uploadMedia } from "./GenericFunctions.js";
+import { attachmentTooLarge, handleError, uploadMedia } from "./GenericFunctions.js";
 import { messageOperations } from "./v1/MessageDescription.js";
 import { mediaOperations } from "./v1/MediaDescription.js";
 import { contentOperations } from "./v1/ContentDescription.js";
@@ -38,6 +38,11 @@ export async function run(config, input, token) {
   let resolvedConfig = config;
   if (["sendImage", "sendVideo", "sendDocument", "sendAudio", "sendSticker"].includes(operation) && typeof config.attachmentIndex === "number") {
     const att = Array.isArray(input?.attachments) ? input.attachments[config.attachmentIndex] : null;
+    if (att?.dataUrl) {
+      const base64Data = att.dataUrl.includes(",") ? att.dataUrl.split(",")[1] : att.dataUrl;
+      const tooBig = attachmentTooLarge(base64Data, operation);
+      if (tooBig) return tooBig;
+    }
     if (att) {
       try {
         const mediaId = await uploadMedia(config.phoneNumberId, token, att);

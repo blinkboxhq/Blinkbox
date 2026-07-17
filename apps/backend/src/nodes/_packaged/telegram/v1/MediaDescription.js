@@ -3,7 +3,7 @@
  * media groups. Handlers receive `(config, token)`.
  */
 import axios from "axios";
-import { BASE_URL, call, msgResult, requireChat, sendMediaByUrlOrInline } from "../GenericFunctions.js";
+import { BASE_URL, attachmentTooLarge, call, msgResult, requireChat, sendMediaByUrlOrInline } from "../GenericFunctions.js";
 
 async function opSendPhoto(config, token) {
   const { chatId, _err } = requireChat(config, "sendPhoto");
@@ -12,6 +12,8 @@ async function opSendPhoto(config, token) {
   if (config._inlineAttachment?.dataUrl) {
     const { dataUrl, mimeType, name } = config._inlineAttachment;
     const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const tooBig = attachmentTooLarge(base64Data, "sendPhoto");
+    if (tooBig) return tooBig;
     const form = new FormData();
     form.append("chat_id", chatId);
     form.append("photo", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "image/jpeg" }), name || "photo.jpg");
@@ -36,6 +38,8 @@ async function opSendDocument(config, token) {
   if (config._inlineAttachment?.dataUrl) {
     const { dataUrl, mimeType, name } = config._inlineAttachment;
     const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+    const tooBig = attachmentTooLarge(base64Data, "sendDocument");
+    if (tooBig) return tooBig;
     const form = new FormData();
     form.append("chat_id", chatId);
     form.append("document", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "application/octet-stream" }), name || "file");

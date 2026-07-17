@@ -11,13 +11,21 @@ const PREFIX = "discord_role_assign:";
 const TIMEOUT = 15000;
 const BASE = "https://discord.com/api/v10";
 
+// Encodes interpolated values only — keeps literal "/" separators, kills path traversal.
+export function p(strings, ...values) {
+  return strings.reduce(
+    (acc, s, i) => acc + s + (i < values.length ? encodeURIComponent(String(values[i])) : ""),
+    ""
+  );
+}
+
 async function getKey(credentialId, workspaceId) {
   const cred = await resolveCredential(credentialId, workspaceId, "Discord");
   return decrypt(cred.encryptedData, cred.iv, cred.authTag);
 }
 
 export async function getClient(config, context) {
-  const token = config.botToken || (config.credentialId && await getKey(config.credentialId, context?.workspaceId));
+  const token = config.credentialId && await getKey(config.credentialId, context?.workspaceId);
   if (!token) throw new Error(`${PREFIX} Discord Bot Token required.`);
   const headers = { Authorization: `Bot ${token}` };
   return {
