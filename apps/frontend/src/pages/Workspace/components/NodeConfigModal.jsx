@@ -95,7 +95,7 @@ function childEntries(value) {
 }
 
 // ── File-tree row: one JSON node (leaf or branch), fully recursive ────────────
-function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied, isSchema }) {
+function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied, isSchema, guides = [], isLast = true }) {
   const structural = valueType(value);
   const isBranch = structural === "object" || structural === "array";
   const type = isSchema && !isBranch && typeof value === "string" ? value : structural;
@@ -121,9 +121,21 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
         onDragEnd={() => setDragging(null)}
         onClick={() => (isBranch ? setOpen((o) => !o) : copy(ref))}
         title={ref}
-        className={`bb-nav-item flex items-center gap-1.5 pr-2 py-[5px] rounded-md transition-colors group cursor-grab ${isDragging ? "opacity-50" : ""}`}
-        style={{ paddingLeft: 8 + depth * 12 }}
+        className={`bb-nav-item flex items-center gap-1.5 px-2 py-[5px] rounded-md transition-colors group cursor-grab ${isDragging ? "opacity-50" : ""}`}
       >
+        {depth > 0 && (
+          <span className="flex self-stretch -my-[5px] shrink-0">
+            {guides.map((g, i) => (
+              <span key={i} className="relative w-3">
+                {g && <span className="absolute inset-y-0 left-1/2 w-px bg-white/[0.08]" />}
+              </span>
+            ))}
+            <span className="relative w-3">
+              <span className={`absolute left-1/2 top-0 w-px bg-white/[0.08] ${isLast ? "h-1/2" : "h-full"}`} />
+              <span className="absolute left-1/2 right-0 top-1/2 h-px bg-white/[0.08]" />
+            </span>
+          </span>
+        )}
         {isBranch ? (
           <ChevronRight className={`w-3 h-3 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
         ) : (
@@ -143,8 +155,8 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
         children.length === 0 ? (
           <p className="text-[10px] text-neutral-700 italic py-1" style={{ paddingLeft: 8 + (depth + 1) * 12 }}>empty</p>
         ) : (
-          <div className="border-l border-white/[0.05]" style={{ marginLeft: 8 + depth * 12 }}>
-            {children.map(([k, v]) => (
+          <div className="flex flex-col">
+            {children.map(([k, v], i) => (
               <VarTreeRow
                 key={k}
                 nodeId={nodeId}
@@ -157,6 +169,8 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
                 copy={copy}
                 copied={copied}
                 isSchema={isSchema}
+                guides={depth === 0 ? [] : [...guides, !isLast]}
+                isLast={i === children.length - 1}
               />
             ))}
           </div>
