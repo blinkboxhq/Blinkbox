@@ -378,7 +378,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
                   onChange={selectEvent}
                   options={eventGroup.events.map((ev) => ({ value: ev.id, label: ev.label, icon: ev.icon }))}
                   placeholder="Choose the event that starts this workflow…"
-                  accentColor={eventDef?.accent || (variant?.accentColor ? `rgb(${variant.accentColor})` : "#6f97e8")}
+                  accentColor={eventDef?.accent || eventGroup.events[0]?.accent || `rgb(${variant.accentColor})`}
                 />
               </div>
               {eventDef ? (
