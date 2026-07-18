@@ -1,50 +1,24 @@
 import imgTeams from './logo.svg';
 import {
   Send, LayoutTemplate, Reply, FolderPlus, List, Users, Video,
-  Eye, Pencil, Trash2, Undo2, MessagesSquare, Folder, FolderX,
-  UserPlus, MessageCircle, MessageSquare,
 } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner, ConfigToggleRow, ConfigInput,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
 
 const OPERATIONS = [
-  { value: 'sendMessage',       label: 'Send Message',       icon: Send,            desc: 'Messages' },
-  { value: 'sendCard',          label: 'Send Adaptive Card', icon: LayoutTemplate,  desc: 'Messages' },
-  { value: 'replyMessage',      label: 'Reply to Thread',    icon: Reply,           desc: 'Messages' },
-  { value: 'listMessages',      label: 'List Messages',      icon: List,            desc: 'Messages' },
-  { value: 'getMessage',        label: 'Get Message',        icon: Eye,             desc: 'Messages' },
-  { value: 'listReplies',       label: 'List Replies',       icon: MessagesSquare,  desc: 'Messages' },
-  { value: 'updateMessage',     label: 'Update Message',     icon: Pencil,          desc: 'Messages' },
-  { value: 'deleteMessage',     label: 'Delete Message',     icon: Trash2,          desc: 'Messages' },
-  { value: 'undoDeleteMessage', label: 'Restore Message',    icon: Undo2,           desc: 'Messages' },
-  { value: 'createChannel',     label: 'Create Channel',     icon: FolderPlus,      desc: 'Channels' },
-  { value: 'listChannels',      label: 'List Channels',      icon: List,            desc: 'Channels' },
-  { value: 'getChannel',        label: 'Get Channel',        icon: Folder,          desc: 'Channels' },
-  { value: 'updateChannel',     label: 'Update Channel',     icon: Pencil,          desc: 'Channels' },
-  { value: 'deleteChannel',     label: 'Delete Channel',     icon: FolderX,         desc: 'Channels' },
-  { value: 'listChannelMembers',label: 'List Members',       icon: Users,           desc: 'Channels' },
-  { value: 'addChannelMember',  label: 'Add Member',         icon: UserPlus,        desc: 'Channels' },
-  { value: 'listTeams',         label: 'List Teams',         icon: Users,           desc: 'Teams' },
-  { value: 'getTeam',           label: 'Get Team',           icon: Eye,             desc: 'Teams' },
-  { value: 'listChats',         label: 'List Chats',         icon: MessageCircle,   desc: 'Chats' },
-  { value: 'getChat',           label: 'Get Chat',           icon: Eye,             desc: 'Chats' },
-  { value: 'sendChatMessage',   label: 'Send Chat Message',  icon: MessageSquare,   desc: 'Chats' },
-  { value: 'listChatMessages',  label: 'List Chat Messages', icon: List,            desc: 'Chats' },
-  { value: 'createMeeting',     label: 'Create Meeting',     icon: Video,           desc: 'Meetings' },
-  { value: 'getMeeting',        label: 'Get Meeting',        icon: Eye,             desc: 'Meetings' },
+  { value: 'sendMessage',   label: 'Send Message',       icon: Send },
+  { value: 'sendCard',      label: 'Send Adaptive Card', icon: LayoutTemplate },
+  { value: 'replyMessage',  label: 'Reply to Thread',    icon: Reply },
+  { value: 'createChannel', label: 'Create Channel',     icon: FolderPlus },
+  { value: 'listChannels',  label: 'List Channels',      icon: List },
+  { value: 'listTeams',     label: 'List Teams',         icon: Users },
+  { value: 'createMeeting', label: 'Create Meeting',     icon: Video },
 ];
-
-const TEAM_OPS = ['sendMessage', 'sendCard', 'replyMessage', 'listMessages', 'getMessage', 'listReplies', 'updateMessage', 'deleteMessage', 'undoDeleteMessage', 'createChannel', 'listChannels', 'getChannel', 'updateChannel', 'deleteChannel', 'listChannelMembers', 'addChannelMember', 'getTeam'];
-const CHANNEL_OPS = ['sendMessage', 'sendCard', 'replyMessage', 'listMessages', 'getMessage', 'listReplies', 'updateMessage', 'deleteMessage', 'undoDeleteMessage', 'getChannel', 'updateChannel', 'deleteChannel', 'listChannelMembers', 'addChannelMember'];
-const MESSAGE_ID_OPS = ['replyMessage', 'getMessage', 'listReplies', 'updateMessage', 'deleteMessage', 'undoDeleteMessage'];
-const CHAT_ID_OPS = ['getChat', 'sendChatMessage', 'listChatMessages'];
-const HTML_OPS = ['sendMessage', 'replyMessage', 'updateMessage', 'sendChatMessage'];
-const LIMIT_OPS = ['listMessages', 'listChats', 'listChatMessages'];
 
 function Field({ label, optional, children }) {
   return (
@@ -87,35 +61,21 @@ export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
         accentColor={ACCENT}
       />
 
-      {TEAM_OPS.includes(op) &&
+      {['sendMessage', 'sendCard', 'replyMessage', 'createChannel', 'listChannels'].includes(op) &&
         text('Team ID', 'teamId', { placeholder: '{{ $json.teamId }}' })}
 
-      {CHANNEL_OPS.includes(op) &&
+      {['sendMessage', 'sendCard', 'replyMessage'].includes(op) &&
         text('Channel ID', 'channelId', { placeholder: '{{ $json.channelId }}' })}
-
-      {MESSAGE_ID_OPS.includes(op) &&
-        text('Message ID', 'messageId', { placeholder: '{{ $json.messageId }}' })}
-
-      {CHAT_ID_OPS.includes(op) &&
-        text('Chat ID', 'chatId', { placeholder: '{{ $json.chatId }}' })}
 
       {op === 'sendMessage' && text('Message', 'content', { placeholder: 'Deployment complete: {{ $json.version }}', multiline: true })}
 
-      {op === 'sendChatMessage' && text('Message', 'content', { placeholder: 'Heads up: {{ $json.summary }}', multiline: true })}
-
-      {op === 'replyMessage' && text('Reply Content', 'content', { placeholder: 'Thanks for the update!', multiline: true })}
-
-      {op === 'updateMessage' && text('New Content', 'content', { placeholder: 'Edited message text', multiline: true })}
-
       {op === 'sendCard' && text('Adaptive Card JSON', 'card', { placeholder: '{"type":"AdaptiveCard","body":[{"type":"TextBlock","text":"Hello!"}]}', multiline: true })}
 
-      {HTML_OPS.includes(op) && (
-        <ConfigToggleRow
-          label="Send as HTML"
-          on={!!config.isHtml}
-          onChange={(v) => updateConfig('isHtml', v)}
-          accentColor={ACCENT}
-        />
+      {op === 'replyMessage' && (
+        <>
+          {text('Message ID (thread to reply to)', 'messageId', { placeholder: '{{ $json.messageId }}' })}
+          {text('Reply Content', 'content', { placeholder: 'Thanks for the update!', multiline: true })}
+        </>
       )}
 
       {op === 'createChannel' && (
@@ -130,38 +90,6 @@ export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
             accentColor={ACCENT}
           />
         </>
-      )}
-
-      {op === 'updateChannel' && (
-        <>
-          {text('New Channel Name', 'displayName', { optional: true, placeholder: 'alerts-production' })}
-          {text('New Description', 'description', { optional: true, placeholder: 'Updated description' })}
-        </>
-      )}
-
-      {op === 'addChannelMember' && (
-        <>
-          {text('User ID', 'userId', { placeholder: 'AAD user ID or {{ $json.userId }}' })}
-          <ConfigToggleRow
-            label="Add as owner"
-            on={!!config.owner}
-            onChange={(v) => updateConfig('owner', v)}
-            accentColor={ACCENT}
-          />
-        </>
-      )}
-
-      {op === 'getMeeting' &&
-        text('Meeting ID', 'meetingId', { placeholder: '{{ $json.meetingId }}' })}
-
-      {LIMIT_OPS.includes(op) && (
-        <ConfigInput
-          label="Limit"
-          type="number"
-          value={config.limit ?? 20}
-          onChange={(val) => updateConfig('limit', Number(val))}
-          hint="Max results"
-        />
       )}
 
       {op === 'createMeeting' && (

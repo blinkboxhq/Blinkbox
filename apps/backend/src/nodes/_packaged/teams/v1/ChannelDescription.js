@@ -71,12 +71,13 @@ async function opAddChannelMember(config, client) {
   if (!channelId) return { success: false, error: "Teams addChannelMember: 'channelId' is required.", skipped: true };
   if (!userId) return { success: false, error: "Teams addChannelMember: 'userId' is required.", skipped: true };
   const roles = config.owner ? ["owner"] : [];
+  const safeUserId = String(userId).replace(/'/g, "''");
   const res = await client.post(
     `/teams/${client.enc(teamId)}/channels/${client.enc(channelId)}/members`,
     {
       "@odata.type": "#microsoft.graph.aadUserConversationMember",
       roles,
-      "user@odata.bind": `https://graph.microsoft.com/v1.0/users('${userId}')`,
+      "user@odata.bind": `https://graph.microsoft.com/v1.0/users('${safeUserId}')`,
     },
   );
   return { success: true, id: res.data.id, displayName: res.data.displayName };

@@ -18,7 +18,7 @@ export function authHeaders(token) {
 
 export function num(value, fallback) {
   const n = Number(value);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 100) : fallback;
 }
 
 /** Parse a JSON-or-object field; throws a Teams-prefixed error on invalid JSON. */
