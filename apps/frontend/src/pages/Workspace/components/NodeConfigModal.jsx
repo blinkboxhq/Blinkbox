@@ -123,8 +123,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
         title={ref}
         className={`bb-nav-item flex items-center gap-1.5 px-2 py-[5px] rounded-md transition-colors group cursor-grab ${isDragging ? "opacity-50" : ""}`}
       >
-        {depth > 0 && (
-          <span className="flex self-stretch -my-[5px] shrink-0">
+        <span className="flex self-stretch -my-[5px] shrink-0">
             {guides.map((g, i) => (
               <span key={i} className="relative w-3">
                 {g && <span className="absolute inset-y-0 left-1/2 w-px bg-white/[0.08]" />}
@@ -134,8 +133,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
               <span className={`absolute left-1/2 top-0 w-px bg-white/[0.08] ${isLast ? "h-1/2" : "h-full"}`} />
               <span className="absolute left-1/2 right-0 top-1/2 h-px bg-white/[0.08]" />
             </span>
-          </span>
-        )}
+        </span>
         {isBranch ? (
           <ChevronRight className={`w-3 h-3 text-neutral-600 group-hover:text-neutral-400 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
         ) : (
@@ -153,7 +151,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
 
       {isBranch && open && (
         children.length === 0 ? (
-          <p className="text-[10px] text-neutral-700 italic py-1" style={{ paddingLeft: 8 + (depth + 1) * 12 }}>empty</p>
+          <p className="text-[10px] text-neutral-700 italic py-1" style={{ paddingLeft: 8 + (depth + 2) * 12 }}>empty</p>
         ) : (
           <div className="flex flex-col">
             {children.map(([k, v], i) => (
@@ -169,7 +167,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
                 copy={copy}
                 copied={copied}
                 isSchema={isSchema}
-                guides={depth === 0 ? [] : [...guides, !isLast]}
+                guides={[...guides, !isLast]}
                 isLast={i === children.length - 1}
               />
             ))}
@@ -269,7 +267,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
                 <div className="pl-1 pr-1 pt-0.5 pb-1 flex flex-col">
                   {rows.length === 0 ? (
                     <p className="px-3 py-1.5 text-[11px] text-neutral-700 italic">No fields</p>
-                  ) : rows.map(([k, v]) => (
+                  ) : rows.map(([k, v], i) => (
                     <VarTreeRow
                       key={k}
                       nodeId={n.id}
@@ -282,6 +280,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
                       copy={copy}
                       copied={copied}
                       isSchema={!hasLiveData}
+                      isLast={i === rows.length - 1}
                     />
                   ))}
                 </div>
