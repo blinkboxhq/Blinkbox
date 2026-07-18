@@ -183,6 +183,7 @@ function schemaToShape(schema) {
   if (typeof schema === "string") return schema; // leaf: show the type as the value
   if (Array.isArray(schema)) return schema.map(schemaToShape);
   if (typeof schema === "object") {
+    if (schema._type === "array") return [schemaToShape(schema._items)];
     const out = {};
     for (const [k, v] of Object.entries(schema)) {
       if (k.startsWith("_")) continue;
@@ -194,7 +195,7 @@ function schemaToShape(schema) {
 }
 
 // ── Panel 1: Input (variables from directly-connected upstream nodes only) ────
-function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
+function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutputSchemas }) {
   const [copied, setCopied]     = useState(null);
   const [dragging, setDragging] = useState(null);
   const [openNode, setOpenNode] = useState({});
@@ -237,7 +238,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
 
           const liveOutput = allRunOutputs[n.id];
           const hasLiveData = liveOutput && typeof liveOutput === "object";
-          const shape = hasLiveData ? liveOutput : schemaToShape(DEFAULT_SCHEMAS[n.data.backendType]);
+          const shape = hasLiveData ? liveOutput : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
           const rows = childEntries(shape);
 
           return (
@@ -598,6 +599,7 @@ export default function NodeConfigModal() {
   const renameNode        = useWorkspaceStore((s) => s.renameNode);
   const lastOutput        = useWorkspaceStore((s) => s.lastRunOutputs?.[s.selectedNodeId] ?? null);
   const allRunOutputs     = useWorkspaceStore((s) => s.lastRunOutputs ?? {});
+  const nodeOutputSchemas = useWorkspaceStore((s) => s.nodeOutputSchemas ?? {});
   const nodeStatus        = useWorkspaceStore((s) => s.nodeStatuses?.[s.selectedNodeId] ?? null);
 
   const node       = nodes.find((n) => n.id === selectedNodeId) ?? null;
@@ -699,7 +701,7 @@ export default function NodeConfigModal() {
           {/* Three resizable panels */}
           <div ref={containerRef} className="flex-1 flex flex-row overflow-hidden select-none">
             <div style={{ width: `${pw[0]}%` }} className="overflow-hidden">
-              <InputPanel canvasNodes={nodes} edges={edges} currentNodeId={selectedNodeId} allRunOutputs={allRunOutputs} />
+              <InputPanel canvasNodes={nodes} edges={edges} currentNodeId={selectedNodeId} allRunOutputs={allRunOutputs} nodeOutputSchemas={nodeOutputSchemas} />
             </div>
 
             <Divider onMouseDown={(e) => startDrag(0, e)} />

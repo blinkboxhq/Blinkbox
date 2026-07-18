@@ -468,6 +468,25 @@ export const createGraphSlice = (set, get) => ({
   },
 
   /**
+   * Batch-infer and store schemas from a full run's outputs ({ [nodeId]: output }).
+   * Turns any node's real JSON into typed variables — no hand-written schema needed.
+   */
+  recordRunOutputSchemas: (outputs) => {
+    const state = get();
+    const newSchemas = { ...state.nodeOutputSchemas };
+    for (const [nodeId, output] of Object.entries(outputs)) {
+      if (output !== undefined) newSchemas[nodeId] = inferSchemaFromValue(output);
+    }
+    const newVars = calculateAllAvailableVariables(state.nodes, state.edges, newSchemas);
+    set({
+      nodeOutputSchemas: newSchemas,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
+      _schemaGeneration: get()._schemaGeneration + 1,
+    });
+  },
+
+  /**
    * Get available variables for a specific node.
    * Returns the pre-computed result from the memoized store — O(1).
    *

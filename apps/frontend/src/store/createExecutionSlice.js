@@ -269,6 +269,7 @@ function _subscribeToNodeStatus(set, get, automationId, passive = false) {
                 }
               }
               set({ lastRunOutputs: outputs });
+              get().recordRunOutputSchemas?.(outputs);
             }
           }
         } catch { /* non-critical */ }
@@ -316,6 +317,7 @@ function _subscribeToExecution(set, get, executionId, automationId) {
             }
           }
           set({ lastRunOutputs: outputs });
+          get().recordRunOutputSchemas?.(outputs);
         }
       }).catch(() => {});
 
