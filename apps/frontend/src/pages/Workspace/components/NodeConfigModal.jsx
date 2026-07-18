@@ -95,9 +95,10 @@ function childEntries(value) {
 }
 
 // ── File-tree row: one JSON node (leaf or branch), fully recursive ────────────
-function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied }) {
-  const type = valueType(value);
-  const isBranch = type === "object" || type === "array";
+function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied, isSchema }) {
+  const structural = valueType(value);
+  const isBranch = structural === "object" || structural === "array";
+  const type = isSchema && !isBranch && typeof value === "string" ? value : structural;
   const [open, setOpen] = useState(depth < 1);
   const ref = `{{${nodeId}${path ? "." + path : ""}}}`;
   const isDragging = dragging === ref;
@@ -129,10 +130,10 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
           <span className="w-3 shrink-0 text-center text-neutral-700 text-[10px] leading-none">·</span>
         )}
         <span className="text-[11px] font-mono font-medium text-neutral-300 group-hover:text-white transition-colors truncate">{label}</span>
-        {!isBranch && value !== null && value !== undefined && (
+        {!isBranch && !isSchema && value !== null && value !== undefined && (
           <span className="text-[10px] text-neutral-600 font-mono truncate ml-1 min-w-0">{formatValue(value)}</span>
         )}
-        <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider shrink-0 ${TYPE_TINT[type]}`}>
+        <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider shrink-0 ${TYPE_TINT[type] || TYPE_TINT.null}`}>
           {isBranch ? (type === "array" ? `[${children.length}]` : `{${children.length}}`) : type}
         </span>
         {isCopied && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
@@ -155,6 +156,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
                 setDragging={setDragging}
                 copy={copy}
                 copied={copied}
+                isSchema={isSchema}
               />
             ))}
           </div>
@@ -223,9 +225,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
 
           const liveOutput = allRunOutputs[n.id];
           const hasLiveData = liveOutput && typeof liveOutput === "object";
-          const shape = hasLiveData
-            ? liveOutput
-            : schemaToShape(DEFAULT_SCHEMAS[n.data.backendType]) || { output: "any", success: "boolean" };
+          const shape = hasLiveData ? liveOutput : schemaToShape(DEFAULT_SCHEMAS[n.data.backendType]);
           const rows = childEntries(shape);
 
           return (
@@ -267,6 +267,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
                       setDragging={setDragging}
                       copy={copy}
                       copied={copied}
+                      isSchema={!hasLiveData}
                     />
                   ))}
                 </div>
