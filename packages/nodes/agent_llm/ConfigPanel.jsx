@@ -1,18 +1,18 @@
 import CredentialPicker from "@/components/ui/CredentialPicker";
 
 const PROVIDERS = [
-  { id: "openai",      label: "OpenAI",       models: ["gpt-4o","gpt-4o-mini","gpt-4-turbo","gpt-3.5-turbo"],                                                         color: "#10A37F", credentialType: "OpenAI" },
+  { id: "openai",      label: "OpenAI",       models: ["gpt-5.6","gpt-5.6-mini","gpt-5.5","o3"],                                                                      color: "#10A37F", credentialType: "OpenAI" },
   { id: "anthropic",   label: "Anthropic",    models: ["claude-opus-4-8","claude-sonnet-5","claude-haiku-4-5"],                                                         color: "#D4C1B3", credentialType: "Anthropic" },
-  { id: "gemini",      label: "Gemini",       models: ["gemini-2.0-flash","gemini-1.5-pro","gemini-1.5-flash"],                                                        color: "#4285F4", credentialType: "Gemini" },
-  { id: "deepseek",    label: "DeepSeek",     models: ["deepseek-chat","deepseek-reasoner"],                                                                            color: "#4D9BF8", credentialType: "DeepSeek" },
+  { id: "gemini",      label: "Gemini",       models: ["gemini-3.5-flash","gemini-3.5-pro","gemini-3.1-pro-preview"],                                                  color: "#4285F4", credentialType: "Gemini" },
+  { id: "deepseek",    label: "DeepSeek",     models: ["deepseek-v4-pro","deepseek-v4-flash","deepseek-reasoner"],                                                      color: "#4D9BF8", credentialType: "DeepSeek" },
   { id: "groq",        label: "Groq",         models: ["llama-3.3-70b-versatile","llama-3.1-8b-instant","mixtral-8x7b-32768"],                                         color: "#F55036", credentialType: "Groq" },
-  { id: "xai",         label: "xAI",          models: ["grok-3","grok-3-mini","grok-beta"],                                                                             color: "#FFFFFF", credentialType: "xAI" },
-  { id: "openrouter",  label: "OpenRouter",   models: ["meta-llama/llama-3.3-70b-instruct","anthropic/claude-3.5-sonnet","google/gemini-2.0-flash-001"],                color: "#6366f1", credentialType: "OpenRouter" },
+  { id: "xai",         label: "xAI",          models: ["grok-4.3","grok-4.20","grok-4"],                                                                                color: "#FFFFFF", credentialType: "xAI" },
+  { id: "openrouter",  label: "OpenRouter",   models: ["deepseek/deepseek-v4-pro","anthropic/claude-sonnet-5","openai/gpt-5.6"],                                        color: "#6366f1", credentialType: "OpenRouter" },
   { id: "nvidia_nim",  label: "NVIDIA NIM",   models: ["nvidia/nemotron-3-ultra-550b-a55b","meta/llama-4-maverick-17b-128e-instruct","meta/llama-3.3-70b-instruct","deepseek-ai/deepseek-v4-flash"], color: "#76B900", credentialType: "NvidiaNim" },
   { id: "gemma",       label: "Gemma",        models: ["google/gemma-4-31b-it","google/gemma-3-27b-it","google/gemma-3n-e4b-it","google/gemma-3-1b-it"],               color: "#4285F4", credentialType: "NvidiaNim" },
   { id: "together",    label: "Together",     models: ["meta-llama/Llama-3-70b-chat-hf","mistralai/Mixtral-8x7B-Instruct-v0.1"],                                      color: "#FF6B6B", credentialType: "Together" },
-  { id: "perplexity",  label: "Perplexity",   models: ["llama-3-sonar-large-32k-online","llama-3-sonar-small-32k-online"],                                             color: "#20808D", credentialType: "Perplexity" },
-  { id: "moonshot",    label: "Moonshot",     models: ["moonshot-v1-8k","moonshot-v1-32k","moonshot-v1-128k"],                                                         color: "#1B64F4", credentialType: "Moonshot" },
+  { id: "perplexity",  label: "Perplexity",   models: ["sonar-pro","sonar","sonar-reasoning-pro","sonar-reasoning"],                                                   color: "#20808D", credentialType: "Perplexity" },
+  { id: "moonshot",    label: "Moonshot",     models: ["kimi-k2.6","kimi-k2.7-code","kimi-k2-thinking"],                                                                color: "#1B64F4", credentialType: "Moonshot" },
 ];
 
 export default function AgentLLMNode({ config = {}, updateConfig }) {

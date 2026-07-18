@@ -437,7 +437,7 @@ function SuggestionGhostNode({ data }) {
   const Icon = nodeDef.icon;
   const clearSuggestionNode = useWorkspaceStore(s => s.clearSuggestionNode);
   const acceptSuggestion = useWorkspaceStore(s => s.acceptSuggestion);
-  const cardW = 72, cardH = 72;
+  const cardW = 80, cardH = 80;
 
   return (
     <motion.div
@@ -619,7 +619,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── TRIGGER NODE ────────────────────────────────────────────────────────
   if (isTrigger) {
-    const cardW = 72, cardH = 72;
+    const cardW = 80, cardH = 80;
     const triggerRadius = `33px ${EDGE_RADIUS}px ${EDGE_RADIUS}px 33px`;
     const isChatTrigger = data.backendType === "chat_trigger" || data.config?.triggerVariant === "chat";
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -661,8 +661,8 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 192;
-    const cardH = 72;
+    const cardW = 212;
+    const cardH = 80;
     const n = AGENT_BOTTOM_SLOTS.length;
 
     const cardBorder = status === "running" ? "2px solid transparent"
@@ -853,13 +853,13 @@ function CustomNodeImpl({ id, data, selected }) {
   }
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
-  const cardW = 72;
+  const cardW = 80;
   // Merge exposes one input handle per branch; the card grows to keep the
   // handles from crowding once there are more than two.
   const mergeInputs = data.backendType === "merge"
     ? Math.max(2, Math.min(10, Number(data.config?.inputs) || 2))
     : 0;
-  const cardH = mergeInputs > 2 ? 72 + (mergeInputs - 2) * 26 : 72;
+  const cardH = mergeInputs > 2 ? 80 + (mergeInputs - 2) * 26 : 80;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"

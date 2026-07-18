@@ -9,7 +9,7 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
   const currency    = config.currency    ?? 'INR';
   const categorize  = config.categorize  ?? true;
   const summary     = config.summary     ?? true;
-  const aiModel     = config.aiModel     ?? 'gpt-4o-mini';
+  const aiModel     = config.aiModel     ?? 'gpt-5.6-mini';
   const debitCol    = config.debitCol    ?? '';
   const creditCol   = config.creditCol   ?? '';
   const dateCol     = config.dateCol     ?? '';
@@ -112,8 +112,8 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">AI Model</label>
             <select value={aiModel} onChange={(e) => updateConfig('aiModel', e.target.value)}
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-200 focus:outline-none cursor-pointer">
-              <option value="gpt-4o-mini">GPT-4o Mini</option>
-              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-5.6-mini">GPT-5.6 Mini</option>
+              <option value="gpt-5.6">GPT-5.6</option>
               <option value="claude-haiku-4-5">Claude Haiku</option>
             </select>
           </div>

@@ -15,20 +15,30 @@ export const DEFAULT_THINK_MODEL  = "deepseek/deepseek-r1";
 export const DEFAULT_CODE_MODEL   = "qwen/qwen3-coder";
 
 export const KNOWN_MODELS = [
+  "anthropic/claude-opus-4-8",
+  "anthropic/claude-sonnet-5",
+  "anthropic/claude-haiku-4-5",
+  "openai/gpt-5.6",
+  "openai/gpt-5.6-mini",
+  "openai/o3",
+  "google/gemini-3.5-pro",
+  "google/gemini-3.5-flash",
+  "x-ai/grok-4.3",
+  "x-ai/grok-4-fast",
   "deepseek/deepseek-v4-pro",
   "deepseek/deepseek-v4-flash",
   "deepseek/deepseek-r1",
-  "z-ai/glm-5.2",
-  "z-ai/glm-4.6",
   "qwen/qwen3-coder",
   "qwen/qwen3-max",
+  "qwen/qwen3.5-397b-a17b",
+  "z-ai/glm-5.2",
+  "z-ai/glm-4.7",
   "minimax/minimax-m2.1",
-  "nvidia/nemotron-3-super-120b-a12b",
-  "anthropic/claude-opus-4-8",
-  "anthropic/claude-sonnet-4-6",
-  "openai/gpt-5.6",
-  "openai/gpt-5.6-mini",
-  "google/gemini-3.5-pro",
+  "moonshotai/kimi-k2.6",
+  "mistralai/mistral-large-3",
+  "meta-llama/llama-4-maverick",
+  "nvidia/nemotron-3-ultra-550b-a55b",
+  "cohere/command-a",
 ];
 
 // Optional ranking/attribution headers OpenRouter uses on its leaderboards.

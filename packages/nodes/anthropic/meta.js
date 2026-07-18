@@ -16,12 +16,11 @@ export default {
     },
 
     {
-      name: "model", type: "options", label: "Model", cols: 1, default: "claude-sonnet-5",
+      name: "model", type: "options", label: "Model", cols: 1, default: "claude-sonnet-4-6",
       options: [
-        { value: "claude-fable-5",   label: "Claude Fable 5" },
-        { value: "claude-opus-4-8",  label: "Claude Opus 4.8" },
-        { value: "claude-sonnet-5",  label: "Claude Sonnet 5" },
-        { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
+        { value: "claude-opus-4-8",              label: "Claude Opus 4.8" },
+        { value: "claude-sonnet-4-6",            label: "Claude Sonnet 4.6" },
+        { value: "claude-haiku-4-5-20251001",    label: "Claude Haiku 4.5" },
       ],
     },
 

@@ -7,17 +7,31 @@ import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } 
 const MONO = '#e5e5e5';
 
 const MODELS_CHAT = [
-  'nvidia/nemotron-3-super-120b-a12b',
   'nvidia/nemotron-3-ultra-550b-a55b',
+  'nvidia/nemotron-3-super-120b-a12b',
   'nvidia/nemotron-3-nano-30b-a3b',
+  'nvidia/llama-3.1-nemotron-ultra-253b-v1',
+  'nvidia/llama-3.3-nemotron-super-49b-v1',
+  'meta/llama-4-maverick-17b-128e-instruct',
+  'meta/llama-4-scout-17b-16e-instruct',
   'meta/llama-3.3-70b-instruct',
+  'meta/llama-3.1-405b-instruct',
+  'meta/llama-3.1-8b-instruct',
   'deepseek-ai/deepseek-v4-pro',
+  'deepseek-ai/deepseek-v4-flash',
+  'deepseek-ai/deepseek-r1',
   'qwen/qwen3.5-397b-a17b',
+  'qwen/qwen3-max',
+  'moonshotai/kimi-k2.6',
+  'minimaxai/minimax-m2.7',
   'mistralai/mistral-large',
+  'mistralai/mixtral-8x22b-instruct-v0.1',
+  'microsoft/phi-4',
+  'google/gemma-3-27b-it',
 ];
-const MODELS_CODE = ['qwen/qwen3-coder-480b-a35b-instruct', 'nvidia/nemotron-3-super-120b-a12b'];
-const MODELS_VISION = ['meta/llama-4-maverick-17b-128e-instruct', 'meta/llama-3.2-90b-vision-instruct'];
-const MODELS_EMBED = ['nvidia/llama-nemotron-embed-1b-v2', 'nvidia/nv-embedqa-e5-v5'];
+const MODELS_CODE = ['qwen/qwen3-coder-480b-a35b-instruct', 'nvidia/nemotron-3-super-120b-a12b', 'deepseek-ai/deepseek-v4-pro', 'meta/llama-4-maverick-17b-128e-instruct'];
+const MODELS_VISION = ['meta/llama-4-maverick-17b-128e-instruct', 'meta/llama-4-scout-17b-16e-instruct', 'meta/llama-3.2-90b-vision-instruct', 'microsoft/phi-4-multimodal-instruct'];
+const MODELS_EMBED = ['nvidia/llama-nemotron-embed-1b-v2', 'nvidia/nv-embedqa-e5-v5', 'nvidia/nv-embedqa-mistral-7b-v2', 'baai/bge-m3'];
 
 const opt = (v) => v.map((s) => ({ value: s, label: s }));
 

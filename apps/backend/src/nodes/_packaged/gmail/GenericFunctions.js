@@ -6,11 +6,12 @@
  * the slim entry uses to preserve that exact calling convention.
  */
 import axios from "axios";
+import crypto from "node:crypto";
 
 export const BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
 
 export function handleError(err) {
-  if (err.message.startsWith("Gmail")) throw err;
+  if (err.message?.startsWith("Gmail")) throw err;
   const status = err.response?.status;
   const apiMsg = err.response?.data?.error?.message || err.message;
   if (status === 401 || status === 403) throw new Error(`Gmail: Auth failed (${status}) — ${apiMsg}. Re-connect your Google account.`);
@@ -30,20 +31,28 @@ export function toBase64url(buf) {
   return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+// RFC 2822 header values are newline-terminated; a CR/LF in an interpolated
+// value forges additional headers (e.g. a silent Bcc). Never apply to body.
+function hdr(value, field) {
+  const s = String(value ?? "");
+  if (/[\r\n]/.test(s)) throw new Error(`Gmail: '${field}' must not contain line breaks.`);
+  return s;
+}
+
 // Build a RFC 2822 email, base64url-encoded.
 // Supports file attachments via config.attachments: [{dataUrl, mimeType, name}]
 export function buildRawEmail({ to, from, subject, body, html, replyTo, inReplyTo, references, attachments }) {
-  const boundary = `bb_boundary_${Date.now().toString(36)}`;
+  const boundary = `bb_boundary_${crypto.randomBytes(16).toString("hex")}`;
   const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
   const bodyContentType = html ? "text/html" : "text/plain";
 
   const headers = [
-    `From: ${from || "me"}`,
-    `To: ${to}`,
-    replyTo ? `Reply-To: ${replyTo}` : null,
-    inReplyTo ? `In-Reply-To: ${inReplyTo}` : null,
-    references ? `References: ${references}` : null,
-    `Subject: ${subject || ""}`,
+    `From: ${hdr(from, "from") || "me"}`,
+    `To: ${hdr(to, "to")}`,
+    replyTo ? `Reply-To: ${hdr(replyTo, "replyTo")}` : null,
+    inReplyTo ? `In-Reply-To: ${hdr(inReplyTo, "inReplyTo")}` : null,
+    references ? `References: ${hdr(references, "references")}` : null,
+    `Subject: ${hdr(subject, "subject") || ""}`,
     `MIME-Version: 1.0`,
     hasAttachments
       ? `Content-Type: multipart/mixed; boundary="${boundary}"`
@@ -64,10 +73,11 @@ export function buildRawEmail({ to, from, subject, body, html, replyTo, inReplyT
 
   const attachParts = attachments.map((a) => {
     const base64Data = a.dataUrl.includes(",") ? a.dataUrl.split(",")[1] : a.dataUrl;
-    const filename = a.name || "attachment";
+    const filename = String(a.name || "attachment").replace(/[\r\n]/g, "").replace(/"/g, '\\"');
+    const mimeType = /^[\w.+-]+\/[\w.+-]+$/.test(String(a.mimeType || "")) ? a.mimeType : "application/octet-stream";
     return [
       `--${boundary}`,
-      `Content-Type: ${a.mimeType || "application/octet-stream"}; name="${filename}"`,
+      `Content-Type: ${mimeType}; name="${filename}"`,
       `Content-Transfer-Encoding: base64`,
       `Content-Disposition: attachment; filename="${filename}"`,
       "",
