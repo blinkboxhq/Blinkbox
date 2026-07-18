@@ -7,10 +7,10 @@ import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
-import { getTriggerEvent, getTriggerEvents } from "../triggerEvents";
+import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEvents";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
-import { ConfigToggleRow } from "../../../components/ui/ConfigKit";
+import { ConfigToggleRow, ConfigSelect } from "../../../components/ui/ConfigKit";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
@@ -329,6 +329,14 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
     setEditing(false);
   };
 
+  const selectEvent = (evId) => {
+    const ev = eventGroup?.events.find((e) => e.id === evId);
+    if (!ev) return;
+    const defaults = eventDefaults(node.data.config.triggerVariant, evId);
+    Object.entries(defaults).forEach(([k, v]) => updateConfig(node.id, k, v));
+    renameNode(node.id, `${(eventGroup.title || variant.label).replace(/^On /, "")}: ${ev.label}`);
+  };
+
   return (
     <div className="bb-modal-panel bb-liquid bb-panel-glow flex flex-col h-full">
       {/* Panel header */}
@@ -361,7 +369,31 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
       {/* Config fields — padded wrapper */}
       <div className="flex-1 overflow-y-auto">
         <div ref={configRef} className="px-1 py-2">
-          {triggerSchema ? (
+          {eventGroup ? (
+            <>
+              <div className="px-4 pt-3 pb-1">
+                <ConfigSelect
+                  label="Event"
+                  value={config.eventId || ""}
+                  onChange={selectEvent}
+                  options={eventGroup.events.map((ev) => ({ value: ev.id, label: ev.label, icon: ev.icon }))}
+                  placeholder="Choose the event that starts this workflow…"
+                  accentColor={eventDef?.accent || (variant?.accentColor ? `rgb(${variant.accentColor})` : "#6f97e8")}
+                />
+              </div>
+              {eventDef ? (
+                <MonoSchemaPanel
+                  schema={triggerSchema}
+                  config={config}
+                  updateConfig={(key, val) => updateConfig(node.id, key, val)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-24 px-6 text-center">
+                  <p className="text-[12px] text-neutral-600">Pick an event above to configure this trigger.</p>
+                </div>
+              )}
+            </>
+          ) : triggerSchema ? (
             <MonoSchemaPanel
               schema={triggerSchema}
               config={config}
