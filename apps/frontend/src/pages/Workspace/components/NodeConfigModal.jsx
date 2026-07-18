@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split, Type, Hash, ToggleLeft, Braces, Brackets, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -75,13 +75,13 @@ function valueType(v) {
   return typeof v; // "string" | "number" | "boolean" | "object"
 }
 
-const TYPE_TINT = {
-  string: "text-emerald-400/70",
-  number: "text-orange-400/70",
-  boolean: "text-amber-400/70",
-  object: "text-violet-400/70",
-  array: "text-sky-400/70",
-  null: "text-neutral-600",
+const TYPE_ICON = {
+  string: Type,
+  number: Hash,
+  boolean: ToggleLeft,
+  object: Braces,
+  array: Brackets,
+  null: Minus,
 };
 
 // Every key of an object — and every index of an array — is a variable. A node
@@ -95,11 +95,11 @@ function childEntries(value) {
 }
 
 // ── File-tree row: one JSON node (leaf or branch), fully recursive ────────────
-function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied, isSchema }) {
+function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, copy, copied, isSchema, accent }) {
   const structural = valueType(value);
   const isBranch = structural === "object" || structural === "array";
   const type = isSchema && !isBranch && typeof value === "string" ? value : structural;
-  const [open, setOpen] = useState(depth < 1);
+  const [open, setOpen] = useState(false);
   const ref = `{{${nodeId}${path ? "." + path : ""}}}`;
   const isDragging = dragging === ref;
   const isCopied = copied === ref;
@@ -139,8 +139,11 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
         {!isBranch && !isSchema && value !== null && value !== undefined && (
           <span className="text-[10px] text-neutral-600 font-mono truncate ml-1 min-w-0">{formatValue(value)}</span>
         )}
-        <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider shrink-0 ${TYPE_TINT[type] || TYPE_TINT.null}`}>
-          {isBranch ? (type === "array" ? `[${children.length}]` : `{${children.length}}`) : type}
+        <span
+          className="ml-auto shrink-0 flex items-center opacity-80 group-hover:opacity-100 transition-opacity"
+          title={isBranch ? `${type} · ${children.length} field${children.length === 1 ? "" : "s"}` : type}
+        >
+          {(() => { const TIcon = TYPE_ICON[type] || TYPE_ICON.null; return <TIcon className="w-3 h-3" strokeWidth={2} style={{ color: accent }} />; })()}
         </span>
         {isCopied && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
       </div>
@@ -163,6 +166,7 @@ function VarTreeRow({ nodeId, path, label, value, depth, dragging, setDragging, 
                 copy={copy}
                 copied={copied}
                 isSchema={isSchema}
+                accent={accent}
               />
             ))}
           </div>
@@ -227,7 +231,9 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
         ) : inputNodes.map((n) => {
           const def = NodeRegistry[n.data.backendType];
           const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
-          const isOpen = openNode[n.id] !== false; // default expanded
+          const isOpen = openNode[n.id] === true;
+          const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
+          const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
 
           const liveOutput = allRunOutputs[n.id];
           const hasLiveData = liveOutput && typeof liveOutput === "object";
@@ -274,6 +280,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs }) {
                       copy={copy}
                       copied={copied}
                       isSchema={!hasLiveData}
+                      accent={accent}
                     />
                   ))}
                 </div>
