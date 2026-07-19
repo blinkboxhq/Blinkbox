@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgCalendar from './logo.svg';
 import {
   CalendarDays, CalendarPlus, CalendarClock, CalendarX2, Eye, Plus, Pencil, Trash2,
@@ -80,22 +81,20 @@ function Field({ label, hint, children }) {
 }
 
 export default function GoogleCalendarNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listEvents';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listEvents';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const showCalId = !NO_CALENDAR_ID_OPS.includes(op);
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgCalendar} title="Google Calendar" subtitle={currentOp?.label || 'Events, calendars, sharing & availability'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {showCalId && (
         <Field label="Calendar ID" hint='"primary" for the default calendar, or a specific calendar ID'>

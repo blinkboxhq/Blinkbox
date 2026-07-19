@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgLinear from './logo.svg';
 import {
   Plus, FileText, Pencil, Archive, List, Search, UserPlus, Workflow, Bell,
@@ -65,7 +66,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function LinearConfigPanel({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listIssues';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listIssues';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const show = (...ops) => ops.includes(op);
 
@@ -83,7 +90,6 @@ export default function LinearConfigPanel({ config = {}, updateConfig, nodeId })
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgLinear} title="Linear" subtitle={currentOp?.label || 'Issues, projects, cycles & teams'} />
 
       <Field label="Credential">
         <CredentialPicker
@@ -94,13 +100,6 @@ export default function LinearConfigPanel({ config = {}, updateConfig, nodeId })
         />
       </Field>
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('createIssue', 'listIssues', 'createProject', 'listCycles', 'getTeam', 'listTeamStates', 'listTeamMembers') &&
         text(

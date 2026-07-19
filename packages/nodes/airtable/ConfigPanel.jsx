@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgAirtable from './logo.svg';
 import {
   PlusCircle, Search, Pencil, Trash2, Download, Layers, Copy, Database, Table2, Columns3,
@@ -47,7 +48,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'create';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'create';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
   const fields = config.fields || {};
   const fieldEntries = Object.entries(fields);
@@ -82,15 +89,7 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgAirtable} title="Airtable" subtitle={currentOp?.label || 'Read & write Airtable records'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {!noBase && text('Base ID', 'baseId', { placeholder: 'appXXXXXXXXXXXXXX' })}
       {!noBase && !noTable && text('Table', 'tableName', { placeholder: 'Table name or ID' })}

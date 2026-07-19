@@ -65,7 +65,7 @@ const NO_CHAT_OPS = ['getMe'];
 // instead of re-asking. Label match is 1:1 with OPERATIONS[].label.
 const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
 const resolveOperation = (config) =>
-  config.operation || LABEL_TO_OP[config.selectedAction] || 'sendMessage';
+  LABEL_TO_OP[config.selectedAction] || config.operation || 'sendMessage';
 
 const PARSE_MODES = [
   { value: 'MarkdownV2', label: 'Markdown' },
@@ -92,13 +92,13 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
   const operation = resolveOperation(config);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
-  // Persist the slug the backend reads: when the node arrives from the action
-  // picker with only selectedAction, write the resolved operation once so the
-  // executor doesn't fail on a missing config.operation.
+  // Persist the slug the backend reads: the blue Action dropdown only writes
+  // selectedAction, so keep config.operation synced whenever the resolved slug
+  // changes — otherwise switching actions wouldn't update the executor.
   useEffect(() => {
-    if (!config.operation && operation) updateConfig('operation', operation);
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [operation]);
 
   const text = (label, key, opts = {}) => (
     <Field label={label} optional={opts.optional}>
@@ -114,7 +114,6 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTelegram} title="Telegram" subtitle={currentOp?.label || 'Telegram Bot API'} />
 
       {!NO_CHAT_OPS.includes(operation) && (
         <Field label={<><Hash className="w-3 h-3 inline mr-1" style={{ color: '#6d6d6d' }} />Chat ID</>}>

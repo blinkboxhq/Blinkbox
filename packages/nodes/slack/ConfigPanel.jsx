@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgSlack from './logo.png';
 import {
   MessageSquare, Layout, Pencil, Trash2, Clock, EyeOff, CornerDownRight, Link2,
@@ -72,7 +73,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function SlackNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'postMessage';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'postMessage';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
   const needsChannel = CHANNEL_OPS.includes(operation);
@@ -89,7 +96,6 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgSlack} title="Slack" subtitle={currentOp?.label || 'Slack Web API'} />
 
       <ConnectAppGuide
         title="Connect your own Slack app"
@@ -112,13 +118,6 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
         hint="Paste your app's Bot User OAuth Token (xoxb-…). Stored encrypted in your Vault."
       />
 
-      <ConfigSelect
-        label="Action"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {needsChannel && (
         <Field label="Channel" hint="#general or C01ABCDEF">

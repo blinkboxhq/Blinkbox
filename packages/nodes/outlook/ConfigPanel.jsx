@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgOutlook from './logo.svg';
 import { Send, Reply, Mail, Inbox, CalendarPlus, CalendarDays, UserPlus, FolderInput, Flag } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -34,7 +35,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'sendEmail';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendEmail';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -51,15 +58,7 @@ export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgOutlook} title="Outlook" subtitle={currentOp?.label || 'Email, calendar, contacts via Microsoft 365'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {(op === 'sendEmail' || op === 'replyEmail') && (
         <>

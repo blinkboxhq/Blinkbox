@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgDrive from './logo.svg';
 import {
   Files, Search, Eye, FolderPlus, Upload, Download, FileOutput, Copy, Pencil,
@@ -70,7 +71,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listFiles';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listFiles';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
 
@@ -88,15 +95,7 @@ export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgDrive} title="Google Drive" subtitle={currentOp?.label || 'Files, folders, trash, sharing & account'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {op === 'listFiles' && (
         <>

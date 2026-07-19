@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgInstagram from './logo.svg';
 import { User, Images, Image as ImageIcon, Send, MessageSquare } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -52,7 +53,13 @@ function Field({ label, icon, optional, children }) {
 }
 
 export default function InstagramNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'getUserInfo';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'getUserInfo';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
 
   const multi = (def) => (Array.isArray(config.fields) ? config.fields : def);
   const toggleField = (def) => (val) => {
@@ -62,19 +69,11 @@ export default function InstagramNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgInstagram} title="Instagram" subtitle="Meta Graph API" />
 
       <ConfigBanner tone="warn">
         Requires Instagram Business or Creator account connected via Facebook
       </ConfigBanner>
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {operation === 'getUserInfo' && (
         <ConfigPills

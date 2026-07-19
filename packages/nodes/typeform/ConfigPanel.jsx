@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgTypeform from './logo.svg';
 import {
   List, FileText, Inbox, FileSearch, FilePlus2, Trash2,
@@ -33,7 +34,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listResponses';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listResponses';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -50,15 +57,7 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTypeform} title="Typeform" subtitle={currentOp?.label || 'Forms & responses'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {op === 'listForms' && (
         <>

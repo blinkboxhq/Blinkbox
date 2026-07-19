@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgMonday from './logo.svg';
 import {
   Plus, Columns3, Eye, List, Trash2, MessageSquarePlus, LayoutDashboard,
@@ -36,7 +37,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function MondayNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createItem';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createItem';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -53,15 +60,7 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgMonday} title="Monday.com" subtitle={currentOp?.label || 'Items, boards, columns, updates'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['createItem', 'listItems', 'createBoard'].indexOf(op) === -1 && op !== 'createBoard' &&
         text('Item ID', 'itemId', { placeholder: '{{ $json.id }}' })}

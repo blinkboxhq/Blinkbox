@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgResend from './logo.svg';
 import { Send, FileSearch, List, XCircle } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -29,7 +30,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function ResendNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendEmail';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendEmail';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
   const field = (label, k, opts = {}) => (
@@ -40,7 +47,6 @@ export default function ResendNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgResend} title="Resend" subtitle={currentOp?.label || 'Transactional email API'} />
 
       <CredentialPicker
         value={config.credentialId || ''}
@@ -50,13 +56,6 @@ export default function ResendNode({ config = {}, updateConfig, nodeId }) {
         placeholder="Select Resend credential..."
       />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {operation === 'sendEmail' && (
         <>

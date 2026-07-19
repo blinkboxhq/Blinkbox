@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgClickUp from './logo.svg';
 import {
   Plus, Pencil, Trash2, Eye, List, MessageSquarePlus, FolderPlus, Layers, Folder, ListChecks,
@@ -44,7 +45,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createTask';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createTask';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -61,15 +68,7 @@ export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgClickUp} title="ClickUp" subtitle={currentOp?.label || 'Tasks, lists, folders, comments'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['createTask', 'listTasks'].includes(op) &&
         text('List ID', 'listId', { placeholder: 'ClickUp list ID' })}

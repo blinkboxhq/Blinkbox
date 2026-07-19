@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgGmail from './logo.png';
 import {
   Send, Reply, Forward, Mail, Search, FileText, ListChecks, MailCheck,
@@ -73,7 +74,13 @@ function Field({ label, hint, optional, children }) {
 }
 
 export default function GmailNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendEmail';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendEmail';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
   const isCompose = COMPOSE_OPS.includes(operation);
   const needsMsgId = MSG_ID_OPS.includes(operation);
@@ -88,15 +95,7 @@ export default function GmailNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgGmail} title="Gmail" subtitle={currentOp?.label || 'Send, read, label & manage emails'} />
 
-      <ConfigSelect
-        label="Action"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {isCompose && (
         <>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgHubspot from '@/assets/hubspot.svg';
 import {
   UserPlus, User, UserCog, UserMinus, List, Search,
@@ -81,7 +82,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function HubspotNode({ config = {}, updateConfig }) {
-  const op = config.operation || 'createContact';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createContact';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const show = (...ops) => ops.includes(op);
@@ -99,7 +106,6 @@ export default function HubspotNode({ config = {}, updateConfig }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgHubspot} title="HubSpot" subtitle={currentOp?.label || 'CRM — contacts, deals, tickets & 38 actions'} />
 
       <CredentialPicker
         provider="hubspot"
@@ -110,13 +116,6 @@ export default function HubspotNode({ config = {}, updateConfig }) {
         placeholder="Connect your HubSpot account"
       />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={set('operation')}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('getContact', 'updateContact', 'deleteContact') &&
         text('Contact ID', 'contactId', { placeholder: 'Numeric contact ID', hint: show('getContact') ? 'Or use email below' : undefined })}

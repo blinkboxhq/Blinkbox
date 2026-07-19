@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgWoo from './logo.svg';
 import {
   ShoppingCart, List, RefreshCw, Package, Pencil, User, Ticket,
@@ -38,7 +39,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listOrders';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listOrders';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -55,15 +62,7 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgWoo} title="WooCommerce" subtitle={currentOp?.label || 'Orders, products, customers, coupons'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {text('Store URL', 'storeUrl', { placeholder: 'https://mystore.com' })}
 

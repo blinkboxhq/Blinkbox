@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgTeams from './logo.svg';
 import {
   Send, LayoutTemplate, Reply, FolderPlus, List, Users, Video,
@@ -34,7 +35,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'sendMessage';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendMessage';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -51,15 +58,7 @@ export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTeams} title="Microsoft Teams" subtitle={currentOp?.label || 'Messages, channels, meetings'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['sendMessage', 'sendCard', 'replyMessage', 'createChannel', 'listChannels'].includes(op) &&
         text('Team ID', 'teamId', { placeholder: '{{ $json.teamId }}' })}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgReddit from './logo.svg';
 import {
   Flame, Clock, TrendingUp, Send, MessageSquare, Search, User, Info, Link2, FileText,
@@ -38,7 +39,13 @@ function Field({ label, icon, children }) {
 }
 
 export default function RedditNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'getHotPosts';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'getHotPosts';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
 
   const text = (label, key, opts = {}) => (
     <Field label={label} icon={opts.icon}>
@@ -54,15 +61,7 @@ export default function RedditNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgReddit} title="Reddit" subtitle="Posts, comments, subreddits, search" />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['getHotPosts', 'getNewPosts', 'getTopPosts', 'submitPost', 'submitComment', 'getSubredditInfo'].includes(op) &&
         text('Subreddit', 'subreddit', { placeholder: 'programming (without r/)' })}

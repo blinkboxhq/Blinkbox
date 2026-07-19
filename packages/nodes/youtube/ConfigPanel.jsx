@@ -59,8 +59,6 @@ export default function YouTubeUploadNode({ config = {}, updateConfig, nodeId })
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgYouTube} title="YouTube Upload" subtitle="Upload a video via Data API v3" />
-
       {text('Video URL or Base64', 'videoUrl', { icon: Video, placeholder: '{{ $json.videoUrl }}' })}
       {text('Title', 'title', { icon: Type, placeholder: '{{ $json.title }}' })}
       {text('Description', 'description', { icon: AlignLeft, placeholder: '{{ $json.description }}', multiline: true })}

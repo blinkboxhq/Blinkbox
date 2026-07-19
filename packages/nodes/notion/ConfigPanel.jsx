@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgNotion from '@/assets/notion.svg';
 import { PlusCircle, Edit3, Database, FileText, AlignLeft, Search, Trash2, RotateCcw, Box, MessageSquare, Users, User } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -47,7 +48,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function NotionNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'createPage';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'createPage';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
   const text = (label, key, opts = {}) => (
@@ -76,15 +83,7 @@ export default function NotionNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgNotion} imgFilter="invert(1)" title="Notion" subtitle={currentOp?.label || 'Read & write Notion pages and databases'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {operation === 'createPage' && (
         <>

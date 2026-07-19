@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgStripe from './logo.svg';
 import {
   Users, User, UserCog, UserMinus, List, Search,
@@ -126,7 +127,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function StripeNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createCustomer';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createCustomer';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const show = (...ops) => ops.includes(op);
 
@@ -144,7 +151,6 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgStripe} title="Stripe" subtitle={currentOp?.label || 'Payments, subscriptions, invoices & 70 actions'} />
 
       <CredentialPicker
         provider="stripe"
@@ -155,13 +161,6 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
         placeholder="Connect your Stripe account"
       />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('getCustomer', 'updateCustomer', 'deleteCustomer') && text('Customer ID', 'customerId', { placeholder: 'cus_...' })}
       {show('createCustomer', 'updateCustomer') && (

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgDiscord from './logo.png';
 import {
   MessageSquare, Layout, FileText, Send, Pencil, Trash2, List, Pin, PinOff,
@@ -64,7 +65,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendMessage';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendMessage';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
   const fields = Array.isArray(config.fields) ? config.fields : [];
   const isWebhook = WEBHOOK_OPS.includes(operation);
@@ -80,15 +87,7 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgDiscord} title="Discord" subtitle={isWebhook ? 'Discord Webhook' : 'Discord Bot API'} />
 
-      <ConfigSelect
-        label="Action"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {isWebhook ? (
         <Field label="Discord Webhook Credential" hint="Create a credential with your Webhook URL — Server Settings → Integrations → Webhooks">

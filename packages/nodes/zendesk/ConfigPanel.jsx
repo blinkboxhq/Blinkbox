@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgZendesk from './logo.svg';
 import {
   Ticket, Inbox, Plus, Pencil, Trash2, List, MessageSquare, UserCheck,
@@ -96,7 +97,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function ZendeskNode({ config = {}, updateConfig }) {
-  const op = config.operation || 'listTickets';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listTickets';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const show = (...ops) => ops.includes(op);
@@ -114,17 +121,9 @@ export default function ZendeskNode({ config = {}, updateConfig }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgZendesk} title="Zendesk" subtitle={currentOp?.label || 'Tickets, users, orgs, macros & Help Center'} />
 
       {text('Subdomain', 'subdomain', { placeholder: 'mycompany', hint: 'From mycompany.zendesk.com → mycompany' })}
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={set('operation')}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('getTicket', 'updateTicket', 'deleteTicket', 'addComment', 'assignTicket', 'closeTicket', 'listTicketComments', 'addTicketTags', 'removeTicketTags', 'listTicketAudits', 'markTicketSpam', 'mergeTickets', 'applyMacro') &&
         text('Ticket ID', 'ticketId', { placeholder: '{{n1.id}}' })}

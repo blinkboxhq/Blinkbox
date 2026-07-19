@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgCalendly from './logo.svg';
 import {
   User, Building2, Users, UserCheck, UserMinus, Mail, UserPlus, UserX,
@@ -68,7 +69,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listEvents';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listEvents';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const show = (...ops) => ops.includes(op);
 
@@ -86,15 +93,7 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgCalendly} title="Calendly" subtitle={currentOp?.label || 'Events, invitees, availability & webhooks'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('getEvent', 'cancelEvent', 'listInvitees') &&
         text('Event URI', 'eventUri', { hint: 'Full URI or UUID of the scheduled event', placeholder: 'https://api.calendly.com/scheduled_events/{{n1.uuid}}' })}

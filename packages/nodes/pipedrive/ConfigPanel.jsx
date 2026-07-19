@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgPipedrive from './logo.svg';
 import {
   Plus, Pencil, Eye, List, UserPlus, UserCog, CalendarPlus, StickyNote, Search,
@@ -38,7 +39,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function PipedriveNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createDeal';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createDeal';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -55,15 +62,7 @@ export default function PipedriveNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgPipedrive} title="Pipedrive" subtitle={currentOp?.label || 'Deals, contacts, activities, notes'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['updateDeal', 'getDeal'].includes(op) &&
         text('Deal ID', 'dealId', { placeholder: '{{ $json.id }}' })}

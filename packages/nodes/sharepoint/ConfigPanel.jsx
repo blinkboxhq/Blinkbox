@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgSharePoint from './logo.svg';
 import {
   LayoutGrid, List, UploadCloud, DownloadCloud, FolderPlus, Trash2, Search,
@@ -36,7 +37,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function SharePointNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listFiles';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listFiles';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -53,15 +60,7 @@ export default function SharePointNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgSharePoint} title="SharePoint" subtitle={currentOp?.label || 'Sites, files & folders'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {text('Site ID', 'siteId', { optional: true, placeholder: 'Leave blank to use root site' })}
 

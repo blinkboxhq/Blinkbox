@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgOneDrive from './logo.svg';
 import {
   UploadCloud, DownloadCloud, List, Trash2, FolderPlus, FolderInput, Link2, Info,
@@ -35,7 +36,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function OneDriveNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'uploadFile';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'uploadFile';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -52,15 +59,7 @@ export default function OneDriveNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgOneDrive} title="OneDrive" subtitle={currentOp?.label || 'Files, folders, sharing via Microsoft'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {op === 'uploadFile' && (
         <>

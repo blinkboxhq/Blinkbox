@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgJira from './logo.svg';
 import {
   Search, Eye, Plus, Pencil, Trash2, UserCheck, ArrowRightLeft,
@@ -66,7 +67,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function JiraNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'searchIssues';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'searchIssues';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -83,7 +90,6 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgJira} title="Jira" subtitle={currentOp?.label || 'Issues, sprints, worklogs, projects & more'} />
 
       <ConfigInput
         label="Jira Domain"
@@ -92,13 +98,6 @@ export default function JiraNode({ config = {}, updateConfig, nodeId }) {
         placeholder="mycompany.atlassian.net"
       />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {op === 'searchIssues' &&
         text('JQL Query', 'jql', { placeholder: 'project = MYPROJ AND status = "To Do" ORDER BY created DESC', multiline: true })}

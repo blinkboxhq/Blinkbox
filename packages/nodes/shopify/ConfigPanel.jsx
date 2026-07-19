@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgShopify from './logo.svg';
 import {
   Package, Boxes, Tag, Layers, Warehouse, MapPin, ShoppingCart, Truck,
@@ -82,7 +83,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function ShopifyNode({ config = {}, updateConfig }) {
-  const op = config.operation || 'listOrders';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listOrders';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
   const set = (k) => (v) => updateConfig(k, v);
   const show = (...ops) => ops.includes(op);
@@ -100,17 +107,9 @@ export default function ShopifyNode({ config = {}, updateConfig }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgShopify} title="Shopify" subtitle={currentOp?.label || 'Products, orders, inventory, customers & more'} />
 
       {text('Shop Domain', 'shop', { placeholder: 'mystore.myshopify.com', hint: "Your store's myshopify.com domain" })}
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={set('operation')}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {show('getProduct', 'updateProduct', 'deleteProduct', 'listVariants', 'createVariant', 'addProductToCollection', 'listMetafields', 'createMetafield') &&
         text('Product ID', 'productId', { placeholder: '{{n1.id}}' })}

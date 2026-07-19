@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgGoogleForms from './logo.svg';
 import { FileText, ListChecks, FileSearch, FilePlus, PlusCircle } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -40,7 +41,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'listResponses';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listResponses';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -57,15 +64,7 @@ export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgGoogleForms} title="Google Forms" subtitle={currentOp?.label || 'Forms, responses, questions'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['getForm', 'listResponses', 'getResponse', 'addQuestion'].includes(op) &&
         text('Form ID', 'formId', { placeholder: 'From Google Forms URL' })}

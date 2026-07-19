@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgIntercom from './logo.svg';
 import {
   UserPlus, UserCog, User, Send, MessagesSquare, Reply, Tag, Activity,
@@ -35,7 +36,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createContact';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createContact';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -52,15 +59,7 @@ export default function IntercomNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgIntercom} title="Intercom" subtitle={currentOp?.label || 'Contacts, messages, conversations, events'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['updateContact', 'getContact', 'sendMessage', 'addTag'].includes(op) &&
         text('Contact ID', 'contactId', { placeholder: '{{ $json.id }}' })}

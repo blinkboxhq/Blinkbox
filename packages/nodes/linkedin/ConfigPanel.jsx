@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgLinkedIn from './logo.svg';
 import { Send, User, Building2, Users } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -35,7 +36,13 @@ function Field({ label, optional, hint, children }) {
 }
 
 export default function LinkedInNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sharePost';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sharePost';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
 
   const smart = (label, key, opts = {}) => (
     <Field label={label} optional={opts.optional} hint={opts.hint}>
@@ -51,15 +58,7 @@ export default function LinkedInNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgLinkedIn} title="LinkedIn" subtitle="LinkedIn API" />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {operation === 'sharePost' && (
         <>

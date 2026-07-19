@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgWhatsApp from './logo.png';
 import {
   MessageSquare, Image, Video, FileText, Music, Sticker, MapPin, User, Smile,
@@ -41,7 +42,13 @@ function Field({ label, icon, optional, children }) {
 }
 
 export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendMessage';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendMessage';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const buttons = Array.isArray(config.buttons) ? config.buttons : [];
   const rows = Array.isArray(config.rows) ? config.rows : [];
   const setItems = (k, arr) => updateConfig(k, arr);
@@ -60,15 +67,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgWhatsApp} title="WhatsApp" subtitle="Meta WhatsApp Cloud API" />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {text('Phone Number ID', 'phoneNumberId', { icon: Phone, placeholder: 'From Meta Business dashboard' })}
 

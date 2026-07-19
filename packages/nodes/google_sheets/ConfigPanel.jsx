@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgSheets from './logo.svg';
 import {
   PlusCircle, Edit3, Trash2, Download, Settings2, Search, Layers, FilePlus2, Copy, Pencil, ArrowDownToLine,
@@ -51,7 +52,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'readRange';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'readRange';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
   const needsRange = ['readRange', 'writeRange', 'appendRow', 'clearRange', 'lookupRow', 'updateRow'].includes(operation);
   const needsValues = ['writeRange', 'appendRow', 'updateRow', 'insertRow'].includes(operation);
@@ -75,15 +82,7 @@ export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) 
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgSheets} title="Google Sheets" subtitle={currentOp?.label || 'Read & write spreadsheet data'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {!noSpreadsheetId && (
         <ConfigInput

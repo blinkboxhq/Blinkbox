@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgTwilio from './logo.svg';
 import {
   MessageSquare, Image, MessageCircle, FileSearch, List, Trash2, Phone,
@@ -59,7 +60,13 @@ function Field({ label, hint, optional, children }) {
 }
 
 export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'sendSms';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'sendSms';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
   const currentOp = OPERATIONS.find((o) => o.value === operation);
 
   const field = (label, k, opts = {}) => (
@@ -70,7 +77,6 @@ export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTwilio} title="Twilio" subtitle={currentOp?.label || 'SMS, voice, WhatsApp & Verify'} />
 
       <ConnectAppGuide
         title="Connect your Twilio account"
@@ -91,13 +97,6 @@ export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
       />
       <ConfigBanner>Store your Twilio credential as AccountSID:AuthToken (colon-separated).</ConfigBanner>
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {SHOW.to.includes(operation) && field('To', 'to', { placeholder: '+15551234567' })}
       {SHOW.from.includes(operation) && field('From (Twilio number)', 'from', { placeholder: '+15559876543' })}

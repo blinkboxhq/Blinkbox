@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgTrello from './logo.svg';
 import {
   Plus, Pencil, MoveRight, Archive, MessageSquarePlus, Tag, Eye, List, LayoutDashboard, ListChecks,
@@ -39,7 +40,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createCard';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createCard';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -56,15 +63,7 @@ export default function TrelloNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTrello} title="Trello" subtitle={currentOp?.label || 'Cards, lists, boards, comments'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['createCard', 'moveCard', 'listCards'].includes(op) &&
         text('List ID', 'listId', { placeholder: 'Trello list ID' })}

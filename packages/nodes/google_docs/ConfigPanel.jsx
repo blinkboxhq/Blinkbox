@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgGoogleDocs from './logo.svg';
 import { FilePlus, FileText, PlusSquare, Replace, Table, List, Download } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -39,7 +40,13 @@ function Field({ label, optional, children }) {
 }
 
 export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
-  const op = config.operation || 'createDoc';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createDoc';
+
+  useEffect(() => {
+    if (op && op !== config.operation) updateConfig('operation', op);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [op]);
   const currentOp = OPERATIONS.find((o) => o.value === op);
 
   const text = (label, key, opts = {}) => (
@@ -56,15 +63,7 @@ export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgGoogleDocs} title="Google Docs" subtitle={currentOp?.label || 'Create, read, edit Google Docs'} />
 
-      <ConfigSelect
-        label="Operation"
-        value={op}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {['getDoc', 'appendText', 'replaceText', 'insertTable', 'exportDoc'].includes(op) &&
         text('Document ID', 'docId', { placeholder: '{{ $json.docId }} or from Drive URL' })}

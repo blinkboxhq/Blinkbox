@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import imgTikTok from './logo.svg';
 import { Upload, User, ListVideo, Video as VideoIcon, Search } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
@@ -68,7 +69,13 @@ function Field({ label, icon, optional, children }) {
 }
 
 export default function TikTokNode({ config = {}, updateConfig, nodeId }) {
-  const operation = config.operation || 'publishVideo';
+  const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
+  const operation = LABEL_TO_OP[config.selectedAction] || config.operation || 'publishVideo';
+
+  useEffect(() => {
+    if (operation && operation !== config.operation) updateConfig('operation', operation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operation]);
 
   const multi = (def) => (Array.isArray(config.fields) ? config.fields : def);
   const toggleField = (def) => (val) => {
@@ -90,15 +97,7 @@ export default function TikTokNode({ config = {}, updateConfig, nodeId }) {
 
   return (
     <ConfigSection className="gap-5">
-      <ConfigHeader logoUrl={imgTikTok} title="TikTok" subtitle="TikTok API v2" />
 
-      <ConfigSelect
-        label="Operation"
-        value={operation}
-        onChange={(val) => updateConfig('operation', val)}
-        options={OPERATIONS}
-        accentColor={ACCENT}
-      />
 
       {operation === 'publishVideo' && (
         <>
