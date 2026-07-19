@@ -8,6 +8,7 @@ import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
 import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEvents";
+import { NODE_ACTIONS } from "../nodeActions";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
 import { ConfigToggleRow, ConfigSelect } from "../../../components/ui/ConfigKit";
@@ -314,6 +315,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
+  const actionList = !variant && backendType === "openai" ? NODE_ACTIONS[backendType] : null;
   const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 
@@ -373,7 +375,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
             <Pencil className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-300 transition-colors shrink-0" />
           </button>
         )}
-        {selectedAction && !editing && (
+        {selectedAction && !editing && !actionList?.length && (
           <div className="flex items-center gap-1.5 mt-1">
             <span className="text-[10px] text-neutral-500">Action:</span>
             <span className="text-[10px] font-semibold text-violet-300">{selectedAction}</span>
@@ -384,6 +386,18 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
       {/* Config fields — padded wrapper */}
       <div className="flex-1 overflow-y-auto">
         <div ref={configRef} className="px-1 py-2">
+          {actionList?.length > 0 && (
+            <div className="px-4 pt-3 pb-1">
+              <ConfigSelect
+                label="Action"
+                value={config.selectedAction || ""}
+                onChange={(v) => updateConfig(node.id, "selectedAction", v)}
+                options={actionList.map((a) => ({ value: a.name, label: a.name, desc: a.description }))}
+                placeholder="Choose what this step does…"
+                accentColor="#4d7cff"
+              />
+            </div>
+          )}
           {eventGroup ? (
             <>
               <div className="px-4 pt-3 pb-1">
