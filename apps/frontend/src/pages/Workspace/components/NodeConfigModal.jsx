@@ -400,7 +400,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
                 label="Action"
                 value={config.selectedAction || ""}
                 onChange={(v) => updateConfig(node.id, "selectedAction", v)}
-                options={actionList.map((a) => ({ value: a.name, label: a.name, desc: a.description }))}
+                options={actionList.map((a) => ({ value: a.name, label: a.name, desc: a.description, icon: a.icon }))}
                 placeholder="Choose what this step does…"
                 accentColor="#4d7cff"
               />

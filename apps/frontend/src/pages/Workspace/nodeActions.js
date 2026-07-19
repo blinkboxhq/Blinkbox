@@ -1,24 +1,29 @@
 // Per-node action list — shown in AddNodeSidebar two-step picker
-// Each entry: { name, description }
+// Each entry: { name, description, icon? }
+
+import {
+  MessageSquare, Zap, Braces, Wrench, Eye, Image, ImagePlus, Copy,
+  Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
+} from "lucide-react";
 
 export const NODE_ACTIONS = {
   // ── AI Models ───────────────────────────────────────────────────────────────
   openai: [
-    { name: "Chat Completion", description: "Send a prompt and get a text response from GPT" },
-    { name: "Stream Chat", description: "Stream tokens in real-time for faster perceived response" },
-    { name: "Structured Output", description: "Force GPT to return JSON matching a schema you define" },
-    { name: "Function Calling", description: "Let GPT call your custom functions to fetch data" },
-    { name: "Vision Analysis", description: "Analyze images and answer questions about them" },
-    { name: "Generate Image", description: "Create images with DALL·E 3 from a text prompt" },
-    { name: "Edit Image", description: "Edit an image with a prompt and an optional mask" },
-    { name: "Image Variation", description: "Generate variations of an existing image" },
-    { name: "Transcribe Audio", description: "Convert audio or video to text using Whisper" },
-    { name: "Translate Audio", description: "Transcribe non-English audio straight into English" },
-    { name: "Text to Speech", description: "Convert text to natural-sounding audio with TTS-1" },
-    { name: "Create Embedding", description: "Generate a vector embedding for text content" },
-    { name: "Moderate Content", description: "Check text for policy violations using the moderation API" },
-    { name: "List Models", description: "Fetch the live list of models available to your key" },
-    { name: "Fine-tune Model", description: "Start a fine-tuning job on a custom dataset" },
+    { name: "Chat Completion", description: "Send a prompt and get a text response from GPT", icon: MessageSquare },
+    { name: "Stream Chat", description: "Stream tokens in real-time for faster perceived response", icon: Zap },
+    { name: "Structured Output", description: "Force GPT to return JSON matching a schema you define", icon: Braces },
+    { name: "Function Calling", description: "Let GPT call your custom functions to fetch data", icon: Wrench },
+    { name: "Vision Analysis", description: "Analyze images and answer questions about them", icon: Eye },
+    { name: "Generate Image", description: "Create images with DALL·E 3 from a text prompt", icon: Image },
+    { name: "Edit Image", description: "Edit an image with a prompt and an optional mask", icon: ImagePlus },
+    { name: "Image Variation", description: "Generate variations of an existing image", icon: Copy },
+    { name: "Transcribe Audio", description: "Convert audio or video to text using Whisper", icon: Mic },
+    { name: "Translate Audio", description: "Transcribe non-English audio straight into English", icon: Languages },
+    { name: "Text to Speech", description: "Convert text to natural-sounding audio with TTS-1", icon: Volume2 },
+    { name: "Create Embedding", description: "Generate a vector embedding for text content", icon: Layers },
+    { name: "Moderate Content", description: "Check text for policy violations using the moderation API", icon: ShieldCheck },
+    { name: "List Models", description: "Fetch the live list of models available to your key", icon: List },
+    { name: "Fine-tune Model", description: "Start a fine-tuning job on a custom dataset", icon: Settings2 },
   ],
   anthropic: [
     { name: "Chat Completion", description: "Send a prompt and get a response from Claude" },
