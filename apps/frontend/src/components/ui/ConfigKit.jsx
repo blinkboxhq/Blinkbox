@@ -92,7 +92,9 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
         className={`bb-glow-border w-full flex items-center justify-between gap-2 bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] font-mono transition-colors ${selected ? 'text-neutral-100' : 'text-neutral-600'}`}
       >
         <span className="truncate flex items-center gap-2">
-          {selected?.icon && <selected.icon className="w-3.5 h-3.5" style={{ color: accentColor }} />}
+          {selected?.logoUrl
+            ? <img src={selected.logoUrl} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={selected.imgFilter ? { filter: selected.imgFilter } : undefined} />
+            : selected?.icon && <selected.icon className="w-3.5 h-3.5" style={{ color: accentColor }} />}
           {selected?.label || placeholder}
         </span>
         <ChevronDown className={`w-3.5 h-3.5 text-neutral-600 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
@@ -126,7 +128,9 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
                   className={`w-full px-2.5 py-2 text-left text-[12.5px] font-mono flex items-center gap-2.5 rounded transition-colors hover:bg-white/[0.04] ${sel ? 'bg-[#6f97e8]/[0.08] text-neutral-100' : 'text-neutral-300'}`}
                 >
                   <span className="text-[9px] w-3.5 shrink-0" style={{ color: sel ? accentColor : '#6d6d6d' }}>{String(i + 1).padStart(2, '0')}</span>
-                  {o.icon && <o.icon className="w-3.5 h-3.5 shrink-0" style={{ color: accentColor }} />}
+                  {o.logoUrl
+                    ? <img src={o.logoUrl} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={o.imgFilter ? { filter: o.imgFilter } : undefined} />
+                    : o.icon && <o.icon className="w-3.5 h-3.5 shrink-0" style={{ color: accentColor }} />}
                   <span className="flex-1 truncate">{o.label}</span>
                   {o.desc && <span className="text-[9px] text-neutral-600 truncate">{o.desc}</span>}
                   {sel && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: accentColor }} />}
