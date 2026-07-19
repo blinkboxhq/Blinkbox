@@ -8,7 +8,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigToggleRow,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigToggleRow, ConnectAppGuide,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -91,15 +91,16 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader logoUrl={imgSlack} title="Slack" subtitle={currentOp?.label || 'Slack Web API'} />
 
-      <div className="flex flex-col gap-2 rounded-md bg-[#4d7cff]/[0.06] border border-[#4d7cff]/20 px-3 py-2.5">
-        <p className="text-[10px] font-semibold text-[#8fb0ff] uppercase tracking-wider">Connect your own Slack app</p>
-        <ol className="text-[10px] text-neutral-400 leading-relaxed font-mono list-decimal list-inside space-y-0.5">
-          <li>Create an app at <span className="text-[#8fb0ff]">api.slack.com/apps</span></li>
-          <li>Add bot scopes under <span className="text-neutral-300">OAuth &amp; Permissions</span> (e.g. chat:write, channels:read)</li>
-          <li>Install to your workspace, copy the <span className="text-neutral-300">Bot User OAuth Token</span> (<span className="text-neutral-300">xoxb-…</span>)</li>
-          <li>Save it below as a credential — reuse it across every Slack step</li>
-        </ol>
-      </div>
+      <ConnectAppGuide
+        title="Connect your own Slack app"
+        accentColor={ACCENT}
+        steps={[
+          <>Create an app at <span className="text-[#8fb0ff]">api.slack.com/apps</span></>,
+          <>Add bot scopes under <span className="text-neutral-300">OAuth &amp; Permissions</span> (e.g. chat:write, channels:read)</>,
+          <>Install to your workspace, copy the <span className="text-neutral-300">Bot User OAuth Token</span> (<span className="text-neutral-300">xoxb-…</span>)</>,
+          <>Save it below as a credential — reuse it across every Slack step</>,
+        ]}
+      />
 
       <CredentialPicker
         value={config.credentialId || ''}

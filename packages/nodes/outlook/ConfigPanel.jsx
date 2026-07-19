@@ -3,7 +3,7 @@ import { Send, Reply, Mail, Inbox, CalendarPlus, CalendarDays, UserPlus, FolderI
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggleRow, ConfigBanner,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggleRow, ConfigBanner, ConnectAppGuide,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -136,6 +136,16 @@ export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
+      <ConnectAppGuide
+        title="Connect your Microsoft 365 account"
+        accentColor={ACCENT}
+        steps={[
+          <>Register an app at <span className="text-[#8fb0ff]">portal.azure.com</span> → App registrations</>,
+          <>Grant Microsoft Graph permissions (e.g. <span className="text-neutral-300">Mail.Send</span>, <span className="text-neutral-300">Mail.ReadWrite</span>)</>,
+          <>Sign in and copy the access token for your mailbox</>,
+          <>Save it below as a credential — reuse it across every Outlook step</>,
+        ]}
+      />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

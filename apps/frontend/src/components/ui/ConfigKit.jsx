@@ -325,3 +325,24 @@ export function ConfigBanner({ children, tone = 'info' }) {
     </div>
   );
 }
+
+export function ConnectAppGuide({ title, steps = [], accentColor = BB_ACCENT }) {
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-md border px-3 py-2.5"
+      style={{ background: `${accentColor}0f`, borderColor: `${accentColor}33` }}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accentColor }}>
+        {title}
+      </p>
+      <ol className="flex flex-col gap-1">
+        {steps.map((step, i) => (
+          <li key={i} className="flex items-start gap-2 text-[10px] text-neutral-400 font-mono leading-relaxed">
+            <span className="shrink-0 font-semibold tabular-nums" style={{ color: accentColor }}>{i + 1}.</span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}

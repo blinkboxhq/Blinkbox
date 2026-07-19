@@ -7,7 +7,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow, ConnectAppGuide,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -100,15 +100,27 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
           />
         </Field>
       ) : (
-        <Field label="Discord Bot Token Credential" hint="Bot token from discord.com/developers → your app → Bot. Invite the bot to your server with the needed permissions.">
-          <CredentialPicker
-            value={config.credentialId || ''}
-            onChange={(val) => updateConfig('credentialId', val)}
-            accentColor="indigo"
-            label="Discord Bot Token"
-            placeholder="Select Discord Bot Token credential…"
+        <>
+          <ConnectAppGuide
+            title="Connect your own Discord bot"
+            accentColor={ACCENT}
+            steps={[
+              <>Create an app at <span className="text-[#8fb0ff]">discord.com/developers/applications</span></>,
+              <>Add a <span className="text-neutral-300">Bot</span> and copy its <span className="text-neutral-300">Bot Token</span></>,
+              <>Invite the bot to your server with the permissions it needs</>,
+              <>Save it below as a credential — reuse it across every Discord step</>,
+            ]}
           />
-        </Field>
+          <Field label="Discord Bot Token Credential">
+            <CredentialPicker
+              value={config.credentialId || ''}
+              onChange={(val) => updateConfig('credentialId', val)}
+              accentColor="indigo"
+              label="Discord Bot Token"
+              placeholder="Select Discord Bot Token credential…"
+            />
+          </Field>
+        </>
       )}
 
       {isWebhook && (

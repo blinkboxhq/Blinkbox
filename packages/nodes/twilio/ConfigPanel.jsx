@@ -6,7 +6,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigPills, ConfigBanner,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigPills, ConfigBanner, ConnectAppGuide,
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -72,6 +72,16 @@ export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader logoUrl={imgTwilio} title="Twilio" subtitle={currentOp?.label || 'SMS, voice, WhatsApp & Verify'} />
 
+      <ConnectAppGuide
+        title="Connect your Twilio account"
+        accentColor={ACCENT}
+        steps={[
+          <>Sign in at <span className="text-[#8fb0ff]">console.twilio.com</span></>,
+          <>Copy your <span className="text-neutral-300">Account SID</span> and <span className="text-neutral-300">Auth Token</span> from the dashboard</>,
+          <>Pick a sending number under <span className="text-neutral-300">Phone Numbers</span></>,
+          <>Save below as <span className="text-neutral-300">AccountSID:AuthToken</span> — reuse it across every Twilio step</>,
+        ]}
+      />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
