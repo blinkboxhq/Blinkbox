@@ -104,7 +104,7 @@ export default function RemoveBackgroundNode({ config = {}, updateConfig, nodeId
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="rose"
+        accentColor="blue"
         label="Remove.bg API Key"
         placeholder="Select Remove.bg API Key..."
       />

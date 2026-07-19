@@ -121,7 +121,7 @@ export default function HubSpotNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="HubSpot Private App Token (pat-...)" placeholder="Select HubSpot credential..." />
+        accentColor="blue" label="HubSpot Private App Token (pat-...)" placeholder="Select HubSpot credential..." />
     </div>
   );
 }

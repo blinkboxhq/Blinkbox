@@ -80,7 +80,7 @@ export default function TikTokPostNode({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
           value={config.credentialId || ''}
           onChange={(id) => updateConfig('credentialId', id)}
-          accentColor="black"
+          accentColor="blue"
           label="TikTok Access Token"
           placeholder="Select access token..."
         />

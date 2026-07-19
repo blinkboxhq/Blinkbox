@@ -141,7 +141,7 @@ export default function PipedriveNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="Pipedrive API Token" placeholder="Select Pipedrive credential..." />
+        accentColor="blue" label="Pipedrive API Token" placeholder="Select Pipedrive credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, title, status, value, close_time</span>

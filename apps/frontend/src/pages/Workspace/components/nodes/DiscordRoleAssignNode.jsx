@@ -89,7 +89,7 @@ export default function DiscordRoleAssignNode({ config = {}, updateConfig, nodeI
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="indigo"
+        accentColor="blue"
         label="Discord Bot Token"
         placeholder="Select Discord Bot Token..."
       />

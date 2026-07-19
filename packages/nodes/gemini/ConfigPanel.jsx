@@ -250,7 +250,7 @@ export default function GeminiNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Gemini API Key"
         placeholder="Select Gemini credential…"
       />

@@ -101,7 +101,7 @@ export default function LinearNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="indigo" label="Linear API Key (lin_api_...)" placeholder="Select Linear credential..." />
+        accentColor="blue" label="Linear API Key (lin_api_...)" placeholder="Select Linear credential..." />
     </div>
   );
 }

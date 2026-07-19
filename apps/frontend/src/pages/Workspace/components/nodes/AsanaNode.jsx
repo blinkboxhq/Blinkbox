@@ -103,7 +103,7 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="rose" label="Asana Personal Access Token" placeholder="Select Asana credential..." />
+        accentColor="blue" label="Asana Personal Access Token" placeholder="Select Asana credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">gid, name, permalink_url, completed, due_on</span>

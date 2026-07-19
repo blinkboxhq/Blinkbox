@@ -414,7 +414,7 @@ export default function GithubNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="GitHub Personal Access Token"
         placeholder="Select GitHub credential..."
       />

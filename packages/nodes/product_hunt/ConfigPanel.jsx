@@ -105,7 +105,7 @@ export default function ProductHuntNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="Product Hunt API Token (optional)" placeholder="Select Product Hunt credential..." />
+        accentColor="blue" label="Product Hunt API Token (optional)" placeholder="Select Product Hunt credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, name, tagline, votes_count, url, thumbnail</span>

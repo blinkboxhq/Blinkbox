@@ -87,7 +87,7 @@ export default function TypeformNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="zinc" label="Typeform Personal Access Token" placeholder="Select Typeform credential..." />
+        accentColor="blue" label="Typeform Personal Access Token" placeholder="Select Typeform credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">items[ ], total_items, page_count, token</span>

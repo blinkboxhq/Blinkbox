@@ -182,7 +182,7 @@ export default function NotionNode({ config = {}, updateConfig, nodeId }) {
 
       {/* Credential */}
       <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc" label="Notion Integration Token" placeholder="Select Notion credential..." />
+        accentColor="blue" label="Notion Integration Token" placeholder="Select Notion credential..." />
     </div>
   );
 }

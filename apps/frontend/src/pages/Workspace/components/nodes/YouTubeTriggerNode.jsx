@@ -15,7 +15,7 @@ export default function YouTubeTriggerNode({ config = {}, updateConfig }) {
         value={config.credentialId || ''}
         onChange={(v) => updateConfig('credentialId', v)}
         oauthProvider="google"
-        accentColor="red"
+        accentColor="blue"
         placeholder="Select Google credential…"
         hint="Needs YouTube Data API v3 — connect via Google OAuth."
       />

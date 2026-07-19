@@ -116,7 +116,7 @@ export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="violet"
+        accentColor="blue"
         label="Microsoft 365 (OAuth)"
         placeholder="Select Teams credential..."
       />

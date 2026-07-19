@@ -53,7 +53,7 @@ export default function AgentIntegrationNode({ config = {}, updateConfig, nodeId
           label={`${label} Credential`}
           value={config.credentialId || ""}
           onChange={v => updateConfig("credentialId", v)}
-          accentColor="violet"
+          accentColor="blue"
           oauthProvider={oauth}
           placeholder={`Select ${label} credential…`}
         />

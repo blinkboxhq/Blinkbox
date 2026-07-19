@@ -74,7 +74,7 @@ export default function TwitchStreamStatusNode({ config = {}, updateConfig, node
           <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="violet"
+        accentColor="blue"
         label="Twitch API Key"
         placeholder="Select Twitch API Key..."
       />

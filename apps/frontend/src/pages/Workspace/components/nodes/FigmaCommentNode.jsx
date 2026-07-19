@@ -82,7 +82,7 @@ export default function FigmaCommentNode({ config = {}, updateConfig }) {
       )}
 
       <CredentialPicker value={config.apiToken || ''} onChange={(id) => updateConfig('apiToken', id)}
-        accentColor="violet" label="Personal Access Token" credentialType="Figma"
+        accentColor="blue" label="Personal Access Token" credentialType="Figma"
         placeholder="Select Figma token..." hint="Figma Settings → Personal access tokens" />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">

@@ -225,7 +225,7 @@ export default function CalendlyNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="Calendly Access Token"
         placeholder="Select Calendly credential..."
       />

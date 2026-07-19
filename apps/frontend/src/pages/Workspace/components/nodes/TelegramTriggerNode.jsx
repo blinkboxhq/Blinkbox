@@ -73,7 +73,7 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, nodeId 
             <CredentialPicker
               value={config.botToken || ''}
               onChange={(id) => updateConfig?.('botToken', id)}
-              accentColor="sky"
+              accentColor="blue"
               label="Bot Token"
               credentialType="Telegram"
               placeholder="Select Telegram Bot Token..."
@@ -83,7 +83,7 @@ export default function TelegramTriggerNode({ config = {}, updateConfig, nodeId 
             <CredentialPicker
               value={config.telegramSecretToken || ''}
               onChange={(id) => updateConfig?.('telegramSecretToken', id)}
-              accentColor="zinc"
+              accentColor="blue"
               label="Secret Token (optional)"
               placeholder="Select secret token for request verification..."
               hint="BlinkBox verifies the X-Telegram-Bot-Api-Secret-Token header using timing-safe comparison."

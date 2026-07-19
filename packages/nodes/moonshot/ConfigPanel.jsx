@@ -206,7 +206,7 @@ export default function MoonshotNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Moonshot (Kimi) API Key"
         placeholder="Select Moonshot credential…"
       />

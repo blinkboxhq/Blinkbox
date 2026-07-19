@@ -103,7 +103,7 @@ export default function VercelNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="zinc" label="Vercel API Token" placeholder="Select Vercel credential..." />
+        accentColor="blue" label="Vercel API Token" placeholder="Select Vercel credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">uid, url, state, createdAt, target, alias</span>

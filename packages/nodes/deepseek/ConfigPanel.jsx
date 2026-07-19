@@ -181,7 +181,7 @@ export default function DeepseekNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="DeepSeek API Key"
         placeholder="Select DeepSeek credential…"
       />

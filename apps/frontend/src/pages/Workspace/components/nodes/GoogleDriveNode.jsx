@@ -132,11 +132,11 @@ export default function GoogleDriveNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      <OAuthConnectButton provider="google" providerLabel="Google" accentColor="yellow"
+      <OAuthConnectButton provider="google" providerLabel="Google" accentColor="blue"
         value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)} icon={DriveIcon} />
       <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="yellow" label="Google OAuth Token" placeholder="Select Google credential..." />
+        accentColor="blue" label="Google OAuth Token" placeholder="Select Google credential..." />
     </div>
   );
 }

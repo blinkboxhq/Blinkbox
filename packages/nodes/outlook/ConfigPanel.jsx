@@ -149,7 +149,7 @@ export default function OutlookNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="Microsoft 365 (OAuth)"
         placeholder="Select Outlook credential..."
       />

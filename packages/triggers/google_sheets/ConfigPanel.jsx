@@ -27,7 +27,7 @@ export default function GoogleSheetsTriggerNode({ config = {}, updateConfig, nod
             value={config.accessToken || ''}
             onChange={(v) => updateConfig?.('accessToken', v)}
             oauthProvider="google"
-            accentColor="green"
+            accentColor="blue"
             placeholder="Select Google credential…"
           />
         </div>

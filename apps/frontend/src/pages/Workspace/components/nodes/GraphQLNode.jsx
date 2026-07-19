@@ -63,7 +63,7 @@ export default function GraphQLNode({ config = {}, updateConfig, nodeId }) {
           <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="pink"
+        accentColor="blue"
         label="Bearer Token"
         placeholder="Select Bearer Token..."
       />

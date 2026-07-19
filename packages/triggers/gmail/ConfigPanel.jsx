@@ -44,7 +44,7 @@ export default function GmailTriggerNode({ config = {}, updateConfig, nodeId }) 
               value={config.credentialId || ''}
               onChange={(v) => updateConfig?.('credentialId', v)}
               oauthProvider="google"
-              accentColor="red"
+              accentColor="blue"
               placeholder="Select Gmail credential…"
               hint="Needs gmail.readonly scope — click Connect with Google to authorize."
             />

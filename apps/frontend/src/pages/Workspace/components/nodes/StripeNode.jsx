@@ -140,7 +140,7 @@ export default function StripeNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="violet" label="Stripe Secret Key" placeholder="Select Stripe credential..." />
+        accentColor="blue" label="Stripe Secret Key" placeholder="Select Stripe credential..." />
     </div>
   );
 }

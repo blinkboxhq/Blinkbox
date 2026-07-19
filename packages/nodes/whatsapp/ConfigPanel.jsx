@@ -254,7 +254,7 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="green"
+        accentColor="blue"
         label="Meta Access Token"
         placeholder="Select WhatsApp credential..."
       />

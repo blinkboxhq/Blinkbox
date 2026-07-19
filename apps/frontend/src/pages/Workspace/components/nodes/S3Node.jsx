@@ -116,7 +116,7 @@ export default function S3Node({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
           value={config.credentialId || ''}
           onChange={(id) => updateConfig('credentialId', id)}
-          accentColor="amber"
+          accentColor="blue"
           label="AWS Credentials (JSON: {accessKeyId, secretAccessKey})"
           placeholder="Select AWS credentials..."
         />

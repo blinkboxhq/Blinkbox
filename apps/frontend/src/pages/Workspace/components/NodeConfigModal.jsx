@@ -443,7 +443,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
                 icon={Split}
                 on={!!config.splitOutputs}
                 onChange={(val) => updateConfig(node.id, "splitOutputs", val)}
-                accentColor="#34d399"
+                accentColor="#4d7cff"
               />
             </div>
           )}

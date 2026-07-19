@@ -87,7 +87,7 @@ export default function GitHubTriggerNode({ config = {}, updateConfig, nodeId })
               value={config.tokenCredentialKey || ''}
               onChange={(v) => updateConfig?.('tokenCredentialKey', v)}
               oauthProvider="github"
-              accentColor="zinc"
+              accentColor="blue"
               placeholder="Select GitHub credential…"
               hint="Needs repo scope to register webhooks — click Connect with GitHub to authorize."
             />

@@ -94,7 +94,7 @@ export default function NetlifyNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="teal" label="Netlify Personal Access Token" placeholder="Select Netlify credential..." />
+        accentColor="blue" label="Netlify Personal Access Token" placeholder="Select Netlify credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, state, url, created_at, deploy_time</span>

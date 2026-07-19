@@ -43,7 +43,7 @@ export default function AirtableTriggerNode({ config = {}, updateConfig, nodeId 
               <CredentialPicker
                 value={config.apiKey || ''}
                 onChange={(id) => updateConfig?.('apiKey', id)}
-                accentColor="red"
+                accentColor="blue"
                 label="Airtable OAuth"
                 oauthProvider="airtable"
                 placeholder="Select Airtable credential..."

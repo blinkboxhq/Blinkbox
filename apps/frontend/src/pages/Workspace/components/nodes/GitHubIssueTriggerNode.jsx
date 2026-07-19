@@ -15,7 +15,7 @@ export default function GitHubIssueTriggerNode({ config = {}, updateConfig }) {
         value={config.credentialId || ''}
         onChange={(v) => updateConfig('credentialId', v)}
         oauthProvider="github"
-        accentColor="zinc"
+        accentColor="blue"
         placeholder="Select GitHub credential…"
         hint="Needs repo scope to read issues and pull requests."
       />

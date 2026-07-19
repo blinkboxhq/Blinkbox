@@ -106,7 +106,7 @@ export default function SentryNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="red" label="Sentry Auth Token" placeholder="Select Sentry credential..." />
+        accentColor="blue" label="Sentry Auth Token" placeholder="Select Sentry credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, title, status, count, firstSeen, lastSeen</span>

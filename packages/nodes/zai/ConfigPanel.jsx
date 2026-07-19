@@ -207,7 +207,7 @@ export default function ZaiNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Z.ai API Key"
         placeholder="Select Z.ai credential…"
       />

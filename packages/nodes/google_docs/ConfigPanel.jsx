@@ -115,7 +115,7 @@ export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="Google OAuth"
         placeholder="Select Google credential..."
       />

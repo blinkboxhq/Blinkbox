@@ -69,7 +69,7 @@ export default function AgentLLMNode({ config = {}, updateConfig }) {
       <CredentialPicker
         value={config.credentialId || ""}
         onChange={id => updateConfig("credentialId", id)}
-        accentColor="violet"
+        accentColor="blue"
         credentialType={provider.credentialType}
         label={`${provider.label} API Key`}
         placeholder={`Select ${provider.label} credential…`}

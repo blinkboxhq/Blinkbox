@@ -102,7 +102,7 @@ export default function TwitterNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="sky" label="Twitter Bearer Token (or OAuth2 for write)" placeholder="Select Twitter credential..." />
+        accentColor="blue" label="Twitter Bearer Token (or OAuth2 for write)" placeholder="Select Twitter credential..." />
       <p className="text-[10px] text-zinc-600 -mt-3">Read-only: Bearer token. Post/like/delete: OAuth2 user context token.</p>
     </div>
   );

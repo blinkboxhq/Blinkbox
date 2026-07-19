@@ -114,7 +114,7 @@ export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="violet" label="ClickUp API Token" placeholder="Select ClickUp credential..." />
+        accentColor="blue" label="ClickUp API Token" placeholder="Select ClickUp credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, name, url, status, priority</span>

@@ -147,7 +147,7 @@ export default function OAuthConnectButton({
       <button
         onClick={handleConnect}
         disabled={isConnecting}
-        className={`flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-xl border border-${accentColor}-500/30 bg-${accentColor}-500/5 hover:bg-${accentColor}-500/10 text-${accentColor}-400 hover:text-${accentColor}-300 text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isConnecting ? (
           <>

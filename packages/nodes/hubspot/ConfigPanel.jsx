@@ -105,7 +105,7 @@ export default function HubspotNode({ config = {}, updateConfig }) {
         provider="hubspot"
         value={config.credentialId || ''}
         onChange={set('credentialId')}
-        accentColor="orange"
+        accentColor="blue"
         label="HubSpot Private App Token"
         placeholder="Connect your HubSpot account"
       />

@@ -92,7 +92,7 @@ export default function AsanaNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="rose"
+        accentColor="blue"
         label="Asana Personal Access Token"
         placeholder="Select Asana credential..."
       />

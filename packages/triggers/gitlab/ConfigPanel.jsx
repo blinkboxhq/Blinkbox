@@ -27,7 +27,7 @@ export default function GitLabTriggerNode({ config = {}, updateConfig, nodeId })
           <CredentialPicker
             value={config.token || ''}
             onChange={(id) => updateConfig?.('token', id)}
-            accentColor="orange"
+            accentColor="blue"
             label="Access Token"
             placeholder="Select GitLab Access Token..."
           />

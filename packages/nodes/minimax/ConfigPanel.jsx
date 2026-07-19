@@ -207,7 +207,7 @@ export default function MiniMaxNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="MiniMax API Key"
         placeholder="Select MiniMax credential…"
       />

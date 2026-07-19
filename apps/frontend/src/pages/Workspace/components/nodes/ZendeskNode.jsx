@@ -139,7 +139,7 @@ export default function ZendeskNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="zinc" label="Zendesk API Token" placeholder="Select Zendesk credential..." />
+        accentColor="blue" label="Zendesk API Token" placeholder="Select Zendesk credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, subject, status, priority, requester, created_at</span>

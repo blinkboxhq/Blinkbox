@@ -38,7 +38,7 @@ const ACCENT = {
   zinc:    { btn: 'text-zinc-400',   dot: 'bg-zinc-400',   badge: 'bg-zinc-800 border-zinc-700 text-zinc-400',             save: 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' },
 };
 
-const DEFAULT_ACCENT = ACCENT.violet;
+const DEFAULT_ACCENT = ACCENT.blue;
 
 const OAUTH_META = {
   google:    { label: 'Google',    color: '#4285F4', logo: logoGoogle },

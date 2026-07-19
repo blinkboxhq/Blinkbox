@@ -117,7 +117,7 @@ export default function PipedriveNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="orange"
+        accentColor="blue"
         label="Pipedrive API Token"
         placeholder="Select Pipedrive credential..."
       />

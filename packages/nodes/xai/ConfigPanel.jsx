@@ -220,7 +220,7 @@ export default function XaiNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="xAI API Key"
         placeholder="Select xAI credential…"
       />

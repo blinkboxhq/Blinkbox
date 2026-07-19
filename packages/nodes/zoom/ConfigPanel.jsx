@@ -114,7 +114,7 @@ export default function ZoomNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="Zoom OAuth"
         placeholder="Select Zoom credential…"
       />

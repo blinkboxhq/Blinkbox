@@ -206,7 +206,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               label="Tavily API Key"
               value={config.webSearchCredentialId || ""}
               onChange={(v) => updateConfig("webSearchCredentialId", v)}
-              accentColor="sky"
+              accentColor="blue"
               credentialType="tavily"
               placeholder="Select Tavily credential…"
               hint="Get a free key at tavily.com — required for web search."

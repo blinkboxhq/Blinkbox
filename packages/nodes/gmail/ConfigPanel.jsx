@@ -157,7 +157,7 @@ export default function GmailNode({ config = {}, updateConfig, nodeId }) {
       <OAuthConnectButton
         provider="google"
         providerLabel="Google"
-        accentColor="red"
+        accentColor="blue"
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
         icon={GmailIcon}
@@ -176,7 +176,7 @@ export default function GmailNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="rose"
+        accentColor="blue"
         label="Google OAuth Token"
         placeholder="Select Google credential..."
       />

@@ -121,7 +121,7 @@ export default function BankStatementParserNode({ config = {}, updateConfig, nod
             <CredentialPicker
               value={config.credentialId || ''}
               onChange={(id) => updateConfig('credentialId', id)}
-              accentColor="emerald"
+              accentColor="blue"
               label="LLM API Key"
               placeholder="Select API key..."
             />

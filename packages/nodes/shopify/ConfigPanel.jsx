@@ -300,7 +300,7 @@ export default function ShopifyNode({ config = {}, updateConfig }) {
         provider="shopify"
         value={config.credentialId || ''}
         onChange={set('credentialId')}
-        accentColor="zinc"
+        accentColor="blue"
         label="Shopify Admin API Token"
         placeholder="Select Shopify credential..."
       />

@@ -123,7 +123,7 @@ export default function RedditNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="orange"
+        accentColor="blue"
         label="Reddit OAuth (Script App)"
         placeholder="Select Reddit credential..."
       />

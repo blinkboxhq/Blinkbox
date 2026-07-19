@@ -45,7 +45,7 @@ export default function ResendNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="API Key"
         placeholder="Select Resend credential..."
       />

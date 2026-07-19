@@ -199,7 +199,7 @@ export default function SendGridNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="SendGrid API Key"
         placeholder="Select SendGrid credential..."
       />

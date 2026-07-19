@@ -73,7 +73,7 @@ export default function DiscordTriggerNode({ config = {}, updateConfig, nodeId }
               <CredentialPicker
                 value={config.botToken || ''}
                 onChange={(id) => updateConfig?.('botToken', id)}
-                accentColor="indigo"
+                accentColor="blue"
                 label="Discord Bot Token"
                 placeholder="Select Discord Bot Token..."
               />
@@ -83,7 +83,7 @@ export default function DiscordTriggerNode({ config = {}, updateConfig, nodeId }
               <CredentialPicker
                 value={config.publicKey || ''}
                 onChange={(id) => updateConfig?.('publicKey', id)}
-                accentColor="indigo"
+                accentColor="blue"
                 label="Application Public Key"
                 placeholder="Select Application Public Key..."
               />

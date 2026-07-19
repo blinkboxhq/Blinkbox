@@ -23,7 +23,7 @@ export default function OpenAIAssistantNode({ config = {}, updateConfig, nodeId 
       <CredentialPicker
         value={config.credentialId || ""}
         onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="green"
+        accentColor="blue"
         label="OpenAI API Key"
         placeholder="Select OpenAI credential..."
       />

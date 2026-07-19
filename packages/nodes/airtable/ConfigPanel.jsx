@@ -194,11 +194,11 @@ export default function AirtableNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      <OAuthConnectButton provider="airtable" providerLabel="Airtable" accentColor="yellow"
+      <OAuthConnectButton provider="airtable" providerLabel="Airtable" accentColor="blue"
         value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)} />
       <p className="text-[10px] text-zinc-600 -mt-3">Or use an existing credential:</p>
       <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="yellow" label="Airtable Token" placeholder="Select Airtable credential..." />
+        accentColor="blue" label="Airtable Token" placeholder="Select Airtable credential..." />
     </ConfigSection>
   );
 }

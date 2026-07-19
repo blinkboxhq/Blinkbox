@@ -101,7 +101,7 @@ export default function InvoiceParserNode({ config = {}, updateConfig, nodeId })
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="amber"
+        accentColor="blue"
         label="API Key"
         placeholder="Select API Key..."
       />

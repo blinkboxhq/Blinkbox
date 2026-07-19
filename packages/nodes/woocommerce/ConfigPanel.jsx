@@ -124,7 +124,7 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="violet"
+        accentColor="blue"
         label="WooCommerce API Key + Secret"
         placeholder="Select WooCommerce credential..."
       />

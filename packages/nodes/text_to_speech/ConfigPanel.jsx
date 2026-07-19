@@ -116,7 +116,7 @@ export default function TextToSpeechNode({ config = {}, updateConfig, nodeId }) 
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="purple"
+        accentColor="blue"
         label="OpenAI / ElevenLabs Key"
         placeholder="Select OpenAI / ElevenLabs Key..."
       />

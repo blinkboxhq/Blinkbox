@@ -115,7 +115,7 @@ export default function ClickUpNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="violet"
+        accentColor="blue"
         label="ClickUp API Token"
         placeholder="Select ClickUp credential..."
       />

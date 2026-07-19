@@ -81,7 +81,7 @@ export default function SftpNode({ config = {}, updateConfig, nodeId }) {
           <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="SFTP Credential"
         placeholder="Select SFTP Credential..."
       />

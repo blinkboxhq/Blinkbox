@@ -104,7 +104,7 @@ export default function InstagramPostNode({ config = {}, updateConfig, nodeId })
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="pink"
+        accentColor="blue"
         label="Instagram Token"
         placeholder="Select Instagram Token..."
       />

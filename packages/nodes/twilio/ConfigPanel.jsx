@@ -85,7 +85,7 @@ export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="rose"
+        accentColor="blue"
         label="Account SID & Auth Token"
         placeholder="Select Twilio credential..."
       />

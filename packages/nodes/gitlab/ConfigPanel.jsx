@@ -106,7 +106,7 @@ export default function GitLabNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="GitLab Personal Access Token" placeholder="Select GitLab credential..." />
+        accentColor="blue" label="GitLab Personal Access Token" placeholder="Select GitLab credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, iid, title, web_url, state</span>

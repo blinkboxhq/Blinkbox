@@ -110,7 +110,7 @@ export default function AgentMemoryNode({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
           value={config.credentialId || ""}
           onChange={id => updateConfig("credentialId", id)}
-          accentColor="violet"
+          accentColor="blue"
           label={`${selected.label} Credential`}
           placeholder={`Select ${selected.label} credential…`}
         />

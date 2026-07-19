@@ -45,7 +45,7 @@ export default function GoogleSheetsNode({ config = {}, updateConfig, nodeId }) 
         onChange={(id) => updateConfig('credentialId', id)}
         oauthProvider="google"
         credentialType="google"
-        accentColor="green"
+        accentColor="blue"
         label="Credential"
         placeholder="Select Google credential…"
         hint="Connect with Google or pick an existing credential."

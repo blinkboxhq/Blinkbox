@@ -95,7 +95,7 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
           <CredentialPicker
             value={config.credentialId || ''}
             onChange={(val) => updateConfig('credentialId', val)}
-            accentColor="indigo"
+            accentColor="blue"
             placeholder="Select Discord webhook credential…"
           />
         </Field>
@@ -115,7 +115,7 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
             <CredentialPicker
               value={config.credentialId || ''}
               onChange={(val) => updateConfig('credentialId', val)}
-              accentColor="indigo"
+              accentColor="blue"
               label="Discord Bot Token"
               placeholder="Select Discord Bot Token credential…"
             />

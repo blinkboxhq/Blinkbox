@@ -43,7 +43,7 @@ export default function NotionTriggerNode({ config = {}, updateConfig, nodeId })
               <CredentialPicker
                 value={config.apiKey || ''}
                 onChange={(id) => updateConfig?.('apiKey', id)}
-                accentColor="zinc"
+                accentColor="blue"
                 label="Notion OAuth"
                 oauthProvider="notion"
                 placeholder="Select Notion credential..."

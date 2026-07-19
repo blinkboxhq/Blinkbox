@@ -62,7 +62,7 @@ export default function WeatherNode({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
           value={config.credentialId || ''}
           onChange={(id) => updateConfig('credentialId', id)}
-          accentColor="sky"
+          accentColor="blue"
           label="OpenWeatherMap API Key"
           placeholder="Select API key..."
         />

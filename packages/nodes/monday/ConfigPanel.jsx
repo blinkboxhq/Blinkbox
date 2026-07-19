@@ -105,7 +105,7 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="red"
+        accentColor="blue"
         label="Monday.com API Token"
         placeholder="Select Monday credential..."
       />

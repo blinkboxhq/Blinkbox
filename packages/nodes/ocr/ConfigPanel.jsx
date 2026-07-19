@@ -103,7 +103,7 @@ export default function OcrNode({ config = {}, updateConfig, nodeId }) {
           <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="sky"
+        accentColor="blue"
         label="OpenAI / Google API Key"
         placeholder="Select OpenAI / Google API Key..."
       />

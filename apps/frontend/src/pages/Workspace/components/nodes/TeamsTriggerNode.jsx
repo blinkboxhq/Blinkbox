@@ -12,7 +12,7 @@ export default function TeamsTriggerNode({ config = {}, updateConfig, nodeId }) 
         <OAuthConnectButton provider="microsoft" providerLabel="Microsoft" accentColor="blue"
           value={config.accessToken || ''} onChange={(id) => updateConfig?.('accessToken', id)} />
         <CredentialPicker value={config.accessToken || ''} onChange={(id) => updateConfig?.('accessToken', id)}
-          accentColor="indigo" label="Access Token" credentialType="Microsoft" placeholder="Select Microsoft OAuth token..." />
+          accentColor="blue" label="Access Token" credentialType="Microsoft" placeholder="Select Microsoft OAuth token..." />
         <div className="flex flex-col gap-1">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Team ID</label>
           <SmartVariableInput value={config.teamId || ''} onChange={(v) => updateConfig?.('teamId', v)} placeholder="From Teams URL or Graph API" />

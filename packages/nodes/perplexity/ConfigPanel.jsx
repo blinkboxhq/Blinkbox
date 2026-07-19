@@ -227,7 +227,7 @@ export default function PerplexityNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Perplexity API Key"
         placeholder="Select Perplexity credential…"
       />

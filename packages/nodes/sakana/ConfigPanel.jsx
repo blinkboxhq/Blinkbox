@@ -208,7 +208,7 @@ export default function SakanaNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Sakana API Key"
         placeholder="Select Sakana credential…"
       />

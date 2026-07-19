@@ -146,7 +146,7 @@ export default function WooCommerceNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="violet" label="WooCommerce API Key + Secret" placeholder="Select WooCommerce credential..." />
+        accentColor="blue" label="WooCommerce API Key + Secret" placeholder="Select WooCommerce credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, status, total, line_items, customer</span>

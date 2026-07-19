@@ -115,7 +115,7 @@ export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="purple"
+        accentColor="blue"
         label="Google OAuth"
         placeholder="Select Google credential..."
       />

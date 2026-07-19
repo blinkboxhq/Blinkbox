@@ -73,7 +73,7 @@ export default function StockPriceNode({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="green"
+        accentColor="blue"
         label="Alpha Vantage / FMP Key"
         placeholder="Select Alpha Vantage / FMP Key..."
       />

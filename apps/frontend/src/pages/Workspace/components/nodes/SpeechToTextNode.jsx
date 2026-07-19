@@ -89,7 +89,7 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="violet"
+        accentColor="blue"
         label="OpenAI / AssemblyAI Key"
         placeholder="Select OpenAI / AssemblyAI Key..."
       />

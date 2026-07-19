@@ -85,7 +85,7 @@ export default function LinearTriggerNode({ config = {}, updateConfig, nodeId })
             <CredentialPicker
               value={config.linearWebhookSecret || ''}
               onChange={(id) => updateConfig?.('linearWebhookSecret', id)}
-              accentColor="indigo"
+              accentColor="blue"
               label="Webhook Secret"
               credentialType="Linear"
               placeholder="Select Linear webhook secret..."

@@ -105,7 +105,7 @@ export default function FileUploadNode({ config = {}, updateConfig, nodeId }) {
         <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Storage Credential"
         placeholder="Select Storage Credential..."
       />

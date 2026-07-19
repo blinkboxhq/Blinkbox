@@ -111,7 +111,7 @@ export default function FigmaNode({ config = {}, updateConfig }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="Figma Personal Access Token" placeholder="Select Figma credential..." />
+        accentColor="blue" label="Figma Personal Access Token" placeholder="Select Figma credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">name, nodes, comments, images (base64 URLs)</span>

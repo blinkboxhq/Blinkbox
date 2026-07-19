@@ -113,7 +113,7 @@ export default function ShopifyNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="green" label="Shopify Admin API Token" placeholder="Select Shopify credential..." />
+        accentColor="blue" label="Shopify Admin API Token" placeholder="Select Shopify credential..." />
     </div>
   );
 }

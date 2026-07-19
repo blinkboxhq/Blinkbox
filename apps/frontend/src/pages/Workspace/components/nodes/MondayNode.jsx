@@ -110,7 +110,7 @@ export default function MondayNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="red" label="Monday.com API Token" placeholder="Select Monday credential..." />
+        accentColor="blue" label="Monday.com API Token" placeholder="Select Monday credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, name, board_id, column_values, created_at</span>

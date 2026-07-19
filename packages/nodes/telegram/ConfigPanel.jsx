@@ -340,7 +340,7 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="indigo"
+        accentColor="blue"
         label="Bot Token"
         placeholder="Select Telegram bot token..."
       />

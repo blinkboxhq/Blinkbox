@@ -100,7 +100,7 @@ export default function TwilioNode({ config = {}, updateConfig, nodeId }) {
 
       {/* Credential */}
       <CredentialPicker value={config.credentialId || ''} onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="red" label="Twilio Account SID:AuthToken" placeholder="Select Twilio credential..." />
+        accentColor="blue" label="Twilio Account SID:AuthToken" placeholder="Select Twilio credential..." />
       <p className="text-[10px] text-zinc-600 -mt-3">Format credential as AccountSID:AuthToken</p>
     </div>
   );

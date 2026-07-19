@@ -251,7 +251,7 @@ export default function ZendeskNode({ config = {}, updateConfig }) {
         provider="zendesk"
         value={config.credentialId || ''}
         onChange={set('credentialId')}
-        accentColor="zinc"
+        accentColor="blue"
         label="Zendesk API Token"
         placeholder="Select Zendesk credential..."
       />

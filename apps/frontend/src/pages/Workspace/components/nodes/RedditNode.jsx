@@ -147,7 +147,7 @@ export default function RedditNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <CredentialPicker value={config.credentialId || ""} onChange={(id) => updateConfig("credentialId", id)}
-        accentColor="orange" label="Reddit OAuth (Script App)" placeholder="Select Reddit credential..." />
+        accentColor="blue" label="Reddit OAuth (Script App)" placeholder="Select Reddit credential..." />
 
       <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
         Returns: <span className="text-zinc-300">id, title, score, url, author, subreddit, created_utc</span>

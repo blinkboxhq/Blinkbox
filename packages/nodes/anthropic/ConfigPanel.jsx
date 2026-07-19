@@ -279,7 +279,7 @@ export default function AnthropicNode({ config = {}, updateConfig, nodeId }) {
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
-        accentColor="zinc"
+        accentColor="blue"
         label="Anthropic API Key"
         placeholder="Select Anthropic credential…"
       />
