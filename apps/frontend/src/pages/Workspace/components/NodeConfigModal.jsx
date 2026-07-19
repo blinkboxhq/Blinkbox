@@ -11,7 +11,7 @@ import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEven
 import { NODE_ACTIONS } from "../nodeActions";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
-import { ConfigToggleRow, ConfigSelect } from "../../../components/ui/ConfigKit";
+import { ConfigToggleRow, ConfigSelect, ConfigHeader } from "../../../components/ui/ConfigKit";
 import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
@@ -387,7 +387,15 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
       <div className="flex-1 overflow-y-auto">
         <div ref={configRef} className="px-1 py-2">
           {actionList?.length > 0 && (
-            <div className="px-4 pt-3 pb-1">
+            <div className="px-4 pt-3 pb-1 flex flex-col gap-3">
+              <ConfigHeader
+                logoUrl={nodeDef?.logoUrl}
+                imgFilter={nodeDef?.imgFilter}
+                icon={nodeDef?.icon}
+                iconColor="#4d7cff"
+                title={nodeDef?.label}
+                subtitle={selectedAction || nodeDef?.description}
+              />
               <ConfigSelect
                 label="Action"
                 value={config.selectedAction || ""}
