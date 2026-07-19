@@ -106,7 +106,7 @@ export default function AddNodeSidebar() {
     });
   };
 
-  const picksActionInPanel = (nodeDef) => (nodeDef.category ?? NodeRegistry[nodeDef.key]?.category) === "ai_models";
+  const picksActionInPanel = (nodeDef) => ["ai_models", "apps"].includes(nodeDef.category ?? NodeRegistry[nodeDef.key]?.category);
 
   const handleNodeClick = (nodeDef) => {
     const actions = NODE_ACTIONS[nodeDef.key];

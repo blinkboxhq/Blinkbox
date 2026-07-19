@@ -21,6 +21,7 @@ import mcpRoutes from "../modules/mcp/mcp.routes.js";
 import mcpOauthRoutes from "../modules/mcp/oauth.routes.js";
 import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
+import { verifyToken } from "../modules/auth/auth.middleware.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
@@ -258,7 +259,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/keys", apiKeyRoutes);
 app.use("/api/mcp", mcpRoutes);
-app.use("/api/vc", vcRouter);
+app.use("/api/vc", verifyToken, vcRouter);
 app.use("/api/ollama", ollamaRoutes);
 
 // ── Global error handler ──────────────────────────────────────────────────────

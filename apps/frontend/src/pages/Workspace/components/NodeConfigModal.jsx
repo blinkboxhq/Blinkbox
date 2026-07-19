@@ -315,7 +315,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
-  const actionList = !variant && nodeDef?.category === "ai_models" ? NODE_ACTIONS[backendType] || null : null;
+  const actionList = !variant && ["ai_models", "apps"].includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
   const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 

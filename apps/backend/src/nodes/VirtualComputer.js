@@ -26,9 +26,30 @@ import { Queue, Worker } from "bullmq";
 import { Router } from "express";
 import crypto from "crypto";
 import { redis } from "../infra/redis.client.js";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET, ALLOW_LOCAL_REQUESTS } from "../config/env.js";
+import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 // Stealth mode: spoofs navigator.webdriver, removes headless signals, etc.
 puppeteer.use(StealthPlugin());
+
+// Blocks the headless browser from being pointed at internal/metadata hosts.
+// Mirrors httpRequest.node.js: loopback allowed only when ALLOW_LOCAL_REQUESTS.
+async function guardBrowserUrl(rawUrl) {
+  let parsed;
+  try { parsed = new URL(rawUrl); } catch { throw new Error(`Virtual Computer: invalid URL "${rawUrl}"`); }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error("Virtual Computer: only http/https URLs are allowed");
+  }
+  const hostname = parsed.hostname.toLowerCase();
+  const isLoopback = hostname === "localhost" || /^127\./.test(hostname) || hostname === "::1";
+  if (isLoopback && ALLOW_LOCAL_REQUESTS) return;
+  try {
+    await assertSafeUrlResolved(rawUrl);
+  } catch (err) {
+    throw new Error(`Virtual Computer: ${err.message}`);
+  }
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -362,6 +383,9 @@ class VCSession {
   openUrl(url, waitUntil = "networkidle2") {
     let attempt = 0;
     return this._run(() => this._exec(async () => {
+      // SSRF guard: the headless browser must not be steerable to cloud-metadata
+      // endpoints or internal services. Resolves DNS to catch rebinding too.
+      await guardBrowserUrl(url);
       // First try waits for network-idle (best for SPAs). If that times out,
       // retries fall back to domcontentloaded so a slow-to-settle page (long-
       // polling, analytics beacons) still loads instead of failing outright.
@@ -886,23 +910,31 @@ export function initVCQueue() {
 
 export const vcRouter = Router();
 
+// Tenant key from the authenticated identity — never trust a client-supplied
+// workspaceId, or one user could drive another's browser session.
+const vcTenant = (req) => req.user?.id?.toString() || req.user?.workspaceId?.toString() || "default";
+// Internal session-map key is namespaced by tenant; clients only ever see their
+// own raw id, so a guessed id can't reach another tenant's session.
+const vcScopedSid = (wid, clientSid) => `${wid}:${clientSid}`;
+
 // POST /api/vc/action
-// Body: { sessionId?, workspaceId?, action, ...actionArgs }
+// Body: { sessionId?, action, ...actionArgs }
 vcRouter.post("/action", async (req, res) => {
-  const { sessionId, workspaceId, action, ...args } = req.body;
-  const sid = sessionId || `vc_${crypto.randomUUID()}`;
-  const wid = workspaceId || req.user?.workspaceId?.toString() || "default";
+  const { sessionId, action, ...args } = req.body;
+  const wid = vcTenant(req);
+  const clientSid = sessionId ? String(sessionId) : `vc_${crypto.randomUUID()}`;
+  const sid = vcScopedSid(wid, clientSid);
   try {
     await checkRate(wid);
     const result = await dispatchAction(sid, wid, action, args);
-    res.json({ ...result, sessionId: sid });
+    res.json({ ...result, sessionId: clientSid });
   } catch (err) {
     const screenshot = await (async () => {
       const s = _sessions.get(sid);
       return s ? s._snap() : null;
     })();
     res.status(err.message.includes("Rate limit") ? 429 : 500).json({
-      success: false, error: err.message, screenshot, data: null, sessionId: sid,
+      success: false, error: err.message, screenshot, data: null, sessionId: clientSid,
     });
   }
 });
@@ -918,7 +950,8 @@ vcRouter.get("/health", (_req, res) => {
 
 // GET /api/vc/session/:id
 vcRouter.get("/session/:id", (req, res) => {
-  const s = _sessions.get(req.params.id);
+  const sid = vcScopedSid(vcTenant(req), req.params.id);
+  const s = _sessions.get(sid);
   if (!s) return res.status(404).json({ error: "Session not found" });
   res.json({
     sessionId: req.params.id,
@@ -929,7 +962,7 @@ vcRouter.get("/session/:id", (req, res) => {
 
 // DELETE /api/vc/session/:id
 vcRouter.delete("/session/:id", async (req, res) => {
-  res.json(await closeSession(req.params.id));
+  res.json(await closeSession(vcScopedSid(vcTenant(req), req.params.id)));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -940,21 +973,36 @@ vcRouter.delete("/session/:id", async (req, res) => {
 export function initVCSocket(io) {
   const ns = io.of("/vc");
 
-  ns.on("connection", (socket) => {
-    const sid = socket.handshake.query.sessionId || `vc_${crypto.randomUUID()}`;
-    const wid = socket.handshake.query.workspaceId || "default";
+  // Namespace middleware does not inherit the main io.use — authenticate here or
+  // the /vc namespace is an open door to the headless-browser pool.
+  ns.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    if (!token) return next(new Error("Authentication required"));
+    try {
+      const decoded = jwt.verify(String(token), JWT_SECRET);
+      socket.wid = (decoded.id || decoded.workspaceId || "default").toString();
+      next();
+    } catch {
+      next(new Error("Invalid token"));
+    }
+  });
 
-    socket.emit("connected", { sessionId: sid });
+  ns.on("connection", (socket) => {
+    const wid = socket.wid;
+    const clientSid = socket.handshake.query.sessionId || `vc_${crypto.randomUUID()}`;
+    const sid = `${wid}:${clientSid}`;
+
+    socket.emit("connected", { sessionId: clientSid });
 
     socket.on("action", async ({ action, ...args }) => {
       try {
         await checkRate(wid);
         const result = await dispatchAction(sid, wid, action, args);
-        socket.emit("result", { ...result, sessionId: sid, action });
+        socket.emit("result", { ...result, sessionId: clientSid, action });
       } catch (err) {
         const s = _sessions.get(sid);
         const screenshot = s ? await s._snap() : null;
-        socket.emit("error", { error: err.message, screenshot, sessionId: sid, action });
+        socket.emit("error", { error: err.message, screenshot, sessionId: clientSid, action });
       }
     });
 
