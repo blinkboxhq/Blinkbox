@@ -106,11 +106,9 @@ export default function AddNodeSidebar() {
     });
   };
 
-  const picksActionInPanel = (nodeDef) => nodeDef.category === "ai_models" || nodeDef.category === "apps";
-
   const handleNodeClick = (nodeDef) => {
     const actions = NODE_ACTIONS[nodeDef.key];
-    if (actions?.length > 0 && !picksActionInPanel(nodeDef)) { setPending(nodeDef); setSearch(""); return; }
+    if (actions?.length > 0) { setPending(nodeDef); setSearch(""); return; }
     if (selected.size > 0) { toggleSelect(nodeDef); return; }
     commitOne(nodeDef);
   };
@@ -229,14 +227,14 @@ export default function AddNodeSidebar() {
               visibleNodes.map((n, i) => (
                 <NodeRow key={n.key} nodeDef={n} focused={i === focusIdx}
                   onHover={() => setFocusIdx(i)} onSelect={() => handleNodeClick(n)}
-                  selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0 && !picksActionInPanel(n)} />
+                  selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0} />
               ))
             )
           ) : catPage ? (
             visibleNodes.map((n, i) => (
               <NodeRow key={n.key} nodeDef={n} focused={i === focusIdx}
                 onHover={() => setFocusIdx(i)} onSelect={() => handleNodeClick(n)}
-                selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0 && !picksActionInPanel(n)} />
+                selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0} />
             ))
           ) : (
             ACTION_CATEGORIES.map((c) => {
