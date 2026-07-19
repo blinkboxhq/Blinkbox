@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import ModelSelect from '@/components/ui/ModelSelect';
 import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } from '@/components/ui/ConfigKit';
 
 // Black & white only. The brand logo is the sole colored element.
@@ -29,7 +30,7 @@ function Dropdown({ label, value, fallback, onChange, options }) {
 function ChatPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Ask DeepSeek anything…" multiline nodeId={nodeId} />
       <Dropdown label="Output Format" value={config.outputFormat} fallback="text" onChange={(v) => updateConfig('outputFormat', v)} options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]} />
@@ -40,7 +41,7 @@ function ChatPanel({ config, updateConfig, nodeId }) {
 function StructuredPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the invoice fields…" multiline nodeId={nodeId} />
       <Text label="JSON Schema (embedded as a hint)" value={config.jsonSchema} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"type":"object","properties":{…}}' multiline nodeId={nodeId} />
     </>
@@ -50,7 +51,7 @@ function StructuredPanel({ config, updateConfig, nodeId }) {
 function FunctionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Paris?" multiline nodeId={nodeId} />
       <Text label="Tools (JSON array)" value={config.tools} onChange={(v) => updateConfig('tools', v)} placeholder='[{"name":"get_weather","parameters":{…}}]' multiline nodeId={nodeId} />
     </>
@@ -60,7 +61,7 @@ function FunctionPanel({ config, updateConfig, nodeId }) {
 function ReasoningPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-reasoner" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_REASON)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-reasoner" onChange={(v) => updateConfig('model', v)} models={MODELS_REASON} accentColor={MONO} />
       <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="Optional guidance…" multiline nodeId={nodeId} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Reason step-by-step through this problem…" multiline nodeId={nodeId} />
     </>
@@ -70,7 +71,7 @@ function ReasoningPanel({ config, updateConfig, nodeId }) {
 function DocumentPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Question / Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What are the key risks in this document?" multiline nodeId={nodeId} />
       <Text label="Document Text (optional — falls back to input)" value={config.documentText} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank" multiline nodeId={nodeId} />
     </>
@@ -80,7 +81,7 @@ function DocumentPanel({ config, updateConfig, nodeId }) {
 function ExtractPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Source Text" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.text}} or paste text…" multiline nodeId={nodeId} />
       <Text label="Fields to Extract" value={config.fields} onChange={(v) => updateConfig('fields', v)} placeholder="name, email, total amount" nodeId={nodeId} />
     </>
@@ -90,7 +91,7 @@ function ExtractPanel({ config, updateConfig, nodeId }) {
 function ClassifyPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Text to Classify" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.message}}" multiline nodeId={nodeId} />
       <Text label="Labels (comma-separated)" value={config.labels} onChange={(v) => updateConfig('labels', v)} placeholder="spam, support, sales, billing" nodeId={nodeId} />
     </>
@@ -100,7 +101,7 @@ function ClassifyPanel({ config, updateConfig, nodeId }) {
 function SummarizePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Text to Summarize" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.article}} or paste text…" multiline nodeId={nodeId} />
       <Dropdown label="Style" value={config.style} fallback="concise" onChange={(v) => updateConfig('style', v)} options={[{ value: 'concise', label: 'Concise' }, { value: 'detailed', label: 'Detailed' }, { value: 'bullet points', label: 'Bullet points' }, { value: 'executive', label: 'Executive summary' }]} />
       <Text label="Max Words (optional)" value={config.maxWords} onChange={(v) => updateConfig('maxWords', v)} placeholder="150" nodeId={nodeId} />
@@ -111,7 +112,7 @@ function SummarizePanel({ config, updateConfig, nodeId }) {
 function TranslatePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Text to Translate" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.text}}" multiline nodeId={nodeId} />
       <Text label="Target Language" value={config.targetLanguage} onChange={(v) => updateConfig('targetLanguage', v)} placeholder="Spanish, French, Japanese…" nodeId={nodeId} />
     </>
@@ -121,7 +122,7 @@ function TranslatePanel({ config, updateConfig, nodeId }) {
 function SentimentPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Text to Analyze" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="{{$node.review}} or paste text…" multiline nodeId={nodeId} />
     </>
   );
@@ -130,7 +131,7 @@ function SentimentPanel({ config, updateConfig, nodeId }) {
 function GeneratePromptPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Task Description" value={config.task} onChange={(v) => updateConfig('task', v)} placeholder="Classify support tickets by priority…" multiline nodeId={nodeId} />
     </>
   );
@@ -139,7 +140,7 @@ function GeneratePromptPanel({ config, updateConfig, nodeId }) {
 function ImprovePromptPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_CHAT)} />
+      <ModelSelect provider="deepseek" credentialId={config.credentialId} value={config.model} fallback="deepseek-chat" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Prompt to Improve" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Paste an existing prompt to refine…" multiline nodeId={nodeId} />
     </>
   );

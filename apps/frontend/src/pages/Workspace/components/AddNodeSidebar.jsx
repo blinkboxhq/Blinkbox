@@ -106,7 +106,7 @@ export default function AddNodeSidebar() {
     });
   };
 
-  const picksActionInPanel = (nodeDef) => nodeDef.key === "openai";
+  const picksActionInPanel = (nodeDef) => (nodeDef.category ?? NodeRegistry[nodeDef.key]?.category) === "ai_models";
 
   const handleNodeClick = (nodeDef) => {
     const actions = NODE_ACTIONS[nodeDef.key];

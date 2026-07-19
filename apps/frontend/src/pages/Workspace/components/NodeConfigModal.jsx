@@ -315,7 +315,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
-  const actionList = !variant && backendType === "openai" ? NODE_ACTIONS[backendType] : null;
+  const actionList = !variant && nodeDef?.category === "ai_models" ? NODE_ACTIONS[backendType] || null : null;
   const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 

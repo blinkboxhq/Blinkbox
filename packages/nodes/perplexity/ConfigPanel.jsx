@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import ModelSelect from '@/components/ui/ModelSelect';
 import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } from '@/components/ui/ConfigKit';
 
 // Black & white only. The brand logo is the sole colored element.
@@ -46,7 +47,7 @@ function SearchControls({ config, updateConfig, nodeId }) {
 function ChatPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Ask anything — answers are web-grounded…" multiline nodeId={nodeId} />
       <Dropdown label="Output Format" value={config.outputFormat} fallback="text" onChange={(v) => updateConfig('outputFormat', v)} options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]} />
@@ -58,7 +59,7 @@ function ChatPanel({ config, updateConfig, nodeId }) {
 function SearchPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Query" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What are the latest findings on…?" multiline nodeId={nodeId} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
     </>
@@ -68,7 +69,7 @@ function SearchPanel({ config, updateConfig, nodeId }) {
 function StructuredPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the company's funding rounds…" multiline nodeId={nodeId} />
       <Text label="JSON Schema (optional)" value={config.jsonSchema} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"type":"object","properties":{…}}' multiline nodeId={nodeId} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
@@ -79,7 +80,7 @@ function StructuredPanel({ config, updateConfig, nodeId }) {
 function ReasoningPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-reasoning-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-reasoning-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Reason through this with current data…" multiline nodeId={nodeId} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
     </>
@@ -89,7 +90,7 @@ function ReasoningPanel({ config, updateConfig, nodeId }) {
 function DeepResearchPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-deep-research" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-deep-research" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Topic" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="A thorough report on the EV battery supply chain…" multiline nodeId={nodeId} />
       <Dropdown label="Reasoning Effort" value={config.reasoningEffort} fallback="medium" onChange={(v) => updateConfig('reasoningEffort', v)} options={[{ value: 'low', label: 'Low — faster' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High — deepest' }]} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
@@ -100,7 +101,7 @@ function DeepResearchPanel({ config, updateConfig, nodeId }) {
 function FactCheckPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Claim to Verify" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="The Great Wall is visible from space." multiline nodeId={nodeId} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
     </>
@@ -110,7 +111,7 @@ function FactCheckPanel({ config, updateConfig, nodeId }) {
 function ComparePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Items to Compare" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Compare Postgres vs MongoDB for analytics workloads" multiline nodeId={nodeId} />
       <SearchControls config={config} updateConfig={updateConfig} nodeId={nodeId} />
     </>
@@ -120,7 +121,7 @@ function ComparePanel({ config, updateConfig, nodeId }) {
 function NewsDigestPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Topic" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="AI regulation in the EU" multiline nodeId={nodeId} />
       <Dropdown label="Recency" value={config.searchRecency} fallback="week" onChange={(v) => updateConfig('searchRecency', v)} options={RECENCY} />
       <Text label="Limit to Domains (optional)" value={config.searchDomains} onChange={(v) => updateConfig('searchDomains', v)} placeholder="reuters.com, apnews.com" nodeId={nodeId} />
@@ -131,7 +132,7 @@ function NewsDigestPanel({ config, updateConfig, nodeId }) {
 function ExtractPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Source Text" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}} or paste text to extract from…" multiline nodeId={nodeId} />
       <Text label="Fields to Extract" value={config.fields} onChange={(v) => updateConfig('fields', v)} placeholder="name, email, total amount" nodeId={nodeId} />
     </>
@@ -141,7 +142,7 @@ function ExtractPanel({ config, updateConfig, nodeId }) {
 function ClassifyPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Text to Classify" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.message}}" multiline nodeId={nodeId} />
       <Text label="Categories (comma-separated)" value={config.categories} onChange={(v) => updateConfig('categories', v)} placeholder="spam, support, sales, billing" nodeId={nodeId} />
     </>
@@ -151,7 +152,7 @@ function ClassifyPanel({ config, updateConfig, nodeId }) {
 function SummarizePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Text to Summarize" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.article}} or paste text…" multiline nodeId={nodeId} />
       <Dropdown label="Style" value={config.summaryStyle} fallback="paragraph" onChange={(v) => updateConfig('summaryStyle', v)} options={[{ value: 'paragraph', label: 'Short paragraph' }, { value: 'bullets', label: 'Bullet points' }, { value: 'tweet', label: 'One sentence' }, { value: 'eli5', label: "Explain like I'm 5" }]} />
     </>
@@ -161,7 +162,7 @@ function SummarizePanel({ config, updateConfig, nodeId }) {
 function TranslatePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Text to Translate" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="{{$node.text}}" multiline nodeId={nodeId} />
       <Text label="Target Language" value={config.targetLanguage} onChange={(v) => updateConfig('targetLanguage', v)} placeholder="Spanish, French, Japanese…" nodeId={nodeId} />
     </>
@@ -171,7 +172,7 @@ function TranslatePanel({ config, updateConfig, nodeId }) {
 function DocumentPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar-pro" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Question / Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What are the key risks in this filing?" multiline nodeId={nodeId} />
       <Text label="Document Text (optional — falls back to input)" value={config.documentText} onChange={(v) => updateConfig('documentText', v)} placeholder="{{$node.content}} or leave blank to use previous node" multiline nodeId={nodeId} />
       <Dropdown label="Output Format" value={config.outputFormat} fallback="text" onChange={(v) => updateConfig('outputFormat', v)} options={[{ value: 'text', label: 'Raw Text' }, { value: 'json', label: 'Structured JSON' }]} />
@@ -182,7 +183,7 @@ function DocumentPanel({ config, updateConfig, nodeId }) {
 function GeneratePromptPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} options={opt(MODELS)} />
+      <ModelSelect provider="perplexity" credentialId={config.credentialId} value={config.model} fallback="sonar" onChange={(v) => updateConfig('model', v)} models={MODELS} accentColor={MONO} />
       <Text label="Task Description" value={config.task} onChange={(v) => updateConfig('task', v)} placeholder="Classify support tickets by priority…" multiline nodeId={nodeId} />
     </>
   );
