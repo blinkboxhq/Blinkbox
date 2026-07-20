@@ -5,9 +5,9 @@ import {
   AddRow, ConfigDivider,
 } from '@/components/ui/ConfigKit';
 
+import { MIN_MERGE_INPUTS as MIN_INPUTS, MAX_MERGE_INPUTS as MAX_INPUTS } from '@/store/mergeHandles';
+
 const ACCENT = '#34d399';
-const MIN_INPUTS = 2;
-const MAX_INPUTS = 10;
 
 const MODE_OPS = [
   { value: 'combine', label: 'Combine',      desc: 'Shallow-merge all branch fields into one object' },

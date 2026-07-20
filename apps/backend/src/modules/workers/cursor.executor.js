@@ -28,6 +28,39 @@ const MAX_CURSORS_PER_EXECUTION = 500;
 // branch lands on its own port; all of them still count as data flow.
 const isDataFlowHandle = (h) => !h || h === "input" || h.startsWith("input-");
 
+// Merge input dots are "input" (slot 0) and "input-N" (slot N). Edges saved
+// before merge had per-branch dots carry no handle at all; those fill the
+// remaining slots in edge order so old workflows keep working.
+const mergeSlotOf = (handle) => {
+  if (!handle || handle === "input") return 0;
+  const n = Number(handle.slice("input-".length));
+  return Number.isInteger(n) && n >= 0 ? n : null;
+};
+
+function collectMergeBranches(dataFlowEdges, dynamicContext, config) {
+  const slots = [];
+  const unslotted = [];
+
+  for (const edge of dataFlowEdges) {
+    const sourceData = dynamicContext[edge.source];
+    const items = Array.isArray(sourceData) ? sourceData.map((d) => d.json) : [];
+    const value = items.length === 1 ? items[0] : items.length ? items : null;
+    const slot = edge.targetHandle ? mergeSlotOf(edge.targetHandle) : null;
+    if (slot == null || slots[slot] !== undefined) unslotted.push(value);
+    else slots[slot] = value;
+  }
+
+  for (const value of unslotted) {
+    let i = 0;
+    while (slots[i] !== undefined) i++;
+    slots[i] = value;
+  }
+
+  const declared = Array.isArray(config?.branches) ? config.branches.length : 0;
+  const length = Math.max(slots.length, declared);
+  return Array.from({ length }, (_, i) => (slots[i] === undefined ? null : slots[i]));
+}
+
 /**
  * Classify an error and generate a human-readable fix hint.
  */
@@ -361,8 +394,9 @@ export async function processCursor({ executionId, cursorId }) {
     // KERNEL EXECUTION: Run node with timeout guard (handler.timeoutMs overrides; 0 = unlimited, heartbeat keeps the cursor alive)
     const nodeTimeoutMs = handler.timeoutMs !== undefined ? handler.timeoutMs : NODE_TIMEOUT_MS;
 
-    // MERGE: needs every branch at once, not one item per run. Collapse all
-    // collected inputs into a single array argument and run the handler once.
+    // MERGE: needs every branch at once, not one item per run. Branches are
+    // keyed by the input dot the edge lands on — never by edge order, which
+    // would let stored edge ordering decide which branch is which.
     if (node.type === "merge") {
       let resolvedConfig;
       try {
@@ -370,7 +404,7 @@ export async function processCursor({ executionId, cursorId }) {
       } catch (configErr) {
         throw new Error(`Config resolution failed: ${configErr.message}. Check {{ expressions }} in this node's settings.`);
       }
-      const branches = inputItems.map((it) => it.json);
+      const branches = collectMergeBranches(dataFlowEdges, dynamicContext, resolvedConfig);
       const rawOutput = await withTimeout(
         handler.run(resolvedConfig, branches, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
         nodeTimeoutMs,

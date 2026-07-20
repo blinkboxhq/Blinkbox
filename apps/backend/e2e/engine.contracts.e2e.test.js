@@ -226,6 +226,40 @@ test("merge gate waits for all parallel branches and runs the merge node once", 
   assert.equal(out.input_2.fromB, "B");
 });
 
+test("merge keys each branch by its input dot, not by stored edge order", async () => {
+  const automation = await Automation.create({
+    name: "merge-slot-order",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "a1", type: "set_fields", data: { mode: "set", fields: [{ key: "who", value: "A" }] } },
+      { id: "b1", type: "set_fields", data: { mode: "set", fields: [{ key: "who", value: "B" }] } },
+      {
+        id: "m1",
+        type: "merge",
+        data: { mode: "combine", branches: [{ label: "Left" }, { label: "Right" }] },
+      },
+    ],
+    // b1 → slot 1 is stored FIRST; positional assembly would label it "left".
+    edges: [
+      { id: "e1", source: "t1", target: "a1" },
+      { id: "e2", source: "t1", target: "b1" },
+      { id: "e4", source: "b1", target: "m1", targetHandle: "input-1" },
+      { id: "e3", source: "a1", target: "m1", targetHandle: "input" },
+    ],
+  });
+  const execution = await startExecution(automation);
+  await drainQueue();
+
+  const merged = await ExecutionData.findOne({ executionId: execution._id, nodeId: "m1" });
+  const out = merged.output[0].json;
+  assert.equal(out.left.who, "A", "slot 0 must come from the edge on the 'input' dot");
+  assert.equal(out.right.who, "B", "slot 1 must come from the edge on the 'input-1' dot");
+  assert.equal(out.__mergedFrom, 2);
+});
+
 test("delay parks the downstream cursor as waiting, schedules resume, and the woken cursor completes the run", async () => {
   delayedJobs.length = 0;
   const automation = await Automation.create({

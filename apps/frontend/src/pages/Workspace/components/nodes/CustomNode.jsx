@@ -8,6 +8,7 @@ import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import { getTriggerEvent } from "../../triggerEvents";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 import { useShallow } from "zustand/react/shallow";
+import { mergeBranchLabels, mergeHandleId } from "../../../../store/mergeHandles";
 
 // Module-level hover registry — ReactFlow fires onNodeMouseEnter/Leave at the
 // wrapper level (more reliable than inner div events). Each mounted node
@@ -578,6 +579,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
   const hasOutputConnection  = edges.some(e => e.source === id && e.sourceHandle === "output");
+  const incomingHandles = new Set(edges.filter(e => e.target === id).map(e => e.targetHandle || "input"));
   const hasErrorConnection   = edges.some(e => e.source === id && e.sourceHandle === "onFailure");
   const hasTrueConnection    = edges.some(e => e.source === id && e.sourceHandle === "true");
   const hasFalseConnection   = edges.some(e => e.source === id && e.sourceHandle === "false");
@@ -854,7 +856,10 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
   const cardW = 80;
-  const cardH = 80;
+  // Merge exposes one input handle per branch; the card grows to keep the
+  // handles from crowding once there are more than two.
+  const mergeBranches = data.backendType === "merge" ? mergeBranchLabels(data.config) : [];
+  const cardH = mergeBranches.length > 2 ? 80 + (mergeBranches.length - 2) * 26 : 80;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -869,10 +874,30 @@ function CustomNodeImpl({ id, data, selected }) {
       {toolbar}
       {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
-      {/* Input handle — styled identically to OutputHandle's source dot. */}
-      <Handle type="target" position={Position.Left} id="input"
-        className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-        style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+      {/* Input handle(s) — styled identically to OutputHandle's source dot.
+          Merge renders one handle per branch, evenly spaced down the left edge;
+          each takes a single incoming edge (enforced in createGraphSlice). */}
+      {mergeBranches.length > 0 ? (
+        mergeBranches.map((label, i) => {
+          const top = cardH / 2 + (i - (mergeBranches.length - 1) / 2) * 24;
+          const taken = incomingHandles.has(mergeHandleId(i));
+          return (
+            <div key={i}>
+              <Handle type="target" position={Position.Left} id={mergeHandleId(i)}
+                className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: taken ? EDGE_COLOR : "transparent", border: `1.5px solid ${taken ? HANDLE_BORDER : "rgba(255,255,255,0.35)"}`, position: "absolute" }} />
+              <span className="absolute pointer-events-none select-none"
+                style={{ top, left: -12, transform: "translate(-100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
+                {label}
+              </span>
+            </div>
+          );
+        })
+      ) : (
+        <Handle type="target" position={Position.Left} id="input"
+          className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+          style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
+      )}
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={handleOpenConfig} className="bb-card relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
