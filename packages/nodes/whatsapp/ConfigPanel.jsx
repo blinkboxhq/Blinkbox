@@ -7,7 +7,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow, ConnectAppGuide,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -240,16 +240,6 @@ export default function WhatsAppNode({ config = {}, updateConfig, nodeId }) {
       {operation === 'markRead' &&
         text('Message ID', 'messageId', { placeholder: '{{trigger.data.message.id}}' })}
 
-      <ConnectAppGuide
-        title="Connect your WhatsApp Business app"
-        accentColor={ACCENT}
-        steps={[
-          <>Create a Business app at <span className="text-[#8fb0ff]">developers.facebook.com</span> and add the <span className="text-neutral-300">WhatsApp</span> product</>,
-          <>Note your <span className="text-neutral-300">Phone Number ID</span> under WhatsApp → API Setup</>,
-          <>Generate a permanent token — <span className="text-neutral-300">Business Settings → System Users</span></>,
-          <>Save it below as a credential — reuse it across every WhatsApp step</>,
-        ]}
-      />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

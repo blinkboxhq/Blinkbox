@@ -10,7 +10,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggle, ConfigToggleRow, ConnectAppGuide,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigToggle, ConfigToggleRow
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -326,16 +326,6 @@ export default function TelegramNode({ config = {}, updateConfig, nodeId }) {
       )}
       {operation === 'revokeInviteLink' && text('Invite Link', 'inviteLink', { placeholder: 'https://t.me/+...' })}
 
-      <ConnectAppGuide
-        title="Connect your own Telegram bot"
-        accentColor={ACCENT}
-        steps={[
-          <>Open Telegram and message <span className="text-[#8fb0ff]">@BotFather</span></>,
-          <>Send <span className="text-neutral-300">/newbot</span>, pick a name and username</>,
-          <>Copy the bot token it returns (<span className="text-neutral-300">123456:ABC-…</span>)</>,
-          <>Save it below as a credential — reuse it across every Telegram step</>,
-        ]}
-      />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

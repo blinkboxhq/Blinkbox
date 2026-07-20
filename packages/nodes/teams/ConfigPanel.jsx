@@ -6,7 +6,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner, ConnectAppGuide,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigPills, ConfigBanner
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -102,16 +102,6 @@ export default function TeamsNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      <ConnectAppGuide
-        title="Connect your Microsoft 365 account"
-        accentColor={ACCENT}
-        steps={[
-          <>Register an app at <span className="text-[#8fb0ff]">portal.azure.com</span> → App registrations</>,
-          <>Grant Microsoft Graph permissions (e.g. <span className="text-neutral-300">ChannelMessage.Send</span>, <span className="text-neutral-300">Team.ReadBasic.All</span>)</>,
-          <>Sign in and copy the access token for your account</>,
-          <>Save it below as a credential — reuse it across every Teams step</>,
-        ]}
-      />
       <CredentialPicker
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}

@@ -8,7 +8,7 @@ import {
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow, ConnectAppGuide,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, AddRow, RemovableRow
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -100,16 +100,6 @@ export default function DiscordNode({ config = {}, updateConfig, nodeId }) {
         </Field>
       ) : (
         <>
-          <ConnectAppGuide
-            title="Connect your own Discord bot"
-            accentColor={ACCENT}
-            steps={[
-              <>Create an app at <span className="text-[#8fb0ff]">discord.com/developers/applications</span></>,
-              <>Add a <span className="text-neutral-300">Bot</span> and copy its <span className="text-neutral-300">Bot Token</span></>,
-              <>Invite the bot to your server with the permissions it needs</>,
-              <>Save it below as a credential — reuse it across every Discord step</>,
-            ]}
-          />
           <Field label="Discord Bot Token Credential">
             <CredentialPicker
               value={config.credentialId || ''}

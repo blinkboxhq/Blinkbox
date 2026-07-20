@@ -9,7 +9,7 @@ import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import OAuthConnectButton from '@/components/ui/OAuthConnectButton';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
-  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigBanner, ConnectAppGuide,
+  ConfigSection, ConfigLabel, ConfigHeader, ConfigSelect, ConfigInput, ConfigBanner
 } from '@/components/ui/ConfigKit';
 
 const ACCENT = '#4d7cff';
@@ -160,16 +160,6 @@ export default function GmailNode({ config = {}, updateConfig, nodeId }) {
         value={config.credentialId || ''}
         onChange={(id) => updateConfig('credentialId', id)}
         icon={GmailIcon}
-      />
-      <ConnectAppGuide
-        title="Connect your own Google app"
-        accentColor={ACCENT}
-        steps={[
-          <>Easiest: hit <span className="text-neutral-300">Sign in with Google</span> above — the token is saved for you</>,
-          <>Own app: create OAuth credentials at <span className="text-[#8fb0ff]">console.cloud.google.com</span> and enable the Gmail API</>,
-          <>Authorize scopes like <span className="text-neutral-300">gmail.send</span> / <span className="text-neutral-300">gmail.modify</span>, copy the access token</>,
-          <>Save it below as a credential — reuse it across every Gmail step</>,
-        ]}
       />
       <p className="text-[10px] text-neutral-600 -mt-3 font-mono">Or use an existing credential:</p>
       <CredentialPicker
