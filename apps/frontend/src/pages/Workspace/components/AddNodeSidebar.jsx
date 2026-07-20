@@ -315,7 +315,7 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
           <img src={nodeDef.logoUrl} alt={nodeDef.label} className="w-[26px] h-[26px] object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
         ) : (
-          <Icon size={24} strokeWidth={1.7} className="text-neutral-300 group-hover:text-white transition-colors" />
+          <Icon size={24} strokeWidth={1.7} className={`${nodeDef.colorClass || "text-neutral-300"} opacity-80 group-hover:opacity-100 transition-opacity`} />
         )}
       </span>
       <div className="flex-1 min-w-0">
@@ -358,7 +358,7 @@ function ActionRow({ action, subject, onSelect }) {
           <img src={subject.logoUrl} alt={subject.label} className="w-[24px] h-[24px] object-contain"
             style={subject.imgFilter ? { filter: subject.imgFilter } : undefined} />
         ) : (
-          Icon && <Icon size={22} strokeWidth={1.7} className="text-neutral-300" />
+          Icon && <Icon size={22} strokeWidth={1.7} className={`${subject?.colorClass || "text-neutral-300"} opacity-80 group-hover:opacity-100 transition-opacity`} />
         )}
       </span>
       <div className="flex-1 min-w-0">

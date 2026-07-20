@@ -479,13 +479,6 @@ export const NODE_ACTIONS = {
   ],
 
   // ── Flow Control ─────────────────────────────────────────────────────────────
-  condition: [
-    { name: "IF / ELSE Branch", description: "Route workflow to true or false branch" },
-    { name: "Multiple Conditions (AND)", description: "Only go true if all conditions pass" },
-    { name: "Any Condition (OR)", description: "Go true if at least one condition passes" },
-    { name: "Value Comparison", description: "Compare a field against a static value" },
-    { name: "Regex Match", description: "Branch based on a regex pattern test" },
-  ],
   distributor: [
     { name: "Round Robin", description: "Distribute items evenly across all output branches" },
     { name: "Weighted Split", description: "Route a percentage of items to each branch" },
