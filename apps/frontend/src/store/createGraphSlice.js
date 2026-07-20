@@ -12,17 +12,6 @@ import {
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 80;
 
-// Merge names each input by the dot it arrives on, so a dot that already has an
-// edge can't take a second one — two sources on one dot would collapse into a
-// single output key.
-function handleAlreadyTaken(targetNode, edges, connection) {
-  if (targetNode?.data?.backendType !== "merge") return false;
-  const handle = connection.targetHandle || "input";
-  return edges.some(
-    (e) => e.target === connection.target && (e.targetHandle || "input") === handle,
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Graph Slice — owns nodes, edges, and all XYFlow mutation logic.
 // Isolated from execution and UI state so canvas re-renders are surgical.
@@ -109,9 +98,6 @@ export const createGraphSlice = (set, get) => ({
     );
     if (duplicate) return;
 
-    // RULE 2b: A merge input dot takes exactly one incoming edge
-    if (handleAlreadyTaken(targetNode, edges, connection)) return;
-
     // RULE 3: DFS cycle detection
     if (wouldCreateCycle(edges, connection.source, connection.target)) return;
 
@@ -182,7 +168,6 @@ export const createGraphSlice = (set, get) => ({
       (e) => e.source === connection.source && e.target === connection.target,
     );
     if (duplicate) return false;
-    if (handleAlreadyTaken(targetNode, edges, connection)) return false;
     return !wouldCreateCycle(edges, connection.source, connection.target);
   },
 

@@ -28,9 +28,9 @@ const MAX_CURSORS_PER_EXECUTION = 500;
 // branch lands on its own port; all of them still count as data flow.
 const isDataFlowHandle = (h) => !h || h === "input" || h.startsWith("input-");
 
-// Merge input dots are "input" (slot 0) and "input-N" (slot N). Edges saved
-// before merge had per-branch dots carry no handle at all; those fill the
-// remaining slots in edge order so old workflows keep working.
+// Merge has a single "input" dot, so branches normally fill in edge order. The
+// "input-N" ids come from workflows saved while merge briefly had per-branch
+// dots; honouring them keeps those wirings pointing at the same branch.
 const mergeSlotOf = (handle) => {
   if (!handle || handle === "input") return 0;
   const n = Number(handle.slice("input-".length));
@@ -394,9 +394,9 @@ export async function processCursor({ executionId, cursorId }) {
     // KERNEL EXECUTION: Run node with timeout guard (handler.timeoutMs overrides; 0 = unlimited, heartbeat keeps the cursor alive)
     const nodeTimeoutMs = handler.timeoutMs !== undefined ? handler.timeoutMs : NODE_TIMEOUT_MS;
 
-    // MERGE: needs every branch at once, not one item per run. Branches are
-    // keyed by the input dot the edge lands on — never by edge order, which
-    // would let stored edge ordering decide which branch is which.
+    // MERGE: needs every branch at once, not one item per run. One incoming
+    // edge is one branch — a parent emitting many items must not spread across
+    // slots and shift every branch after it.
     if (node.type === "merge") {
       let resolvedConfig;
       try {
