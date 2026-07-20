@@ -188,7 +188,6 @@ export default function Canvas() {
   const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
-  const clearAddNodeModal = useWorkspaceStore((s) => s.clearAddNodeModal);
   const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const storeNodesLen    = useWorkspaceStore((s) => s.nodes.length);
@@ -451,8 +450,6 @@ export default function Canvas() {
         data: { ...payload, config: payload.config || {} },
       });
       playNodeLand();
-      clearAddNodeModal();
-      setTriggerPickerOpen(false);
     };
 
     const onDragEnd = () => {
@@ -468,7 +465,7 @@ export default function Canvas() {
       window.removeEventListener("drop", onDrop);
       window.removeEventListener("dragend", onDragEnd);
     };
-  }, [ghostPosition, addNodeAndBroadcast, clearAddNodeModal, setTriggerPickerOpen]);
+  }, [ghostPosition, addNodeAndBroadcast]);
 
   const onNodeMouseEnter = useCallback((_, node) => setNodeHovered(node.id, true), []);
   const onNodeMouseLeave = useCallback((_, node) => setNodeHovered(node.id, false), []);
