@@ -218,9 +218,12 @@ test("merge gate waits for all parallel branches and runs the merge node once", 
 
   const merged = await ExecutionData.findOne({ executionId: execution._id, nodeId: "m1" });
   const out = merged.output[0].json;
-  assert.equal(out.fromA, "A");
-  assert.equal(out.fromB, "B");
+  assert.equal(out.merged.fromA, "A");
+  assert.equal(out.merged.fromB, "B");
   assert.equal(out.__mergedFrom, 2);
+  // Unlabelled branches stay individually addressable under their slot slug.
+  assert.equal(out.input_1.fromA, "A");
+  assert.equal(out.input_2.fromB, "B");
 });
 
 test("delay parks the downstream cursor as waiting, schedules resume, and the woken cursor completes the run", async () => {
