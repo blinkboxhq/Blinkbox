@@ -61,6 +61,7 @@ export default function FilterArrayNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader
         icon={Filter}
+        iconColor={ACCENT}
         title="Filter Array"
         subtitle="Keep only items matching a condition"
       />

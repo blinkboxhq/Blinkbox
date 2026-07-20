@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, X, ArrowLeft, ChevronRight, CheckCircle2, Plus, Layers } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
-import { NODE_ACTIONS } from "../nodeActions";
+import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES, nodeHasActions } from "../nodeActions";
 import { playNodeLand } from "../../../lib/sounds";
 
 const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
@@ -106,11 +106,12 @@ export default function AddNodeSidebar() {
     });
   };
 
-  const picksActionInPanel = (nodeDef) => ["ai_models", "apps"].includes(nodeDef.category ?? NodeRegistry[nodeDef.key]?.category);
+  const catOf = (nodeDef) => nodeDef.category ?? NodeRegistry[nodeDef.key]?.category;
+  const picksActionInPanel = (nodeDef) => ACTION_PICKER_CATEGORIES.includes(catOf(nodeDef));
+  const picksActionInSidebar = (nodeDef) => nodeHasActions(catOf(nodeDef), nodeDef.key) && !picksActionInPanel(nodeDef);
 
   const handleNodeClick = (nodeDef) => {
-    const actions = NODE_ACTIONS[nodeDef.key];
-    if (actions?.length > 0 && !picksActionInPanel(nodeDef)) { setPending(nodeDef); setSearch(""); return; }
+    if (picksActionInSidebar(nodeDef)) { setPending(nodeDef); setSearch(""); return; }
     if (selected.size > 0) { toggleSelect(nodeDef); return; }
     commitOne(nodeDef);
   };
@@ -229,14 +230,14 @@ export default function AddNodeSidebar() {
               visibleNodes.map((n, i) => (
                 <NodeRow key={n.key} nodeDef={n} focused={i === focusIdx}
                   onHover={() => setFocusIdx(i)} onSelect={() => handleNodeClick(n)}
-                  selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0 && !picksActionInPanel(n)} />
+                  selected={selected.has(n.key)} hasActions={picksActionInSidebar(n)} />
               ))
             )
           ) : catPage ? (
             visibleNodes.map((n, i) => (
               <NodeRow key={n.key} nodeDef={n} focused={i === focusIdx}
                 onHover={() => setFocusIdx(i)} onSelect={() => handleNodeClick(n)}
-                selected={selected.has(n.key)} hasActions={NODE_ACTIONS[n.key]?.length > 0 && !picksActionInPanel(n)} />
+                selected={selected.has(n.key)} hasActions={picksActionInSidebar(n)} />
             ))
           ) : (
             ACTION_CATEGORIES.map((c) => {

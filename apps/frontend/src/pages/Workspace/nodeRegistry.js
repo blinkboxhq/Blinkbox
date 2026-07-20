@@ -1834,27 +1834,30 @@ export const NodeRegistry = {
   filter_array: {
     label: "Filter Array",
     icon: Filter,
-    colorClass: "text-white",
+    colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: FilterArrayNode,
     category: "logic",
+    description: "Keep only the array items matching a condition",
   },
   sort_array: {
     label: "Sort Array",
     icon: ArrowUpDown,
-    colorClass: "text-white",
+    colorClass: "text-cyan-400",
     accentColor: "34,211,238",
     ConfigPanel: SortArrayNode,
     category: "logic",
+    description: "Reorder array items by a field value",
   },
   deduplicate: {
     label: "Deduplicate",
     icon: Layers,
     logoUrl: imgDeduplicate,
-    colorClass: "text-white",
-    accentColor: "139,92,246",
+    colorClass: "text-violet-400",
+    accentColor: "167,139,250",
     ConfigPanel: DeduplicateNode,
     category: "logic",
+    description: "Remove duplicate items from an array",
   },
   csv_parser: {
     label: "CSV Parser",
@@ -1920,6 +1923,7 @@ export const NodeRegistry = {
     accentColor: "251,146,60",
     ConfigPanel: DelayNode,
     category: "logic",
+    description: "Pause the workflow, then resume automatically",
   },
   loop: {
     label: "Loop",
@@ -1928,6 +1932,7 @@ export const NodeRegistry = {
     accentColor: "167,139,250",
     ConfigPanel: LoopNode,
     category: "logic",
+    description: "Run every downstream node once per array item",
   },
   merge: {
     label: "Merge",
@@ -1941,10 +1946,11 @@ export const NodeRegistry = {
   approval: {
     label: "Approval Gate",
     icon: CheckSquare,
-    colorClass: "text-white",
+    colorClass: "text-yellow-400",
     accentColor: "250,204,21",
     ConfigPanel: ApprovalNode,
     category: "logic",
+    description: "Pause until a human approves or rejects the run",
   },
 
   // Code
@@ -2194,6 +2200,7 @@ export const NodeRegistry = {
     accentColor: "45,212,191",
     ConfigPanel: AggregateNode,
     category: "logic",
+    description: "Collect items from a loop into a single array",
   },
   // ── Coding Agents ─────────────────────────────────────────────────────────
 
@@ -2707,7 +2714,7 @@ export const NodeRegistry = {
   success_failed: {
     label: "Success / Failed",
     icon: CheckCircle2,
-    colorClass: "text-white",
+    colorClass: "text-zinc-400",
     accentColor: "161,161,170",
     ConfigPanel: SuccessFailedNode,
     category: "logic",

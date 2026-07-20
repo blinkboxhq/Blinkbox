@@ -52,6 +52,7 @@ export default function SortArrayNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
       <ConfigHeader
         icon={ArrowUpDown}
+        iconColor={ACCENT}
         title="Sort Array"
         subtitle="Reorder items by a field value"
       />

@@ -8,7 +8,7 @@ import { schemaForNode } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
 import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEvents";
-import { NODE_ACTIONS } from "../nodeActions";
+import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES } from "../nodeActions";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
 import { ConfigToggleRow, ConfigSelect, ConfigHeader } from "../../../components/ui/ConfigKit";
@@ -349,7 +349,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
-  const actionList = !variant && ["ai_models", "apps"].includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
+  const actionList = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
   const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 

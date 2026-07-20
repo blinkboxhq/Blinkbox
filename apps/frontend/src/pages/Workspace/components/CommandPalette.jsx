@@ -3,13 +3,21 @@ import { Search, Zap, ArrowRight, Command, CornerDownLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import { NODE_ACTIONS } from "../nodeActions";
+import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES, nodeHasActions } from "../nodeActions";
 import { playPanelOpen, playNodeLand } from "../../../lib/sounds";
 
 const ALL_NODES = Object.entries(NodeRegistry)
   .filter(([, def]) => def.category !== "trigger" && !def.agentOnly)
   .map(([key, def]) => ({ key, ...def }))
   .filter((v, i, a) => a.findIndex((n) => n.key === v.key) === i);
+
+// Apps and AI models choose their action from the config panel dropdown, so the
+// palette drops them straight on the canvas instead of asking twice. Logic never
+// asks at all.
+const picksActionInPalette = (item) => {
+  const cat = item.category ?? NodeRegistry[item.key]?.category;
+  return nodeHasActions(cat, item.key) && !ACTION_PICKER_CATEGORIES.includes(cat);
+};
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
@@ -124,8 +132,7 @@ export default function CommandPalette() {
 
   const selectItem = (item) => {
     if (item.type === "node") {
-      const actions = NODE_ACTIONS[item.key];
-      if (actions?.length > 0) {
+      if (picksActionInPalette(item)) {
         setPending(item);
         setQuery("");
       } else {
@@ -227,7 +234,7 @@ export default function CommandPalette() {
                   <div className="p-2">
                     {items.map((item, i) => {
                       const Icon = item.icon;
-                      const hasActions = NODE_ACTIONS[item.key]?.length > 0;
+                      const hasActions = picksActionInPalette(item);
                       return (
                         <button
                           key={item.id}

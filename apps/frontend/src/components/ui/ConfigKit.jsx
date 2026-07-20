@@ -209,7 +209,7 @@ export function RemovableRow({ children, onRemove }) {
 }
 
 // ── Header block (icon/logo + title/subtitle + optional badge) ──────────────
-export function ConfigHeader({ icon: Icon, logoUrl, imgFilter, iconColor, title, subtitle, badge }) {
+export function ConfigHeader({ icon: Icon, logoUrl, imgFilter, iconColor, iconClass, title, subtitle, badge }) {
   return (
     <div className="bb-glow-border flex items-center gap-3 p-4 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
       {logoUrl ? (
@@ -217,8 +217,9 @@ export function ConfigHeader({ icon: Icon, logoUrl, imgFilter, iconColor, title,
           <img src={logoUrl} alt="" className="w-[26px] h-[26px] object-contain" style={imgFilter ? { filter: imgFilter } : undefined} />
         </div>
       ) : Icon && (
-        <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ color: iconColor || '#fff' }}>
-          <Icon className="w-[26px] h-[26px]" strokeWidth={1.75} />
+        <div className="w-9 h-9 flex items-center justify-center shrink-0"
+          style={iconClass ? undefined : { color: iconColor || '#fff' }}>
+          <Icon className={`w-[26px] h-[26px] ${iconClass || ''}`} strokeWidth={1.75} />
         </div>
       )}
       <div className="flex flex-col min-w-0">

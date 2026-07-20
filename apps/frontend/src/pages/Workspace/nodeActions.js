@@ -6,6 +6,17 @@ import {
   Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
 } from "lucide-react";
 
+// Categories whose nodes pick an action inside the config panel dropdown.
+// Anything else with a NODE_ACTIONS entry uses the sidebar's two-step picker.
+export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps"];
+
+// Categories where a node is one node, one job — never an action picker,
+// in the sidebar or the panel.
+export const NO_ACTION_CATEGORIES = ["logic"];
+
+export const nodeHasActions = (category, key) =>
+  !NO_ACTION_CATEGORIES.includes(category) && (NODE_ACTIONS[key]?.length ?? 0) > 0;
+
 export const NODE_ACTIONS = {
   // ── AI Models ───────────────────────────────────────────────────────────────
   openai: [
@@ -478,49 +489,8 @@ export const NODE_ACTIONS = {
     { name: "Get My IP", description: "Return the outbound IP of this workflow" },
   ],
 
-  // ── Flow Control ─────────────────────────────────────────────────────────────
-  distributor: [
-    { name: "Round Robin", description: "Distribute items evenly across all output branches" },
-    { name: "Weighted Split", description: "Route a percentage of items to each branch" },
-    { name: "First Match Wins", description: "Send to the first branch whose condition matches" },
-    { name: "Broadcast to All", description: "Send the same item to every output branch" },
-  ],
-  logic_router: [
-    { name: "Switch on Value", description: "Route to the matching case branch" },
-    { name: "Default Fallthrough", description: "Catch unmatched cases in the default branch" },
-    { name: "Range-based Routing", description: "Route based on numeric ranges" },
-  ],
-  approval: [
-    { name: "Wait for Human Approval", description: "Pause and send an approval request email" },
-    { name: "Require Comment", description: "Pause until a reviewer leaves a comment" },
-    { name: "Time-out Auto-approve", description: "Auto-approve if no response within N minutes" },
-    { name: "Multi-step Approval", description: "Route through a chain of approvers" },
-  ],
-  wait_for_event: [
-    { name: "Wait for Webhook", description: "Pause until a specific webhook fires" },
-    { name: "Wait for File", description: "Resume when a file appears in a folder" },
-    { name: "Wait for DB Change", description: "Resume when a database value changes" },
-  ],
-  retry: [
-    { name: "Retry on Failure", description: "Retry the previous node up to N times on error" },
-    { name: "Exponential Backoff", description: "Retry with increasing delay between attempts" },
-    { name: "Retry on Status Code", description: "Only retry on specific HTTP status codes" },
-  ],
-  stop_error: [
-    { name: "Stop with Error", description: "Throw a custom error and halt execution" },
-    { name: "Stop Silently", description: "Stop execution without raising an error" },
-    { name: "Stop with Warning", description: "Log a warning and stop the current branch" },
-  ],
-  rate_limiter: [
-    { name: "Throttle Requests", description: "Limit API calls to N per second or minute" },
-    { name: "Queue Overflow", description: "Queue excess requests instead of dropping them" },
-    { name: "Per-user Rate Limit", description: "Apply separate limits per user or tenant" },
-  ],
-  success_failed: [
-    { name: "Route on Success", description: "Continue only if the previous node succeeded" },
-    { name: "Route on Failure", description: "Continue only if the previous node failed" },
-    { name: "Route on Both", description: "Handle both success and failure paths" },
-  ],
+  // Logic & Flow nodes intentionally have no actions — one node does one thing,
+  // configured in its own panel. See ACTION_PICKER_CATEGORIES.
 
   // ── Code ─────────────────────────────────────────────────────────────────────
   code: [

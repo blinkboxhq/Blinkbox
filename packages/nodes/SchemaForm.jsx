@@ -1,6 +1,7 @@
 import { Settings } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
+import { ConfigHeader } from '@/components/ui/ConfigKit';
 
 // ── visibility ───────────────────────────────────────────────────────────────
 function isVisible(field, config) {
@@ -243,25 +244,24 @@ function Field({ field, config, updateConfig, nodeId }) {
 //   meta        — node meta.js default export (must have .label, .fields[])
 //   icon        — Lucide component (optional, falls back to Settings)
 //   colorClass  — Tailwind text color e.g. "text-blue-400"
+//   logoUrl     — brand asset; when set it replaces the Lucide icon
 //   config      — current config object from store
 //   updateConfig— (key, value) => void
 //   nodeId      — passed through to SmartVariableInput
-export default function SchemaForm({ meta, icon: Icon, colorClass, config = {}, updateConfig, nodeId }) {
+export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId }) {
   const Ic = Icon ?? Settings;
   const clr = colorClass ?? 'text-blue-400';
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      {/* Header */}
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
-          <Ic className={`w-4 h-4 ${clr}`} />
-        </div>
-        <div>
-          <div className="text-[13px] font-bold text-zinc-100">{meta.label}</div>
-          {meta.description && <div className="text-[11px] text-zinc-500">{meta.description}</div>}
-        </div>
-      </div>
+      <ConfigHeader
+        icon={Ic}
+        iconClass={clr}
+        logoUrl={logoUrl}
+        imgFilter={imgFilter}
+        title={meta.label}
+        subtitle={meta.description}
+      />
 
       {/* Fields */}
       {(meta.fields ?? []).map((field, i) => (
