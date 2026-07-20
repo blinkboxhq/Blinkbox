@@ -90,7 +90,6 @@ import successFailed   from "./successFailed.node.js";
 import stopError       from "./stopError.node.js";
 import retry           from "./retry.node.js";
 import rateLimiter     from "./rateLimiter.node.js";
-import waitForEvent    from "./waitForEvent.node.js";
 import approval        from "./approval.node.js";
 import subWorkflow     from "./subWorkflow.node.js";
 
@@ -316,7 +315,6 @@ const rawNodeRegistry = {
   stop_error:     stopError,
   retry:          retry,
   rate_limiter:   rateLimiter,
-  wait_for_event: waitForEvent,
   approval:       approval,
   sub_workflow:   subWorkflow,
 

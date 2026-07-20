@@ -196,10 +196,3 @@ test("approval parks the run instead of falling through", async () => {
   assert.equal(out.orderId, "A1", "input survives the gate");
 });
 
-test("wait_for_event sleeps until its timeout", async () => {
-  const waitForEvent = await load("waitForEvent");
-  const out = await waitForEvent.run({ timeoutMs: 60_000 }, { ref: "x" });
-  assert.equal(out.__delay, true);
-  assert.ok(Date.parse(out.resumeAfter) > Date.now());
-  assert.equal(out.ref, "x", "input survives the wait");
-});

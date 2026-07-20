@@ -390,7 +390,6 @@ import ConditionNode from "@nodes/condition/ConfigPanel.jsx";
 import RetryNode from "@nodes/retry/ConfigPanel.jsx";
 import StopErrorNode from "@nodes/stop_error/ConfigPanel.jsx";
 import RateLimiterNode from "@nodes/rate_limiter/ConfigPanel.jsx";
-import WaitForEventNode from "@nodes/wait_for_event/ConfigPanel.jsx";
 import SuccessFailedNode from "@nodes/success_failed/ConfigPanel.jsx";
 
 // Config Panels — Database nodes
@@ -2719,15 +2718,6 @@ export const NodeRegistry = {
     ConfigPanel: SuccessFailedNode,
     category: "logic",
     description: "Explicitly mark this branch as succeeded or failed",
-  },
-  wait_for_event: {
-    label: "Wait for Event",
-    icon: Clock,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    ConfigPanel: WaitForEventNode,
-    category: "logic",
-    description: "Pause workflow until a webhook or condition is met",
   },
   retry: {
     label: "Retry",
