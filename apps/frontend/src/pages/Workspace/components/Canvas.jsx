@@ -188,6 +188,7 @@ export default function Canvas() {
   const setAddNodeSource = useWorkspaceStore((s) => s.setAddNodeSource);
   const isAddNodeOpen = useWorkspaceStore((s) => s.isAddNodeOpen);
   const setAddNodeOpen = useWorkspaceStore((s) => s.setAddNodeOpen);
+  const clearAddNodeModal = useWorkspaceStore((s) => s.clearAddNodeModal);
   const isTriggerPickerOpen = useWorkspaceStore((s) => s.isTriggerPickerOpen);
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
   const storeNodesLen    = useWorkspaceStore((s) => s.nodes.length);
@@ -404,66 +405,70 @@ export default function Canvas() {
     [screenToFlowPosition],
   );
 
-  const onDragOver = useCallback(
-    (event) => {
+  // The pickers render a full-viewport backdrop above the canvas, so drag events
+  // never reach the wrapper while one is open — that swallowed both the ghost and
+  // the drop. Claim them at the window instead and hit-test the canvas rect.
+  useEffect(() => {
+    const overCanvas = (event) => {
+      const rect = reactFlowWrapper.current?.getBoundingClientRect();
+      if (!rect) return false;
+      return (
+        event.clientX >= rect.left && event.clientX <= rect.right &&
+        event.clientY >= rect.top && event.clientY <= rect.bottom
+      );
+    };
+
+    const onDragOver = (event) => {
+      const payload = getDragPayload();
+      if (!payload) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
 
-      const payload = getDragPayload();
-      if (!payload) return;
-
+      if (!overCanvas(event)) {
+        setDropGhost(null);
+        return;
+      }
       const { x, y } = ghostPosition(event.clientX, event.clientY, payload);
       setDropGhost((prev) =>
         prev && prev.x === x && prev.y === y && prev.payload === payload
           ? prev
           : { payload, x, y },
       );
-    },
-    [ghostPosition],
-  );
+    };
 
-  const onDragLeave = useCallback((event) => {
-    if (event.currentTarget.contains(event.relatedTarget)) return;
-    setDropGhost(null);
-  }, []);
-
-  // A drag released outside the canvas never fires dragleave on the wrapper,
-  // which would strand the ghost on screen.
-  useEffect(() => {
-    const clear = () => {
+    const onDrop = (event) => {
+      const payload = getDragPayload();
       setDropGhost(null);
       clearDragPayload();
-    };
-    window.addEventListener("dragend", clear);
-    window.addEventListener("drop", clear);
-    return () => {
-      window.removeEventListener("dragend", clear);
-      window.removeEventListener("drop", clear);
-    };
-  }, []);
-
-  const onDrop = useCallback(
-    (event) => {
+      if (!payload || !overCanvas(event)) return;
       event.preventDefault();
-      setDropGhost(null);
-      clearDragPayload();
 
-      const nodeDataString = event.dataTransfer.getData("application/json");
-      if (!nodeDataString) return;
-
-      const nodeData = JSON.parse(nodeDataString);
-      const position = ghostPosition(event.clientX, event.clientY, nodeData);
-
+      const position = ghostPosition(event.clientX, event.clientY, payload);
       addNodeAndBroadcast({
-        id: `${nodeData.backendType}-${crypto.randomUUID()}`,
+        id: `${payload.backendType}-${crypto.randomUUID()}`,
         type: "custom",
         position,
-        data: { ...nodeData, config: nodeData.config || {} },
+        data: { ...payload, config: payload.config || {} },
       });
       playNodeLand();
-    },
-    [ghostPosition, addNode],
-  );
+      clearAddNodeModal();
+      setTriggerPickerOpen(false);
+    };
+
+    const onDragEnd = () => {
+      setDropGhost(null);
+      clearDragPayload();
+    };
+
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("drop", onDrop);
+    window.addEventListener("dragend", onDragEnd);
+    return () => {
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("drop", onDrop);
+      window.removeEventListener("dragend", onDragEnd);
+    };
+  }, [ghostPosition, addNodeAndBroadcast, clearAddNodeModal, setTriggerPickerOpen]);
 
   const onNodeMouseEnter = useCallback((_, node) => setNodeHovered(node.id, true), []);
   const onNodeMouseLeave = useCallback((_, node) => setNodeHovered(node.id, false), []);
@@ -472,9 +477,6 @@ export default function Canvas() {
     <div
       className="flex-1 h-full min-w-0 relative bg-transparent"
       ref={reactFlowWrapper}
-      onDrop={onDrop}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
     >
       <ReactFlow
         nodes={nodes}
