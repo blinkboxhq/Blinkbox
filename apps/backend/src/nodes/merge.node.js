@@ -9,18 +9,27 @@
  *                  "deep"    recursively merges nested objects.
  *                  "array"   collects each branch as an element under `key`.
  *                  "first"   keeps only the first non-empty branch.
- *   key          — output key for the collected array in "array" mode (default "merged").
  *   conflict     — for combine/deep on key collisions: "last" (default) | "first".
  *   branches     — per-input rows [{ label, value }]. A branch's `value` (already
  *                  {{ }}-resolved by the executor) overrides the live wired input
  *                  for that slot; empty value falls back to the live input. Lets a
  *                  merge contribute typed/dropped values even for unwired handles.
  *
- * Every mode returns a consistent envelope so downstream nodes always have a
- * concrete, predictable output:
- *   { ...merged, __mergedFrom: <branchCount> }   (combine / deep / first)
- *   { [key]: [...], __mergedFrom: <branchCount> } (array)
+ * Output is the same envelope in every mode: each input stays addressable under
+ * its own (slugified) branch label, alongside the combined result.
+ *   { <branchSlug>: <branchValue>, …, merged: <result>, __mergedFrom: <count> }
  */
+
+// Branch labels are free text but become output keys, so they have to survive
+// `{{ node.key }}` addressing. Falls back to the slot's position.
+export function slugifyLabel(label, index) {
+  const slug = String(label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return slug || `input_${index + 1}`;
+}
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -80,46 +89,48 @@ function deepMerge(target, source, conflict) {
   return out;
 }
 
+function combineBranches(labeled, mode, conflict) {
+  switch (mode) {
+    case "array":
+      return labeled.map((b) => b.value);
+
+    case "first": {
+      const nonEmpty = labeled
+        .map((b) => b.value)
+        .filter((v) => v != null && (!isPlainObject(v) || Object.keys(v).length > 0));
+      return nonEmpty[0] ?? null;
+    }
+
+    case "deep":
+      return labeled.reduce((acc, b) => deepMerge(acc, asMergeObject(b), conflict), {});
+
+    case "combine":
+    default: {
+      const ordered = conflict === "first" ? [...labeled].reverse() : labeled;
+      return ordered.reduce((acc, b) => ({ ...acc, ...asMergeObject(b) }), {});
+    }
+  }
+}
+
 export default {
+  slugifyLabel,
+
   async run(config = {}, input) {
-    const { mode = "combine", key = "merged", conflict = "last" } = config;
+    const { mode = "combine", conflict = "last" } = config;
 
     const liveInputs = Array.isArray(input) ? input : [input];
     const labeled = applyBranchValues(liveInputs, config.branches);
-    const values = labeled.map((b) => b.value);
-    const nonEmpty = values.filter((b) => b != null && (!isPlainObject(b) || Object.keys(b).length > 0));
-    const branchCount = nonEmpty.length;
+    const branchCount = labeled.filter(
+      (b) => b.value != null && (!isPlainObject(b.value) || Object.keys(b.value).length > 0),
+    ).length;
 
-    switch (mode) {
-      case "array": {
-        const outKey = String(key || "merged").trim() || "merged";
-        return { [outKey]: values, __mergedFrom: branchCount };
-      }
+    const named = {};
+    labeled.forEach((b, i) => {
+      named[slugifyLabel(b.label, i)] = b.value ?? null;
+    });
 
-      case "first": {
-        const first = nonEmpty[0] || {};
-        return isPlainObject(first)
-          ? { ...first, __mergedFrom: branchCount }
-          : { value: first, __mergedFrom: branchCount };
-      }
-
-      case "deep": {
-        const merged = labeled.reduce(
-          (acc, b) => deepMerge(acc, asMergeObject(b), conflict),
-          {},
-        );
-        return { ...merged, __mergedFrom: branchCount };
-      }
-
-      case "combine":
-      default: {
-        const ordered = conflict === "first" ? [...labeled].reverse() : labeled;
-        const merged = ordered.reduce(
-          (acc, b) => ({ ...acc, ...asMergeObject(b) }),
-          {},
-        );
-        return { ...merged, __mergedFrom: branchCount };
-      }
-    }
+    // `merged` and `__mergedFrom` are written last so a branch labelled "merged"
+    // can never shadow the combined result.
+    return { ...named, merged: combineBranches(labeled, mode, conflict), __mergedFrom: branchCount };
   },
 };

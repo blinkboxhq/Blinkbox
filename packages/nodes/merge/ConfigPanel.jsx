@@ -16,6 +16,14 @@ const MODE_OPS = [
   { value: 'first',   label: 'First wins',   desc: 'Keep only the first non-empty branch' },
 ];
 
+// Branch labels become output keys — must match slugifyLabel in
+// apps/backend/src/nodes/merge.node.js.
+function slugifyLabel(label, index) {
+  const slug = String(label || '').trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return slug || `input_${index + 1}`;
+}
+
 const CONFLICT_OPS = [
   { value: 'last',  label: 'Last branch wins' },
   { value: 'first', label: 'First branch wins' },
@@ -37,8 +45,6 @@ function Field({ label, optional, hint, children }) {
 
 // Merge branches aren't "one var of a node" — each parallel input is its own
 // value. So we render a labeled value field per branch, not a flat var list.
-// `config.branches` is the source of truth; `config.inputs` mirrors its length
-// so the canvas draws the matching number of input handles.
 function normalizeBranches(config) {
   const raw = Array.isArray(config.branches) ? config.branches : null;
   let branches = raw
@@ -60,10 +66,7 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
   const showConflict = mode === 'combine' || mode === 'deep';
   const branches = normalizeBranches(config);
 
-  const commit = (next) => {
-    updateConfig('branches', next);
-    updateConfig('inputs', next.length);
-  };
+  const commit = (next) => updateConfig('branches', next);
 
   const setBranch = (idx, key, val) =>
     commit(branches.map((b, i) => (i === idx ? { ...b, [key]: val } : b)));
@@ -89,7 +92,7 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
 
       <Field
         label="Input Branches"
-        hint="One row per parallel branch. Each adds an input handle on the canvas; drop a variable or type the value this branch should contribute."
+        hint="One row per branch feeding this merge. Name it to control the output key; drop a variable or type the value this branch should contribute."
       >
         <div className="flex flex-col gap-2.5">
           {branches.map((branch, idx) => (
@@ -104,7 +107,7 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
                   style={{ color: ACCENT }}
                 />
                 <span className="text-[9px] font-mono text-neutral-700 shrink-0">
-                  {idx === 0 ? 'input' : `input-${idx}`}
+                  {slugifyLabel(branch.label, idx)}
                 </span>
                 <button
                   type="button"
@@ -141,20 +144,6 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
         accentColor={ACCENT}
       />
 
-      {mode === 'array' && (
-        <Field
-          label="Array Key"
-          hint="Name of the array field the collected branches are placed under."
-        >
-          <SmartVariableInput
-            value={config.key || ''}
-            onChange={(val) => updateConfig('key', val)}
-            placeholder="merged"
-            nodeId={nodeId}
-          />
-        </Field>
-      )}
-
       {showConflict && (
         <ConfigPills
           label="On key conflict"
@@ -166,8 +155,9 @@ export default function MergeNode({ config = {}, updateConfig, nodeId }) {
       )}
 
       <ConfigBanner>
-        Returns the merged data plus{' '}
-        <span className="text-neutral-300">__mergedFrom</span> — the number of branches combined.
+        Outputs every input under its own key —{' '}
+        <span className="text-neutral-300">{branches.map((b, i) => slugifyLabel(b.label, i)).join(', ')}</span>
+        {' '}— plus <span className="text-neutral-300">merged</span> with the combined result.
       </ConfigBanner>
     </ConfigSection>
   );

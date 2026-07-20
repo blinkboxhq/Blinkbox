@@ -91,7 +91,7 @@ export const DEFAULT_SCHEMAS = {
   code: { result: "object" },
   delay: { delayed: "boolean", resumeAfter: "string" },
   loop: { __loopIndex: "number", __loopTotal: "number", _dynamic: true },
-  merge: { __mergedFrom: "number", _dynamic: true },
+  merge: { merged: "object", __mergedFrom: "number" },
   // AI Hub
   openai: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
   anthropic: { result: "string", text: "string", model: "string", tokensUsed: "number", stopReason: "string", provider: "string", operation: "string" },
@@ -287,13 +287,37 @@ function getNodeSchema(node, nodeOutputSchemas) {
   // Prefer stored schema (from test execution)
   if (nodeOutputSchemas[node.id]) return nodeOutputSchemas[node.id];
 
-  // Fall back to default schema for known types
-  const backendType = node.data?.backendType;
-  if (backendType && DEFAULT_SCHEMAS[backendType]) {
-    return DEFAULT_SCHEMAS[backendType];
+  return schemaForNode(node.data?.backendType, node.data?.config);
+}
+
+// Branch labels become output keys — must match slugifyLabel in
+// apps/backend/src/nodes/merge.node.js.
+function slugifyLabel(label, index) {
+  const slug = String(label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return slug || `input_${index + 1}`;
+}
+
+/**
+ * Default schema for a node, refined by its config where the config determines
+ * the output shape (merge names one output field per input branch).
+ */
+export function schemaForNode(backendType, config) {
+  if (!backendType) return null;
+
+  if (backendType === "merge") {
+    const branches = Array.isArray(config?.branches) ? config.branches : [];
+    const named = {};
+    branches.forEach((b, i) => {
+      named[slugifyLabel(b?.label, i)] = "object";
+    });
+    return { ...named, ...DEFAULT_SCHEMAS.merge };
   }
 
-  return null;
+  return DEFAULT_SCHEMAS[backendType] || null;
 }
 
 /**

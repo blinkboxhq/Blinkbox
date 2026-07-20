@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
-import { DEFAULT_SCHEMAS } from "../../../store/schemaEngine";
+import { schemaForNode } from "../../../store/schemaEngine";
 import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
 import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEvents";
@@ -212,7 +212,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     const hasLiveData = !!(live && typeof live === "object");
     const shape = hasLiveData
       ? live
-      : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
+      : schemaToShape(nodeOutputSchemas[n.id] ?? schemaForNode(n.data.backendType, n.data.config));
     return { hasLiveData, rows: childEntries(shape) };
   };
 

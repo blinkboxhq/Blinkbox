@@ -854,12 +854,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── STANDARD ACTION NODE ─────────────────────────────────────────────────
   const cardW = 80;
-  // Merge exposes one input handle per branch; the card grows to keep the
-  // handles from crowding once there are more than two.
-  const mergeInputs = data.backendType === "merge"
-    ? Math.max(2, Math.min(10, Number(data.config?.inputs) || 2))
-    : 0;
-  const cardH = mergeInputs > 2 ? 80 + (mergeInputs - 2) * 26 : 80;
+  const cardH = 80;
 
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -874,30 +869,10 @@ function CustomNodeImpl({ id, data, selected }) {
       {toolbar}
       {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
-      {/* Input handle(s) — styled identically to OutputHandle's source dot.
-          Merge renders one handle per branch, evenly spaced down the left edge. */}
-      {mergeInputs > 0 ? (
-        Array.from({ length: mergeInputs }, (_, i) => {
-          const gap = 24;
-          const top = cardH / 2 + (i - (mergeInputs - 1) / 2) * gap;
-          return (
-            <div key={i}>
-              <Handle type="target" position={Position.Left}
-                id={i === 0 ? "input" : `input-${i}`}
-                className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
-              <span className="absolute pointer-events-none select-none"
-                style={{ top, left: -12, transform: "translate(-100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
-                Input {i + 1}
-              </span>
-            </div>
-          );
-        })
-      ) : (
-        <Handle type="target" position={Position.Left} id="input"
-          className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-          style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
-      )}
+      {/* Input handle — styled identically to OutputHandle's source dot. */}
+      <Handle type="target" position={Position.Left} id="input"
+        className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+        style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
 
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={handleOpenConfig} className="bb-card relative flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
@@ -924,17 +899,9 @@ function CustomNodeImpl({ id, data, selected }) {
       ) : (data.backendType === "success_failed" || splitOutputs) ? (
         <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
-        <>
-          <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
-          {mergeInputs > 0 && (
-            <span className="absolute pointer-events-none select-none"
-              style={{ top: cardH / 2, right: -12, transform: "translate(100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
-              Output
-            </span>
-          )}
-        </>
+        <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       )}
-      {outputCount != null && mergeInputs === 0 && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
+      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
         <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
           <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
             {outputCount} item{outputCount !== 1 ? 's' : ''}
