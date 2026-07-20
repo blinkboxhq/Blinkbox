@@ -579,7 +579,6 @@ function CustomNodeImpl({ id, data, selected }) {
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
   const hasOutputConnection  = edges.some(e => e.source === id && e.sourceHandle === "output");
-  const incomingHandles = new Set(edges.filter(e => e.target === id).map(e => e.targetHandle || "input"));
   const hasErrorConnection   = edges.some(e => e.source === id && e.sourceHandle === "onFailure");
   const hasTrueConnection    = edges.some(e => e.source === id && e.sourceHandle === "true");
   const hasFalseConnection   = edges.some(e => e.source === id && e.sourceHandle === "false");
@@ -880,12 +879,11 @@ function CustomNodeImpl({ id, data, selected }) {
       {mergeBranches.length > 0 ? (
         mergeBranches.map((label, i) => {
           const top = cardH / 2 + (i - (mergeBranches.length - 1) / 2) * 24;
-          const taken = incomingHandles.has(mergeHandleId(i));
           return (
             <div key={i}>
               <Handle type="target" position={Position.Left} id={mergeHandleId(i)}
                 className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: taken ? EDGE_COLOR : "#18181b", border: `1.5px solid ${taken ? HANDLE_BORDER : "rgba(255,255,255,0.55)"}`, position: "absolute" }} />
+                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
               <span className="absolute pointer-events-none select-none"
                 style={{ top, left: -12, transform: "translate(-100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
                 {label}
