@@ -14,12 +14,75 @@ import {
   useReactFlow,
   MarkerType,
   getBezierPath,
+  ViewportPortal,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import { NodeRegistry } from "../nodeRegistry";
+import { TRIGGER_VARIANTS } from "../triggerVariants";
+import { getDragPayload, clearDragPayload } from "../dragPayload";
 import CustomNode, { setNodeHovered, setConnecting } from "./nodes/CustomNode";
 import ConfigurableEdge from "./ConfigurableEdge";
 import { getSocket } from "../../../lib/socket";
+
+const GRID = 20;
+const snap = (v) => Math.round(v / GRID) * GRID;
+
+// Mirrors the card geometry in CustomNode so the ghost occupies exactly the
+// footprint the real node will take.
+function ghostShape(payload) {
+  if (payload.backendType === "ai_agent") return { w: 212, h: 80, radius: "7px" };
+  if (payload.type === "trigger") return { w: 80, h: 80, radius: "33px 7px 7px 33px" };
+  return { w: 80, h: 80, radius: "7px" };
+}
+
+function DropGhost({ payload, x, y }) {
+  const nodeDef = NodeRegistry[payload.backendType] || NodeRegistry.manual;
+  const variantDef = payload.config?.triggerVariant
+    ? TRIGGER_VARIANTS[payload.config.triggerVariant]
+    : null;
+  const def = variantDef || nodeDef;
+  const Icon = def.icon;
+  const accent = def.accentColor || nodeDef.accentColor || "161,161,170";
+  const { w, h, radius } = ghostShape(payload);
+
+  return (
+    <div className="absolute pointer-events-none select-none" style={{ left: x, top: y, width: w }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.12, ease: "easeOut" }}
+        className="flex items-center justify-center"
+        style={{
+          width: w,
+          height: h,
+          borderRadius: radius,
+          background: `rgba(${accent},0.07)`,
+          border: `1.5px dashed rgba(${accent},0.55)`,
+          boxShadow: `0 0 0 6px rgba(${accent},0.05), 0 18px 40px -12px rgba(0,0,0,0.75)`,
+          backdropFilter: "blur(3px)",
+        }}
+      >
+        {def.logoUrl ? (
+          <img
+            src={def.logoUrl}
+            alt=""
+            className="w-7 h-7 object-contain opacity-50"
+            style={def.imgFilter ? { filter: def.imgFilter } : undefined}
+          />
+        ) : Icon ? (
+          <Icon className={`w-7 h-7 opacity-50 ${nodeDef.colorClass || "text-white"}`} strokeWidth={1.5} />
+        ) : null}
+      </motion.div>
+      <div
+        className="mt-1.5 text-center text-[11px] font-semibold truncate"
+        style={{ color: `rgba(${accent},0.75)` }}
+      >
+        {payload.label}
+      </div>
+    </div>
+  );
+}
 
 function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
@@ -253,6 +316,7 @@ export default function Canvas() {
 
   // Multi-select
   const [ctxMenu, setCtxMenu] = useState(null); // { x, y, nodeId, nodeLabel }
+  const [dropGhost, setDropGhost] = useState(null); // { payload, x, y } in flow coords
   const connectStart = useRef(null); // { nodeId, handleId } captured on drag-from-handle
 
   // Fullscreen
@@ -329,23 +393,66 @@ export default function Canvas() {
     });
   }, [edges, nodeStatuses, isExecutionLive]);
 
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
+  // The cursor holds the node by its centre, so the ghost and the eventual
+  // drop share one origin — what you see is exactly where it lands.
+  const ghostPosition = useCallback(
+    (clientX, clientY, payload) => {
+      const { w, h } = ghostShape(payload);
+      const p = screenToFlowPosition({ x: clientX, y: clientY });
+      return { x: snap(p.x - w / 2), y: snap(p.y - h / 2) };
+    },
+    [screenToFlowPosition],
+  );
+
+  const onDragOver = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+
+      const payload = getDragPayload();
+      if (!payload) return;
+
+      const { x, y } = ghostPosition(event.clientX, event.clientY, payload);
+      setDropGhost((prev) =>
+        prev && prev.x === x && prev.y === y && prev.payload === payload
+          ? prev
+          : { payload, x, y },
+      );
+    },
+    [ghostPosition],
+  );
+
+  const onDragLeave = useCallback((event) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    setDropGhost(null);
+  }, []);
+
+  // A drag released outside the canvas never fires dragleave on the wrapper,
+  // which would strand the ghost on screen.
+  useEffect(() => {
+    const clear = () => {
+      setDropGhost(null);
+      clearDragPayload();
+    };
+    window.addEventListener("dragend", clear);
+    window.addEventListener("drop", clear);
+    return () => {
+      window.removeEventListener("dragend", clear);
+      window.removeEventListener("drop", clear);
+    };
   }, []);
 
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
+      setDropGhost(null);
+      clearDragPayload();
+
       const nodeDataString = event.dataTransfer.getData("application/json");
       if (!nodeDataString) return;
 
       const nodeData = JSON.parse(nodeDataString);
-
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
+      const position = ghostPosition(event.clientX, event.clientY, nodeData);
 
       addNodeAndBroadcast({
         id: `${nodeData.backendType}-${crypto.randomUUID()}`,
@@ -355,7 +462,7 @@ export default function Canvas() {
       });
       playNodeLand();
     },
-    [screenToFlowPosition, addNode],
+    [ghostPosition, addNode],
   );
 
   const onNodeMouseEnter = useCallback((_, node) => setNodeHovered(node.id, true), []);
@@ -367,6 +474,7 @@ export default function Canvas() {
       ref={reactFlowWrapper}
       onDrop={onDrop}
       onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
     >
       <ReactFlow
         nodes={nodes}
@@ -421,6 +529,18 @@ export default function Canvas() {
         zoomOnPinch
         zoomOnScroll
       >
+        <ViewportPortal>
+          <AnimatePresence>
+            {dropGhost && (
+              <DropGhost
+                key="drop-ghost"
+                payload={dropGhost.payload}
+                x={dropGhost.x}
+                y={dropGhost.y}
+              />
+            )}
+          </AnimatePresence>
+        </ViewportPortal>
         <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="#2a2a30" />
         <MiniMap
           nodeColor={(node) => {

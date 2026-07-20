@@ -4,6 +4,7 @@ import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES, nodeHasActions } from "../nodeActions";
 import { playNodeLand } from "../../../lib/sounds";
+import { setDragPayload, clearDragPayload } from "../dragPayload";
 
 const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
 
@@ -293,18 +294,21 @@ function NodeRow({ nodeDef, focused, onHover, onSelect, selected, hasActions }) 
   const Icon = nodeDef.icon;
   const onDragStart = (e) => {
     e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("application/json", JSON.stringify({
+    const payload = {
       backendType: nodeDef.key,
       label: nodeDef.label,
       type: "action",
       config: {},
-    }));
+    };
+    e.dataTransfer.setData("application/json", JSON.stringify(payload));
+    setDragPayload(payload);
   };
   return (
     <button
       ref={rowRef}
       draggable
       onDragStart={onDragStart}
+      onDragEnd={clearDragPayload}
       onClick={onSelect}
       onMouseEnter={onHover}
       className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group cursor-grab active:cursor-grabbing ${
@@ -340,17 +344,20 @@ function ActionRow({ action, subject, onSelect }) {
   const Icon = subject?.icon;
   const onDragStart = (e) => {
     e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("application/json", JSON.stringify({
+    const payload = {
       backendType: subject.key,
       label: action.name,
       type: "action",
       config: { selectedAction: action.name },
-    }));
+    };
+    e.dataTransfer.setData("application/json", JSON.stringify(payload));
+    setDragPayload(payload);
   };
   return (
     <button
       draggable
       onDragStart={onDragStart}
+      onDragEnd={clearDragPayload}
       onClick={onSelect}
       className="bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3 transition-colors text-left group cursor-grab active:cursor-grabbing"
     >

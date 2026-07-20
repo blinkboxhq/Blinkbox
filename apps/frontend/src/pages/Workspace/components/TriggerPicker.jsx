@@ -3,6 +3,7 @@ import { Search, X, ArrowLeft, ChevronRight, Zap, AppWindow, Server } from "luci
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { playNodeLand } from "../../../lib/sounds";
+import { setDragPayload, clearDragPayload } from "../dragPayload";
 
 const CORE_KEYS = ["manual", "cron", "webhook", "chat", "error"];
 
@@ -224,18 +225,21 @@ function TriggerRow({ trigger, focused, onHover, onSelect }) {
   const Icon = trigger.icon;
   const onDragStart = (e) => {
     e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("application/json", JSON.stringify({
+    const payload = {
       backendType: trigger.backendType,
       label: trigger.label,
       type: "trigger",
       config: { triggerVariant: trigger.id },
-    }));
+    };
+    e.dataTransfer.setData("application/json", JSON.stringify(payload));
+    setDragPayload(payload);
   };
   return (
     <button
       ref={rowRef}
       draggable
       onDragStart={onDragStart}
+      onDragEnd={clearDragPayload}
       onClick={onSelect}
       onMouseEnter={onHover}
       className={`bb-nav-item rounded-xl flex items-center gap-3.5 w-full px-3.5 py-3.5 transition-colors text-left group cursor-grab active:cursor-grabbing ${

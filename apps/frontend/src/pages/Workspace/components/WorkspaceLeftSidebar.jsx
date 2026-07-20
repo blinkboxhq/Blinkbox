@@ -6,6 +6,7 @@ import { Zap, ChevronRight } from "lucide-react";
 import logo from "../../../assets/logo.svg";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { useReactFlow } from "@xyflow/react";
+import { setDragPayload, clearDragPayload } from "../dragPayload";
 
 const DraggableSidebarItem = ({ nodeKey, node }) => {
   const { open, animate } = useSidebar();
@@ -14,9 +15,15 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
   const { getViewport } = useReactFlow();
 
   const handleDragStart = (event) => {
-    const payload = { backendType: nodeKey, ...node };
+    const payload = {
+      backendType: nodeKey,
+      label: node.label,
+      type: node.category === 'trigger' ? 'trigger' : 'action',
+      config: {},
+    };
     event.dataTransfer.setData('application/json', JSON.stringify(payload));
     event.dataTransfer.effectAllowed = 'copy';
+    setDragPayload(payload);
   };
 
   const handleDoubleClick = () => {
@@ -36,6 +43,7 @@ const DraggableSidebarItem = ({ nodeKey, node }) => {
     <div
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={clearDragPayload}
       onDoubleClick={handleDoubleClick}
       title={`${node.label} — double-click or drag to add`}
       className="flex items-center justify-start gap-3 py-2 px-2 group/sidebar rounded-lg hover:bg-zinc-800/40 cursor-grab active:cursor-grabbing transition-colors w-full overflow-hidden"
