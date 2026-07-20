@@ -9,7 +9,6 @@ import conditionNode from "../src/nodes/condition.node.js";
 import loopNode from "../src/nodes/loop.node.js";
 import mergeNode from "../src/nodes/merge.node.js";
 import delayNode from "../src/nodes/delay.node.js";
-import successFailedNode from "../src/nodes/successFailed.node.js";
 
 // Stands in for aggregate.node.js, which reaches for Redis at import time —
 // a static import of it would bind the real client before mock.module runs.
@@ -55,7 +54,6 @@ mock.module("../src/nodes/index.js", {
       delay: delayNode,
       aggregate: holdingNode,
       rate_limiter: droppingNode,
-      success_failed: successFailedNode,
       flaky: flakyNode,
     },
   },
@@ -82,7 +80,6 @@ mock.module("../src/infra/credit.engine.js", {
   namedExports: { checkCredits: async () => ({ allowed: true }), deductCredits: noop },
 });
 mock.module("../src/nodes/agentTools.registry.js", { defaultExport: { resolve: () => null } });
-mock.module("../src/infra/error.trigger.js", { namedExports: { dispatchErrorTriggers: noop } });
 
 const { processCursor } = await import("../src/modules/workers/cursor.executor.js");
 const { default: Execution } = await import("../src/models/execution.model.js");
@@ -467,34 +464,3 @@ test("a delay carries the upstream payload across the sleep", async () => {
   assert.equal(woke.output[0].json.echoed, "A1", "{{ $json.* }} still resolves after the sleep");
 });
 
-test("a deliberate branch failure routes to the failed edge without burning retries", async () => {
-  delayedJobs.length = 0;
-  const automation = await Automation.create({
-    name: "branch-failure",
-    trigger: "manual",
-    workspaceId: "ws-contracts",
-    entryNodeId: "t1",
-    nodes: [
-      { id: "t1", type: "manual", data: {} },
-      { id: "sf1", type: "success_failed", data: { outcome: "failed", message: "payment declined" } },
-      { id: "ok1", type: "set_fields", data: { mode: "set", fields: [{ key: "branch", value: "success" }] } },
-      { id: "no1", type: "set_fields", data: { mode: "set", fields: [{ key: "branch", value: "failed" }] } },
-    ],
-    edges: [
-      { id: "e1", source: "t1", target: "sf1" },
-      { id: "e2", source: "sf1", target: "ok1", sourceHandle: "success" },
-      { id: "e3", source: "sf1", target: "no1", sourceHandle: "failed" },
-    ],
-  });
-  const execution = await startExecution(automation);
-  await drainQueue();
-
-  // A decided outcome is not a transient error — re-running it cannot change
-  // the answer, so nothing may land in the retry scheduler.
-  assert.equal(delayedJobs.length, 0, "a decided failure must not schedule a retry");
-
-  const fresh = await Execution.findById(execution._id);
-  const spawned = fresh.cursors.filter((c) => c.nodeId === "no1" || c.nodeId === "ok1");
-  assert.equal(spawned.length, 1, "only the failed branch spawns");
-  assert.equal(spawned[0].nodeId, "no1");
-});

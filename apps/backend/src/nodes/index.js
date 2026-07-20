@@ -69,7 +69,6 @@ import sshTrigger             from "../triggers/ssh.js";
 import dockerTrigger          from "../triggers/docker.js";
 import dbTrigger              from "../triggers/db.js";
 import imapTrigger            from "../triggers/imap.js";
-import errorTriggerNode       from "../triggers/error_trigger.js";
 import githubIssueTrigger     from "../triggers/github_issue.js";
 
 // Core nodes
@@ -86,11 +85,9 @@ import respondWebhook  from "./respond_webhook.node.js";
 
 // Flow control
 import condition       from "./condition.node.js";
-import successFailed   from "./successFailed.node.js";
-import stopError       from "./stopError.node.js";
 import retry           from "./retry.node.js";
 import rateLimiter     from "./rateLimiter.node.js";
-import approval        from "./approval.node.js";
+import waitForEvent    from "./waitForEvent.node.js";
 import subWorkflow     from "./subWorkflow.node.js";
 
 // Data processing
@@ -234,7 +231,6 @@ const rawNodeRegistry = {
   form_trigger:             formTrigger,
   cron_trigger:             cronTrigger,
   cron:                     cronTrigger,
-  error_trigger:            errorTriggerNode,
   rss_trigger:              rssTrigger,
   imap_trigger:             imapTrigger,
   db_trigger:               dbTrigger,
@@ -311,11 +307,9 @@ const rawNodeRegistry = {
 
   // ── Flow control ──────────────────────────────────────────────────────────
   condition:      condition,
-  success_failed: successFailed,
-  stop_error:     stopError,
   retry:          retry,
   rate_limiter:   rateLimiter,
-  approval:       approval,
+  wait_for_event: waitForEvent,
   sub_workflow:   subWorkflow,
 
   // ── Data processing ───────────────────────────────────────────────────────

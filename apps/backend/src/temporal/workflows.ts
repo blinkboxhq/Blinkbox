@@ -31,19 +31,19 @@ import { evaluateConditionV2 } from "./condition.inline.js";
 // The parent workflow dispatches it via executeChild("executeAiAgentWorkflow", ...).
 export { executeAiAgentWorkflow } from "./aiAgentWorkflow.js";
 
-// ── Approval Signal ─────────────────────────────────────────────────────────────
-// External systems (email links, Slack buttons, API calls) fire this signal
-// to wake a sleeping approval node. The payload identifies which node to
-// unblock and whether the human approved or rejected.
+// ── Webhook Event Signal ────────────────────────────────────────────────────────
+// A wait_for_event node parks until its public webhook URL is called. The
+// signal carries the request that woke it.
 
-export interface ApprovalSignalPayload {
+export interface WebhookEventPayload {
   nodeId: string;
-  status: "approved" | "rejected";
-  reviewerEmail?: string;
-  comment?: string;
+  body?: unknown;
+  headers?: Record<string, string>;
+  query?: Record<string, string>;
 }
 
-export const approvalSignal = defineSignal<[ApprovalSignalPayload]>("approvalSignal");
+export const webhookEventSignal =
+  defineSignal<[WebhookEventPayload]>("webhookEventSignal");
 
 // ── Activity Proxies ────────────────────────────────────────────────────────────
 
@@ -88,14 +88,6 @@ const vault = proxyActivities<
   retry: { maximumAttempts: 2, initialInterval: "500ms" },
 });
 
-// Approval notification: send email/Slack with approve/reject links
-const notify = proxyActivities<
-  Pick<typeof activities, "sendApprovalNotificationActivity">
->({
-  startToCloseTimeout: "30s",
-  retry: { maximumAttempts: 3, initialInterval: "1s", backoffCoefficient: 2 },
-});
-
 // Sub-Workflow: load the target automation definition from MongoDB
 const subWf = proxyActivities<
   Pick<typeof activities, "loadSubWorkflowDefinitionActivity">
@@ -108,14 +100,13 @@ const subWf = proxyActivities<
 
 const TRIGGER_TYPES = new Set([
   "manual", "webhook", "cron_trigger",
-  "imap_trigger", "rss_trigger", "db_trigger", "error_trigger",
+  "imap_trigger", "rss_trigger", "db_trigger",
   "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
   "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
   "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
   "typeform_trigger",
 ]);
 const MAX_ITERATIONS = 500;
-const DEFAULT_APPROVAL_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ── Per-Node Activity Proxy ─────────────────────────────────────────────────────
 
@@ -203,11 +194,11 @@ export async function executeAutomationWorkflow(
   // Seed the entry node with trigger data
   nodeOutputs[definition.entryNodeId] = triggerData;
 
-  // ── Approval Signal State ──────────────────────────────────────────────
-  const approvalDecisions: Record<string, ApprovalSignalPayload> = {};
+  // ── Webhook Event State ────────────────────────────────────────────────
+  const webhookEvents: Record<string, WebhookEventPayload> = {};
 
-  setHandler(approvalSignal, (payload: ApprovalSignalPayload) => {
-    approvalDecisions[payload.nodeId] = payload;
+  setHandler(webhookEventSignal, (payload: WebhookEventPayload) => {
+    webhookEvents[payload.nodeId] = payload;
   });
 
   // ── Telemetry: execution started ────────────────────────────────────────
@@ -300,66 +291,29 @@ export async function executeAutomationWorkflow(
           variables: input,
         });
         output = codeResult.result;
-      } else if (node.type === "approval") {
-        await notify.sendApprovalNotificationActivity({
-          workflowId: automationId,
-          nodeId,
-          nodeLabel: (node.data["label"] as string) ?? "Approval Required",
-          notifyChannels: (node.data["notifyChannels"] as string[]) ?? ["email"],
-          notifyTo: (node.data["notifyTo"] as string) ?? "",
-          smtpCredentialId: (node.data["smtpCredentialId"] as string) ?? "",
-          slackCredentialId: (node.data["slackCredentialId"] as string) ?? "",
-          slackChannel: (node.data["slackChannel"] as string) ?? "",
-          contextSummary: JSON.stringify(input).slice(0, 2000),
-          workspaceId: definition.workspaceId ?? "",
-        });
-
+      } else if (node.type === "wait_for_event") {
         await emitTelemetry({
           action: "node_step",
           workflowId: automationId,
           automationId,
           nodeId,
-          nodeType: "approval",
+          nodeType: "wait_for_event",
           status: "waiting",
           durationMs: 0,
           input,
         });
 
-        const timeoutMs =
-          (node.data["timeoutMs"] as number) ?? DEFAULT_APPROVAL_TIMEOUT_MS;
+        // No timeout by design — the branch parks until the webhook fires.
+        await condition(() => webhookEvents[nodeId] !== undefined);
 
-        const signalReceived = await condition(
-          () => approvalDecisions[nodeId] !== undefined,
-          timeoutMs,
-        );
-
-        if (!signalReceived) {
-          output = {
-            approved: false,
-            status: "timeout",
-            nodeId,
-            message: `Approval timed out after ${Math.round(timeoutMs / 3600000)}h with no response.`,
-          };
-          failed = true;
-          errorMsg = (output as { message: string }).message;
-        } else {
-          const decision = approvalDecisions[nodeId];
-          const isApproved = decision.status === "approved";
-
-          output = {
-            approved: isApproved,
-            status: decision.status,
-            reviewerEmail: decision.reviewerEmail ?? null,
-            comment: decision.comment ?? null,
-            nodeId,
-            decidedAt: Date.now(),
-          };
-
-          if (!isApproved) {
-            failed = true;
-            errorMsg = `Approval rejected${decision.comment ? `: ${decision.comment}` : ""}`;
-          }
-        }
+        const event = webhookEvents[nodeId];
+        output = {
+          ...(input as Record<string, unknown>),
+          body: event.body ?? {},
+          headers: event.headers ?? {},
+          query: event.query ?? {},
+          receivedAt: new Date().toISOString(),
+        };
       } else if (node.type === "sub_workflow") {
         const targetAutomationId = (node.data["targetAutomationId"] as string) ?? "";
         if (!targetAutomationId) {

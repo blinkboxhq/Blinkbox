@@ -1,7 +1,16 @@
 import { Settings } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
-import { ConfigHeader } from '@/components/ui/ConfigKit';
+import {
+  ConfigSection,
+  ConfigHeader,
+  ConfigLabel,
+  ConfigInput,
+  ConfigPills,
+  ConfigToggleRow,
+  ConfigBanner,
+  BB_ACCENT,
+} from '@/components/ui/ConfigKit';
 
 // ── visibility ───────────────────────────────────────────────────────────────
 function isVisible(field, config) {
@@ -19,41 +28,46 @@ function isVisible(field, config) {
   return true;
 }
 
-// ── shared styles ────────────────────────────────────────────────────────────
-const LBL = 'text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block';
-const INP = 'w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-zinc-500';
-
 // ── field components ─────────────────────────────────────────────────────────
 
 function StringField({ field, value, onChange, nodeId }) {
+  if (field.smart === false) {
+    return (
+      <ConfigInput
+        label={field.label}
+        value={value ?? ''}
+        onChange={onChange}
+        placeholder={field.placeholder ?? ''}
+        hint={field.hint}
+      />
+    );
+  }
+
   return (
-    <div>
-      <label className={LBL}>
+    <div className="flex flex-col">
+      <ConfigLabel>
         {field.label}
         {field.required && <span className="text-red-400 ml-0.5">*</span>}
-      </label>
-      {field.smart !== false ? (
-        <SmartVariableInput
-          value={value ?? ''}
-          onChange={onChange}
-          placeholder={field.placeholder ?? ''}
-          nodeId={nodeId}
-          multiline={!!field.multiline}
-        />
-      ) : (
-        <input
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={field.placeholder ?? ''}
-          className={INP + (field.mono ? ' font-mono' : '')}
-        />
+      </ConfigLabel>
+      <SmartVariableInput
+        value={value ?? ''}
+        onChange={onChange}
+        placeholder={field.placeholder ?? ''}
+        nodeId={nodeId}
+        multiline={!!field.multiline}
+      />
+      {field.hint && (
+        <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>
       )}
-      {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
       {field.examples && (
         <div className="flex flex-col gap-1 mt-1.5">
           {field.examples.map((ex) => (
-            <button key={ex} onClick={() => onChange(ex)}
-              className="text-left px-2 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[11px] text-zinc-500 hover:text-zinc-300 font-mono transition-all">
+            <button
+              key={ex}
+              type="button"
+              onClick={() => onChange(ex)}
+              className="bb-glow-border text-left px-2.5 py-1.5 rounded-md bg-[#0f0f0f] border border-[#2b2b2b] hover:border-[#3b3b3b] text-[11px] text-neutral-500 hover:text-neutral-300 font-mono transition-colors"
+            >
               {ex}
             </button>
           ))}
@@ -65,103 +79,51 @@ function StringField({ field, value, onChange, nodeId }) {
 
 function NumberField({ field, value, onChange }) {
   return (
-    <div>
-      <label className={LBL}>{field.label}</label>
-      <input
-        type="number"
-        min={field.min}
-        max={field.max}
-        step={field.step ?? 1}
-        value={value ?? field.default ?? 0}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className={INP}
-      />
-      {field.hint && <p className="text-[10px] text-zinc-600 mt-1">{field.hint}</p>}
-    </div>
+    <ConfigInput
+      label={field.label}
+      type="number"
+      value={value ?? field.default ?? 0}
+      onChange={(v) => onChange(Number(v))}
+      hint={field.hint}
+    />
   );
 }
 
 function BooleanField({ field, value, onChange }) {
-  const on = value ?? field.default ?? false;
   return (
-    <div className="flex items-center justify-between py-0.5">
-      <div>
-        <span className="text-[13px] font-semibold text-zinc-100">{field.label}</span>
-        {field.hint && <p className="text-[10px] text-zinc-500 mt-0.5">{field.hint}</p>}
-      </div>
-      <button
-        onClick={() => onChange(!on)}
-        className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${on ? 'bg-blue-500' : 'bg-zinc-700'}`}
-      >
-        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-150 ${on ? 'left-5' : 'left-0.5'}`} />
-      </button>
-    </div>
+    <ConfigToggleRow
+      label={field.label}
+      desc={field.hint}
+      on={value ?? field.default ?? false}
+      onChange={onChange}
+      accentColor={BB_ACCENT}
+    />
   );
 }
 
 function OptionsField({ field, value, onChange }) {
   const opts = field.options ?? [];
   const selected = value ?? field.default ?? (typeof opts[0] === 'string' ? opts[0] : opts[0]?.value);
-  const cols = field.cols ?? Math.min(opts.length, 4);
-
   return (
-    <div>
-      <label className={LBL}>{field.label}</label>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-        {opts.map((opt) => {
-          const val = typeof opt === 'string' ? opt : opt.value;
-          const lbl = typeof opt === 'string' ? opt : opt.label;
-          const active = selected === val;
-          return (
-            <button
-              key={val}
-              onClick={() => onChange(val)}
-              className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                active
-                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-400'
-              }`}
-            >
-              {lbl}
-            </button>
-          );
-        })}
-      </div>
-      {field.hint && <p className="text-[10px] text-zinc-600 mt-1.5">{field.hint}</p>}
+    <div className="flex flex-col">
+      <ConfigPills label={field.label} value={selected} onChange={onChange} options={opts} />
+      {field.hint && (
+        <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>
+      )}
     </div>
   );
 }
 
 function MultiOptionsField({ field, value, onChange }) {
   const selected = value ?? field.default ?? [];
-  const toggle = (v) => {
-    const next = selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v];
-    onChange(next);
-  };
+  const toggle = (v) =>
+    onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
   return (
-    <div>
-      <label className={LBL}>{field.label}</label>
-      <div className="flex flex-wrap gap-1.5">
-        {(field.options ?? []).map((opt) => {
-          const val = typeof opt === 'string' ? opt : opt.value;
-          const lbl = typeof opt === 'string' ? opt : opt.label;
-          const active = selected.includes(val);
-          return (
-            <button
-              key={val}
-              onClick={() => toggle(val)}
-              className={`py-1 px-2.5 rounded-full text-[11px] font-semibold border transition-all ${
-                active
-                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-              }`}
-            >
-              {lbl}
-            </button>
-          );
-        })}
-      </div>
-      {field.hint && <p className="text-[10px] text-zinc-600 mt-1.5">{field.hint}</p>}
+    <div className="flex flex-col">
+      <ConfigPills label={field.label} onChange={toggle} options={field.options ?? []} multi={selected} />
+      {field.hint && (
+        <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>
+      )}
     </div>
   );
 }
@@ -180,29 +142,23 @@ function CredentialField({ field, value, onChange }) {
 
 function ColorField({ field, value, onChange }) {
   return (
-    <div>
-      <label className={LBL}>{field.label}</label>
+    <div className="flex flex-col">
+      <ConfigLabel>{field.label}</ConfigLabel>
       <input
         type="color"
         value={value ?? field.default ?? '#000000'}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full h-9 rounded-lg border border-zinc-700 bg-zinc-900 cursor-pointer"
+        className="w-full h-9 rounded-md border border-[#3b3b3b] bg-[#0f0f0f] cursor-pointer"
       />
     </div>
   );
 }
 
 function NoticeField({ field }) {
-  const styles = {
-    info:    'bg-zinc-900 border-zinc-800 text-zinc-500',
-    warning: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-    error:   'bg-red-500/10 border-red-500/20 text-red-400',
-    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-  };
   return (
-    <div className={`px-3 py-2 rounded-lg border text-[11px] ${styles[field.variant ?? 'info']}`}>
+    <ConfigBanner tone={field.variant === 'info' || !field.variant ? 'info' : 'warn'}>
       {field.text}
-    </div>
+    </ConfigBanner>
   );
 }
 
@@ -249,31 +205,26 @@ function Field({ field, config, updateConfig, nodeId }) {
 //   updateConfig— (key, value) => void
 //   nodeId      — passed through to SmartVariableInput
 export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId }) {
-  const Ic = Icon ?? Settings;
-  const clr = colorClass ?? 'text-blue-400';
-
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <ConfigSection>
       <ConfigHeader
-        icon={Ic}
-        iconClass={clr}
+        icon={Icon ?? Settings}
+        iconClass={colorClass ?? 'text-blue-400'}
         logoUrl={logoUrl}
         imgFilter={imgFilter}
         title={meta.label}
         subtitle={meta.description}
       />
 
-      {/* Fields */}
       {(meta.fields ?? []).map((field, i) => (
         <Field key={field.name ?? i} field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />
       ))}
 
-      {/* Outputs footer */}
       {meta.outputs && (
-        <div className="px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-500">
-          Returns: <span className="text-zinc-300">{meta.outputs.join(', ')}</span>
-        </div>
+        <ConfigBanner>
+          Returns: <span className="text-neutral-300">{meta.outputs.join(', ')}</span>
+        </ConfigBanner>
       )}
-    </div>
+    </ConfigSection>
   );
 }

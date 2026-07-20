@@ -181,11 +181,6 @@ export const NODE_KB = {
       { k: "operation", t: "select", r: false, ex: "INSERT", d: "INSERT|UPDATE|DELETE|ALL" },
     ],
   },
-  error_trigger: {
-    label: "Error Handler",
-    out: ["errorMessage", "nodeName", "executionId"],
-    fields: [],
-  },
   reddit_trigger: {
     label: "Reddit Trigger",
     out: ["title", "selftext", "author", "url", "subreddit", "score"],
@@ -291,16 +286,10 @@ export const NODE_KB = {
       { k: "until", t: "string", r: false, ex: "2026-07-12T09:00:00Z", d: "ISO datetime (mode=until)" },
     ],
   },
-  approval: {
-    label: "Approval Gate",
-    out: ["approved", "approvedBy", "comment"],
-    fields: [
-      { k: "label", t: "string", r: true, ex: "Approve new vendor payment", d: "What the approver sees" },
-      { k: "notifyTo", t: "string", r: true, ex: "manager@company.com", d: "Email of approver" },
-      { k: "notifyChannels", t: "array", r: false, ex: ["email"], d: "email|slack" },
-      { k: "timeoutValue", t: "number", r: false, ex: 72, d: "Auto-expire after this duration" },
-      { k: "timeoutUnit", t: "select", r: false, ex: "hours", d: "hours|days" },
-    ],
+  wait_for_event: {
+    label: "Wait for Webhook",
+    out: ["body", "headers", "query", "receivedAt"],
+    fields: [],
   },
   sub_workflow: {
     label: "Sub-Workflow",

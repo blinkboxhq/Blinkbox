@@ -5,7 +5,6 @@ import RedisMock from "ioredis-mock";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import manualTrigger from "../src/triggers/manual.js";
 import dataMapper from "../src/nodes/dataMapper.node.js";
-import successFailed from "../src/nodes/successFailed.node.js";
 
 process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
@@ -18,7 +17,6 @@ mock.module("../src/nodes/index.js", {
     nodeRegistry: {
       manual: manualTrigger,
       set_fields: dataMapper,
-      success_failed: successFailed,
     },
   },
 });
@@ -38,7 +36,6 @@ mock.module("../src/infra/credit.engine.js", {
   namedExports: { checkCredits: async () => ({ allowed: true }), deductCredits: noop },
 });
 mock.module("../src/nodes/agentTools.registry.js", { defaultExport: { resolve: () => null } });
-mock.module("../src/infra/error.trigger.js", { namedExports: { dispatchErrorTriggers: noop } });
 
 const { processCursor } = await import("../src/modules/workers/cursor.executor.js");
 const { default: Execution } = await import("../src/models/execution.model.js");
@@ -55,7 +52,7 @@ after(async () => {
   await mongod.stop();
 });
 
-test("3-node workflow runs end to end: manual → set_fields → success_failed", async () => {
+test("3-node workflow runs end to end: manual → set_fields → set_fields", async () => {
   const automation = await Automation.create({
     name: "e2e-smoke",
     trigger: "manual",
@@ -74,7 +71,17 @@ test("3-node workflow runs end to end: manual → set_fields → success_failed"
           ],
         },
       },
-      { id: "f1", type: "success_failed", data: { outcome: "success", message: "all good" } },
+      {
+        id: "f1",
+        type: "set_fields",
+        data: {
+          mode: "set",
+          fields: [
+            { key: "outcome", value: "success" },
+            { key: "message", value: "all good" },
+          ],
+        },
+      },
     ],
     edges: [
       { id: "e1", source: "t1", target: "s1" },

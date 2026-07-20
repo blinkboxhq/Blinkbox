@@ -27,7 +27,7 @@ import WorkspaceUsage from "../models/workspaceUsage.model.js";
 const NODE_COSTS = {
   // ── Triggers (0 — passive pass-through) ───────────────────────────────────
   manual: 0, webhook: 0, cron_trigger: 0, cron: 0,
-  chat_trigger: 0, form_trigger: 0, error_trigger: 0,
+  chat_trigger: 0, form_trigger: 0,
   rss_trigger: 0, imap_trigger: 0, db_trigger: 0,
   github_trigger: 0, stripe_trigger: 0,
   telegram_trigger: 0, slack_trigger: 0, discord_trigger: 0,
@@ -52,10 +52,10 @@ const NODE_COSTS = {
   virustotal_trigger: 0,
 
   // ── Pure data ops (1 — no external calls) ─────────────────────────────────
-  data_mapper: 1, logic_router: 1, condition: 1, success_failed: 1,
-  switch: 1, stop_error: 1, retry: 1, rate_limiter: 1,
+  data_mapper: 1, logic_router: 1, condition: 1,
+  switch: 1, retry: 1, rate_limiter: 1,
   delay: 1, merge: 1, loop: 1, code: 1, respond_webhook: 1,
-  sub_workflow: 1, approval: 1,
+  sub_workflow: 1, wait_for_event: 1,
   filter_array: 1, sort_array: 1, deduplicate: 1,
   csv_parser: 1, date_time: 1, crypto_utils: 1,
   text_splitter: 1, template_renderer: 1, json_validator: 1,

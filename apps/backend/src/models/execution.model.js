@@ -25,6 +25,10 @@ const CursorSchema = new mongoose.Schema(
     lockedAt: { type: Date, default: null },
     lockedBy: { type: String, default: null },
     parentCursorId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    // Parked by a wait_for_event node. Has no resumeAt and must never be
+    // swept up by the resumer's stale-waiting recovery — only its webhook
+    // releases it, however long that takes.
+    waitingForWebhook: { type: Boolean, default: false },
     // Set by loop fan-out: the specific item this cursor should process
     _loopItemOverride: { type: mongoose.Schema.Types.Mixed, default: null },
   },

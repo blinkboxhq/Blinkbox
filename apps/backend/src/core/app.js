@@ -25,8 +25,8 @@ import { verifyToken } from "../modules/auth/auth.middleware.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
+import { handleWaitWebhook } from "../modules/automation/waitWebhook.controller.js";
 import { handleSlackEvents } from "../modules/automation/slackEvents.controller.js";
-import { handleApprovalSignal } from "../modules/automation/signal.controller.js";
 import { redis } from "../infra/redis.client.js";
 import { MCP_HOST } from "../config/env.js";
 import { readFileSync } from "node:fs";
@@ -237,10 +237,9 @@ app.post("/webhook/pubsub/google", handleGooglePubSub);
 app.post("/webhook/:automationId", parseMultipartFields, handlePublicWebhook);
 app.get("/webhook/:automationId", handlePublicWebhook);
 
-// ── Public approval signal endpoint (no auth — the workflowId is the capability token)
-// GET for one-click email links, POST for API/Slack interactive payloads
-app.get("/api/automations/signal/:workflowId", handleApprovalSignal);
-app.post("/api/automations/signal/:workflowId", handleApprovalSignal);
+// ── Wait-for-event release endpoint (no auth — automationId + nodeId are the token)
+app.post("/webhook/wait/:automationId/:nodeId", parseMultipartFields, handleWaitWebhook);
+app.get("/webhook/wait/:automationId/:nodeId", handleWaitWebhook);
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);

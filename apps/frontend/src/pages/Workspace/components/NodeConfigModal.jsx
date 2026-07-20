@@ -350,7 +350,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
   const actionList = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
-  const NO_SPLIT = ["condition", "success_failed", "loop", "merge"];
+  const NO_SPLIT = ["condition", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 
   const currentName = config.customLabel || selectedAction || def?.label || node?.data.label || "";

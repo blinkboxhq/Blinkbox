@@ -36,7 +36,6 @@ import {
   Server,
   SplitSquareHorizontal,
   AlignLeft,
-  CheckCircle2,
   GitFork,
   Image,
   Package,
@@ -52,7 +51,6 @@ import {
   Edit2,
   // Flow control
   CheckCheck,
-  XCircle,
   RotateCcw,
   Timer,
   // New icons
@@ -227,7 +225,6 @@ import imgSakana from "@/assets/logos/sakana.svg";
 import imgMCP from "../../assets/mcp.svg";
 import imgWebhookTrigger from "@triggers/webhook/logo.png";
 import imgFormTrigger from "@triggers/form/logo.png";
-import imgErrorTrigger from "@triggers/error_trigger/logo.svg";
 import imgImap from "@triggers/imap/logo.svg";
 import imgDbTrigger from "@triggers/db/logo.svg";
 import imgDnsTrigger from "@triggers/dns/logo.svg";
@@ -299,7 +296,6 @@ import NotionNode from "@nodes/notion/ConfigPanel.jsx";
 import TwilioNode from "@nodes/twilio/ConfigPanel.jsx";
 import SendGridNode from "@nodes/sendgrid/ConfigPanel.jsx";
 import MergeNode from "@nodes/merge/ConfigPanel.jsx";
-import ApprovalNode from "@nodes/approval/ConfigPanel.jsx";
 
 // Config Panels — new utility nodes
 import FilterArrayNode from "@nodes/filter_array/ConfigPanel.jsx";
@@ -356,7 +352,6 @@ import RedditTriggerNode from "@triggers/reddit/ConfigPanel.jsx";
 import RssTriggerNode from "@triggers/rss/ConfigPanel.jsx";
 import SslTriggerNode from "@triggers/ssl/ConfigPanel.jsx";
 import YouTubeTriggerNode from "@triggers/youtube/ConfigPanel.jsx";
-import ErrorTriggerNode from "@triggers/error_trigger/ConfigPanel.jsx";
 // Automators nodes
 import VariableSetGetNode from "@nodes/variable_set_get/ConfigPanel.jsx";
 import FileUploadNode from "@nodes/file_upload/ConfigPanel.jsx";
@@ -387,10 +382,9 @@ import UrlParserNode from "@nodes/url_parser/ConfigPanel.jsx";
 import JsonTransformNode from "@nodes/json_transform/ConfigPanel.jsx";
 import MathExpressionNode from "@nodes/math_expression/ConfigPanel.jsx";
 import ConditionNode from "@nodes/condition/ConfigPanel.jsx";
+import WaitForEventNode from "@nodes/wait_for_event/ConfigPanel.jsx";
 import RetryNode from "@nodes/retry/ConfigPanel.jsx";
-import StopErrorNode from "@nodes/stop_error/ConfigPanel.jsx";
 import RateLimiterNode from "@nodes/rate_limiter/ConfigPanel.jsx";
-import SuccessFailedNode from "@nodes/success_failed/ConfigPanel.jsx";
 
 // Config Panels — Database nodes
 import SupabaseNode from "@nodes/supabase/ConfigPanel.jsx";
@@ -1942,15 +1936,6 @@ export const NodeRegistry = {
     category: "logic",
     description: "Wait for parallel branches and combine their outputs into one",
   },
-  approval: {
-    label: "Approval Gate",
-    icon: CheckSquare,
-    colorClass: "text-yellow-400",
-    accentColor: "250,204,21",
-    ConfigPanel: ApprovalNode,
-    category: "logic",
-    description: "Pause until a human approves or rejects the run",
-  },
 
   // Code
 
@@ -2607,16 +2592,6 @@ export const NodeRegistry = {
     category: "apps",
     description: "Poll any IMAP inbox for new emails",
   },
-  error_trigger: {
-    label: "Error Handler",
-    icon: AlertTriangle,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    logoUrl: imgErrorTrigger,
-    ConfigPanel: ErrorTriggerNode,
-    category: "logic",
-    description: "Catch and handle errors from other nodes in the workflow",
-  },
 
 
   // ── Automation Utility Nodes ──────────────────────────────────────────────
@@ -2710,14 +2685,14 @@ export const NodeRegistry = {
     category: "logic",
     description: "Branch into True or False path based on a condition",
   },
-  success_failed: {
-    label: "Success / Failed",
-    icon: CheckCircle2,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
-    ConfigPanel: SuccessFailedNode,
+  wait_for_event: {
+    label: "Wait for Webhook",
+    icon: Webhook,
+    colorClass: "text-cyan-400",
+    accentColor: "34,211,238",
+    ConfigPanel: WaitForEventNode,
     category: "logic",
-    description: "Explicitly mark this branch as succeeded or failed",
+    description: "Pause the branch until its webhook URL is called",
   },
   retry: {
     label: "Retry",
@@ -2727,15 +2702,6 @@ export const NodeRegistry = {
     ConfigPanel: RetryNode,
     category: "logic",
     description: "Retry the previous node N times on failure",
-  },
-  stop_error: {
-    label: "Stop & Error",
-    icon: XCircle,
-    colorClass: "text-red-400",
-    accentColor: "239,68,68",
-    ConfigPanel: StopErrorNode,
-    category: "logic",
-    description: "Halt the workflow and throw a custom error",
   },
   rate_limiter: {
     label: "Rate Limiter",

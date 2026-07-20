@@ -50,7 +50,6 @@ mock.module("../../infra/credit.engine.js", {
   namedExports: { checkCredits: async () => ({ allowed: true }), deductCredits: noop },
 });
 mock.module("../../nodes/agentTools.registry.js", { defaultExport: { resolve: () => null } });
-mock.module("../../infra/error.trigger.js", { namedExports: { dispatchErrorTriggers: noop } });
 
 export const { processCursor } = await import("./cursor.executor.js");
 export const { default: Execution } = await import("../../models/execution.model.js");

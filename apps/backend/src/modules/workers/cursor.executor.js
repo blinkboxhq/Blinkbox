@@ -14,7 +14,6 @@ import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
-import { dispatchErrorTriggers } from "../../infra/error.trigger.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
 // Must stay well under the resumer's STALE_MS (90s) or long-running nodes get re-enqueued mid-flight
@@ -69,16 +68,6 @@ function collectMergeBranches(dataFlowEdges, dynamicContext, config) {
 function classifyError(err, nodeType, config) {
   const msg = err.message || String(err);
   const lower = msg.toLowerCase();
-
-  // A node that failed the branch on purpose (Stop & Error, Success/Failed).
-  // Retrying a decided outcome just delays the failed edge by the backoff.
-  if (err.branchFailure === true) {
-    return {
-      category: "branch",
-      message: msg,
-      hint: "This branch was marked failed on purpose by the workflow.",
-    };
-  }
 
   // Timeout errors
   if (lower.includes("timeout") || lower.includes("exceeded") || lower.includes("etimedout")) {
@@ -457,6 +446,14 @@ export async function processCursor({ executionId, cursorId }) {
         rawOutput = { ...passthrough, delayed: true, requestedSleep: true };
       }
 
+      // Wait for webhook: park every downstream branch with no deadline at all.
+      // The public wait endpoint is the only thing that releases them.
+      if (rawOutput && rawOutput.__waitWebhook === true) {
+        const { __waitWebhook, ...passthrough } = rawOutput;
+        rawOutput = passthrough;
+        finalOutputs.__waitWebhook = true;
+      }
+
       // Loop fan-out: store items array so routeEdges can spawn one cursor per item
       if (rawOutput && rawOutput.__loopFanOut === true) {
         finalOutputs.__loopFanOut = true;
@@ -578,6 +575,7 @@ export async function processCursor({ executionId, cursorId }) {
         await routeEdges(
           automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
           finalOutputs.__loopFanOut ? finalOutputs.__loopItems : null,
+          finalOutputs.__waitWebhook === true,
         );
       }
     } else {
@@ -587,7 +585,7 @@ export async function processCursor({ executionId, cursorId }) {
       const hint = errorClassification?.hint || "";
 
       // Don't auto-retry errors that won't self-fix on a bare re-run
-      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout", "branch"];
+      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout"];
 
       // An upstream Retry node annotates its output with __retryConfig. Clamped
       // because these values reach the executor from user config, and an
@@ -696,21 +694,6 @@ export async function processCursor({ executionId, cursorId }) {
           totalDuration: (performance.now() - startTime).toFixed(2),
         },
       });
-
-      // Fire error_trigger automations if this execution failed
-      if (hasFailed) {
-        const failedCursor = latestExecution.cursors.find((c) => c.status === "failed");
-        dispatchErrorTriggers({
-          workspaceId: latestExecution.workspaceId,
-          automationId: latestExecution.automationId,
-          automationName: latestExecution.name || "Unknown",
-          executionId: latestExecution._id,
-          nodeId: failedCursor?.nodeId || node.id,
-          nodeType: node.type,
-          errorMessage: failedCursor?.errorMessage || executionError || "Unknown error",
-          failedAt: latestExecution.completedAt.toISOString(),
-        }).catch((e) => console.error("[ErrorTrigger] Dispatch error:", e.message));
-      }
     }
 
     await latestExecution.save();
@@ -760,6 +743,7 @@ async function routeEdges(
   edgeType,
   delayUntil,
   fanOutItems = null,
+  webhookPark = false,
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
@@ -814,7 +798,8 @@ async function routeEdges(
         for (const loopItem of itemsToSpawn) {
           const newCursor = {
             nodeId: targetNodeId,
-            status: delayUntil ? "waiting" : "pending",
+            status: delayUntil || webhookPark ? "waiting" : "pending",
+            waitingForWebhook: webhookPark,
             retries: 0,
             lockedAt: null,
             lockedBy: null,
@@ -837,7 +822,8 @@ async function routeEdges(
 
       const newCursor = {
         nodeId: targetNodeId,
-        status: delayUntil ? "waiting" : "pending",
+        status: delayUntil || webhookPark ? "waiting" : "pending",
+        waitingForWebhook: webhookPark,
         retries: 0,
         lockedAt: null,
         lockedBy: null,
@@ -858,6 +844,8 @@ async function routeEdges(
   // Save cursors to MongoDB FIRST so they exist when the worker picks them up
   if (toEnqueue.length > 0) {
     await execution.save();
+
+    if (webhookPark) return; // nothing to enqueue — the wait webhook wakes these
 
     for (const { payload, delayed } of toEnqueue) {
       if (delayed) {

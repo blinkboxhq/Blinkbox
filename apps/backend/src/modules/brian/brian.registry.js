@@ -8,7 +8,7 @@ export const TRIGGER_BT = new Set([
   "slack_trigger", "discord_trigger", "telegram_trigger", "github_trigger",
   "shopify_trigger", "linear_trigger", "notion_trigger", "airtable_trigger",
   "stripe_trigger", "hubspot_trigger", "youtube_trigger", "reddit_trigger",
-  "google_calendar_trigger", "form_trigger", "chat_trigger", "db_trigger", "error_trigger",
+  "google_calendar_trigger", "form_trigger", "chat_trigger", "db_trigger",
 ]);
 
 export const MODEL_BT = new Set([

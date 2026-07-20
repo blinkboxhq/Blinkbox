@@ -67,8 +67,13 @@ export function startExecutionResumer() {
       const staleWaiting = new Date(Date.now() - 5 * 60 * 1000);
       const stuckWaitingExecutions = await Execution.find({
         status: { $in: ["pending", "running"] },
-        "cursors.status": "waiting",
-        "cursors.lockedAt": null,
+        cursors: {
+          $elemMatch: {
+            status: "waiting",
+            lockedAt: null,
+            waitingForWebhook: { $ne: true },
+          },
+        },
         updatedAt: { $lte: staleWaiting },
       }).limit(100);
 
@@ -77,7 +82,7 @@ export function startExecutionResumer() {
         const toEnqueue = [];
 
         for (const cursor of execution.cursors) {
-          if (cursor.status === "waiting") {
+          if (cursor.status === "waiting" && !cursor.waitingForWebhook) {
             console.log(`[Resumer] Recovering stuck waiting cursor: ${cursor._id}`);
             cursor.status = "pending";
             modified = true;

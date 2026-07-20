@@ -26,7 +26,7 @@ const TRIGGERS = new Set([
   "shopify_trigger","linear_trigger","notion_trigger","airtable_trigger",
   "stripe_trigger","hubspot_trigger","youtube_trigger","reddit_trigger",
   "google_calendar_trigger","price_alert_trigger","chat_trigger","form_trigger",
-  "db_trigger","error_trigger",
+  "db_trigger",
 ]);
 
 const NODE_REF = buildNodeRef();
@@ -305,7 +305,6 @@ credentialId: always \`""\` — user fills it in. Never invent one.
 - After any trigger: consider a \`filter\` node if not all events should continue
 - Before \`condition\`: add \`ai_classify\` to produce a clean category field
 - Before any template: add \`ai_extract\` to pull structured fields from raw text
-- After critical actions (payment, CRM write): add \`success_failed\` for error handling
 
 ---
 

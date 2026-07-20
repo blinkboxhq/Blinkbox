@@ -50,7 +50,7 @@ const NEXT_STEPS = {
 };
 
 const NO_SUGGEST = new Set([
-  'condition', 'success_failed', 'distributor', 'loop',
+  'condition', 'distributor', 'loop',
   'slack', 'discord', 'telegram', 'sendgrid', 'gmail',
   'sticky_note',
 ]);

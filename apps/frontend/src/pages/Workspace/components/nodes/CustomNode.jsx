@@ -585,7 +585,7 @@ function CustomNodeImpl({ id, data, selected }) {
   const hasFailedConnection  = edges.some(e => e.source === id && e.sourceHandle === "failed");
 
   // Nodes that already own their output routing can't be split into success/fail.
-  const NO_SPLIT = new Set(["condition", "success_failed", "loop", "merge"]);
+  const NO_SPLIT = new Set(["condition", "loop", "merge"]);
   const canSplit = data.type !== "trigger" && !NO_SPLIT.has(data.backendType);
   const splitOutputs = canSplit && !!data.config?.splitOutputs;
 
@@ -895,12 +895,12 @@ function CustomNodeImpl({ id, data, selected }) {
 
       {data.backendType === "condition" ? (
         <ConditionOutputHandles cardHeight={cardH} trueConnected={hasTrueConnection} falseConnected={hasFalseConnection} onAdd={handleAddNext} />
-      ) : (data.backendType === "success_failed" || splitOutputs) ? (
+      ) : splitOutputs ? (
         <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
       ) : (
         <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
       )}
-      {outputCount != null && data.backendType !== "condition" && data.backendType !== "success_failed" && !splitOutputs && (
+      {outputCount != null && data.backendType !== "condition" && !splitOutputs && (
         <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
           <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
             {outputCount} item{outputCount !== 1 ? 's' : ''}

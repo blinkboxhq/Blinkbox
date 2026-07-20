@@ -11,7 +11,7 @@ export const NODE_TYPES = [
   "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
   "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
   "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
-  "typeform_trigger", "error_trigger", "youtube_trigger", "price_alert_trigger",
+  "typeform_trigger", "youtube_trigger", "price_alert_trigger",
   "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
   "app_event_trigger", "evaluation_trigger", "database_trigger",
   "ssh_trigger", "docker_trigger", "jira_trigger", "trello_trigger",
@@ -51,7 +51,7 @@ export const NODE_TYPES = [
   "virtual_computer", "coding_agent",
   "claude_code", "codex", "gemini_cli", "ollama", "lm_studio", "github_copilot",
   // Flow Control
-  "approval", "sub_workflow",
+  "wait_for_event", "sub_workflow",
   // Backward-compat aliases
   "advanced_scraper", "informer", "transform", "filter", "if_condition",
 ] as const;
@@ -73,7 +73,7 @@ export const TRIGGER_TYPES = [
   "telegram_trigger", "slack_trigger", "discord_trigger", "whatsapp_trigger",
   "gmail_trigger", "airtable_trigger", "notion_trigger", "hubspot_trigger",
   "shopify_trigger", "stripe_trigger", "github_trigger", "linear_trigger",
-  "typeform_trigger", "error_trigger", "youtube_trigger", "price_alert_trigger",
+  "typeform_trigger", "youtube_trigger", "price_alert_trigger",
   "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
   "app_event_trigger", "evaluation_trigger", "database_trigger",
   "ssl_trigger", "dns_trigger", "port_monitor_trigger",

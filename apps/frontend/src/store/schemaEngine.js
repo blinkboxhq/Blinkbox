@@ -208,7 +208,7 @@ export const DEFAULT_SCHEMAS = {
   docker_trigger: { type: "string", action: "string", actor: "string", name: "string", image: "string", attributes: "object", timestamp: "string", raw: "object" },
   db_trigger: { dbType: "string", collection: "string", table: "string", documents: "array", rows: "array", columns: "array", count: "number", latestDocument: "object", latestRow: "object", triggeredAt: "string" },
   imap_trigger: { folder: "string", emails: "array", count: "number", triggeredAt: "string", uid: "number", subject: "string", from: "string", fromName: "string", to: "array", cc: "array", date: "string", messageId: "string", body: "string", isRead: "boolean", isFlagged: "boolean", hasAttachments: "boolean" },
-  error_trigger: { event: "string", errorMessage: "string", errorType: "string", errorCode: "string", errorStack: "string", failedNodeId: "string", failedNodeType: "string", failedNodeLabel: "string", workflowId: "string", executionId: "string", workspaceName: "string", triggeredAt: "string" },
+  wait_for_event: { body: "object", headers: "object", query: "object", receivedAt: "string" },
 
   // New Utility Nodes
   qr_code: { dataUrl: "string", content: "string", size: "number", format: "string" },

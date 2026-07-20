@@ -141,14 +141,6 @@ test("retry annotates the downstream execution context", async () => {
   assert.equal(out.id, 7, "input passes through");
 });
 
-test("stop_error always throws with the configured code and message", async () => {
-  const stopError = await load("stopError");
-  await assert.rejects(
-    () => stopError.run({ message: "no stock left", code: "OUT_OF_STOCK" }),
-    (err) => err.code === "OUT_OF_STOCK" && /no stock left/.test(err.message),
-  );
-});
-
 test("rate_limiter counts per node and drops once over the limit", async () => {
   const rateLimiter = await load("rateLimiter");
   const ctx = { workspaceId: "ws1", nodeId: "rl1" };
@@ -170,29 +162,14 @@ test("rate_limiter counts per node and drops once over the limit", async () => {
   );
 });
 
-test("success_failed passes through on success and signals the failed branch", async () => {
-  const successFailed = await load("successFailed");
+test("wait_for_event parks the branch with no deadline", async () => {
+  const waitForEvent = await load("waitForEvent");
+  const out = await waitForEvent.run({}, { orderId: "A1" });
 
-  const ok = await successFailed.run({ outcome: "success" }, { id: 3 });
-  assert.equal(ok.id, 3);
-
-  await assert.rejects(
-    () => successFailed.run({ outcome: "failed", message: "payment declined" }),
-    (err) => /payment declined/.test(err.message) && err.branchFailure === true,
-  );
-});
-
-test("approval parks the run instead of falling through", async () => {
-  const approval = await load("approval");
-  const out = await approval.run(
-    { label: "Ship it?", notifyTo: "a@b.co" },
-    { orderId: "A1" },
-    { nodeId: "ap1" },
-  );
-  assert.equal(out.__delay, true, "an approval gate must park the branch");
-  assert.ok(Date.parse(out.resumeAfter) > Date.now(), "the timeout is in the future");
-  assert.equal(out.status, "waiting");
-  assert.equal(out.label, "Ship it?");
-  assert.equal(out.orderId, "A1", "input survives the gate");
+  assert.equal(out.__waitWebhook, true, "the branch must park on its webhook");
+  assert.equal(out.resumeAfter, undefined, "no deadline — it waits indefinitely");
+  assert.equal(out.waiting, true);
+  assert.equal(out.orderId, "A1", "input survives the wait");
+  assert.deepEqual(out.body, {});
 });
 
