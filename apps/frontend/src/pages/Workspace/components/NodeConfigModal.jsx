@@ -207,14 +207,79 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     setTimeout(() => setCopied(null), 1600);
   };
 
-  // ONLY nodes wired into THIS node's input — direct incoming edges, not output.
-  const sourceIds = [];
+  // Every node on the canvas is referenceable — wiring controls execution order,
+  // not which data you're allowed to pull into a field.
+  const connectedIds = [];
   for (const e of edges || []) {
-    if (e.target === currentNodeId && !sourceIds.includes(e.source)) sourceIds.push(e.source);
+    if (e.target === currentNodeId && !connectedIds.includes(e.source)) connectedIds.push(e.source);
   }
-  const inputNodes = sourceIds
-    .map((id) => canvasNodes.find((n) => n.id === id))
-    .filter(Boolean);
+  const connected = connectedIds.map((id) => canvasNodes.find((n) => n.id === id)).filter(Boolean);
+  const others = (canvasNodes || []).filter(
+    (n) => n.id !== currentNodeId && !connectedIds.includes(n.id)
+  );
+
+  const renderNode = (n) => {
+    const def = NodeRegistry[n.data.backendType];
+    const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
+    const isOpen = openNode[n.id] === true;
+    const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
+    const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
+
+    const liveOutput = allRunOutputs[n.id];
+    const hasLiveData = liveOutput && typeof liveOutput === "object";
+    const shape = hasLiveData ? liveOutput : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
+    const rows = childEntries(shape);
+
+    return (
+      <div key={n.id} className="flex flex-col">
+        <button
+          onClick={() => setOpenNode((s) => ({ ...s, [n.id]: !isOpen }))}
+          className="bb-nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors group text-left"
+        >
+          <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+            {def?.logoUrl
+              ? <img src={def.logoUrl} alt="" className="w-[22px] h-[22px] object-contain" style={def?.imgFilter ? { filter: def.imgFilter } : undefined} />
+              : def?.icon
+                ? <def.icon style={{ width: 20, height: 20 }} className="text-neutral-300" strokeWidth={1.5} />
+                : <div className="w-4 h-4 rounded bg-neutral-700" />
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[13px] font-medium text-neutral-200 group-hover:text-white truncate transition-colors block">{name}</span>
+            {hasLiveData && (
+              <span className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider">live data</span>
+            )}
+          </div>
+          <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {isOpen && (
+          <div className="pl-1 pr-1 pt-0.5 pb-1 flex flex-col">
+            {rows.length === 0 ? (
+              <p className="px-3 py-1.5 text-[11px] text-neutral-700 italic">No fields</p>
+            ) : rows.map(([k, v]) => (
+              <VarTreeRow
+                key={k}
+                nodeId={n.id}
+                path={k}
+                label={k}
+                value={v}
+                depth={0}
+                dragging={dragging}
+                setDragging={setDragging}
+                copy={copy}
+                copied={copied}
+                isSchema={!hasLiveData}
+                accent={accent}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const sectionLabel = "px-3 pt-2 pb-1 text-[9px] font-bold uppercase tracking-wider text-neutral-600";
 
   return (
     <div className="bb-modal-side bb-liquid bb-panel-glow flex flex-col h-full">
@@ -224,72 +289,28 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
-        {inputNodes.length === 0 ? (
+        {connected.length === 0 && others.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-5">
             <Zap className="w-5 h-5 text-neutral-700 mb-2" />
-            <p className="text-[12px] text-neutral-600">No nodes connected to this input</p>
-            <p className="text-[10px] text-neutral-700 mt-1">Wire a node into this one to use its data</p>
+            <p className="text-[12px] text-neutral-600">No other nodes yet</p>
+            <p className="text-[10px] text-neutral-700 mt-1">Add a node to the canvas to use its data</p>
           </div>
-        ) : inputNodes.map((n) => {
-          const def = NodeRegistry[n.data.backendType];
-          const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
-          const isOpen = openNode[n.id] === true;
-          const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
-          const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
-
-          const liveOutput = allRunOutputs[n.id];
-          const hasLiveData = liveOutput && typeof liveOutput === "object";
-          const shape = hasLiveData ? liveOutput : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
-          const rows = childEntries(shape);
-
-          return (
-            <div key={n.id} className="flex flex-col">
-              <button
-                onClick={() => setOpenNode((s) => ({ ...s, [n.id]: !isOpen }))}
-                className="bb-nav-item flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors group text-left"
-              >
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                  {def?.logoUrl
-                    ? <img src={def.logoUrl} alt="" className="w-[22px] h-[22px] object-contain" style={def?.imgFilter ? { filter: def.imgFilter } : undefined} />
-                    : def?.icon
-                      ? <def.icon style={{ width: 20, height: 20 }} className="text-neutral-300" strokeWidth={1.5} />
-                      : <div className="w-4 h-4 rounded bg-neutral-700" />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[13px] font-medium text-neutral-200 group-hover:text-white truncate transition-colors block">{name}</span>
-                  {hasLiveData && (
-                    <span className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider">live data</span>
-                  )}
-                </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isOpen && (
-                <div className="pl-1 pr-1 pt-0.5 pb-1 flex flex-col">
-                  {rows.length === 0 ? (
-                    <p className="px-3 py-1.5 text-[11px] text-neutral-700 italic">No fields</p>
-                  ) : rows.map(([k, v]) => (
-                    <VarTreeRow
-                      key={k}
-                      nodeId={n.id}
-                      path={k}
-                      label={k}
-                      value={v}
-                      depth={0}
-                      dragging={dragging}
-                      setDragging={setDragging}
-                      copy={copy}
-                      copied={copied}
-                      isSchema={!hasLiveData}
-                      accent={accent}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        ) : (
+          <>
+            {connected.length > 0 && (
+              <>
+                <p className={sectionLabel}>Connected</p>
+                {connected.map(renderNode)}
+              </>
+            )}
+            {others.length > 0 && (
+              <>
+                <p className={sectionLabel}>{connected.length > 0 ? "All other nodes" : "All nodes"}</p>
+                {others.map(renderNode)}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
