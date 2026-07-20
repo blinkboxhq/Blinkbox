@@ -23,6 +23,19 @@ const holdingNode = {
   },
 };
 
+// Same reasoning as holdingNode: rateLimiter.node.js imports Redis at module
+// scope. These stubs pin the executor's side of the contract — that a dropped
+// branch stops, and that an upstream __retryConfig overrides the built-in budget.
+const droppingNode = { async run(config, input) { return { ...input, __stopBranch: true, dropped: true }; } };
+
+let flakyAttempts = 0;
+const flakyNode = {
+  async run() {
+    flakyAttempts += 1;
+    throw new Error("upstream returned 500");
+  },
+};
+
 process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
 
@@ -40,6 +53,8 @@ mock.module("../src/nodes/index.js", {
       merge: mergeNode,
       delay: delayNode,
       aggregate: holdingNode,
+      rate_limiter: droppingNode,
+      flaky: flakyNode,
     },
   },
 });
@@ -311,6 +326,65 @@ test("aggregate holds the batch: only the run that receives the last item routes
   const reloaded = await Execution.findById(execution._id);
   const downstreamCursors = reloaded.cursors.filter((c) => c.nodeId === "s1");
   assert.equal(downstreamCursors.length, 1, "downstream runs once, not once per held item");
+});
+
+test("rate limiter 'drop' ends the branch instead of passing the dropped item downstream", async () => {
+  const automation = await Automation.create({
+    name: "rate-drop",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "r1", type: "rate_limiter", data: { strategy: "drop", limit: 1 } },
+      { id: "s1", type: "set_fields", data: { mode: "set", fields: [{ key: "sent", value: "yes" }] } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "r1" },
+      { id: "e2", source: "r1", target: "s1" },
+    ],
+  });
+  const execution = await startExecution(automation);
+  await drainQueue();
+
+  const limited = await ExecutionData.findOne({ executionId: execution._id, nodeId: "r1" });
+  assert.equal(limited.output[0].json.dropped, true, "limiter records the drop");
+
+  // Dropping has to mean the downstream node never runs. Before the executor
+  // honoured __stopBranch, "drop" and "pass through" were the same code path.
+  const reloaded = await Execution.findById(execution._id);
+  assert.equal(reloaded.cursors.filter((c) => c.nodeId === "s1").length, 0, "no downstream cursor spawned");
+});
+
+test("an upstream __retryConfig overrides the executor's built-in retry budget", async () => {
+  flakyAttempts = 0;
+  const automation = await Automation.create({
+    name: "retry-budget",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "f1", type: "flaky", data: {} },
+    ],
+    edges: [{ id: "e1", source: "t1", target: "f1" }],
+  });
+  const execution = await startExecution(automation);
+  await ExecutionData.create({
+    executionId: execution._id,
+    nodeId: "t1",
+    output: [{ json: { __retryConfig: { maxRetries: 1, delayMs: 100, backoff: "fixed" } } }],
+  });
+
+  // Retries land in delayedJobs, not the main queue, so pump them back in.
+  for (let i = 0; i < 8 && (queue.length || delayedJobs.length); i++) {
+    await drainQueue();
+    while (delayedJobs.length) queue.push(delayedJobs.shift().payload);
+  }
+
+  // maxRetries:1 means one attempt plus one retry. The hardcoded default of 3
+  // would have produced 4 — that difference is the whole point of the node.
+  assert.equal(flakyAttempts, 2, "honours maxRetries:1 rather than the built-in 3");
 });
 
 test("delay parks the downstream cursor as waiting, schedules resume, and the woken cursor completes the run", async () => {

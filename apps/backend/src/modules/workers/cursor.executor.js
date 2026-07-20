@@ -21,6 +21,8 @@ const NODE_TIMEOUT_MS = 60 * 1000;
 const HEARTBEAT_MS = 30 * 1000;
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
+const RETRY_MAX_ATTEMPTS = 10;
+const RETRY_MAX_DELAY_MS = 5 * 60 * 1000;
 const MAX_CURSORS_PER_EXECUTION = 500;
 
 // A data-flow edge feeds the standard input array (vs. agent slots: llm/memory/tools).
@@ -463,6 +465,13 @@ export async function processCursor({ executionId, cursorId }) {
         rawOutput = { pending: true, collected: rawOutput.collected, expected: rawOutput.expected };
       }
 
+      // Rate limiter's "drop" strategy: end this branch quietly. Without this
+      // the drop still routed downstream, so dropping and passing through were
+      // the same thing.
+      if (rawOutput && rawOutput.__stopBranch === true) {
+        finalOutputs.__stopBranch = true;
+      }
+
       const formatted = Array.isArray(rawOutput)
         ? rawOutput.map((r) => (r.json ? r : { json: r }))
         : [{ json: rawOutput }];
@@ -548,8 +557,8 @@ export async function processCursor({ executionId, cursorId }) {
       });
 
       // Condition node false-path: route to "false" edges but keep cursor completed
-      if (finalOutputs.__hold) {
-        // batch incomplete — nothing downstream yet
+      if (finalOutputs.__hold || finalOutputs.__stopBranch) {
+        // batch incomplete, or deliberately dropped — nothing downstream
       } else if (finalOutputs.__conditionFalse) {
         await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
       } else {
@@ -566,12 +575,26 @@ export async function processCursor({ executionId, cursorId }) {
 
       // Don't auto-retry errors that won't self-fix on a bare re-run
       const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout"];
-      const shouldRetry = currentRetries < MAX_RETRIES && !noRetryCategories.includes(category);
+
+      // An upstream Retry node annotates its output with __retryConfig. Clamped
+      // because these values reach the executor from user config, and an
+      // unbounded maxRetries would park a cursor in the queue indefinitely.
+      const retryCfg = resolvedInput?.__retryConfig || {};
+      const maxRetries = Number.isFinite(retryCfg.maxRetries)
+        ? Math.min(Math.max(Math.trunc(retryCfg.maxRetries), 0), RETRY_MAX_ATTEMPTS)
+        : MAX_RETRIES;
+      const baseMs = Number.isFinite(retryCfg.delayMs)
+        ? Math.min(Math.max(Math.trunc(retryCfg.delayMs), 100), RETRY_MAX_DELAY_MS)
+        : RETRY_BASE_MS;
+
+      const shouldRetry = currentRetries < maxRetries && !noRetryCategories.includes(category);
 
       if (shouldRetry) {
-        const backoffMs = RETRY_BASE_MS * Math.pow(2, currentRetries);
+        const backoffMs = retryCfg.backoff === "fixed"
+          ? baseMs
+          : Math.min(baseMs * Math.pow(2, currentRetries), RETRY_MAX_DELAY_MS);
         console.warn(
-          `[Retry ${currentRetries + 1}/${MAX_RETRIES}] Node [${node.id}] failed (${category}). ` +
+          `[Retry ${currentRetries + 1}/${maxRetries}] Node [${node.id}] failed (${category}). ` +
           `Retrying in ${backoffMs}ms... Error: ${executionError}`,
         );
 
@@ -588,13 +611,13 @@ export async function processCursor({ executionId, cursorId }) {
         await emitExecutionEvent(latestExecution._id, {
           type: "node_retrying",
           nodeId: node.id,
-          message: `Retry ${currentRetries + 1}/${MAX_RETRIES} in ${backoffMs}ms — ${category} error`,
+          message: `Retry ${currentRetries + 1}/${maxRetries} in ${backoffMs}ms — ${category} error`,
           meta: { category, hint, retryIn: backoffMs },
         });
       } else {
         const reason = noRetryCategories.includes(category)
           ? `${executionError} [${category} error — auto-retry skipped, fix required]`
-          : `${executionError} [failed after ${MAX_RETRIES} retries]`;
+          : `${executionError} [failed after ${maxRetries} retries]`;
 
         console.error(`[Dead] Node [${node.id}] permanently failed: ${reason}`);
 

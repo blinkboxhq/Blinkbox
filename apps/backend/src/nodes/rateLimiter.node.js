@@ -13,7 +13,10 @@ export default {
     const strategy = config.strategy ?? "error";
 
     const windowSec = WINDOW_SECONDS[window] ?? 60;
-    const key = `rate_limit:${context.workspaceId}:${context.executionId?.slice(0, 8) ?? "global"}:${window}`;
+    // Scope by node, not execution: a counter keyed on executionId resets every
+    // run, so it could never limit the thing it exists to limit — traffic across
+    // runs. One limiter node = one shared budget for its workspace.
+    const key = `rate_limit:${context.workspaceId}:${context.nodeId ?? "global"}:${window}`;
 
     let count = 0;
     try {
@@ -31,7 +34,7 @@ export default {
         throw new Error(`Rate limit exceeded: ${count}/${limit} requests per ${window}. Add a Delay node or increase the limit.`);
       }
       if (strategy === "drop") {
-        return { ...input, __rateLimited: true, dropped: true, count };
+        return { ...input, __stopBranch: true, rateLimited: true, dropped: true, count };
       }
       // strategy === 'queue' — just pass through, upstream handles queuing
     }
