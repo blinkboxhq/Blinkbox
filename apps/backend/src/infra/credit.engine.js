@@ -52,8 +52,8 @@ const NODE_COSTS = {
   virustotal_trigger: 0,
 
   // ── Pure data ops (1 — no external calls) ─────────────────────────────────
-  data_mapper: 1, logic_router: 1, condition: 1,
-  switch: 1, retry: 1, rate_limiter: 1,
+  data_mapper: 1, condition: 1,
+  retry: 1, rate_limiter: 1,
   delay: 1, merge: 1, loop: 1, code: 1, respond_webhook: 1,
   sub_workflow: 1, wait_for_event: 1,
   filter_array: 1, sort_array: 1, deduplicate: 1,

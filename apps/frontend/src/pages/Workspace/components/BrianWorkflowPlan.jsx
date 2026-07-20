@@ -83,7 +83,7 @@ const CRED_META = {
 const ICONS = {
   webhook: Globe, manual: Zap, cron_trigger: Clock, http_request: Globe,
   code: Code2, gmail: Mail, gmail_trigger: Mail, slack: Link, slack_trigger: Link,
-  logic_router: GitBranch, data_mapper: Database, ai_agent: Cpu,
+  condition: GitBranch, data_mapper: Database, ai_agent: Cpu,
 };
 function NodeIcon({ type }) {
   const Icon = ICONS[type] || Box;

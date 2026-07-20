@@ -225,11 +225,12 @@ export const NODE_KB = {
       { k: "items", t: "array", r: true, ex: [{ key1: "name", key2: "{{$json.firstName}} {{$json.lastName}}" }], d: "Field mappings. key1=target, key2=value/source" },
     ],
   },
-  logic_router: {
-    label: "Logic Router",
+  condition: {
+    label: "Condition",
     out: [],
     fields: [
-      { k: "routes", t: "array", r: true, ex: [{ label: "VIP", field: "plan", operator: "equals", value: "enterprise" }], d: "Route rules: label, field, operator, value" },
+      { k: "conditions", t: "array", r: true, ex: [{ operator: "equals", left: "{{$json.plan}}", right: "enterprise" }], d: "Rules: operator, left, right. True branch = 'true' handle, false = 'false' handle" },
+      { k: "mode", t: "select", r: false, ex: "and", d: "and (all must pass) | or (any passes)" },
     ],
   },
   loop: {

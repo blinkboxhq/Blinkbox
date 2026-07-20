@@ -97,7 +97,8 @@ export const createUISlice = (set, get) => ({
         set_fields: "data_mapper",
         transform: "data_mapper",
         filter: "data_mapper",
-        if_condition: "logic_router",
+        if_condition: "condition",
+        logic_router: "condition",
       };
 
       const loadedNodes = workflow.nodes.map((n, index) => {

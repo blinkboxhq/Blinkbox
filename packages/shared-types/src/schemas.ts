@@ -12,7 +12,7 @@ export const NODE_TYPES = [
   "advanced_scraper",
   "ai_agent",
   "data_mapper",
-  "logic_router",
+  "condition",
   // Supporting
   "code",
   "delay",

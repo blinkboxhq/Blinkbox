@@ -215,7 +215,10 @@ function getConfigHint(data, edges, nodeId) {
   }
   if (data.backendType === "webhook") { const v = c.triggerVariant; if (v === "form") return c.expectedFields?.length ? `${c.expectedFields.length} fields` : "form"; if (v === "chat") return c.systemPrompt ? c.systemPrompt.slice(0, 28) : "chat endpoint"; if (v === "sub_workflow") return "sub-workflow"; if (v === "app_event") return c.expectedEvents || "app events"; return "webhook"; }
   if (data.backendType === "cron_trigger" && c.expression) return c.expression;
-  if (data.backendType === "logic_router" && c.field) return `if ${c.field}`;
+  if (data.backendType === "condition") {
+    const first = Array.isArray(c.conditions) ? c.conditions[0] : c.condition;
+    if (first?.left) return `if ${first.left}`;
+  }
   if (data.backendType === "slack" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "discord" && c.message) return c.message.slice(0, 40);
   if (data.backendType === "stripe" && c.action) return c.action.replace("_", " ");

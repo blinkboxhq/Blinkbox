@@ -20,14 +20,14 @@ export const NODE_TYPES = [
   "ssl_trigger", "dns_trigger", "port_monitor_trigger",
   "hackernews_trigger", "pipedrive_trigger", "asana_trigger",
   // Core
-  "http_request", "web_scraper", "ai_agent", "data_mapper", "logic_router",
+  "http_request", "web_scraper", "ai_agent", "data_mapper", "condition",
   // Supporting
   "code", "delay", "loop", "merge", "respond_webhook",
   // Utility
   "filter_array", "sort_array", "deduplicate", "csv_parser",
   "date_time", "crypto_utils", "data_diff", "aggregate", "set_fields",
   "qr_code", "image_resize", "pdf_generator", "text_splitter",
-  "template_renderer", "json_validator", "switch",
+  "template_renderer", "json_validator",
   // AI Hub
   "openai", "anthropic", "gemini", "deepseek", "groq", "perplexity", "xai",
   "openai_assistant", "ai_classify", "ai_extract", "ai_transform", "ai_decision",

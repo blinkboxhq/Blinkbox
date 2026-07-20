@@ -12,7 +12,7 @@ const TYPE_ICON = {
   imap_trigger: Mail,
   code: Code2,
   http_request: Globe,
-  logic_router: GitBranch,
+  condition: GitBranch,
   data_mapper: Database,
   web_scraper: Globe,
   ai_agent: Cpu,

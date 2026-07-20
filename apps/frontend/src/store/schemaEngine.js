@@ -85,7 +85,6 @@ export const DEFAULT_SCHEMAS = {
   },
   data_mapper: { _dynamic: true },
   set_fields: { _dynamic: true },
-  logic_router: { _passthrough: true },
 
   // Supporting nodes
   code: { result: "object" },
@@ -217,6 +216,7 @@ export const DEFAULT_SCHEMAS = {
   json_validator: { valid: "boolean", data: "object", errors: "array", errorCount: "number" },
   image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },
   aggregate: { items: "array", count: "number", sessionId: "string", completedAt: "string" },
+  rate_limiter: { count: "number", dropped: "boolean" },
   filter_array: { items: "array", filteredCount: "number", totalCount: "number" },
   sort_array: { items: "array", count: "number" },
   deduplicate: { items: "array", count: "number", removedCount: "number" },
@@ -400,7 +400,7 @@ const EXPECTED_INPUT_TYPES = {
   set_fields: { fields: "array" },
   code: { input: "object" },
   ai_agent: { prompt: "string", systemPrompt: "string" },
-  logic_router: { conditions: "array" },
+  condition: { conditions: "array" },
   email_parser: { emailText: "string" },
   vector_memory: { text: "string" },
   ai_decision: { scenario: "string" },
