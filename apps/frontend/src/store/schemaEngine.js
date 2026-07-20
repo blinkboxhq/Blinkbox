@@ -86,6 +86,7 @@ export const DEFAULT_SCHEMAS = {
   data_mapper: { _dynamic: true },
   set_fields: { _dynamic: true },
   logic_router: { _passthrough: true },
+  condition: { _passthrough: true },
 
   // Supporting nodes
   code: { result: "object" },

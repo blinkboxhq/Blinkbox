@@ -218,6 +218,25 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     (n) => n.id !== currentNodeId && !connectedIds.includes(n.id)
   );
 
+  // Condition and routers hand their input straight through, so the fields you can
+  // pull off them are whatever fed them. Walk back until a node declares real data.
+  const shapeOf = (n, seen) => {
+    const live = allRunOutputs[n.id];
+    if (live && typeof live === "object") return { shape: live, live: true };
+
+    const schema = nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType];
+    if (!schema?._passthrough) return { shape: schemaToShape(schema), live: false };
+
+    for (const e of edges || []) {
+      if (e.target !== n.id || seen.has(e.source)) continue;
+      seen.add(e.source);
+      const up = (canvasNodes || []).find((x) => x.id === e.source);
+      const upstream = up && shapeOf(up, seen);
+      if (upstream?.shape) return upstream;
+    }
+    return { shape: null, live: false };
+  };
+
   const renderNode = (n) => {
     const def = NodeRegistry[n.data.backendType];
     const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
@@ -225,9 +244,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
     const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
 
-    const liveOutput = allRunOutputs[n.id];
-    const hasLiveData = liveOutput && typeof liveOutput === "object";
-    const shape = hasLiveData ? liveOutput : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
+    const { shape, live: hasLiveData } = shapeOf(n, new Set([n.id]));
     const rows = childEntries(shape);
 
     return (
