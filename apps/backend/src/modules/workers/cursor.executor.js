@@ -427,7 +427,7 @@ export async function processCursor({ executionId, cursorId }) {
       }
 
       let rawOutput = await withTimeout(
-        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
+        handler.run(resolvedConfig, item.json, { workspaceId: execution.workspaceId, executionId, nodeId: node.id, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
         nodeTimeoutMs,
       );
 
@@ -454,6 +454,13 @@ export async function processCursor({ executionId, cursorId }) {
       // Condition node false-path signal — mark for non-error routing to false edges
       if (rawOutput && rawOutput.__conditionResult === false) {
         finalOutputs.__conditionFalse = true;
+      }
+
+      // Aggregate is still filling its batch. This cursor completes without
+      // routing; whichever run receives the last item routes for all of them.
+      if (rawOutput && rawOutput.__hold === true) {
+        finalOutputs.__hold = true;
+        rawOutput = { pending: true, collected: rawOutput.collected, expected: rawOutput.expected };
       }
 
       const formatted = Array.isArray(rawOutput)
@@ -541,7 +548,9 @@ export async function processCursor({ executionId, cursorId }) {
       });
 
       // Condition node false-path: route to "false" edges but keep cursor completed
-      if (finalOutputs.__conditionFalse) {
+      if (finalOutputs.__hold) {
+        // batch incomplete — nothing downstream yet
+      } else if (finalOutputs.__conditionFalse) {
         await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
       } else {
         await routeEdges(

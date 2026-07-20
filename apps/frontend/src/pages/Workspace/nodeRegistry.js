@@ -2601,7 +2601,7 @@ export const NodeRegistry = {
     category: "apps",
     description: "Poll any IMAP inbox for new emails",
   },
-  error: {
+  error_trigger: {
     label: "Error Handler",
     icon: AlertTriangle,
     colorClass: "text-red-400",

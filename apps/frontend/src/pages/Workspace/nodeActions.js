@@ -2099,10 +2099,4 @@ export const NODE_ACTIONS = {
     { name: "List Meetings", description: "List your scheduled meetings" },
     { name: "Update Meeting", description: "Update an existing meeting" },
   ],
-  error: [
-    { name: "Catch Error", description: "Handle errors from a previous failed node" },
-    { name: "Log Error", description: "Write the error details to a log" },
-    { name: "Notify on Error", description: "Send an alert when an error is caught" },
-    { name: "Retry on Error", description: "Automatically retry the failed node" },
-  ],
 };

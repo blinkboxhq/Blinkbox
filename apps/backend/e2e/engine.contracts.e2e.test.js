@@ -10,6 +10,19 @@ import loopNode from "../src/nodes/loop.node.js";
 import mergeNode from "../src/nodes/merge.node.js";
 import delayNode from "../src/nodes/delay.node.js";
 
+// Stands in for aggregate.node.js, which reaches for Redis at import time —
+// a static import of it would bind the real client before mock.module runs.
+// What is under test here is the executor's __hold contract, not the batching.
+let holdCalls = 0;
+const holdingNode = {
+  async run() {
+    holdCalls += 1;
+    return holdCalls < 3
+      ? { __hold: true, collected: holdCalls, expected: 3 }
+      : { items: [1, 2, 3], count: 3 };
+  },
+};
+
 process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
 
@@ -26,6 +39,7 @@ mock.module("../src/nodes/index.js", {
       loop: loopNode,
       merge: mergeNode,
       delay: delayNode,
+      aggregate: holdingNode,
     },
   },
 });
@@ -258,6 +272,45 @@ test("merge keys each branch by its input dot, not by stored edge order", async 
   assert.equal(out.left.who, "A", "slot 0 must come from the edge on the 'input' dot");
   assert.equal(out.right.who, "B", "slot 1 must come from the edge on the 'input-1' dot");
   assert.equal(out.__mergedFrom, 2);
+});
+
+test("aggregate holds the batch: only the run that receives the last item routes downstream", async () => {
+  holdCalls = 0;
+  const automation = await Automation.create({
+    name: "aggregate-hold",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "l1", type: "loop", data: { arrayPath: "items" } },
+      { id: "g1", type: "aggregate", data: { expectedCount: 3 } },
+      { id: "s1", type: "set_fields", data: { mode: "set", fields: [{ key: "done", value: "yes" }] } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "l1" },
+      { id: "e2", source: "l1", target: "g1" },
+      { id: "e3", source: "g1", target: "s1" },
+    ],
+  });
+  const execution = await startExecution(automation);
+  await ExecutionData.create({
+    executionId: execution._id,
+    nodeId: "t1",
+    output: [{ json: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] } }],
+  });
+  await drainQueue();
+
+  const agg = await ExecutionData.findOne({ executionId: execution._id, nodeId: "g1" });
+  assert.equal(agg.output.at(-1).json.count, 3, "final run emits the whole batch");
+
+  // Count cursors, not ExecutionData docs: output is upserted one doc per
+  // nodeId, so a doc count stays 1 however many times the node actually ran.
+  // A dead __hold marker routes the two holding runs onward as well, which
+  // shows up here as three s1 cursors instead of one.
+  const reloaded = await Execution.findById(execution._id);
+  const downstreamCursors = reloaded.cursors.filter((c) => c.nodeId === "s1");
+  assert.equal(downstreamCursors.length, 1, "downstream runs once, not once per held item");
 });
 
 test("delay parks the downstream cursor as waiting, schedules resume, and the woken cursor completes the run", async () => {
