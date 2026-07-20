@@ -236,17 +236,15 @@ export default function ConditionNode({ config = {}, updateConfig, nodeId }) {
 function PathChip({ tone, active, dim, label }) {
   const isTrue = tone === 'true';
   const Icon = isTrue ? CheckCheck : XCircle;
-  const base = isTrue
-    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-    : 'bg-red-500/10 border-red-500/20 text-red-400';
-  const on = isTrue
-    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-    : 'bg-red-500/20 border-red-500/50 text-red-300';
+  const text = isTrue ? 'text-emerald-400' : 'text-red-400';
+  const border = active
+    ? (isTrue ? 'border-emerald-500/40' : 'border-red-500/40')
+    : 'border-neutral-800';
   return (
     <div
-      className={`flex-1 flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-all duration-150 ${
-        active ? on : base
-      } ${dim ? 'opacity-35' : ''}`}
+      className={`flex-1 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neutral-950 border transition-all duration-150 ${border} ${text} ${
+        dim ? 'opacity-35' : ''
+      }`}
     >
       <Icon className="w-3.5 h-3.5 shrink-0" />
       <span className="text-[11px] font-bold">{label}</span>
