@@ -215,7 +215,6 @@ export const DEFAULT_SCHEMAS = {
   text_splitter: { chunks: "array", chunkCount: "number", totalLength: "number" },
   template_renderer: { rendered: "string", templateLength: "number", outputLength: "number" },
   json_validator: { valid: "boolean", data: "object", errors: "array", errorCount: "number" },
-  switch: { value: "string", matchedCase: "string", isDefault: "boolean" },
   image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },
   aggregate: { items: "array", count: "number", sessionId: "string", completedAt: "string" },
   filter_array: { items: "array", filteredCount: "number", totalCount: "number" },

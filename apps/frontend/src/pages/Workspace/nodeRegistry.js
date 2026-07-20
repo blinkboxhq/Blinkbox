@@ -316,7 +316,6 @@ import CryptoUtilsNode from "@nodes/crypto_utils/ConfigPanel.jsx";
 // Config Panels — Innovation Sprint nodes
 import TextSplitterNode from "@nodes/text_splitter/ConfigPanel.jsx";
 import TemplateRendererNode from "@nodes/template_renderer/ConfigPanel.jsx";
-import SwitchNode from "@nodes/switch/ConfigPanel.jsx";
 import ImageResizeNode from "@nodes/image_resize/ConfigPanel.jsx";
 import AggregateNode from "@nodes/aggregate/ConfigPanel.jsx";
 import PDFGeneratorNode from "@nodes/pdf_generator/ConfigPanel.jsx";
@@ -2186,14 +2185,6 @@ export const NodeRegistry = {
     accentColor: "251,191,36",
     ConfigPanel: TemplateRendererNode,
     category: "data",
-  },
-  switch: {
-    label: "Switch",
-    icon: GitFork,
-    colorClass: "text-pink-400",
-    accentColor: "244,114,182",
-    ConfigPanel: SwitchNode,
-    category: "logic",
   },
   aggregate: {
     label: "Aggregate",

@@ -93,7 +93,6 @@ import rateLimiter     from "./rateLimiter.node.js";
 import waitForEvent    from "./waitForEvent.node.js";
 import approval        from "./approval.node.js";
 import subWorkflow     from "./subWorkflow.node.js";
-import switchNode      from "./switch.node.js";
 
 // Data processing
 import filterArray     from "./filterArray.node.js";
@@ -320,7 +319,6 @@ const rawNodeRegistry = {
   wait_for_event: waitForEvent,
   approval:       approval,
   sub_workflow:   subWorkflow,
-  switch:         switchNode,
 
   // ── Data processing ───────────────────────────────────────────────────────
   filter_array:      filterArray,
