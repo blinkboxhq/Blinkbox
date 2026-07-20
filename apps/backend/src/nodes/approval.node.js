@@ -3,10 +3,9 @@
  *
  * Human-in-the-Loop gate for the cursor-based execution engine.
  *
- * When this node executes in the cursor engine, it sets the cursor to
- * "waiting" status and sends a notification. The cursor stays parked
- * until an external signal (POST /api/automations/signal/:workflowId)
- * resumes it.
+ * In the cursor engine the gate is the delay mechanism: everything downstream
+ * is parked as "waiting" until the timeout lapses or someone resumes the run
+ * (POST /api/executions/resume/:executionId). Approving is resuming.
  *
  * In the Temporal engine, this node is handled directly in workflows.ts
  * using Temporal's native signal + condition primitives. This file is
@@ -22,8 +21,10 @@
  *   timeoutMs           — Max wait time (default: 30 days)
  *
  * Output:
- *   { approved, status, nodeId, message, waitingSince }
+ *   { status, label, notifyTo, notifyChannels, waitingSince }
  */
+
+const DEFAULT_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
 
 const BACKEND_URL =
   process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -36,15 +37,16 @@ export default {
       notifyChannels = ["email"],
     } = config;
 
-    // In the cursor engine, the actual blocking is handled by the executor
-    // setting the cursor to "waiting". This run() returns metadata that the
-    // executor stores, then the cursor is parked. When the external signal
-    // hits the resume endpoint, the executor re-enqueues the cursor.
-    //
-    // We return a "waiting" sentinel that the cursor executor recognizes.
+    const timeoutMs = Number.isFinite(Number(config.timeoutMs))
+      ? Number(config.timeoutMs)
+      : DEFAULT_TIMEOUT_MS;
+
+    // __delay is what actually parks the branch. Without it the gate returned
+    // metadata and the run carried straight on — approving everything by default.
     return {
-      __approvalWaiting: true,
-      approved: null,
+      ...(input && typeof input === "object" && !Array.isArray(input) ? input : {}),
+      __delay: true,
+      resumeAfter: new Date(Date.now() + timeoutMs).toISOString(),
       status: "waiting",
       nodeId: context.nodeId || null,
       label,

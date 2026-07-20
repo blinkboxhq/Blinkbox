@@ -38,7 +38,7 @@ function durationMs(config) {
 }
 
 export default {
-  async run(config = {}) {
+  async run(config = {}, input) {
     const now = Date.now();
     let resumeMs;
 
@@ -61,7 +61,13 @@ export default {
     // Global ceiling regardless of mode.
     resumeMs = Math.min(resumeMs, now + MAX_DELAY_MS);
 
+    // Sleeping is not a reason to lose the data — anything upstream of the
+    // delay stays addressable after it.
+    const carried =
+      input && typeof input === "object" && !Array.isArray(input) ? input : {};
+
     return {
+      ...carried,
       __delay: true,
       resumeAfter: new Date(resumeMs).toISOString(),
     };

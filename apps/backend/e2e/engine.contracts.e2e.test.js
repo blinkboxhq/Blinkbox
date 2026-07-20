@@ -9,6 +9,7 @@ import conditionNode from "../src/nodes/condition.node.js";
 import loopNode from "../src/nodes/loop.node.js";
 import mergeNode from "../src/nodes/merge.node.js";
 import delayNode from "../src/nodes/delay.node.js";
+import successFailedNode from "../src/nodes/successFailed.node.js";
 
 // Stands in for aggregate.node.js, which reaches for Redis at import time —
 // a static import of it would bind the real client before mock.module runs.
@@ -54,6 +55,7 @@ mock.module("../src/nodes/index.js", {
       delay: delayNode,
       aggregate: holdingNode,
       rate_limiter: droppingNode,
+      success_failed: successFailedNode,
       flaky: flakyNode,
     },
   },
@@ -429,4 +431,70 @@ test("delay parks the downstream cursor as waiting, schedules resume, and the wo
   assert.ok(fresh.cursors.every((c) => c.status === "completed"));
   const woke = await ExecutionData.findOne({ executionId: execution._id, nodeId: "s1" });
   assert.equal(woke.output[0].json.woke, "up");
+});
+
+test("a delay carries the upstream payload across the sleep", async () => {
+  delayedJobs.length = 0;
+  const automation = await Automation.create({
+    name: "delay-passthrough",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "s0", type: "set_fields", data: { mode: "set", fields: [{ key: "orderId", value: "A1" }] } },
+      { id: "d1", type: "delay", data: { mode: "duration", ms: 60000 } },
+      { id: "s1", type: "set_fields", data: { mode: "set", fields: [{ key: "echoed", value: "{{ $json.orderId }}" }] } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "s0" },
+      { id: "e2", source: "s0", target: "d1" },
+      { id: "e3", source: "d1", target: "s1" },
+    ],
+  });
+  const execution = await startExecution(automation);
+  await drainQueue();
+
+  const parked = await ExecutionData.findOne({ executionId: execution._id, nodeId: "d1" });
+  assert.equal(parked.output[0].json.orderId, "A1", "the delay must not wipe upstream fields");
+  assert.equal(parked.output[0].json.delayed, true);
+  assert.equal(parked.output[0].json.__delay, undefined, "the marker is consumed, not stored");
+
+  await processCursor(delayedJobs[0].payload);
+  await drainQueue();
+
+  const woke = await ExecutionData.findOne({ executionId: execution._id, nodeId: "s1" });
+  assert.equal(woke.output[0].json.echoed, "A1", "{{ $json.* }} still resolves after the sleep");
+});
+
+test("a deliberate branch failure routes to the failed edge without burning retries", async () => {
+  delayedJobs.length = 0;
+  const automation = await Automation.create({
+    name: "branch-failure",
+    trigger: "manual",
+    workspaceId: "ws-contracts",
+    entryNodeId: "t1",
+    nodes: [
+      { id: "t1", type: "manual", data: {} },
+      { id: "sf1", type: "success_failed", data: { outcome: "failed", message: "payment declined" } },
+      { id: "ok1", type: "set_fields", data: { mode: "set", fields: [{ key: "branch", value: "success" }] } },
+      { id: "no1", type: "set_fields", data: { mode: "set", fields: [{ key: "branch", value: "failed" }] } },
+    ],
+    edges: [
+      { id: "e1", source: "t1", target: "sf1" },
+      { id: "e2", source: "sf1", target: "ok1", sourceHandle: "success" },
+      { id: "e3", source: "sf1", target: "no1", sourceHandle: "failed" },
+    ],
+  });
+  const execution = await startExecution(automation);
+  await drainQueue();
+
+  // A decided outcome is not a transient error — re-running it cannot change
+  // the answer, so nothing may land in the retry scheduler.
+  assert.equal(delayedJobs.length, 0, "a decided failure must not schedule a retry");
+
+  const fresh = await Execution.findById(execution._id);
+  const spawned = fresh.cursors.filter((c) => c.nodeId === "no1" || c.nodeId === "ok1");
+  assert.equal(spawned.length, 1, "only the failed branch spawns");
+  assert.equal(spawned[0].nodeId, "no1");
 });

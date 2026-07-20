@@ -31,5 +31,5 @@ export default {
     },
     { type: "notice", variant: "info", text: "After timeout, workflow resumes with approved = false" },
   ],
-  outputs: ["approved", "approvedBy", "approvedAt", "comment"],
+  outputs: ["status", "label", "notifyTo", "waitingSince"],
 };

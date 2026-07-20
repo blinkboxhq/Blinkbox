@@ -9,6 +9,7 @@ export default {
     const code = config.code || "WORKFLOW_ERROR";
     const err = new Error(`[${code}] ${message}`);
     err.code = code;
+    err.branchFailure = true;
     throw err;
   },
 };

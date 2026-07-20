@@ -11,5 +11,5 @@ export default {
     ]},
     { name: "outputKey", label: "Output Key", type: "string", default: "items", mono: true, smart: false },
   ],
-  outputs: ["items", "removedCount"],
+  outputs: ["items", "count", "removedCount"],
 };

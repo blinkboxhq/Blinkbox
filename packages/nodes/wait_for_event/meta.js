@@ -26,5 +26,5 @@ export default {
       hint: "Max seconds to wait before resuming with timed_out=true",
     },
   ],
-  outputs: ["payload", "timed_out", "event_type"],
+  outputs: ["delayed", "resumeKey"],
 };

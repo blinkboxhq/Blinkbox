@@ -70,6 +70,16 @@ function classifyError(err, nodeType, config) {
   const msg = err.message || String(err);
   const lower = msg.toLowerCase();
 
+  // A node that failed the branch on purpose (Stop & Error, Success/Failed).
+  // Retrying a decided outcome just delays the failed edge by the backoff.
+  if (err.branchFailure === true) {
+    return {
+      category: "branch",
+      message: msg,
+      hint: "This branch was marked failed on purpose by the workflow.",
+    };
+  }
+
   // Timeout errors
   if (lower.includes("timeout") || lower.includes("exceeded") || lower.includes("etimedout")) {
     return {
@@ -438,10 +448,13 @@ export async function processCursor({ executionId, cursorId }) {
         return; // abort without error; webhook already returned 200
       }
 
-      // Handle custom Delay/Sleep requests from nodes
+      // Handle custom Delay/Sleep requests from nodes. Everything the node
+      // passed through survives the sleep — replacing the payload outright made
+      // every upstream field unreachable downstream of a Delay.
       if (rawOutput && rawOutput.__delay) {
         nodeDelayUntil = new Date(rawOutput.resumeAfter);
-        rawOutput = { delayed: true, requestedSleep: true };
+        const { __delay, resumeAfter, ...passthrough } = rawOutput;
+        rawOutput = { ...passthrough, delayed: true, requestedSleep: true };
       }
 
       // Loop fan-out: store items array so routeEdges can spawn one cursor per item
@@ -574,7 +587,7 @@ export async function processCursor({ executionId, cursorId }) {
       const hint = errorClassification?.hint || "";
 
       // Don't auto-retry errors that won't self-fix on a bare re-run
-      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout"];
+      const noRetryCategories = ["config", "auth", "expression", "code", "parse", "quota", "network", "timeout", "branch"];
 
       // An upstream Retry node annotates its output with __retryConfig. Clamped
       // because these values reach the executor from user config, and an

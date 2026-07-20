@@ -113,7 +113,7 @@ test("3-node workflow runs end to end: manual → set_fields → success_failed"
   assert.equal(out.status, "processed", "set_fields static value flows through");
   assert.equal(out.source, "manual", "{{ $json.triggerType }} resolved by the real parser");
   assert.equal(out.triggerType, "manual", "trigger payload preserved down the chain");
-  assert.equal(out.__outcome, "success");
+  assert.equal(out.outcome, "success");
   assert.equal(out.message, "all good");
 
   const eventTypes = fresh.events.map((e) => e.type);

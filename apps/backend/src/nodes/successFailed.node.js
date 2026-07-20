@@ -10,9 +10,13 @@ export default {
     const message = config.message || "Branch marked as failed";
 
     if (outcome === "failed") {
-      throw new Error(message);
+      // Flagged so the executor routes straight to the failed edge instead of
+      // spending the retry budget — re-running cannot change a decided outcome.
+      const err = new Error(message);
+      err.branchFailure = true;
+      throw err;
     }
 
-    return { ...input, __outcome: "success", message: config.message || undefined };
+    return { ...input, outcome: "success", message: config.message || undefined };
   },
 };

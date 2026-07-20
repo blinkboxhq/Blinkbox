@@ -8,5 +8,5 @@ export default {
     { name: "aggregateKey", label: "Collect Field (optional)", type: "string", smart: false, mono: true, placeholder: "result  (blank = collect entire item)" },
     { name: "ttlSeconds", label: "TTL (seconds)", type: "number", default: 300, min: 10, max: 3600, hint: "Auto-clear partial batches after this many seconds" },
   ],
-  outputs: ["items", "count", "sessionId"],
+  outputs: ["items", "count", "sessionId", "completedAt"],
 };
