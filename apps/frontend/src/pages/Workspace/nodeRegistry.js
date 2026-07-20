@@ -1936,6 +1936,7 @@ export const NodeRegistry = {
     accentColor: "52,211,153",
     ConfigPanel: MergeNode,
     category: "logic",
+    description: "Wait for parallel branches and combine their outputs into one",
   },
   approval: {
     label: "Approval Gate",
