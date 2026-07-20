@@ -885,7 +885,7 @@ function CustomNodeImpl({ id, data, selected }) {
             <div key={i}>
               <Handle type="target" position={Position.Left} id={mergeHandleId(i)}
                 className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
-                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: taken ? EDGE_COLOR : "transparent", border: `1.5px solid ${taken ? HANDLE_BORDER : "rgba(255,255,255,0.35)"}`, position: "absolute" }} />
+                style={{ boxShadow: "none", top, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: taken ? EDGE_COLOR : "#18181b", border: `1.5px solid ${taken ? HANDLE_BORDER : "rgba(255,255,255,0.55)"}`, position: "absolute" }} />
               <span className="absolute pointer-events-none select-none"
                 style={{ top, left: -12, transform: "translate(-100%, -50%)", fontSize: 9, color: "#71717a", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", letterSpacing: "0.02em", zIndex: 5 }}>
                 {label}
