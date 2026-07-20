@@ -207,35 +207,30 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     setTimeout(() => setCopied(null), 1600);
   };
 
+  const fieldsOf = (n) => {
+    const live = allRunOutputs[n.id];
+    const hasLiveData = !!(live && typeof live === "object");
+    const shape = hasLiveData
+      ? live
+      : schemaToShape(nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType]);
+    return { hasLiveData, rows: childEntries(shape) };
+  };
+
   // Every node on the canvas is referenceable — wiring controls execution order,
-  // not which data you're allowed to pull into a field.
+  // not which data you're allowed to pull into a field. Nodes that produce nothing
+  // to reference (condition and friends just pass their input along) are left out.
+  const hasFields = (n) => fieldsOf(n).rows.length > 0;
+
   const connectedIds = [];
   for (const e of edges || []) {
     if (e.target === currentNodeId && !connectedIds.includes(e.source)) connectedIds.push(e.source);
   }
-  const connected = connectedIds.map((id) => canvasNodes.find((n) => n.id === id)).filter(Boolean);
+  const connected = connectedIds
+    .map((id) => canvasNodes.find((n) => n.id === id))
+    .filter((n) => n && hasFields(n));
   const others = (canvasNodes || []).filter(
-    (n) => n.id !== currentNodeId && !connectedIds.includes(n.id)
+    (n) => n.id !== currentNodeId && !connectedIds.includes(n.id) && hasFields(n)
   );
-
-  // Condition and routers hand their input straight through, so the fields you can
-  // pull off them are whatever fed them. Walk back until a node declares real data.
-  const shapeOf = (n, seen) => {
-    const live = allRunOutputs[n.id];
-    if (live && typeof live === "object") return { shape: live, live: true };
-
-    const schema = nodeOutputSchemas[n.id] ?? DEFAULT_SCHEMAS[n.data.backendType];
-    if (!schema?._passthrough) return { shape: schemaToShape(schema), live: false };
-
-    for (const e of edges || []) {
-      if (e.target !== n.id || seen.has(e.source)) continue;
-      seen.add(e.source);
-      const up = (canvasNodes || []).find((x) => x.id === e.source);
-      const upstream = up && shapeOf(up, seen);
-      if (upstream?.shape) return upstream;
-    }
-    return { shape: null, live: false };
-  };
 
   const renderNode = (n) => {
     const def = NodeRegistry[n.data.backendType];
@@ -244,8 +239,7 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
     const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
     const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
 
-    const { shape, live: hasLiveData } = shapeOf(n, new Set([n.id]));
-    const rows = childEntries(shape);
+    const { hasLiveData, rows } = fieldsOf(n);
 
     return (
       <div key={n.id} className="flex flex-col">
@@ -309,7 +303,9 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
         {connected.length === 0 && others.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-5">
             <Zap className="w-5 h-5 text-neutral-700 mb-2" />
-            <p className="text-[12px] text-neutral-600">No other nodes yet</p>
+            <p className="text-[12px] text-neutral-600">
+              {(canvasNodes || []).some((n) => n.id !== currentNodeId) ? "No data to use yet" : "No other nodes yet"}
+            </p>
             <p className="text-[10px] text-neutral-700 mt-1">Add a node to the canvas to use its data</p>
           </div>
         ) : (
