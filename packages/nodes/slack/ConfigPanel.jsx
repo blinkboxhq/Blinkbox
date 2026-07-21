@@ -14,7 +14,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'postMessage',       label: 'Post Message',        icon: MessageSquare,   group: 'Messaging' },
   { value: 'postRichMessage',   label: 'Rich Message',        icon: Layout,          group: 'Messaging' },
   { value: 'updateMessage',     label: 'Update Message',      icon: Pencil,          group: 'Messaging' },

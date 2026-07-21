@@ -11,7 +11,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'getOrder',      label: 'Get Order',           icon: ShoppingCart },
   { value: 'listOrders',    label: 'List Orders',         icon: List },
   { value: 'updateOrder',   label: 'Update Order Status', icon: RefreshCw },

@@ -10,7 +10,7 @@ import {
 const ACCENT = '#4d7cff';
 const jsonVal = (v) => (typeof v === 'string' ? v : (v ? JSON.stringify(v, null, 2) : ''));
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'createPage',      label: 'Create Page',    icon: PlusCircle },
   { value: 'updatePage',      label: 'Update Page',    icon: Edit3 },
   { value: 'getPage',         label: 'Get Page',       icon: FileText },

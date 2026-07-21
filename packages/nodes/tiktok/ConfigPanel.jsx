@@ -9,7 +9,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'publishVideo', label: 'Publish Video', icon: Upload },
   { value: 'getUserInfo',  label: 'Get User Info', icon: User },
   { value: 'listVideos',   label: 'List Videos',   icon: ListVideo },

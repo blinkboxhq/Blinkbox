@@ -11,15 +11,15 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'addSubscriber',    label: 'Add / Update Subscriber', icon: UserPlus },
-  { value: 'removeSubscriber', label: 'Unsubscribe',             icon: UserMinus },
+  { value: 'archiveSubscriber', label: 'Archive / Unsubscribe',             icon: UserMinus },
   { value: 'getSubscriber',    label: 'Get Subscriber',          icon: User },
   { value: 'listCampaigns',    label: 'List Campaigns',          icon: List },
   { value: 'sendCampaign',     label: 'Send Campaign',           icon: Send },
   { value: 'createCampaign',   label: 'Create Campaign',         icon: FilePlus2 },
-  { value: 'addTag',           label: 'Add Tag to Subscriber',   icon: Tag },
-  { value: 'listLists',        label: 'List Audiences',          icon: Users },
+  { value: 'addSubscriberTags',           label: 'Add Tag to Subscriber',   icon: Tag },
+  { value: 'listAudiences',        label: 'List Audiences',          icon: Users },
 ];
 
 function Field({ label, optional, children }) {
@@ -61,10 +61,10 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
 
 
-      {!['listCampaigns', 'createCampaign', 'listLists'].includes(op) &&
+      {!['listCampaigns', 'createCampaign', 'listAudiences'].includes(op) &&
         text('Audience (List) ID', 'listId', { placeholder: 'Mailchimp audience ID' })}
 
-      {(op === 'addSubscriber' || op === 'getSubscriber' || op === 'removeSubscriber' || op === 'addTag') &&
+      {(op === 'addSubscriber' || op === 'getSubscriber' || op === 'archiveSubscriber' || op === 'addSubscriberTags') &&
         text('Email Address', 'email', { placeholder: '{{ $json.email }}' })}
 
       {op === 'addSubscriber' && (
@@ -90,7 +90,7 @@ export default function MailchimpNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      {op === 'addTag' && text('Tag Name', 'tagName', { placeholder: 'premium-user' })}
+      {op === 'addSubscriberTags' && text('Tag Name', 'tagName', { placeholder: 'premium-user' })}
 
       {op === 'sendCampaign' && text('Campaign ID', 'campaignId', { placeholder: '{{ $json.id }}' })}
 

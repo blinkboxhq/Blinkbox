@@ -11,7 +11,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'listForms',      label: 'List Forms',      icon: List },
   { value: 'getForm',        label: 'Get Form',        icon: FileText },
   { value: 'listResponses',  label: 'List Responses',  icon: Inbox },

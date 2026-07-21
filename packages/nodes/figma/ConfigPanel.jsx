@@ -11,13 +11,12 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'getFile',       label: 'Get File',           icon: FileText },
   { value: 'getFileNodes',  label: 'Get Nodes',          icon: Boxes },
-  { value: 'getComments',   label: 'Get Comments',       icon: MessageSquare },
-  { value: 'postComment',   label: 'Post Comment',       icon: MessageSquarePlus },
-  { value: 'deleteComment', label: 'Delete Comment',     icon: MessageSquareX },
-  { value: 'exportNode',    label: 'Export Node (image)', icon: ImageDown },
+  { value: 'list',   label: 'Get Comments',       icon: MessageSquare },
+  { value: 'post',   label: 'Post Comment',       icon: MessageSquarePlus },
+  { value: 'exportImage',    label: 'Export Node (image)', icon: ImageDown },
   { value: 'getStyles',     label: 'Get Styles',         icon: Palette },
   { value: 'getComponents', label: 'Get Components',     icon: Component },
 ];
@@ -63,10 +62,10 @@ export default function FigmaNode({ config = {}, updateConfig, nodeId }) {
 
       {text('File Key', 'fileKey', { placeholder: 'From figma.com/file/XXXX/...' })}
 
-      {['getFileNodes', 'exportNode'].includes(op) &&
+      {['getFileNodes', 'exportImage'].includes(op) &&
         text('Node IDs (comma-sep)', 'nodeIds', { placeholder: '1:2,3:4' })}
 
-      {op === 'postComment' && (
+      {op === 'post' && (
         <>
           {text('Comment Message', 'message', { placeholder: 'Approved — ready for handoff 🎉', multiline: true })}
           <div className="flex gap-3">
@@ -79,7 +78,7 @@ export default function FigmaNode({ config = {}, updateConfig, nodeId }) {
       {op === 'deleteComment' &&
         text('Comment ID', 'commentId', { placeholder: '{{ $json.id }}' })}
 
-      {op === 'exportNode' && (
+      {op === 'exportImage' && (
         <>
           <ConfigPills
             label="Export Format"

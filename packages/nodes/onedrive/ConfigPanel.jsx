@@ -11,7 +11,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'uploadFile',   label: 'Upload File',       icon: UploadCloud },
   { value: 'downloadFile', label: 'Download File',     icon: DownloadCloud },
   { value: 'listFiles',    label: 'List Files',        icon: List },

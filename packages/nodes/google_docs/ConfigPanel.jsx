@@ -9,14 +9,12 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
-  { value: 'createDoc',   label: 'Create Document',      icon: FilePlus },
-  { value: 'getDoc',      label: 'Get Document',         icon: FileText },
-  { value: 'appendText',  label: 'Append Text',          icon: PlusSquare },
+export const OPERATIONS = [
+  { value: 'create',   label: 'Create Document',      icon: FilePlus },
+  { value: 'get',      label: 'Get Document',         icon: FileText },
+  { value: 'append',  label: 'Append Text',          icon: PlusSquare },
   { value: 'replaceText', label: 'Find & Replace',       icon: Replace },
-  { value: 'insertTable', label: 'Insert Table',         icon: Table },
-  { value: 'listDocs',    label: 'List Documents',       icon: List },
-  { value: 'exportDoc',   label: 'Export as PDF / DOCX', icon: Download },
+  { value: 'list',    label: 'List Documents',       icon: List },
 ];
 
 const FORMATS = [
@@ -41,7 +39,7 @@ function Field({ label, optional, children }) {
 
 export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
   const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
-  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'createDoc';
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'create';
 
   useEffect(() => {
     if (op && op !== config.operation) updateConfig('operation', op);
@@ -65,10 +63,10 @@ export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
 
 
-      {['getDoc', 'appendText', 'replaceText', 'insertTable', 'exportDoc'].includes(op) &&
+      {['get', 'append', 'replaceText', 'insertTable', 'exportDoc'].includes(op) &&
         text('Document ID', 'docId', { placeholder: '{{ $json.docId }} or from Drive URL' })}
 
-      {op === 'createDoc' && (
+      {op === 'create' && (
         <>
           {text('Document Title', 'title', { placeholder: 'Weekly Report — {{ $json.week }}' })}
           {text('Initial Content', 'content', { optional: true, placeholder: '# Report\n\n{{ $json.summary }}', multiline: true })}
@@ -76,7 +74,7 @@ export default function GoogleDocsNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      {op === 'appendText' && (
+      {op === 'append' && (
         <>
           {text('Text to Append', 'text', { placeholder: '{{ $json.entry }}', multiline: true })}
           <ConfigToggleRow

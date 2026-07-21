@@ -339,7 +339,6 @@ import AsanaTriggerNode from "@triggers/asana/ConfigPanel.jsx";
 import makeCodingAgentNode from "@nodes/coding_agent/ConfigPanel.jsx";
 import GenericActionNode from "@nodes/generic_action/ConfigPanel.jsx";
 import AgentIntegrationNode from "@nodes/agent_integration/ConfigPanel.jsx";
-import EmailTriggerNode from "@triggers/imap/ConfigPanel.jsx";
 import ImapTriggerNode from "@triggers/imap/ConfigPanel.jsx";
 import DatabaseTriggerNode from "@triggers/db/ConfigPanel.jsx";
 import DnsTriggerNode from "@triggers/dns/ConfigPanel.jsx";
@@ -2569,26 +2568,6 @@ export const NodeRegistry = {
     ConfigPanel: PostgresNode,
     category: "data",
     description: "Query and write to PostgreSQL or MySQL databases",
-  },
-  email: {
-    label: "Email (Webhook)",
-    icon: Mail,
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    ConfigPanel: EmailTriggerNode,
-    category: "apps",
-    description:
-      "Receive inbound emails via Mailgun, SendGrid or Postmark webhook",
-  },
-  imap: {
-    label: "Email (IMAP)",
-    icon: Mail,
-    colorClass: "text-cyan-400",
-    accentColor: "34,211,238",
-    logoUrl: imgImap,
-    ConfigPanel: ImapTriggerNode,
-    category: "apps",
-    description: "Poll any IMAP inbox for new emails",
   },
 
 

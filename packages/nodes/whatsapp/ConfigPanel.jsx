@@ -12,7 +12,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'sendMessage',  label: 'Send Text',     icon: MessageSquare },
   { value: 'sendImage',    label: 'Send Image',    icon: Image },
   { value: 'sendVideo',    label: 'Send Video',    icon: Video },

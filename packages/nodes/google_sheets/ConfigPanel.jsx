@@ -20,7 +20,7 @@ function SheetsIcon({ className }) {
   );
 }
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'readRange',  label: 'Read Range',   icon: Download,        group: 'Values' },
   { value: 'writeRange', label: 'Write Range',  icon: Edit3,           group: 'Values' },
   { value: 'appendRow',  label: 'Append Row',   icon: PlusCircle,      group: 'Values' },

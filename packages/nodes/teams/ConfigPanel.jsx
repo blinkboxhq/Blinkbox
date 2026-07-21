@@ -11,7 +11,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'sendMessage',   label: 'Send Message',       icon: Send },
   { value: 'sendCard',      label: 'Send Adaptive Card', icon: LayoutTemplate },
   { value: 'replyMessage',  label: 'Reply to Thread',    icon: Reply },

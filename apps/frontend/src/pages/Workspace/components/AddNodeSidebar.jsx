@@ -57,6 +57,13 @@ export default function AddNodeSidebar() {
     setSelected(new Set());
   }, [clearAddNodeModal]);
 
+  // App actions carry the panel's own operation slug, so execution never depends
+  // on matching the display name; older hand-listed actions still match by label.
+  const actionConfig = (action) =>
+    !action ? {} : action.value
+      ? { operation: action.value, selectedAction: action.name }
+      : { selectedAction: action.name };
+
   const basePosition = useCallback(() => {
     const src = nodes.find((n) => n.id === addNodeSource);
     if (src) return { x: src.position.x + 300, y: src.position.y };
@@ -64,10 +71,10 @@ export default function AddNodeSidebar() {
     return { x: 400, y: 300 };
   }, [nodes, addNodeSource]);
 
-  const commitOne = useCallback((nodeDef, selectedAction = null) => {
+  const commitOne = useCallback((nodeDef, action = null) => {
     const pos   = basePosition();
     const newId = `${nodeDef.key}-${crypto.randomUUID()}`;
-    addNode({ id: newId, type: "custom", position: pos, data: { backendType: nodeDef.key, label: selectedAction || nodeDef.label, type: "action", config: selectedAction ? { selectedAction } : {} } });
+    addNode({ id: newId, type: "custom", position: pos, data: { backendType: nodeDef.key, label: action?.name || nodeDef.label, type: "action", config: actionConfig(action) } });
     if (addNodeSource && addNodeSource !== "__edge__") {
       const already = edges.some((e) => e.source === addNodeSource && e.sourceHandle === addNodeSourceHandle);
       if (!already) onConnect({ source: addNodeSource, target: newId, sourceHandle: addNodeSourceHandle, targetHandle: null });
@@ -218,8 +225,8 @@ export default function AddNodeSidebar() {
         <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
           {pendingNode ? (
             actions.map((action, i) => (
-              <ActionRow key={i} action={action} subject={pendingNode}
-                onSelect={() => commitOne(pendingNode, action.name)} />
+              <ActionRow key={action.value || i} action={action} subject={pendingNode}
+                onSelect={() => commitOne(pendingNode, action)} />
             ))
           ) : query ? (
             visibleNodes.length === 0 ? (
@@ -348,7 +355,9 @@ function ActionRow({ action, subject, onSelect }) {
       backendType: subject.key,
       label: action.name,
       type: "action",
-      config: { selectedAction: action.name },
+      config: action.value
+        ? { operation: action.value, selectedAction: action.name }
+        : { selectedAction: action.name },
     };
     e.dataTransfer.setData("application/json", JSON.stringify(payload));
     setDragPayload(payload);

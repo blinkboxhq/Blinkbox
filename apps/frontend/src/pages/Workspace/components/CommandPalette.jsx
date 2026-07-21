@@ -69,7 +69,7 @@ export default function CommandPalette() {
   // When viewing actions for a pending node, filter its actions
   const actionItems = pendingNode
     ? (NODE_ACTIONS[pendingNode.key] || []).filter((a) =>
-        !q || a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q)
+        !q || a.name.toLowerCase().includes(q) || (a.description || "").toLowerCase().includes(q)
       ).map((a, i) => ({ type: "action", ...a, id: `action-${i}`, nodeDef: pendingNode }))
     : [];
 
@@ -95,7 +95,8 @@ export default function CommandPalette() {
     if (e.key === "Backspace" && !query && pendingNode) { setPending(null); }
   };
 
-  const commitNode = useCallback((nodeDef, selectedAction = null) => {
+  const commitNode = useCallback((nodeDef, action = null) => {
+    const selectedAction = action?.name || null;
     const sourceNode = nodes.find((n) => n.id === addNodeSource);
     const position = sourceNode
       ? { x: sourceNode.position.x + 300, y: sourceNode.position.y }
@@ -112,7 +113,9 @@ export default function CommandPalette() {
         backendType: nodeDef.key,
         label: selectedAction || nodeDef.label,
         type: "action",
-        config: selectedAction ? { selectedAction } : {},
+        config: !selectedAction ? {} : action.value
+          ? { operation: action.value, selectedAction }
+          : { selectedAction },
       },
     });
 
@@ -139,7 +142,7 @@ export default function CommandPalette() {
         commitNode(item);
       }
     } else if (item.type === "action") {
-      commitNode(item.nodeDef, item.name);
+      commitNode(item.nodeDef, item);
     }
   };
 

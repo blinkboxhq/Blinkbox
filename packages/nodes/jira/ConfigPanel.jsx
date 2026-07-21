@@ -16,7 +16,7 @@ import {
 const ACCENT = '#4d7cff';
 const PRIORITIES = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'searchIssues', label: 'Search (JQL)', icon: Search, desc: 'Issues' },
   { value: 'getIssue', label: 'Get Issue', icon: Eye, desc: 'Issues' },
   { value: 'createIssue', label: 'Create Issue', icon: Plus, desc: 'Issues' },

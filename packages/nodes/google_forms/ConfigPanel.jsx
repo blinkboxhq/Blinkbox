@@ -9,12 +9,10 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'getForm',       label: 'Get Form',       icon: FileText },
-  { value: 'listResponses', label: 'List Responses', icon: ListChecks },
+  { value: 'getResponses', label: 'List Responses', icon: ListChecks },
   { value: 'getResponse',   label: 'Get Response',   icon: FileSearch },
-  { value: 'createForm',    label: 'Create Form',    icon: FilePlus },
-  { value: 'addQuestion',   label: 'Add Question',   icon: PlusCircle },
 ];
 
 const QUESTION_TYPES = [
@@ -42,7 +40,7 @@ function Field({ label, optional, children }) {
 
 export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
   const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
-  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listResponses';
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'getResponses';
 
   useEffect(() => {
     if (op && op !== config.operation) updateConfig('operation', op);
@@ -66,12 +64,12 @@ export default function GoogleFormsNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
 
 
-      {['getForm', 'listResponses', 'getResponse', 'addQuestion'].includes(op) &&
+      {['getForm', 'getResponses', 'getResponse', 'addQuestion'].includes(op) &&
         text('Form ID', 'formId', { placeholder: 'From Google Forms URL' })}
 
       {op === 'getResponse' && text('Response ID', 'responseId', { placeholder: '{{ $json.responseId }}' })}
 
-      {op === 'listResponses' && (
+      {op === 'getResponses' && (
         <>
           {text('Page Size', 'pageSize', { placeholder: '50' })}
           <ConfigToggleRow

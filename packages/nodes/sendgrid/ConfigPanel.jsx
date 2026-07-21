@@ -9,7 +9,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'sendEmail',         label: 'Send Email',         icon: Send },
   { value: 'sendTemplate',      label: 'Use Template',       icon: Layout },
   { value: 'sendBulk',          label: 'Bulk Send',          icon: Users },

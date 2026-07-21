@@ -12,7 +12,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'create',      label: 'Create Record',  icon: PlusCircle, group: 'Records' },
   { value: 'read',        label: 'Read Records',   icon: Search,     group: 'Records' },
   { value: 'update',      label: 'Update Record',  icon: Pencil,     group: 'Records' },

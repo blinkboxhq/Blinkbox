@@ -22,7 +22,7 @@ function GmailIcon({ className }) {
   );
 }
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'sendEmail',    label: 'Send Email',   icon: Send,           group: 'Compose' },
   { value: 'replyToEmail', label: 'Reply',        icon: Reply,          group: 'Compose' },
   { value: 'forwardEmail', label: 'Forward',      icon: Forward,        group: 'Compose' },

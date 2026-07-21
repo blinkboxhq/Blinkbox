@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import imgReddit from './logo.svg';
 import {
-  Flame, Clock, TrendingUp, Send, MessageSquare, Search, User, Info, Link2, FileText,
+  Flame, Send, MessageSquare, Search, User, Info, Link2, FileText,
 } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
@@ -11,18 +11,23 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
-  { value: 'getHotPosts',     label: 'Get Hot Posts',     icon: Flame },
-  { value: 'getNewPosts',     label: 'Get New Posts',     icon: Clock },
-  { value: 'getTopPosts',     label: 'Get Top Posts',     icon: TrendingUp },
+export const OPERATIONS = [
+  { value: 'listPosts',     label: 'List Posts',     icon: Flame },
   { value: 'submitPost',      label: 'Submit Post',       icon: Send },
-  { value: 'submitComment',   label: 'Submit Comment',    icon: MessageSquare },
-  { value: 'searchPosts',     label: 'Search Posts',      icon: Search },
-  { value: 'getUserInfo',     label: 'Get User Info',     icon: User },
-  { value: 'getSubredditInfo', label: 'Get Subreddit Info', icon: Info },
+  { value: 'reply',   label: 'Submit Comment',    icon: MessageSquare },
+  { value: 'search',     label: 'Search Posts',      icon: Search },
+  { value: 'getUser',     label: 'Get User Info',     icon: User },
+  { value: 'getSubreddit', label: 'Get Subreddit Info', icon: Info },
 ];
 
 const TIME_FILTERS = ['hour', 'day', 'week', 'month', 'year', 'all'];
+const SORTS = [
+  { value: 'hot', label: 'Hot' },
+  { value: 'new', label: 'New' },
+  { value: 'top', label: 'Top' },
+  { value: 'rising', label: 'Rising' },
+  { value: 'controversial', label: 'Controversial' },
+];
 const LIMITS = [5, 10, 25, 50];
 const POST_KINDS = [
   { value: 'link', label: 'Link Post' },
@@ -40,7 +45,7 @@ function Field({ label, icon, children }) {
 
 export default function RedditNode({ config = {}, updateConfig, nodeId }) {
   const LABEL_TO_OP = Object.fromEntries(OPERATIONS.map((o) => [o.label, o.value]));
-  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'getHotPosts';
+  const op = LABEL_TO_OP[config.selectedAction] || config.operation || 'listPosts';
 
   useEffect(() => {
     if (op && op !== config.operation) updateConfig('operation', op);
@@ -63,20 +68,30 @@ export default function RedditNode({ config = {}, updateConfig, nodeId }) {
     <ConfigSection className="gap-5">
 
 
-      {['getHotPosts', 'getNewPosts', 'getTopPosts', 'submitPost', 'submitComment', 'getSubredditInfo'].includes(op) &&
+      {['listPosts', 'submitPost', 'reply', 'getSubreddit'].includes(op) &&
         text('Subreddit', 'subreddit', { placeholder: 'programming (without r/)' })}
 
-      {op === 'getTopPosts' && (
+      {op === 'listPosts' && (
+        <ConfigPills
+          label="Sort"
+          value={config.sort || 'hot'}
+          onChange={(val) => updateConfig('sort', val)}
+          options={SORTS}
+          accentColor={ACCENT}
+        />
+      )}
+
+      {op === 'listPosts' && ['top', 'controversial'].includes(config.sort) && (
         <ConfigPills
           label="Time Filter"
-          value={config.t || 'day'}
-          onChange={(val) => updateConfig('t', val)}
+          value={config.time || 'day'}
+          onChange={(val) => updateConfig('time', val)}
           options={TIME_FILTERS}
           accentColor={ACCENT}
         />
       )}
 
-      {['getHotPosts', 'getNewPosts', 'getTopPosts'].includes(op) && (
+      {op === 'listPosts' && (
         <ConfigPills
           label="Limit"
           value={config.limit || 10}
@@ -102,22 +117,22 @@ export default function RedditNode({ config = {}, updateConfig, nodeId }) {
         </>
       )}
 
-      {op === 'submitComment' && (
+      {op === 'reply' && (
         <>
-          {text('Parent ID (post or comment fullname)', 'parentId', { placeholder: 't3_xxxx (post) or t1_xxxx (comment)' })}
+          {text('Parent ID (post or comment fullname)', 'parent', { placeholder: 't3_xxxx (post) or t1_xxxx (comment)' })}
           {text('Comment Text (Markdown)', 'text', { icon: MessageSquare, placeholder: '{{ $json.reply }}', multiline: true })}
         </>
       )}
 
-      {op === 'searchPosts' && (
+      {op === 'search' && (
         <>
-          {text('Query', 'q', { icon: Search, placeholder: '{{ $json.searchTerm }}' })}
+          {text('Query', 'query', { icon: Search, placeholder: '{{ $json.searchTerm }}' })}
           {text('Subreddit (optional, blank = all)', 'subreddit', { placeholder: 'programming' })}
           {text('Limit', 'limit', { placeholder: '10' })}
         </>
       )}
 
-      {op === 'getUserInfo' && text('Username', 'username', { icon: User, placeholder: '{{ $json.username }}' })}
+      {op === 'getUser' && text('Username', 'username', { icon: User, placeholder: '{{ $json.username }}' })}
 
       <CredentialPicker
         value={config.credentialId || ''}

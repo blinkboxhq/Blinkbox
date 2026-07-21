@@ -11,7 +11,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'createCard',  label: 'Create Card',         icon: Plus },
   { value: 'updateCard',  label: 'Update Card',         icon: Pencil },
   { value: 'moveCard',    label: 'Move Card',           icon: MoveRight },

@@ -13,7 +13,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'sendMessage',    label: 'Send (Webhook)',  icon: MessageSquare,  group: 'Webhook' },
   { value: 'sendEmbed',      label: 'Embed (Webhook)', icon: Layout,         group: 'Webhook' },
   { value: 'sendFile',       label: 'File (Webhook)',  icon: FileText,       group: 'Webhook' },

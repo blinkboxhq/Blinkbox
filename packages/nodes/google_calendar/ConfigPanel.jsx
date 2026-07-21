@@ -15,7 +15,7 @@ import {
 
 const ACCENT = '#4d7cff';
 
-const OPERATIONS = [
+export const OPERATIONS = [
   { value: 'listEvents',    label: 'List Events',    icon: CalendarDays,  group: 'Events' },
   { value: 'getEvent',      label: 'Get Event',      icon: Eye,           group: 'Events' },
   { value: 'createEvent',   label: 'Create Event',   icon: CalendarPlus,  group: 'Events' },
