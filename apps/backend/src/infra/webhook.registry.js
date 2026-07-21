@@ -523,6 +523,159 @@ export const WEBHOOK_APPS = {
     }),
   },
 
+  onedrive_trigger: {
+    optional: true,
+    resolveToken: oauth("OneDrive trigger"),
+    secretKey: "onedriveWebhookSecret",
+    genSecret: true,
+    // folder filters are applied by the poll check, so the subscription watches
+    // the whole drive root and never needs recreating on config edits
+    create: ({ url, secret, token }) => ({
+      method: "POST",
+      url: "https://graph.microsoft.com/v1.0/subscriptions",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        changeType: "updated",
+        notificationUrl: url,
+        resource: "/me/drive/root",
+        expirationDateTime: new Date(Date.now() + 4230 * 60 * 1000).toISOString(),
+        clientState: secret,
+      },
+    }),
+    extractId: (j) => j.id,
+    storeExtra: () => ({ pushPollType: "onedrive_trigger" }),
+    deletePath: ({ webhookId, token }) => ({
+      method: "DELETE",
+      url: `https://graph.microsoft.com/v1.0/subscriptions/${webhookId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  },
+
+  sharepoint_trigger: {
+    optional: true,
+    resolveToken: oauth("SharePoint trigger"),
+    secretKey: "sharepointWebhookSecret",
+    genSecret: true,
+    create: ({ url, secret, cfg, token }) => ({
+      method: "POST",
+      url: "https://graph.microsoft.com/v1.0/subscriptions",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        changeType: "updated",
+        notificationUrl: url,
+        resource: `sites/${cfg.siteId}/lists/${cfg.listId}`,
+        expirationDateTime: new Date(Date.now() + 4230 * 60 * 1000).toISOString(),
+        clientState: secret,
+      },
+    }),
+    extractId: (j) => j.id,
+    storeExtra: () => ({ pushPollType: "sharepoint_trigger" }),
+    deletePath: ({ webhookId, token }) => ({
+      method: "DELETE",
+      url: `https://graph.microsoft.com/v1.0/subscriptions/${webhookId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  },
+
+  google_calendar_trigger: {
+    optional: true,
+    resolveToken: oauth("Google Calendar trigger"),
+    secretKey: "gcalWebhookSecret",
+    genSecret: true,
+    create: ({ url, secret, cfg, token, automationId }) => ({
+      method: "POST",
+      url: `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId || "primary")}/events/watch`,
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        id: `bb-${automationId}-${Date.now()}`,
+        type: "web_hook",
+        address: url,
+        token: secret,
+        expiration: String(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    }),
+    extractId: (j) => j.id,
+    storeExtra: (j) => ({
+      pushPollType: "google_calendar_trigger",
+      driveResourceId: j?.resourceId || "",
+      driveExpiresAt: j?.expiration ? Number(j.expiration) : 0,
+    }),
+    // calendar channels stop on the calendar endpoint, not the Drive one
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "POST",
+      url: "https://www.googleapis.com/calendar/v3/channels/stop",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: { id: webhookId, resourceId: cfg.driveResourceId },
+    }),
+  },
+
+  // Drive watches a single file id. google_drive needs a folderId to watch;
+  // without one `create` throws and `optional` leaves the poller running.
+  google_drive_trigger: {
+    optional: true,
+    resolveToken: oauth("Google Drive trigger"),
+    secretKey: "gdriveWebhookSecret",
+    genSecret: true,
+    create: ({ url, secret, cfg, token, automationId }) => {
+      if (!cfg.folderId) throw new Error("Drive push needs a folder — watching the whole drive requires a change token");
+      return {
+        method: "POST",
+        url: `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(cfg.folderId)}/watch`,
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: {
+          id: `bb-${automationId}-${Date.now()}`,
+          type: "web_hook",
+          address: url,
+          token: secret,
+          expiration: String(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      };
+    },
+    extractId: (j) => j.id,
+    storeExtra: (j) => ({
+      pushPollType: "google_drive_trigger",
+      driveResourceId: j?.resourceId || "",
+      driveExpiresAt: j?.expiration ? Number(j.expiration) : 0,
+    }),
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "POST",
+      url: "https://www.googleapis.com/drive/v3/channels/stop",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: { id: webhookId, resourceId: cfg.driveResourceId },
+    }),
+  },
+
+  google_docs_trigger: {
+    optional: true,
+    resolveToken: oauth("Google Docs trigger"),
+    secretKey: "gdocsWebhookSecret",
+    genSecret: true,
+    create: ({ url, secret, cfg, token, automationId }) => ({
+      method: "POST",
+      url: `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(cfg.docId)}/watch`,
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: {
+        id: `bb-${automationId}-${Date.now()}`,
+        type: "web_hook",
+        address: url,
+        token: secret,
+        expiration: String(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    }),
+    extractId: (j) => j.id,
+    storeExtra: (j) => ({
+      pushPollType: "google_docs_trigger",
+      driveResourceId: j?.resourceId || "",
+      driveExpiresAt: j?.expiration ? Number(j.expiration) : 0,
+    }),
+    deletePath: ({ cfg, webhookId, token }) => ({
+      method: "POST",
+      url: "https://www.googleapis.com/drive/v3/channels/stop",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: { id: webhookId, resourceId: cfg.driveResourceId },
+    }),
+  },
+
   google_sheets_trigger: {
     optional: true,
     resolveToken: oauth("Google Sheets trigger"),

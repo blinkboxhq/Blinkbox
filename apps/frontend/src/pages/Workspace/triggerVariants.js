@@ -56,7 +56,6 @@ import JiraTriggerNode             from "@triggers/jira/ConfigPanel.jsx";
 import TrelloTriggerNode           from "@triggers/trello/ConfigPanel.jsx";
 import GoogleSheetsTriggerNode     from "@triggers/google_sheets/ConfigPanel.jsx";
 import OutlookTriggerNode          from "@triggers/outlook/ConfigPanel.jsx";
-import TeamsTriggerNode            from "@triggers/teams/ConfigPanel.jsx";
 import HttpMonitorTriggerNode      from "@triggers/http_monitor/ConfigPanel.jsx";
 import GitLabTriggerNode           from "@triggers/gitlab/ConfigPanel.jsx";
 import SslTriggerNode              from "@triggers/ssl/ConfigPanel.jsx";
@@ -92,7 +91,6 @@ import imgJira           from "@triggers/jira/logo.svg";
 import imgTrello         from "@triggers/trello/logo.svg";
 import imgGoogleSheets   from "@triggers/google_sheets/logo.svg";
 import imgOutlook        from "@triggers/outlook/logo.svg";
-import imgTeams          from "@triggers/teams/logo.svg";
 import imgVercel         from "@triggers/vercel/logo.svg";
 import imgGitLab         from "@triggers/gitlab/logo.svg";
 import imgLetsEncrypt    from "@triggers/ssl/logo.svg";
@@ -442,15 +440,6 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-[#0078D4]",
     accentColor: "0,120,212",
     ConfigPanel: OutlookTriggerNode,
-  },
-  teams: {
-    backendType: "teams_trigger",
-    icon: Github,
-    logoUrl: imgTeams,
-    label: "On Teams Message",
-    colorClass: "text-[#6264A7]",
-    accentColor: "98,100,167",
-    ConfigPanel: TeamsTriggerNode,
   },
   http_monitor: {
     backendType: "http_monitor_trigger",

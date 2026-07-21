@@ -15,7 +15,7 @@ export const NODE_TYPES = [
   "reddit_trigger", "google_calendar_trigger", "github_issue_trigger",
   "app_event_trigger", "evaluation_trigger", "database_trigger",
   "ssh_trigger", "docker_trigger", "jira_trigger", "trello_trigger",
-  "google_sheets_trigger", "outlook_trigger", "teams_trigger",
+  "google_sheets_trigger", "outlook_trigger",
   "http_monitor_trigger", "gitlab_trigger",
   "ssl_trigger", "dns_trigger", "port_monitor_trigger",
   "hackernews_trigger", "pipedrive_trigger", "asana_trigger",

@@ -59,7 +59,6 @@ import googleDocsTrigger      from "../triggers/google_docs.js";
 import googleFormsTrigger     from "../triggers/google_forms.js";
 import onedriveTrigger        from "../triggers/onedrive.js";
 import outlookTrigger         from "../triggers/outlook.js";
-import teamsTrigger           from "../triggers/teams.js";
 import priceAlertTrigger      from "../triggers/price_alert.js";
 import httpMonitorTrigger     from "../triggers/http_monitor.js";
 import sslTrigger             from "../triggers/ssl.js";
@@ -284,7 +283,6 @@ const rawNodeRegistry = {
   google_forms_trigger:     googleFormsTrigger,
   onedrive_trigger:         onedriveTrigger,
   outlook_trigger:          outlookTrigger,
-  teams_trigger:            teamsTrigger,
   price_alert_trigger:      priceAlertTrigger,
   http_monitor_trigger:     httpMonitorTrigger,
   ssl_trigger:              sslTrigger,

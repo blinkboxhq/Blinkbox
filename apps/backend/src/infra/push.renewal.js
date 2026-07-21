@@ -8,18 +8,26 @@ import { GOOGLE_PUBSUB_TOPIC } from "../config/env.js";
 const INTERVAL_MS = 6 * 60 * 60 * 1000;
 const LOCK_KEY = "bb:push:renewal:lock";
 
-async function renewOutlook() {
-  const automations = await findAutomationsWithTrigger("outlook_trigger");
+// Graph subscriptions extend in place via PATCH; Google channels cannot be
+// extended and must be swapped for a fresh one before they lapse.
+const GRAPH_TYPES = ["outlook_trigger", "onedrive_trigger", "sharepoint_trigger"];
+const DRIVE_CHANNEL_TYPES = [
+  "google_sheets_trigger", "google_docs_trigger",
+  "google_drive_trigger", "google_calendar_trigger",
+];
+
+async function renewGraph(type) {
+  const automations = await findAutomationsWithTrigger(type);
   let fellBack = false;
 
   for (const automation of automations) {
     if (!automation.active) continue;
-    for (const node of getTriggerNodesOfType(automation, "outlook_trigger")) {
+    for (const node of getTriggerNodesOfType(automation, type)) {
       const cfg = getTriggerConfig(node);
-      const subId = cfg.outlook_trigger_webhookId;
+      const subId = cfg[`${type}_webhookId`];
       if (!cfg.webhookRegistered || !subId) continue;
       try {
-        const token = await WEBHOOK_APPS.outlook_trigger.resolveToken(cfg, automation.workspaceId);
+        const token = await WEBHOOK_APPS[type].resolveToken(cfg, automation.workspaceId);
         const res = await fetch(`https://graph.microsoft.com/v1.0/subscriptions/${subId}`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -29,26 +37,26 @@ async function renewOutlook() {
         });
         if (!res.ok) throw new Error(`Graph renew → ${res.status}`);
       } catch (err) {
-        console.warn(`[PushRenewal] outlook ${automation._id}: ${err.message} — recreating`);
-        fellBack = (await recreate("outlook_trigger", automation, node, cfg)) || fellBack;
+        console.warn(`[PushRenewal] ${type} ${automation._id}: ${err.message} — recreating`);
+        fellBack = (await recreate(type, automation, node, cfg)) || fellBack;
       }
     }
   }
   return fellBack;
 }
 
-async function renewSheets() {
-  const automations = await findAutomationsWithTrigger("google_sheets_trigger");
+async function renewDriveChannel(type) {
+  const automations = await findAutomationsWithTrigger(type);
   let fellBack = false;
 
   for (const automation of automations) {
     if (!automation.active) continue;
-    for (const node of getTriggerNodesOfType(automation, "google_sheets_trigger")) {
+    for (const node of getTriggerNodesOfType(automation, type)) {
       const cfg = getTriggerConfig(node);
-      if (!cfg.webhookRegistered || !cfg.google_sheets_trigger_webhookId) continue;
+      if (!cfg.webhookRegistered || !cfg[`${type}_webhookId`]) continue;
       // Drive channels can't be extended — swap in a fresh one before expiry
       if ((Number(cfg.driveExpiresAt) || 0) - Date.now() > INTERVAL_MS + 2 * 60 * 60 * 1000) continue;
-      fellBack = (await recreate("google_sheets_trigger", automation, node, cfg)) || fellBack;
+      fellBack = (await recreate(type, automation, node, cfg)) || fellBack;
     }
   }
   return fellBack;
@@ -132,8 +140,12 @@ async function runRenewal() {
   const lock = await redis.set(LOCK_KEY, "1", "EX", 300, "NX");
   if (!lock) return;
   try {
-    if (await renewOutlook()) await syncPollerHub("outlook_trigger");
-    if (await renewSheets()) await syncPollerHub("google_sheets_trigger");
+    for (const t of GRAPH_TYPES) {
+      if (await renewGraph(t)) await syncPollerHub(t);
+    }
+    for (const t of DRIVE_CHANNEL_TYPES) {
+      if (await renewDriveChannel(t)) await syncPollerHub(t);
+    }
     if (await renewGmail()) await syncPollerHub("gmail_trigger");
     if (await renewForms()) await syncPollerHub("google_forms_trigger");
   } catch (err) {

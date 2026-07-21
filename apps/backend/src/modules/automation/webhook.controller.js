@@ -11,6 +11,19 @@ import { matchesWhatsappEvent, shapeWhatsappPayload } from "../../infra/whatsapp
 import { resolveSecret } from "../../utils/resolveSecret.js";
 import { pollTriggerNow, syncPollerHub } from "../../infra/poller.hub.js";
 
+// Push families share one verification shape: Graph echoes a validationToken
+// then signs with clientState; Google channels send a sync ping then a
+// x-goog-channel-token. Each trigger keeps its own secret key so existing
+// registrations survive, so the check scans every key in the family.
+const GRAPH_PUSH_TYPES = new Set(["outlook_trigger", "onedrive_trigger", "sharepoint_trigger"]);
+const DRIVE_PUSH_TYPES = new Set([
+  "google_sheets_trigger", "google_docs_trigger",
+  "google_drive_trigger", "google_calendar_trigger",
+]);
+const GRAPH_SECRET_KEYS = ["outlookWebhookSecret", "onedriveWebhookSecret", "sharepointWebhookSecret"];
+const DRIVE_SECRET_KEYS = ["sheetsWebhookSecret", "gdocsWebhookSecret", "gdriveWebhookSecret", "gcalWebhookSecret"];
+const pickSecret = (cfg, keys) => keys.map((k) => cfg[k]).find(Boolean) || "";
+
 // Constant-time string compare that never throws. The naive pattern
 // (`a.length !== b.length` + `timingSafeEqual(Buffer.from(a), Buffer.from(b))`)
 // compares UTF-16 code-unit length but builds UTF-8 byte buffers — a multibyte
@@ -335,24 +348,26 @@ export async function handlePublicWebhook(req, res) {
     // secret exists in config — so the echo is gated on node type only (the
     // Asana-handshake model). The echo fires nothing and reveals nothing.
     const entryNodeType = entryNode?.type || entryNode?.data?.type;
-    if (entryNodeType === "outlook_trigger" && req.query.validationToken) {
+    if (GRAPH_PUSH_TYPES.has(entryNodeType) && req.query.validationToken) {
       return res.status(200).type("text/plain").send(String(req.query.validationToken));
     }
-    if (triggerConfig.outlookWebhookSecret) {
+    const graphSecret = pickSecret(triggerConfig, GRAPH_SECRET_KEYS);
+    if (graphSecret) {
       const items = Array.isArray(req.body?.value) ? req.body.value : [];
-      if (!items.some((v) => safeEqual(String(v.clientState || ""), triggerConfig.outlookWebhookSecret))) {
+      if (!items.some((v) => safeEqual(String(v.clientState || ""), graphSecret))) {
         return res.status(401).json({ error: "Invalid Graph clientState" });
       }
     }
 
-    // ── Google Drive (Sheets): channel token check ────────────────────────────
+    // ── Google Drive / Calendar channels: token check ─────────────────────────
     // The "sync" ping arrives during channel create, before the secret is
     // stored — ack it by node type without firing anything.
-    if (entryNodeType === "google_sheets_trigger" && req.headers["x-goog-resource-state"] === "sync") {
+    if (DRIVE_PUSH_TYPES.has(entryNodeType) && req.headers["x-goog-resource-state"] === "sync") {
       return res.status(200).json({ ok: true });
     }
-    if (triggerConfig.sheetsWebhookSecret) {
-      if (!safeEqual(String(req.headers["x-goog-channel-token"] || ""), triggerConfig.sheetsWebhookSecret)) {
+    const driveSecret = pickSecret(triggerConfig, DRIVE_SECRET_KEYS);
+    if (driveSecret) {
+      if (!safeEqual(String(req.headers["x-goog-channel-token"] || ""), driveSecret)) {
         return res.status(401).json({ error: "Invalid Drive channel token" });
       }
     }

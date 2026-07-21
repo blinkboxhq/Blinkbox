@@ -27,7 +27,7 @@ const TRIGGER_CATEGORIES = [
     description: "SaaS & platform integrations",
     accent: "#38bdf8",
     keys: [
-      "slack", "discord", "telegram", "whatsapp", "gmail", "outlook", "teams",
+      "slack", "discord", "telegram", "whatsapp", "gmail", "outlook",
       "github", "github_issue", "gitlab", "stripe", "shopify", "notion", "airtable",
       "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms",
       "hubspot", "linear", "jira", "trello", "asana", "pipedrive",

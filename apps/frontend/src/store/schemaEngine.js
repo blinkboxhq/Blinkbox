@@ -195,7 +195,6 @@ export const DEFAULT_SCHEMAS = {
   google_forms_trigger: { responseId: "string", submittedAt: "string", respondentEmail: "string", answers: "object", answersByTitle: "object", fileCount: "number" },
   onedrive_trigger: { itemId: "string", name: "string", webUrl: "string", size: "number", lastModified: "string", createdBy: "string", lastModifiedBy: "string", isFolder: "boolean", kind: "string", ext: "string", shared: "boolean", deleted: "boolean" },
   outlook_trigger: { id: "string", subject: "string", from: "string", fromName: "string", receivedAt: "string", preview: "string", hasAttachments: "boolean", importance: "string", flagged: "boolean", folder: "string" },
-  teams_trigger: { id: "string", text: "string", subject: "string", author: "string", authorEmail: "string", importance: "string", mentionCount: "number", attachmentCount: "number", reactionCount: "number", isReply: "boolean", messageType: "string", createdAt: "string" },
 
   // ── System monitor triggers ───────────────────────────────────────────
   github_issue_trigger: { id: "string", number: "number", title: "string", body: "string", state: "string", url: "string", author: "string", labels: "array", assignees: "array", milestone: "string", comments: "number", reactions: "number", createdAt: "string", type: "string" },

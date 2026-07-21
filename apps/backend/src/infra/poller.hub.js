@@ -32,7 +32,6 @@ import { pollSubreddit } from "./reddit.poller.js";
 import { pollFeed } from "./rss.poller.js";
 import { pollSsh } from "./ssh.poller.js";
 import { pollSslCert } from "./sslCert.poller.js";
-import { pollTeams } from "./teamsMessage.poller.js";
 import { pollDatadog } from "./datadog.poller.js";
 import { pollClickUp } from "./clickup.poller.js";
 import { pollSentry } from "./sentry.poller.js";
@@ -732,21 +731,6 @@ const POLL_REGISTRY = {
     repeat: (cfg) => ({ every: (parseInt(cfg.pollIntervalMinutes) || 60) * 60 * 1000 }),
     jobPrefix: "ssl",
     run: async ({ automationId, triggerNodeId, cfg }) => { await pollSslCert(automationId, triggerNodeId, cfg); },
-  },
-
-  teams_trigger: {
-    triggerName: "teams_trigger",
-    required: ["credentialId", "teamId", "channelId"],
-    extract: (cfg, automation) => ({
-      cfg: {
-        credentialId: cfg.credentialId, workspaceId: automation.workspaceId.toString(),
-        teamId: cfg.teamId, channelId: cfg.channelId, eventType: cfg.eventType || cfg.watchType,
-        keywordFilter: cfg.keywordFilter, fromUser: cfg.fromUser,
-      },
-    }),
-    repeat: (cfg) => ({ pattern: `*/${parseInt(cfg.pollIntervalMinutes) || 1} * * * *` }),
-    jobPrefix: "teams",
-    run: async ({ automationId, triggerNodeId, cfg }) => { await pollTeams(automationId, triggerNodeId, cfg); },
   },
 
   trello_trigger: {

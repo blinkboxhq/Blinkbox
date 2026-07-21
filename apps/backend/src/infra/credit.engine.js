@@ -38,7 +38,7 @@ const NODE_COSTS = {
   google_calendar_trigger: 0, github_issue_trigger: 0,
   ssh_trigger: 0, docker_trigger: 0, jira_trigger: 0,
   trello_trigger: 0, google_sheets_trigger: 0, outlook_trigger: 0,
-  teams_trigger: 0, http_monitor_trigger: 0, gitlab_trigger: 0,
+  http_monitor_trigger: 0, gitlab_trigger: 0,
   ssl_trigger: 0, dns_trigger: 0, port_monitor_trigger: 0,
   hackernews_trigger: 0, pipedrive_trigger: 0, asana_trigger: 0,
   google_drive_trigger: 0, google_docs_trigger: 0,

@@ -332,7 +332,6 @@ import JiraTriggerNode from "@triggers/jira/ConfigPanel.jsx";
 import TrelloTriggerNode from "@triggers/trello/ConfigPanel.jsx";
 import GoogleSheetsTriggerNode from "@triggers/google_sheets/ConfigPanel.jsx";
 import OutlookTriggerNode from "@triggers/outlook/ConfigPanel.jsx";
-import TeamsTriggerNode from "@triggers/teams/ConfigPanel.jsx";
 import GitLabTriggerNode from "@triggers/gitlab/ConfigPanel.jsx";
 import HackerNewsTriggerNode from "@triggers/hackernews/ConfigPanel.jsx";
 import PipedriveTriggerNode from "@triggers/pipedrive/ConfigPanel.jsx";
@@ -638,7 +637,6 @@ export const NodeRegistry = {
   rss_trigger:            { label: "RSS Trigger",            icon: Rss,           colorClass: "text-orange-400",    accentColor: "251,146,60",   logoUrl: imgRss,                category: "trigger", ConfigPanel: RssTriggerNode },
   ssh_trigger:            { label: "SSH Trigger",            icon: Server,        colorClass: "text-zinc-300",      accentColor: "212,212,216",  logoUrl: imgSsh,                category: "trigger", ConfigPanel: SshTriggerNode },
   ssl_trigger:            { label: "SSL/TLS Trigger",        icon: Shield,        colorClass: "text-green-400",     accentColor: "74,222,128",   logoUrl: imgLetsEncrypt,        category: "trigger", ConfigPanel: SslTriggerNode },
-  teams_trigger:          { label: "Microsoft Teams Trigger",icon: Users,         colorClass: "text-[#5059C9]",     accentColor: "80,89,201",    logoUrl: imgTeams,              category: "trigger", ConfigPanel: TeamsTriggerNode },
   trello_trigger:         { label: "Trello Trigger",         icon: LayoutGrid,    colorClass: "text-[#0052CC]",     accentColor: "0,82,204",     logoUrl: imgTrello,             category: "trigger", ConfigPanel: TrelloTriggerNode },
   youtube_trigger:        { label: "YouTube Trigger",        icon: Youtube,       colorClass: "text-red-400",       accentColor: "248,113,113",  logoUrl: imgYouTube,            category: "trigger", ConfigPanel: YouTubeTriggerNode },
 
