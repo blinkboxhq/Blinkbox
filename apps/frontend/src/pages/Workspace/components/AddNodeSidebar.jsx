@@ -17,7 +17,8 @@ const CAT_DESC = {
   ai_agent:  "Agents, memory, tools & integrations",
   apps:      "SaaS & platform actions",
   logic:     "Conditions, loops & flow control",
-  data:      "Databases, transforms & variables",
+  databases: "SQL, NoSQL, cache & vector stores",
+  data:      "Transforms, mapping & variables",
   infra:     "Files, network & system ops",
 };
 
@@ -26,6 +27,7 @@ const CAT_COLORS = {
   ai_agent:  { accent: "#e879f9" },
   apps:      { accent: "#38bdf8" },
   logic:     { accent: "#34d399" },
+  databases: { accent: "#2dd4bf" },
   data:      { accent: "#60a5fa" },
   infra:     { accent: "#7dd3fc" },
 };
