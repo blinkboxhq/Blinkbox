@@ -3,6 +3,12 @@ import assert from "node:assert/strict";
 import crypto from "crypto";
 import fs from "fs";
 
+// github.js → infra/github.webhook.js → config/env.js, which throws at import
+// time when these are unset. CI has no .env file, so seed them before the
+// dynamic imports below pull that graph in.
+process.env.JWT_SECRET ||= "test-jwt-secret";
+process.env.ENCRYPTION_KEY ||= "0123456789abcdef0123456789abcdef";
+
 const github = (await import("./github.js")).default;
 const stripe = (await import("./stripe.js")).default;
 const webhook = (await import("./webhook.js")).default;
