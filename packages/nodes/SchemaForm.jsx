@@ -217,7 +217,7 @@ export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgF
       />
 
       {(meta.fields ?? []).map((field, i) => (
-        <Field key={field.name ?? i} field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />
+        <Field key={`${field.name ?? 'f'}-${i}`} field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />
       ))}
 
       {meta.outputs && (

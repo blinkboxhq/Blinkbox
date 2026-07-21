@@ -86,8 +86,11 @@ export default {
 
     { name: "bucket", type: "string", label: "Bucket", smart: true, required: true, placeholder: "avatars",
       show: { operation: ["listFiles", "createSignedUrl", "getPublicUrl", "deleteFile"] } },
-    { name: "path", type: "string", label: "Path", smart: true, placeholder: "public/logo.png",
-      show: { operation: ["listFiles", "createSignedUrl", "getPublicUrl", "deleteFile"] } },
+    { name: "path", type: "string", label: "Folder", smart: true, placeholder: "public",
+      hint: "Leave empty to list the bucket root",
+      show: { operation: ["listFiles"] } },
+    { name: "path", type: "string", label: "Path", smart: true, required: true, placeholder: "public/logo.png",
+      show: { operation: ["createSignedUrl", "getPublicUrl", "deleteFile"] } },
     { name: "expiresIn", type: "number", label: "Expires In (seconds)", default: 3600,
       show: { operation: ["createSignedUrl"] } },
   ],
