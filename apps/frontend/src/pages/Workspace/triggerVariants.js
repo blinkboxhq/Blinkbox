@@ -25,7 +25,6 @@ import TriggerNode         from "@triggers/manual/ConfigPanel.jsx";
 import WebhookTriggerNode  from "@triggers/webhook/ConfigPanel.jsx";
 import ScheduleTriggerNode from "@triggers/cron/ConfigPanel.jsx";
 import ChatTriggerNode     from "@triggers/chat/ConfigPanel.jsx";
-import EmailTriggerNode    from "@triggers/imap/ConfigPanel.jsx";
 import RssTriggerNode      from "@triggers/rss/ConfigPanel.jsx";
 import ImapTriggerNode     from "@triggers/imap/ConfigPanel.jsx";
 import DatabaseTriggerNode from "@triggers/db/ConfigPanel.jsx";
@@ -160,14 +159,6 @@ export const TRIGGER_VARIANTS = {
     colorClass: "text-pink-400",
     accentColor: "236,72,153",
     ConfigPanel: ChatTriggerNode,
-  },
-  email: {
-    backendType: "webhook",
-    icon: Mail,
-    label: "On Email Received",
-    colorClass: "text-violet-400",
-    accentColor: "139,92,246",
-    ConfigPanel: EmailTriggerNode,
   },
   rss: {
     backendType: "rss_trigger",

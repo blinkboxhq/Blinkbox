@@ -5,7 +5,7 @@ import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { playNodeLand } from "../../../lib/sounds";
 import { setDragPayload, clearDragPayload } from "../dragPayload";
 
-const CORE_KEYS = ["manual", "cron", "webhook", "chat", "error"];
+const CORE_KEYS = ["manual", "cron", "webhook", "chat"];
 
 const TRIGGER_CATEGORIES = [
   {
@@ -31,7 +31,7 @@ const TRIGGER_CATEGORIES = [
       "github", "github_issue", "gitlab", "stripe", "shopify", "notion", "airtable",
       "google_calendar", "google_sheets", "google_drive", "google_docs", "google_forms",
       "hubspot", "linear", "jira", "trello", "asana", "pipedrive",
-      "clickup", "monday", "typeform", "figma",
+      "clickup", "monday", "typeform", "jotform", "figma",
       "sentry", "vercel", "netlify", "pagerduty", "datadog",
       "zendesk", "calendly", "mailchimp", "intercom", "woocommerce",
       "azure_devops", "onedrive", "sharepoint",
