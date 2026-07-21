@@ -173,21 +173,28 @@ function ImprovePromptPanel({ config, updateConfig, nodeId }) {
 // ── Action → panel + canonical operation key ────────────────────────────────
 
 const ACTIONS = {
-  'Chat Completion':         { op: 'message',          Panel: ChatPanel },
-  'Code Generation':         { op: 'code',             Panel: CodePanel },
-  'Structured Output':       { op: 'structuredOutput', Panel: StructuredPanel },
-  'Function Calling':        { op: 'functionCalling',  Panel: FunctionPanel },
-  'Reasoning':               { op: 'reasoning',        Panel: ReasoningPanel },
-  'Vision Analysis':         { op: 'analyzeImage',     Panel: VisionPanel },
-  'Analyze Document':        { op: 'analyzeDocument',  Panel: DocumentPanel },
-  'Extract Structured Data': { op: 'extractData',      Panel: ExtractPanel },
-  'Classify':                { op: 'classify',         Panel: ClassifyPanel },
-  'Summarize':               { op: 'summarize',        Panel: SummarizePanel },
-  'Translate':               { op: 'translate',        Panel: TranslatePanel },
-  'Sentiment Analysis':      { op: 'sentiment',        Panel: SentimentPanel },
-  'Generate Prompt':         { op: 'generatePrompt',   Panel: GeneratePromptPanel },
-  'Improve Prompt':          { op: 'improvePrompt',    Panel: ImprovePromptPanel },
+  'Chat Completion':         { op: 'message', desc: "Chat with GLM-5.2 and the GLM family",          Panel: ChatPanel },
+  'Code Generation':         { op: 'code', desc: "Generate or explain code with GLM",             Panel: CodePanel },
+  'Structured Output':       { op: 'structuredOutput', desc: "Return JSON matching a schema", Panel: StructuredPanel },
+  'Function Calling':        { op: 'functionCalling', desc: "Let GLM call your tools/functions",  Panel: FunctionPanel },
+  'Reasoning':               { op: 'reasoning', desc: "Deep step-by-step reasoning with GLM-5.2",        Panel: ReasoningPanel },
+  'Vision Analysis':         { op: 'analyzeImage', desc: "Describe or answer questions about an image",     Panel: VisionPanel },
+  'Analyze Document':        { op: 'analyzeDocument', desc: "Answer questions about a long document",  Panel: DocumentPanel },
+  'Extract Structured Data': { op: 'extractData', desc: "Pull named fields out of source text",      Panel: ExtractPanel },
+  'Classify':                { op: 'classify', desc: "Label text into one of your categories",         Panel: ClassifyPanel },
+  'Summarize':               { op: 'summarize', desc: "Condense text in a chosen style",        Panel: SummarizePanel },
+  'Translate':               { op: 'translate', desc: "Translate text into a target language",        Panel: TranslatePanel },
+  'Sentiment Analysis':      { op: 'sentiment', desc: "Score sentiment and extract key phrases",        Panel: SentimentPanel },
+  'Generate Prompt':         { op: 'generatePrompt', desc: "Draft an optimized prompt from a task",   Panel: GeneratePromptPanel },
+  'Improve Prompt':          { op: 'improvePrompt', desc: "Rewrite an existing prompt to be sharper",    Panel: ImprovePromptPanel },
 };
+
+// Single source of truth for the action picker — it can only offer what
+// this panel knows how to render.
+export const OPERATIONS = Object.entries(ACTIONS).map(([label, a]) => ({
+  value: a.op, label, desc: a.desc, icon: a.icon,
+}));
+
 
 const DEFAULT_ACTION = 'Chat Completion';
 

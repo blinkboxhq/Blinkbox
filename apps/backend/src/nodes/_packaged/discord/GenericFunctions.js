@@ -32,9 +32,10 @@ export function validateWebhook(url) {
     throw new Error("Discord: Invalid webhook URL. Must start with https://discord.com/api/webhooks/");
 }
 
+// The segment after /webhooks/ is the id; the one after THAT is the secret
+// token — returning the wrong one leaks it into execution output.
 export function webhookId(url) {
-  const parts = url.split("/");
-  return parts[6] || parts[5] || null;
+  return String(url).replace(DISCORD_WEBHOOK_RE, "").split(/[/?#]/)[0] || null;
 }
 
 export async function post(webhookUrl, payload) {

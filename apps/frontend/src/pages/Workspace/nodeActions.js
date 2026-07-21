@@ -63,10 +63,33 @@ import { OPERATIONS as ops_json_transform } from "@nodes/json_transform/ConfigPa
 import { OPERATIONS as ops_variable_set_get } from "@nodes/variable_set_get/ConfigPanel.jsx";
 import { OPERATIONS as ops_data_mapper } from "@nodes/data_mapper/ConfigPanel.jsx";
 
-import {
-  MessageSquare, Zap, Braces, Wrench, Eye, Image, ImagePlus, Copy,
-  Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
-} from "lucide-react";
+import { OPERATIONS as ops_openai } from "@nodes/openai/ConfigPanel.jsx";
+import { OPERATIONS as ops_anthropic } from "@nodes/anthropic/ConfigPanel.jsx";
+import { OPERATIONS as ops_gemini } from "@nodes/gemini/ConfigPanel.jsx";
+import { OPERATIONS as ops_perplexity } from "@nodes/perplexity/ConfigPanel.jsx";
+import { OPERATIONS as ops_xai } from "@nodes/xai/ConfigPanel.jsx";
+import { OPERATIONS as ops_deepseek } from "@nodes/deepseek/ConfigPanel.jsx";
+import { OPERATIONS as ops_nvidia_nim } from "@nodes/nvidia_nim/ConfigPanel.jsx";
+import { OPERATIONS as ops_moonshot } from "@nodes/moonshot/ConfigPanel.jsx";
+import { OPERATIONS as ops_openrouter } from "@nodes/openrouter/ConfigPanel.jsx";
+import { OPERATIONS as ops_zai } from "@nodes/zai/ConfigPanel.jsx";
+import { OPERATIONS as ops_minimax } from "@nodes/minimax/ConfigPanel.jsx";
+import { OPERATIONS as ops_sakana } from "@nodes/sakana/ConfigPanel.jsx";
+
+const AI_OPERATIONS = {
+  openai: ops_openai,
+  anthropic: ops_anthropic,
+  gemini: ops_gemini,
+  perplexity: ops_perplexity,
+  xai: ops_xai,
+  deepseek: ops_deepseek,
+  nvidia_nim: ops_nvidia_nim,
+  moonshot: ops_moonshot,
+  openrouter: ops_openrouter,
+  zai: ops_zai,
+  minimax: ops_minimax,
+  sakana: ops_sakana,
+};
 
 const APP_OPERATIONS = {
   telegram: ops_telegram,
@@ -137,10 +160,11 @@ const derive = (source) =>
   Object.fromEntries(
     Object.entries(source).map(([key, ops]) => [
       key,
-      ops.map((o) => ({ name: o.label, value: o.value, description: o.group || "", icon: o.icon })),
+      ops.map((o) => ({ name: o.label, value: o.value, description: o.desc || o.group || "", icon: o.icon })),
     ]),
   );
 
+const AI_ACTIONS = derive(AI_OPERATIONS);
 const APP_ACTIONS = derive(APP_OPERATIONS);
 const DB_ACTIONS = derive(DB_OPERATIONS);
 const DATA_ACTIONS = derive(DATA_OPERATIONS);
@@ -158,210 +182,6 @@ export const nodeHasActions = (category, key) =>
 
 const BUILTIN_ACTIONS = {
   // ── AI Models ───────────────────────────────────────────────────────────────
-  openai: [
-    { name: "Chat Completion", description: "Send a prompt and get a text response from GPT", icon: MessageSquare },
-    { name: "Stream Chat", description: "Stream tokens in real-time for faster perceived response", icon: Zap },
-    { name: "Structured Output", description: "Force GPT to return JSON matching a schema you define", icon: Braces },
-    { name: "Function Calling", description: "Let GPT call your custom functions to fetch data", icon: Wrench },
-    { name: "Vision Analysis", description: "Analyze images and answer questions about them", icon: Eye },
-    { name: "Generate Image", description: "Create images with DALL·E 3 from a text prompt", icon: Image },
-    { name: "Edit Image", description: "Edit an image with a prompt and an optional mask", icon: ImagePlus },
-    { name: "Image Variation", description: "Generate variations of an existing image", icon: Copy },
-    { name: "Transcribe Audio", description: "Convert audio or video to text using Whisper", icon: Mic },
-    { name: "Translate Audio", description: "Transcribe non-English audio straight into English", icon: Languages },
-    { name: "Text to Speech", description: "Convert text to natural-sounding audio with TTS-1", icon: Volume2 },
-    { name: "Create Embedding", description: "Generate a vector embedding for text content", icon: Layers },
-    { name: "Moderate Content", description: "Check text for policy violations using the moderation API", icon: ShieldCheck },
-    { name: "List Models", description: "Fetch the live list of models available to your key", icon: List },
-    { name: "Fine-tune Model", description: "Start a fine-tuning job on a custom dataset", icon: Settings2 },
-  ],
-  anthropic: [
-    { name: "Chat Completion", description: "Send a prompt and get a response from Claude" },
-    { name: "Multi-turn Conversation", description: "Maintain dialogue context across a messages array" },
-    { name: "Structured Output", description: "Force Claude to return JSON matching a tool schema" },
-    { name: "Tool Use", description: "Let Claude call your functions to retrieve live data" },
-    { name: "Extended Thinking", description: "Deep reasoning with a configurable thinking-token budget" },
-    { name: "Vision Analysis", description: "Upload images and ask Claude questions about them" },
-    { name: "Analyze Document", description: "Reason over long text passed as context" },
-    { name: "Analyze PDF", description: "Native PDF understanding from a file or URL" },
-    { name: "Cited Answer", description: "Answer a question with exact citations from a document" },
-    { name: "Extract Structured Data", description: "Pull named fields from unstructured text or images" },
-    { name: "Classify", description: "Categorize input into one of your labels" },
-    { name: "Summarize", description: "Compress long text with length and style control" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Detect sentiment and emotion in text" },
-    { name: "Moderate Content", description: "Safety-review text against a policy" },
-    { name: "Code Review", description: "Analyze code and surface bugs, security, and fixes" },
-    { name: "Generate Prompt", description: "Write an effective prompt for a described task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be clearer and stronger" },
-    { name: "Prompt Caching", description: "Cache a large context block to cut cost on repeat calls" },
-    { name: "Count Tokens", description: "Estimate token usage before sending — free, no charge" },
-    { name: "List Models", description: "Fetch the live list of Claude models for your key" },
-  ],
-  gemini: [
-    { name: "Chat Completion", description: "Send a prompt and get a response from Gemini" },
-    { name: "Structured Output", description: "Force Gemini to return JSON matching a schema" },
-    { name: "Function Calling", description: "Let Gemini call your functions to retrieve live data" },
-    { name: "Deep Reasoning", description: "Thinking-budget reasoning for hard problems" },
-    { name: "Vision Analysis", description: "Upload an image and ask Gemini about it" },
-    { name: "Generate Image", description: "Create or edit images natively with Gemini" },
-    { name: "Analyze Document", description: "Reason over long text passed as context" },
-    { name: "Analyze PDF", description: "Native PDF understanding from a file or URL" },
-    { name: "Analyze Audio", description: "Transcribe and understand audio files" },
-    { name: "Analyze Video", description: "Describe and reason over video content" },
-    { name: "Create Embedding", description: "Generate semantic vector embeddings for RAG" },
-    { name: "Extract Structured Data", description: "Pull named fields from unstructured text" },
-    { name: "Classify", description: "Categorize input into one of your labels" },
-    { name: "Summarize", description: "Compress long text with style control" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Generate Prompt", description: "Write an effective prompt for a described task" },
-    { name: "Count Tokens", description: "Estimate token usage before sending — free" },
-    { name: "List Models", description: "Fetch the live list of Gemini models for your key" },
-  ],
-  perplexity: [
-    { name: "Search-augmented Chat", description: "Answer questions with live web search grounding" },
-    { name: "Web Search", description: "Run a focused web search and synthesize an answer" },
-    { name: "Cited Answer", description: "Answer with inline citations and source links" },
-    { name: "Structured Output", description: "Return JSON matching a schema, web-grounded" },
-    { name: "Reasoning", description: "Step-through reasoning with current data" },
-    { name: "Deep Research", description: "Long-form researched report with sources" },
-    { name: "Fact Check", description: "Verify a claim against current web sources" },
-    { name: "Compare", description: "Compare options using up-to-date information" },
-    { name: "News Digest", description: "Summarize recent news on a topic" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Analyze Document", description: "Answer questions about a supplied document" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task description" },
-  ],
-  xai: [
-    { name: "Chat Completion", description: "Query Grok for a conversational response" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let Grok call your tools/functions" },
-    { name: "Reasoning", description: "Extended step-through reasoning" },
-    { name: "Live Search", description: "Answer grounded in real-time web search" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Generate Image", description: "Create images from a text prompt" },
-    { name: "Analyze Document", description: "Answer questions about a supplied document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  deepseek: [
-    { name: "Chat Completion", description: "Query DeepSeek for a conversational response" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let DeepSeek call your tools/functions" },
-    { name: "Reasoning", description: "Thinking mode with exposed chain-of-thought" },
-    { name: "Analyze Document", description: "Answer questions about a supplied document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  moonshot: [
-    { name: "Chat Completion", description: "Query Kimi for a conversational response" },
-    { name: "Code Generation", description: "Generate or explain code with Kimi-Code" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let Kimi call your tools/functions" },
-    { name: "Reasoning", description: "Thinking mode for hard, multi-step problems" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Analyze Document", description: "Answer questions about a long document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  openrouter: [
-    { name: "Chat Completion", description: "Query any OpenRouter model for a response" },
-    { name: "Code Generation", description: "Generate or explain code with a coding model" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let the model call your tools/functions" },
-    { name: "Reasoning", description: "Route to a reasoning model for hard problems" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Analyze Document", description: "Answer questions about a long document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  zai: [
-    { name: "Chat Completion", description: "Chat with GLM-5.2 and the GLM family" },
-    { name: "Code Generation", description: "Generate or explain code with GLM" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let GLM call your tools/functions" },
-    { name: "Reasoning", description: "Deep step-by-step reasoning with GLM-5.2" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Analyze Document", description: "Answer questions about a long document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  minimax: [
-    { name: "Chat Completion", description: "Chat with MiniMax-M3 and the M-series" },
-    { name: "Code Generation", description: "Generate or explain code with MiniMax" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let MiniMax call your tools/functions" },
-    { name: "Reasoning", description: "Deep step-by-step reasoning with MiniMax-M3" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Analyze Document", description: "Answer questions about a 1M-token document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  sakana: [
-    { name: "Chat Completion", description: "Chat with the Fugu multi-agent council" },
-    { name: "Code Generation", description: "Generate or explain code with fugu-ultra" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let Fugu call your tools/functions" },
-    { name: "Reasoning", description: "Deep multi-agent reasoning with fugu-ultra" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Analyze Document", description: "Answer questions about a long document" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
-  nvidia_nim: [
-    { name: "Chat Completion", description: "Query an NVIDIA-hosted model for a response" },
-    { name: "Code Generation", description: "Generate or explain code with Qwen Coder" },
-    { name: "Structured Output", description: "Return JSON matching a schema" },
-    { name: "Function Calling", description: "Let the model call your tools/functions" },
-    { name: "Reasoning", description: "Step-through reasoning with Nemotron" },
-    { name: "Vision Analysis", description: "Describe or answer questions about an image" },
-    { name: "Create Embedding", description: "Embed text with NeMo Retriever models" },
-    { name: "Extract Structured Data", description: "Pull named fields out of source text" },
-    { name: "Classify", description: "Label text into one of your categories" },
-    { name: "Summarize", description: "Condense text in a chosen style" },
-    { name: "Translate", description: "Translate text into a target language" },
-    { name: "Sentiment Analysis", description: "Score sentiment and extract key phrases" },
-    { name: "Generate Prompt", description: "Draft an optimized prompt from a task" },
-    { name: "Improve Prompt", description: "Rewrite an existing prompt to be sharper" },
-  ],
 
   // ── AI Agent Building Blocks ────────────────────────────────────────────────
   ai_agent: [
@@ -1292,4 +1112,4 @@ const BUILTIN_ACTIONS = {
   // ── Apps (blue in-panel action dropdown) ─────────────────────────────────────
 };
 
-export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS, ...DATA_ACTIONS };
+export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...AI_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS, ...DATA_ACTIONS };

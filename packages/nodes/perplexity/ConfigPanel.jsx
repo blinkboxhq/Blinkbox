@@ -192,22 +192,29 @@ function GeneratePromptPanel({ config, updateConfig, nodeId }) {
 // ── Action → panel + canonical operation key ────────────────────────────────
 
 const ACTIONS = {
-  'Search-augmented Chat':   { op: 'message',          Panel: ChatPanel },
-  'Web Search':              { op: 'search',           Panel: SearchPanel },
-  'Cited Answer':            { op: 'askWithCitations', Panel: SearchPanel },
-  'Structured Output':       { op: 'structuredOutput', Panel: StructuredPanel },
-  'Reasoning':               { op: 'reasoning',        Panel: ReasoningPanel },
-  'Deep Research':           { op: 'deepResearch',     Panel: DeepResearchPanel },
-  'Fact Check':              { op: 'factCheck',        Panel: FactCheckPanel },
-  'Compare':                 { op: 'compare',          Panel: ComparePanel },
-  'News Digest':             { op: 'newsDigest',       Panel: NewsDigestPanel },
-  'Extract Structured Data': { op: 'extractData',      Panel: ExtractPanel },
-  'Classify':                { op: 'classify',         Panel: ClassifyPanel },
-  'Summarize':               { op: 'summarize',        Panel: SummarizePanel },
-  'Translate':               { op: 'translate',        Panel: TranslatePanel },
-  'Analyze Document':        { op: 'analyzeDocument',  Panel: DocumentPanel },
-  'Generate Prompt':         { op: 'generatePrompt',   Panel: GeneratePromptPanel },
+  'Search-augmented Chat':   { op: 'message', desc: "Answer questions with live web search grounding",          Panel: ChatPanel },
+  'Web Search':              { op: 'search', desc: "Run a focused web search and synthesize an answer",           Panel: SearchPanel },
+  'Cited Answer':            { op: 'askWithCitations', desc: "Answer with inline citations and source links", Panel: SearchPanel },
+  'Structured Output':       { op: 'structuredOutput', desc: "Return JSON matching a schema, web-grounded", Panel: StructuredPanel },
+  'Reasoning':               { op: 'reasoning', desc: "Step-through reasoning with current data",        Panel: ReasoningPanel },
+  'Deep Research':           { op: 'deepResearch', desc: "Long-form researched report with sources",     Panel: DeepResearchPanel },
+  'Fact Check':              { op: 'factCheck', desc: "Verify a claim against current web sources",        Panel: FactCheckPanel },
+  'Compare':                 { op: 'compare', desc: "Compare options using up-to-date information",          Panel: ComparePanel },
+  'News Digest':             { op: 'newsDigest', desc: "Summarize recent news on a topic",       Panel: NewsDigestPanel },
+  'Extract Structured Data': { op: 'extractData', desc: "Pull named fields out of source text",      Panel: ExtractPanel },
+  'Classify':                { op: 'classify', desc: "Label text into one of your categories",         Panel: ClassifyPanel },
+  'Summarize':               { op: 'summarize', desc: "Condense text in a chosen style",        Panel: SummarizePanel },
+  'Translate':               { op: 'translate', desc: "Translate text into a target language",        Panel: TranslatePanel },
+  'Analyze Document':        { op: 'analyzeDocument', desc: "Answer questions about a supplied document",  Panel: DocumentPanel },
+  'Generate Prompt':         { op: 'generatePrompt', desc: "Draft an optimized prompt from a task description",   Panel: GeneratePromptPanel },
 };
+
+// Single source of truth for the action picker — it can only offer what
+// this panel knows how to render.
+export const OPERATIONS = Object.entries(ACTIONS).map(([label, a]) => ({
+  value: a.op, label, desc: a.desc, icon: a.icon,
+}));
+
 
 const DEFAULT_ACTION = 'Search-augmented Chat';
 

@@ -1,4 +1,8 @@
 import { useEffect } from 'react';
+import {
+  MessageSquare, Zap, Braces, Wrench, Eye, Image, ImagePlus, Copy,
+  Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
+} from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import ModelSelect from '@/components/ui/ModelSelect';
@@ -198,22 +202,29 @@ function FineTunePanel({ config, updateConfig, nodeId }) {
 // ── Action → panel + canonical operation key ────────────────────────────────
 
 const ACTIONS = {
-  'Chat Completion':   { op: 'message',          Panel: ChatPanel },
-  'Stream Chat':       { op: 'message',          Panel: StreamPanel },
-  'Structured Output': { op: 'structuredOutput', Panel: StructuredPanel },
-  'Function Calling':  { op: 'functionCalling',  Panel: FunctionPanel },
-  'Vision Analysis':   { op: 'analyzeImage',     Panel: VisionPanel },
-  'Generate Image':    { op: 'generateImage',    Panel: GenerateImagePanel },
-  'Edit Image':        { op: 'editImage',        Panel: EditImagePanel },
-  'Image Variation':   { op: 'imageVariation',   Panel: ImageVariationPanel },
-  'Transcribe Audio':  { op: 'transcribeAudio',  Panel: TranscribePanel },
-  'Translate Audio':   { op: 'translateAudio',   Panel: TranslatePanel },
-  'Text to Speech':    { op: 'textToSpeech',     Panel: SpeechPanel },
-  'Create Embedding':  { op: 'embeddings',       Panel: EmbeddingPanel },
-  'Moderate Content':  { op: 'moderateContent',  Panel: ModeratePanel },
-  'List Models':       { op: 'listModels',       Panel: ListModelsPanel },
-  'Fine-tune Model':   { op: 'fineTune',         Panel: FineTunePanel },
+  'Chat Completion':   { op: 'message', desc: "Send a prompt and get a text response from GPT", icon: MessageSquare,          Panel: ChatPanel },
+  'Stream Chat':       { op: 'message', desc: "Stream tokens in real-time for faster perceived response", icon: Zap,          Panel: StreamPanel },
+  'Structured Output': { op: 'structuredOutput', desc: "Force GPT to return JSON matching a schema you define", icon: Braces, Panel: StructuredPanel },
+  'Function Calling':  { op: 'functionCalling', desc: "Let GPT call your custom functions to fetch data", icon: Wrench,  Panel: FunctionPanel },
+  'Vision Analysis':   { op: 'analyzeImage', desc: "Analyze images and answer questions about them", icon: Eye,     Panel: VisionPanel },
+  'Generate Image':    { op: 'generateImage', desc: "Create images with DALL·E 3 from a text prompt", icon: Image,    Panel: GenerateImagePanel },
+  'Edit Image':        { op: 'editImage', desc: "Edit an image with a prompt and an optional mask", icon: ImagePlus,        Panel: EditImagePanel },
+  'Image Variation':   { op: 'imageVariation', desc: "Generate variations of an existing image", icon: Copy,   Panel: ImageVariationPanel },
+  'Transcribe Audio':  { op: 'transcribeAudio', desc: "Convert audio or video to text using Whisper", icon: Mic,  Panel: TranscribePanel },
+  'Translate Audio':   { op: 'translateAudio', desc: "Transcribe non-English audio straight into English", icon: Languages,   Panel: TranslatePanel },
+  'Text to Speech':    { op: 'textToSpeech', desc: "Convert text to natural-sounding audio with TTS-1", icon: Volume2,     Panel: SpeechPanel },
+  'Create Embedding':  { op: 'embeddings', desc: "Generate a vector embedding for text content", icon: Layers,       Panel: EmbeddingPanel },
+  'Moderate Content':  { op: 'moderateContent', desc: "Check text for policy violations using the moderation API", icon: ShieldCheck,  Panel: ModeratePanel },
+  'List Models':       { op: 'listModels', desc: "Fetch the live list of models available to your key", icon: List,       Panel: ListModelsPanel },
+  'Fine-tune Model':   { op: 'fineTune', desc: "Start a fine-tuning job on a custom dataset", icon: Settings2,         Panel: FineTunePanel },
 };
+
+// Single source of truth for the action picker — it can only offer what
+// this panel knows how to render.
+export const OPERATIONS = Object.entries(ACTIONS).map(([label, a]) => ({
+  value: a.op, label, desc: a.desc, icon: a.icon,
+}));
+
 
 const DEFAULT_ACTION = 'Chat Completion';
 

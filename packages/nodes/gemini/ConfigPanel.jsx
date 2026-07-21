@@ -212,25 +212,32 @@ function ListModelsPanel() {
 // ── Action → panel + canonical operation key ────────────────────────────────
 
 const ACTIONS = {
-  'Chat Completion':         { op: 'message',          Panel: ChatPanel },
-  'Structured Output':       { op: 'structuredOutput', Panel: StructuredPanel },
-  'Function Calling':        { op: 'functionCalling',  Panel: FunctionPanel },
-  'Deep Reasoning':          { op: 'reasoning',        Panel: ReasoningPanel },
-  'Vision Analysis':         { op: 'analyzeImage',     Panel: VisionPanel },
-  'Generate Image':          { op: 'generateImage',    Panel: GenerateImagePanel },
-  'Analyze Document':        { op: 'analyzeDocument',  Panel: DocumentPanel },
-  'Analyze PDF':             { op: 'analyzePdf',       Panel: PdfPanel },
-  'Analyze Audio':           { op: 'analyzeAudio',     Panel: AudioPanel },
-  'Analyze Video':           { op: 'analyzeVideo',     Panel: VideoPanel },
-  'Create Embedding':        { op: 'embeddings',       Panel: EmbeddingPanel },
-  'Extract Structured Data': { op: 'extractData',      Panel: ExtractPanel },
-  'Classify':                { op: 'classify',         Panel: ClassifyPanel },
-  'Summarize':               { op: 'summarize',        Panel: SummarizePanel },
-  'Translate':               { op: 'translate',        Panel: TranslatePanel },
-  'Generate Prompt':         { op: 'generatePrompt',   Panel: GeneratePromptPanel },
-  'Count Tokens':            { op: 'countTokens',      Panel: CountTokensPanel },
-  'List Models':             { op: 'listModels',       Panel: ListModelsPanel },
+  'Chat Completion':         { op: 'message', desc: "Send a prompt and get a response from Gemini",          Panel: ChatPanel },
+  'Structured Output':       { op: 'structuredOutput', desc: "Force Gemini to return JSON matching a schema", Panel: StructuredPanel },
+  'Function Calling':        { op: 'functionCalling', desc: "Let Gemini call your functions to retrieve live data",  Panel: FunctionPanel },
+  'Deep Reasoning':          { op: 'reasoning', desc: "Thinking-budget reasoning for hard problems",        Panel: ReasoningPanel },
+  'Vision Analysis':         { op: 'analyzeImage', desc: "Upload an image and ask Gemini about it",     Panel: VisionPanel },
+  'Generate Image':          { op: 'generateImage', desc: "Create or edit images natively with Gemini",    Panel: GenerateImagePanel },
+  'Analyze Document':        { op: 'analyzeDocument', desc: "Reason over long text passed as context",  Panel: DocumentPanel },
+  'Analyze PDF':             { op: 'analyzePdf', desc: "Native PDF understanding from a file or URL",       Panel: PdfPanel },
+  'Analyze Audio':           { op: 'analyzeAudio', desc: "Transcribe and understand audio files",     Panel: AudioPanel },
+  'Analyze Video':           { op: 'analyzeVideo', desc: "Describe and reason over video content",     Panel: VideoPanel },
+  'Create Embedding':        { op: 'embeddings', desc: "Generate semantic vector embeddings for RAG",       Panel: EmbeddingPanel },
+  'Extract Structured Data': { op: 'extractData', desc: "Pull named fields from unstructured text",      Panel: ExtractPanel },
+  'Classify':                { op: 'classify', desc: "Categorize input into one of your labels",         Panel: ClassifyPanel },
+  'Summarize':               { op: 'summarize', desc: "Compress long text with style control",        Panel: SummarizePanel },
+  'Translate':               { op: 'translate', desc: "Translate text into a target language",        Panel: TranslatePanel },
+  'Generate Prompt':         { op: 'generatePrompt', desc: "Write an effective prompt for a described task",   Panel: GeneratePromptPanel },
+  'Count Tokens':            { op: 'countTokens', desc: "Estimate token usage before sending — free",      Panel: CountTokensPanel },
+  'List Models':             { op: 'listModels', desc: "Fetch the live list of Gemini models for your key",       Panel: ListModelsPanel },
 };
+
+// Single source of truth for the action picker — it can only offer what
+// this panel knows how to render.
+export const OPERATIONS = Object.entries(ACTIONS).map(([label, a]) => ({
+  value: a.op, label, desc: a.desc, icon: a.icon,
+}));
+
 
 const DEFAULT_ACTION = 'Chat Completion';
 

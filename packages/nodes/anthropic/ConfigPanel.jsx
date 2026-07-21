@@ -238,28 +238,35 @@ function ListModelsPanel() {
 // ── Action → panel + canonical operation key ────────────────────────────────
 
 const ACTIONS = {
-  'Chat Completion':         { op: 'message',          Panel: ChatPanel },
-  'Multi-turn Conversation': { op: 'multiTurn',        Panel: MultiTurnPanel },
-  'Structured Output':       { op: 'structuredOutput', Panel: StructuredPanel },
-  'Tool Use':                { op: 'functionCalling',  Panel: ToolUsePanel },
-  'Extended Thinking':       { op: 'extendedThinking', Panel: ThinkingPanel },
-  'Vision Analysis':         { op: 'analyzeImage',     Panel: VisionPanel },
-  'Analyze Document':        { op: 'analyzeDocument',  Panel: DocumentPanel },
-  'Analyze PDF':             { op: 'analyzePdf',       Panel: PdfPanel },
-  'Cited Answer':            { op: 'citations',        Panel: CitationsPanel },
-  'Extract Structured Data': { op: 'extractData',      Panel: ExtractPanel },
-  'Classify':                { op: 'classify',         Panel: ClassifyPanel },
-  'Summarize':               { op: 'summarize',        Panel: SummarizePanel },
-  'Translate':               { op: 'translate',        Panel: TranslatePanel },
-  'Sentiment Analysis':      { op: 'sentiment',        Panel: SentimentPanel },
-  'Moderate Content':        { op: 'moderateContent',  Panel: ModeratePanel },
-  'Code Review':             { op: 'codeReview',       Panel: CodeReviewPanel },
-  'Generate Prompt':         { op: 'generatePrompt',   Panel: GeneratePromptPanel },
-  'Improve Prompt':          { op: 'improvePrompt',    Panel: ImprovePromptPanel },
-  'Prompt Caching':          { op: 'promptCaching',    Panel: CachingPanel },
-  'Count Tokens':            { op: 'countTokens',      Panel: CountTokensPanel },
-  'List Models':             { op: 'listModels',       Panel: ListModelsPanel },
+  'Chat Completion':         { op: 'message', desc: "Send a prompt and get a response from Claude",          Panel: ChatPanel },
+  'Multi-turn Conversation': { op: 'multiTurn', desc: "Maintain dialogue context across a messages array",        Panel: MultiTurnPanel },
+  'Structured Output':       { op: 'structuredOutput', desc: "Force Claude to return JSON matching a tool schema", Panel: StructuredPanel },
+  'Tool Use':                { op: 'functionCalling', desc: "Let Claude call your functions to retrieve live data",  Panel: ToolUsePanel },
+  'Extended Thinking':       { op: 'extendedThinking', desc: "Deep reasoning with a configurable thinking-token budget", Panel: ThinkingPanel },
+  'Vision Analysis':         { op: 'analyzeImage', desc: "Upload images and ask Claude questions about them",     Panel: VisionPanel },
+  'Analyze Document':        { op: 'analyzeDocument', desc: "Reason over long text passed as context",  Panel: DocumentPanel },
+  'Analyze PDF':             { op: 'analyzePdf', desc: "Native PDF understanding from a file or URL",       Panel: PdfPanel },
+  'Cited Answer':            { op: 'citations', desc: "Answer a question with exact citations from a document",        Panel: CitationsPanel },
+  'Extract Structured Data': { op: 'extractData', desc: "Pull named fields from unstructured text or images",      Panel: ExtractPanel },
+  'Classify':                { op: 'classify', desc: "Categorize input into one of your labels",         Panel: ClassifyPanel },
+  'Summarize':               { op: 'summarize', desc: "Compress long text with length and style control",        Panel: SummarizePanel },
+  'Translate':               { op: 'translate', desc: "Translate text into a target language",        Panel: TranslatePanel },
+  'Sentiment Analysis':      { op: 'sentiment', desc: "Detect sentiment and emotion in text",        Panel: SentimentPanel },
+  'Moderate Content':        { op: 'moderateContent', desc: "Safety-review text against a policy",  Panel: ModeratePanel },
+  'Code Review':             { op: 'codeReview', desc: "Analyze code and surface bugs, security, and fixes",       Panel: CodeReviewPanel },
+  'Generate Prompt':         { op: 'generatePrompt', desc: "Write an effective prompt for a described task",   Panel: GeneratePromptPanel },
+  'Improve Prompt':          { op: 'improvePrompt', desc: "Rewrite an existing prompt to be clearer and stronger",    Panel: ImprovePromptPanel },
+  'Prompt Caching':          { op: 'promptCaching', desc: "Cache a large context block to cut cost on repeat calls",    Panel: CachingPanel },
+  'Count Tokens':            { op: 'countTokens', desc: "Estimate token usage before sending — free, no charge",      Panel: CountTokensPanel },
+  'List Models':             { op: 'listModels', desc: "Fetch the live list of Claude models for your key",       Panel: ListModelsPanel },
 };
+
+// Single source of truth for the action picker — it can only offer what
+// this panel knows how to render.
+export const OPERATIONS = Object.entries(ACTIONS).map(([label, a]) => ({
+  value: a.op, label, desc: a.desc, icon: a.icon,
+}));
+
 
 const DEFAULT_ACTION = 'Chat Completion';
 

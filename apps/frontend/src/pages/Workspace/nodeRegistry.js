@@ -655,6 +655,7 @@ export const NodeRegistry = {
     logoUrl: imgAnthropic,
     ConfigPanel: AnthropicNode,
     category: "ai_models",
+    description: "Claude models — reasoning, vision, documents & tool use",
   },
   gemini: {
     label: "Google Gemini",
@@ -664,6 +665,7 @@ export const NodeRegistry = {
     logoUrl: imgGemini,
     ConfigPanel: GeminiNode,
     category: "ai_models",
+    description: "Gemini models — text, vision, documents & long context",
   },
   perplexity: {
     label: "Perplexity",
@@ -673,6 +675,7 @@ export const NodeRegistry = {
     logoUrl: imgPerplexity,
     ConfigPanel: PerplexityNode,
     category: "ai_models",
+    description: "Sonar models — answers grounded in live web search",
   },
   xai: {
     label: "xAI (Grok)",
@@ -682,6 +685,7 @@ export const NodeRegistry = {
     logoUrl: imgGrok,
     ConfigPanel: XAINode,
     category: "ai_models",
+    description: "Grok models — reasoning, vision & real-time X data",
   },
   deepseek: {
     label: "DeepSeek",
@@ -691,6 +695,7 @@ export const NodeRegistry = {
     logoUrl: imgDeepSeek,
     ConfigPanel: DeepSeekNode,
     category: "ai_models",
+    description: "DeepSeek V3 & R1 — frontier reasoning and coding",
   },
   nvidia_nim: {
     label: "NVIDIA NIM",
@@ -1941,6 +1946,7 @@ export const NodeRegistry = {
     logoUrl: imgTelegram,
     ConfigPanel: TelegramNode,
     category: "apps",
+    description: "Send messages, media and polls via the Telegram Bot API",
   },
   whatsapp: {
     label: "WhatsApp",
@@ -1950,6 +1956,7 @@ export const NodeRegistry = {
     logoUrl: imgWhatsApp,
     ConfigPanel: WhatsAppNode,
     category: "apps",
+    description: "Send messages, media and templates via WhatsApp Business",
   },
   slack: {
     label: "Slack",
@@ -1959,6 +1966,7 @@ export const NodeRegistry = {
     logoUrl: imgSlack,
     ConfigPanel: SlackNode,
     category: "apps",
+    description: "Post messages, upload files and manage Slack channels",
   },
   discord: {
     label: "Discord",
@@ -1968,6 +1976,7 @@ export const NodeRegistry = {
     logoUrl: imgDiscord,
     ConfigPanel: DiscordNode,
     category: "apps",
+    description: "Send messages, embeds and files to Discord channels",
   },
   gmail: {
     label: "Gmail",
@@ -1977,6 +1986,7 @@ export const NodeRegistry = {
     logoUrl: imgGmail,
     ConfigPanel: GmailNode,
     category: "apps",
+    description: "Send, read, label and search email in Gmail",
   },
   twilio: {
     label: "Twilio",
@@ -1986,6 +1996,7 @@ export const NodeRegistry = {
     logoUrl: imgTwilio,
     ConfigPanel: TwilioNode,
     category: "apps",
+    description: "Send SMS, place calls and verify numbers with Twilio",
   },
   sendgrid: {
     label: "SendGrid",
@@ -1995,6 +2006,7 @@ export const NodeRegistry = {
     logoUrl: imgSendGrid,
     ConfigPanel: SendGridNode,
     category: "apps",
+    description: "Send transactional email and manage SendGrid contacts",
   },
   airtable: {
     label: "Airtable",
@@ -2004,6 +2016,7 @@ export const NodeRegistry = {
     logoUrl: imgAirtable,
     ConfigPanel: AirtableNode,
     category: "apps",
+    description: "Create, update and query records in Airtable bases",
   },
   google_sheets: {
     label: "Google Sheets",
@@ -2013,6 +2026,7 @@ export const NodeRegistry = {
     logoUrl: imgGoogleSheets,
     ConfigPanel: GoogleSheetsNode,
     category: "apps",
+    description: "Read, append and update rows in Google Sheets",
   },
   notion: {
     label: "Notion",
@@ -2022,6 +2036,7 @@ export const NodeRegistry = {
     logoUrl: imgNotion,
     ConfigPanel: NotionNode,
     category: "apps",
+    description: "Create and query Notion pages, databases and blocks",
   },
 
   // Google Workspace
@@ -2033,6 +2048,7 @@ export const NodeRegistry = {
     logoUrl: imgGoogleCalendar,
     ConfigPanel: GoogleCalendarNode,
     category: "apps",
+    description: "Create, update and list Google Calendar events",
   },
   google_drive: {
     label: "Google Drive",
@@ -2042,6 +2058,7 @@ export const NodeRegistry = {
     logoUrl: imgGoogleDrive,
     ConfigPanel: GoogleDriveNode,
     category: "apps",
+    description: "Upload, download, move and share Google Drive files",
   },
 
   // Developer Tools
@@ -2100,6 +2117,7 @@ export const NodeRegistry = {
     logoUrl: imgJira,
     ConfigPanel: JiraNode,
     category: "apps",
+    description: "Create and manage Jira issues, comments and projects",
   },
   linear: {
     label: "Linear",
@@ -2109,6 +2127,7 @@ export const NodeRegistry = {
     logoUrl: imgLinear,
     ConfigPanel: LinearNode,
     category: "apps",
+    description: "Manage Linear issues, comments, teams and projects",
   },
 
   // Payments
@@ -2120,6 +2139,7 @@ export const NodeRegistry = {
     logoUrl: imgStripe,
     ConfigPanel: StripeNode,
     category: "apps",
+    description: "Manage customers, payments, invoices and products in Stripe",
   },
 
   // CRM & E-commerce
@@ -2131,6 +2151,7 @@ export const NodeRegistry = {
     logoUrl: imgHubSpot,
     ConfigPanel: HubSpotNode,
     category: "apps",
+    description: "Manage contacts, deals, companies and notes in HubSpot",
   },
   shopify: {
     label: "Shopify",
@@ -2140,6 +2161,7 @@ export const NodeRegistry = {
     logoUrl: imgShopify,
     ConfigPanel: ShopifyNode,
     category: "apps",
+    description: "Manage products, orders and customers in Shopify",
   },
 
 
