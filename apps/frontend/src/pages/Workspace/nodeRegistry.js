@@ -1783,6 +1783,7 @@ export const NodeRegistry = {
     logoUrl: imgPostgres,
     ConfigPanel: PostgresNode,
     category: "databases",
+    description: "Query, insert and manage rows in PostgreSQL",
   },
   supabase: {
     label: "Supabase",
@@ -1792,6 +1793,7 @@ export const NodeRegistry = {
     accentColor: "52,211,153",
     ConfigPanel: SupabaseNode,
     category: "databases",
+    description: "Read and write Supabase tables, auth users and storage",
   },
   mongodb: {
     label: "MongoDB",
@@ -1801,6 +1803,7 @@ export const NodeRegistry = {
     accentColor: "71,162,72",
     ConfigPanel: MongoDBNode,
     category: "databases",
+    description: "Find, write and aggregate MongoDB documents",
   },
   redis_node: {
     label: "Redis",
@@ -1810,6 +1813,7 @@ export const NodeRegistry = {
     accentColor: "255,68,56",
     ConfigPanel: RedisNode,
     category: "databases",
+    description: "Read and write Redis keys, lists, sets and hashes",
   },
   firebase: {
     label: "Firebase",
@@ -1819,6 +1823,7 @@ export const NodeRegistry = {
     accentColor: "255,202,40",
     ConfigPanel: FirebaseNode,
     category: "databases",
+    description: "Work with Firestore documents, Auth users and push messaging",
   },
 
   // Transform (array/data manipulation)
@@ -2204,6 +2209,7 @@ export const NodeRegistry = {
     accentColor: "74,222,128",
     ConfigPanel: PineconeNode,
     category: "databases",
+    description: "Upsert and query vectors in a Pinecone index",
   },
   vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
   resend: {
