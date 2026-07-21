@@ -303,17 +303,21 @@ function Field({ field, config, updateConfig, nodeId }) {
 //   config      — current config object from store
 //   updateConfig— (key, value) => void
 //   nodeId      — passed through to SmartVariableInput
-export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId }) {
+//   hideHeader  — set by the modal when it already rendered the header above
+//                 its action picker, so the node is not titled twice
+export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId, hideHeader }) {
   return (
     <ConfigSection>
-      <ConfigHeader
-        icon={Icon ?? Settings}
-        iconClass={colorClass ?? 'text-blue-400'}
-        logoUrl={logoUrl}
-        imgFilter={imgFilter}
-        title={meta.label}
-        subtitle={meta.description}
-      />
+      {!hideHeader && (
+        <ConfigHeader
+          icon={Icon ?? Settings}
+          iconClass={colorClass ?? 'text-blue-400'}
+          logoUrl={logoUrl}
+          imgFilter={imgFilter}
+          title={meta.label}
+          subtitle={meta.description}
+        />
+      )}
 
       {(meta.fields ?? []).map((field, i) => (
         <Field key={`${field.name ?? 'f'}-${i}`} field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />
