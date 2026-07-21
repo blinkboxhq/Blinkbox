@@ -64,7 +64,9 @@ function toCSV(data, delimiter) {
 
 export default {
   async run(config, input) {
-    const { mode = "toJson", delimiter = ",", hasHeader = true, outputKey = "rows" } = config;
+    const { delimiter = ",", hasHeader = true, outputKey = "rows" } = config;
+
+    const mode = config.operation || config.mode || "toJson";
 
     if (mode === "toJson") {
       const csvText = config.csv ?? (typeof input === "string" ? input : input?.csv ?? "");

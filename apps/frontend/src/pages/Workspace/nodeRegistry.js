@@ -271,7 +271,6 @@ import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
 import VirtualComputerPanel from "@nodes/virtual_computer/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
-import SetFieldsNode from "@nodes/set_fields/ConfigPanel.jsx";
 import LoopNode from "@nodes/loop/ConfigPanel.jsx";
 import SlackNode from "@nodes/slack/ConfigPanel.jsx";
 import DiscordNode from "@nodes/discord/ConfigPanel.jsx";
@@ -359,7 +358,6 @@ import ZipFilesNode from "@nodes/zip_files/ConfigPanel.jsx";
 import YouTubeUploadNode from "@nodes/youtube/ConfigPanel.jsx";
 import RssFeedGeneratorNode from "@nodes/rss_feed/ConfigPanel.jsx";
 // Developer Tools nodes
-import EnvVariableNode from "@nodes/env_variable/ConfigPanel.jsx";
 import GraphQLNode from "@nodes/graphql/ConfigPanel.jsx";
 import SftpNode from "@nodes/sftp/ConfigPanel.jsx";
 import S3Node from "@nodes/s3/ConfigPanel.jsx";
@@ -376,7 +374,6 @@ import HttpMonitorNode from "@nodes/http_monitor/ConfigPanel.jsx";
 // Data Processing nodes
 import TextFormatNode from "@nodes/text_format/ConfigPanel.jsx";
 import RegexMatchNode from "@nodes/regex_match/ConfigPanel.jsx";
-import UrlParserNode from "@nodes/url_parser/ConfigPanel.jsx";
 import JsonTransformNode from "@nodes/json_transform/ConfigPanel.jsx";
 import MathExpressionNode from "@nodes/math_expression/ConfigPanel.jsx";
 import ConditionNode from "@nodes/condition/ConfigPanel.jsx";
@@ -1858,26 +1855,20 @@ export const NodeRegistry = {
   csv_parser: {
     label: "CSV Parser",
     icon: FileText,
-    colorClass: "text-white",
+    colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: CSVParserNode,
     category: "data",
+    description: "Convert CSV text into JSON rows, or JSON arrays back into CSV",
   },
   data_mapper: {
     label: "Data Mapper",
     icon: Database,
-    colorClass: "text-white",
+    colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: DataMapperNode,
     category: "data",
-  },
-  set_fields: {
-    label: "Set Fields",
-    icon: Edit2,
-    colorClass: "text-white",
-    accentColor: "52,211,153",
-    ConfigPanel: SetFieldsNode,
-    category: "data",
+    description: "Set, rename, filter, remove or pick fields on the incoming payload",
   },
   date_time:         { label: "Date & Time",        icon: Calendar,       colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: DateTimeNode,         category: "data", description: "Parse, format and manipulate dates and times" },
   crypto_utils:      { label: "Crypto / Hash",       icon: Lock,           colorClass: "text-yellow-400", accentColor: "250,204,21",  ConfigPanel: CryptoUtilsNode,      category: "data", description: "Hash, encrypt and HMAC sign data with SHA, MD5, AES" },
@@ -1886,7 +1877,6 @@ export const NodeRegistry = {
   email_parser:      { label: "Email Parser",        icon: Mail,           colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: EmailParserNode,      category: "infra", description: "Parse raw email into subject, body, attachments and headers" },
   text_format:       { label: "Text Format",         icon: AlignLeft,      colorClass: "text-zinc-300",   accentColor: "212,212,216", ConfigPanel: TextFormatNode,       category: "data", description: "Trim, truncate, slugify, case-convert and pad strings" },
   regex_match:       { label: "Regex Match",         icon: Regex,          colorClass: "text-green-400",  accentColor: "74,222,128",  ConfigPanel: RegexMatchNode,       category: "data", description: "Test, capture and replace with regular expressions" },
-  url_parser:        { label: "URL Parser",          icon: Link2,          colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: UrlParserNode,        category: "data", description: "Parse URLs into protocol, host, path, query and hash" },
   json_transform:    { label: "JSON Transform",      icon: Braces,         colorClass: "text-emerald-400",accentColor: "52,211,153",  ConfigPanel: JsonTransformNode,    category: "data", description: "Parse, stringify, or extract values from JSON without code" },
   math_expression:   { label: "Math Expression",     icon: Calculator,     colorClass: "text-blue-400",   accentColor: "96,165,250",  ConfigPanel: MathExpressionNode,   category: "data", description: "Evaluate math expressions, formulas and unit conversions" },
 
@@ -2055,22 +2045,13 @@ export const NodeRegistry = {
   },
 
   // Developer Tools
-  env_variable: {
-    label: "Environment Variable",
-    icon: Key,
-    colorClass: "text-emerald-400",
-    accentColor: "52,211,153",
-    ConfigPanel: EnvVariableNode,
-    category: "data",
-    description: "Inject, read or assert environment variables in the workflow",
-  },
   graphql_request: {
     label: "GraphQL Request",
     icon: Network,
     colorClass: "text-pink-400",
     accentColor: "244,114,182",
     ConfigPanel: GraphQLNode,
-    category: "data",
+    category: "infra",
     description: "Query or mutate any GraphQL API with variables and auth",
   },
   sftp: {
@@ -2170,7 +2151,8 @@ export const NodeRegistry = {
     colorClass: "text-sky-400",
     accentColor: "56,189,248",
     ConfigPanel: TextSplitterNode,
-    category: "data",
+    category: "ai_agent",
+    description: "Split long text into overlapping chunks for AI and RAG pipelines",
   },
   template_renderer: {
     label: "Template Renderer",
@@ -2179,6 +2161,7 @@ export const NodeRegistry = {
     accentColor: "251,191,36",
     ConfigPanel: TemplateRendererNode,
     category: "data",
+    description: "Render a Handlebars template with data from upstream nodes",
   },
   aggregate: {
     label: "Aggregate",

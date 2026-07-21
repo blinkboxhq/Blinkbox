@@ -1,4 +1,4 @@
-import { Settings } from 'lucide-react';
+import { Settings, Plus, X } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
 import {
@@ -162,6 +162,103 @@ function NoticeField({ field }) {
   );
 }
 
+function RowBtn({ onClick, children, title }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="shrink-0 w-8 h-8 rounded-md border border-[#2b2b2b] bg-[#0f0f0f] text-neutral-600 hover:text-neutral-300 hover:border-[#3b3b3b] flex items-center justify-center transition-colors"
+    >
+      {children}
+    </button>
+  );
+}
+
+function KeyValueField({ field, value, onChange, nodeId }) {
+  const kName = field.keyName ?? 'key';
+  const vName = field.valueName ?? 'value';
+  const rows = Array.isArray(value) ? value : [];
+  const patch = (i, prop, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [prop]: v } : r)));
+
+  return (
+    <div className="flex flex-col">
+      <ConfigLabel>{field.label}</ConfigLabel>
+      <div className="flex flex-col gap-2">
+        {rows.map((row, i) => (
+          <div key={i} className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0">
+              <SmartVariableInput
+                value={row[kName] ?? ''}
+                onChange={(v) => patch(i, kName, v)}
+                placeholder={field.keyPlaceholder ?? 'field'}
+                nodeId={nodeId}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <SmartVariableInput
+                value={row[vName] ?? ''}
+                onChange={(v) => patch(i, vName, v)}
+                placeholder={field.valuePlaceholder ?? '{{ $json.value }}'}
+                nodeId={nodeId}
+              />
+            </div>
+            <RowBtn onClick={() => onChange(rows.filter((_, j) => j !== i))} title="Remove">
+              <X className="w-3.5 h-3.5" />
+            </RowBtn>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange([...rows, { [kName]: '', [vName]: '' }])}
+        className="bb-glow-border mt-2 px-2.5 py-1.5 rounded-md bg-[#0f0f0f] border border-[#2b2b2b] hover:border-[#3b3b3b] text-[11px] text-neutral-500 hover:text-neutral-300 flex items-center justify-center gap-1.5 transition-colors"
+      >
+        <Plus className="w-3 h-3" /> {field.addLabel ?? 'Add'}
+      </button>
+      {field.hint && (
+        <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>
+      )}
+    </div>
+  );
+}
+
+function ListField({ field, value, onChange, nodeId }) {
+  const rows = Array.isArray(value) ? value : [];
+  return (
+    <div className="flex flex-col">
+      <ConfigLabel>{field.label}</ConfigLabel>
+      <div className="flex flex-col gap-2">
+        {rows.map((row, i) => (
+          <div key={i} className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0">
+              <SmartVariableInput
+                value={row ?? ''}
+                onChange={(v) => onChange(rows.map((r, j) => (j === i ? v : r)))}
+                placeholder={field.placeholder ?? 'fieldName'}
+                nodeId={nodeId}
+              />
+            </div>
+            <RowBtn onClick={() => onChange(rows.filter((_, j) => j !== i))} title="Remove">
+              <X className="w-3.5 h-3.5" />
+            </RowBtn>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange([...rows, ''])}
+        className="bb-glow-border mt-2 px-2.5 py-1.5 rounded-md bg-[#0f0f0f] border border-[#2b2b2b] hover:border-[#3b3b3b] text-[11px] text-neutral-500 hover:text-neutral-300 flex items-center justify-center gap-1.5 transition-colors"
+      >
+        <Plus className="w-3 h-3" /> {field.addLabel ?? 'Add'}
+      </button>
+      {field.hint && (
+        <p className="text-[9px] text-neutral-600 mt-1.5 font-mono tracking-wide leading-relaxed">{field.hint}</p>
+      )}
+    </div>
+  );
+}
+
 function RowField({ field, config, updateConfig, nodeId }) {
   if (!isVisible(field, config)) return null;
   return (
@@ -189,6 +286,8 @@ function Field({ field, config, updateConfig, nodeId }) {
     case 'multiOptions': return <MultiOptionsField field={field} value={value} onChange={onChange} />;
     case 'color':        return <ColorField field={field} value={value} onChange={onChange} />;
     case 'credential':   return <CredentialField field={field} value={value} onChange={onChange} />;
+    case 'keyValue':     return <KeyValueField field={field} value={value} onChange={onChange} nodeId={nodeId} />;
+    case 'list':         return <ListField field={field} value={value} onChange={onChange} nodeId={nodeId} />;
     case 'notice':       return <NoticeField field={field} />;
     case 'row':          return <RowField field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />;
     default:             return null;

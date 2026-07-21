@@ -1,4 +1,19 @@
-import { Table } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import meta from './meta.js';
-import SchemaForm from '@nodes/SchemaForm.jsx';
-export default (props) => <SchemaForm meta={meta} icon={Table} colorClass="text-emerald-400" {...props} />;
+import DbPanel from '@nodes/DbPanel.jsx';
+import { OPERATIONS, DEFAULT_OPERATION } from './operations.js';
+
+export { OPERATIONS };
+
+export default function CsvParserNode(props) {
+  return (
+    <DbPanel
+      meta={meta}
+      operations={OPERATIONS}
+      defaultOperation={DEFAULT_OPERATION}
+      icon={FileText}
+      colorClass="text-emerald-400"
+      {...props}
+    />
+  );
+}

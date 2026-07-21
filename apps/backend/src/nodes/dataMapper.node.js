@@ -35,7 +35,7 @@ const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export default {
   async run(config, input) {
-    const { mode = "set" } = config;
+    const mode = config.operation || config.mode || "set";
 
     switch (mode) {
       case "set":

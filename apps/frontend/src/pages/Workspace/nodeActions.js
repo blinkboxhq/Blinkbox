@@ -54,6 +54,15 @@ import { OPERATIONS as ops_redis } from "@nodes/redis/ConfigPanel.jsx";
 import { OPERATIONS as ops_firebase } from "@nodes/firebase/ConfigPanel.jsx";
 import { OPERATIONS as ops_pinecone } from "@nodes/pinecone/ConfigPanel.jsx";
 
+import { OPERATIONS as ops_csv_parser } from "@nodes/csv_parser/ConfigPanel.jsx";
+import { OPERATIONS as ops_date_time } from "@nodes/date_time/ConfigPanel.jsx";
+import { OPERATIONS as ops_crypto_utils } from "@nodes/crypto_utils/ConfigPanel.jsx";
+import { OPERATIONS as ops_text_format } from "@nodes/text_format/ConfigPanel.jsx";
+import { OPERATIONS as ops_regex_match } from "@nodes/regex_match/ConfigPanel.jsx";
+import { OPERATIONS as ops_json_transform } from "@nodes/json_transform/ConfigPanel.jsx";
+import { OPERATIONS as ops_variable_set_get } from "@nodes/variable_set_get/ConfigPanel.jsx";
+import { OPERATIONS as ops_data_mapper } from "@nodes/data_mapper/ConfigPanel.jsx";
+
 import {
   MessageSquare, Zap, Braces, Wrench, Eye, Image, ImagePlus, Copy,
   Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
@@ -113,6 +122,17 @@ const DB_OPERATIONS = {
   pinecone: ops_pinecone,
 };
 
+const DATA_OPERATIONS = {
+  csv_parser: ops_csv_parser,
+  date_time: ops_date_time,
+  crypto_utils: ops_crypto_utils,
+  text_format: ops_text_format,
+  regex_match: ops_regex_match,
+  json_transform: ops_json_transform,
+  variable_set_get: ops_variable_set_get,
+  data_mapper: ops_data_mapper,
+};
+
 const derive = (source) =>
   Object.fromEntries(
     Object.entries(source).map(([key, ops]) => [
@@ -123,10 +143,11 @@ const derive = (source) =>
 
 const APP_ACTIONS = derive(APP_OPERATIONS);
 const DB_ACTIONS = derive(DB_OPERATIONS);
+const DATA_ACTIONS = derive(DATA_OPERATIONS);
 
 // Categories whose nodes pick an action inside the config panel dropdown.
 // Anything else with a NODE_ACTIONS entry uses the sidebar's two-step picker.
-export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps", "databases"];
+export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps", "databases", "data"];
 
 // Categories where a node is one node, one job — never an action picker,
 // in the sidebar or the panel.
@@ -445,44 +466,6 @@ const BUILTIN_ACTIONS = {
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
-  csv_parser: [
-    { name: "Parse CSV String", description: "Convert a CSV text into an array of objects" },
-    { name: "CSV to JSON", description: "Transform CSV data into JSON format" },
-    { name: "JSON to CSV", description: "Convert an array of objects to CSV text" },
-    { name: "Read CSV File", description: "Parse a CSV file from a URL or base64 blob" },
-    { name: "Map Columns", description: "Rename or reorder CSV columns" },
-  ],
-  date_time: [
-    { name: "Format Date", description: "Convert a date to a specific display format" },
-    { name: "Parse Date String", description: "Convert a date string to a Unix timestamp" },
-    { name: "Add/Subtract Time", description: "Add or subtract days, hours, or minutes" },
-    { name: "Get Current Timestamp", description: "Return the current date and time" },
-    { name: "Calculate Difference", description: "Find the difference between two dates" },
-    { name: "Convert Timezone", description: "Convert a timestamp from one timezone to another" },
-  ],
-  crypto_utils: [
-    { name: "Hash Data (SHA-256)", description: "Compute the SHA-256 hash of a string" },
-    { name: "HMAC Sign", description: "Sign data with a secret key using HMAC" },
-    { name: "Encrypt (AES)", description: "Encrypt data using AES symmetric encryption" },
-    { name: "Decrypt (AES)", description: "Decrypt AES-encrypted data" },
-    { name: "Base64 Encode", description: "Encode binary or text data as base64" },
-    { name: "Base64 Decode", description: "Decode a base64 string to raw text" },
-    { name: "Generate UUID", description: "Generate a random UUID v4" },
-  ],
-  data_mapper: [
-    { name: "Map Fields", description: "Remap keys in an object to new field names" },
-    { name: "Pick Fields", description: "Keep only specified fields from an object" },
-    { name: "Omit Fields", description: "Remove specified fields from an object" },
-    { name: "Flatten Nested Object", description: "Collapse nested keys into dot-notation" },
-    { name: "Merge Objects", description: "Merge two or more objects into one" },
-  ],
-  set_fields: [
-    { name: "Set Field Value", description: "Add or overwrite a field in the payload" },
-    { name: "Set Multiple Fields", description: "Add several key-value pairs at once" },
-    { name: "Delete Field", description: "Remove a specific key from the payload" },
-    { name: "Rename Field", description: "Rename a key while preserving its value" },
-    { name: "Compute Expression", description: "Set a field to a computed expression result" },
-  ],
 
   // ── Research ──────────────────────────────────────────────────────────────────
   web_scraper: [
@@ -569,12 +552,6 @@ const BUILTIN_ACTIONS = {
     { name: "Validate Schema", description: "Check that data matches a JSON schema" },
     { name: "Custom Logic", description: "Write any custom business logic in code" },
   ],
-  variable_set_get: [
-    { name: "Set Variable", description: "Store a value in a named workflow variable" },
-    { name: "Get Variable", description: "Retrieve a named variable's current value" },
-    { name: "Increment Variable", description: "Add to a numeric variable" },
-    { name: "Reset Variable", description: "Reset a variable to its initial value" },
-  ],
   counter: [
     { name: "Increment", description: "Add 1 (or N) to the counter" },
     { name: "Decrement", description: "Subtract 1 (or N) from the counter" },
@@ -586,12 +563,6 @@ const BUILTIN_ACTIONS = {
     { name: "Pick N Random Items", description: "Select N random items without replacement" },
     { name: "Shuffle Array", description: "Randomize the order of an array" },
     { name: "Random Number", description: "Generate a random number in a range" },
-  ],
-  math_expression: [
-    { name: "Evaluate Expression", description: "Calculate a math formula with variables" },
-    { name: "Round Number", description: "Round to a specific number of decimal places" },
-    { name: "Min / Max", description: "Find the minimum or maximum in an array of numbers" },
-    { name: "Statistical Summary", description: "Calculate mean, median, and standard deviation" },
   ],
   unit_converter: [
     { name: "Convert Length", description: "Convert meters, feet, miles, km, etc." },
@@ -908,11 +879,6 @@ const BUILTIN_ACTIONS = {
     { name: "Delete File", description: "Remove a file from an SFTP server" },
     { name: "Create Directory", description: "Create a new directory on an SFTP server" },
   ],
-  graphql_request: [
-    { name: "Execute Query", description: "Run a GraphQL query and return the response" },
-    { name: "Execute Mutation", description: "Run a GraphQL mutation to create or update data" },
-    { name: "Introspect Schema", description: "Fetch the GraphQL schema for a endpoint" },
-  ],
   grpc_call: [
     { name: "Unary Call", description: "Make a single request/response gRPC call" },
     { name: "Server Streaming", description: "Open a gRPC server-side streaming request" },
@@ -923,11 +889,6 @@ const BUILTIN_ACTIONS = {
     { name: "Respond with HTML", description: "Return an HTML page to the webhook caller" },
     { name: "Respond with Status", description: "Return a status code with an optional body" },
     { name: "Redirect", description: "Redirect the caller to another URL" },
-  ],
-  env_variable: [
-    { name: "Get Variable", description: "Read an environment variable by name" },
-    { name: "Set Variable", description: "Set an environment variable for this execution" },
-    { name: "List Variables", description: "Return all visible environment variables" },
   ],
   docker: [
     { name: "List Containers", description: "List all running Docker containers" },
@@ -1153,20 +1114,6 @@ const BUILTIN_ACTIONS = {
     { name: "Round to Decimal", description: "Round a number to N decimal places" },
     { name: "Add Thousands Separator", description: "Format large numbers with commas" },
   ],
-  text_format: [
-    { name: "Uppercase", description: "Convert text to uppercase" },
-    { name: "Lowercase", description: "Convert text to lowercase" },
-    { name: "Title Case", description: "Capitalize the first letter of each word" },
-    { name: "Trim Whitespace", description: "Remove leading and trailing whitespace" },
-    { name: "Truncate Text", description: "Shorten text to a max character count" },
-    { name: "Pad Text", description: "Pad a string to a fixed length" },
-  ],
-  regex_match: [
-    { name: "Test Pattern", description: "Check if a string matches a regex pattern" },
-    { name: "Extract Matches", description: "Pull all regex matches from a string" },
-    { name: "Replace Pattern", description: "Replace regex matches with a substitution" },
-    { name: "Split by Pattern", description: "Split a string using a regex delimiter" },
-  ],
   find_replace: [
     { name: "Find & Replace", description: "Replace all occurrences of a string" },
     { name: "Case-insensitive Replace", description: "Replace text regardless of case" },
@@ -1194,13 +1141,6 @@ const BUILTIN_ACTIONS = {
     { name: "Render to Plain Text", description: "Strip Markdown syntax to plain text" },
     { name: "Extract Headings", description: "Pull all heading text from a Markdown document" },
     { name: "Extract Links", description: "Find all links in a Markdown document" },
-  ],
-  url_parser: [
-    { name: "Parse URL", description: "Break a URL into protocol, host, path, and params" },
-    { name: "Build URL", description: "Construct a URL from components" },
-    { name: "Encode URL", description: "Percent-encode a URL or query string" },
-    { name: "Extract Domain", description: "Pull just the domain from a URL" },
-    { name: "Add Query Param", description: "Append or replace a URL query parameter" },
   ],
 
   // ── Finance & Accounting ──────────────────────────────────────────────────────
@@ -1352,4 +1292,4 @@ const BUILTIN_ACTIONS = {
   // ── Apps (blue in-panel action dropdown) ─────────────────────────────────────
 };
 
-export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS };
+export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS, ...DATA_ACTIONS };

@@ -4,18 +4,6 @@ export default {
   description: "Format, parse, add, diff, and convert dates",
   fields: [
     {
-      name: "operation", label: "Operation", type: "options", cols: 2, default: "now",
-      options: [
-        { value: "now", label: "Current Time" },
-        { value: "format", label: "Format Date" },
-        { value: "parse", label: "Parse Date" },
-        { value: "add", label: "Add Duration" },
-        { value: "subtract", label: "Subtract Duration" },
-        { value: "diff", label: "Date Difference" },
-        { value: "convert", label: "Convert Timezone" },
-      ],
-    },
-    {
       name: "date", label: "Date", type: "string", smart: true,
       placeholder: "{{ $json.createdAt }}  or  2024-01-15T10:00:00Z",
       show: { operation: ["format", "parse", "add", "subtract", "diff", "convert"] },

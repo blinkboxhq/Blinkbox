@@ -16,7 +16,6 @@ export { default as counter } from "./counter.node.js";
 export { default as variable_set_get } from "./variableSetGet.node.js";
 export { default as schedule_check } from "./scheduleCheck.node.js";
 export { default as semver_compare } from "./semverCompare.node.js";
-export { default as env_variable } from "./envVariable.node.js";
 export { default as error } from "./errorNode.node.js";
 export { default as zip_files } from "./zipFiles.node.js";
 export { default as color_palette } from "./colorPalette.node.js";

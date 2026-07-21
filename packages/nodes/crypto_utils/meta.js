@@ -4,17 +4,6 @@ export default {
   description: "Hash, HMAC, base64, UUID, random tokens",
   fields: [
     {
-      name: "operation", label: "Operation", type: "options", cols: 2, default: "hash",
-      options: [
-        { value: "hash", label: "Hash" },
-        { value: "hmac", label: "HMAC Sign" },
-        { value: "base64encode", label: "Base64 Encode" },
-        { value: "base64decode", label: "Base64 Decode" },
-        { value: "uuid", label: "Generate UUID" },
-        { value: "random", label: "Random Bytes" },
-      ],
-    },
-    {
       name: "input", label: "Input", type: "string", smart: true, placeholder: "{{ $json.payload }}",
       show: { operation: ["hash", "hmac", "base64encode", "base64decode"] },
     },

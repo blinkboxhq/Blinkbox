@@ -104,7 +104,6 @@ import pdfGenerator    from "./pdfGenerator.node.js";
 import emailParser     from "./emailParser.node.js";
 import vectorMemory    from "./vectorMemory.node.js";
 import ocr             from "./ocr.node.js";
-import urlParser       from "./urlParser.node.js";
 import jsonTransform   from "./jsonTransform.node.js";
 import translation     from "./translation.node.js";
 import speechToText    from "./speechToText.node.js";
@@ -325,7 +324,6 @@ const rawNodeRegistry = {
   email_parser:      emailParser,
   vector_memory:     vectorMemory,
   ocr:               ocr,
-  url_parser:        urlParser,
   json_transform:    jsonTransform,
   translation:       translation,
   speech_to_text:    speechToText,
@@ -484,7 +482,6 @@ const rawNodeRegistry = {
   // ── Backward compatibility aliases ───────────────────────────────────────
   advanced_scraper: webScraper,
   informer:         webScraper,
-  set_fields:       dataMapper,
   transform:        dataMapper,
   filter:           dataMapper,
   twitter_post:     twitter,
