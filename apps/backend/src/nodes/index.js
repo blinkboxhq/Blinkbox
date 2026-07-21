@@ -381,7 +381,6 @@ const rawNodeRegistry = {
   mongodb:       mongodb,
   redis_node:    redisNode,
   firebase:      firebase,
-  database:      postgres,
 
   // ── Google Workspace ──────────────────────────────────────────────────────
   google_calendar: googleCalendar,

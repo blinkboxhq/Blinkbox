@@ -47,6 +47,13 @@ import { OPERATIONS as ops_tiktok } from "@nodes/tiktok/ConfigPanel.jsx";
 import { OPERATIONS as ops_linkedin } from "@nodes/linkedin/ConfigPanel.jsx";
 import { OPERATIONS as ops_zoom } from "@nodes/zoom/ConfigPanel.jsx";
 
+import { OPERATIONS as ops_postgres } from "@nodes/postgres/ConfigPanel.jsx";
+import { OPERATIONS as ops_supabase } from "@nodes/supabase/ConfigPanel.jsx";
+import { OPERATIONS as ops_mongodb } from "@nodes/mongodb/ConfigPanel.jsx";
+import { OPERATIONS as ops_redis } from "@nodes/redis/ConfigPanel.jsx";
+import { OPERATIONS as ops_firebase } from "@nodes/firebase/ConfigPanel.jsx";
+import { OPERATIONS as ops_pinecone } from "@nodes/pinecone/ConfigPanel.jsx";
+
 import {
   MessageSquare, Zap, Braces, Wrench, Eye, Image, ImagePlus, Copy,
   Mic, Languages, Volume2, Layers, ShieldCheck, List, Settings2,
@@ -97,16 +104,29 @@ const APP_OPERATIONS = {
 
 };
 
-const APP_ACTIONS = Object.fromEntries(
-  Object.entries(APP_OPERATIONS).map(([key, ops]) => [
-    key,
-    ops.map((o) => ({ name: o.label, value: o.value, description: o.group || "", icon: o.icon })),
-  ]),
-);
+const DB_OPERATIONS = {
+  postgres: ops_postgres,
+  supabase: ops_supabase,
+  mongodb: ops_mongodb,
+  redis_node: ops_redis,
+  firebase: ops_firebase,
+  pinecone: ops_pinecone,
+};
+
+const derive = (source) =>
+  Object.fromEntries(
+    Object.entries(source).map(([key, ops]) => [
+      key,
+      ops.map((o) => ({ name: o.label, value: o.value, description: o.group || "", icon: o.icon })),
+    ]),
+  );
+
+const APP_ACTIONS = derive(APP_OPERATIONS);
+const DB_ACTIONS = derive(DB_OPERATIONS);
 
 // Categories whose nodes pick an action inside the config panel dropdown.
 // Anything else with a NODE_ACTIONS entry uses the sidebar's two-step picker.
-export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps"];
+export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps", "databases"];
 
 // Categories where a node is one node, one job — never an action picker,
 // in the sidebar or the panel.
@@ -422,56 +442,6 @@ const BUILTIN_ACTIONS = {
     { name: "Download File", description: "Download binary content from a URL" },
     { name: "Authenticated Request", description: "Make a request with OAuth, API key, or Basic Auth" },
     { name: "Paginated Fetch", description: "Auto-iterate through paginated API responses" },
-  ],
-  postgres: [
-    { name: "Execute Query", description: "Run a raw SQL SELECT, INSERT, UPDATE, or DELETE" },
-    { name: "Insert Row", description: "Insert a single record into a table" },
-    { name: "Insert Many Rows", description: "Bulk-insert an array of records" },
-    { name: "Update Row", description: "Update records matching a WHERE clause" },
-    { name: "Delete Row", description: "Delete records matching a WHERE clause" },
-    { name: "Find Row", description: "Fetch a single row by primary key" },
-    { name: "List Rows", description: "Fetch multiple rows with optional filters" },
-    { name: "Execute Transaction", description: "Run multiple SQL statements atomically" },
-  ],
-  supabase: [
-    { name: "Select Rows", description: "Query a Supabase table with filters" },
-    { name: "Insert Row", description: "Insert a new record into a Supabase table" },
-    { name: "Update Row", description: "Update matching records in Supabase" },
-    { name: "Delete Row", description: "Delete records from a Supabase table" },
-    { name: "Upsert Row", description: "Insert or update a record by primary key" },
-    { name: "Call RPC Function", description: "Execute a custom Supabase Postgres function" },
-    { name: "Subscribe to Realtime", description: "Listen for live row changes via Supabase Realtime" },
-    { name: "Upload Storage File", description: "Upload a file to Supabase Storage bucket" },
-  ],
-  mongodb: [
-    { name: "Find Documents", description: "Query documents with a MongoDB filter" },
-    { name: "Find One", description: "Fetch the first matching document" },
-    { name: "Insert Document", description: "Insert a single document into a collection" },
-    { name: "Insert Many", description: "Bulk-insert multiple documents" },
-    { name: "Update Document", description: "Update one document matching a filter" },
-    { name: "Delete Document", description: "Remove documents matching a filter" },
-    { name: "Aggregate Pipeline", description: "Run a MongoDB aggregation pipeline" },
-    { name: "Count Documents", description: "Count documents matching a filter" },
-  ],
-  redis_node: [
-    { name: "Get Value", description: "Retrieve a value from Redis by key" },
-    { name: "Set Value", description: "Store a key-value pair with optional TTL" },
-    { name: "Delete Key", description: "Remove a key from Redis" },
-    { name: "Increment Counter", description: "Atomically increment a numeric value" },
-    { name: "Push to List", description: "Append a value to a Redis list" },
-    { name: "Pop from List", description: "Remove and return the first item from a list" },
-    { name: "Set Hash Field", description: "Set a field in a Redis hash" },
-    { name: "Publish Message", description: "Publish to a Redis pub/sub channel" },
-  ],
-  firebase: [
-    { name: "Read Document", description: "Fetch a Firestore document by path" },
-    { name: "Write Document", description: "Create or overwrite a Firestore document" },
-    { name: "Update Document", description: "Merge fields into an existing Firestore document" },
-    { name: "Delete Document", description: "Remove a Firestore document" },
-    { name: "Query Collection", description: "Query a Firestore collection with filters" },
-    { name: "Push Notification", description: "Send an FCM push notification to a device" },
-    { name: "Read Realtime DB", description: "Read from Firebase Realtime Database" },
-    { name: "Write Realtime DB", description: "Write to Firebase Realtime Database" },
   ],
 
   // ── Data Processing ──────────────────────────────────────────────────────────
@@ -1363,13 +1333,6 @@ const BUILTIN_ACTIONS = {
     { name: "Search Feed Items", description: "Filter feed items by keyword" },
     { name: "Subscribe to Feed", description: "Watch an RSS feed for new items" },
   ],
-  database: [
-    { name: "Execute SQL", description: "Run any SQL query against a connected database" },
-    { name: "Insert Record", description: "Insert a row into a table" },
-    { name: "Update Record", description: "Update rows matching a WHERE clause" },
-    { name: "Delete Record", description: "Delete rows matching a WHERE clause" },
-    { name: "Create Table", description: "Run a CREATE TABLE DDL statement" },
-  ],
   price_alert: [
     { name: "Check Price Drop", description: "Check if a product's price fell below a threshold" },
     { name: "Check Price Rise", description: "Alert when a price exceeds a target" },
@@ -1389,4 +1352,4 @@ const BUILTIN_ACTIONS = {
   // ── Apps (blue in-panel action dropdown) ─────────────────────────────────────
 };
 
-export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...APP_ACTIONS };
+export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS };

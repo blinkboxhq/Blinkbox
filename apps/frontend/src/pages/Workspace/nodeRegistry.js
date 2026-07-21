@@ -440,7 +440,8 @@ export const CATEGORIES = [
   { id: "ai_agent",  label: "AI Agent",   icon: Bot,        shape: "glass"  },
   { id: "apps",      label: "Apps",       icon: Briefcase,  shape: "pill"   },
   { id: "logic",     label: "Logic & Flow", icon: GitFork,  shape: "sharp"  },
-  { id: "data",      label: "Data",       icon: Database,   shape: "rounded"},
+  { id: "databases", label: "Databases",  icon: Database,   shape: "rounded"},
+  { id: "data",      label: "Data",       icon: Braces,     shape: "rounded"},
   { id: "infra",     label: "Files & Infra", icon: Server,  shape: "rounded"},
 ];
 
@@ -1781,7 +1782,7 @@ export const NodeRegistry = {
     accentColor: "91,155,213",
     logoUrl: imgPostgres,
     ConfigPanel: PostgresNode,
-    category: "data",
+    category: "databases",
   },
   supabase: {
     label: "Supabase",
@@ -1790,7 +1791,7 @@ export const NodeRegistry = {
     colorClass: "text-emerald-400",
     accentColor: "52,211,153",
     ConfigPanel: SupabaseNode,
-    category: "data",
+    category: "databases",
   },
   mongodb: {
     label: "MongoDB",
@@ -1799,7 +1800,7 @@ export const NodeRegistry = {
     colorClass: "text-[#47A248]",
     accentColor: "71,162,72",
     ConfigPanel: MongoDBNode,
-    category: "data",
+    category: "databases",
   },
   redis_node: {
     label: "Redis",
@@ -1808,7 +1809,7 @@ export const NodeRegistry = {
     colorClass: "text-[#FF4438]",
     accentColor: "255,68,56",
     ConfigPanel: RedisNode,
-    category: "data",
+    category: "databases",
   },
   firebase: {
     label: "Firebase",
@@ -1817,7 +1818,7 @@ export const NodeRegistry = {
     colorClass: "text-[#FFCA28]",
     accentColor: "255,202,40",
     ConfigPanel: FirebaseNode,
-    category: "data",
+    category: "databases",
   },
 
   // Transform (array/data manipulation)
@@ -2202,7 +2203,7 @@ export const NodeRegistry = {
     colorClass: "text-green-400",
     accentColor: "74,222,128",
     ConfigPanel: PineconeNode,
-    category: "data",
+    category: "databases",
   },
   vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
   resend: {
@@ -2558,16 +2559,6 @@ export const NodeRegistry = {
     ConfigPanel: RssFeedGeneratorNode,
     category: "infra",
     description: "Read, parse and generate RSS / Atom feeds",
-  },
-  database: {
-    label: "Database",
-    icon: Database,
-    colorClass: "text-[#5B9BD5]",
-    accentColor: "91,155,213",
-    logoUrl: imgPostgres,
-    ConfigPanel: PostgresNode,
-    category: "data",
-    description: "Query and write to PostgreSQL or MySQL databases",
   },
 
 
