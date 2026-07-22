@@ -58,6 +58,7 @@ import {
   humanize as humanizeAction,
 } from "./integrationManifest.js";
 import { describeResources, applyResourceDefaults } from "./integrationResources.js";
+import { loadAgentMemory, saveAgentMemory } from "./agentMemory.js";
 
 // Platform integration nodes — imported for autonomous tool use
 import _slackNode    from "./integrations/slack.node.js";
@@ -581,7 +582,22 @@ const agentNode = {
       tools.length > 0 ? formatToolsForProvider(tools, provider) : null;
 
     // ── Resolve Memory ─────────────────────────────────────────────────
-    const memoryMessages = resolveMemory(_memory);
+    // A connected memory sub-node arrives as a descriptor, not as data —
+    // read its store here and write the turn back after the final answer.
+    const memoryNode = _memory?.__memoryNode || null;
+    let memoryMessages;
+    if (memoryNode) {
+      const loaded = await loadAgentMemory({
+        type: memoryNode.type,
+        config: memoryNode.config,
+        workspaceId: context.workspaceId,
+        query: String(prompt || ""),
+      });
+      memoryMessages = loaded.messages;
+      if (loaded.notes) context.log?.(loaded.notes);
+    } else {
+      memoryMessages = resolveMemory(_memory);
+    }
     if (memoryMessages.length > MAX_MEMORY_MESSAGES) {
       memoryMessages.splice(0, memoryMessages.length - MAX_MEMORY_MESSAGES);
     }
@@ -799,6 +815,17 @@ const agentNode = {
 
       if (outputFormat === "json") {
         result = parseJsonResponse(result);
+      }
+
+      // ── Save the turn to the connected memory provider ────────────
+      if (memoryNode) {
+        await saveAgentMemory({
+          type: memoryNode.type,
+          config: memoryNode.config,
+          workspaceId: context.workspaceId,
+          userText: userTextContent,
+          assistantText: typeof result === "string" ? result : JSON.stringify(result),
+        });
       }
 
       // ── Save conversation turn to Redis ───────────────────────────
@@ -2599,6 +2626,7 @@ agentNode._think = async function ({
   isFirstCall,
 }) {
   const provider = nodeConfig.provider || "openai";
+  const memoryNode = nodeConfig._memory?.__memoryNode || null;
   const resolvedModel =
     nodeConfig.customModel?.trim() || nodeConfig.model || DEFAULT_MODELS[provider];
   // Per-call base URL for local providers — passed to callProvider, never
@@ -2663,7 +2691,18 @@ agentNode._think = async function ({
     systemPromptFinal = system;
 
     // ── Build initial messages ──────────────────────────────────────
-    const memoryMessages = resolveMemory(nodeConfig._memory);
+    let memoryMessages;
+    if (memoryNode) {
+      const loaded = await loadAgentMemory({
+        type: memoryNode.type,
+        config: memoryNode.config,
+        workspaceId,
+        query: String(nodeConfig.prompt || ""),
+      });
+      memoryMessages = loaded.messages;
+    } else {
+      memoryMessages = resolveMemory(nodeConfig._memory);
+    }
     if (memoryMessages.length > MAX_MEMORY_MESSAGES) {
       memoryMessages.splice(0, memoryMessages.length - MAX_MEMORY_MESSAGES);
     }
@@ -2710,6 +2749,17 @@ agentNode._think = async function ({
     updatedMessages.push({
       role: "assistant",
       content: response.text || "",
+    });
+  }
+
+  // No tool calls means this was the final answer — the turn is complete.
+  if (memoryNode && !response.toolCalls?.length && response.text) {
+    await saveAgentMemory({
+      type: memoryNode.type,
+      config: memoryNode.config,
+      workspaceId,
+      userText: nodeConfig.prompt || "",
+      assistantText: response.text,
     });
   }
 

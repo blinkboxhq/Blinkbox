@@ -1144,7 +1144,6 @@ export const NodeRegistry = {
     description: "In-memory sliding window of recent messages",
     ConfigPanel: makeAgentMemoryPanel({
       label: "Window Buffer",
-      hasWindowSize: true,
     }),
   },
   agent_memory_redis: {
@@ -1158,6 +1157,7 @@ export const NodeRegistry = {
     description: "Persist conversation memory in Redis",
     ConfigPanel: makeAgentMemoryPanel({
       label: "Redis",
+      logoUrl: imgRedis,
       hasConnectionString: true,
       connectionStringPlaceholder: "redis://localhost:6379",
     }),
@@ -1170,10 +1170,12 @@ export const NodeRegistry = {
     accentColor: "71,162,72",
     category: "ai_agent",
     agentOnly: true,
-    description: "Persist conversation memory in MongoDB",
+    description: "Semantic memory stored as vectors in MongoDB",
     ConfigPanel: makeAgentMemoryPanel({
       label: "MongoDB",
-      credentialType: "MongoDB",
+      logoUrl: imgMongoDB,
+      credentialType: "OpenAI",
+      isVector: true,
       hasConnectionString: true,
       connectionStringPlaceholder: "mongodb+srv://...",
     }),
@@ -1189,7 +1191,8 @@ export const NodeRegistry = {
     description: "Persist conversation memory in PostgreSQL",
     ConfigPanel: makeAgentMemoryPanel({
       label: "PostgreSQL",
-      credentialType: "PostgreSQL",
+      logoUrl: imgPostgres,
+      credentialType: "OpenAI",
       hasConnectionString: true,
       connectionStringPlaceholder: "postgresql://user:pass@host/db",
     }),
@@ -1205,7 +1208,8 @@ export const NodeRegistry = {
     description: "Vector memory using Pinecone",
     ConfigPanel: makeAgentMemoryPanel({
       label: "Pinecone",
-      credentialType: "Pinecone",
+      logoUrl: imgPinecone,
+      credentialType: "OpenAI",
       isVector: true,
     }),
   },
@@ -1220,7 +1224,8 @@ export const NodeRegistry = {
     description: "Persist conversation memory in Supabase",
     ConfigPanel: makeAgentMemoryPanel({
       label: "Supabase",
-      credentialType: "Supabase",
+      logoUrl: imgSupabase,
+      credentialType: "OpenAI",
       isVector: true,
     }),
   },
@@ -1235,9 +1240,9 @@ export const NodeRegistry = {
     description: "Long-term memory with Zep",
     ConfigPanel: makeAgentMemoryPanel({
       label: "Zep",
+      logoUrl: imgZep,
       hasConnectionString: true,
       connectionStringPlaceholder: "http://localhost:8000",
-      hasWindowSize: true,
     }),
   },
 

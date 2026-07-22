@@ -14,6 +14,7 @@ import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
+import { describeMemoryNode } from "../../nodes/agentMemory.js";
 import { toPlatformTool } from "../../nodes/integrationManifest.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
@@ -315,7 +316,10 @@ export async function processCursor({ executionId, cursorId }) {
           const sourceData = dynamicContext[edge.source];
           const firstOutput = Array.isArray(sourceData) ? sourceData[0]?.json : null;
           if (handle === "memory") {
-            handleDeps._memory = firstOutput;
+            // Memory sub-nodes never execute, so there is no output to read —
+            // hand the agent the provider's config and let it drive the store.
+            const memNode = automation.nodes.find((n) => n.id === edge.source);
+            handleDeps._memory = describeMemoryNode(memNode) || firstOutput;
           } else if (handle === "tools") {
             // Tools handle: build callable tool definitions with execute closures.
             // If the source node exports a toolDefinition, wrap it with an execute()
