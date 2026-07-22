@@ -6,12 +6,12 @@
  * No more dequeueCursor() — the BullMQ Worker consumes jobs automatically.
  */
 
-import { cursorQueue } from "../../infra/bullmq.js";
+import { getCursorQueue } from "../../infra/bullmq.js";
 
 /**
  * Enqueue a cursor for processing.
  * @param {Object} payload - { executionId, cursorId }
  */
 export async function enqueueCursor(payload) {
-  await cursorQueue.add("process-cursor", payload);
+  await getCursorQueue().add("process-cursor", payload);
 }

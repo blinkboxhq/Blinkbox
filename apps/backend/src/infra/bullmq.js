@@ -24,27 +24,36 @@ function createBullMQConnection() {
   });
 }
 
+// A Queue opens its Redis socket the moment it is constructed, so building these
+// at module load meant any file that merely imported this one — a unit test
+// reaching for a single pure function — opened sockets that retried forever and
+// kept the event loop alive, so the process never exited. Build on first use.
+const once = (build) => {
+  let instance = null;
+  return () => (instance ??= build());
+};
+
 // ── Main Execution Queue ──────────────────────────────────────────────────────
-export const cursorQueue = new Queue("bb-cursor-execute", {
+export const getCursorQueue = once(() => new Queue("bb-cursor-execute", {
   connection: createBullMQConnection(),
   defaultJobOptions: {
     attempts: 1,  // App-level retries handled by cursor state machine, not BullMQ
     removeOnComplete: { count: 1000 },  // Keep last 1000 for debugging
     removeOnFail: { count: 5000 },      // Keep failed for dead-letter inspection
   },
-});
+}));
 
 // ── Dead Letter Queue ─────────────────────────────────────────────────────────
 // Jobs that fail at the BullMQ level (not app-level retries) land here.
 // Operators can inspect and replay these jobs.
-export const deadLetterQueue = new Queue("bb-cursor-dead-letter", {
+export const getDeadLetterQueue = once(() => new Queue("bb-cursor-dead-letter", {
   connection: createBullMQConnection(),
-});
+}));
 
 // ── Queue Events (monitoring) ─────────────────────────────────────────────────
-export const cursorQueueEvents = new QueueEvents("bb-cursor-execute", {
+export const getCursorQueueEvents = once(() => new QueueEvents("bb-cursor-execute", {
   connection: createBullMQConnection(),
-});
+}));
 
 // ── Export connection factory for Worker creation ─────────────────────────────
 export { createBullMQConnection };

@@ -11,7 +11,7 @@
  */
 
 import { redis } from "./redis.client.js";
-import { cursorQueue } from "./bullmq.js";
+import { getCursorQueue } from "./bullmq.js";
 
 const DELAY_SET = "bb:delay:cursors";
 const POLL_INTERVAL_MS = 1000;
@@ -51,7 +51,7 @@ export function startDelayScheduler() {
         const payload = JSON.parse(member);
 
         // Promote to BullMQ for immediate processing
-        await cursorQueue.add("process-cursor", payload);
+        await getCursorQueue().add("process-cursor", payload);
         console.log(`[DelayScheduler] Promoted cursor ${payload.cursorId}`);
       }
     } catch (err) {

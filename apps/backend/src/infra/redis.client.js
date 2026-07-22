@@ -1,14 +1,19 @@
 import Redis from "ioredis";
 import { REDIS_URL } from "../config/env.js";
 
-// commandTimeout is the important one: without it ioredis parks every command
-// in an unbounded offline queue while disconnected, so an await on redis.get()
-// never settles and the caller hangs forever instead of failing.
+// commandTimeout: without it ioredis parks every command in an unbounded
+// offline queue while disconnected, so an await on redis.get() never settles
+// and the caller hangs forever instead of failing.
+// lazyConnect: 91 modules import this file, so connecting on import meant any
+// process that merely loaded one of them — a unit test, a one-off script —
+// opened a socket that retried forever and kept the event loop alive. The
+// connection now opens on first command instead.
 // (BullMQ's blocking commands use their own connection — see infra/bullmq.js.)
 const redis = new Redis(REDIS_URL || "redis://127.0.0.1:6379", {
   retryStrategy: (times) => Math.min(times * 200, 10000),
   maxRetriesPerRequest: 2,
   commandTimeout: 5000,
+  lazyConnect: true,
 });
 
 // ioredis retries forever, and an unreachable Redis emits one error per

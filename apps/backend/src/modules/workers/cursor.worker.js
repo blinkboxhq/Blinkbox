@@ -12,7 +12,7 @@
  */
 
 import { Worker } from "bullmq";
-import { createBullMQConnection, cursorQueue, deadLetterQueue } from "../../infra/bullmq.js";
+import { createBullMQConnection, getCursorQueue, getDeadLetterQueue } from "../../infra/bullmq.js";
 import { processCursor } from "./cursor.executor.js";
 import { redis } from "../../infra/redis.client.js";
 
@@ -31,7 +31,7 @@ export async function startCursorWorker() {
       // Kill switch check: if active, delay and re-queue
       const isKilled = await redis.get("bb:locks:global_kill_switch");
       if (isKilled) {
-        await cursorQueue.add("process-cursor", job.data, { delay: 5000 });
+        await getCursorQueue().add("process-cursor", job.data, { delay: 5000 });
         return; // Complete this job silently, the re-queued one will run later
       }
 
@@ -51,7 +51,7 @@ export async function startCursorWorker() {
 
     // Move to dead-letter queue for inspection and possible replay
     if (job) {
-      await deadLetterQueue.add("dead-cursor", {
+      await getDeadLetterQueue().add("dead-cursor", {
         ...job.data,
         error: err.message,
         failedAt: new Date().toISOString(),
