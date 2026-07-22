@@ -680,8 +680,8 @@ function CustomNodeImpl({ id, data, selected }) {
         {status === "running" && <SpinBorder radius={shapeRadius} w={cardW} h={cardH} />}
 
         <Handle type="target" position={Position.Left} id="input"
-          className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] transition-all duration-200 touch-none"
-          style={{ top: cardH / 2, zIndex: 2, position: "absolute" }} />
+          className="!w-4 !h-4 !rounded-full touch-none !shadow-none"
+          style={{ boxShadow: "none", top: cardH / 2, left: 0, transform: "translate(-50%, -50%)", zIndex: 5, background: EDGE_COLOR, border: `1.5px solid ${HANDLE_BORDER}`, position: "absolute" }} />
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
           onClick={handleOpenConfig} className="bb-card relative flex items-center justify-center cursor-pointer transition-all duration-300"
