@@ -196,3 +196,129 @@ test("a false condition with an unwired false handle ends the run cleanly", asyn
   assert.equal(fresh.status, "executed", "finalized, not left running");
   assert.ok(fresh.completedAt, "completedAt is stamped");
 });
+
+// ── Split outputs ────────────────────────────────────────────────────────────
+
+test("split outputs: a node error powers only the failed handle", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_hard_fail", data: { config: { splitOutputs: true } } },
+      { id: "ok", type: "stub_ok", data: {} },
+      { id: "bad", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "ok", sourceHandle: "success" },
+      { id: "e2", source: "n1", target: "bad", sourceHandle: "failed" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  const spawned = fresh.cursors.filter((c) => !c._id.equals(cursorId));
+  assert.equal(spawned.length, 1, "exactly one branch fires");
+  assert.equal(spawned[0].nodeId, "bad", "the failed handle, not success");
+});
+
+test("split outputs: a handled failure does not mark the execution failed", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_hard_fail", data: { config: { splitOutputs: true } } },
+      { id: "bad", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e2", source: "n1", target: "bad", sourceHandle: "failed" }],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+  let fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.id(cursorId).status, "completed", "failure was handled in-graph");
+
+  const spawned = fresh.cursors.filter((c) => !c._id.equals(cursorId));
+  await processCursor({ executionId: execution._id, cursorId: spawned[0]._id });
+  fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.status, "executed");
+});
+
+test("split outputs: with no failure branch wired, an error still stops the workflow", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_hard_fail", data: { config: { splitOutputs: true } } },
+      { id: "ok", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "n1", target: "ok", sourceHandle: "success" }],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.id(cursorId).status, "failed");
+  assert.equal(fresh.cursors.length, 1, "success branch must not fire on an error");
+  assert.equal(fresh.status, "failed");
+});
+
+test("split outputs: an output reporting success:false takes the failed handle", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_soft_fail", data: { config: { splitOutputs: true } } },
+      { id: "ok", type: "stub_ok", data: {} },
+      { id: "bad", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "ok", sourceHandle: "success" },
+      { id: "e2", source: "n1", target: "bad", sourceHandle: "failed" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const spawned = (await Execution.findById(execution._id)).cursors.filter(
+    (c) => !c._id.equals(cursorId),
+  );
+  assert.equal(spawned.length, 1);
+  assert.equal(spawned[0].nodeId, "bad");
+});
+
+test("without the split toggle, success:false is just data and takes the normal path", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_soft_fail", data: {} },
+      { id: "next", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "n1", target: "next" }],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const spawned = (await Execution.findById(execution._id)).cursors.filter(
+    (c) => !c._id.equals(cursorId),
+  );
+  assert.equal(spawned.length, 1);
+  assert.equal(spawned[0].nodeId, "next");
+});
+
+test("an edge from the legacy onFailure handle never fires on success", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_ok", data: {} },
+      { id: "next", type: "stub_ok", data: {} },
+      { id: "err", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "next" },
+      { id: "e2", source: "n1", target: "err", sourceHandle: "onFailure" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const spawned = (await Execution.findById(execution._id)).cursors.filter(
+    (c) => !c._id.equals(cursorId),
+  );
+  assert.deepEqual(spawned.map((c) => c.nodeId), ["next"]);
+});

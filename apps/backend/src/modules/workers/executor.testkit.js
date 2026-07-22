@@ -16,6 +16,14 @@ export const stubRegistry = {
     },
   },
   stub_condition_false: { run: async () => ({ __conditionResult: false, matched: false }) },
+  // "401" classifies as auth — a no-retry category, so it fails permanently on
+  // the first pass and reaches the failure branch without burning the budget.
+  stub_hard_fail: {
+    run: async () => {
+      throw new Error("401 unauthorized");
+    },
+  },
+  stub_soft_fail: { run: async () => ({ success: false, error: "upstream said no" }) },
   stub_fanout: { run: async (config) => ({ __loopFanOut: true, items: config.items }) },
 };
 

@@ -394,6 +394,32 @@ export const createGraphSlice = (set, get) => ({
     });
   },
 
+  // Toggling Split outputs off hides the success/failed handles, but edges
+  // drawn from them survive in the graph and keep routing invisibly — the
+  // failure edge especially, since the executor still honours its handle id.
+  // Drop the failure edges and fold the success edges back onto the default
+  // output so what the canvas shows is what the engine runs.
+  reconcileSplitEdges: (nodeId, splitOn) => {
+    if (splitOn) return;
+    const state = get();
+    const newEdges = state.edges
+      .filter((e) => !(e.source === nodeId && e.sourceHandle === "failed"))
+      .map((e) =>
+        e.source === nodeId && e.sourceHandle === "success"
+          ? { ...e, sourceHandle: "output" }
+          : e,
+      );
+    if (newEdges.length === state.edges.length && newEdges.every((e, i) => e === state.edges[i])) return;
+
+    const newVars = calculateAllAvailableVariables(state.nodes, newEdges, state.nodeOutputSchemas);
+    set({
+      edges: newEdges,
+      availableVariables: newVars,
+      mappingWarnings: validateAllNodeMappings(state.nodes, newVars),
+      _schemaGeneration: state._schemaGeneration + 1,
+    });
+  },
+
   // Update edge condition path (used by ConfigurableEdge)
   updateEdgeCondition: (edgeId, conditionPath) => {
     set({

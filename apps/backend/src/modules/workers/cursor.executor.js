@@ -571,6 +571,8 @@ export async function processCursor({ executionId, cursorId }) {
         // batch incomplete, or deliberately dropped — nothing downstream
       } else if (finalOutputs.__conditionFalse) {
         await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
+      } else if (splitOutputsOn(node) && outputReportsFailure(finalOutputs)) {
+        await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
       } else {
         await routeEdges(
           automation, latestExecution, node, finalOutputs, "onSuccess", nodeDelayUntil,
@@ -649,7 +651,14 @@ export async function processCursor({ executionId, cursorId }) {
           { upsert: true },
         );
 
-        latestCursor.status = "failed";
+        // Split outputs exists so a failure can be handled in the graph instead
+        // of killing the run. When the user wired a failure branch, the cursor
+        // ends "completed" so finalization doesn't mark the whole execution
+        // failed — the node's own log still records the error. With no branch
+        // wired, this stays a hard failure and the workflow stops, as before.
+        const failureHandled = splitOutputsOn(node) && hasFailureBranch(automation, node.id);
+
+        latestCursor.status = failureHandled ? "completed" : "failed";
         latestCursor.errorMessage = hint ? `${executionError} — ${hint}` : executionError;
         latestCursor.lockedAt = null;
         latestCursor.lockedBy = null;
@@ -764,6 +773,35 @@ function liveReachableNodes(automation, execution, sourceNodeId) {
   return seen;
 }
 
+// ── Success / failure branch classification ──────────────────────────────────
+// Every edge leaving a node belongs to exactly one branch, decided here and
+// nowhere else. `failed` is the Split-outputs handle, `onFailure`/`error` the
+// legacy single error dot, `false` the condition node's own branch. Anything
+// else — `success`, `output`, `true`, or no handle at all — is the success
+// branch. `onFailure` was absent from this set, so every edge drawn from the
+// legacy error dot was classified as a success edge and fired on success.
+const FAILURE_HANDLES = new Set(["failed", "onFailure", "error", "false"]);
+
+export function isFailureEdge(edge) {
+  return edge.type === "onFailure" || FAILURE_HANDLES.has(edge.sourceHandle);
+}
+
+function splitOutputsOn(node) {
+  return !!node?.data?.config?.splitOutputs;
+}
+
+function hasFailureBranch(automation, nodeId) {
+  return automation.edges.some((e) => e.source === nodeId && isFailureEdge(e));
+}
+
+// A node can report failure in its output without throwing. Under Split outputs
+// the user has explicitly asked for a failure branch, so an output that says it
+// failed must take that branch instead of silently powering the success path.
+function outputReportsFailure(outputs) {
+  const json = outputs?.[0]?.json;
+  return !!json && json.success === false && !!json.error;
+}
+
 // ── Edge router with fresh merge check ───────────────────────────────────────
 // fanOutItems: when set (loop node), spawn one cursor per item in this array
 async function routeEdges(
@@ -778,9 +816,7 @@ async function routeEdges(
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
-    const isFailurePath = e.sourceHandle === 'error' || e.sourceHandle === 'false' || e.sourceHandle === 'failed' || e.type === 'onFailure';
-    const normalizedType = isFailurePath ? "onFailure" : "onSuccess";
-    return normalizedType === edgeType;
+    return (isFailureEdge(e) ? "onFailure" : "onSuccess") === edgeType;
   });
 
   // Runtime cycle guard: cap total cursors

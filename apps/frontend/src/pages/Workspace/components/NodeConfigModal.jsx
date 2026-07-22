@@ -499,10 +499,13 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
             <div className="px-4 pt-1 pb-3 mt-2 border-t border-white/[0.06]">
               <ConfigToggleRow
                 label="Split outputs"
-                desc="Add separate success and failure outputs — route by whether this node succeeds or errors."
+                desc="Adds a Failed output. Without it an error stops the workflow — with it, errors route down their own path."
                 icon={Split}
                 on={!!config.splitOutputs}
-                onChange={(val) => updateConfig(node.id, "splitOutputs", val)}
+                onChange={(val) => {
+                  updateConfig(node.id, "splitOutputs", val);
+                  useWorkspaceStore.getState().reconcileSplitEdges(node.id, val);
+                }}
                 accentColor="#4d7cff"
               />
             </div>
