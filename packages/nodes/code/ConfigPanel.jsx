@@ -1,15 +1,43 @@
 import { Terminal } from "lucide-react";
+import Editor from "@monaco-editor/react";
 import {
   ConfigSection, ConfigHeader, ConfigBadge, ConfigLabel, ConfigInput, ConfigBanner,
 } from "@/components/ui/ConfigKit";
 
 const VIOLET = "#a78bfa";
 
-const JS_PLACEHOLDER = `// Access previous node data via the \`input\` object
-const active = input.items.filter(i => i.active);
+const EDITOR_OPTIONS = {
+  minimap: { enabled: false },
+  fontSize: 12.5,
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  lineNumbers: "on",
+  scrollBeyondLastLine: false,
+  padding: { top: 12, bottom: 12 },
+  tabSize: 2,
+  automaticLayout: true,
+  wordWrap: "on",
+  renderLineHighlight: "none",
+  overviewRulerLanes: 0,
+  scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+  fixedOverflowWidgets: true,
+};
 
-// Return the result for the next node
-return { result: active };`;
+function defineTheme(monaco) {
+  monaco.editor.defineTheme("bb-dark", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [],
+    colors: {
+      "editor.background": "#0f0f0f",
+      "editorGutter.background": "#0f0f0f",
+      "editorLineNumber.foreground": "#404040",
+      "editorLineNumber.activeForeground": "#a78bfa",
+      "editor.selectionBackground": "#a78bfa33",
+      "editorCursor.foreground": "#a78bfa",
+      "editorIndentGuide.background1": "#1e1e1e",
+    },
+  });
+}
 
 export default function CodeNode({ config = {}, updateConfig }) {
   const code    = config.code || "";
@@ -27,13 +55,18 @@ export default function CodeNode({ config = {}, updateConfig }) {
 
       <div className="flex flex-col">
         <ConfigLabel>JavaScript</ConfigLabel>
-        <textarea
-          value={code}
-          onChange={(e) => updateConfig("code", e.target.value)}
-          placeholder={JS_PLACEHOLDER}
-          spellCheck={false}
-          className="bb-glow-border w-full min-h-[220px] bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] font-mono text-neutral-100 outline-none resize-y leading-relaxed placeholder-neutral-600 transition-colors focus:border-violet-500/50"
-        />
+        <div className="bb-glow-border rounded-md border border-[#3b3b3b] overflow-hidden bg-[#0f0f0f] transition-colors focus-within:border-violet-500/50">
+          <Editor
+            height="240px"
+            defaultLanguage="javascript"
+            theme="bb-dark"
+            value={code}
+            beforeMount={defineTheme}
+            onChange={(val) => updateConfig("code", val ?? "")}
+            options={EDITOR_OPTIONS}
+            loading={<div className="h-[240px] flex items-center justify-center text-[11px] text-neutral-600 font-mono">Loading editor…</div>}
+          />
+        </div>
       </div>
 
       <ConfigBanner>
