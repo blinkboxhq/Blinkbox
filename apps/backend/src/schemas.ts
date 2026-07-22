@@ -26,7 +26,7 @@ export const NODE_TYPES = [
   // Utility
   "filter_array", "sort_array", "deduplicate", "csv_parser",
   "date_time", "crypto_utils", "data_diff", "aggregate", "set_fields",
-  "qr_code", "image_resize", "pdf_generator", "text_splitter",
+  "qr_code", "image_resize", "pdf_generator",
   "template_renderer", "json_validator",
   // AI Hub
   "openai", "anthropic", "gemini", "deepseek", "groq", "perplexity", "xai",

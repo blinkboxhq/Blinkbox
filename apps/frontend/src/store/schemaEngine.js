@@ -210,7 +210,6 @@ export const DEFAULT_SCHEMAS = {
 
   // New Utility Nodes
   qr_code: { dataUrl: "string", content: "string", size: "number", format: "string" },
-  text_splitter: { chunks: "array", chunkCount: "number", totalLength: "number" },
   template_renderer: { rendered: "string", templateLength: "number", outputLength: "number" },
   json_validator: { valid: "boolean", data: "object", errors: "array", errorCount: "number" },
   image_resize: { dataUrl: "string", format: "string", width: "number", height: "number", sizeBytes: "number" },

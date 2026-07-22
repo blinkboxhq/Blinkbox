@@ -341,15 +341,6 @@ export const NODE_KB = {
       { k: "schema", t: "object", r: false, ex: { type: "object", required: ["email"] }, d: "JSON Schema to validate against" },
     ],
   },
-  text_splitter: {
-    label: "Text Splitter",
-    out: ["chunks", "count"],
-    fields: [
-      { k: "text", t: "string", r: true, ex: "{{$json.content}}", d: "Text to split" },
-      { k: "chunkSize", t: "number", r: false, ex: 1000, d: "Characters per chunk" },
-      { k: "overlap", t: "number", r: false, ex: 100, d: "Overlap characters between chunks" },
-    ],
-  },
   date_time: {
     label: "Date & Time",
     out: ["formatted", "unix", "iso", "components"],

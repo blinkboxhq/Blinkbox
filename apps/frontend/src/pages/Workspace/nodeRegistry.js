@@ -34,7 +34,6 @@ import {
   Merge,
   CheckSquare,
   Server,
-  SplitSquareHorizontal,
   AlignLeft,
   GitFork,
   Image,
@@ -311,7 +310,6 @@ import CryptoUtilsNode from "@nodes/crypto_utils/ConfigPanel.jsx";
 
 
 // Config Panels — Innovation Sprint nodes
-import TextSplitterNode from "@nodes/text_splitter/ConfigPanel.jsx";
 import TemplateRendererNode from "@nodes/template_renderer/ConfigPanel.jsx";
 import ImageResizeNode from "@nodes/image_resize/ConfigPanel.jsx";
 import AggregateNode from "@nodes/aggregate/ConfigPanel.jsx";
@@ -2184,15 +2182,6 @@ export const NodeRegistry = {
 
 
   // ── New Utility Nodes ──────────────────────────────────────────────────────
-  text_splitter: {
-    label: "Text Splitter",
-    icon: SplitSquareHorizontal,
-    colorClass: "text-sky-400",
-    accentColor: "56,189,248",
-    ConfigPanel: TextSplitterNode,
-    category: "ai_agent",
-    description: "Split long text into overlapping chunks for AI and RAG pipelines",
-  },
   template_renderer: {
     label: "Template Renderer",
     icon: AlignLeft,

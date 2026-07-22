@@ -58,7 +58,7 @@ const NODE_COSTS = {
   sub_workflow: 1, wait_for_event: 1,
   filter_array: 1, sort_array: 1, deduplicate: 1,
   csv_parser: 1, date_time: 1, crypto_utils: 1,
-  text_splitter: 1, template_renderer: 1, json_validator: 1,
+  template_renderer: 1, json_validator: 1,
   aggregate: 1, data_diff: 1, url_parser: 1,
   base64: 1, color_converter: 1, unit_converter: 1, number_format: 1,
   find_replace: 1, regex_match: 1, math_expression: 1,

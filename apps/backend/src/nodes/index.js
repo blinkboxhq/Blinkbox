@@ -96,7 +96,6 @@ import deduplicate     from "./deduplicate.node.js";
 import csvParser       from "./csvParser.node.js";
 import dateTime        from "./dateTime.node.js";
 import cryptoUtils     from "./cryptoUtils.node.js";
-import textSplitter    from "./textSplitter.node.js";
 import templateRenderer from "./templateRenderer.node.js";
 import imageResize     from "./imageResize.node.js";
 import aggregate       from "./aggregate.node.js";
@@ -317,7 +316,6 @@ const rawNodeRegistry = {
   csv_parser:        csvParser,
   date_time:         dateTime,
   crypto_utils:      cryptoUtils,
-  text_splitter:     textSplitter,
   template_renderer: templateRenderer,
   image_resize:      imageResize,
   aggregate:         aggregate,
