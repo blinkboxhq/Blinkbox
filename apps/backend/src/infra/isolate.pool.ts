@@ -154,7 +154,10 @@ export function discard(entry: PoolEntry): void {
 export async function executeInPool(
   code: string,
   variables: Record<string, unknown>,
-  options: { timeout?: number } = {},
+  options: {
+    timeout?: number;
+    onConsole?: (logs: { level: string; text: string }[]) => void;
+  } = {},
 ): Promise<unknown> {
   // Pre-flight: reject oversized payloads before touching the pool
   const serialized = JSON.stringify(variables ?? {});
@@ -185,13 +188,33 @@ export async function executeInPool(
         const $input = __vars;
         const input  = __vars;
         let   $output = JSON.parse(JSON.stringify(__vars));
-        const console = { log() {}, warn() {}, error() {}, info() {} };
+
+        const __logs = [];
+        const __fmt = function (args) {
+          return Array.prototype.map.call(args, function (x) {
+            if (typeof x === "string") return x;
+            try { return JSON.stringify(x); } catch (e) { return String(x); }
+          }).join(" ");
+        };
+        const __push = function (level, args) {
+          if (__logs.length >= 200) return;
+          var text = __fmt(args);
+          if (text.length > 2000) text = text.slice(0, 2000) + "…";
+          __logs.push({ level: level, text: text });
+        };
+        const console = {
+          log:   function () { __push("log", arguments); },
+          info:  function () { __push("info", arguments); },
+          warn:  function () { __push("warn", arguments); },
+          error: function () { __push("error", arguments); },
+          debug: function () { __push("log", arguments); },
+        };
 
         const __ret = (function () {
           ${code}
         })();
 
-        return JSON.stringify(__ret !== undefined ? __ret : $output);
+        return JSON.stringify({ data: __ret !== undefined ? __ret : $output, logs: __logs });
       })()
     `;
 
@@ -210,7 +233,14 @@ export async function executeInPool(
 
     // Success — return to pool
     release(entry);
-    return JSON.parse(resultStr);
+    const envelope = JSON.parse(resultStr) as {
+      data: unknown;
+      logs?: { level: string; text: string }[];
+    };
+    if (options.onConsole && Array.isArray(envelope.logs)) {
+      options.onConsole(envelope.logs);
+    }
+    return envelope.data;
   } catch (err: unknown) {
     const error = err as Error;
 

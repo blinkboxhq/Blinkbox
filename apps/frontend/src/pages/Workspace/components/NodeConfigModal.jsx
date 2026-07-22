@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split, Type, Hash, ToggleLeft, Braces, Brackets, Minus } from "lucide-react";
+import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split, Type, Hash, ToggleLeft, Braces, Brackets, Minus, Terminal as TerminalIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -16,6 +16,9 @@ import api from "../../../lib/api";
 import { playPanelOpen, playSuccess, playError } from "../../../lib/sounds";
 
 const PANEL_HEADER_H = 52; // px — all three panels share this header height
+
+const LOG_TONE = { log: "text-neutral-300", info: "text-sky-300", warn: "text-amber-300", error: "text-red-300" };
+const LOG_GLYPH = { log: "›", info: "ℹ", warn: "▲", error: "✕" };
 
 // ── JSON syntax view ──────────────────────────────────────────────────────────
 function JsonView({ data }) {
@@ -564,7 +567,14 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
         input: parsed,
       });
       setResult({ ...res.data, clientMs: Date.now() - t0 });
-      if (res.data.success) playSuccess(); else playError();
+      if (res.data.success) {
+        const out = res.data.output;
+        const sample = Array.isArray(out) && out.length
+          ? (out[0]?.json !== undefined ? out[0].json : out[0])
+          : {};
+        useWorkspaceStore.getState().setNodeOutputSchema?.(node.id, sample);
+        playSuccess();
+      } else playError();
     } catch (err) {
       setResult({ success: false, error: err.response?.data?.error || err.message });
       playError();
@@ -631,6 +641,23 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
                   <span className="ml-auto text-[11px] text-neutral-600 font-mono">{display.durationMs ?? display.clientMs}ms</span>
                 )}
               </div>
+              {display.logs?.length > 0 && (
+                <div className="rounded-xl border border-white/[0.06] bg-black/40 overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-white/[0.06]">
+                    <TerminalIcon className="w-3 h-3 text-neutral-500 shrink-0" />
+                    <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Console</span>
+                    <span className="ml-auto text-[10px] text-neutral-600 font-mono">{display.logs.length}</span>
+                  </div>
+                  <div className="p-3 overflow-auto max-h-[180px] font-mono text-[11px] leading-relaxed flex flex-col gap-0.5">
+                    {display.logs.map((l, i) => (
+                      <div key={i} className="flex gap-2 whitespace-pre-wrap break-words">
+                        <span className={`shrink-0 ${LOG_TONE[l.level] || "text-neutral-400"}`}>{LOG_GLYPH[l.level] || "›"}</span>
+                        <span className={LOG_TONE[l.level] || "text-neutral-300"}>{l.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="bb-card rounded-xl p-4 overflow-auto max-h-[420px]">
                 <JsonView data={display.output ?? display.error ?? display} />
               </div>
