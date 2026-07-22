@@ -733,6 +733,37 @@ async function _markCursorFailed(execution, cursor, reason, category = "unknown"
   console.error(`[Fatal] Cursor ${cursor._id} killed (${category}): ${reason}`);
 }
 
+// A node can still produce data only if it sits downstream of something that is
+// still alive: a pending/waiting/running cursor, or the node currently routing.
+// Anything outside that set is on a branch a condition already refused — waiting
+// on it would deadlock the merge forever.
+function liveReachableNodes(automation, execution, sourceNodeId) {
+  const adjacency = new Map();
+  for (const e of automation.edges) {
+    if (!adjacency.has(e.source)) adjacency.set(e.source, []);
+    adjacency.get(e.source).push(e.target);
+  }
+
+  const frontier = [sourceNodeId];
+  for (const c of execution.cursors) {
+    if (c.status === "pending" || c.status === "running" || c.status === "waiting") {
+      frontier.push(c.nodeId);
+    }
+  }
+
+  const seen = new Set(frontier);
+  const stack = [...frontier];
+  while (stack.length > 0) {
+    for (const next of adjacency.get(stack.pop()) || []) {
+      if (!seen.has(next)) {
+        seen.add(next);
+        stack.push(next);
+      }
+    }
+  }
+  return seen;
+}
+
 // ── Edge router with fresh merge check ───────────────────────────────────────
 // fanOutItems: when set (loop node), spawn one cursor per item in this array
 async function routeEdges(
@@ -779,8 +810,12 @@ async function routeEdges(
         const freshContext = {};
         completedData.forEach((doc) => { freshContext[doc.nodeId] = doc.output; });
 
+        const stillLive = liveReachableNodes(automation, execution, sourceNode.id);
         const ready = allIncoming.every(
-          (e) => e.source === sourceNode.id || freshContext[e.source] !== undefined,
+          (e) =>
+            e.source === sourceNode.id ||
+            freshContext[e.source] !== undefined ||
+            !stillLive.has(e.source),
         );
         if (!ready) continue;
       }

@@ -92,9 +92,13 @@ export const createGraphSlice = (set, get) => ({
     const targetNode = nodes.find((n) => n.id === connection.target);
     if (targetNode?.data?.type === "trigger") return;
 
-    // RULE 2: Reject duplicate edges
+    // RULE 2: Reject duplicate edges — same handle only, so a condition's true
+    // and false outputs can both rejoin at the same node
     const duplicate = edges.some(
-      (e) => e.source === connection.source && e.target === connection.target,
+      (e) =>
+        e.source === connection.source &&
+        e.target === connection.target &&
+        (e.sourceHandle || null) === (connection.sourceHandle || null),
     );
     if (duplicate) return;
 
