@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split, Type, Hash, ToggleLeft, Braces, Brackets, Minus, Terminal as TerminalIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import AgentActionPicker from "./AgentActionPicker";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { schemaForNode } from "../../../store/schemaEngine";
@@ -353,6 +354,12 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
   const actionList = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
+  // Wired into an agent's Integration slot? Then this app is a tool, not a step —
+  // the user picks which of its operations the agent may call.
+  const feedsAgent = useWorkspaceStore((st) =>
+    st.edges.some((e) => e.source === node?.id && e.targetHandle === "integration")
+  );
+  const agentType = backendType?.replace(/^agent_integration_/, "");
   const NO_SPLIT = ["condition", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
 
@@ -493,6 +500,16 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">
               <p className="text-[13px] text-neutral-600">No configuration needed.</p>
+            </div>
+          )}
+
+          {feedsAgent && agentType && (
+            <div className="px-4 pt-1 pb-3 mt-2 border-t border-white/[0.06]">
+              <AgentActionPicker
+                type={agentType}
+                value={config.enabledActions}
+                onChange={(v) => updateConfig(node.id, "enabledActions", v)}
+              />
             </div>
           )}
 

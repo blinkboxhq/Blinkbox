@@ -52,6 +52,11 @@ import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
 import { BRIAN_ANTHROPIC_MODEL } from "../modules/brian/brian.registry.js";
 import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
+import {
+  buildToolSchema,
+  runIntegrationOperation,
+  humanize as humanizeAction,
+} from "./integrationManifest.js";
 
 // Platform integration nodes — imported for autonomous tool use
 import _slackNode    from "./integrations/slack.node.js";
@@ -1140,17 +1145,38 @@ async function assembleTools({
     for (const pt of platformTools) {
       const { type, credentialId, alias } = pt || {};
       if (!type || !credentialId) continue;
-      const spec = PLATFORM_TOOL_SPECS[type];
-      if (!spec) continue;
+      const enabled = Array.isArray(pt.enabledActions) ? pt.enabledActions.filter(Boolean) : [];
       const toolName = alias
         ? `${type}_${alias.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_")}`
         : type;
       if (seen.has(toolName)) continue;
+
+      const spec = PLATFORM_TOOL_SPECS[type];
+      if (spec) {
+        tools.push({
+          name: toolName,
+          description: alias ? `${spec.description} (${alias})` : spec.description,
+          parameters: restrictOperations(spec.parameters, enabled),
+          execute: (args) => spec.run(args, credentialId, workspaceId, inputAttachments),
+        });
+        seen.add(toolName);
+        continue;
+      }
+
+      // No hand-written spec — derive the tool from the app's own operation manifest.
+      let derived = null;
+      try {
+        derived = await buildToolSchema(type, enabled);
+      } catch (err) {
+        console.error(`[AIAgent] Manifest tool build failed for "${type}": ${err.message}`);
+      }
+      if (!derived) continue;
+      const opList = derived.actions.map((a) => a.key).join(", ");
       tools.push({
         name: toolName,
-        description: alias ? `${spec.description} (${alias})` : spec.description,
-        parameters: spec.parameters,
-        execute: (args) => spec.run(args, credentialId, workspaceId, inputAttachments),
+        description: `${humanizeAction(type)} integration${alias ? ` (${alias})` : ""}. Available operations: ${opList}.`,
+        parameters: derived.parameters,
+        execute: (args) => runIntegrationOperation(type, args, credentialId, workspaceId),
       });
       seen.add(toolName);
     }
@@ -1222,6 +1248,25 @@ async function assembleTools({
 // ═════════════════════════════════════════════════════════════════════════════
 // PLATFORM TOOL SPECS — wires real Blinkbox integration nodes as agent tools
 // ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Narrow a hand-written spec's `operation` enum to the actions the user ticked
+ * on the node. Empty list = every operation stays available.
+ */
+function restrictOperations(parameters, enabledActions) {
+  if (!Array.isArray(enabledActions) || !enabledActions.length) return parameters;
+  const full = parameters?.properties?.operation?.enum;
+  if (!Array.isArray(full)) return parameters;
+  const kept = full.filter((op) => enabledActions.includes(op));
+  if (!kept.length || kept.length === full.length) return parameters;
+  return {
+    ...parameters,
+    properties: {
+      ...parameters.properties,
+      operation: { ...parameters.properties.operation, enum: kept },
+    },
+  };
+}
 
 const PLATFORM_TOOL_SPECS = {
   slack: {

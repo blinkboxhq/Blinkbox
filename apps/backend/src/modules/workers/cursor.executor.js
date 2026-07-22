@@ -14,6 +14,7 @@ import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
+import { toPlatformTool } from "../../nodes/integrationManifest.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
 // Must stay well under the resumer's STALE_MS (90s) or long-running nodes get re-enqueued mid-flight
@@ -363,14 +364,10 @@ export async function processCursor({ executionId, cursorId }) {
               : firstOutput;
           } else if (handle === "integration") {
             const sourceNode = automation.nodes.find((n) => n.id === edge.source);
-            if (sourceNode?.data?.credentialId) {
+            const pt = toPlatformTool(sourceNode);
+            if (pt) {
               if (!handleDeps._platformTools) handleDeps._platformTools = [];
-              const intType = sourceNode.type.replace(/^agent_integration_/, "");
-              handleDeps._platformTools.push({
-                type: intType,
-                credentialId: sourceNode.data.credentialId,
-                alias: sourceNode.data.alias || "",
-              });
+              handleDeps._platformTools.push(pt);
             }
           } else if (handle === "skills") {
             const sourceNode = automation.nodes.find((n) => n.id === edge.source);

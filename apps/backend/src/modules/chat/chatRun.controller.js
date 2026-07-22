@@ -3,6 +3,7 @@ import Automation from "../../models/automation.model.js";
 import { nodeRegistry } from "../../nodes/index.js";
 import { resolveConfig } from "../automation/engine/expression.parser.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
+import { toPlatformTool } from "../../nodes/integrationManifest.js";
 import { emitNodeStatus } from "../../infra/socket.server.js";
 
 const MAX_STEPS = 30;
@@ -131,14 +132,10 @@ export async function chatRun(req, res) {
               handleDeps._chatModel = srcNode ? { ...(srcNode.data || {}), backendType: srcNode.type } : firstJson;
             } else if (handle === "integration") {
               const srcNode = nodes.find(n => n.id === edge.source);
-              if (srcNode?.data?.credentialId) {
+              const pt = toPlatformTool(srcNode);
+              if (pt) {
                 if (!handleDeps._platformTools) handleDeps._platformTools = [];
-                const intType = srcNode.type.replace(/^agent_integration_/, "");
-                handleDeps._platformTools.push({
-                  type: intType,
-                  credentialId: srcNode.data.credentialId,
-                  alias: srcNode.data.alias || "",
-                });
+                handleDeps._platformTools.push(pt);
               }
             }
           }
