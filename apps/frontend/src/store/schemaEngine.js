@@ -113,10 +113,6 @@ export const DEFAULT_SCHEMAS = {
   agent_moonshot: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
   agent_nvidia_nim: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
   agent_perplexity: { result: "string", citations: "array", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
-  agent_groq: { result: "string", code: "string", model: "string", tokensUsed: "number", operation: "string", provider: "string" },
-  agent_gemma: { reply: "string", model: "string", tokensUsed: "number", operation: "string" },
-  agent_ollama: { status: "string", baseUrl: "string", provider: "string", modelsAvailable: "array", serverSide: "boolean", hint: "string" },
-  agent_lmstudio: { status: "string", baseUrl: "string", provider: "string", modelsAvailable: "array", hint: "string" },
 
   // Comms Hub
   telegram: { ok: "boolean", messageId: "number", chat: "object", pollId: "string", deleted: "boolean", pinned: "boolean" },

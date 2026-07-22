@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Plus, Check, X } from 'lucide-react';
+import { ChevronDown, Plus, Check, X, Search } from 'lucide-react';
 
 /**
  * ConfigKit — shared field primitives for node config panels.
@@ -50,10 +50,12 @@ export function ConfigInput({ label, icon, value, onChange, placeholder, type = 
   );
 }
 
-export function ConfigSelect({ label, icon, value, onChange, options = [], placeholder = 'Select…', accentColor = BB_ACCENT }) {
+export function ConfigSelect({ label, icon, value, onChange, options = [], placeholder = 'Select…', accentColor = BB_ACCENT, searchable, searchPlaceholder = 'Search…', action, emptyLabel = 'No options' }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const triggerRef = useRef(null);
   const dropRef = useRef(null);
+  const searchRef = useRef(null);
   const [rect, setRect] = useState(null);
 
   useEffect(() => {
@@ -75,12 +77,21 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
     };
   }, [open]);
 
-  const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
-  const selected = opts.find((o) => o.value === value);
+  useEffect(() => {
+    if (!open) setQuery('');
+    else if (searchable) requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open, searchable]);
+
+  const all = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+  const selected = all.find((o) => o.value === value);
+  const q = query.trim().toLowerCase();
+  const opts = q
+    ? all.filter((o) => `${o.value} ${o.label} ${o.desc || ''}`.toLowerCase().includes(q))
+    : all;
 
   return (
     <div className="flex flex-col">
-      {label && <ConfigLabel icon={icon}>{label}</ConfigLabel>}
+      {label && <ConfigLabel icon={icon} action={action}>{label}</ConfigLabel>}
       <button
         ref={triggerRef}
         type="button"
@@ -116,8 +127,25 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
             };
           })()}
         >
+          {searchable && (
+            <div className="flex items-center gap-2 px-2.5 py-2 mb-1 border-b border-[#3b3b3b] shrink-0">
+              <Search className="w-3.5 h-3.5 text-neutral-600 shrink-0" />
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="w-full bg-transparent text-[12.5px] font-mono text-neutral-100 placeholder-neutral-600 outline-none"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery('')} className="shrink-0 text-neutral-600 hover:text-neutral-300">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
           <div className="overflow-y-auto">
-            {opts.length === 0 && <p className="px-3 py-3 text-[12px] text-neutral-600 text-center font-mono">No options</p>}
+            {opts.length === 0 && <p className="px-3 py-3 text-[12px] text-neutral-600 text-center font-mono">{q ? `No match for "${query}"` : emptyLabel}</p>}
             {opts.map((o, i) => {
               const sel = o.value === value;
               return (

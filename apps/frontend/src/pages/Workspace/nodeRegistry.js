@@ -143,11 +143,7 @@ import imgGemini from "@nodes/gemini/logo.svg";
 import imgPerplexity from "../../assets/perplexity-color.svg";
 import imgDeepSeek from "@nodes/deepseek/logo.svg";
 import imgGrok from "../../assets/grok-color.svg";
-import imgGroq from "../../assets/groq.svg";
 import imgNvidiaNim from "@nodes/nvidia_nim/logo.svg";
-import imgGemmaNim from "@nodes/gemma/logo.svg";
-import imgOllama from "../../assets/ollama.svg";
-import imgLmStudio from "../../assets/lmstudio.svg";
 import imgRedis from "@nodes/redis/logo.svg";
 import imgMongoDB from "@nodes/mongodb/logo.svg";
 import imgSupabase from "@nodes/supabase/logo.svg";
@@ -266,8 +262,6 @@ import AgentMemoryNode from "@nodes/agent_memory/ConfigPanel.jsx";
 import AgentToolNode from "@nodes/agent_tool/ConfigPanel.jsx";
 import AgentSkillNode from "@nodes/agent_skill/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
-import OllamaConfigPanel from "@nodes/agent_ollama/ConfigPanel.jsx";
-import LmStudioConfigPanel from "@nodes/agent_lmstudio/ConfigPanel.jsx";
 import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
 import VirtualComputerPanel from "@nodes/virtual_computer/ConfigPanel.jsx";
@@ -429,6 +423,65 @@ import RedditNode from "@nodes/reddit/ConfigPanel.jsx";
 // AI Model provider subject panels (multi-op, live model fetch)
 import PerplexityNode from "@nodes/perplexity/ConfigPanel.jsx";
 import XAINode from "@nodes/xai/ConfigPanel.jsx";
+
+// Single source of truth for AI Agent chat-model lists — the canvas card and the
+// config panel read the same array, so they cannot drift apart.
+export const AGENT_MODELS = {
+  openai: [
+    { value: "gpt-5.6", label: "GPT-5.6" },
+    { value: "gpt-5.6-mini", label: "GPT-5.6 Mini" },
+    { value: "gpt-5.5", label: "GPT-5.5" },
+    { value: "gpt-5.1", label: "GPT-5.1" },
+    { value: "o3", label: "o3" },
+  ],
+  anthropic: [
+    { value: "claude-opus-4-8", label: "Claude Opus 4.8" },
+    { value: "claude-sonnet-5", label: "Claude Sonnet 5" },
+    { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
+  ],
+  gemini: [
+    { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
+    { value: "gemini-3.5-pro", label: "Gemini 3.5 Pro" },
+    { value: "gemini-3.1-flash", label: "Gemini 3.1 Flash" },
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+  ],
+  xai: [
+    { value: "grok-4.3", label: "Grok 4.3" },
+    { value: "grok-4.20", label: "Grok 4.20" },
+    { value: "grok-4-fast", label: "Grok 4 Fast" },
+  ],
+  deepseek: [
+    { value: "deepseek-chat", label: "DeepSeek Chat" },
+    { value: "deepseek-reasoner", label: "DeepSeek Reasoner" },
+  ],
+  moonshot: [
+    { value: "moonshot-v1-8k", label: "Kimi V1 · 8K" },
+    { value: "moonshot-v1-32k", label: "Kimi V1 · 32K" },
+    { value: "moonshot-v1-128k", label: "Kimi V1 · 128K" },
+    { value: "moonshot-v1-8k-vision-preview", label: "Kimi V1 · Vision" },
+  ],
+  nvidia_nim: [
+    { value: "nvidia/nemotron-3-ultra-550b-a55b", label: "Nemotron 3 Ultra 550B ✦" },
+    { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B" },
+    { value: "nvidia/llama-3.1-nemotron-ultra-253b-v1", label: "Nemotron Ultra 253B" },
+    { value: "nvidia/llama-3.3-nemotron-super-49b-v1", label: "Nemotron Super 49B" },
+    { value: "meta/llama-4-maverick-17b-128e-instruct", label: "Llama 4 Maverick 17B×128E ✦" },
+    { value: "meta/llama-3.3-70b-instruct", label: "Llama 3.3 70B" },
+    { value: "deepseek-ai/deepseek-v4-pro", label: "DeepSeek V4 Pro ✦" },
+    { value: "deepseek-ai/deepseek-v4-flash", label: "DeepSeek V4 Flash" },
+    { value: "moonshotai/kimi-k2.6", label: "Kimi K2.6" },
+    { value: "qwen/qwen3-coder-480b-a35b-instruct", label: "Qwen3-Coder 480B" },
+    { value: "mistralai/mistral-nemotron", label: "Mistral Nemotron" },
+    { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B (fast)" },
+  ],
+  perplexity: [
+    { value: "sonar", label: "Sonar" },
+    { value: "sonar-pro", label: "Sonar Pro" },
+    { value: "sonar-reasoning", label: "Sonar Reasoning" },
+    { value: "sonar-reasoning-pro", label: "Sonar Reasoning Pro" },
+    { value: "sonar-deep-research", label: "Sonar Deep Research" },
+  ],
+};
 
 // Category Definitions (ordered for sidebar)
 export const CATEGORIES = [
@@ -810,7 +863,7 @@ export const NodeRegistry = {
     description: "A Claude-style skill file the agent loads on demand",
   },
 
-  // ── Dedicated Agent Model Nodes (agentOnly — only usable inside an AI Agent) ──
+  // ── Dedicated Agent Model Nodes ──
   agent_openai: {
     label: "OpenAI",
     icon: Brain,
@@ -818,19 +871,15 @@ export const NodeRegistry = {
     colorClass: "text-[#10A37F]",
     accentColor: "16,163,127",
     category: "ai_models",
-    agentOnly: true,
     description: "GPT models powering the AI Agent",
     defaultModel: "gpt-5.6",
-    models: [
-      { value: "gpt-5.6", label: "GPT-5.6" },
-      { value: "gpt-5.6-mini", label: "GPT-5.6 Mini" },
-      { value: "gpt-5.5", label: "GPT-5.5" },
-      { value: "o3", label: "o3" },
-    ],
+    models: AGENT_MODELS.openai,
     ConfigPanel: makeAgentModelPanel({
       label: "OpenAI",
+      provider: "openai",
       credentialType: "OpenAI",
-      models: ["gpt-5.6", "gpt-5.6-mini", "gpt-5.5", "gpt-5.1", "o3"],
+      logoUrl: imgOpenAI,
+      models: AGENT_MODELS.openai,
       color: "#10A37F",
     }),
   },
@@ -841,22 +890,15 @@ export const NodeRegistry = {
     colorClass: "text-[#D4C1B3]",
     accentColor: "212,193,179",
     category: "ai_models",
-    agentOnly: true,
     description: "Claude models powering the AI Agent",
     defaultModel: "claude-sonnet-5",
-    models: [
-      { value: "claude-opus-4-8", label: "Claude Opus 4.8" },
-      { value: "claude-sonnet-5", label: "Claude Sonnet 5" },
-      { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
-    ],
+    models: AGENT_MODELS.anthropic,
     ConfigPanel: makeAgentModelPanel({
       label: "Anthropic",
+      provider: "anthropic",
       credentialType: "Anthropic",
-      models: [
-        "claude-opus-4-8",
-        "claude-sonnet-5",
-        "claude-haiku-4-5",
-      ],
+      logoUrl: imgAnthropic,
+      models: AGENT_MODELS.anthropic,
       color: "#D4A27A",
     }),
   },
@@ -867,19 +909,15 @@ export const NodeRegistry = {
     colorClass: "text-[#4285F4]",
     accentColor: "66,133,244",
     category: "ai_models",
-    agentOnly: true,
     description: "Gemini models powering the AI Agent",
     defaultModel: "gemini-3.5-flash",
-    models: [
-      { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
-      { value: "gemini-3.5-pro", label: "Gemini 3.5 Pro" },
-      { value: "gemini-3.1-flash", label: "Gemini 3.1 Flash" },
-      { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-    ],
+    models: AGENT_MODELS.gemini,
     ConfigPanel: makeAgentModelPanel({
       label: "Gemini",
+      provider: "gemini",
       credentialType: "Gemini",
-      models: ["gemini-3.5-flash", "gemini-3.5-pro", "gemini-3.1-flash"],
+      logoUrl: imgGemini,
+      models: AGENT_MODELS.gemini,
       color: "#4285F4",
     }),
   },
@@ -890,18 +928,15 @@ export const NodeRegistry = {
     colorClass: "text-zinc-100",
     accentColor: "244,244,245",
     category: "ai_models",
-    agentOnly: true,
     description: "Grok models powering the AI Agent",
     defaultModel: "grok-4.3",
-    models: [
-      { value: "grok-4.3", label: "Grok 4.3" },
-      { value: "grok-4.20", label: "Grok 4.20" },
-      { value: "grok-4-fast", label: "Grok 4 Fast" },
-    ],
+    models: AGENT_MODELS.xai,
     ConfigPanel: makeAgentModelPanel({
       label: "xAI",
+      provider: "xai",
       credentialType: "xAI",
-      models: ["grok-4.3", "grok-4.20", "grok-4-fast"],
+      logoUrl: imgGrok,
+      models: AGENT_MODELS.xai,
       color: "#6B7280",
     }),
   },
@@ -912,17 +947,15 @@ export const NodeRegistry = {
     colorClass: "text-[#4D9BF8]",
     accentColor: "77,155,248",
     category: "ai_models",
-    agentOnly: true,
     description: "DeepSeek models powering the AI Agent",
     defaultModel: "deepseek-chat",
-    models: [
-      { value: "deepseek-chat", label: "DeepSeek Chat" },
-      { value: "deepseek-reasoner", label: "DeepSeek Reasoner" },
-    ],
+    models: AGENT_MODELS.deepseek,
     ConfigPanel: makeAgentModelPanel({
       label: "DeepSeek",
+      provider: "deepseek",
       credentialType: "DeepSeek",
-      models: ["deepseek-chat", "deepseek-reasoner"],
+      logoUrl: imgDeepSeek,
+      models: AGENT_MODELS.deepseek,
       color: "#4D9BF8",
     }),
   },
@@ -933,47 +966,16 @@ export const NodeRegistry = {
     colorClass: "text-[#1B64F4]",
     accentColor: "27,100,244",
     category: "ai_models",
-    agentOnly: true,
     description: "Kimi long-context models powering the AI Agent",
     defaultModel: "moonshot-v1-8k",
-    models: [
-      { value: "moonshot-v1-8k",                label: "Kimi V1 · 8K" },
-      { value: "moonshot-v1-32k",               label: "Kimi V1 · 32K" },
-      { value: "moonshot-v1-128k",              label: "Kimi V1 · 128K" },
-      { value: "moonshot-v1-8k-vision-preview", label: "Kimi V1 · Vision" },
-    ],
+    models: AGENT_MODELS.moonshot,
     ConfigPanel: makeAgentModelPanel({
       label: "Kimi",
+      provider: "moonshot",
       credentialType: "Moonshot",
-      models: ["moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k", "moonshot-v1-8k-vision-preview"],
+      logoUrl: imgKimi,
+      models: AGENT_MODELS.moonshot,
       color: "#1B64F4",
-    }),
-  },
-  agent_groq: {
-    label: "Groq",
-    icon: Zap,
-    logoUrl: imgGroq,
-    colorClass: "text-[#F55036]",
-    accentColor: "245,80,54",
-    category: "ai_models",
-    agentOnly: true,
-    description: "Groq fast inference powering the AI Agent",
-    defaultModel: "llama-3.3-70b-versatile",
-    models: [
-      { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" },
-      { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" },
-      { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" },
-      { value: "gemma2-9b-it", label: "Gemma 2 9B" },
-    ],
-    ConfigPanel: makeAgentModelPanel({
-      label: "Groq",
-      credentialType: "Groq",
-      models: [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "mixtral-8x7b-32768",
-      ],
-      color: "#F97316",
     }),
   },
   agent_nvidia_nim: {
@@ -983,100 +985,17 @@ export const NodeRegistry = {
     colorClass: "text-[#76B900]",
     accentColor: "118,185,0",
     category: "ai_models",
-    agentOnly: true,
     description: "NVIDIA-hosted Llama, Nemotron & Mistral models powering the AI Agent",
     defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
-    models: [
-      { value: "nvidia/nemotron-3-ultra-550b-a55b",       label: "Nemotron 3 Ultra 550B ✦" },
-      { value: "nvidia/nemotron-3-super-120b-a12b",       label: "Nemotron 3 Super 120B" },
-      { value: "nvidia/llama-3.1-nemotron-ultra-253b-v1", label: "Nemotron Ultra 253B" },
-      { value: "nvidia/llama-3.3-nemotron-super-49b-v1",  label: "Nemotron Super 49B" },
-      { value: "meta/llama-4-maverick-17b-128e-instruct", label: "Llama 4 Maverick 17B×128E ✦" },
-      { value: "meta/llama-3.3-70b-instruct",             label: "Llama 3.3 70B" },
-      { value: "deepseek-ai/deepseek-v4-pro",             label: "DeepSeek V4 Pro ✦" },
-      { value: "deepseek-ai/deepseek-v4-flash",           label: "DeepSeek V4 Flash" },
-      { value: "moonshotai/kimi-k2.6",                    label: "Kimi K2.6" },
-      { value: "qwen/qwen3-coder-480b-a35b-instruct",     label: "Qwen3-Coder 480B" },
-      { value: "mistralai/mistral-nemotron",               label: "Mistral Nemotron" },
-      { value: "meta/llama-3.1-8b-instruct",              label: "Llama 3.1 8B (fast)" },
-    ],
+    models: AGENT_MODELS.nvidia_nim,
     ConfigPanel: makeAgentModelPanel({
       label: "NVIDIA NIM",
+      provider: "nvidia_nim",
       credentialType: "NvidiaNim",
-      models: [
-        { value: "nvidia/nemotron-3-ultra-550b-a55b",       label: "Nemotron 3 Ultra 550B ✦" },
-        { value: "nvidia/nemotron-3-super-120b-a12b",       label: "Nemotron 3 Super 120B" },
-        { value: "nvidia/llama-3.1-nemotron-ultra-253b-v1", label: "Nemotron Ultra 253B" },
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1",  label: "Nemotron Super 49B" },
-        { value: "meta/llama-4-maverick-17b-128e-instruct", label: "Llama 4 Maverick 17B×128E ✦" },
-        { value: "meta/llama-3.3-70b-instruct",             label: "Llama 3.3 70B" },
-        { value: "deepseek-ai/deepseek-v4-pro",             label: "DeepSeek V4 Pro ✦" },
-        { value: "deepseek-ai/deepseek-v4-flash",           label: "DeepSeek V4 Flash" },
-        { value: "moonshotai/kimi-k2.6",                    label: "Kimi K2.6" },
-        { value: "qwen/qwen3-coder-480b-a35b-instruct",     label: "Qwen3-Coder 480B" },
-        { value: "mistralai/mistral-nemotron",               label: "Mistral Nemotron" },
-        { value: "meta/llama-3.1-8b-instruct",              label: "Llama 3.1 8B (fast)" },
-      ],
+      logoUrl: imgNvidiaNim,
+      models: AGENT_MODELS.nvidia_nim,
       color: "#76B900",
     }),
-  },
-  agent_gemma: {
-    label: "Google Gemma",
-    icon: Brain,
-    logoUrl: imgGemmaNim,
-    colorClass: "text-[#4285F4]",
-    accentColor: "66,133,244",
-    category: "ai_models",
-    agentOnly: true,
-    description: "Gemma 4 & Gemma 3 models via NVIDIA NIM powering the AI Agent",
-    defaultModel: "google/gemma-4-31b-it",
-    models: [
-      { value: "google/gemma-4-31b-it",   label: "Gemma 4 31B ✦" },
-      { value: "google/gemma-3-12b-it",   label: "Gemma 3 12B" },
-      { value: "google/gemma-3-4b-it",    label: "Gemma 3 4B (fast)" },
-      { value: "google/gemma-3n-e4b-it",  label: "Gemma 3n E4B (edge)" },
-      { value: "google/gemma-3n-e2b-it",  label: "Gemma 3n E2B (edge)" },
-      { value: "google/codegemma-1.1-7b", label: "CodeGemma 1.1 7B" },
-    ],
-    ConfigPanel: makeAgentModelPanel({
-      label: "Google Gemma",
-      credentialType: "NvidiaNim",
-      models: [
-        { value: "google/gemma-4-31b-it",   label: "Gemma 4 31B ✦" },
-        { value: "google/gemma-3-12b-it",   label: "Gemma 3 12B" },
-        { value: "google/gemma-3-4b-it",    label: "Gemma 3 4B (fast)" },
-        { value: "google/gemma-3n-e4b-it",  label: "Gemma 3n E4B (edge)" },
-        { value: "google/gemma-3n-e2b-it",  label: "Gemma 3n E2B (edge)" },
-        { value: "google/codegemma-1.1-7b", label: "CodeGemma 1.1 7B" },
-      ],
-      color: "#4285F4",
-    }),
-  },
-  agent_ollama: {
-    label: "Ollama",
-    icon: Brain,
-    logoUrl: imgOllama,
-    colorClass: "text-zinc-300",
-    accentColor: "212,212,216",
-    category: "ai_models",
-    agentOnly: true,
-    description: "Run Ollama models on the server or connect to any Ollama instance",
-    defaultModel: "llama3.2",
-    models: null,
-    ConfigPanel: OllamaConfigPanel,
-  },
-  agent_lmstudio: {
-    label: "OpenAI Compatible",
-    icon: Brain,
-    logoUrl: imgLmStudio,
-    colorClass: "text-purple-400",
-    accentColor: "192,132,252",
-    category: "ai_models",
-    agentOnly: true,
-    description: "Any OpenAI-compatible server — LM Studio, llama.cpp, vLLM, KoboldCpp, or a remote endpoint",
-    defaultModel: "local-model",
-    models: null,
-    ConfigPanel: LmStudioConfigPanel,
   },
   agent_perplexity: {
     label: "Perplexity",
@@ -1085,24 +1004,15 @@ export const NodeRegistry = {
     colorClass: "text-[#22d3ee]",
     accentColor: "34,211,238",
     category: "ai_models",
-    agentOnly: true,
     description: "Perplexity search-augmented models for the AI Agent",
     defaultModel: "sonar-pro",
-    models: [
-      { value: "sonar", label: "Sonar" },
-      { value: "sonar-pro", label: "Sonar Pro" },
-      { value: "sonar-reasoning", label: "Sonar Reasoning" },
-      { value: "sonar-deep-research", label: "Sonar Deep Research" },
-    ],
+    models: AGENT_MODELS.perplexity,
     ConfigPanel: makeAgentModelPanel({
       label: "Perplexity",
+      provider: "perplexity",
       credentialType: "Perplexity",
-      models: [
-        "sonar",
-        "sonar-pro",
-        "sonar-reasoning",
-        "sonar-reasoning-pro",
-      ],
+      logoUrl: imgPerplexity,
+      models: AGENT_MODELS.perplexity,
       color: "#20B2AA",
     }),
   },

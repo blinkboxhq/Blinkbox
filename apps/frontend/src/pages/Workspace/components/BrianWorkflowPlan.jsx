@@ -9,7 +9,6 @@ const CRED_META = {
   // AI model nodes
   agent_anthropic:                   { label: 'Anthropic API Key',       credentialType: 'api_key',  hint: 'sk-ant-...' },
   agent_openai:                      { label: 'OpenAI API Key',          credentialType: 'api_key',  hint: 'sk-...' },
-  agent_groq:                        { label: 'Groq API Key',            credentialType: 'api_key',  hint: 'gsk_...' },
   agent_gemini:                      { label: 'Google AI Key',           credentialType: 'api_key',  hint: 'AI Studio key' },
 
   // Agent integrations — Google

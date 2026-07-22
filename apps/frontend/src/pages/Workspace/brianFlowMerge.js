@@ -7,7 +7,7 @@ export function brianEdgeKey(edge) {
   ].join("|");
 }
 
-const MODEL_BT = new Set(["agent_anthropic", "agent_openai", "agent_gemini", "agent_groq"]);
+const MODEL_BT = new Set(["agent_anthropic", "agent_openai", "agent_gemini", "agent_xai", "agent_deepseek", "agent_moonshot", "agent_nvidia_nim", "agent_perplexity"]);
 const MEMORY_BT = new Set(["agent_memory_supabase", "agent_memory_pinecone", "agent_memory_postgres", "agent_memory_redis"]);
 const TOOL_BT = new Set(["agent_tool"]);
 const INTEG_PREFIX = "agent_integration_";
