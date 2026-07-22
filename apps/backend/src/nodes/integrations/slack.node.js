@@ -3,8 +3,9 @@
  * modular router in _packaged/slack/. 30 operation keys across message, file,
  * channel and user resources.
  *
- * Auth: Slack Bot Token (xoxb-...) from the credential vault.
- * Note: legacy webhookUrl mode (postMessage only) still bypasses token resolution.
+ * Auth: Slack Bot Token (xoxb-...) from the user's own Slack app, stored in the
+ * credential vault. This is the only supported auth — every operation requires a
+ * bot-token credential.
  */
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { run as runSlack, OPERATIONS, DEFAULT_OPERATION } from "../_packaged/slack/router.js";
@@ -16,13 +17,8 @@ export default {
     if (!OPERATIONS[operation])
       return { success: false, error: `Slack: Unknown operation "${operation}".`, skipped: true };
 
-    // Legacy webhook mode bypasses token resolution
-    if (operation === "postMessage" && config.webhookUrl && !config.credentialId) {
-      return runSlack(config, makeReq(null));
-    }
-
     if (!config.credentialId) {
-      return { success: false, error: "Slack: No credential selected — pick a Slack Bot Token credential.", skipped: true };
+      return { success: false, error: "Slack: No credential selected — add your Slack app's Bot User OAuth Token (xoxb-…) in the Vault and pick it here.", skipped: true };
     }
 
     let token;
@@ -30,6 +26,10 @@ export default {
       token = await getOAuthToken(config.credentialId, context.workspaceId, "Slack");
     } catch (e) {
       return { success: false, error: `Slack: Could not resolve credential — ${e.message}`, skipped: true };
+    }
+
+    if (!/^xoxb-/.test(String(token || ""))) {
+      return { success: false, error: "Slack: This credential is not a Bot User OAuth Token. Paste the xoxb-… token from your own Slack app's OAuth & Permissions page.", skipped: true };
     }
 
     // Allow forwarding attachments from previous node output (standalone canvas use)

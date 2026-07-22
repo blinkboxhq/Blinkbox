@@ -5,16 +5,6 @@ import axios from "axios";
 import { API, slackCall } from "../GenericFunctions.js";
 
 async function opPostMessage(config, token) {
-  // Legacy webhook mode
-  if (config.webhookUrl && !config.credentialId) {
-    if (!/^https:\/\/hooks\.slack\.com\//.test(config.webhookUrl))
-      throw new Error("Slack: Invalid webhook URL.");
-    const text = config.message || config.text;
-    if (!text) return { success: false, error: "Slack postMessage: 'text' is required — configure this field.", skipped: true };
-    await axios.post(config.webhookUrl, { text }, { timeout: 10000 });
-    return { ok: true, ts: null, channel: null };
-  }
-
   const channel = config.channel;
   const text = config.message || config.text;
   if (!channel) return { success: false, error: "Slack postMessage: 'channel' is required — configure this field.", skipped: true };
