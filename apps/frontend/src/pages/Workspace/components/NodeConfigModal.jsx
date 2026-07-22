@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import { X, Play, CheckCircle2, XCircle, Loader2, Pencil, Check, ChevronDown, ChevronRight, Zap, Split, Type, Hash, ToggleLeft, Braces, Brackets, Minus, Terminal as TerminalIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWorkspaceStore from "../../../store/workspaceStore";
-import AgentActionPicker from "./AgentActionPicker";
+import IntegrationPanel from "./nodes/IntegrationPanel.jsx";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { schemaForNode } from "../../../store/schemaEngine";
@@ -353,15 +353,19 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
   const selectedAction = config.selectedAction;
-  const actionList = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
+  const actionListRaw = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
   // Wired into an agent's Integration slot? Then this app is a tool, not a step —
   // the user picks which of its operations the agent may call.
   const feedsAgent = useWorkspaceStore((st) =>
     st.edges.some((e) => e.source === node?.id && e.targetHandle === "integration")
   );
   const agentType = backendType?.replace(/^agent_integration_/, "");
+  // In integration mode the app is not a workflow step: no operation picker, no
+  // step fields, no failure branch — just account + the actions the agent may call.
+  const integrationMode = feedsAgent && !!agentType;
+  const actionList = integrationMode ? null : actionListRaw;
   const NO_SPLIT = ["condition", "loop", "merge"];
-  const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType);
+  const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType) && !integrationMode;
 
   const currentName = config.customLabel || selectedAction || def?.label || node?.data.label || "";
   const [editing, setEditing] = useState(false);
@@ -419,7 +423,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
             <Pencil className="w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-300 transition-colors shrink-0" />
           </button>
         )}
-        {selectedAction && !editing && !actionList?.length && (
+        {selectedAction && !editing && !actionList?.length && !integrationMode && (
           <div className="flex items-center gap-1.5 mt-1">
             <span className="text-[10px] text-neutral-500">Action:</span>
             <span className="text-[10px] font-semibold text-violet-300">{selectedAction}</span>
@@ -450,7 +454,16 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
               />
             </div>
           )}
-          {eventGroup ? (
+          {integrationMode ? (
+            <div className="px-4 pt-3 pb-3">
+              <IntegrationPanel
+                type={agentType}
+                config={config}
+                updateConfig={(key, val) => updateConfig(node.id, key, val)}
+                nodeId={node.id}
+              />
+            </div>
+          ) : eventGroup ? (
             <>
               <div className="px-4 pt-3 pb-1">
                 <ConfigSelect
@@ -500,16 +513,6 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">
               <p className="text-[13px] text-neutral-600">No configuration needed.</p>
-            </div>
-          )}
-
-          {feedsAgent && agentType && (
-            <div className="px-4 pt-1 pb-3 mt-2 border-t border-white/[0.06]">
-              <AgentActionPicker
-                type={agentType}
-                value={config.enabledActions}
-                onChange={(v) => updateConfig(node.id, "enabledActions", v)}
-              />
             </div>
           )}
 
