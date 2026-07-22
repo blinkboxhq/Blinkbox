@@ -1,5 +1,5 @@
 import { getBezierPath, getSmoothStepPath, EdgeLabelRenderer, useReactFlow } from "@xyflow/react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useLayoutEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
@@ -115,6 +115,25 @@ export default function ConfigurableEdge({
     edgePath = p; labelX = lx; labelY = ly;
   }
 
+  // getSmoothStepPath returns the *requested* centerY as the label point even when
+  // the routing ignores it (aligned horizontal spans), which throws the midpoint
+  // controls off the wire. Sample the rendered path instead — always on the edge.
+  const pathRef = useRef(null);
+  const [mid, setMid] = useState(null);
+  useLayoutEffect(() => {
+    const el = pathRef.current;
+    if (!el?.getTotalLength) return;
+    const len = el.getTotalLength();
+    if (!len) return;
+    const p = el.getPointAtLength(len / 2);
+    const a = el.getPointAtLength(Math.max(0, len / 2 - 2));
+    const b = el.getPointAtLength(Math.min(len, len / 2 + 2));
+    setMid({ x: p.x, y: p.y, angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI });
+  }, [edgePath]);
+  const midX = mid?.x ?? labelX;
+  const midY = mid?.y ?? labelY;
+  const midAngle = mid?.angle ?? 0;
+
   // ── Status-driven styling ────────────────────────────────────────────────────
   const sourceStatus = isExecutionLive ? nodeStatuses[source] : null;
   const targetStatus = isExecutionLive ? nodeStatuses[target] : null;
@@ -172,6 +191,7 @@ export default function ConfigurableEdge({
       {/* Main visible edge */}
       <path
         id={id}
+        ref={pathRef}
         className="react-flow__edge-path"
         d={edgePath}
         strokeWidth={strokeWidth}
@@ -203,7 +223,7 @@ export default function ConfigurableEdge({
       {/* Directional arrow at the edge midpoint — points along the edge */}
       {!isAgentEdge && !isRunning && (
         <g
-          transform={`translate(${labelX}, ${labelY})`}
+          transform={`translate(${midX}, ${midY}) rotate(${midAngle})`}
           className={`transition-opacity duration-100 ${hovered ? "opacity-0" : "opacity-100"}`}
           style={{ pointerEvents: "none" }}
         >
@@ -222,7 +242,7 @@ export default function ConfigurableEdge({
         <div
           style={{
             position: "absolute",
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            transform: `translate(-50%, -50%) translate(${midX}px,${midY}px)`,
             pointerEvents: "all",
           }}
           className="nodrag nopan"
@@ -262,7 +282,7 @@ export default function ConfigurableEdge({
           <div
             style={{
               position: "absolute",
-              transform: `translate(-50%, -120%) translate(${labelX}px,${labelY}px)`,
+              transform: `translate(-50%, -120%) translate(${midX}px,${midY}px)`,
               pointerEvents: "all",
             }}
             className="nodrag nopan bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/40 text-zinc-500 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md"
