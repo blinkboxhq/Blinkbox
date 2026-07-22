@@ -36,7 +36,7 @@ export const NODE_TYPES = [
   "resend", "notify_hub", "email_parser",
   // Data
   "airtable", "google_sheets", "notion", "mongodb", "postgres", "redis_node",
-  "firebase", "supabase", "pinecone", "vector_memory",
+  "firebase", "supabase", "pinecone",
   // Web
   "web_search",
   // Dev tools

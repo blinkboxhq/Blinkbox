@@ -137,17 +137,6 @@ export const NODE_DOCS = {
       { name: "...", type: "any", desc: "Dynamic fields from the extracted document" },
     ],
   },
-  vector_memory: {
-    description: "Store and recall text by semantic meaning using AI embeddings.",
-    inputs: [
-      { name: "operation", type: "string", desc: "remember | recall | forget" },
-      { name: "text", type: "string", desc: "Text to store or search for" },
-    ],
-    outputs: [
-      { name: "memories", type: "array", desc: "List of similar memories found (recall)" },
-      { name: "memoryId", type: "string", desc: "ID of the stored memory (remember)" },
-    ],
-  },
   ai_decision: {
     description: "Make a structured decision between multiple options using AI reasoning.",
     inputs: [

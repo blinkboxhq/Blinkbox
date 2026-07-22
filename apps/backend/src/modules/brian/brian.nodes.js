@@ -966,17 +966,6 @@ export const NODE_KB = {
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Pinecone credential" },
     ],
   },
-  vector_memory: {
-    label: "Vector Memory",
-    out: ["results", "stored"],
-    fields: [
-      { k: "operation", t: "select", r: true, ex: "search", d: "search|store|clear" },
-      { k: "query", t: "string", r: false, ex: "{{$json.message}}", d: "Search query (for search operation)" },
-      { k: "content", t: "string", r: false, ex: "{{$json.text}}", d: "Content to store (for store operation)" },
-      { k: "topK", t: "number", r: false, ex: 5, d: "Max results" },
-      { k: "namespace", t: "string", r: false, ex: "{{$json.sessionId}}", d: "Namespace to isolate memory per user/session" },
-    ],
-  },
 
   // ─── PRODUCTIVITY / PM ────────────────────────────────────────────────────
   github: {

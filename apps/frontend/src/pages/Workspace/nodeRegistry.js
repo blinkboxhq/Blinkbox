@@ -152,7 +152,7 @@ import imgRedis from "@nodes/redis/logo.svg";
 import imgMongoDB from "@nodes/mongodb/logo.svg";
 import imgSupabase from "@nodes/supabase/logo.svg";
 import imgPinecone from "@nodes/pinecone/logo.svg";
-import imgZep from "@nodes/vector_memory/logo.svg";
+import imgZep from "@nodes/agent_memory/logo-zep.svg";
 import imgComputer from "../../assets/computer.png";
 import imgHTTP from "@nodes/http_request/logo.svg";
 import imgCode from "@nodes/code/logo.svg";
@@ -315,7 +315,6 @@ import ImageResizeNode from "@nodes/image_resize/ConfigPanel.jsx";
 import AggregateNode from "@nodes/aggregate/ConfigPanel.jsx";
 import PDFGeneratorNode from "@nodes/pdf_generator/ConfigPanel.jsx";
 import EmailParserNode from "@nodes/email_parser/ConfigPanel.jsx";
-import VectorMemoryNode from "@nodes/vector_memory/ConfigPanel.jsx";
 
 import ElevenLabsNode from "@nodes/elevenlabs/ConfigPanel.jsx";
 import PineconeNode from "@nodes/pinecone/ConfigPanel.jsx";
@@ -2223,7 +2222,6 @@ export const NodeRegistry = {
     category: "databases",
     description: "Upsert and query vectors in a Pinecone index",
   },
-  vector_memory:     { label: "Vector Memory",    icon: MemoryStick,  logoUrl: imgZep,    colorClass: "text-purple-400", accentColor: "192,132,252", ConfigPanel: VectorMemoryNode,    category: "ai_agent", description: "Store and search vector embeddings with semantic similarity" },
   resend: {
     label: "Resend",
     icon: Mail,

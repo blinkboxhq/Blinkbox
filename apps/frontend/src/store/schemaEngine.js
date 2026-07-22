@@ -224,7 +224,6 @@ export const DEFAULT_SCHEMAS = {
 
   // AI Innovated Nodes
   email_parser: { _meta: "object", _dynamic: true },
-  vector_memory: { memories: "array", count: "number", namespace: "string", query: "string", memoryId: "string", memoryKey: "string", text: "string" },
   ai_decision: { decision: "string", confidence: "number", reasoning: "string", scores: "object", factors: "array", recommended_action: "string", risks: "array", alternatives: "array" },
   notification_hub: { sent: "number", failed: "number", total: "number", results: "array", fallbackUsed: "boolean", deduped: "boolean", message: "string" },
 
@@ -400,7 +399,6 @@ const EXPECTED_INPUT_TYPES = {
   ai_agent: { prompt: "string", systemPrompt: "string" },
   condition: { conditions: "array" },
   email_parser: { emailText: "string" },
-  vector_memory: { text: "string" },
   ai_decision: { scenario: "string" },
   notification_hub: { message: "string" },
   data_diff: { before: "object", after: "object" },

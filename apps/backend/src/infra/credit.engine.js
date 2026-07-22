@@ -119,7 +119,7 @@ const NODE_COSTS = {
   claude_code: 10, codex: 10, gemini_cli: 10, github_copilot: 10,
   openai_assistant: 10, elevenlabs: 10,
   speech_to_text: 10, text_to_speech: 10, translation: 10,
-  email_parser: 10, vector_memory: 10, pinecone: 10,
+  email_parser: 10, pinecone: 10,
   // agent sub-node aliases
   agent_openai: 10, agent_anthropic: 10, agent_gemini: 10,
   agent_deepseek: 10, agent_moonshot: 10, agent_perplexity: 10,

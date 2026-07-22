@@ -321,7 +321,6 @@ const rawNodeRegistry = {
   aggregate:         aggregate,
   pdf_generator:     pdfGenerator,
   email_parser:      emailParser,
-  vector_memory:     vectorMemory,
   ocr:               ocr,
   json_transform:    jsonTransform,
   translation:       translation,
