@@ -36,7 +36,6 @@ function segmentHitsNodes(sx, sy, tx, ty, nodes, sourceId, targetId) {
 // ── Arrow marker ID (matches Canvas defaultEdgeOptions) ─────────────────────
 export const EDGE_ARROW_ID = "blinkbox-arrow";
 
-const AGENT_TYPES = new Set(["agent_llm", "agent_memory", "agent_tool", "ai_agent"]);
 const AGENT_SUB_TYPES = new Set(["agent_llm", "agent_memory", "agent_tool"]);
 const AGENT_HANDLE = "agent_out";
 
@@ -65,17 +64,14 @@ export default function ConfigurableEdge({
   const nodes = useWorkspaceStore((s) => s.nodes);
   const srcType = nodes.find(n => n.id === source)?.data?.backendType;
   const tgtType = nodes.find(n => n.id === target)?.data?.backendType;
-  // Slot edges: sub-node → ai_agent only (agent_out handle or sub-node source type)
+  // Slot edges: dock connectors between a sub-node and ai_agent, in either
+  // direction. Main-flow edges into/out of ai_agent are NOT slot edges — they
+  // keep the arrow and the insert button like any other edge.
   const isSlotEdge = sourceHandleId === AGENT_HANDLE
     || ["llm", "chat_model", "memory", "integration", "tools"].includes(targetHandleId)
     || AGENT_SUB_TYPES.has(srcType)
     || srcType?.startsWith("agent_")
-    || srcType?.startsWith("agent_memory_")
-    || srcType?.startsWith("agent_integration_");
-  // Agent edge (broader): any edge touching an agent node — suppresses insert button
-  const isAgentEdge = isSlotEdge
-    || AGENT_TYPES.has(srcType)
-    || AGENT_TYPES.has(tgtType)
+    || AGENT_SUB_TYPES.has(tgtType)
     || tgtType?.startsWith("agent_memory_")
     || tgtType?.startsWith("agent_integration_");
   const nodeStatuses = useWorkspaceStore((s) => s.nodeStatuses);
@@ -221,7 +217,7 @@ export default function ConfigurableEdge({
       )}
 
       {/* Directional arrow at the edge midpoint — points along the edge */}
-      {!isAgentEdge && !isRunning && (
+      {!isSlotEdge && !isRunning && (
         <g
           transform={`translate(${midX}, ${midY}) rotate(${midAngle})`}
           className={`transition-opacity duration-100 ${hovered ? "opacity-0" : "opacity-100"}`}
@@ -252,7 +248,7 @@ export default function ConfigurableEdge({
             onMouseEnter={show}
             onMouseLeave={hide}
           >
-            {!isAgentEdge && (
+            {!isSlotEdge && (
               <button
                 onClick={handleInsert}
                 className="w-7 h-7 rounded-full bg-[#1c1c1e] border border-zinc-600
