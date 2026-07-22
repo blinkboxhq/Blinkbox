@@ -31,9 +31,9 @@ function defineTheme(monaco) {
       "editor.background": "#0f0f0f",
       "editorGutter.background": "#0f0f0f",
       "editorLineNumber.foreground": "#404040",
-      "editorLineNumber.activeForeground": "#a78bfa",
-      "editor.selectionBackground": "#a78bfa33",
-      "editorCursor.foreground": "#a78bfa",
+      "editorLineNumber.activeForeground": "#a3a3a3",
+      "editor.selectionBackground": "#ffffff1a",
+      "editorCursor.foreground": "#d4d4d4",
       "editorIndentGuide.background1": "#1e1e1e",
     },
   });
@@ -55,17 +55,19 @@ export default function CodeNode({ config = {}, updateConfig }) {
 
       <div className="flex flex-col">
         <ConfigLabel>JavaScript</ConfigLabel>
-        <div className="bb-glow-border rounded-md border border-[#3b3b3b] overflow-hidden bg-[#0f0f0f] transition-colors focus-within:border-violet-500/50">
-          <Editor
-            height="240px"
-            defaultLanguage="javascript"
-            theme="bb-dark"
-            value={code}
-            beforeMount={defineTheme}
-            onChange={(val) => updateConfig("code", val ?? "")}
-            options={EDITOR_OPTIONS}
-            loading={<div className="h-[240px] flex items-center justify-center text-[11px] text-neutral-600 font-mono">Loading editor…</div>}
-          />
+        <div className="bb-glow-border rounded-md border border-[#3b3b3b] bg-[#0f0f0f] transition-colors focus-within:border-[#545454]">
+          <div className="rounded-md overflow-hidden">
+            <Editor
+              height="240px"
+              defaultLanguage="javascript"
+              theme="bb-dark"
+              value={code}
+              beforeMount={defineTheme}
+              onChange={(val) => updateConfig("code", val ?? "")}
+              options={EDITOR_OPTIONS}
+              loading={<div className="h-[240px] flex items-center justify-center text-[11px] text-neutral-600 font-mono">Loading editor…</div>}
+            />
+          </div>
         </div>
       </div>
 
