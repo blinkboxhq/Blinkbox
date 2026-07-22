@@ -105,7 +105,7 @@ export default function SlackNode({ config = {}, updateConfig, nodeId }) {
         label="Slack Bot Token"
         credentialType="slack"
         placeholder="Select or add a Slack credential…"
-        hint="Paste your app's Bot User OAuth Token (xoxb-…). Stored encrypted in your Vault."
+        hint="Paste the Bot User OAuth Token (xoxb-…) from your OWN Slack app — messages are sent as that app. Stored encrypted in your Vault."
       />
 
 
