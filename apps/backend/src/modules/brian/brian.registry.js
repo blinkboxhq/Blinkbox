@@ -25,8 +25,9 @@ export const MEMORY_BT = new Set([
   "agent_memory_redis",
 ]);
 
-// Keep this list aligned with PLATFORM_TOOL_SPECS in ../../nodes/aiAgent.node.js.
-// If a runtime tool is not present there, Brian must not generate it.
+// Legacy agent_integration_* aliases. Any app node can now feed an agent's
+// `integration` handle, so this set only gates the old prefixed keys — it is not
+// the list of integrations the agent supports.
 export const INTEG_BT = new Set([
   "agent_integration_slack",
   "agent_integration_gmail",

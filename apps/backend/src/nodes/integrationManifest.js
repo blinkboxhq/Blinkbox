@@ -55,12 +55,15 @@ function dirIndex() {
   return _dirIndex;
 }
 
+// An app is only usable as an agent tool if it has BOTH an operation router and
+// a node entry — the node is what resolves the credential the router needs.
 export function isKnownIntegration(type) {
-  return Boolean(dirIndex().packaged[type] || dirIndex().nodes[type]);
+  const { packaged, nodes } = dirIndex();
+  return Boolean(packaged[type] && nodes[type]);
 }
 
 export function listIntegrationTypes() {
-  return Object.keys(dirIndex().packaged).sort();
+  return Object.keys(dirIndex().packaged).filter(isKnownIntegration).sort();
 }
 
 const _routerCache = new Map();

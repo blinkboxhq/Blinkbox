@@ -289,7 +289,8 @@ export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
       if (raw.targetHandle && AI_AGENT_HANDLES.has(raw.targetHandle)) {
         const srcNode = canvasNodes.find((n) => n.id === raw.source);
         const tgtNode = canvasNodes.find((n) => n.id === raw.target);
-        if (srcNode?.data?.backendType === "ai_agent" && tgtNode && HUB_TYPES.has(tgtNode.data?.backendType)) {
+        const tgtIsHub = tgtNode && (HUB_TYPES.has(tgtNode.data?.backendType) || raw.targetHandle === "integration");
+        if (srcNode?.data?.backendType === "ai_agent" && tgtIsHub) {
           [raw.source, raw.target] = [raw.target, raw.source];
         }
       }
@@ -342,7 +343,11 @@ export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
       else if (MEMORY_BT.has(bt)) n.position = { ...AGENT_LAYOUT.memory };
     });
 
-    const integNodes = canvasNodes.filter((n) => INTEG_BT.has(n.data.backendType));
+    const integNodes = canvasNodes.filter(
+      (n) =>
+        INTEG_BT.has(n.data.backendType) ||
+        canvasEdges.some((e) => e.source === n.id && e.targetHandle === "integration"),
+    );
     const xArr = integrationXs(integNodes.length);
     integNodes.forEach((n, i) => {
       n.position = { x: xArr[i] ?? 400, y: AGENT_LAYOUT.integrationY };
