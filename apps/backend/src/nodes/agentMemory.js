@@ -92,8 +92,14 @@ function plan(type, config) {
 const windowKey = (workspaceId, session) => `bb:mem:${workspaceId}:${session}`;
 const namespaceOf = (session) => `agent:${session}`;
 
+// A disconnected client still accepts commands and eats the full command
+// timeout before rejecting, so skip the call once we know the socket is down.
+// "connecting" is not down — that is a cold start, and it must still try.
+const DOWN = new Set(["reconnecting", "close", "end"]);
+const redisLive = () => redis && !DOWN.has(redis.status);
+
 async function readWindow(key, size) {
-  if (!redis) return [];
+  if (!redisLive()) return [];
   try {
     const raw = await redis.get(key);
     if (!raw) return [];
@@ -160,7 +166,7 @@ export async function saveAgentMemory({ type, config = {}, workspaceId, userText
     { role: "assistant", content: String(assistantText ?? "") },
   ];
 
-  if (redis) {
+  if (redisLive()) {
     try {
       const key = windowKey(workspaceId, p.session);
       const prior = await readWindow(key, p.windowSize);
