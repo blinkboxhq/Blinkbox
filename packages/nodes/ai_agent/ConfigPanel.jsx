@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Bot, Brain, Database, Zap, Plug, Globe, MessageSquare, Eye, Settings2,
   ChevronDown, ChevronRight, ArrowRight, Repeat, Hash, Thermometer,
-  ShieldAlert, FileOutput, Sigma, BookOpen, Code2, Save, Search, Fingerprint,
+  ShieldAlert, FileOutput, Fingerprint, Plus,
 } from "lucide-react";
 import SmartVariableInput from "@/components/ui/SmartVariableInput";
 import CredentialPicker from "@/components/ui/CredentialPicker";
@@ -12,16 +12,8 @@ import {
   ConfigToggleRow, ConfigBanner, ConfigDivider,
 } from "@/components/ui/ConfigKit";
 
-const VIOLET = "#a78bfa";
-
-const BUILTIN_TOOLS = [
-  { icon: Sigma,    label: "Calculator",   desc: "Math & formulas" },
-  { icon: BookOpen, label: "Wikipedia",    desc: "Factual lookup" },
-  { icon: Globe,    label: "HTTP Request", desc: "Call any API" },
-  { icon: Code2,    label: "Run JS",       desc: "Execute scripts" },
-  { icon: Save,     label: "Remember",     desc: "Store facts" },
-  { icon: Search,   label: "Recall",       desc: "Retrieve facts" },
-];
+// --bb-accent from index.css :root
+const ACCENT = "#6f97e8";
 
 const PROMPT_TEMPLATES = [
   { label: "Research agent", prompt: "Research the following topic thoroughly using web search and Wikipedia. Summarize key findings with sources: {{$json.topic}}" },
@@ -30,14 +22,15 @@ const PROMPT_TEMPLATES = [
   { label: "Code reviewer",  prompt: "Review the following code for bugs, security issues, and improvements. Return structured feedback: {{$json.code}}" },
 ];
 
+const SLOTS = [
+  { id: "llm",         label: "Chat Model",   icon: Brain,    hint: "Required" },
+  { id: "memory",      label: "Memory",       icon: Database, hint: "Optional" },
+  { id: "integration", label: "Integrations", icon: Plug,     hint: "Apps" },
+  { id: "tools",       label: "Tools",        icon: Zap,      hint: "Canvas" },
+];
+
 function slotHandles(slotId) {
   return slotId === "llm" ? new Set(["llm", "chat_model"]) : new Set([slotId]);
-}
-
-function getSlotNode(edges, nodes, agentNodeId, slotId) {
-  const handles = slotHandles(slotId);
-  const edge = edges.find((e) => e.target === agentNodeId && handles.has(e.targetHandle));
-  return edge ? nodes.find((n) => n.id === edge.source) || null : null;
 }
 
 function getNodesForSlot(edges, nodes, agentNodeId, slotId) {
@@ -60,29 +53,48 @@ function nodeTitle(node) {
   );
 }
 
-function SlotRow({ label, icon: Icon, color, connected = [], onGoTo }) {
+function SlotRow({ label, icon: Icon, hint, connected = [], onGoTo, onAdd }) {
   const live = connected.length > 0;
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5">
-      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: live ? color : "#525252" }} />
-      <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-500 flex-1">{label}</span>
+    <div className="flex items-start gap-3 px-3 py-2.5">
+      <span
+        className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center border transition-colors"
+        style={{
+          borderColor: live ? `${ACCENT}59` : "#2b2b2b",
+          backgroundColor: live ? `${ACCENT}14` : "transparent",
+        }}
+      >
+        <Icon className="w-3 h-3" style={{ color: live ? ACCENT : "#525252" }} />
+      </span>
+
+      <span className="flex-1 min-w-0 pt-0.5">
+        <span className="block text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">{label}</span>
+        {!live && <span className="block text-[9px] font-mono text-neutral-700 mt-0.5">{hint}</span>}
+      </span>
+
       {live ? (
-        <div className="flex flex-wrap gap-1 justify-end">
+        <span className="flex flex-wrap gap-1 justify-end max-w-[62%]">
           {connected.map((n) => (
             <button
               key={n.id}
               type="button"
               onClick={() => onGoTo(n.id)}
               className="flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-mono transition-opacity hover:opacity-75 max-w-[140px]"
-              style={{ color, backgroundColor: `${color}1a`, borderColor: `${color}4d` }}
+              style={{ color: ACCENT, backgroundColor: `${ACCENT}14`, borderColor: `${ACCENT}4d` }}
             >
               <span className="truncate">{nodeTitle(n)}</span>
               <ArrowRight className="w-2.5 h-2.5 opacity-60 shrink-0" />
             </button>
           ))}
-        </div>
+        </span>
       ) : (
-        <span className="text-[9px] font-mono text-neutral-700 border border-[#2b2b2b] rounded px-1.5 py-0.5">empty</span>
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex items-center gap-1 px-2 py-1 rounded border border-[#2b2b2b] text-[9px] font-mono text-neutral-600 hover:text-neutral-200 hover:border-[#3b3b3b] transition-colors shrink-0"
+        >
+          <Plus className="w-2.5 h-2.5" /> Add
+        </button>
       )}
     </div>
   );
@@ -92,46 +104,57 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const nodes = useWorkspaceStore((s) => s.nodes);
   const edges = useWorkspaceStore((s) => s.edges);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const openAgentPicker = useWorkspaceStore((s) => s.openAgentPicker);
   const [advOpen, setAdvOpen] = useState(false);
 
-  const llmNode = getSlotNode(edges, nodes, nodeId, "llm");
-  const memoryNode = getSlotNode(edges, nodes, nodeId, "memory");
-  const toolNodes = getNodesForSlot(edges, nodes, nodeId, "tools");
-  const integrationNodes = getNodesForSlot(edges, nodes, nodeId, "integration");
+  const bySlot = Object.fromEntries(
+    SLOTS.map((s) => [s.id, getNodesForSlot(edges, nodes, nodeId, s.id)]),
+  );
+  const llmNode = bySlot.llm[0] || null;
 
-  const toolCount = toolNodes.length + integrationNodes.length + (config.builtinWebSearch ? 1 : 0);
+  const toolCount =
+    bySlot.tools.length + bySlot.integration.length + (config.builtinWebSearch ? 1 : 0);
   const prompt = config.prompt || "";
   const maxIterations = config.maxIterations || 5;
   const temperature = config.temperature ?? 0.3;
 
+  const addComponent = () => openAgentPicker?.(nodeId);
+
   const sliderStyle = (pct) => ({
-    background: `linear-gradient(to right, ${VIOLET} 0%, ${VIOLET} ${pct}%, #3b3b3b ${pct}%, #3b3b3b 100%)`,
+    background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${pct}%, #3b3b3b ${pct}%, #3b3b3b 100%)`,
   });
 
   return (
     <ConfigSection>
       <ConfigHeader
         icon={Bot}
-        iconColor={VIOLET}
+        iconColor={ACCENT}
         title="AI Agent"
         subtitle="Autonomous reasoning & tool use"
-        badge={llmNode ? <ConfigBadge tone="live" label="MODEL LINKED" /> : <ConfigBadge label="NO MODEL" accentColor="#fbbf24" />}
+        badge={
+          llmNode
+            ? <ConfigBadge tone="live" label="MODEL LINKED" />
+            : <ConfigBadge label="NO MODEL" accentColor="#fbbf24" />
+        }
       />
 
       <div className="bb-glow-border rounded-md bg-[#0f0f0f] border border-[#2b2b2b] divide-y divide-[#1f1f1f]">
-        <SlotRow label="Chat Model" icon={Brain} color={VIOLET}
-          connected={llmNode ? [llmNode] : []} onGoTo={setSelectedNodeId} />
-        <SlotRow label="Memory" icon={Database} color="#c084fc"
-          connected={memoryNode ? [memoryNode] : []} onGoTo={setSelectedNodeId} />
-        <SlotRow label="Integrations" icon={Plug} color="#34d399"
-          connected={integrationNodes} onGoTo={setSelectedNodeId} />
-        <SlotRow label="Canvas Tools" icon={Zap} color="#fb923c"
-          connected={toolNodes} onGoTo={setSelectedNodeId} />
+        {SLOTS.map((s) => (
+          <SlotRow
+            key={s.id}
+            label={s.label}
+            icon={s.icon}
+            hint={s.hint}
+            connected={bySlot[s.id]}
+            onGoTo={setSelectedNodeId}
+            onAdd={addComponent}
+          />
+        ))}
       </div>
 
       {!llmNode && (
         <ConfigBanner tone="warn">
-          Connect a chat model from the slot row under the agent node on the canvas.
+          An agent needs a chat model before it can run — add one from the slot row above.
         </ConfigBanner>
       )}
 
@@ -165,19 +188,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         )}
       </div>
 
-      <ConfigDivider label="Built-in Capabilities" />
-
-      <div className="grid grid-cols-3 gap-1.5 -mt-1">
-        {BUILTIN_TOOLS.map((t) => (
-          <div key={t.label} className="bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-md bg-[#0f0f0f] border border-[#2b2b2b]">
-            <t.icon className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-[10px] font-mono font-semibold text-neutral-300 leading-none mb-1 truncate">{t.label}</p>
-              <p className="text-[9px] font-mono text-neutral-600 leading-none truncate">{t.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConfigDivider label="Capabilities" />
 
       <ConfigToggleRow
         label="Web Search"
@@ -185,7 +196,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         icon={Globe}
         on={!!config.builtinWebSearch}
         onChange={(v) => updateConfig("builtinWebSearch", v)}
-        accentColor={VIOLET}
+        accentColor={ACCENT}
       />
       {config.builtinWebSearch && (
         <CredentialPicker
@@ -204,7 +215,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         icon={MessageSquare}
         on={!!config.conversationMemoryEnabled}
         onChange={(v) => updateConfig("conversationMemoryEnabled", v)}
-        accentColor={VIOLET}
+        accentColor={ACCENT}
       />
       {config.conversationMemoryEnabled && (
         <>
@@ -223,7 +234,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             value={config.memoryMaxMessages || 20}
             onChange={(v) => updateConfig("memoryMaxMessages", v)}
             options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
-            accentColor={VIOLET}
+            accentColor={ACCENT}
           />
         </>
       )}
@@ -257,7 +268,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             value={config.outputFormat || "text"}
             onChange={(v) => updateConfig("outputFormat", v)}
             options={["text", "json", "markdown"]}
-            accentColor={VIOLET}
+            accentColor={ACCENT}
           />
 
           <div className="flex flex-col">
@@ -285,7 +296,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             value={config.maxTokens || 8192}
             onChange={(v) => updateConfig("maxTokens", v)}
             options={[4096, 8192, 16384, 32768].map((n) => ({ value: n, label: `${n / 1024}k` }))}
-            accentColor={VIOLET}
+            accentColor={ACCENT}
           />
 
           <div className="flex flex-col">
@@ -313,7 +324,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
             icon={Eye}
             on={!!config.returnIntermediateSteps}
             onChange={(v) => updateConfig("returnIntermediateSteps", v)}
-            accentColor={VIOLET}
+            accentColor={ACCENT}
           />
 
           <ConfigPills
@@ -326,7 +337,7 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               { value: "return", label: "Return Partial" },
               { value: "retry", label: "Auto Retry" },
             ]}
-            accentColor={VIOLET}
+            accentColor={ACCENT}
           />
         </>
       )}

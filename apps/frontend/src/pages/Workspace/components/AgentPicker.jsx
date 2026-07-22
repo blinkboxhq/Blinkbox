@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Brain, Database, Wrench, ArrowLeft, X, Search, Code2, Globe, FileText,
   Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch,
-  Bot, Plug, Sparkles, CheckCircle2, Plus, ChevronRight } from "lucide-react";
+  Bot, Plug, Sparkles, CheckCircle2, Plus, ChevronRight, Layers } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -30,6 +30,22 @@ const AGENT_CATEGORIES = [
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["slack","gmail","discord","telegram","notion","airtable","google_sheets","google_calendar","google_drive","outlook","github","linear","hubspot","jira","asana","stripe","shopify","clickup","twilio","mongodb","postgres","redis_node","azure_devops","calendly","datadog","elevenlabs","firebase","instagram","intercom","linkedin","mailchimp","monday","netlify","onedrive","pagerduty","pinecone","pipedrive","reddit","resend","s3","sendgrid","sentry","sftp","sharepoint","supabase","teams","tiktok","trello","typeform","vercel","web_search","whatsapp","woocommerce","youtube","zendesk","zoom"] },
   { id: "skills",       label: "Skills",       icon: Sparkles,slotId: "skills",       nodes: ["agent_skill"] },
 ];
+
+const CAT_DESC = {
+  chat_model:  "The brain that reasons",
+  memory:      "Recall across runs",
+  tools:       "Actions the agent can call",
+  integration: "Apps the agent can act in",
+  skills:      "Reusable instruction packs",
+};
+
+const CAT_COLORS = {
+  chat_model:  "#6f97e8",
+  memory:      "#a9c0ef",
+  tools:       "#7dd3fc",
+  integration: "#6ee7b7",
+  skills:      "#c4b5fd",
+};
 
 const SLOT_OFFSETS = {
   llm:         { x: -30,  y: 160 },
@@ -150,107 +166,103 @@ export default function AgentPicker() {
     return () => window.removeEventListener("keydown", onKey);
   }, [close, isListPage, isSubCatPage, visibleNodes, focusIdx, selected, currentSlotId, page, search, commitSingle, toggleSelect]);
 
-  const backLabel = isSubCatPage ? "Tools" : page !== "home" ? "Back" : "";
+  const totalCount = AGENT_CATEGORIES.reduce(
+    (a, c) =>
+      a +
+      (c.subCategories
+        ? c.subCategories.reduce((b, sub) => b + sub.nodes.filter(k => NodeRegistry[k]).length, 0)
+        : c.nodes.filter(k => NodeRegistry[k]).length),
+    0,
+  );
+
+  const title = currentSubCat ? currentSubCat.label : currentCat ? currentCat.label : "Add to Agent";
+  const subtitle = currentSubCat
+    ? `${currentSubCat.nodes.filter(k => NodeRegistry[k]).length} tools`
+    : currentCat
+    ? CAT_DESC[currentCat.id]
+    : "Everything an agent can plug into";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={close}
-    >
+    <>
+      <div className="fixed inset-0 z-40" onClick={close} />
       <div
-        className="w-full max-w-[460px] mx-4 bg-[#111113] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-        style={{ maxHeight: "72vh" }}
-        onClick={e => e.stopPropagation()}
+        className="bb-liquid bb-edge-left fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+        style={{ width: "clamp(360px, 32vw, 480px)" }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
+        <div className="shrink-0 px-5 pt-5 pb-3 flex items-start gap-3">
           {page !== "home" && (
             <button
               onClick={() => { setPage(isSubCatPage ? "tools" : "home"); setSearch(""); }}
-              className="p-2 text-white/40 hover:text-white hover:bg-white/[0.07] rounded-xl transition-colors shrink-0"
-              title={`Back to ${backLabel}`}
+              className="w-7 h-7 -ml-1 mt-0.5 shrink-0 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={15} />
             </button>
           )}
-
-          {(isListPage || isSubCatPage) ? (
-            <div className="flex-1 flex items-center gap-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2.5 focus-within:border-white/20 transition-colors">
-              <Search size={14} className="text-white/40 shrink-0" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search…"
-                className="flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-white/35"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="text-white/30 hover:text-white/70 transition-colors">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex-1">
-              <div className="text-[14px] font-bold text-white">Add to Agent</div>
-              <div className="text-[11px] text-white/35 mt-0.5">Model · Memory · Tools · Integrations</div>
-            </div>
-          )}
-
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[16px] font-semibold text-white leading-tight truncate">{title}</h2>
+            <p className="text-[12px] text-neutral-500 mt-1 leading-snug">{subtitle}</p>
+          </div>
           <button
             onClick={close}
-            className="p-2 text-white/40 hover:text-white hover:bg-white/[0.07] rounded-xl transition-colors shrink-0"
+            className="w-7 h-7 shrink-0 mt-0.5 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-colors"
           >
             <X size={15} />
           </button>
         </div>
 
-        {/* Sub-heading when in a sub-page */}
-        {(currentCat || currentSubCat) && !isListPage && !isSubCatPage && page === "tools" && (
-          <div className="px-4 pb-2 shrink-0">
-            <div className="text-[11px] text-white/35 uppercase tracking-wider font-semibold">Tools</div>
-          </div>
-        )}
-        {(currentCat && isListPage) && !query && (
-          <div className="px-4 pb-2 shrink-0">
-            <div className="text-[11px] text-white/35 uppercase tracking-wider font-semibold">{currentCat.label}</div>
-          </div>
-        )}
-        {currentSubCat && !query && (
-          <div className="px-4 pb-2 shrink-0">
-            <div className="text-[11px] text-white/35 uppercase tracking-wider font-semibold">{currentSubCat.label}</div>
+        {(isListPage || isSubCatPage) && (
+          <div className="shrink-0 px-5 pb-3">
+            <div className="bb-input bb-glow-border flex items-center gap-2.5 px-3.5 h-11 rounded-xl focus-within:border-white/[0.22] transition-all">
+              <Search size={15} className="text-neutral-600 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={`Search ${title.toLowerCase()}…`}
+                className="flex-1 bg-transparent text-[14px] text-white font-medium outline-none placeholder:text-neutral-600"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="text-neutral-600 hover:text-white transition-colors shrink-0">
+                  <X size={13} />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-2 pb-2" style={{ scrollbarWidth: "thin", scrollbarColor: "#333 transparent" }}>
-
-          {/* Home — 4 agent categories */}
+        <div
+          className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}
+        >
           {page === "home" && AGENT_CATEGORIES.map(cat => {
             const CatIcon = cat.icon;
             const count = cat.subCategories
-              ? cat.subCategories.reduce((a, s) => a + s.nodes.filter(k => NodeRegistry[k]).length, 0)
+              ? cat.subCategories.reduce((a, sub) => a + sub.nodes.filter(k => NodeRegistry[k]).length, 0)
               : cat.nodes.filter(k => NodeRegistry[k]).length;
             return (
               <button
                 key={cat.id}
                 onClick={() => setPage(cat.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors text-left group"
+                className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 rounded-xl text-left group"
               >
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                  <CatIcon size={18} strokeWidth={1.8} className="text-white/60 group-hover:text-white/90 transition-colors" />
-                </div>
+                <CatIcon
+                  size={24}
+                  strokeWidth={1.7}
+                  className="shrink-0"
+                  style={{ color: CAT_COLORS[cat.id] || "#a3a3a3" }}
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-white leading-tight">{cat.label}</div>
-                  <div className="text-[11px] text-white/35 mt-0.5">{count} available</div>
+                  <div className="text-[14px] font-semibold text-white leading-tight">{cat.label}</div>
+                  <div className="text-[12px] text-neutral-500 mt-0.5 truncate">
+                    {CAT_DESC[cat.id]} · {count}
+                  </div>
                 </div>
-                <ChevronRight size={13} className="text-white/25 shrink-0 group-hover:text-white/50 transition-colors" />
+                <ChevronRight size={16} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
               </button>
             );
           })}
 
-          {/* Tools — sub-category list */}
           {page === "tools" && TOOL_SUBCATEGORIES.map(sub => {
             const SubIcon = sub.icon;
             const count = sub.nodes.filter(k => NodeRegistry[k]).length;
@@ -259,26 +271,23 @@ export default function AgentPicker() {
               <button
                 key={sub.id}
                 onClick={() => setPage(`tools:${sub.id}`)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors text-left group"
+                className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3 rounded-xl text-left group"
               >
-                <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                  <SubIcon size={18} strokeWidth={1.8} className="text-white/60 group-hover:text-white/90 transition-colors" />
-                </div>
+                <SubIcon size={22} strokeWidth={1.7} className="shrink-0 text-neutral-400" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-white leading-tight">{sub.label}</div>
-                  <div className="text-[11px] text-white/35 mt-0.5">{count} tools</div>
+                  <div className="text-[13.5px] font-semibold text-white leading-tight">{sub.label}</div>
+                  <div className="text-[11.5px] text-neutral-500 mt-0.5">{count} tools</div>
                 </div>
-                <ChevronRight size={13} className="text-white/25 shrink-0 group-hover:text-white/50 transition-colors" />
+                <ChevronRight size={16} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
               </button>
             );
           })}
 
-          {/* Node list (flat) */}
           {(isListPage || isSubCatPage) && (
             visibleNodes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <Search size={26} className="text-white/20" />
-                <p className="text-[12px] text-white/35">No results for "{search}"</p>
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Search size={28} className="text-neutral-700" />
+                <p className="text-[13px] text-neutral-500">No results for "{search}"</p>
               </div>
             ) : (
               visibleNodes.map((n, i) => (
@@ -299,35 +308,33 @@ export default function AgentPicker() {
           )}
         </div>
 
-        {/* Multi-select footer */}
-        {selected.length > 0 && (
-          <div className="shrink-0 px-3 py-2.5 border-t border-white/[0.06] flex items-center gap-2">
-            <button onClick={() => setSelected([])} className="p-1.5 text-white/35 hover:text-white hover:bg-white/[0.07] rounded-lg transition-colors shrink-0">
+        {selected.length > 0 ? (
+          <div className="shrink-0 px-5 py-3.5 border-t border-white/[0.06] flex items-center gap-3">
+            <button
+              onClick={() => setSelected([])}
+              className="p-1.5 text-neutral-600 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors shrink-0"
+            >
               <X size={13} />
             </button>
-            <span className="text-[12px] text-white/45 flex-1">{selected.length} selected</span>
+            <span className="text-[12px] text-neutral-500 flex-1">{selected.length} selected</span>
             <button
               onClick={commitAll}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-black text-[12px] font-bold transition-colors hover:bg-white/90"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white text-black text-[12px] font-bold hover:bg-neutral-200 transition-colors"
             >
-              <Plus size={13} />
-              Add {selected.length}
+              <Plus size={13} /> Add {selected.length}
             </button>
           </div>
+        ) : (
+          <div className="shrink-0 px-5 py-3.5 border-t border-white/[0.06] flex items-center gap-2">
+            <Layers size={12} className="text-neutral-600" />
+            <span className="text-[12px] text-neutral-600">{totalCount} components</span>
+            <span className="text-[11px] text-neutral-700 ml-auto">
+              ESC {page !== "home" ? "back" : "close"}
+            </span>
+          </div>
         )}
-
-        {/* Footer hint */}
-        <div className="shrink-0 px-4 py-2.5 border-t border-white/[0.06] flex items-center gap-3">
-          {(isListPage || isSubCatPage) ? (
-            <>
-              <span className="text-[10px] text-white/25">↑↓ navigate</span>
-              <span className="text-[10px] text-white/25">↵ add</span>
-            </>
-          ) : null}
-          <span className="text-[10px] text-white/25">ESC {page !== "home" ? "back" : "close"}</span>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -343,40 +350,42 @@ function AgentNodeRow({ nodeDef, focused, onHover, onSelect, onToggle, selected 
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-100 text-left group ${
-        selected ? "bg-white/[0.09]" : focused ? "bg-white/[0.07]" : "hover:bg-white/[0.05]"
+      className={`bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 rounded-xl text-left group ${
+        selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : ""
       }`}
     >
-      <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+      <div className="w-[26px] h-[26px] shrink-0 flex items-center justify-center">
         {nodeDef.logoUrl ? (
           <img
             src={nodeDef.logoUrl}
             alt={nodeDef.label}
-            className="w-6 h-6 object-contain"
+            className="w-[26px] h-[26px] object-contain"
             style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined}
           />
         ) : Icon ? (
-          <Icon size={18} strokeWidth={1.8} className="text-white/70" />
+          <Icon size={22} strokeWidth={1.7} className="text-neutral-300" />
         ) : (
-          <Bot size={18} strokeWidth={1.8} className="text-white/40" />
+          <Bot size={22} strokeWidth={1.7} className="text-neutral-500" />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-white leading-tight">{nodeDef.label}</div>
+        <div className="text-[14px] font-semibold text-white leading-tight truncate">{nodeDef.label}</div>
         {nodeDef.description && (
-          <div className="text-[11px] text-white/40 mt-0.5 truncate">{nodeDef.description}</div>
+          <div className="text-[12px] text-neutral-500 mt-0.5 truncate">{nodeDef.description}</div>
         )}
       </div>
       {selected ? (
-        <CheckCircle2 size={14} className="text-white shrink-0" />
+        <CheckCircle2 size={16} className="text-white shrink-0" />
       ) : (
-        <button
+        <span
+          role="button"
+          tabIndex={-1}
           onClick={e => { e.stopPropagation(); onToggle(); }}
-          className="opacity-0 group-hover:opacity-100 p-1 text-white/30 hover:text-white hover:bg-white/[0.1] rounded-lg transition-all shrink-0"
+          className="opacity-0 group-hover:opacity-100 p-1 text-neutral-600 hover:text-white hover:bg-white/[0.08] rounded-lg transition-all shrink-0"
           title="Add to selection"
         >
-          <Plus size={12} />
-        </button>
+          <Plus size={13} />
+        </span>
       )}
     </button>
   );
