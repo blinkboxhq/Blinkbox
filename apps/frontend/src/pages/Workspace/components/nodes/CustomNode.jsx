@@ -163,25 +163,25 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
 
   // Dots straddle the bottom border of the card but render above it via zIndex:2
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 8, transform: "translateX(-50%)", zIndex: 2 }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 6, transform: "translateX(-50%)", zIndex: 2 }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
-        className="!opacity-0 !w-5 !h-5 !pointer-events-none"
+        className="!opacity-0 !w-4 !h-4 !pointer-events-none"
         style={{ left: "50%", top: 0, transform: "translateX(-50%)" }} />
 
       {showPlus ? (
         <button
           onClick={e => { e.stopPropagation(); openAgentPicker(parentNodeId); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-4 h-4 bg-zinc-800 border-[2px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
+          className="w-3 h-3 bg-zinc-800 border-[1.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
           style={{ transform: "rotate(45deg)" }}
           title={slot.label}
         >
-          <Plus className="w-2 h-2 text-zinc-300" strokeWidth={3} style={{ transform: "rotate(-45deg)" }} />
+          <Plus className="w-1.5 h-1.5 text-zinc-300" strokeWidth={4} style={{ transform: "rotate(-45deg)" }} />
         </button>
       ) : (
-        <div className="w-4 h-4 border-[2.5px] border-[#1a1a1e]"
+        <div className="w-3 h-3 border-[1.5px] border-[#1a1a1e]"
           style={{ backgroundColor: "#71717a", transform: "rotate(45deg)" }} />
       )}
     </div>
@@ -667,6 +667,8 @@ function CustomNodeImpl({ id, data, selected }) {
     const cardW = 212;
     const cardH = 80;
     const n = AGENT_BOTTOM_SLOTS.length;
+    const slotPad = 30;
+    const slotStep = (cardW - slotPad * 2) / (n - 1);
 
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -699,8 +701,8 @@ function CustomNodeImpl({ id, data, selected }) {
         </motion.div>
 
         {/* Slot labels — below the card bottom border dots */}
-        <div className="absolute left-0 right-0 grid pointer-events-none select-none"
-          style={{ top: cardH + 12, gridTemplateColumns: `repeat(${n}, 1fr)`, height: 18, zIndex: 2 }}>
+        <div className="absolute grid pointer-events-none select-none"
+          style={{ top: cardH + 12, left: slotPad - slotStep / 2, right: slotPad - slotStep / 2, gridTemplateColumns: `repeat(${n}, 1fr)`, height: 18, zIndex: 2 }}>
           {AGENT_BOTTOM_SLOTS.map(slot => (
             <span key={slot.id} className="flex items-center justify-center text-[9px] font-medium text-zinc-500 tracking-wide">
               {slot.label}
@@ -712,7 +714,7 @@ function CustomNodeImpl({ id, data, selected }) {
         {AGENT_BOTTOM_SLOTS.map((slot, i) => (
           <AgentSlotDot key={slot.id} slot={slot} parentNodeId={id}
             hasConnection={getSlotConnected(slot.id)}
-            leftPct={`${(cardW / n) * i + cardW / n / 2}px`}
+            leftPct={`${slotPad + slotStep * i}px`}
             cardH={cardH} />
         ))}
 
