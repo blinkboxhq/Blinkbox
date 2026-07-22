@@ -101,6 +101,9 @@ const ENDPOINTS = {
   novita: "https://api.novita.ai/v3/openai/chat/completions",
   deepinfra: "https://api.deepinfra.com/v1/openai/chat/completions",
   hyperbolic: "https://api.hyperbolic.xyz/v1/chat/completions",
+  zai:      "https://api.z.ai/api/paas/v4/chat/completions",
+  minimax:  "https://api.minimax.io/v1/chat/completions",
+  sakana:   "https://api.sakana.ai/v1/chat/completions",
 };
 
 const DEFAULT_MODELS = {
@@ -123,6 +126,9 @@ const DEFAULT_MODELS = {
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
+  zai:      "glm-5.2",
+  minimax:  "MiniMax-M3",
+  sakana:   "fugu",
 };
 
 const MAX_INPUT_BYTES = 30_000;
@@ -454,6 +460,7 @@ const agentNode = {
       agent_moonshot: "moonshot", agent_novita: "novita", agent_deepinfra: "deepinfra",
       agent_hyperbolic: "hyperbolic", agent_fireworks: "fireworks", agent_cerebras: "cerebras",
       agent_together: "together", agent_openrouter: "openrouter",
+      agent_zai: "zai", agent_minimax: "minimax", agent_sakana: "sakana",
     };
     const _llm = _chatModel?.config || _chatModel;
     const _derivedProvider = _chatModel?.backendType ? BACKENDTYPE_TO_PROVIDER[_chatModel.backendType] : null;
@@ -494,6 +501,9 @@ const agentNode = {
       novita:      "NOVITA_API_KEY",
       deepinfra:   "DEEPINFRA_API_KEY",
       hyperbolic:  "HYPERBOLIC_API_KEY",
+      zai:         "ZAI_API_KEY",
+      minimax:     "MINIMAX_API_KEY",
+      sakana:      "SAKANA_API_KEY",
     };
 
     const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio"]);

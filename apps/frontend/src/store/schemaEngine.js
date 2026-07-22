@@ -113,6 +113,10 @@ export const DEFAULT_SCHEMAS = {
   agent_moonshot: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
   agent_nvidia_nim: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
   agent_perplexity: { result: "string", citations: "array", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
+  agent_openrouter: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
+  agent_zai: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
+  agent_minimax: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
+  agent_sakana: { result: "string", model: "string", tokensUsed: "number", finishReason: "string", provider: "string", operation: "string" },
 
   // Comms Hub
   telegram: { ok: "boolean", messageId: "number", chat: "object", pollId: "string", deleted: "boolean", pinned: "boolean" },
