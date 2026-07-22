@@ -1,10 +1,8 @@
-import { Terminal } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import jsLogo from "./js.svg";
 import {
   ConfigSection, ConfigHeader, ConfigBadge, ConfigLabel, ConfigInput, ConfigBanner,
 } from "@/components/ui/ConfigKit";
-
-const VIOLET = "#a78bfa";
 
 const EDITOR_OPTIONS = {
   minimap: { enabled: false },
@@ -18,6 +16,7 @@ const EDITOR_OPTIONS = {
   wordWrap: "on",
   renderLineHighlight: "none",
   overviewRulerLanes: 0,
+  bracketPairColorization: { enabled: true },
   scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
   fixedOverflowWidgets: true,
 };
@@ -26,12 +25,23 @@ function defineTheme(monaco) {
   monaco.editor.defineTheme("bb-dark", {
     base: "vs-dark",
     inherit: true,
-    rules: [],
+    rules: [
+      { token: "",                foreground: "d4d4d4" },
+      { token: "comment",         foreground: "6a9955", fontStyle: "italic" },
+      { token: "keyword",         foreground: "569cd6" },
+      { token: "string",          foreground: "ce9178" },
+      { token: "number",          foreground: "b5cea8" },
+      { token: "regexp",          foreground: "d16969" },
+      { token: "type",            foreground: "4ec9b0" },
+      { token: "type.identifier", foreground: "4ec9b0" },
+      { token: "delimiter",       foreground: "d4d4d4" },
+    ],
     colors: {
       "editor.background": "#0f0f0f",
       "editorGutter.background": "#0f0f0f",
-      "editorLineNumber.foreground": "#404040",
-      "editorLineNumber.activeForeground": "#a3a3a3",
+      "editor.foreground": "#d4d4d4",
+      "editorLineNumber.foreground": "#737373",
+      "editorLineNumber.activeForeground": "#d4d4d4",
       "editor.selectionBackground": "#ffffff1a",
       "editorCursor.foreground": "#d4d4d4",
       "editorIndentGuide.background1": "#1e1e1e",
@@ -46,8 +56,7 @@ export default function CodeNode({ config = {}, updateConfig }) {
   return (
     <ConfigSection>
       <ConfigHeader
-        icon={Terminal}
-        iconColor={VIOLET}
+        logoUrl={jsLogo}
         title="Run Code"
         subtitle="Execute sandboxed JavaScript — no filesystem or network access"
         badge={<ConfigBadge label="JS" tone="code" />}
@@ -55,7 +64,10 @@ export default function CodeNode({ config = {}, updateConfig }) {
 
       <div className="flex flex-col">
         <ConfigLabel>JavaScript</ConfigLabel>
-        <div className="bb-glow-border rounded-md border border-[#3b3b3b] bg-[#0f0f0f] transition-colors focus-within:border-[#545454]">
+        <div
+          onKeyDown={(e) => { if (e.key !== "Escape") e.stopPropagation(); }}
+          className="bb-glow-border rounded-md border border-[#3b3b3b] bg-[#0f0f0f] transition-colors focus-within:border-[#545454]"
+        >
           <div className="rounded-md overflow-hidden">
             <Editor
               height="240px"
