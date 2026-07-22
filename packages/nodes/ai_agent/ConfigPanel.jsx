@@ -1,8 +1,7 @@
 import { useState } from "react";
 import {
-  Bot, Brain, Database, Zap, Plug, Globe, MessageSquare, Eye, Settings2,
-  ChevronDown, ChevronRight, ArrowRight, Repeat, Hash, Thermometer,
-  ShieldAlert, FileOutput, Fingerprint, Plus,
+  Bot, Globe, MessageSquare, Eye, Settings2, ChevronDown, ChevronRight,
+  Repeat, Hash, Thermometer, ShieldAlert, FileOutput, Fingerprint,
 } from "lucide-react";
 import SmartVariableInput from "@/components/ui/SmartVariableInput";
 import CredentialPicker from "@/components/ui/CredentialPicker";
@@ -22,12 +21,7 @@ const PROMPT_TEMPLATES = [
   { label: "Code reviewer",  prompt: "Review the following code for bugs, security issues, and improvements. Return structured feedback: {{$json.code}}" },
 ];
 
-const SLOTS = [
-  { id: "llm",         label: "Chat Model",   icon: Brain,    hint: "Required" },
-  { id: "memory",      label: "Memory",       icon: Database, hint: "Optional" },
-  { id: "integration", label: "Integrations", icon: Plug,     hint: "Apps" },
-  { id: "tools",       label: "Tools",        icon: Zap,      hint: "Canvas" },
-];
+const SLOT_IDS = ["llm", "memory", "integration", "tools"];
 
 function slotHandles(slotId) {
   return slotId === "llm" ? new Set(["llm", "chat_model"]) : new Set([slotId]);
@@ -41,74 +35,13 @@ function getNodesForSlot(edges, nodes, agentNodeId, slotId) {
     .filter(Boolean);
 }
 
-function nodeTitle(node) {
-  return (
-    node.data?.config?.alias ||
-    node.data?.config?.model ||
-    node.data?.config?.toolName ||
-    node.data?.config?.toolId?.replace(/_/g, " ") ||
-    node.data?.config?.memoryType?.replace(/_/g, " ") ||
-    node.data?.label ||
-    node.data?.backendType
-  );
-}
-
-function SlotRow({ label, icon: Icon, hint, connected = [], onGoTo, onAdd }) {
-  const live = connected.length > 0;
-  return (
-    <div className="flex items-start gap-3 px-3 py-2.5">
-      <span
-        className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center border transition-colors"
-        style={{
-          borderColor: live ? `${ACCENT}59` : "#2b2b2b",
-          backgroundColor: live ? `${ACCENT}14` : "transparent",
-        }}
-      >
-        <Icon className="w-3 h-3" style={{ color: live ? ACCENT : "#525252" }} />
-      </span>
-
-      <span className="flex-1 min-w-0 pt-0.5">
-        <span className="block text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">{label}</span>
-        {!live && <span className="block text-[9px] font-mono text-neutral-700 mt-0.5">{hint}</span>}
-      </span>
-
-      {live ? (
-        <span className="flex flex-wrap gap-1 justify-end max-w-[62%]">
-          {connected.map((n) => (
-            <button
-              key={n.id}
-              type="button"
-              onClick={() => onGoTo(n.id)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-mono transition-opacity hover:opacity-75 max-w-[140px]"
-              style={{ color: ACCENT, backgroundColor: `${ACCENT}14`, borderColor: `${ACCENT}4d` }}
-            >
-              <span className="truncate">{nodeTitle(n)}</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-60 shrink-0" />
-            </button>
-          ))}
-        </span>
-      ) : (
-        <button
-          type="button"
-          onClick={onAdd}
-          className="flex items-center gap-1 px-2 py-1 rounded border border-[#2b2b2b] text-[9px] font-mono text-neutral-600 hover:text-neutral-200 hover:border-[#3b3b3b] transition-colors shrink-0"
-        >
-          <Plus className="w-2.5 h-2.5" /> Add
-        </button>
-      )}
-    </div>
-  );
-}
-
 export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const nodes = useWorkspaceStore((s) => s.nodes);
   const edges = useWorkspaceStore((s) => s.edges);
-  const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
-  const openAgentPicker = useWorkspaceStore((s) => s.openAgentPicker);
   const [advOpen, setAdvOpen] = useState(false);
 
   const bySlot = Object.fromEntries(
-    SLOTS.map((s) => [s.id, getNodesForSlot(edges, nodes, nodeId, s.id)]),
+    SLOT_IDS.map((id) => [id, getNodesForSlot(edges, nodes, nodeId, id)]),
   );
   const llmNode = bySlot.llm[0] || null;
 
@@ -117,8 +50,6 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const prompt = config.prompt || "";
   const maxIterations = config.maxIterations || 5;
   const temperature = config.temperature ?? 0.3;
-
-  const addComponent = () => openAgentPicker?.(nodeId);
 
   const sliderStyle = (pct) => ({
     background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${pct}%, #3b3b3b ${pct}%, #3b3b3b 100%)`,
@@ -138,23 +69,9 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
         }
       />
 
-      <div className="bb-glow-border rounded-md bg-[#0f0f0f] border border-[#2b2b2b] divide-y divide-[#1f1f1f]">
-        {SLOTS.map((s) => (
-          <SlotRow
-            key={s.id}
-            label={s.label}
-            icon={s.icon}
-            hint={s.hint}
-            connected={bySlot[s.id]}
-            onGoTo={setSelectedNodeId}
-            onAdd={addComponent}
-          />
-        ))}
-      </div>
-
       {!llmNode && (
         <ConfigBanner tone="warn">
-          An agent needs a chat model before it can run — add one from the slot row above.
+          An agent needs a chat model before it can run — connect one from the agent node on the canvas.
         </ConfigBanner>
       )}
 
