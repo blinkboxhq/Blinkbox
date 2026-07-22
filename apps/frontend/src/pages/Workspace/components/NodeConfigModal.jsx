@@ -488,6 +488,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
               nodeId={node.id}
               backendType={backendType}
               hideHeader={actionList?.length > 0}
+              hideAction={actionList?.length > 0}
             />
           ) : (
             <div className="flex items-center justify-center h-32 px-6 text-center">

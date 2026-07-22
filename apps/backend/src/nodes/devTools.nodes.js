@@ -134,9 +134,13 @@ export const gitlab = {
           let vars = config.variables;
           if (typeof vars === "string") { try { vars = JSON.parse(vars); } catch { vars = {}; } }
           const body = { ref: config.ref || "main" };
-          if (vars && typeof vars === "object") {
-            body.variables = Object.entries(vars).map(([key, value]) => ({ key, value: String(value) }));
-          }
+          // The panel sends [{ key, value }] rows; older configs sent a plain object.
+          const pairs = Array.isArray(vars)
+            ? vars.filter((v) => v?.key).map((v) => ({ key: v.key, value: String(v.value ?? "") }))
+            : vars && typeof vars === "object"
+              ? Object.entries(vars).map(([key, value]) => ({ key, value: String(value) }))
+              : [];
+          if (pairs.length) body.variables = pairs;
           const res = await axios.post(`${api}/pipeline`, body, { headers, timeout: 15000 });
           return { id: res.data.id, status: res.data.status, ref: res.data.ref, web_url: res.data.web_url };
         }

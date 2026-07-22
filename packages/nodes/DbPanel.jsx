@@ -5,7 +5,7 @@ import SchemaForm from '@nodes/SchemaForm.jsx';
 // on the `operation` slug. Resolve label → slug and keep `operation` in sync.
 export default function DbPanel({
   meta, operations, defaultOperation, icon, colorClass, logoUrl, imgFilter,
-  config = {}, updateConfig, nodeId, hideHeader,
+  config = {}, updateConfig, nodeId, hideHeader, hideAction,
 }) {
   const fromLabel = operations.find((o) => o.label === config.selectedAction)?.value;
   const fromConfig = operations.some((o) => o.value === config.operation) ? config.operation : null;
@@ -27,6 +27,7 @@ export default function DbPanel({
       updateConfig={updateConfig}
       nodeId={nodeId}
       hideHeader={hideHeader}
+      hideAction={hideAction}
     />
   );
 }

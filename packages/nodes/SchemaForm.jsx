@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Settings, Plus, X } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import CredentialPicker from '@/components/ui/CredentialPicker';
@@ -305,7 +306,33 @@ function Field({ field, config, updateConfig, nodeId }) {
 //   nodeId      — passed through to SmartVariableInput
 //   hideHeader  — set by the modal when it already rendered the header above
 //                 its action picker, so the node is not titled twice
-export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId, hideHeader }) {
+//   hideAction  — set by the modal when its own Action dropdown is on screen, so
+//                 the meta's `operation` field isn't asked for twice
+export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgFilter, config = {}, updateConfig, nodeId, hideHeader, hideAction }) {
+  const opField = (meta.fields ?? []).find((f) => f.name === 'operation');
+  const fromLabel = opField?.options?.find((o) => o.label === config.selectedAction)?.value;
+
+  // The Action dropdown writes only `selectedAction`, a display label; the
+  // backend dispatches on the `operation` slug. Resolve one to the other, and
+  // seed the label back when an older node has only the slug — otherwise the
+  // dropdown opens blank on a node that is in fact configured.
+  useEffect(() => {
+    if (!opField) return;
+    const op = hideAction ? fromLabel || config.operation || opField.default
+                          : config.operation || fromLabel || opField.default;
+    if (!op) return;
+    if (op !== config.operation) updateConfig('operation', op);
+    if (hideAction) {
+      const label = opField.options?.find((o) => o.value === op)?.label;
+      if (label && label !== config.selectedAction) updateConfig('selectedAction', label);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromLabel, hideAction]);
+
+  const fields = hideAction && opField
+    ? (meta.fields ?? []).filter((f) => f !== opField)
+    : (meta.fields ?? []);
+
   return (
     <ConfigSection>
       {!hideHeader && (
@@ -319,7 +346,7 @@ export default function SchemaForm({ meta, icon: Icon, colorClass, logoUrl, imgF
         />
       )}
 
-      {(meta.fields ?? []).map((field, i) => (
+      {fields.map((field, i) => (
         <Field key={`${field.name ?? 'f'}-${i}`} field={field} config={config} updateConfig={updateConfig} nodeId={nodeId} />
       ))}
 

@@ -16,6 +16,10 @@ import meta_ssh from "@nodes/ssh/meta.js";
 import meta_sftp from "@nodes/sftp/meta.js";
 import meta_s3 from "@nodes/s3/meta.js";
 import meta_email_parser from "@nodes/email_parser/meta.js";
+import meta_elevenlabs from "@nodes/elevenlabs/meta.js";
+
+import { OPERATIONS as ops_gitlab } from "@nodes/gitlab/ConfigPanel.jsx";
+import { OPERATIONS as ops_azure_devops } from "@nodes/azure_devops/ConfigPanel.jsx";
 
 import { OPERATIONS as ops_telegram } from "@nodes/telegram/ConfigPanel.jsx";
 import { OPERATIONS as ops_whatsapp } from "@nodes/whatsapp/ConfigPanel.jsx";
@@ -181,6 +185,9 @@ const INFRA_OPERATIONS = {
   sftp: opsFromMeta(meta_sftp),
   s3: opsFromMeta(meta_s3),
   email_parser: opsFromMeta(meta_email_parser),
+  elevenlabs: opsFromMeta(meta_elevenlabs),
+  gitlab: ops_gitlab,
+  azure_devops: ops_azure_devops,
 };
 
 const derive = (source) =>
@@ -199,7 +206,7 @@ const INFRA_ACTIONS = derive(INFRA_OPERATIONS);
 
 // Categories whose nodes pick an action inside the config panel dropdown.
 // Anything else with a NODE_ACTIONS entry uses the sidebar's two-step picker.
-export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps", "databases", "data"];
+export const ACTION_PICKER_CATEGORIES = ["ai_models", "apps", "databases", "data", "infra"];
 
 // Categories where a node is one node, one job — never an action picker,
 // in the sidebar or the panel.
