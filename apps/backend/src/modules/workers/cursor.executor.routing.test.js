@@ -173,3 +173,26 @@ test("a merge node waits for a parallel branch that is still pending", async () 
   fresh = await Execution.findById(execution._id);
   assert.ok(fresh.cursors.some((c) => c.nodeId === "C"), "C spawns once both arrive");
 });
+
+// A false result with nothing wired to the false handle is a dead end, not an
+// error — the branch stops and the execution finalizes as a success.
+test("a false condition with an unwired false handle ends the run cleanly", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_condition_false", data: {} },
+      { id: "nTrue", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "n1", target: "nTrue", sourceHandle: "true" }],
+    cursorNode: "n1",
+  });
+
+  const enqueuedBefore = enqueued.length;
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.ok(!fresh.cursors.some((c) => c.nodeId === "nTrue"), "true branch not taken");
+  assert.equal(enqueued.length, enqueuedBefore, "nothing enqueued");
+  assert.equal(fresh.cursors.id(cursorId).status, "completed");
+  assert.equal(fresh.status, "executed", "finalized, not left running");
+  assert.ok(fresh.completedAt, "completedAt is stamped");
+});
