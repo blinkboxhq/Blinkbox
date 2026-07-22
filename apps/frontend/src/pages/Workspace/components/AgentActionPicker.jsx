@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Search, ShieldCheck, Wrench } from "lucide-react";
-import { ConfigLabel, ConfigBanner, BB_ACCENT } from "@/components/ui/ConfigKit";
+import { ConfigLabel, BB_ACCENT } from "@/components/ui/ConfigKit";
 import useIntegrationActions from "@/hooks/useIntegrationActions";
 
 const MAX_DEFAULT = 5;
@@ -137,10 +137,6 @@ export default function AgentActionPicker({ type, value = [], onChange, accentCo
               ))}
             </div>
           )}
-
-          <ConfigBanner>
-            {`The agent can only run the ${effective.length} ticked action${effective.length === 1 ? "" : "s"} — one credential covers them all.`}
-          </ConfigBanner>
         </>
       )}
     </div>

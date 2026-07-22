@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Hash, RefreshCw, Search } from "lucide-react";
-import { ConfigLabel, ConfigBanner, BB_ACCENT } from "@/components/ui/ConfigKit";
+import { ConfigLabel, BB_ACCENT } from "@/components/ui/ConfigKit";
 import api from "@/lib/api";
 
 /**
@@ -12,7 +12,6 @@ export default function AgentResourcePicker({
   type,
   kind,
   label,
-  hint,
   credentialId,
   value = [],
   onChange,
@@ -150,12 +149,6 @@ export default function AgentResourcePicker({
               <div className="px-3 py-4 text-[10px] font-mono text-neutral-600">Nothing to show</div>
             )}
           </div>
-
-          <ConfigBanner>
-            {pinned.length
-              ? `The agent may only use these ${pinned.length} — it gets the real IDs, not names.`
-              : hint || `Pin the ${label.toLowerCase()} the agent may touch, or it has to guess.`}
-          </ConfigBanner>
         </>
       )}
     </div>
