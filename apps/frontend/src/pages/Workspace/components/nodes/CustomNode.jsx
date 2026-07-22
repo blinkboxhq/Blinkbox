@@ -163,7 +163,7 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
 
   // Dots straddle the bottom border of the card but render above it via zIndex:2
   return (
-    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 6, transform: "translateX(-50%)", zIndex: 2 }}
+    <div className="absolute nodrag" style={{ left: leftPct, top: cardH - 7.25, transform: "translateX(-50%)", zIndex: 2 }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
       <Handle type="target" position={Position.Bottom} id={slot.id}
@@ -174,14 +174,14 @@ function AgentSlotDot({ slot, parentNodeId, hasConnection, leftPct, cardH }) {
         <button
           onClick={e => { e.stopPropagation(); openAgentPicker(parentNodeId); }}
           onMouseDown={e => e.stopPropagation()}
-          className="w-3 h-3 bg-zinc-800 border-[1.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
+          className="w-[14.5px] h-[14.5px] bg-zinc-800 border-[1.5px] border-zinc-500 flex items-center justify-center hover:border-zinc-300 active:scale-95 transition-all duration-100"
           style={{ transform: "rotate(45deg)" }}
           title={slot.label}
         >
-          <Plus className="w-1.5 h-1.5 text-zinc-300" strokeWidth={4} style={{ transform: "rotate(-45deg)" }} />
+          <Plus className="w-2 h-2 text-zinc-300" strokeWidth={3.5} style={{ transform: "rotate(-45deg)" }} />
         </button>
       ) : (
-        <div className="w-3 h-3 border-[1.5px] border-[#1a1a1e]"
+        <div className="w-[14.5px] h-[14.5px] border-[1.5px] border-[#1a1a1e]"
           style={{ backgroundColor: "#71717a", transform: "rotate(45deg)" }} />
       )}
     </div>
