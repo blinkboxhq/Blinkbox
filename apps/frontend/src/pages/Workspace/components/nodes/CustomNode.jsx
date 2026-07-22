@@ -110,7 +110,7 @@ const AGENT_BOTTOM_SLOTS = [
     icon: Database,
     color: "#c084fc",
     accentColor: "192,132,252",
-    allowedTypes: ["agent_memory"],
+    allowedTypes: ["agent_memory", "agent_memory_window"],
     single: true,
     showPlus: false,
   },
@@ -208,7 +208,7 @@ function getConfigHint(data, edges, nodeId) {
     return "tools agent";
   }
   if (data.backendType === "agent_llm") return data.config?.model || (data.config?.provider || "");
-  if (data.backendType === "agent_memory") return data.config?.memoryType?.replace(/_/g, " ") || "memory";
+  if (data.backendType?.startsWith("agent_memory")) return data.config?.sessionName || "default session";
   if (data.backendType === "agent_tool") {
     const toolId = data.config?.toolId;
     return toolId ? (data.config?.toolName || toolId.replace(/_/g, " ")) : "pick a tool";

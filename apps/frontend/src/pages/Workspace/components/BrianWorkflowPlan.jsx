@@ -38,10 +38,10 @@ const CRED_META = {
   agent_integration_postgres:        { label: 'PostgreSQL URI',          credentialType: 'api_key',  hint: 'postgresql://...' },
   agent_integration_redis:           { label: 'Redis URL',               credentialType: 'api_key',  hint: 'redis://...' },
   // Agent memory
-  agent_memory_supabase:             { label: 'Supabase (Memory)',       credentialType: 'api_key',  hint: 'service_role key' },
-  agent_memory_pinecone:             { label: 'Pinecone API Key',        credentialType: 'api_key',  hint: 'pc-...' },
-  agent_memory_postgres:             { label: 'PostgreSQL Memory URI',   credentialType: 'api_key',  hint: 'postgresql://...' },
-  agent_memory_redis:                { label: 'Redis Memory URL',        credentialType: 'api_key',  hint: 'redis://...' },
+  agent_memory:                      { label: 'OpenAI Embedding Key',    credentialType: 'api_key',  hint: 'sk-... — turns memories into vectors' },
+  agent_memory_supabase:             { label: 'OpenAI Embedding Key',    credentialType: 'api_key',  hint: 'sk-... — turns memories into vectors' },
+  agent_memory_pinecone:             { label: 'OpenAI Embedding Key',    credentialType: 'api_key',  hint: 'sk-... — turns memories into vectors' },
+  agent_memory_mongodb:              { label: 'OpenAI Embedding Key',    credentialType: 'api_key',  hint: 'sk-... — turns memories into vectors' },
 
   // Direct service nodes — Google
   gmail:                             { label: 'Gmail',                   credentialType: 'oauth',    oauthProvider: 'google',    accentColor: 'red' },
@@ -93,7 +93,7 @@ function roleForNode(node) {
   const bt = node.data?.backendType || node.backendType || '';
   if (node.data?.type === 'trigger' || bt.endsWith('_trigger') || bt === 'manual' || bt === 'webhook') return 'Trigger';
   if (bt === 'ai_agent') return 'Agent';
-  if (bt.startsWith('agent_memory_')) return 'Memory';
+  if (bt.startsWith('agent_memory')) return 'Memory';
   if (bt.startsWith('agent_integration_')) return 'Integrations';
   if (bt.startsWith('agent_')) return 'Model';
   return 'Steps';

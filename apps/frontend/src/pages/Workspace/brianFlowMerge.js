@@ -8,7 +8,7 @@ export function brianEdgeKey(edge) {
 }
 
 const MODEL_BT = new Set(["agent_anthropic", "agent_openai", "agent_gemini", "agent_xai", "agent_deepseek", "agent_moonshot", "agent_nvidia_nim", "agent_perplexity", "agent_openrouter", "agent_zai", "agent_minimax", "agent_sakana"]);
-const MEMORY_BT = new Set(["agent_memory_supabase", "agent_memory_pinecone", "agent_memory_postgres", "agent_memory_redis"]);
+const isMemoryBT = (bt) => bt === "agent_memory" || bt.startsWith("agent_memory_");
 const TOOL_BT = new Set(["agent_tool"]);
 const INTEG_PREFIX = "agent_integration_";
 const HUB_HANDLES = new Set(["llm", "chat_model", "memory", "integration", "tools"]);
@@ -33,7 +33,7 @@ function isTrigger(node) {
 function slotFor(node) {
   const bt = backendType(node);
   if (MODEL_BT.has(bt)) return "llm";
-  if (MEMORY_BT.has(bt)) return "memory";
+  if (isMemoryBT(bt)) return "memory";
   if (bt.startsWith(INTEG_PREFIX)) return "integration";
   if (TOOL_BT.has(bt)) return "tools";
   return null;
@@ -103,7 +103,7 @@ function visualRepairBrianFlow(flow = {}) {
     nodes.forEach((node) => {
       const bt = backendType(node);
       if (MODEL_BT.has(bt)) node.position = { ...LAYOUT.model };
-      if (MEMORY_BT.has(bt)) node.position = { ...LAYOUT.memory };
+      if (isMemoryBT(bt)) node.position = { ...LAYOUT.memory };
     });
 
     const integrations = nodes.filter((node) => backendType(node).startsWith(INTEG_PREFIX));

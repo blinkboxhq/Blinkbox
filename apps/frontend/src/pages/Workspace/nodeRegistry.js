@@ -258,7 +258,6 @@ import DelayNode from "@nodes/delay/ConfigPanel.jsx";
 import InformerNode from "@nodes/informer/ConfigPanel.jsx";
 import AIAgentNode from "@nodes/ai_agent/ConfigPanel.jsx";
 import AgentLLMNode from "@nodes/agent_llm/ConfigPanel.jsx";
-import AgentMemoryNode from "@nodes/agent_memory/ConfigPanel.jsx";
 import AgentToolNode from "@nodes/agent_tool/ConfigPanel.jsx";
 import AgentSkillNode from "@nodes/agent_skill/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
@@ -873,14 +872,14 @@ export const NodeRegistry = {
     description: "LLM powering the AI Agent",
   },
   agent_memory: {
-    label: "Memory",
-    icon: Database,
+    label: "Vector Memory",
+    icon: Brain,
     colorClass: "text-purple-400",
     accentColor: "192,132,252",
-    ConfigPanel: AgentMemoryNode,
+    ConfigPanel: makeAgentMemoryPanel({ label: "Vector Memory", semantic: true }),
     category: "ai_agent",
     agentOnly: true,
-    description: "Conversation memory for the AI Agent",
+    description: "Remembers recent messages and recalls older ones by meaning",
   },
   agent_tool: {
     label: "Tool",
@@ -1134,6 +1133,8 @@ export const NodeRegistry = {
   },
 
   // ── Dedicated Agent Memory Nodes ──
+  // Every one of these runs on our own store (Redis window + Mongo vectors);
+  // the provider name is branding, `semantic` is the only behavioural switch.
   agent_memory_window: {
     label: "Window Buffer",
     icon: MemoryStick,
@@ -1141,10 +1142,8 @@ export const NodeRegistry = {
     accentColor: "167,139,250",
     category: "ai_agent",
     agentOnly: true,
-    description: "In-memory sliding window of recent messages",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "Window Buffer",
-    }),
+    description: "Keeps the last N messages of the conversation",
+    ConfigPanel: makeAgentMemoryPanel({ label: "Window Buffer" }),
   },
   agent_memory_redis: {
     label: "Redis",
@@ -1154,13 +1153,8 @@ export const NodeRegistry = {
     accentColor: "220,56,45",
     category: "ai_agent",
     agentOnly: true,
-    description: "Persist conversation memory in Redis",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "Redis",
-      logoUrl: imgRedis,
-      hasConnectionString: true,
-      connectionStringPlaceholder: "redis://localhost:6379",
-    }),
+    description: "Keeps the last N messages of the conversation",
+    ConfigPanel: makeAgentMemoryPanel({ label: "Redis", logoUrl: imgRedis }),
   },
   agent_memory_mongodb: {
     label: "MongoDB",
@@ -1170,15 +1164,8 @@ export const NodeRegistry = {
     accentColor: "71,162,72",
     category: "ai_agent",
     agentOnly: true,
-    description: "Semantic memory stored as vectors in MongoDB",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "MongoDB",
-      logoUrl: imgMongoDB,
-      credentialType: "OpenAI",
-      isVector: true,
-      hasConnectionString: true,
-      connectionStringPlaceholder: "mongodb+srv://...",
-    }),
+    description: "Semantic memory stored as vectors",
+    ConfigPanel: makeAgentMemoryPanel({ label: "MongoDB", logoUrl: imgMongoDB, semantic: true }),
   },
   agent_memory_postgres: {
     label: "PostgreSQL",
@@ -1188,14 +1175,8 @@ export const NodeRegistry = {
     accentColor: "91,155,213",
     category: "ai_agent",
     agentOnly: true,
-    description: "Persist conversation memory in PostgreSQL",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "PostgreSQL",
-      logoUrl: imgPostgres,
-      credentialType: "OpenAI",
-      hasConnectionString: true,
-      connectionStringPlaceholder: "postgresql://user:pass@host/db",
-    }),
+    description: "Keeps the last N messages of the conversation",
+    ConfigPanel: makeAgentMemoryPanel({ label: "PostgreSQL", logoUrl: imgPostgres }),
   },
   agent_memory_pinecone: {
     label: "Pinecone",
@@ -1205,13 +1186,8 @@ export const NodeRegistry = {
     accentColor: "26,115,232",
     category: "ai_agent",
     agentOnly: true,
-    description: "Vector memory using Pinecone",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "Pinecone",
-      logoUrl: imgPinecone,
-      credentialType: "OpenAI",
-      isVector: true,
-    }),
+    description: "Semantic memory stored as vectors",
+    ConfigPanel: makeAgentMemoryPanel({ label: "Pinecone", logoUrl: imgPinecone, semantic: true }),
   },
   agent_memory_supabase: {
     label: "Supabase",
@@ -1221,13 +1197,8 @@ export const NodeRegistry = {
     accentColor: "62,207,142",
     category: "ai_agent",
     agentOnly: true,
-    description: "Persist conversation memory in Supabase",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "Supabase",
-      logoUrl: imgSupabase,
-      credentialType: "OpenAI",
-      isVector: true,
-    }),
+    description: "Semantic memory stored as vectors",
+    ConfigPanel: makeAgentMemoryPanel({ label: "Supabase", logoUrl: imgSupabase, semantic: true }),
   },
   agent_memory_zep: {
     label: "Zep",
@@ -1237,13 +1208,8 @@ export const NodeRegistry = {
     accentColor: "124,58,237",
     category: "ai_agent",
     agentOnly: true,
-    description: "Long-term memory with Zep",
-    ConfigPanel: makeAgentMemoryPanel({
-      label: "Zep",
-      logoUrl: imgZep,
-      hasConnectionString: true,
-      connectionStringPlaceholder: "http://localhost:8000",
-    }),
+    description: "Keeps the last N messages of the conversation",
+    ConfigPanel: makeAgentMemoryPanel({ label: "Zep", logoUrl: imgZep }),
   },
 
   // ── Agent Integrations — platform nodes attached via the Integration slot ──────

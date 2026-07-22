@@ -1,4 +1,4 @@
-import { Brain, Database, Layers, Link2, Sparkles } from "lucide-react";
+import { Brain, Clock, Database, Layers, Sparkles } from "lucide-react";
 import CredentialPicker from "@/components/ui/CredentialPicker";
 import {
   ConfigSection,
@@ -22,39 +22,25 @@ const MATCH_LEVELS = [
   { value: "0.85", label: "Exact — only near-identical matches" },
 ];
 
-export default function makeAgentMemoryPanel({
-  label,
-  logoUrl,
-  imgFilter,
-  credentialType,
-  hasConnectionString = false,
-  connectionStringPlaceholder = "connection string",
-  isVector = false,
-  hasWindowSize = false,
-}) {
+/**
+ * One panel for every memory provider. `semantic` is the only real switch: it
+ * decides whether each turn is also embedded into the vector store and recalled
+ * by meaning. Every field below is one the backend actually reads.
+ */
+export default function makeAgentMemoryPanel({ label, logoUrl, imgFilter, semantic = false }) {
   return function AgentMemoryPanel({ config = {}, updateConfig }) {
     const num = (key, fallback) => String(config[key] ?? fallback);
 
     return (
       <div className="flex flex-col gap-4 p-4 bg-[#0d0d0f] min-h-full">
         <ConfigHeader
-          icon={Brain}
+          icon={semantic ? Brain : Clock}
           logoUrl={logoUrl}
           imgFilter={imgFilter}
           iconColor={ACCENT}
           title={label}
-          subtitle={isVector ? "Semantic memory — recalled by meaning" : "Conversation memory"}
+          subtitle={semantic ? "Semantic memory — recalled by meaning" : "Conversation memory"}
         />
-
-        {hasConnectionString && (
-          <ConfigInput
-            label="Connection String"
-            icon={Link2}
-            value={config.connectionString || ""}
-            onChange={(v) => updateConfig("connectionString", v)}
-            placeholder={connectionStringPlaceholder}
-          />
-        )}
 
         <ConfigSection>
           <ConfigInput
@@ -68,7 +54,7 @@ export default function makeAgentMemoryPanel({
 
           <ConfigInput
             label="Messages To Remember"
-            icon={Database}
+            icon={Clock}
             type="number"
             value={num("windowSize", 20)}
             onChange={(v) => updateConfig("windowSize", parseInt(v, 10) || 20)}
@@ -76,7 +62,7 @@ export default function makeAgentMemoryPanel({
           />
         </ConfigSection>
 
-        {isVector && (
+        {semantic && (
           <ConfigSection>
             <ConfigInput
               label="Memories To Keep"
@@ -116,17 +102,18 @@ export default function makeAgentMemoryPanel({
           </ConfigSection>
         )}
 
-        {credentialType && (
+        {semantic && (
           <CredentialPicker
             value={config.credentialId || ""}
             onChange={(id) => updateConfig("credentialId", id)}
-            type={credentialType}
-            label={`${label} Credential`}
-            placeholder={`Select ${label} credential…`}
+            credentialType="OpenAI"
+            accentColor="violet"
+            label="Embedding Key"
+            placeholder="Select OpenAI credential…"
           />
         )}
 
-        {isVector && !config.credentialId && (
+        {semantic && !config.credentialId && (
           <ConfigBanner tone="warn">
             Semantic recall needs an OpenAI key to turn memories into vectors. Without one the
             agent still remembers recent messages, but not older ones.

@@ -25,7 +25,7 @@ const TOOL_SUBCATEGORIES = [
 
 const AGENT_CATEGORIES = [
   { id: "chat_model",   label: "Chat Model",   icon: Brain,   slotId: "llm",         nodes: ["agent_openai","agent_anthropic","agent_gemini","agent_perplexity","agent_xai","agent_deepseek","agent_moonshot","agent_nvidia_nim", "agent_openrouter", "agent_zai", "agent_minimax", "agent_sakana"] },
-  { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory_window","agent_memory_redis","agent_memory_mongodb","agent_memory_postgres","agent_memory_pinecone","agent_memory_supabase","agent_memory_zep"] },
+  { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory","agent_memory_window"] },
   { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        subCategories: TOOL_SUBCATEGORIES },
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["slack","gmail","discord","telegram","notion","airtable","google_sheets","google_calendar","google_drive","outlook","github","linear","hubspot","jira","asana","stripe","shopify","clickup","twilio","mongodb","postgres","redis_node","azure_devops","calendly","datadog","elevenlabs","firebase","instagram","intercom","linkedin","mailchimp","monday","netlify","onedrive","pagerduty","pinecone","pipedrive","reddit","resend","s3","sendgrid","sentry","sftp","sharepoint","supabase","teams","tiktok","trello","typeform","vercel","web_search","whatsapp","woocommerce","youtube","zendesk","zoom"] },
   { id: "skills",       label: "Skills",       icon: Sparkles,slotId: "skills",       nodes: ["agent_skill"] },
