@@ -205,6 +205,7 @@ export function toPlatformTool(node) {
     credentialId: cfg.credentialId,
     alias: cfg.alias || "",
     enabledActions: Array.isArray(cfg.enabledActions) ? cfg.enabledActions.filter(Boolean) : [],
+    resources: cfg.resources && typeof cfg.resources === "object" ? cfg.resources : null,
   };
 }
 

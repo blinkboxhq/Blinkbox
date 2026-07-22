@@ -23,12 +23,16 @@ export default function useIntegrationActions(type) {
       .then((res) => {
         const actions = res.data?.actions;
         if (!alive || !Array.isArray(actions)) return;
-        const payload = { actions, defaultOperation: res.data?.defaultOperation || null };
+        const payload = {
+          actions,
+          defaultOperation: res.data?.defaultOperation || null,
+          resources: Array.isArray(res.data?.resources) ? res.data.resources : [],
+        };
         cache.set(type, payload);
         setState(payload);
       })
       .catch(() => {
-        if (alive) setState({ actions: [], defaultOperation: null });
+        if (alive) setState({ actions: [], defaultOperation: null, resources: [] });
       });
     return () => {
       alive = false;
@@ -38,6 +42,7 @@ export default function useIntegrationActions(type) {
   return {
     actions: state?.actions || [],
     defaultOperation: state?.defaultOperation || null,
+    resources: state?.resources || [],
     loading: state === null && Boolean(type),
   };
 }

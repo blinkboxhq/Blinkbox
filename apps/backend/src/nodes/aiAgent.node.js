@@ -57,6 +57,7 @@ import {
   runIntegrationOperation,
   humanize as humanizeAction,
 } from "./integrationManifest.js";
+import { describeResources, applyResourceDefaults } from "./integrationResources.js";
 
 // Platform integration nodes — imported for autonomous tool use
 import _slackNode    from "./integrations/slack.node.js";
@@ -1151,13 +1152,16 @@ async function assembleTools({
         : type;
       if (seen.has(toolName)) continue;
 
+      const pinned = pt.resources || null;
+
       const spec = PLATFORM_TOOL_SPECS[type];
       if (spec) {
         tools.push({
           name: toolName,
           description: alias ? `${spec.description} (${alias})` : spec.description,
-          parameters: restrictOperations(spec.parameters, enabled),
-          execute: (args) => spec.run(args, credentialId, workspaceId, inputAttachments),
+          parameters: describeResources(type, pinned, restrictOperations(spec.parameters, enabled)),
+          execute: (args) =>
+            spec.run(applyResourceDefaults(type, args, pinned), credentialId, workspaceId, inputAttachments),
         });
         seen.add(toolName);
         continue;
@@ -1175,8 +1179,9 @@ async function assembleTools({
       tools.push({
         name: toolName,
         description: `${humanizeAction(type)} integration${alias ? ` (${alias})` : ""}. Available operations: ${opList}.`,
-        parameters: derived.parameters,
-        execute: (args) => runIntegrationOperation(type, args, credentialId, workspaceId),
+        parameters: describeResources(type, pinned, derived.parameters),
+        execute: (args) =>
+          runIntegrationOperation(type, applyResourceDefaults(type, args, pinned), credentialId, workspaceId),
       });
       seen.add(toolName);
     }

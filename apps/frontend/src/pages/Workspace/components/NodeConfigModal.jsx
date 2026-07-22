@@ -579,6 +579,8 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
                 type: intType,
                 credentialId: src.data.config.credentialId,
                 alias: src.data.config.alias || "",
+                enabledActions: src.data.config.enabledActions || [],
+                resources: src.data.config.resources || null,
               });
             }
           }

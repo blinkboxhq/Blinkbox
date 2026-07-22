@@ -2,6 +2,8 @@ import { Plug } from "lucide-react";
 import CredentialPicker from "@/components/ui/CredentialPicker";
 import { ConfigSection, ConfigHeader, ConfigBadge, ConfigInput, ConfigBanner } from "@/components/ui/ConfigKit";
 import AgentActionPicker from "../AgentActionPicker";
+import AgentResourcePicker from "../AgentResourcePicker";
+import useIntegrationActions from "@/hooks/useIntegrationActions";
 import { NodeRegistry } from "../../nodeRegistry";
 
 // --bb-accent from index.css :root
@@ -20,6 +22,10 @@ export default function IntegrationPanel({ type, config = {}, updateConfig, node
   const label = def.label || type;
   const oauth = OAUTH_BY_APP[type] || null;
   const connected = !!config.credentialId;
+  const { resources } = useIntegrationActions(type);
+  const pinned = config.resources && typeof config.resources === "object" ? config.resources : {};
+
+  const setResource = (kind, list) => updateConfig("resources", { ...pinned, [kind]: list });
 
   return (
     <ConfigSection>
@@ -67,6 +73,20 @@ export default function IntegrationPanel({ type, config = {}, updateConfig, node
         onChange={(v) => updateConfig("enabledActions", v)}
         accentColor={ACCENT}
       />
+
+      {resources.map((r) => (
+        <AgentResourcePicker
+          key={r.kind}
+          type={type}
+          kind={r.kind}
+          label={r.label}
+          hint={r.hint}
+          credentialId={config.credentialId}
+          value={pinned[r.kind]}
+          onChange={(v) => setResource(r.kind, v)}
+          accentColor={ACCENT}
+        />
+      ))}
     </ConfigSection>
   );
 }
