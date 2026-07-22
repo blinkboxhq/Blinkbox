@@ -7,15 +7,15 @@ export default {
     {
       name: "operation", label: "Operation", type: "options", cols: 2, default: "createIncident",
       options: [
-        { value: "createIncident",      label: "Create Incident" },
-        { value: "getIncident",         label: "Get Incident" },
-        { value: "listIncidents",       label: "List Incidents" },
-        { value: "resolveIncident",     label: "Resolve Incident" },
-        { value: "acknowledgeIncident", label: "Acknowledge Incident" },
-        { value: "updateIncident",      label: "Update Incident" },
-        { value: "addNote",             label: "Add Note" },
-        { value: "listServices",        label: "List Services" },
-        { value: "listOnCalls",         label: "List On-Calls" },
+        { value: "createIncident",      label: "Create Incident", desc: "Open a new incident on a service" },
+        { value: "getIncident",         label: "Get Incident", desc: "Fetch one incident by ID" },
+        { value: "listIncidents",       label: "List Incidents", desc: "List incidents, filtered by status" },
+        { value: "resolveIncident",     label: "Resolve Incident", desc: "Mark an incident as resolved" },
+        { value: "acknowledgeIncident", label: "Acknowledge Incident", desc: "Acknowledge an incident so paging stops" },
+        { value: "updateIncident",      label: "Update Incident", desc: "Change an incident's priority or assignee" },
+        { value: "addNote",             label: "Add Note", desc: "Add a timeline note to an incident" },
+        { value: "listServices",        label: "List Services", desc: "List services you can page" },
+        { value: "listOnCalls",         label: "List On-Calls", desc: "See who is on call right now" },
       ],
     },
 
@@ -35,7 +35,7 @@ export default {
     { name: "incidentId", label: "Incident ID", type: "string", smart: true, show: { operation: ["getIncident", "resolveIncident", "acknowledgeIncident", "updateIncident", "addNote"] } },
 
     {
-      name: "listStatus", label: "Status", type: "options", cols: 3, optional: true,
+      name: "statuses", label: "Status", type: "options", cols: 3, optional: true,
       options: [
         { value: "triggered",     label: "Triggered" },
         { value: "acknowledged",  label: "Acknowledged" },
@@ -44,34 +44,33 @@ export default {
       show: { operation: ["listIncidents"] },
     },
     {
-      name: "listUrgency", label: "Urgency", type: "options", cols: 2, optional: true,
+      name: "urgency", label: "Urgency", type: "options", cols: 2, optional: true,
       options: [
         { value: "high", label: "High" },
         { value: "low",  label: "Low" },
       ],
       show: { operation: ["listIncidents"] },
     },
-    { name: "listLimit", label: "Limit", type: "number", default: 25, show: { operation: ["listIncidents"] } },
+    { name: "limit", label: "Limit", type: "number", default: 25, show: { operation: ["listIncidents"] } },
 
-    { name: "from", label: "From (Email)", type: "string", smart: true, placeholder: "requester@email.com", show: { operation: ["resolveIncident", "acknowledgeIncident", "updateIncident", "addNote"] } },
+    { name: "fromEmail", label: "From (Email)", type: "string", smart: true, placeholder: "requester@email.com", show: { operation: ["resolveIncident", "acknowledgeIncident", "updateIncident", "addNote"] } },
 
     {
-      name: "updateStatus", label: "Status", type: "options", cols: 2,
+      name: "status", label: "Status", type: "options", cols: 2,
       options: [
         { value: "acknowledged", label: "Acknowledged" },
         { value: "resolved",     label: "Resolved" },
       ],
       show: { operation: ["updateIncident"] },
     },
-    { name: "updateTitle", label: "Title", type: "string", smart: true, optional: true, show: { operation: ["updateIncident"] } },
-    { name: "assignmentIds", label: "Assignee User IDs", type: "string", smart: true, optional: true, hint: "Comma-separated user IDs", show: { operation: ["updateIncident"] } },
+    { name: "title", label: "Title", type: "string", smart: true, optional: true, show: { operation: ["updateIncident"] } },
+    { name: "assigneeId", label: "Assignee User ID", type: "string", smart: true, optional: true, hint: "PagerDuty user ID to assign", show: { operation: ["createIncident"] } },
 
-    { name: "noteContent", label: "Note", type: "string", smart: true, multiline: true, show: { operation: ["addNote"] } },
+    { name: "content", label: "Note", type: "string", smart: true, multiline: true, show: { operation: ["addNote"] } },
 
-    { name: "servicesLimit", label: "Limit", type: "number", default: 25, show: { operation: ["listServices"] } },
-    { name: "teamIds", label: "Team IDs", type: "string", smart: true, optional: true, hint: "Comma-separated", show: { operation: ["listServices"] } },
+    { name: "limit", label: "Limit", type: "number", default: 25, show: { operation: ["listServices"] } },
 
-    { name: "scheduleIds", label: "Schedule IDs", type: "string", smart: true, optional: true, hint: "Comma-separated", show: { operation: ["listOnCalls"] } },
+    { name: "scheduleId", label: "Schedule IDs", type: "string", smart: true, optional: true, hint: "Comma-separated", show: { operation: ["listOnCalls"] } },
     { name: "since", label: "Since", type: "string", smart: true, optional: true, show: { operation: ["listOnCalls"] } },
     { name: "until", label: "Until", type: "string", smart: true, optional: true, show: { operation: ["listOnCalls"] } },
   ],

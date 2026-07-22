@@ -32,6 +32,13 @@ import { assertSafeUrlResolved } from "../utils/ssrf.js";
 const MAX_RESPONSE_BYTES = 25 * 1024 * 1024; // 25 MB for binary downloads
 const MAX_TIMEOUT_MS = 60000;
 
+// The config panel collects headers and query params as [{ key, value }] rows;
+// older saved workflows stored them as plain objects. Accept both.
+const pairsToObject = (v) =>
+  Array.isArray(v)
+    ? Object.fromEntries(v.filter((r) => r?.key).map((r) => [r.key, r.value ?? ""]))
+    : v || {};
+
 export default {
   toolDefinition: {
     name: "http_request",
@@ -91,7 +98,7 @@ export default {
 
     await guardUrl(url);
 
-    const finalHeaders = { "Content-Type": "application/json", ...headers };
+    const finalHeaders = { "Content-Type": "application/json", ...pairsToObject(headers) };
     const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
 
     // Vault: resolve + decrypt credentials at runtime
@@ -128,7 +135,7 @@ export default {
           method: method.toUpperCase(),
           headers: finalHeaders,
           data: ["POST", "PUT", "PATCH"].includes(method.toUpperCase()) ? body : undefined,
-          params: redirects === 0 ? queryParams : undefined,
+          params: redirects === 0 ? pairsToObject(queryParams) : undefined,
           timeout: clampedTimeout,
           maxContentLength: MAX_RESPONSE_BYTES,
           maxRedirects: 0,

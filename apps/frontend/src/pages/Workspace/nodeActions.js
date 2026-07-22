@@ -1,9 +1,21 @@
 // Per-node action list — shown in AddNodeSidebar two-step picker
 // Each entry: { name, description, icon?, value? }
 //
-// App nodes are NOT listed by hand: their actions are derived from the same
-// OPERATIONS array their config panel renders, so the picker can never offer
-// an action the panel doesn't know how to run.
+// App, database, data and infra nodes are NOT listed by hand: their actions are
+// derived from the same operation list their config panel renders, so the picker
+// can never offer an action the panel doesn't know how to run.
+
+import { opsFromMeta } from "@nodes/metaOps.js";
+import meta_github from "@nodes/github/meta.js";
+import meta_sentry from "@nodes/sentry/meta.js";
+import meta_vercel from "@nodes/vercel/meta.js";
+import meta_netlify from "@nodes/netlify/meta.js";
+import meta_pagerduty from "@nodes/pagerduty/meta.js";
+import meta_datadog from "@nodes/datadog/meta.js";
+import meta_ssh from "@nodes/ssh/meta.js";
+import meta_sftp from "@nodes/sftp/meta.js";
+import meta_s3 from "@nodes/s3/meta.js";
+import meta_email_parser from "@nodes/email_parser/meta.js";
 
 import { OPERATIONS as ops_telegram } from "@nodes/telegram/ConfigPanel.jsx";
 import { OPERATIONS as ops_whatsapp } from "@nodes/whatsapp/ConfigPanel.jsx";
@@ -156,6 +168,21 @@ const DATA_OPERATIONS = {
   data_mapper: ops_data_mapper,
 };
 
+// Infra nodes read their action list from the same meta their SchemaForm panel
+// renders, so the picker can never offer an operation the panel has no fields for.
+const INFRA_OPERATIONS = {
+  github: opsFromMeta(meta_github),
+  sentry: opsFromMeta(meta_sentry),
+  vercel: opsFromMeta(meta_vercel),
+  netlify: opsFromMeta(meta_netlify),
+  pagerduty: opsFromMeta(meta_pagerduty),
+  datadog: opsFromMeta(meta_datadog),
+  ssh: opsFromMeta(meta_ssh),
+  sftp: opsFromMeta(meta_sftp),
+  s3: opsFromMeta(meta_s3),
+  email_parser: opsFromMeta(meta_email_parser),
+};
+
 const derive = (source) =>
   Object.fromEntries(
     Object.entries(source).map(([key, ops]) => [
@@ -168,6 +195,7 @@ const AI_ACTIONS = derive(AI_OPERATIONS);
 const APP_ACTIONS = derive(APP_OPERATIONS);
 const DB_ACTIONS = derive(DB_OPERATIONS);
 const DATA_ACTIONS = derive(DATA_OPERATIONS);
+const INFRA_ACTIONS = derive(INFRA_OPERATIONS);
 
 // Categories whose nodes pick an action inside the config panel dropdown.
 // Anything else with a NODE_ACTIONS entry uses the sidebar's two-step picker.
@@ -397,45 +425,6 @@ const BUILTIN_ACTIONS = {
   // ── Integrations: Productivity ────────────────────────────────────────────────
 
   // ── Developer Tools ──────────────────────────────────────────────────────────
-  github: [
-    { name: "List Issues", description: "List open or closed issues in a repository" },
-    { name: "Get Issue", description: "Fetch a single issue with labels and assignees" },
-    { name: "Create Issue", description: "Open a new issue in a GitHub repository" },
-    { name: "Update Issue", description: "Edit title, body, labels, assignees or state" },
-    { name: "Close Issue", description: "Close an issue with a reason" },
-    { name: "Add Labels", description: "Add labels to an existing issue" },
-    { name: "Add Comment", description: "Add a comment to an issue or PR" },
-    { name: "List Comments", description: "List comments on an issue or PR" },
-    { name: "List Pull Requests", description: "List open, closed or all PRs" },
-    { name: "Get Pull Request", description: "Fetch a PR with diff stats and merge state" },
-    { name: "Create Pull Request", description: "Open a new PR from a branch" },
-    { name: "Update Pull Request", description: "Edit a PR's title, body, base or state" },
-    { name: "Merge Pull Request", description: "Merge a PR via merge, squash or rebase" },
-    { name: "List PR Files", description: "List files changed in a pull request" },
-    { name: "Request Reviewers", description: "Request reviews from users or teams" },
-    { name: "Submit Review", description: "Approve, request changes or comment on a PR" },
-    { name: "Create / Update File", description: "Commit a new or updated file to a repo" },
-    { name: "Get File", description: "Read a file's content or list a directory" },
-    { name: "Delete File", description: "Remove a file with a commit" },
-    { name: "List Branches", description: "List all branches in a repository" },
-    { name: "Get Branch", description: "Fetch a branch and its head SHA" },
-    { name: "Create Branch", description: "Create a new branch from another branch" },
-    { name: "List Commits", description: "List commits, filterable by branch or path" },
-    { name: "Get Commit", description: "Fetch a commit with stats and changed files" },
-    { name: "Create Release", description: "Publish a new release for a tag" },
-    { name: "List Releases", description: "List a repository's releases" },
-    { name: "Latest Release", description: "Get the most recent published release" },
-    { name: "Workflow Runs", description: "List GitHub Actions workflow runs" },
-    { name: "Dispatch Workflow", description: "Trigger a workflow_dispatch run" },
-    { name: "Get Repository", description: "Fetch metadata about a repository" },
-    { name: "My Repositories", description: "List repos for the authenticated user" },
-    { name: "Create Repository", description: "Create a new repo under a user or org" },
-    { name: "Get User", description: "Fetch a public GitHub user profile" },
-    { name: "My Profile", description: "Get the authenticated user's profile" },
-    { name: "Search Issues", description: "Search issues and PRs across GitHub" },
-    { name: "Search Repositories", description: "Search public repositories" },
-    { name: "Search Code", description: "Search code across GitHub" },
-  ],
   azure_devops: [
     { name: "Create Work Item", description: "Create a new task, bug, or user story" },
     { name: "Get Work Item", description: "Fetch a specific work item by ID" },
@@ -469,205 +458,6 @@ const BUILTIN_ACTIONS = {
     { name: "List Iterations", description: "List a team's iterations (sprints)" },
     { name: "List Areas", description: "List area paths in a project" },
   ],
-  sentry: [
-    { name: "List Issues", description: "Fetch issues from a Sentry project with filters" },
-    { name: "Get Issue", description: "Fetch a single issue by its ID" },
-    { name: "Update Issue", description: "Change an issue's status or assignee" },
-    { name: "Resolve Issue", description: "Mark a Sentry issue as resolved" },
-    { name: "Ignore Issue", description: "Mute an issue so it stops alerting" },
-    { name: "Assign Issue", description: "Assign an issue to a team member" },
-    { name: "Delete Issue", description: "Permanently delete an issue" },
-    { name: "List Events", description: "List error events for an issue" },
-    { name: "Latest Event", description: "Fetch the most recent event for an issue" },
-    { name: "List Issue Comments", description: "Read activity-note comments on an issue" },
-    { name: "Add Issue Comment", description: "Post a note comment on an issue" },
-    { name: "List Issue Tags", description: "List the tags recorded on an issue" },
-    { name: "List Projects", description: "List all projects in an organization" },
-    { name: "Get Project", description: "Fetch a single project by slug" },
-    { name: "Create Project", description: "Create a project under a team" },
-    { name: "Update Project", description: "Rename or reconfigure a project" },
-    { name: "List DSN Keys", description: "List a project's client DSN keys" },
-    { name: "List Project Issues", description: "List issues scoped to one project" },
-    { name: "List Releases", description: "List releases in an organization" },
-    { name: "Get Release", description: "Fetch a single release by version" },
-    { name: "Create Release", description: "Create a release across projects" },
-    { name: "Finalize Release", description: "Mark a release as released" },
-    { name: "Create Deploy", description: "Record a deploy for a release" },
-    { name: "List Deploys", description: "List deploys for a release" },
-    { name: "List Teams", description: "List teams in an organization" },
-    { name: "List Team Projects", description: "List projects owned by a team" },
-    { name: "List Team Members", description: "List members of a team" },
-    { name: "List Organizations", description: "List orgs your token can access" },
-    { name: "Get Organization", description: "Fetch details for one organization" },
-    { name: "List Org Members", description: "List members of an organization" },
-    { name: "Capture Event", description: "Send a custom event to a project DSN" },
-  ],
-  vercel: [
-    { name: "List Deployments", description: "List recent deployments with state filter" },
-    { name: "Get Deployment", description: "Fetch a single deployment by ID" },
-    { name: "Trigger Deploy", description: "Deploy a project from a git branch" },
-    { name: "Redeploy", description: "Re-run a previous deployment" },
-    { name: "Promote to Prod", description: "Promote a deployment to production" },
-    { name: "Cancel Deploy", description: "Stop a running deployment" },
-    { name: "Delete Deploy", description: "Permanently delete a deployment" },
-    { name: "List Files", description: "List the file tree of a deployment" },
-    { name: "Build Logs", description: "Fetch build/runtime events for a deployment" },
-    { name: "Deploy Aliases", description: "List aliases assigned to a deployment" },
-    { name: "List Projects", description: "List all projects in the account or team" },
-    { name: "Get Project", description: "Fetch a single project by name or ID" },
-    { name: "Create Project", description: "Create a new project, optionally git-linked" },
-    { name: "Update Project", description: "Change project framework, build, or root dir" },
-    { name: "Delete Project", description: "Permanently delete a project" },
-    { name: "Pause Project", description: "Pause production deployments for a project" },
-    { name: "Unpause Project", description: "Resume a paused project" },
-    { name: "List Project Domains", description: "List domains attached to a project" },
-    { name: "Add Project Domain", description: "Attach a domain to a project" },
-    { name: "Remove Project Domain", description: "Detach a domain from a project" },
-    { name: "Verify Project Domain", description: "Trigger verification of a project domain" },
-    { name: "List Env Vars", description: "List a project's environment variables" },
-    { name: "Get Env Var", description: "Fetch one env var, optionally decrypted" },
-    { name: "Create Env Var", description: "Add an env var to a project" },
-    { name: "Update Env Var", description: "Change an existing env var's value or targets" },
-    { name: "Delete Env Var", description: "Remove an env var from a project" },
-    { name: "List Account Domains", description: "List domains owned by the account" },
-    { name: "Get Domain", description: "Fetch details for an account domain" },
-    { name: "Add Account Domain", description: "Register a domain on the account" },
-    { name: "Remove Domain", description: "Delete a domain from the account" },
-    { name: "Check Domain Availability", description: "Check if a domain can be purchased" },
-    { name: "List DNS Records", description: "List DNS records for a domain" },
-    { name: "Create DNS Record", description: "Add an A/CNAME/MX/TXT DNS record" },
-    { name: "Delete DNS Record", description: "Remove a DNS record by ID" },
-    { name: "List Aliases", description: "List aliases for the account or a project" },
-    { name: "Assign Alias", description: "Point an alias at a deployment" },
-    { name: "Delete Alias", description: "Remove an alias" },
-    { name: "List Teams", description: "List teams the token can access" },
-    { name: "Get Team", description: "Fetch details for a team" },
-    { name: "List Team Members", description: "List members of a team" },
-    { name: "List Edge Configs", description: "List the account's Edge Config stores" },
-    { name: "Current User", description: "Fetch the authenticated Vercel user" },
-  ],
-  netlify: [
-    { name: "List Sites", description: "List all sites in the account" },
-    { name: "Get Site", description: "Fetch a single site by ID" },
-    { name: "Create Site", description: "Create a new site, optionally git-linked" },
-    { name: "Update Site", description: "Change a site's name, domain, or build settings" },
-    { name: "Delete Site", description: "Permanently delete a site" },
-    { name: "List Deploys", description: "Fetch recent deploy history for a site" },
-    { name: "Get Deploy", description: "Check the status of a single deploy" },
-    { name: "Create Deploy", description: "Start a new deploy for a site" },
-    { name: "Cancel Deploy", description: "Cancel a currently running deploy" },
-    { name: "Restore Deploy", description: "Roll a site back to a previous deploy" },
-    { name: "Lock Deploy", description: "Prevent new deploys from auto-publishing" },
-    { name: "Unlock Deploy", description: "Resume auto-publishing of deploys" },
-    { name: "List Deploy Files", description: "List the files in a deploy" },
-    { name: "Trigger Build", description: "Kick off a fresh build for a site" },
-    { name: "List Builds", description: "List build history for a site" },
-    { name: "Get Build", description: "Fetch a single build by ID" },
-    { name: "List Functions", description: "List a site's serverless functions" },
-    { name: "List Forms", description: "List forms detected on a site" },
-    { name: "List Submissions", description: "List submissions for a form" },
-    { name: "Delete Submission", description: "Delete a form submission" },
-    { name: "List Env Vars", description: "List environment variables for a site" },
-    { name: "Get Env Var", description: "Fetch one env var by key" },
-    { name: "Set Env Var", description: "Create or update an env var on a site" },
-    { name: "Delete Env Var", description: "Remove an env var from a site" },
-    { name: "List DNS Zones", description: "List managed DNS zones" },
-    { name: "Get DNS Zone", description: "Fetch a single DNS zone" },
-    { name: "List DNS Records", description: "List records in a DNS zone" },
-    { name: "Create DNS Record", description: "Add an A/CNAME/MX/TXT record" },
-    { name: "Delete DNS Record", description: "Remove a DNS record by ID" },
-    { name: "List Hooks", description: "List notification/build hooks for a site" },
-    { name: "Create Hook", description: "Add a deploy-event webhook to a site" },
-    { name: "Delete Hook", description: "Remove a hook by ID" },
-    { name: "List Accounts", description: "List Netlify accounts/teams you belong to" },
-    { name: "List Account Members", description: "List members of an account" },
-    { name: "Current User", description: "Fetch the authenticated Netlify user" },
-  ],
-  pagerduty: [
-    { name: "List Incidents", description: "List incidents with status/service/urgency filters" },
-    { name: "Get Incident", description: "Fetch a single incident by ID" },
-    { name: "Create Incident", description: "Trigger a new PagerDuty incident" },
-    { name: "Update Incident", description: "Change an incident's title, status, urgency or priority" },
-    { name: "Resolve Incident", description: "Resolve an active incident" },
-    { name: "Acknowledge Incident", description: "Acknowledge an incident to stop escalation" },
-    { name: "Snooze Incident", description: "Snooze an incident for a duration" },
-    { name: "Merge Incidents", description: "Merge source incidents into a target incident" },
-    { name: "Add Note", description: "Add a note to an active incident" },
-    { name: "List Notes", description: "List all notes on an incident" },
-    { name: "Add Responder", description: "Request a user to respond to an incident" },
-    { name: "List Alerts", description: "List alerts attached to an incident" },
-    { name: "List Log Entries", description: "List the timeline log entries of an incident" },
-    { name: "List Services", description: "List PagerDuty services" },
-    { name: "Get Service", description: "Fetch a service by ID" },
-    { name: "Create Service", description: "Create a new service with an escalation policy" },
-    { name: "Update Service", description: "Update a service's name, status or policy" },
-    { name: "Delete Service", description: "Delete a service" },
-    { name: "List Escalation Policies", description: "List escalation policies" },
-    { name: "Get Escalation Policy", description: "Fetch an escalation policy by ID" },
-    { name: "Delete Escalation Policy", description: "Delete an escalation policy" },
-    { name: "List Schedules", description: "List on-call schedules" },
-    { name: "Get Schedule", description: "Fetch a schedule with its on-call layers" },
-    { name: "List Overrides", description: "List schedule overrides in a time window" },
-    { name: "Create Override", description: "Override a schedule for a user and time range" },
-    { name: "List On-Calls", description: "Find who is on-call, filtered by policy/schedule/user" },
-    { name: "List Users", description: "List PagerDuty users" },
-    { name: "Get User", description: "Fetch a user by ID" },
-    { name: "Get Current User", description: "Fetch the authenticated user" },
-    { name: "List Contact Methods", description: "List a user's contact methods" },
-    { name: "List Teams", description: "List teams" },
-    { name: "Get Team", description: "Fetch a team by ID" },
-    { name: "List Team Members", description: "List the members of a team" },
-    { name: "List Priorities", description: "List configured incident priorities" },
-    { name: "Trigger Event", description: "Fire an Events API v2 alert via routing key" },
-    { name: "Acknowledge Event", description: "Acknowledge an Events API v2 alert by dedup key" },
-    { name: "Resolve Event", description: "Resolve an Events API v2 alert by dedup key" },
-  ],
-  datadog: [
-    { name: "Submit Metric", description: "Post a custom metric point to Datadog" },
-    { name: "Query Metrics", description: "Query a timeseries with a metric query" },
-    { name: "List Active Metrics", description: "List metrics actively reporting" },
-    { name: "Get Metric Metadata", description: "Fetch a metric's metadata" },
-    { name: "Update Metric Metadata", description: "Edit a metric's description, unit or type" },
-    { name: "Search Metrics", description: "Search the metric catalog" },
-    { name: "Create Event", description: "Send an event to the Datadog event stream" },
-    { name: "Get Event", description: "Fetch an event by ID" },
-    { name: "List Events", description: "List events in a time window" },
-    { name: "Create Monitor", description: "Set up a Datadog alert monitor" },
-    { name: "Get Monitor", description: "Fetch a monitor by ID" },
-    { name: "List Monitors", description: "List monitors with tag/name filters" },
-    { name: "Update Monitor", description: "Edit a monitor's query, message or tags" },
-    { name: "Delete Monitor", description: "Delete a monitor" },
-    { name: "Mute Monitor", description: "Temporarily silence a monitor" },
-    { name: "Unmute Monitor", description: "Re-enable a muted monitor" },
-    { name: "Search Monitors", description: "Search monitors by query" },
-    { name: "Send Log", description: "Push a log entry to Datadog Logs" },
-    { name: "Search Logs", description: "Query the Datadog log explorer" },
-    { name: "List Dashboards", description: "List all dashboards" },
-    { name: "Get Dashboard", description: "Fetch a dashboard by ID" },
-    { name: "Delete Dashboard", description: "Delete a dashboard" },
-    { name: "List Downtimes", description: "List scheduled downtimes" },
-    { name: "Schedule Downtime", description: "Mute alerts for a scope and time range" },
-    { name: "Cancel Downtime", description: "Cancel an active downtime" },
-    { name: "List Hosts", description: "List reporting hosts with a filter" },
-    { name: "Get Host Totals", description: "Get active/up host counts" },
-    { name: "Mute Host", description: "Mute alerts for a host" },
-    { name: "Unmute Host", description: "Unmute a host" },
-    { name: "Get Host Tags", description: "Get the tags on a host" },
-    { name: "Add Host Tags", description: "Add tags to a host" },
-    { name: "List SLOs", description: "List service level objectives" },
-    { name: "Get SLO", description: "Fetch an SLO by ID" },
-    { name: "Delete SLO", description: "Delete an SLO" },
-    { name: "List Incidents", description: "List incidents" },
-    { name: "Get Incident", description: "Fetch an incident by ID" },
-    { name: "Create Incident", description: "Declare a new incident" },
-    { name: "Update Incident", description: "Change an incident's title or status" },
-    { name: "List Synthetic Tests", description: "List synthetic monitoring tests" },
-    { name: "Get Synthetic Test", description: "Fetch a synthetic test by public ID" },
-    { name: "Trigger Synthetic Test", description: "Run a synthetic test on demand" },
-    { name: "List Users", description: "List org users" },
-    { name: "Get User", description: "Fetch a user by ID" },
-    { name: "Post Service Check", description: "Submit a service check status" },
-  ],
   npm_package_info: [
     { name: "Get Package Info", description: "Fetch metadata for an npm package" },
     { name: "Get Latest Version", description: "Find the latest published version" },
@@ -685,19 +475,6 @@ const BUILTIN_ACTIONS = {
     { name: "Exec in Container", description: "Run a command inside a running container" },
     { name: "Stop Container", description: "Gracefully stop a running container" },
     { name: "Remove Container", description: "Delete a stopped container" },
-  ],
-  ssh: [
-    { name: "Execute Command", description: "Run a shell command on a remote server via SSH" },
-    { name: "Transfer File (SCP)", description: "Upload or download a file via SCP" },
-    { name: "Run Script", description: "Execute a multi-line script on a remote host" },
-    { name: "Check Server Status", description: "Ping a server and verify it's reachable" },
-  ],
-  sftp: [
-    { name: "Upload File", description: "Transfer a file to an SFTP server" },
-    { name: "Download File", description: "Fetch a file from an SFTP server" },
-    { name: "List Files", description: "List files in an SFTP directory" },
-    { name: "Delete File", description: "Remove a file from an SFTP server" },
-    { name: "Create Directory", description: "Create a new directory on an SFTP server" },
   ],
   grpc_call: [
     { name: "Unary Call", description: "Make a single request/response gRPC call" },
@@ -1112,4 +889,4 @@ const BUILTIN_ACTIONS = {
   // ── Apps (blue in-panel action dropdown) ─────────────────────────────────────
 };
 
-export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...AI_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS, ...DATA_ACTIONS };
+export const NODE_ACTIONS = { ...BUILTIN_ACTIONS, ...AI_ACTIONS, ...APP_ACTIONS, ...DB_ACTIONS, ...DATA_ACTIONS, ...INFRA_ACTIONS };

@@ -326,6 +326,7 @@ import LinkedInNode from "@nodes/linkedin/ConfigPanel.jsx";
 import ResendNode from "@nodes/resend/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
 import SshTriggerNode from "@triggers/ssh/ConfigPanel.jsx";
+import SshNode from "@nodes/ssh/ConfigPanel.jsx";
 import DockerTriggerNode from "@triggers/docker/ConfigPanel.jsx";
 import JiraTriggerNode from "@triggers/jira/ConfigPanel.jsx";
 import TrelloTriggerNode from "@triggers/trello/ConfigPanel.jsx";
@@ -1776,6 +1777,7 @@ export const NodeRegistry = {
     logoUrl: imgHTTP,
     ConfigPanel: HttpRequestNode,
     category: "infra",
+    description: "Call any REST API with headers, auth, body and retries",
   },
   postgres: {
     label: "PostgreSQL",
@@ -1895,6 +1897,7 @@ export const NodeRegistry = {
     imgFilter: "brightness(0) invert(1)",
     ConfigPanel: InformerNode,
     category: "infra",
+    description: "Extract text, links and structured data from any web page",
   },
   web_search: {
     label: "Web Search",
@@ -1904,6 +1907,7 @@ export const NodeRegistry = {
     accentColor: "129,140,248",
     ConfigPanel: WebSearchNode,
     category: "infra",
+    description: "Search the web and return ranked results with snippets",
   },
   // Logic & Flow
   delay: {
@@ -2108,6 +2112,7 @@ export const NodeRegistry = {
     logoUrl: imgGitHub,
     ConfigPanel: GithubNode,
     category: "infra",
+    description: "Manage GitHub issues, pull requests, releases and repos",
   },
   jira: {
     label: "Jira",
@@ -2205,6 +2210,7 @@ export const NodeRegistry = {
     logoUrl: imgElevenLabs,
     ConfigPanel: ElevenLabsNode,
     category: "infra",
+    description: "Generate lifelike speech from text with ElevenLabs voices",
   },
   pinecone: {
     label: "Pinecone",
@@ -2492,7 +2498,7 @@ export const NodeRegistry = {
     colorClass: "text-white",
     accentColor: "161,161,170",
     logoUrl: imgSsh,
-    ConfigPanel: SshTriggerNode,
+    ConfigPanel: SshNode,
     category: "infra",
     description: "Run a command on a remote server via SSH and capture output",
   },

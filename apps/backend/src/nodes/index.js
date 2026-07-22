@@ -193,6 +193,7 @@ import onedrive       from "./integrations/onedrive.node.js";
 import sharepoint     from "./integrations/sharepoint.node.js";
 import box            from "./integrations/box.node.js";
 import sftp           from "./integrations/sftp.node.js";
+import ssh            from "./integrations/ssh.node.js";
 
 // Social & publishing
 import twitter        from "./integrations/twitter.node.js";
@@ -413,6 +414,7 @@ const rawNodeRegistry = {
   sharepoint: sharepoint,
   box:        box,
   sftp:       sftp,
+  ssh:        ssh,
 
   // ── Social & publishing ───────────────────────────────────────────────────
   twitter:   twitter,

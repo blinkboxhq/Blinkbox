@@ -10,11 +10,11 @@ export default {
     {
       name: "operation", label: "Extract Type", type: "options", cols: 2, default: "extractInvoice",
       options: [
-        { value: "extractInvoice", label: "Invoice" },
-        { value: "extractOrder", label: "Order" },
-        { value: "extractContact", label: "Contact" },
-        { value: "extractMeeting", label: "Meeting" },
-        { value: "extractCustom", label: "Custom" },
+        { value: "extractInvoice", label: "Invoice", desc: "Pull invoice number, totals and line items" },
+        { value: "extractOrder", label: "Order", desc: "Pull order ID, items and shipping details" },
+        { value: "extractContact", label: "Contact", desc: "Pull name, email, phone and company" },
+        { value: "extractMeeting", label: "Meeting", desc: "Pull title, time, location and attendees" },
+        { value: "extractCustom", label: "Custom", desc: "Pull fields you describe in your own words" },
       ],
     },
     {
@@ -22,7 +22,7 @@ export default {
       placeholder: "{{ $json.body }}",
     },
     {
-      name: "customFields", label: "Fields to Extract (comma-separated)", type: "string", smart: false,
+      name: "customSchema", label: "Fields to Extract (comma-separated)", type: "string", smart: false,
       placeholder: "name, email, phone, company",
       show: { operation: "extractCustom" },
     },

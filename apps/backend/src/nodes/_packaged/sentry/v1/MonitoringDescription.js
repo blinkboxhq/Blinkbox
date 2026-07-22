@@ -12,10 +12,13 @@ async function opCaptureEvent(config, ctx) {
   if (!m) return skip("captureEvent", "invalid DSN format");
   const [, key, host, projectId] = m;
   if (!/^[\w.-]+$/.test(host)) return skip("captureEvent", "invalid DSN host");
+  const tags = Array.isArray(config.tags)
+    ? Object.fromEntries(config.tags.filter((r) => r && r.key).map((r) => [r.key, r.value]))
+    : config.tags || {};
   const data = await axios
     .post(
       `https://${host}/api/${projectId}/store/`,
-      { message: config.message || "BlinkBox event", level: config.level || "error", tags: config.tags || {} },
+      { message: config.message || "BlinkBox event", level: config.level || "error", tags },
       { headers: { "X-Sentry-Auth": `Sentry sentry_version=7,sentry_key=${key}` }, timeout: 10000 }
     )
     .then((r) => r.data);

@@ -1,1 +1,35 @@
-export default { backendType: "text_to_speech" };
+export default {
+  backendType: "text_to_speech",
+  label: "Text to Speech",
+  description: "Turn text into spoken audio with OpenAI or ElevenLabs voices.",
+  fields: [
+    { name: "text", type: "string", label: "Text", smart: true, multiline: true,
+      placeholder: "{{ $json.text }}" },
+    { name: "provider", type: "options", label: "Provider", default: "openai", options: [
+      { value: "openai",     label: "OpenAI" },
+      { value: "elevenlabs", label: "ElevenLabs" },
+    ]},
+    { name: "credentialId", type: "credential", label: "API Key", accentColor: "violet" },
+    { name: "voice", type: "options", label: "Voice", default: "alloy", options: [
+      { value: "alloy",   label: "Alloy" },
+      { value: "echo",    label: "Echo" },
+      { value: "fable",   label: "Fable" },
+      { value: "onyx",    label: "Onyx" },
+      { value: "nova",    label: "Nova" },
+      { value: "shimmer", label: "Shimmer" },
+    ], show: { provider: "openai" } },
+    { name: "speed", type: "number", label: "Speed", default: 1,
+      hint: "0.25 to 4.0", show: { provider: "openai" } },
+    { name: "voiceId", type: "string", label: "Voice ID", smart: true,
+      default: "pNInz6obpgDQGcFmaJgB",
+      hint: "Copy from your ElevenLabs voice library",
+      show: { provider: "elevenlabs" } },
+    { name: "stability", type: "number", label: "Stability", default: 0.5,
+      hint: "0 is expressive, 1 is monotone", show: { provider: "elevenlabs" } },
+    { name: "similarityBoost", type: "number", label: "Similarity", default: 0.75,
+      show: { provider: "elevenlabs" } },
+    { name: "model", type: "string", label: "Model", smart: false,
+      hint: "Blank uses the provider default" },
+  ],
+  outputs: ["audioBase64", "mimeType", "provider", "voice"],
+};

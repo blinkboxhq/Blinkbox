@@ -10,23 +10,18 @@ export default {
     {
       name: "operation", label: "Operation", type: "options", cols: 2, default: "executeCommand",
       options: [
-        { value: "executeCommand", label: "Execute Command" },
-        { value: "uploadFile",     label: "Upload File" },
-        { value: "downloadFile",   label: "Download File" },
-        { value: "listFiles",      label: "List Files" },
+        { value: "executeCommand", label: "Execute Command", desc: "Run a shell command and capture its output" },
+        { value: "uploadFile",     label: "Upload File", desc: "Write a file to the remote host" },
+        { value: "downloadFile",   label: "Download File", desc: "Read a file from the remote host" },
+        { value: "listFiles",      label: "List Files", desc: "List the contents of a remote directory" },
       ],
     },
 
     { name: "command", label: "Command", type: "string", smart: true, multiline: true, placeholder: "ls -la /home", show: { operation: ["executeCommand"] } },
     { name: "timeout", label: "Timeout (ms)", type: "number", default: 30000, show: { operation: ["executeCommand"] } },
 
-    { name: "localPath", label: "Local Path", type: "string", smart: true, placeholder: "/tmp/file.txt", show: { operation: ["uploadFile"] } },
+    { name: "content", label: "File Content", type: "string", smart: true, multiline: true, placeholder: "{{ $json.data }}", show: { operation: ["uploadFile"] } },
     { name: "remotePath", label: "Remote Path", type: "string", smart: true, placeholder: "/home/ubuntu/file.txt", show: { operation: ["uploadFile", "downloadFile", "listFiles"] } },
-
-    { name: "downloadRemotePath", label: "Remote Path", type: "string", smart: true, show: { operation: ["downloadFile"] } },
-    { name: "downloadLocalPath", label: "Local Path", type: "string", smart: true, show: { operation: ["downloadFile"] } },
-
-    { name: "listPath", label: "Remote Path", type: "string", smart: true, default: "/home", show: { operation: ["listFiles"] } },
   ],
   outputs: ["output", "stdout", "stderr", "exitCode", "files"],
 };
