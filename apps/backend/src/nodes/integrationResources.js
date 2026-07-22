@@ -49,6 +49,77 @@ export const RESOURCE_SPECS = {
       },
     },
   },
+  airtable: {
+    bases: {
+      label: "Bases",
+      hint: "Bases the agent may read or write.",
+      param: "baseId",
+      operation: "listBases",
+      map: (r) =>
+        (r?.bases || []).map((b) => ({ id: b.id, label: b.name, meta: b.permissionLevel || "" })),
+    },
+  },
+  mongodb: {
+    collections: {
+      label: "Collections",
+      hint: "Collections the agent may query or write.",
+      param: "collection",
+      operation: "listCollections",
+      map: (r) => (r?.collections || []).map((n) => ({ id: String(n), label: String(n) })),
+    },
+  },
+  google_sheets: {
+    spreadsheet: {
+      field: true,
+      label: "Spreadsheet ID",
+      hint: "The long id in the sheet URL, between /d/ and /edit.",
+      param: "spreadsheetId",
+      placeholder: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+    },
+  },
+  jira: {
+    site: {
+      field: true,
+      label: "Site Domain",
+      hint: "Your Atlassian site, without https://",
+      param: "domain",
+      placeholder: "mycompany.atlassian.net",
+    },
+  },
+  zendesk: {
+    site: {
+      field: true,
+      label: "Subdomain",
+      hint: "The first part of your Zendesk URL.",
+      param: "subdomain",
+      placeholder: "mycompany",
+    },
+  },
+  shopify: {
+    store: {
+      field: true,
+      label: "Store Domain",
+      param: "shop",
+      placeholder: "mystore.myshopify.com",
+    },
+  },
+  woocommerce: {
+    store: {
+      field: true,
+      label: "Store URL",
+      param: "storeUrl",
+      placeholder: "https://mystore.com",
+    },
+  },
+  azure_devops: {
+    org: {
+      field: true,
+      label: "Organization",
+      hint: "The organization segment of your dev.azure.com URL.",
+      param: "organization",
+      placeholder: "my-org",
+    },
+  },
 };
 
 /** Resource kinds an app exposes — panel metadata, no credential needed. */
@@ -60,6 +131,8 @@ export function listResourceKinds(type) {
     label: s.label,
     hint: s.hint || "",
     param: s.param,
+    type: s.field ? "field" : "list",
+    placeholder: s.placeholder || "",
   }));
 }
 
@@ -67,6 +140,7 @@ export function listResourceKinds(type) {
 export async function fetchResource(type, kind, credentialId, workspaceId) {
   const spec = RESOURCE_SPECS[type]?.[kind];
   if (!spec) return { options: [], error: `Unknown resource "${kind}" for ${type}.` };
+  if (spec.field) return { options: [] };
   const res = await runIntegrationOperation(
     type,
     { operation: spec.operation, ...(spec.args || {}) },
@@ -84,7 +158,19 @@ const pinnedFor = (type, resources) => {
   const spec = RESOURCE_SPECS[type];
   if (!spec || !resources || typeof resources !== "object") return [];
   return Object.entries(spec)
-    .map(([kind, s]) => ({ param: s.param, spec: s, list: Array.isArray(resources[kind]) ? resources[kind] : [] }))
+    .map(([kind, s]) => {
+      const raw = resources[kind];
+      // A field resource is one account-level value typed once, not a picked
+      // list — carry it as a list of one so it pins and fills the same way.
+      const list = s.field
+        ? typeof raw === "string" && raw.trim()
+          ? [{ id: raw.trim(), label: raw.trim() }]
+          : []
+        : Array.isArray(raw)
+          ? raw
+          : [];
+      return { param: s.param, spec: s, list };
+    })
     .filter((e) => e.list.length);
 };
 
@@ -118,7 +204,9 @@ export function applyResourceDefaults(type, args = {}, resources) {
     const given = out[param];
     let resolved = null;
 
-    if (given === undefined || given === null || given === "") {
+    if (spec.field) {
+      resolved = list[0].id;
+    } else if (given === undefined || given === null || given === "") {
       if (list.length === 1) resolved = list[0].id;
     } else if (list.some((o) => o.id === given)) {
       resolved = given;

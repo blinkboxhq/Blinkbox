@@ -57,18 +57,29 @@ export default function IntegrationPanel({ type, config = {}, updateConfig, node
         accentColor={ACCENT}
       />
 
-      {resources.map((r) => (
-        <AgentResourcePicker
-          key={r.kind}
-          type={type}
-          kind={r.kind}
-          label={r.label}
-          credentialId={config.credentialId}
-          value={pinned[r.kind]}
-          onChange={(v) => setResource(r.kind, v)}
-          accentColor={ACCENT}
-        />
-      ))}
+      {resources.map((r) =>
+        r.type === "field" ? (
+          <ConfigInput
+            key={r.kind}
+            label={r.label}
+            value={typeof pinned[r.kind] === "string" ? pinned[r.kind] : ""}
+            onChange={(v) => setResource(r.kind, v)}
+            placeholder={r.placeholder}
+            hint={r.hint}
+          />
+        ) : (
+          <AgentResourcePicker
+            key={r.kind}
+            type={type}
+            kind={r.kind}
+            label={r.label}
+            credentialId={config.credentialId}
+            value={pinned[r.kind]}
+            onChange={(v) => setResource(r.kind, v)}
+            accentColor={ACCENT}
+          />
+        ),
+      )}
     </ConfigSection>
   );
 }
