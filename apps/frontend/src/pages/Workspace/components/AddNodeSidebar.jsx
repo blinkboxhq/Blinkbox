@@ -48,6 +48,7 @@ export default function AddNodeSidebar() {
   const clearAddNodeModal = useWorkspaceStore((s) => s.clearAddNodeModal);
   const onConnect         = useWorkspaceStore((s) => s.onConnect);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
+  const insertNodesOnEdge = useWorkspaceStore((s) => s.insertNodesOnEdge);
 
   useEffect(() => { inputRef.current?.focus(); }, [catPage, pendingNode]);
 
@@ -74,6 +75,13 @@ export default function AddNodeSidebar() {
   }, [nodes, addNodeSource]);
 
   const commitOne = useCallback((nodeDef, action = null) => {
+    if (addNodeSource === "__edge__") {
+      const spliced = insertNodesOnEdge([{ backendType: nodeDef.key, label: action?.name || nodeDef.label, config: actionConfig(action) }]);
+      playNodeLand();
+      close();
+      if (spliced) setSelectedNodeId(spliced);
+      return;
+    }
     const pos   = basePosition();
     const newId = `${nodeDef.key}-${crypto.randomUUID()}`;
     addNode({ id: newId, type: "custom", position: pos, data: { backendType: nodeDef.key, label: action?.name || nodeDef.label, type: "action", config: actionConfig(action) } });
@@ -84,10 +92,18 @@ export default function AddNodeSidebar() {
     playNodeLand();
     close();
     setSelectedNodeId(newId);
-  }, [addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId]);
+  }, [addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId, insertNodesOnEdge]);
 
   const commitAll = useCallback(() => {
     if (selected.size === 0) return;
+    if (addNodeSource === "__edge__") {
+      const defs = [...selected].map((key) => NodeRegistry[key] && { backendType: key, label: NodeRegistry[key].label, config: {} }).filter(Boolean);
+      const spliced = insertNodesOnEdge(defs);
+      playNodeLand();
+      close();
+      if (spliced) setSelectedNodeId(spliced);
+      return;
+    }
     const base = basePosition();
     let lastId = null;
     let i = 0;
@@ -106,7 +122,7 @@ export default function AddNodeSidebar() {
     playNodeLand();
     close();
     if (lastId) setSelectedNodeId(lastId);
-  }, [selected, addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId]);
+  }, [selected, addNode, addNodeSource, addNodeSourceHandle, edges, onConnect, basePosition, close, setSelectedNodeId, insertNodesOnEdge]);
 
   const toggleSelect = (nodeDef) => {
     setSelected((prev) => {

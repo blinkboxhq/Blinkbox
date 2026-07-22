@@ -31,6 +31,7 @@ export default function CommandPalette() {
   const addNode           = useWorkspaceStore((s) => s.addNode);
   const addNodeSource     = useWorkspaceStore((s) => s.addNodeSource);
   const addNodeSourceHandle = useWorkspaceStore((s) => s.addNodeSourceHandle);
+  const insertNodesOnEdge = useWorkspaceStore((s) => s.insertNodesOnEdge);
   const nodes             = useWorkspaceStore((s) => s.nodes);
   const edges             = useWorkspaceStore((s) => s.edges);
   const setSelectedNodeId = useWorkspaceStore((s) => s.setSelectedNodeId);
@@ -97,6 +98,20 @@ export default function CommandPalette() {
 
   const commitNode = useCallback((nodeDef, action = null) => {
     const selectedAction = action?.name || null;
+    const cfg = !selectedAction ? {} : action.value
+      ? { operation: action.value, selectedAction }
+      : { selectedAction };
+
+    if (addNodeSource === "__edge__") {
+      const spliced = insertNodesOnEdge([{ backendType: nodeDef.key, label: selectedAction || nodeDef.label, config: cfg }]);
+      playNodeLand();
+      setOpen(false);
+      setPending(null);
+      setQuery("");
+      if (spliced) setSelectedNodeId(spliced);
+      return;
+    }
+
     const sourceNode = nodes.find((n) => n.id === addNodeSource);
     const position = sourceNode
       ? { x: sourceNode.position.x + 300, y: sourceNode.position.y }
@@ -113,9 +128,7 @@ export default function CommandPalette() {
         backendType: nodeDef.key,
         label: selectedAction || nodeDef.label,
         type: "action",
-        config: !selectedAction ? {} : action.value
-          ? { operation: action.value, selectedAction }
-          : { selectedAction },
+        config: cfg,
       },
     });
 
@@ -131,7 +144,7 @@ export default function CommandPalette() {
     setPending(null);
     setQuery("");
     setSelectedNodeId(newId);
-  }, [nodes, edges, addNodeSource, addNodeSourceHandle, addNode, onConnect, setSelectedNodeId]);
+  }, [nodes, edges, addNodeSource, addNodeSourceHandle, addNode, onConnect, setSelectedNodeId, insertNodesOnEdge]);
 
   const selectItem = (item) => {
     if (item.type === "node") {

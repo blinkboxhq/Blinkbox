@@ -57,6 +57,68 @@ export const createUISlice = (set, get) => ({
   setInsertOnEdge: (edgeId) =>
     set({ insertEdgeId: edgeId, addNodeSource: "__edge__", isAddNodeOpen: true, isTriggerPickerOpen: false, selectedNodeId: null }),
   clearAddNodeModal: () => set({ addNodeSource: null, addNodeSourceHandle: "output", insertEdgeId: null, isAddNodeOpen: false }),
+  // Splice one or more nodes into the middle of an existing edge: the original
+  // edge is replaced by source → new… → target, and the downstream subtree slides
+  // right when the span is too tight to hold the new cards.
+  insertNodesOnEdge: (defs) => {
+    const { edges, nodes, insertEdgeId } = get();
+    const edge = edges.find((e) => e.id === insertEdgeId);
+    if (!edge || !defs.length) return null;
+    const src = nodes.find((n) => n.id === edge.source);
+    const tgt = nodes.find((n) => n.id === edge.target);
+    if (!src || !tgt) return null;
+
+    const W = (n) => n.measured?.width ?? n.width ?? 80;
+    const H = (n) => n.measured?.height ?? n.height ?? 80;
+    const NEW_W = 80, NEW_H = 80;
+    const SPACING = 300;
+
+    const srcRight = src.position.x + W(src);
+    const gap = tgt.position.x - srcRight;
+    const shift = Math.max(0, SPACING * defs.length - gap);
+    const span = gap + shift;
+    const midY = ((src.position.y + H(src) / 2) + (tgt.position.y + H(tgt) / 2)) / 2 - NEW_H / 2;
+
+    const moved = new Set();
+    if (shift > 0) {
+      const queue = [edge.target];
+      while (queue.length) {
+        const nid = queue.shift();
+        if (nid === edge.source || moved.has(nid)) continue;
+        moved.add(nid);
+        for (const e of edges) if (e.source === nid) queue.push(e.target);
+      }
+    }
+
+    const created = defs.map((d, i) => ({
+      id: `${d.backendType}-${crypto.randomUUID()}`,
+      type: "custom",
+      position: { x: srcRight + (span * (i + 1)) / (defs.length + 1) - NEW_W / 2, y: midY },
+      data: { backendType: d.backendType, label: d.label, type: "action", config: d.config || {} },
+    }));
+
+    const chain = [edge.source, ...created.map((n) => n.id), edge.target];
+    set((state) => ({
+      nodes: [
+        ...state.nodes.map((n) => (moved.has(n.id) ? { ...n, position: { ...n.position, x: n.position.x + shift } } : n)),
+        ...created,
+      ],
+      edges: [
+        ...state.edges.filter((e) => e.id !== insertEdgeId),
+        ...chain.slice(0, -1).map((from, i) => ({
+          id: `e-${from}-${chain[i + 1]}`,
+          source: from,
+          target: chain[i + 1],
+          sourceHandle: i === 0 ? edge.sourceHandle ?? null : "output",
+          targetHandle: i === chain.length - 2 ? edge.targetHandle ?? null : null,
+          type: "configurable",
+          data: i === 0 ? edge.data ?? { conditionPath: "" } : { conditionPath: "" },
+          style: {},
+        })),
+      ],
+    }));
+    return created[created.length - 1].id;
+  },
   openAgentPicker: (parentId) => set({ isAgentPickerOpen: true, agentPickerParentId: parentId, isAddNodeOpen: false, isTriggerPickerOpen: false }),
   closeAgentPicker: () => set({ isAgentPickerOpen: false, agentPickerParentId: null }),
   setSuggestionNode: (node) => set({ suggestionNode: node }),
