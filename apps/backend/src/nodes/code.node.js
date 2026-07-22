@@ -14,9 +14,9 @@ export default {
   },
 
   async run(config, input) {
-    const { code } = config;
+    const { code, timeout } = config;
     if (!code) return input;
 
-    return executeInPool(code, input || {});
+    return executeInPool(code, input || {}, { timeout: Number(timeout) > 0 ? Number(timeout) * 1000 : undefined });
   },
 };

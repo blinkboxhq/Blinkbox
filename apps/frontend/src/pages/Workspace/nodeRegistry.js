@@ -156,6 +156,7 @@ import imgPinecone from "@nodes/pinecone/logo.svg";
 import imgZep from "@nodes/vector_memory/logo.svg";
 import imgComputer from "../../assets/computer.png";
 import imgHTTP from "@nodes/http_request/logo.svg";
+import imgCode from "@nodes/code/logo.svg";
 import imgAirtable from "@nodes/airtable/logo.svg";
 import imgNotion from "@nodes/notion/logo.svg";
 import imgSendGrid from "@nodes/sendgrid/logo.svg";
@@ -257,6 +258,7 @@ import TypeformTriggerNode from "@triggers/typeform/ConfigPanel.jsx";
 import JotformTriggerNode from "@triggers/jotform/ConfigPanel.jsx";
 import WhatsAppTriggerNode from "@triggers/whatsapp/ConfigPanel.jsx";
 import HttpRequestNode from "@nodes/http_request/ConfigPanel.jsx";
+import CodeNode from "@nodes/code/ConfigPanel.jsx";
 import DelayNode from "@nodes/delay/ConfigPanel.jsx";
 import InformerNode from "@nodes/informer/ConfigPanel.jsx";
 import AIAgentNode from "@nodes/ai_agent/ConfigPanel.jsx";
@@ -1940,6 +1942,16 @@ export const NodeRegistry = {
   },
 
   // Code
+  code: {
+    label: "Code",
+    icon: Code2,
+    logoUrl: imgCode,
+    colorClass: "text-violet-400",
+    accentColor: "167,139,250",
+    ConfigPanel: CodeNode,
+    category: "infra",
+    description: "Run sandboxed JavaScript with access to upstream data — no filesystem or network",
+  },
 
   // Integrations (comms) — all have logoUrl so colorClass is fallback only
   telegram: {

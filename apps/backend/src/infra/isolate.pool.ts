@@ -29,6 +29,7 @@ const MEMORY_LIMIT_MB = 64;
 const MAX_REUSES = 50; // Dispose after N executions to prevent heap fragmentation
 
 export const EXECUTION_TIMEOUT_MS = 500;
+export const MAX_EXECUTION_TIMEOUT_MS = 5000;
 export const MAX_VARIABLES_BYTES = 5 * 1024 * 1024; // 5 MB payload guard
 
 // ── Pool Entry ────────────────────────────────────────────────────────────────
@@ -153,6 +154,7 @@ export function discard(entry: PoolEntry): void {
 export async function executeInPool(
   code: string,
   variables: Record<string, unknown>,
+  options: { timeout?: number } = {},
 ): Promise<unknown> {
   // Pre-flight: reject oversized payloads before touching the pool
   const serialized = JSON.stringify(variables ?? {});
@@ -162,6 +164,10 @@ export async function executeInPool(
     );
   }
 
+  const timeoutMs = Math.min(
+    MAX_EXECUTION_TIMEOUT_MS,
+    Math.max(100, Number(options.timeout) || EXECUTION_TIMEOUT_MS),
+  );
   const entry = acquire();
 
   try {
@@ -176,13 +182,16 @@ export async function executeInPool(
 
     const wrapper = `
       (function () {
-        const $input  = __vars;
+        const $input = __vars;
+        const input  = __vars;
         let   $output = JSON.parse(JSON.stringify(__vars));
         const console = { log() {}, warn() {}, error() {}, info() {} };
 
-        ${code}
+        const __ret = (function () {
+          ${code}
+        })();
 
-        return JSON.stringify($output);
+        return JSON.stringify(__ret !== undefined ? __ret : $output);
       })()
     `;
 
@@ -190,7 +199,7 @@ export async function executeInPool(
 
     // runSync with wall-clock timeout — kills infinite loops at the V8 level
     const resultStr = script.runSync(context, {
-      timeout: EXECUTION_TIMEOUT_MS,
+      timeout: timeoutMs,
     });
 
     if (typeof resultStr !== "string") {
@@ -221,7 +230,7 @@ export async function executeInPool(
     // Translate errors into user-friendly messages
     if (error.message.includes("Script execution timed out")) {
       throw new Error(
-        `Code Node: Execution timed out after ${EXECUTION_TIMEOUT_MS}ms. ` +
+        `Code Node: Execution timed out after ${timeoutMs}ms. ` +
           "Check for infinite loops or expensive operations.",
       );
     }
