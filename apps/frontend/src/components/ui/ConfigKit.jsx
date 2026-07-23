@@ -17,6 +17,25 @@ export const BB_ACCENT_HOT = '#a3a3a3';
 
 const FIELD = 'bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454]';
 
+// iOS-style option wheel: rows tilt/fade by distance from the list's vertical
+// center as you scroll. Container must be `relative` (offsetTop math) and carry
+// `[perspective:700px]`. No-op when the list doesn't overflow.
+export function wheelScroll(el) {
+  if (!el) return;
+  const overflow = el.scrollHeight > el.clientHeight + 2;
+  const mid = el.scrollTop + el.clientHeight / 2;
+  for (const child of el.children) {
+    if (!overflow) {
+      child.style.transform = '';
+      child.style.opacity = '';
+      continue;
+    }
+    const d = Math.max(-1, Math.min(1, (child.offsetTop + child.offsetHeight / 2 - mid) / (el.clientHeight / 2)));
+    child.style.transform = `rotateX(${-d * 24}deg) scale(${1 - Math.abs(d) * 0.08})`;
+    child.style.opacity = `${1 - Math.abs(d) * 0.45}`;
+  }
+}
+
 export function ConfigSection({ children, className = '' }) {
   return <div className={`flex flex-col gap-4 p-4 ${className}`}>{children}</div>;
 }
@@ -56,7 +75,16 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
   const triggerRef = useRef(null);
   const dropRef = useRef(null);
   const searchRef = useRef(null);
+  const listRef = useRef(null);
   const [rect, setRect] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = listRef.current;
+    const sel = el?.querySelector('[data-sel]');
+    if (sel) el.scrollTop = sel.offsetTop - el.clientHeight / 2 + sel.offsetHeight / 2;
+    wheelScroll(el);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -144,18 +172,22 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
               )}
             </div>
           )}
-          <div className="overflow-y-auto">
+          <div
+            ref={(el) => { listRef.current = el; wheelScroll(el); }}
+            onScroll={(e) => wheelScroll(e.currentTarget)}
+            className="overflow-y-auto relative snap-y snap-proximity [perspective:700px]"
+          >
             {opts.length === 0 && <p className="px-3 py-3 text-[12px] text-neutral-600 text-center font-mono">{q ? `No match for "${query}"` : emptyLabel}</p>}
-            {opts.map((o, i) => {
+            {opts.map((o) => {
               const sel = o.value === value;
               return (
                 <button
                   key={o.value}
                   type="button"
+                  data-sel={sel ? '' : undefined}
                   onClick={() => { onChange?.(o.value); setOpen(false); }}
-                  className={`w-full px-2.5 py-2 text-left text-[12.5px] font-mono flex items-center gap-2.5 rounded transition-colors hover:bg-white/[0.04] ${sel ? 'bg-[#6f97e8]/[0.08] text-neutral-100' : 'text-neutral-300'}`}
+                  className={`w-full px-2.5 py-2 text-left text-[12.5px] font-mono flex items-center gap-2.5 rounded snap-center transition-colors hover:bg-white/[0.04] ${sel ? 'bg-[#6f97e8]/[0.08] text-neutral-100' : 'text-neutral-300'}`}
                 >
-                  <span className="text-[9px] w-3.5 shrink-0" style={{ color: sel ? accentColor : '#6d6d6d' }}>{String(i + 1).padStart(2, '0')}</span>
                   {o.logoUrl
                     ? <img src={o.logoUrl} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={o.imgFilter ? { filter: o.imgFilter } : undefined} />
                     : o.icon && <o.icon className="w-3.5 h-3.5 shrink-0" style={{ color: accentColor }} />}

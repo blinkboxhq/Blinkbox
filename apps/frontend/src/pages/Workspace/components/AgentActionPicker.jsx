@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Search, ShieldCheck, Wrench } from "lucide-react";
-import { ConfigLabel, BB_ACCENT } from "@/components/ui/ConfigKit";
+import { ConfigLabel, BB_ACCENT, wheelScroll } from "@/components/ui/ConfigKit";
 import useIntegrationActions from "@/hooks/useIntegrationActions";
 
 const MAX_DEFAULT = 5;
@@ -87,7 +87,11 @@ export default function AgentActionPicker({ type, value = [], onChange, accentCo
             </div>
           )}
 
-          <div className="bb-glow-border rounded-md bg-[#0f0f0f] border border-[#2b2b2b] max-h-[260px] overflow-y-auto divide-y divide-[#1c1c1c]">
+          <div
+            ref={(el) => wheelScroll(el)}
+            onScroll={(e) => wheelScroll(e.currentTarget)}
+            className="bb-glow-border rounded-md bg-[#0f0f0f] border border-[#2b2b2b] max-h-[260px] overflow-y-auto relative [perspective:700px] divide-y divide-[#1c1c1c]"
+          >
             {filtered.map((a) => {
               const on = effective.includes(a.key);
               return (
