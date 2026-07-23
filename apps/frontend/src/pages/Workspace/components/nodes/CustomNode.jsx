@@ -7,7 +7,6 @@ import { NodeRegistry } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import { getTriggerEvent } from "../../triggerEvents";
 import useWorkspaceStore from "../../../../store/workspaceStore";
-import { faviconUrl } from "../../../../lib/favicon";
 import { useShallow } from "zustand/react/shallow";
 
 // Module-level hover registry — ReactFlow fires onNodeMouseEnter/Leave at the
@@ -530,12 +529,6 @@ function CustomNodeImpl({ id, data, selected }) {
   const accent = (variantDef?.accentColor || nodeDef.accentColor) || "161,161,170";
   const iconColorClass = nodeDef.colorClass || "text-white";
 
-  // A connected MCP server wears its own favicon instead of the generic plug.
-  const [remoteLogoFailed, setRemoteLogoFailed] = useState(false);
-  const remoteLogo = data.backendType === "tool_mcp_client" && !remoteLogoFailed
-    ? faviconUrl(data.config?.serverUrl)
-    : null;
-
   const isExecutionLive = useWorkspaceStore(s => s.isExecutionLive);
   const getNodeStatus = useWorkspaceStore(s => s.getNodeStatus);
   const getMappingWarnings = useWorkspaceStore(s => s.getMappingWarnings);
@@ -796,10 +789,7 @@ function CustomNodeImpl({ id, data, selected }) {
           style={{ width: d, height: d, borderRadius: 9999, background: GLASS_BG, backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)", border: cardBorder, boxShadow: cardShadow, position: "relative", zIndex: 1 }}
         >
           {badge}
-          {remoteLogo ? (
-            <img src={remoteLogo} alt={agentComponentLabel} onError={() => setRemoteLogoFailed(true)}
-              className="w-7 h-7 object-contain rounded-[4px] opacity-90 group-hover:opacity-100 transition-opacity duration-300" />
-          ) : nodeDef.logoUrl ? (
+          {nodeDef.logoUrl ? (
             <img src={nodeDef.logoUrl} alt={data.label} className="w-7 h-7 object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
               style={nodeDef.imgFilter ? { filter: nodeDef.imgFilter } : undefined} />
           ) : (

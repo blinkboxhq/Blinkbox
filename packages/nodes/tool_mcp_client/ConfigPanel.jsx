@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Network, Server, KeyRound, ListFilter, Tag, Unlink, Wrench } from 'lucide-react';
 import api, { API_URL } from '@/lib/api';
 import { openOAuthPopup } from '@/lib/oauthConnect';
-import { faviconUrl } from '@/lib/favicon';
 import {
   ConfigSection,
   ConfigDivider,
@@ -82,7 +81,6 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
   const serverUrl = (config.serverUrl || '').trim();
   const discovered = Array.isArray(config.discoveredTools) ? config.discoveredTools : [];
   const signedIn = !!config.credentialId;
-  const logo = faviconUrl(serverUrl);
 
   const connect = useCallback(async () => {
     setStatus('loading');
@@ -175,7 +173,6 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
     <ConfigSection>
       <ToolHeader
         icon={Network}
-        logoUrl={logo}
         iconColor={ACCENT}
         title={config.serverName || 'MCP Client'}
         subtitle={serverUrl || 'Calls a tool on an external MCP server'}
