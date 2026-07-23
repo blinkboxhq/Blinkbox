@@ -229,8 +229,7 @@ export default function AgentPicker() {
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-semibold text-white leading-tight">{cat.label}</div>
                   <div className="text-[12px] text-neutral-500 mt-0.5 truncate">
-                    {CAT_DESC[cat.id]} ·{" "}
-                    <span style={{ color: CAT_COLORS[cat.id] || "#a3a3a3" }}>{count}</span>
+                    {CAT_DESC[cat.id]} · {count}
                   </div>
                 </div>
                 <ChevronRight size={16} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
@@ -300,26 +299,15 @@ function AgentNodeRow({ nodeDef, focused, onHover, onSelect, onToggle, selected 
   }, [focused]);
 
   const Icon = nodeDef.icon;
-  const rgb = nodeDef.accentColor;
-  const accent = rgb ? `rgb(${rgb})` : "#d4d4d4";
+  const accent = nodeDef.accentColor ? `rgb(${nodeDef.accentColor})` : "#d4d4d4";
   return (
     <button
       ref={rowRef}
       onClick={onSelect}
       onMouseEnter={onHover}
-      className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 rounded-xl text-left group"
-      style={
-        rgb && (selected || focused)
-          ? {
-              backgroundColor: `rgba(${rgb}, ${selected ? 0.14 : 0.08})`,
-              boxShadow: `inset 2px 0 0 ${selected ? accent : `rgba(${rgb}, 0.5)`}`,
-            }
-          : selected
-          ? { backgroundColor: "rgba(255,255,255,0.07)" }
-          : focused
-          ? { backgroundColor: "rgba(255,255,255,0.05)" }
-          : undefined
-      }
+      className={`bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3.5 rounded-xl text-left group ${
+        selected ? "bg-white/[0.07]" : focused ? "bg-white/[0.05]" : ""
+      }`}
     >
       <div className="w-[26px] h-[26px] shrink-0 flex items-center justify-center">
         {nodeDef.logoUrl ? (
@@ -342,7 +330,7 @@ function AgentNodeRow({ nodeDef, focused, onHover, onSelect, onToggle, selected 
         )}
       </div>
       {selected ? (
-        <CheckCircle2 size={16} className="shrink-0" style={{ color: accent }} />
+        <CheckCircle2 size={16} className="text-white shrink-0" />
       ) : (
         <span
           role="button"
