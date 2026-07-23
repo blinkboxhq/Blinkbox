@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import { Handle, Position, NodeToolbar, useReactFlow } from "@xyflow/react";
-import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Sparkles, Plug } from "lucide-react";
+import { Check, AlertTriangle, Settings2, Loader2, Plus, Brain, Database, MousePointer2, Play, Settings, Copy, Trash2, CheckCheck, XCircle, Zap, Bot, Split, X, Plug } from "lucide-react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
@@ -131,16 +131,6 @@ const AGENT_BOTTOM_SLOTS = [
     color: "#fb923c",
     accentColor: "251,146,60",
     allowedTypes: ["agent_tool"],
-    single: false,
-    showPlus: true,
-  },
-  {
-    id: "skills",
-    label: "Skills",
-    icon: Sparkles,
-    color: "#f472b6",
-    accentColor: "244,114,182",
-    allowedTypes: ["agent_skill"],
     single: false,
     showPlus: true,
   },

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Brain, Database, Wrench, ArrowLeft, X, Search,
-  Bot, Plug, Sparkles, CheckCircle2, Plus, ChevronRight, Layers } from "lucide-react";
+  Bot, Plug, CheckCircle2, Plus, ChevronRight, Layers } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
@@ -21,7 +21,6 @@ const AGENT_CATEGORIES = [
   { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory","agent_memory_window"] },
   { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        nodes: AGENT_TOOLS },
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["slack","gmail","discord","telegram","notion","airtable","google_sheets","google_calendar","google_drive","outlook","github","linear","hubspot","jira","asana","stripe","shopify","clickup","twilio","mongodb","postgres","redis_node","azure_devops","calendly","datadog","elevenlabs","firebase","instagram","intercom","linkedin","mailchimp","monday","netlify","onedrive","pagerduty","pinecone","pipedrive","reddit","resend","s3","sendgrid","sentry","sftp","sharepoint","supabase","teams","tiktok","trello","typeform","vercel","web_search","whatsapp","woocommerce","youtube","zendesk","zoom"] },
-  { id: "skills",       label: "Skills",       icon: Sparkles,slotId: "skills",       nodes: ["agent_skill"] },
 ];
 
 const CAT_DESC = {
@@ -29,7 +28,6 @@ const CAT_DESC = {
   memory:      "Recall across runs",
   tools:       "Actions the agent can call",
   integration: "Apps the agent can act in",
-  skills:      "Reusable instruction packs",
 };
 
 const CAT_COLORS = {
@@ -37,7 +35,6 @@ const CAT_COLORS = {
   memory:      "#a9c0ef",
   tools:       "#7dd3fc",
   integration: "#6ee7b7",
-  skills:      "#c4b5fd",
 };
 
 const SLOT_OFFSETS = {
@@ -45,7 +42,6 @@ const SLOT_OFFSETS = {
   memory:      { x: 30,   y: 160 },
   integration: { x: 90,   y: 160 },
   tools:       { x: 150,  y: 160 },
-  skills:      { x: 210,  y: 160 },
 };
 
 export default function AgentPicker() {
