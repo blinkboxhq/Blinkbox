@@ -31,8 +31,9 @@ export function wheelScroll(el) {
       continue;
     }
     const d = Math.max(-1, Math.min(1, (child.offsetTop + child.offsetHeight / 2 - mid) / (el.clientHeight / 2)));
-    child.style.transform = `rotateX(${-d * 24}deg) scale(${1 - Math.abs(d) * 0.08})`;
-    child.style.opacity = `${1 - Math.abs(d) * 0.45}`;
+    const a = Math.abs(d);
+    child.style.transform = `rotateX(${-d * 52}deg) translateZ(${-a * 80}px) scale(${1 - a * 0.1})`;
+    child.style.opacity = `${1 - a * 0.55}`;
   }
 }
 
