@@ -17,26 +17,6 @@ export const BB_ACCENT_HOT = '#a3a3a3';
 
 const FIELD = 'bb-glow-border w-full bg-[#0f0f0f] border border-[#3b3b3b] rounded-md px-3 py-2.5 text-[12.5px] text-neutral-100 font-mono outline-none transition-colors focus:border-[#545454]';
 
-// iOS-style option wheel: rows tilt/fade by distance from the list's vertical
-// center as you scroll. Container must be `relative` (offsetTop math) and carry
-// `[perspective:700px]`. No-op when the list doesn't overflow.
-export function wheelScroll(el) {
-  if (!el) return;
-  const overflow = el.scrollHeight > el.clientHeight + 2;
-  const mid = el.scrollTop + el.clientHeight / 2;
-  for (const child of el.children) {
-    if (!overflow) {
-      child.style.transform = '';
-      child.style.opacity = '';
-      continue;
-    }
-    const d = Math.max(-1, Math.min(1, (child.offsetTop + child.offsetHeight / 2 - mid) / (el.clientHeight / 2)));
-    const a = Math.abs(d);
-    child.style.transform = `rotateX(${-d * 52}deg) translateZ(${-a * 80}px) scale(${1 - a * 0.1})`;
-    child.style.opacity = `${1 - a * 0.55}`;
-  }
-}
-
 export function ConfigSection({ children, className = '' }) {
   return <div className={`flex flex-col gap-4 p-4 ${className}`}>{children}</div>;
 }

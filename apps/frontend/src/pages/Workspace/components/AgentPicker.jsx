@@ -5,7 +5,6 @@ import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 import { agentSlotSpawnOffset } from "./nodes/CustomNode";
-import { wheelScroll } from "@/components/ui/ConfigKit";
 
 const AGENT_TOOLS = [
   "tool_http_request",
@@ -203,9 +202,7 @@ export default function AgentPicker() {
         )}
 
         <div
-          ref={(el) => wheelScroll(el)}
-          onScroll={(e) => wheelScroll(e.currentTarget)}
-          className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5 relative [perspective:700px]"
+          className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}
         >
           {page === "home" && AGENT_CATEGORIES.map(cat => {
