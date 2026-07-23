@@ -542,8 +542,17 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
   const [testInput, setTestInput] = useState("{}");
   const [result, setResult]        = useState(null);
   const [loading, setLoading]      = useState(false);
+  const [varsOpen, setVarsOpen]    = useState(true);
+  const [copied, setCopied]        = useState(null);
+  const [dragging, setDragging]    = useState(null);
 
   useEffect(() => { setResult(null); }, [node?.id]);
+
+  const copy = (text) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(text);
+    setTimeout(() => setCopied(null), 1600);
+  };
 
   const runTest = useCallback(async () => {
     if (!node) return;
@@ -610,6 +619,17 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
   }, [node, testInput]);
 
   const display = result || (lastOutput ? { success: nodeStatus !== "failed", output: [{ json: lastOutput }] } : null);
+
+  // Same sample extraction as runTest: array outputs expose item 0 as the shape.
+  const varsSample = (() => {
+    if (!display?.success) return null;
+    const out = display.output;
+    const s = Array.isArray(out)
+      ? (out.length ? (out[0]?.json !== undefined ? out[0].json : out[0]) : null)
+      : out;
+    return s && typeof s === "object" ? s : null;
+  })();
+  const varsRows = varsSample ? childEntries(varsSample) : [];
 
   return (
     <div className="bb-modal-side bb-liquid bb-panel-glow flex flex-col h-full">
@@ -682,6 +702,39 @@ function OutputPanel({ node, nodeStatus, lastOutput }) {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              {varsRows.length > 0 && (
+                <div className="rounded-xl border border-white/[0.06] bg-black/40 overflow-hidden">
+                  <button
+                    onClick={() => setVarsOpen((o) => !o)}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/[0.03] transition-colors text-left"
+                  >
+                    <ChevronRight className={`w-3 h-3 text-neutral-500 shrink-0 transition-transform ${varsOpen ? "rotate-90" : ""}`} />
+                    <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Output Variables</span>
+                    <span className="text-[10px] text-neutral-700">drag or click to copy</span>
+                    <span className="ml-auto text-[10px] text-neutral-600 font-mono">{varsRows.length}</span>
+                  </button>
+                  {varsOpen && (
+                    <div className="p-1.5 flex flex-col max-h-[260px] overflow-y-auto border-t border-white/[0.06]">
+                      {varsRows.map(([k, v]) => (
+                        <VarTreeRow
+                          key={k}
+                          nodeId={node.id}
+                          path={k}
+                          label={k}
+                          value={v}
+                          depth={0}
+                          dragging={dragging}
+                          setDragging={setDragging}
+                          copy={copy}
+                          copied={copied}
+                          isSchema={false}
+                          accent="#34d399"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <div className="bb-card rounded-xl p-4 overflow-auto max-h-[420px]">
