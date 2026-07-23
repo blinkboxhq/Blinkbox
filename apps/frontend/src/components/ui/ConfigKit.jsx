@@ -75,16 +75,7 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
   const triggerRef = useRef(null);
   const dropRef = useRef(null);
   const searchRef = useRef(null);
-  const listRef = useRef(null);
   const [rect, setRect] = useState(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const el = listRef.current;
-    const sel = el?.querySelector('[data-sel]');
-    if (sel) el.scrollTop = sel.offsetTop - el.clientHeight / 2 + sel.offsetHeight / 2;
-    wheelScroll(el);
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -172,22 +163,18 @@ export function ConfigSelect({ label, icon, value, onChange, options = [], place
               )}
             </div>
           )}
-          <div
-            ref={(el) => { listRef.current = el; wheelScroll(el); }}
-            onScroll={(e) => wheelScroll(e.currentTarget)}
-            className="overflow-y-auto relative snap-y snap-proximity [perspective:700px]"
-          >
+          <div className="overflow-y-auto">
             {opts.length === 0 && <p className="px-3 py-3 text-[12px] text-neutral-600 text-center font-mono">{q ? `No match for "${query}"` : emptyLabel}</p>}
-            {opts.map((o) => {
+            {opts.map((o, i) => {
               const sel = o.value === value;
               return (
                 <button
                   key={o.value}
                   type="button"
-                  data-sel={sel ? '' : undefined}
                   onClick={() => { onChange?.(o.value); setOpen(false); }}
-                  className={`w-full px-2.5 py-2 text-left text-[12.5px] font-mono flex items-center gap-2.5 rounded snap-center transition-colors hover:bg-white/[0.04] ${sel ? 'bg-[#6f97e8]/[0.08] text-neutral-100' : 'text-neutral-300'}`}
+                  className={`w-full px-2.5 py-2 text-left text-[12.5px] font-mono flex items-center gap-2.5 rounded transition-colors hover:bg-white/[0.04] ${sel ? 'bg-[#6f97e8]/[0.08] text-neutral-100' : 'text-neutral-300'}`}
                 >
+                  <span className="text-[9px] w-3.5 shrink-0" style={{ color: sel ? accentColor : '#6d6d6d' }}>{String(i + 1).padStart(2, '0')}</span>
                   {o.logoUrl
                     ? <img src={o.logoUrl} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={o.imgFilter ? { filter: o.imgFilter } : undefined} />
                     : o.icon && <o.icon className="w-3.5 h-3.5 shrink-0" style={{ color: accentColor }} />}

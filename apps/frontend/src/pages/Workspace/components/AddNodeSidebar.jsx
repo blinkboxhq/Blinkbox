@@ -5,6 +5,7 @@ import { NodeRegistry, CATEGORIES } from "../nodeRegistry";
 import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES, nodeHasActions } from "../nodeActions";
 import { playNodeLand } from "../../../lib/sounds";
 import { setDragPayload, clearDragPayload } from "../dragPayload";
+import { wheelScroll } from "@/components/ui/ConfigKit";
 
 const ACTION_CATEGORIES = CATEGORIES.filter((c) => c.id !== "trigger");
 
@@ -240,7 +241,12 @@ export default function AddNodeSidebar() {
         )}
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}>
+        <div
+          ref={(el) => wheelScroll(el)}
+          onScroll={(e) => wheelScroll(e.currentTarget)}
+          className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-0.5 relative [perspective:700px]"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "#222 transparent" }}
+        >
           {pendingNode ? (
             actions.map((action, i) => (
               <ActionRow key={action.value || i} action={action} subject={pendingNode}
