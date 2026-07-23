@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Network, Server, KeyRound, ListFilter, Timer, ShieldCheck, List, Tag, Unlink, Wrench } from 'lucide-react';
+import { Network, Server, KeyRound, ListFilter, Tag, Unlink, Wrench } from 'lucide-react';
 import api, { API_URL } from '@/lib/api';
 import { openOAuthPopup } from '@/lib/oauthConnect';
 import { faviconUrl } from '@/lib/favicon';
@@ -8,14 +8,12 @@ import {
   ConfigDivider,
   ConfigInput,
   ConfigLabel,
-  ConfigTextarea,
   ConfigToggleRow,
   ConfigBanner,
   ToolHeader,
   GuardrailNote,
   ConnectButton,
   Text,
-  NumberField,
 } from '@nodes/agent_tool_panel/ToolKit.jsx';
 
 const ACCENT = '#2dd4bf';
@@ -79,21 +77,12 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [signingIn, setSigningIn] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const cancelSignInRef = useRef(null);
 
   const serverUrl = (config.serverUrl || '').trim();
   const discovered = Array.isArray(config.discoveredTools) ? config.discoveredTools : [];
   const signedIn = !!config.credentialId;
   const logo = faviconUrl(serverUrl);
-
-  // One writer for the auth fields so the stored mode can never drift out of
-  // step with the values it describes.
-  const setAuth = (key, value) => {
-    const next = { ...config, [key]: value };
-    updateConfig(key, value);
-    updateConfig('authType', deriveAuthType(next));
-  };
 
   const connect = useCallback(async () => {
     setStatus('loading');
@@ -124,10 +113,12 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
     } catch (err) {
       const res = err.response?.data;
       setStatus('error');
+      // Only say something worth reading — the red button already carries the
+      // failure, so a raw transport string like "Network Error" adds nothing.
       setMessage(
         res?.needsAuth
           ? 'This server wants a sign-in. Use "Sign in with browser" below, then connect again.'
-          : res?.message || err.message || 'Could not reach that server.',
+          : res?.message || '',
       );
     }
   }, [serverUrl, config, updateConfig]);
@@ -253,10 +244,6 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
             disabled={!serverUrl}
             onClick={signIn}
           />
-          <ConfigBanner tone="info">
-            Only for servers that ask you to log in. Most register Blinkbox on their own —
-            fill the two fields below only if yours says it can&apos;t.
-          </ConfigBanner>
           <ConfigInput
             label="Client ID"
             icon={KeyRound}
@@ -295,68 +282,6 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
           Connect above and every tool this server exposes gets listed here, each with its
           own switch.
         </ConfigBanner>
-      )}
-
-      <ConfigDivider label="Advanced" />
-
-      <ConfigToggleRow
-        label="Show advanced settings"
-        desc="Static tokens, extra headers, host allowlist and timeout."
-        icon={ShieldCheck}
-        accentColor={ACCENT}
-        on={showAdvanced}
-        onChange={setShowAdvanced}
-      />
-
-      {showAdvanced && (
-        <>
-          <ConfigInput
-            label="Access Token"
-            icon={KeyRound}
-            type="password"
-            value={config.authToken || ''}
-            onChange={(v) => setAuth('authToken', v)}
-            placeholder="Sent as Authorization: Bearer …"
-            hint="Only for servers that hand out a static token instead of a sign-in."
-          />
-
-          <ConfigInput
-            label="Send Token As Header"
-            icon={Tag}
-            value={config.authHeader || ''}
-            onChange={(v) => setAuth('authHeader', v)}
-            placeholder="X-API-Key"
-            hint="Leave empty to send it as a bearer token."
-          />
-
-          <ConfigTextarea
-            label="Extra Headers"
-            icon={List}
-            rows={3}
-            value={config.headers || ''}
-            onChange={(v) => updateConfig('headers', v)}
-            placeholder={'X-Tenant: acme\nX-Env: prod'}
-            hint="One per line, Key: value."
-          />
-
-          <Text
-            label="Allowed Hosts"
-            icon={ShieldCheck}
-            value={config.allowedHosts}
-            onChange={(v) => updateConfig('allowedHosts', v)}
-            placeholder="mcp.example.com"
-            nodeId={nodeId}
-            hint="Comma separated. Empty = any host that passes the SSRF guard."
-          />
-
-          <NumberField
-            label="Timeout (ms)"
-            icon={Timer}
-            value={config.timeoutMs}
-            onChange={(v) => updateConfig('timeoutMs', v)}
-            placeholder="30000"
-          />
-        </>
       )}
     </ConfigSection>
   );
