@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Network, Server, KeyRound, ListFilter, Timer, ShieldCheck, List, Tag, Unlink } from 'lucide-react';
 import api, { API_URL } from '@/lib/api';
+import { openOAuthPopup } from '@/lib/oauthConnect';
 import {
   ConfigSection,
   ConfigDivider,
@@ -28,6 +29,7 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const cancelSignInRef = useRef(null);
 
   const serverUrl = (config.serverUrl || '').trim();
   const authType = config.authType || (config.authToken ? 'bearer' : 'none');
@@ -65,31 +67,7 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
     }
   }, [serverUrl, authType, config.authToken, config.authHeader, config.headers, config.timeoutMs, config.credentialId, updateConfig]);
 
-  // The consent screen runs on the MCP server's own domain, so the only way back
-  // is the popup posting its result to us.
-  useEffect(() => {
-    const onMessage = (event) => {
-      if (event.data?.type !== 'blinkbox:mcp-oauth') return;
-      const payload = event.data.payload;
-      setSigningIn(false);
-      if (payload?.error) {
-        setStatus('error');
-        setMessage(payload.error);
-        return;
-      }
-      if (payload?.success && payload?.credential?._id) {
-        updateConfig('credentialId', payload.credential._id);
-        updateConfig('credentialName', payload.credential.name);
-        if (!serverUrl && payload.credential.serverUrl) {
-          updateConfig('serverUrl', payload.credential.serverUrl);
-        }
-        setStatus('idle');
-        setMessage(`Signed in as ${payload.credential.name}. Hit Connect to load tools.`);
-      }
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [updateConfig, serverUrl]);
+  useEffect(() => () => cancelSignInRef.current?.(), []);
 
   const signIn = () => {
     const token = localStorage.getItem('blinkbox_token');
@@ -98,28 +76,32 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
       setMessage('Not authenticated. Log in again.');
       return;
     }
+    cancelSignInRef.current?.();
     setSigningIn(true);
     setStatus('idle');
     setMessage('');
 
     const params = new URLSearchParams({ token, serverUrl });
     if (config.oauthClientId) params.set('clientId', config.oauthClientId);
-    const w = 600;
-    const h = 700;
-    const left = window.screenX + (window.innerWidth - w) / 2;
-    const top = window.screenY + (window.innerHeight - h) / 2;
-    const popup = window.open(
-      `${API_URL}/api/mcp-client/oauth/authorize?${params.toString()}`,
-      'blinkbox_mcp_oauth',
-      `width=${w},height=${h},left=${left},top=${top},popup=1`,
-    );
 
-    const poll = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(poll);
-        setSigningIn(false);
-      }
-    }, 500);
+    cancelSignInRef.current = openOAuthPopup({
+      url: `${API_URL}/api/mcp-client/oauth/authorize?${params.toString()}`,
+      name: 'blinkbox_mcp_oauth',
+      match: (c) => c.type === 'mcp_oauth',
+      onCredential: (cred) => {
+        updateConfig('credentialId', cred._id);
+        updateConfig('credentialName', cred.name);
+        if (!serverUrl && cred.serverUrl) updateConfig('serverUrl', cred.serverUrl);
+        setStatus('idle');
+        setMessage(`Signed in as ${cred.name}. Hit Connect to load tools.`);
+      },
+      onError: (msg) => {
+        if (!msg) return;
+        setStatus('error');
+        setMessage(msg);
+      },
+      onSettled: () => { setSigningIn(false); cancelSignInRef.current = null; },
+    });
   };
 
   const signOut = () => {

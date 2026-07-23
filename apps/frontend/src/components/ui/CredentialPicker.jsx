@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Plus, Shield, Loader2, ChevronDown, X, Eye, EyeOff, Check, Search, Link2 } from 'lucide-react';
 import api from '../../lib/api';
 import useCredentialsStore from '../../store/credentialsStore';
+import { openOAuthPopup, oauthAuthorizeUrl } from '../../lib/oauthConnect';
 
 import logoGoogle from '../../assets/credentials/google-color.svg';
 import logoGithub from '../../assets/credentials/github.svg';
@@ -10,8 +11,6 @@ import logoMicrosoft from '../../assets/credentials/microsoft-color.svg';
 import logoNotion from '../../assets/credentials/notion.svg';
 import logoSlack from '../../assets/credentials/slack-new-logo-logo-svgrepo-com.svg';
 import logoAirtable from '../../assets/credentials/Airtable--Streamline-Svg-Logos.svg';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const OAUTH_LOGO = {
   google: logoGoogle,
@@ -49,6 +48,29 @@ const OAUTH_META = {
   microsoft: { label: 'Microsoft', color: '#0078D4', logo: logoMicrosoft },
   meta:      { label: 'Meta',      color: '#1877F2' },
 };
+
+// Most panels only say what kind of credential they want, not which OAuth app
+// issues it — so derive the provider instead of making every one of the ~70
+// call sites remember to pass it. Only types the backend actually holds scopes
+// for are listed; anything else falls through to the manual key form.
+const PROVIDER_BY_TYPE = {
+  slack: 'slack',
+  gmail: 'google', youtube: 'google',
+  microsoft: 'microsoft', outlook: 'microsoft', teams: 'microsoft',
+  onedrive: 'microsoft', microsoft_todo: 'microsoft',
+  github: 'github',
+  airtable: 'airtable',
+  notion: 'notion',
+  whatsapp: 'meta', meta: 'meta',
+};
+
+function inferProvider(credentialType) {
+  const t = String(credentialType || '').toLowerCase();
+  if (!t) return null;
+  if (PROVIDER_BY_TYPE[t]) return PROVIDER_BY_TYPE[t];
+  if (t.startsWith('google')) return 'google';
+  return null;
+}
 
 function CredRow({ c, value, onChange, setOpen, setSearch, ac }) {
   const selected = c._id === value;
@@ -90,6 +112,7 @@ export default function CredentialPicker({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState(null);
   const [manual, setManual] = useState(false);
 
   const [newName, setNewName] = useState('');
@@ -101,10 +124,10 @@ export default function CredentialPicker({
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
   const [dropdownRect, setDropdownRect] = useState(null);
-  const popupRef = useRef(null);
-  const messageHandlerRef = useRef(null);
+  const cancelConnectRef = useRef(null);
   const ac = ACCENT[accentColor] || DEFAULT_ACCENT;
-  const oauthMeta = oauthProvider ? OAUTH_META[oauthProvider] : null;
+  const provider = oauthProvider || inferProvider(credentialType);
+  const oauthMeta = provider ? OAUTH_META[provider] : null;
 
   useEffect(() => { ensureFresh(); }, [ensureFresh]);
 
@@ -129,68 +152,31 @@ export default function CredentialPicker({
     };
   }, [open]);
 
-  // Cleanup popup message listener on unmount
-  useEffect(() => {
-    return () => {
-      if (messageHandlerRef.current) {
-        window.removeEventListener('message', messageHandlerRef.current);
-      }
-    };
-  }, []);
+  useEffect(() => () => cancelConnectRef.current?.(), []);
 
   const connectOAuth = () => {
-    const token = localStorage.getItem('blinkbox_token');
-    if (!token) return;
+    const url = oauthAuthorizeUrl(provider);
+    if (!url) {
+      setConnectError('Your session expired. Log in again.');
+      return;
+    }
 
+    cancelConnectRef.current?.();
     setIsConnecting(true);
+    setConnectError(null);
 
-    // Close any existing popup
-    if (popupRef.current && !popupRef.current.closed) {
-      popupRef.current.close();
-    }
-    if (messageHandlerRef.current) {
-      window.removeEventListener('message', messageHandlerRef.current);
-    }
-
-    const popup = window.open(
-      `${API_URL}/api/oauth/${oauthProvider}/authorize?token=${encodeURIComponent(token)}`,
-      'blinkbox_oauth',
-      'width=600,height=700,scrollbars=yes,resizable=yes'
-    );
-    popupRef.current = popup;
-
-    const handler = (e) => {
-      if (e.data?.type !== 'blinkbox:oauth') return;
-      const apiOrigin = new URL(API_URL).origin;
-      if (e.origin !== apiOrigin) return;
-      const { payload } = e.data;
-      window.removeEventListener('message', handler);
-      messageHandlerRef.current = null;
-      setIsConnecting(false);
-
-      if (payload?.success && payload?.credential?._id) {
-        const cred = payload.credential;
-        upsertCredential(cred);
+    cancelConnectRef.current = openOAuthPopup({
+      url,
+      name: `blinkbox_oauth_${provider}`,
+      match: (c) => c.provider === provider,
+      onCredential: (cred) => {
         onChange(cred._id);
         setManual(false);
         setOpen(false);
-      }
-    };
-
-    messageHandlerRef.current = handler;
-    window.addEventListener('message', handler);
-
-    // Poll for popup closed without completing OAuth
-    const pollTimer = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(pollTimer);
-        if (messageHandlerRef.current) {
-          window.removeEventListener('message', messageHandlerRef.current);
-          messageHandlerRef.current = null;
-        }
-        setIsConnecting(false);
-      }
-    }, 500);
+      },
+      onError: (msg) => setConnectError(msg || 'Sign-in was cancelled before it finished.'),
+      onSettled: () => { setIsConnecting(false); cancelConnectRef.current = null; },
+    });
   };
 
   const selectedCred = credentials.find((c) => c._id === value);
@@ -400,11 +386,11 @@ export default function CredentialPicker({
       {/* Connected badge */}
       {selectedCred && (
         <div className="bb-glow-border flex items-center gap-2 px-2.5 py-2 rounded-md bg-[#0f0f0f] border border-[#3b3b3b]">
-          {oauthMeta?.logo && selectedCred.provider === oauthProvider
+          {oauthMeta?.logo && selectedCred.provider === provider
             ? <img src={oauthMeta.logo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" style={oauthMeta.invert ? { filter: 'invert(1)' } : undefined} />
             : <Shield className="w-3 h-3 shrink-0 text-neutral-400" />}
           <span className="text-[11px] font-mono text-neutral-200 truncate">{selectedCred.name}</span>
-          {oauthMeta && selectedCred.provider === oauthProvider && (
+          {oauthMeta && selectedCred.provider === provider && (
             <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
               <span className="w-[5px] h-[5px] rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" /> Connected
             </span>
@@ -419,6 +405,10 @@ export default function CredentialPicker({
             <X className="w-3 h-3" />
           </button>
         </div>
+      )}
+
+      {connectError && !selectedCred && (
+        <p className="text-[10px] text-amber-400 leading-relaxed">{connectError}</p>
       )}
 
       {/* Hint */}

@@ -35,6 +35,9 @@ export function renderPopupResult(res, data, messageType = "blinkbox:oauth") {
 
   res.setHeader("Content-Type", "text/html");
   res.setHeader("X-Content-Type-Options", "nosniff");
+  // Belt and braces with the helmet config in core/app.js: any COOP stricter
+  // than this detaches window.opener and the postMessage below goes nowhere.
+  res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
   res.send(`<!DOCTYPE html>
 <html>
 <head><title>BlinkBox — OAuth</title></head>
@@ -51,8 +54,10 @@ export function renderPopupResult(res, data, messageType = "blinkbox:oauth") {
       allowedOrigins.forEach(function(origin) {
         try { window.opener.postMessage({ type: messageType, payload: payload }, origin); } catch(e) {}
       });
-      setTimeout(function() { window.close(); }, 1500);
     }
+    // The app also learns about this over its socket, so closing is safe even
+    // when the opener was detached and nothing above could be delivered.
+    setTimeout(function() { window.close(); }, payload && payload.error ? 4000 : 1200);
   </script>
 </body>
 </html>`);

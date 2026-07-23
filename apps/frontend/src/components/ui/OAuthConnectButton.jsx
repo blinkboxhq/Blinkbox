@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link2, Loader2, CheckCircle2, AlertCircle, Unlink } from 'lucide-react';
-import { API_URL } from '../../lib/api';
 import useCredentialsStore from '../../store/credentialsStore';
+import { openOAuthPopup, oauthAuthorizeUrl } from '../../lib/oauthConnect';
 
 /**
  * OAuthConnectButton — opens an OAuth popup for a given provider.
@@ -27,8 +27,8 @@ export default function OAuthConnectButton({
 
   const credentials = useCredentialsStore((s) => s.credentials);
   const ensureFresh = useCredentialsStore((s) => s.ensureFresh);
-  const upsertCredential = useCredentialsStore((s) => s.upsert);
 
+  const cancelConnectRef = useRef(null);
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; });
   const hasAutoSelected = useRef(false);
@@ -47,66 +47,27 @@ export default function OAuthConnectButton({
     }
   }, [value, provider, credentials]);
 
-  // Listen for postMessage from OAuth popup
-  const handleMessage = useCallback(
-    (event) => {
-      const apiOrigin = new URL(API_URL).origin;
-      if (event.origin !== apiOrigin) return;
-      const data = event.data;
-      if (data?.type !== 'blinkbox:oauth') return;
-
-      const payload = data.payload;
-      setIsConnecting(false);
-
-      if (payload?.error) {
-        setError(payload.error);
-        return;
-      }
-
-      if (payload?.success && payload?.credential?._id) {
-        setError(null);
-        upsertCredential(payload.credential);
-        onChange(payload.credential._id);
-      }
-    },
-    [onChange, upsertCredential],
-  );
-
-  useEffect(() => {
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [handleMessage]);
+  useEffect(() => () => cancelConnectRef.current?.(), []);
 
   const handleConnect = () => {
-    setError(null);
-    setIsConnecting(true);
-
-    const token = localStorage.getItem('blinkbox_token');
-    if (!token) {
+    const url = oauthAuthorizeUrl(provider);
+    if (!url) {
       setError('Not authenticated. Please log in again.');
-      setIsConnecting(false);
       return;
     }
 
-    const url = `${API_URL}/api/oauth/${provider}/authorize?token=${encodeURIComponent(token)}`;
-    const w = 600;
-    const h = 700;
-    const left = window.screenX + (window.innerWidth - w) / 2;
-    const top = window.screenY + (window.innerHeight - h) / 2;
+    cancelConnectRef.current?.();
+    setError(null);
+    setIsConnecting(true);
 
-    const popup = window.open(
+    cancelConnectRef.current = openOAuthPopup({
       url,
-      `blinkbox_oauth_${provider}`,
-      `width=${w},height=${h},left=${left},top=${top},popup=1`,
-    );
-
-    // Poll for popup close (user closed without completing)
-    const interval = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(interval);
-        setIsConnecting(false);
-      }
-    }, 500);
+      name: `blinkbox_oauth_${provider}`,
+      match: (c) => c.provider === provider,
+      onCredential: (cred) => onChangeRef.current(cred._id),
+      onError: (msg) => setError(msg || `${providerLabel} sign-in was closed before it finished.`),
+      onSettled: () => { setIsConnecting(false); cancelConnectRef.current = null; },
+    });
   };
 
   const handleDisconnect = () => {

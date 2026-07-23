@@ -21,6 +21,7 @@ import Credential from "../../models/credential.model.js";
 import { encrypt, decrypt } from "../../utils/crypto.js";
 import { redis } from "../../infra/redis.client.js";
 import { assertSafeUrlResolved } from "../../utils/ssrf.js";
+import { emitToUser } from "../../infra/socket.server.js";
 import { BACKEND_URL } from "../../config/env.js";
 
 const STATE_TTL = 5 * 60;
@@ -216,13 +217,19 @@ export async function completeMcpAuthorization({ code, state }) {
   saveTokens(doc, tokens);
   await doc.save();
 
-  return {
+  const credential = {
     _id: doc._id,
     name: doc.name,
     type: doc.type,
     provider: doc.provider,
     serverUrl: pending.serverUrl,
   };
+
+  // Same signal every other OAuth flow emits, so the app picks this up live
+  // even when the popup could not reach its opener.
+  emitToUser(String(pending.userId), "credential:created", { credential });
+
+  return credential;
 }
 
 /**

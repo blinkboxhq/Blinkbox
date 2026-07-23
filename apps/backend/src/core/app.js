@@ -97,6 +97,11 @@ app.get("/favicon.svg", favicon(FAVICON_SVG, "image/svg+xml"));
 app.use(helmet({
   contentSecurityPolicy: false, // API-only; no HTML served here
   crossOriginEmbedderPolicy: false,
+  // The only HTML this API serves is the OAuth popup result page. COOP
+  // same-origin puts that popup in a fresh browsing-context group, which nulls
+  // its window.opener — so the popup had nobody to hand the new credential to
+  // and every "Sign in with X" in the app silently connected nothing.
+  crossOriginOpenerPolicy: { policy: "unsafe-none" },
 }));
 app.use(
   compression({

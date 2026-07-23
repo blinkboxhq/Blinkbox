@@ -1,8 +1,9 @@
-import { Component, lazy, Suspense } from 'react';
+import { Component, lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import TopProgressBar from './components/TopProgressBar';
 import useGlowBorder from './hooks/useGlowBorder';
+import useCredentialsStore from './store/credentialsStore';
 const Landing      = lazy(() => import('./pages/Landing'));
 const Auth         = lazy(() => import('./pages/auth'));
 const VerifyEmail  = lazy(() => import('./pages/auth/VerifyEmail'));
@@ -55,6 +56,10 @@ class ErrorBoundary extends Component {
 
 const RequireAuth = ({ children }) => {
   const token = localStorage.getItem('blinkbox_token');
+  // Credentials arrive over the socket — a finished OAuth popup, a teammate
+  // adding one. Subscribe at the door rather than when a picker happens to
+  // mount, so an event that lands while the user is still navigating isn't lost.
+  useEffect(() => { if (token) useCredentialsStore.getState().wireLive(); }, [token]);
   if (!token) return <Navigate to="/login" replace />;
   return children;
 };
