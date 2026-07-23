@@ -29,6 +29,22 @@ export const NO_BASE_OPS = new Set(["listBases"]);
 
 export const DEFAULT_OPERATION = "create";
 
+export const OPERATION_SCHEMA = {
+  create: { description: "Create one record in a table", recommended: true },
+  read: { description: "List records from a table, filterable by formula", recommended: true },
+  update: { description: "Update fields on an existing record", recommended: true },
+  delete: { description: "Delete one record" },
+  bulkDelete: { description: "Delete up to 10 records at once" },
+  getRecord: { description: "Read one record by ID", recommended: true },
+  search: { description: "Find records matching a field value or formula", recommended: true },
+  bulkCreate: { description: "Create up to 10 records at once" },
+  bulkUpdate: { description: "Update up to 10 records at once" },
+  listBases: { description: "List the bases the token can access" },
+  listTables: { description: "List a base's tables and their fields" },
+  createTable: { description: "Create a table in a base" },
+  createField: { description: "Add a field to a table" },
+};
+
 export async function run(config, req) {
   const op = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[op];

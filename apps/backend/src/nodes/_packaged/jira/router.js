@@ -29,6 +29,43 @@ export const OPERATIONS = {
 
 export const DEFAULT_OPERATION = "searchIssues";
 
+export const OPERATION_SCHEMA = {
+  createIssue: { description: "Create an issue in a project", recommended: true },
+  getIssue: { description: "Read one issue by key, including its fields" },
+  updateIssue: { description: "Update an issue's summary, description or fields", recommended: true },
+  deleteIssue: { description: "Delete an issue" },
+  assignIssue: { description: "Assign an issue to a user" },
+  searchIssues: { description: "Search issues with a JQL query", recommended: true },
+  transitionIssue: { description: "Move an issue to another status", recommended: true },
+  listTransitions: { description: "List the transitions available for an issue" },
+  addComment: { description: "Comment on an issue", recommended: true },
+  getComments: { description: "List an issue's comments" },
+  updateComment: { description: "Edit a comment" },
+  deleteComment: { description: "Delete a comment" },
+  linkIssues: { description: "Link two issues (blocks, relates to, …)" },
+  listLinkTypes: { description: "List available issue link types" },
+  addWatcher: { description: "Add a watcher to an issue" },
+  getWatchers: { description: "List an issue's watchers" },
+  addWorklog: { description: "Log time spent on an issue" },
+  getWorklogs: { description: "List an issue's worklogs" },
+  listProjects: { description: "List projects" },
+  getProject: { description: "Read one project by key" },
+  getProjectStatuses: { description: "List a project's issue types and statuses" },
+  listVersions: { description: "List a project's versions" },
+  createVersion: { description: "Create a version in a project" },
+  listComponents: { description: "List a project's components" },
+  getCurrentUser: { description: "Read the profile behind the current token" },
+  searchUsers: { description: "Find users by name or email" },
+  listIssueTypes: { description: "List issue types" },
+  listPriorities: { description: "List priorities" },
+  getFields: { description: "List field definitions, including custom fields" },
+  listBoards: { description: "List agile boards" },
+  getBoardIssues: { description: "List the issues on a board" },
+  listSprints: { description: "List a board's sprints" },
+  createSprint: { description: "Create a sprint on a board" },
+  moveIssuesToSprint: { description: "Move issues into a sprint" },
+};
+
 export async function run(config, req) {
   const op = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[op];
