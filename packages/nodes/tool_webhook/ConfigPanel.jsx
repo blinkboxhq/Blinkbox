@@ -9,7 +9,7 @@ import {
   NumberField,
 } from '@nodes/agent_tool_panel/ToolKit.jsx';
 
-const ACCENT = '#a1a1aa';
+const ACCENT = '#fb7185';
 
 export default function ToolWebhookPanel({ config = {}, updateConfig, nodeId }) {
   const pinned = Boolean((config.url || '').trim());

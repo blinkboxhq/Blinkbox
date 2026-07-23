@@ -1570,8 +1570,8 @@ export const NodeRegistry = {
   tool_webhook: {
     label: "Webhook Call",
     icon: Webhook,
-    colorClass: "text-zinc-400",
-    accentColor: "161,161,170",
+    colorClass: "text-rose-400",
+    accentColor: "251,113,133",
     category: "ai_agent",
     agentOnly: true,
     description: "Trigger an outbound webhook URL",
