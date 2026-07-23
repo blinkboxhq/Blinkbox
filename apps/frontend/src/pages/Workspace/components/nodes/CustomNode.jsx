@@ -136,6 +136,23 @@ const AGENT_BOTTOM_SLOTS = [
   },
 ];
 
+export const AGENT_CARD_W = 212;
+export const AGENT_SLOT_PAD = 30;
+export const AGENT_SUB_D = 50;
+export const AGENT_SUB_DROP = 160;
+const agentSlotStep = () => (AGENT_CARD_W - AGENT_SLOT_PAD * 2) / (AGENT_BOTTOM_SLOTS.length - 1);
+export const agentSlotX = (i) => AGENT_SLOT_PAD + agentSlotStep() * i;
+
+// A sub-node's handle sits dead centre of its 50px circle, so parking that
+// centre on the slot dot's x is what makes the edge drop straight down.
+export function agentSlotSpawnOffset(slotId, depth = 0) {
+  const i = AGENT_BOTTOM_SLOTS.findIndex((s) => s.id === slotId);
+  return {
+    x: agentSlotX(i < 0 ? 0 : i) - AGENT_SUB_D / 2,
+    y: AGENT_SUB_DROP + depth * 130,
+  };
+}
+
 // ─── Agent sub-node — top input and bottom output handles ───────────────────
 // These are the compact mini-cards: agent_llm, agent_memory, agent_tool.
 const AGENT_SUB_TYPES = ["agent_llm", "agent_memory", "agent_tool", "agent_integration"];
@@ -654,11 +671,11 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── AI AGENT NODE ── standard dark card, 3 slot dots on the bottom border ──
   if (isAgent) {
-    const cardW = 212;
+    const cardW = AGENT_CARD_W;
     const cardH = 80;
     const n = AGENT_BOTTOM_SLOTS.length;
-    const slotPad = 30;
-    const slotStep = (cardW - slotPad * 2) / (n - 1);
+    const slotPad = AGENT_SLOT_PAD;
+    const slotStep = agentSlotStep();
 
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
@@ -720,7 +737,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
   // ── AGENT COMPONENT CIRCLE (placed via AgentPicker or legacy agent sub-types) ──
   if (data.isAgentComponent || isAgentSub || hasAgentOutConnection) {
-    const d = 50;
+    const d = AGENT_SUB_D;
     const models = nodeDef.models || [];
     const selectedModel = data.config?.model || nodeDef.defaultModel || "";
     const selectedLabel = models.find(m => m.value === selectedModel)?.label || selectedModel;

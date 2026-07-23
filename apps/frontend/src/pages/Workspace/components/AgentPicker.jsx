@@ -4,6 +4,7 @@ import { Brain, Database, Wrench, ArrowLeft, X, Search,
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
+import { agentSlotSpawnOffset } from "./nodes/CustomNode";
 
 const AGENT_TOOLS = [
   "tool_http_request",
@@ -37,12 +38,6 @@ const CAT_COLORS = {
   integration: "#6ee7b7",
 };
 
-const SLOT_OFFSETS = {
-  llm:         { x: -30,  y: 160 },
-  memory:      { x: 30,   y: 160 },
-  integration: { x: 90,   y: 160 },
-  tools:       { x: 150,  y: 160 },
-};
 
 export default function AgentPicker() {
   const [page, setPage]       = useState("home");
@@ -76,7 +71,7 @@ export default function AgentPicker() {
 
   const commitSingle = useCallback((nodeKey, slotId) => {
     const parentNode = getNode(agentPickerParentId);
-    const off = SLOT_OFFSETS[slotId] || { x: 60, y: 220 };
+    const off = agentSlotSpawnOffset(slotId);
     const newId = `${nodeKey}-${crypto.randomUUID()}`;
     const nodeDef = NodeRegistry[nodeKey];
     addNode({
@@ -93,14 +88,17 @@ export default function AgentPicker() {
   const commitAll = useCallback(() => {
     if (selected.length === 0) return;
     const parentNode = getNode(agentPickerParentId);
+    // Stack same-slot picks straight down rather than fanning them out — a
+    // diagonal offset would bend every edge off its dot.
+    const depth = {};
     selected.forEach(({ nodeKey, slotId }, i) => {
-      const off = SLOT_OFFSETS[slotId] || { x: 60, y: 220 };
+      const off = agentSlotSpawnOffset(slotId, depth[slotId] = (depth[slotId] ?? -1) + 1);
       const newId = `${nodeKey}-${crypto.randomUUID()}`;
       const nodeDef = NodeRegistry[nodeKey];
       addNode({
         id: newId, type: "custom",
         position: parentNode
-          ? { x: parentNode.position.x + off.x + i * 30, y: parentNode.position.y + off.y + i * 30 }
+          ? { x: parentNode.position.x + off.x, y: parentNode.position.y + off.y }
           : { x: 400 + i * 200, y: 300 },
         data: { backendType: nodeKey, label: nodeDef?.label || nodeKey, type: "action", config: {}, isAgentComponent: true },
       });
