@@ -17,7 +17,13 @@ export async function getClient(credentialId, workspaceId) {
     throw new Error("Supabase: Credential must be JSON { url, key }");
   }
   if (!url || !key) throw new Error("Supabase: Credential must include 'url' and 'key'.");
-  return createClient(url, key, { auth: { persistSession: false } });
+  return createClient(url, key, {
+    auth: { persistSession: false },
+    global: {
+      fetch: (input, init = {}) =>
+        fetch(input, { ...init, signal: init.signal ?? AbortSignal.timeout(120000) }),
+    },
+  });
 }
 
 export function handleError(err) {

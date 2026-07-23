@@ -32,7 +32,7 @@ export const remove_background = {
     const res = await axios.post("https://api.remove.bg/v1.0/removebg", form, {
       headers: { "X-Api-Key": apiKey, ...form.getHeaders() },
       responseType: "arraybuffer",
-      timeout: 60000,
+      timeout: 120000,
     });
     const base64 = Buffer.from(res.data).toString("base64");
     return { result: `data:image/png;base64,${base64}`, format: "png", originalUrl: imageUrl };
@@ -87,7 +87,7 @@ export const chat = {
 
     const res = await axios.post("https://api.openai.com/v1/chat/completions",
       { model: config.model || "gpt-4o-mini", messages, max_tokens: parseInt(config.maxTokens || 1000), temperature: parseFloat(config.temperature || 0.7) },
-      { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 60000 },
+      { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000 },
     );
     const reply = res.data.choices?.[0]?.message?.content || "";
     return {

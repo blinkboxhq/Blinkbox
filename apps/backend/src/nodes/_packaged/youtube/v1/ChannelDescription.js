@@ -10,7 +10,7 @@ async function opGetChannel(config, token) {
   if (config.channelId) params.id = config.channelId;
   else if (config.forUsername) params.forUsername = config.forUsername;
   else params.mine = true;
-  const data = await get(token, `/channels`, { params, timeout: 10000 });
+  const data = await get(token, `/channels`, { params, timeout: 120000 });
   return { success: true, ...data.items?.[0] };
 }
 

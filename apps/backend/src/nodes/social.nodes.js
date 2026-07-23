@@ -34,7 +34,7 @@ export const twitter_post = {
 
     const res = await axios.post("https://api.twitter.com/2/tweets", body, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      timeout: 30000,
+      timeout: 120000,
     });
     return { tweetId: res.data.data?.id, text: res.data.data?.text, url: `https://twitter.com/i/web/status/${res.data.data?.id}` };
   },
@@ -68,7 +68,7 @@ export const linkedin_post = {
 
     const res = await axios.post("https://api.linkedin.com/v2/ugcPosts", body, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Restli-Protocol-Version": "2.0.0" },
-      timeout: 30000,
+      timeout: 120000,
     });
     return { postId: res.headers["x-restli-id"], authorUrn };
   },
@@ -91,7 +91,7 @@ export const youtube_upload = {
     const initRes = await axios.post(
       "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
       metadata,
-      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Upload-Content-Type": "video/*" }, timeout: 30000 },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Upload-Content-Type": "video/*" }, timeout: 120000 },
     );
 
     const uploadUrl = initRes.headers.location;
@@ -121,11 +121,11 @@ export const discord_role_assign = {
     const url = `https://discord.com/api/v10/guilds/${guildId}/members/${userId}/roles/${roleId}`;
 
     if (operation === "add") {
-      await axios.put(url, {}, { headers, timeout: 15000 });
+      await axios.put(url, {}, { headers, timeout: 120000 });
       return { userId, roleId, guildId, action: "added" };
     }
     if (operation === "remove") {
-      await axios.delete(url, { headers, timeout: 15000 });
+      await axios.delete(url, { headers, timeout: 120000 });
       return { userId, roleId, guildId, action: "removed" };
     }
     throw new Error(`discord_role_assign: Unknown operation "${operation}". Use: add, remove`);
@@ -152,42 +152,42 @@ export const mastodon = {
         const body = { status: status.substring(0, 500), visibility: config.visibility || "public" };
         if (config.inReplyToId || config.replyToId) body.in_reply_to_id = config.inReplyToId || config.replyToId;
         if (config.spoilerText) body.spoiler_text = config.spoilerText;
-        const res = await axios.post(`${base}/statuses`, body, { headers, timeout: 30000 });
+        const res = await axios.post(`${base}/statuses`, body, { headers, timeout: 120000 });
         return { id: res.data.id, url: res.data.url, content: res.data.content, visibility: res.data.visibility };
       }
       if (operation === "deleteStatus") {
         const id = config.statusId || input?.id;
         if (!id) return { success: false, error: "mastodon: 'statusId' is required.", skipped: true };
-        await axios.delete(`${base}/statuses/${id}`, { headers, timeout: 15000 });
+        await axios.delete(`${base}/statuses/${id}`, { headers, timeout: 120000 });
         return { deleted: true, id };
       }
       if (operation === "boostStatus") {
         const id = config.statusId || input?.id;
         if (!id) return { success: false, error: "mastodon: 'statusId' is required.", skipped: true };
-        const res = await axios.post(`${base}/statuses/${id}/reblog`, {}, { headers, timeout: 15000 });
+        const res = await axios.post(`${base}/statuses/${id}/reblog`, {}, { headers, timeout: 120000 });
         return { reblogged: true, id: res.data.id };
       }
       if (operation === "favouriteStatus") {
         const id = config.statusId || input?.id;
         if (!id) return { success: false, error: "mastodon: 'statusId' is required.", skipped: true };
-        const res = await axios.post(`${base}/statuses/${id}/favourite`, {}, { headers, timeout: 15000 });
+        const res = await axios.post(`${base}/statuses/${id}/favourite`, {}, { headers, timeout: 120000 });
         return { favourited: true, id: res.data.id };
       }
       if (operation === "getTimeline" || operation === "timeline") {
-        const res = await axios.get(`${base}/timelines/home`, { headers, params: { limit: parseInt(config.limit) || 20 }, timeout: 15000 });
+        const res = await axios.get(`${base}/timelines/home`, { headers, params: { limit: parseInt(config.limit) || 20 }, timeout: 120000 });
         const posts = res.data.map((s) => ({ id: s.id, content: s.content, account: s.account.acct, createdAt: s.created_at, url: s.url, reblogsCount: s.reblogs_count, favouritesCount: s.favourites_count }));
         return { posts, count: posts.length };
       }
       if (operation === "searchAccounts") {
         const q = config.q || config.query || input?.query;
         if (!q) return { success: false, error: "mastodon: 'q' query is required.", skipped: true };
-        const res = await axios.get(`${base}/accounts/search`, { headers, params: { q, limit: parseInt(config.limit) || 10 }, timeout: 15000 });
+        const res = await axios.get(`${base}/accounts/search`, { headers, params: { q, limit: parseInt(config.limit) || 10 }, timeout: 120000 });
         return { accounts: res.data.map((a) => ({ id: a.id, username: a.username, displayName: a.display_name, url: a.url, followersCount: a.followers_count })), count: res.data.length };
       }
       if (operation === "followAccount" || operation === "follow") {
         const id = config.accountId || input?.id;
         if (!id) return { success: false, error: "mastodon: 'accountId' is required.", skipped: true };
-        const res = await axios.post(`${base}/accounts/${id}/follow`, {}, { headers, timeout: 15000 });
+        const res = await axios.post(`${base}/accounts/${id}/follow`, {}, { headers, timeout: 120000 });
         return { following: res.data.following, accountId: id };
       }
       throw new Error(`mastodon: Unknown operation "${operation}".`);
@@ -270,7 +270,7 @@ export const email = {
         from: { email: config.from || process.env.FROM_EMAIL || "noreply@blinkbox.io" },
         subject,
         content: [{ type: config.html ? "text/html" : "text/plain", value: body }],
-      }, { headers: { Authorization: `Bearer ${sgKey}` }, timeout: 30000 });
+      }, { headers: { Authorization: `Bearer ${sgKey}` }, timeout: 120000 });
       return { sent: true, to, subject, provider: "sendgrid", statusCode: res.status };
     }
 

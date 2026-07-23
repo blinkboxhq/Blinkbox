@@ -10,13 +10,13 @@ import { buildHeaders } from "../GenericFunctions.js";
 const CONTROL_PLANE = "https://api.pinecone.io";
 
 async function opListIndexes(_config, apiKey) {
-  const res = await axios.get(`${CONTROL_PLANE}/indexes`, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.get(`${CONTROL_PLANE}/indexes`, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { indexes: res.data?.indexes || [], count: res.data?.indexes?.length ?? 0 };
 }
 
 async function opDescribeIndex(config, apiKey) {
   if (!config.indexName) return { success: false, error: "Pinecone describeIndex: 'indexName' is required.", skipped: true };
-  const res = await axios.get(`${CONTROL_PLANE}/indexes/${encodeURIComponent(config.indexName)}`, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.get(`${CONTROL_PLANE}/indexes/${encodeURIComponent(config.indexName)}`, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { index: res.data, host: res.data?.host, dimension: res.data?.dimension, metric: res.data?.metric, status: res.data?.status };
 }
 
@@ -35,13 +35,13 @@ async function opCreateIndex(config, apiKey) {
       },
     },
   };
-  const res = await axios.post(`${CONTROL_PLANE}/indexes`, body, { headers: buildHeaders(apiKey), timeout: 30000 });
+  const res = await axios.post(`${CONTROL_PLANE}/indexes`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { created: true, index: res.data, host: res.data?.host, name: config.indexName };
 }
 
 async function opDeleteIndex(config, apiKey) {
   if (!config.indexName) return { success: false, error: "Pinecone deleteIndex: 'indexName' is required.", skipped: true };
-  await axios.delete(`${CONTROL_PLANE}/indexes/${encodeURIComponent(config.indexName)}`, { headers: buildHeaders(apiKey), timeout: 15000 });
+  await axios.delete(`${CONTROL_PLANE}/indexes/${encodeURIComponent(config.indexName)}`, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { deleted: true, name: config.indexName };
 }
 

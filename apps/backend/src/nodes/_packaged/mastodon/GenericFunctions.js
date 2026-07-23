@@ -51,7 +51,7 @@ export function boundLimit(val, def = 20) {
   return Math.min(n, 40);
 }
 
-export async function get(client, path, { params, timeout = 15000 } = {}) {
+export async function get(client, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.get(`${client.base}${path}`, {
     headers: client.headers,
     ...(params ? { params } : {}),
@@ -60,18 +60,18 @@ export async function get(client, path, { params, timeout = 15000 } = {}) {
   return data;
 }
 
-export async function post(client, path, body = {}, { timeout = 15000 } = {}) {
+export async function post(client, path, body = {}, { timeout = 120000 } = {}) {
   const { data } = await axios.post(`${client.base}${path}`, body, { headers: client.headers, timeout });
   return data;
 }
 
-export async function del(client, path, { timeout = 15000 } = {}) {
+export async function del(client, path, { timeout = 120000 } = {}) {
   const { data } = await axios.delete(`${client.base}${path}`, { headers: client.headers, timeout });
   return data;
 }
 
 /** GET a /api/v2 endpoint (client.base ends in /api/v1). Used by full search. */
-export async function getV2(client, path, { params, timeout = 15000 } = {}) {
+export async function getV2(client, path, { params, timeout = 120000 } = {}) {
   const base2 = client.base.replace(/\/api\/v1$/, "/api/v2");
   const { data } = await axios.get(`${base2}${path}`, {
     headers: client.headers,

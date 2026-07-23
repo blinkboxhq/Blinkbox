@@ -68,7 +68,7 @@ export async function resolveMediaSource(ref, { kind = "image", fallbackMime } =
   }
   if (/^https?:\/\//i.test(ref)) {
     await assertSafeUrlResolved(ref);
-    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 60000, maxContentLength: 32 * 1024 * 1024, maxRedirects: 0 });
+    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 120000, maxContentLength: 32 * 1024 * 1024, maxRedirects: 0 });
     const mediaType = (res.headers["content-type"] || fallbackMime || "").split(";")[0] || fallbackMime;
     return { type: "base64", media_type: mediaType, data: Buffer.from(res.data).toString("base64") };
   }
@@ -122,7 +122,7 @@ export async function listModels(credentialId, workspaceId) {
   const apiKey = await getApiKey(credentialId, workspaceId);
   const response = await axios.get(MODELS_URL, {
     headers: { "x-api-key": apiKey, "anthropic-version": ANTHROPIC_VERSION },
-    timeout: 30000,
+    timeout: 120000,
   });
   return (response.data.data || [])
     .map(m => m.id)

@@ -21,21 +21,21 @@ async function opTriggerEvent(config) {
   if (config.dedupKey) payload.dedup_key = config.dedupKey;
   if (config.component) payload.payload.component = config.component;
   if (config.eventClass) payload.payload.class = config.eventClass;
-  const { data } = await axios.post(EVENTS_URL, payload, { timeout: 15000 });
+  const { data } = await axios.post(EVENTS_URL, payload, { timeout: 120000 });
   return { success: true, status: data.status, dedup_key: data.dedup_key, message: data.message };
 }
 
 async function opResolveEvent(config) {
   let e = need(config, "routingKey", "resolveEvent"); if (e) return e;
   e = need(config, "dedupKey", "resolveEvent"); if (e) return e;
-  const { data } = await axios.post(EVENTS_URL, { routing_key: config.routingKey, event_action: "resolve", dedup_key: config.dedupKey }, { timeout: 15000 });
+  const { data } = await axios.post(EVENTS_URL, { routing_key: config.routingKey, event_action: "resolve", dedup_key: config.dedupKey }, { timeout: 120000 });
   return { success: true, status: data.status, dedup_key: data.dedup_key };
 }
 
 async function opAcknowledgeEvent(config) {
   let e = need(config, "routingKey", "acknowledgeEvent"); if (e) return e;
   e = need(config, "dedupKey", "acknowledgeEvent"); if (e) return e;
-  const { data } = await axios.post(EVENTS_URL, { routing_key: config.routingKey, event_action: "acknowledge", dedup_key: config.dedupKey }, { timeout: 15000 });
+  const { data } = await axios.post(EVENTS_URL, { routing_key: config.routingKey, event_action: "acknowledge", dedup_key: config.dedupKey }, { timeout: 120000 });
   return { success: true, status: data.status, dedup_key: data.dedup_key };
 }
 

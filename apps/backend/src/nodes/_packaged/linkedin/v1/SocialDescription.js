@@ -22,7 +22,7 @@ async function opCreateComment(config, token) {
   const { data, headers: respHeaders } = await axios.post(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}/comments`,
     { actor, message: { text } },
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   return { commentId: respHeaders["x-restli-id"] || data?.$URN || data?.id, entity, actor, text };
 }
@@ -33,7 +33,7 @@ async function opListComments(config, token) {
   const count = boundCount(config.limit, 25, 100);
   const { data } = await axios.get(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}/comments?count=${count}`,
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   const comments = (data.elements || []).map((c) => ({
     id: c.$URN || c.id,
@@ -53,7 +53,7 @@ async function opDeleteComment(config, token) {
   if (!actor) return { success: false, error: "LinkedIn deleteComment: 'orgId' is required when acting as organization.", skipped: true };
   await axios.delete(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}/comments/${encodeURIComponent(commentId)}?actor=${encodeURIComponent(actor)}`,
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   return { deleted: true, entity, commentId };
 }
@@ -66,7 +66,7 @@ async function opLikePost(config, token) {
   await axios.post(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}/likes`,
     { actor, root: entity },
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   return { liked: true, entity, actor };
 }
@@ -78,7 +78,7 @@ async function opUnlikePost(config, token) {
   if (!actor) return { success: false, error: "LinkedIn unlikePost: 'orgId' is required when acting as organization.", skipped: true };
   await axios.delete(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}/likes/${encodeURIComponent(actor)}`,
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   return { unliked: true, entity, actor };
 }
@@ -88,7 +88,7 @@ async function opGetSocialSummary(config, token) {
   if (!entity) return { success: false, error: "LinkedIn getSocialSummary: 'postId' (entity URN) is required.", skipped: true };
   const { data } = await axios.get(
     `${REST_BASE}/socialActions/${encodeURIComponent(entity)}`,
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   return {
     entity,

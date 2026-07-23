@@ -14,7 +14,7 @@ async function opQueryDatabase(config, token) {
   if (config.startCursor) body.start_cursor = config.startCursor;
 
   const response = await axios.post(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}/query`, body, {
-    headers: headers(token), timeout: 20000,
+    headers: headers(token), timeout: 120000,
   });
   return {
     results: response.data.results,
@@ -40,13 +40,13 @@ async function opCreateDatabase(config, token) {
   if (config.description) body.description = [{ type: "text", text: { content: config.description } }];
   if (config.isInline !== undefined) body.is_inline = config.isInline;
 
-  const response = await axios.post(`${BASE}/databases`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.post(`${BASE}/databases`, body, { headers: headers(token), timeout: 120000 });
   return { databaseId: response.data.id, url: response.data.url, title: config.title, created: true };
 }
 
 async function opGetDatabase(config, token) {
   if (!config.databaseId) return { success: false, error: "Notion getDatabase: 'databaseId' is required.", skipped: true };
-  const response = await axios.get(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, { headers: headers(token), timeout: 15000 });
+  const response = await axios.get(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, { headers: headers(token), timeout: 120000 });
   const d = response.data;
   return { databaseId: d.id, url: d.url, title: (d.title || []).map((t) => t.plain_text).join(""), properties: d.properties };
 }
@@ -57,7 +57,7 @@ async function opUpdateDatabase(config, token) {
   if (config.title) body.title = [{ type: "text", text: { content: config.title } }];
   if (config.description) body.description = [{ type: "text", text: { content: config.description } }];
   if (config.properties) body.properties = parseJSON(config.properties, "updateDatabase", "properties");
-  const response = await axios.patch(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.patch(`${BASE}/databases/${encodeURIComponent(stripId(config.databaseId))}`, body, { headers: headers(token), timeout: 120000 });
   return { databaseId: response.data.id, url: response.data.url, updated: true };
 }
 

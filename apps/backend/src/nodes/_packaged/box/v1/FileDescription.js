@@ -53,7 +53,7 @@ async function opUploadNewVersion(config, client) {
   form.append("file", buffer, { filename: fileName || "file" });
   const res = await axios.post(`https://upload.box.com/api/2.0/files/${enc(fileId)}/content`, form, {
     headers: { Authorization: `Bearer ${client.token}`, ...form.getHeaders() },
-    timeout: 60000, maxContentLength: Infinity, maxBodyLength: Infinity,
+    timeout: 120000, maxContentLength: Infinity, maxBodyLength: Infinity,
   });
   const entry = res.data.entries?.[0] ?? {};
   return { success: true, id: entry.id, name: entry.name, size: entry.size, modifiedAt: entry.modified_at };
@@ -66,7 +66,7 @@ async function opDownloadFile(config, client) {
   const dlRes = await axios.get(`${API}/files/${enc(fileId)}/content`, {
     headers: { Authorization: `Bearer ${client.token}` },
     responseType: "arraybuffer",
-    timeout: 60000,
+    timeout: 120000,
     maxRedirects: 5,
   });
   return {
@@ -102,7 +102,7 @@ async function opCopyFile(config, client) {
   if (!destFolderId) return { success: false, error: "Box copyFile: 'destFolderId' is required.", skipped: true };
   const body = { parent: { id: destFolderId } };
   if (newName) body.name = newName;
-  const res = await axios.post(`${API}/${itemPath(itemType)}/${enc(fileId)}/copy`, body, { headers: client.headers, timeout: 20000 });
+  const res = await axios.post(`${API}/${itemPath(itemType)}/${enc(fileId)}/copy`, body, { headers: client.headers, timeout: 120000 });
   return { success: true, id: res.data.id, name: res.data.name, createdAt: res.data.created_at };
 }
 

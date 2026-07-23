@@ -49,7 +49,7 @@ async function opMarkRead(config, token) {
   try {
     const response = await axios.post(url,
       { messaging_product: "whatsapp", status: "read", message_id: messageId },
-      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 10000 },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 120000 },
     );
     if (response.data?.error) {
       const { message, code } = response.data.error;

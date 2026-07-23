@@ -98,7 +98,7 @@ async function opSharePost(config, token) {
       },
       visibility: { "com.linkedin.ugc.MemberNetworkVisibility": visibility },
     };
-    const { data } = await axios.post(`${BASE}/ugcPosts`, pollPayload, { headers: headers(token), timeout: 15000 });
+    const { data } = await axios.post(`${BASE}/ugcPosts`, pollPayload, { headers: headers(token), timeout: 120000 });
     return { id: data.id, success: true, authorUrn, type: "poll", note: "Poll creation requires LinkedIn Partner API access for full poll support." };
   }
 
@@ -109,7 +109,7 @@ async function opSharePost(config, token) {
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": visibility },
   };
 
-  const { data } = await axios.post(`${BASE}/ugcPosts`, post, { headers: headers(token), timeout: 15000 });
+  const { data } = await axios.post(`${BASE}/ugcPosts`, post, { headers: headers(token), timeout: 120000 });
   return {
     postId: data.id,
     postUrl: `https://www.linkedin.com/feed/update/${data.id}`,
@@ -140,7 +140,7 @@ async function opCreatePost(config, token) {
   };
   const { headers: respHeaders, data } = await axios.post(`${REST_BASE}/posts`, body, {
     headers: restHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
   });
   const id = respHeaders["x-restli-id"] || data?.id;
   return { postId: id, postUrl: id ? `https://www.linkedin.com/feed/update/${id}` : null, authorUrn, publishedAt: new Date().toISOString() };
@@ -151,7 +151,7 @@ async function opGetPost(config, token) {
   if (!id) return { success: false, error: "LinkedIn getPost: 'postId' (URN) is required.", skipped: true };
   const { data } = await axios.get(`${REST_BASE}/posts/${encodeURIComponent(id)}`, {
     headers: restHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     id: data.id,
@@ -168,7 +168,7 @@ async function opDeletePost(config, token) {
   if (!id) return { success: false, error: "LinkedIn deletePost: 'postId' (URN) is required.", skipped: true };
   await axios.delete(`${REST_BASE}/posts/${encodeURIComponent(id)}`, {
     headers: restHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
   });
   return { deleted: true, id };
 }
@@ -181,7 +181,7 @@ async function opUpdatePost(config, token) {
   await axios.post(
     `${REST_BASE}/posts/${encodeURIComponent(id)}`,
     { patch: { $set: { commentary: text } } },
-    { headers: restHeaders(token, { "X-RestLi-Method": "PARTIAL_UPDATE" }), timeout: 15000 },
+    { headers: restHeaders(token, { "X-RestLi-Method": "PARTIAL_UPDATE" }), timeout: 120000 },
   );
   return { updated: true, id, commentary: text };
 }
@@ -201,7 +201,7 @@ async function opResharePost(config, token) {
   };
   const { headers: respHeaders } = await axios.post(`${REST_BASE}/posts`, body, {
     headers: restHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
   });
   const id = respHeaders["x-restli-id"];
   return { postId: id, reshareOf: parent, authorUrn };
@@ -214,7 +214,7 @@ async function opListOrgPosts(config, token) {
   const count = Math.min(parseInt(config.limit) || 10, 100);
   const { data } = await axios.get(
     `${REST_BASE}/posts?q=author&author=${authorUrn}&count=${count}&sortBy=LAST_MODIFIED`,
-    { headers: restHeaders(token), timeout: 15000 },
+    { headers: restHeaders(token), timeout: 120000 },
   );
   const posts = (data.elements || []).map((p) => ({
     id: p.id,

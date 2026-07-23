@@ -42,7 +42,7 @@ export default {
             { role: "system", content: SYSTEM_PROMPTS.groq },
             { role: "user",   content: userMsg },
           ] },
-        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000 },
+        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
       );
       const text   = res.data.choices?.[0]?.message?.content || "";
       const tokens = res.data.usage?.total_tokens || 0;

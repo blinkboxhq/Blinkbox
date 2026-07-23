@@ -21,7 +21,7 @@ async function opEmbeddings(config, input, apiKey) {
   const response = await axios.post(
     `${MODELS_URL}/${model}:batchEmbedContents`,
     { requests },
-    { headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: 60000 },
+    { headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: 120000 },
   );
 
   const vectors = (response.data.embeddings || []).map(e => e.values);
@@ -34,7 +34,7 @@ async function opEmbeddings(config, input, apiKey) {
 
 async function opListModels(config, input, apiKey) {
   const response = await axios.get(MODELS_URL, {
-    headers: { "x-goog-api-key": apiKey }, timeout: 30000, params: { pageSize: 200 },
+    headers: { "x-goog-api-key": apiKey }, timeout: 120000, params: { pageSize: 200 },
   });
   const models = (response.data.models || [])
     .filter(m => (m.supportedGenerationMethods || []).some(x => x === "generateContent" || x === "embedContent"))

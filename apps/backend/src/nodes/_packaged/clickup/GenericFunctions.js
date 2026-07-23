@@ -39,7 +39,7 @@ export function buildClient(token) {
   return { headers: { Authorization: token, "Content-Type": "application/json" } };
 }
 
-export async function req(client, method, path, { params, body, timeout = 15000 } = {}) {
+export async function req(client, method, path, { params, body, timeout = 120000 } = {}) {
   const { data } = await axios({
     method,
     url: `${BASE}${path}`,

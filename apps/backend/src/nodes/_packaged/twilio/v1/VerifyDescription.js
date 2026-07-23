@@ -12,7 +12,7 @@ async function opSendVerification(config, { accountSid, authToken }) {
   const response = await axios.post(url, encodeForm({ To: config.to, Channel: config.channel || "sms" }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { verificationSid: response.data.sid, status: response.data.status, channel: response.data.channel, to: response.data.to };
 }
@@ -25,7 +25,7 @@ async function opCheckVerification(config, { accountSid, authToken }) {
   const response = await axios.post(url, encodeForm({ To: config.to, Code: config.code }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { status: response.data.status, valid: response.data.valid, to: response.data.to };
 }

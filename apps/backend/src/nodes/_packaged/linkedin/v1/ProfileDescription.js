@@ -10,7 +10,7 @@ import { BASE, headers, boundCount, localized } from "../GenericFunctions.js";
 async function opGetProfile(config, token) {
   const { data } = await axios.get(
     `${BASE}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams),vanityName)`,
-    { headers: headers(token), timeout: 10000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const firstName = data.firstName?.localized?.en_US || Object.values(data.firstName?.localized || {})[0] || "";
   const lastName = data.lastName?.localized?.en_US || Object.values(data.lastName?.localized || {})[0] || "";
@@ -25,7 +25,7 @@ async function opGetProfile(config, token) {
 
 /** OpenID Connect userinfo — works with the modern 'openid profile' scopes. */
 async function opGetUserInfo(config, token) {
-  const { data } = await axios.get(`${BASE}/userinfo`, { headers: headers(token), timeout: 10000 });
+  const { data } = await axios.get(`${BASE}/userinfo`, { headers: headers(token), timeout: 120000 });
   return {
     sub: data.sub,
     name: data.name,
@@ -41,7 +41,7 @@ async function opGetUserInfo(config, token) {
 async function opGetEmail(config, token) {
   const { data } = await axios.get(
     `${BASE}/emailAddress?q=members&projection=(elements*(handle~))`,
-    { headers: headers(token), timeout: 10000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const email = data.elements?.[0]?.["handle~"]?.emailAddress || null;
   if (!email) return { success: false, error: "LinkedIn getEmail: no email returned — check the r_emailaddress scope.", skipped: true };
@@ -52,7 +52,7 @@ async function opGetConnections(config, token) {
   const count = boundCount(config.limit, 50, 500);
   const { data } = await axios.get(
     `${BASE}/connections?q=viewer&start=0&count=${count}&projection=(elements*(id,firstName,lastName,headline))`,
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const connections = (data.elements || []).map((el) => ({
     id: el.id,

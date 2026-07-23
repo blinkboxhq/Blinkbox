@@ -25,7 +25,7 @@ async function opSetEnvVar(config, { api }) {
   if (config.value === undefined || config.value === "") return skip("setEnvVar", "'value' is required.");
   const ctx = config.context || "production";
   const body = [{ key: config.key, values: [{ value: String(config.value), context: ctx }] }];
-  await api.patch(`/sites/${encodeURIComponent(config.siteId)}/env`, body, { timeout: 20000 });
+  await api.patch(`/sites/${encodeURIComponent(config.siteId)}/env`, body, { timeout: 120000 });
   return { success: true, key: config.key, context: ctx, updated: true };
 }
 

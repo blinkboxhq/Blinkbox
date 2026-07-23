@@ -37,7 +37,7 @@ async function sendSlack(ch, message, workspaceId) {
   await axios.post(
     "https://slack.com/api/chat.postMessage",
     { channel, text: message },
-    { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 15000 },
+    { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
   return { type: "slack", channel, success: true };
 }
@@ -49,7 +49,7 @@ async function sendTelegram(ch, message, workspaceId) {
   await axios.post(
     `https://api.telegram.org/bot${token}/sendMessage`,
     { chat_id: chatId, text: message, parse_mode: "Markdown" },
-    { timeout: 15000 },
+    { timeout: 120000 },
   );
   return { type: "telegram", chatId, success: true };
 }
@@ -58,7 +58,7 @@ async function sendDiscord(ch, message) {
   const webhookUrl = ch.webhookUrl;
   if (!webhookUrl) return { success: false, error: "Discord: webhookUrl is required.", skipped: true };
   await assertSafeUrlResolved(webhookUrl);
-  await axios.post(webhookUrl, { content: message }, { timeout: 15000 });
+  await axios.post(webhookUrl, { content: message }, { timeout: 120000 });
   return { type: "discord", success: true };
 }
 
@@ -71,7 +71,7 @@ async function sendEmail(ch, message, subject, workspaceId) {
     await axios.post(
       "https://api.sendgrid.com/v3/mail/send",
       { personalizations: [{ to: [{ email: to }] }], from: { email: ch.from || "noreply@blinkbox.app" }, subject: subject || message.slice(0, 60), content: [{ type: "text/plain", value: message }] },
-      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 15000 },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 120000 },
     );
   } else {
     // Resend (default email provider)
@@ -79,7 +79,7 @@ async function sendEmail(ch, message, subject, workspaceId) {
     await axios.post(
       "https://api.resend.com/emails",
       { from: ch.from || "noreply@blinkbox.app", to: [to], subject: subject || message.slice(0, 60), text: message },
-      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 15000 },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 120000 },
     );
   }
   return { type: ch.type || "email", to, success: true };
@@ -97,7 +97,7 @@ async function sendSms(ch, message, workspaceId) {
   await axios.post(
     `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`,
     new URLSearchParams({ To: to, From: from, Body: message }).toString(),
-    { auth: { username: accountSid, password: authToken }, headers: { "Content-Type": "application/x-www-form-urlencoded" }, timeout: 15000 },
+    { auth: { username: accountSid, password: authToken }, headers: { "Content-Type": "application/x-www-form-urlencoded" }, timeout: 120000 },
   );
   return { type: "sms", to, success: true };
 }

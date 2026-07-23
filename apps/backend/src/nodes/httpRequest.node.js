@@ -17,7 +17,7 @@
  *   body            — Request body (for POST/PUT/PATCH)
  *   credentialId    — Reference to encrypted credential in Vault
  *   queryParams     — Object of URL query parameters
- *   timeout         — Request timeout in ms (default: 15000, max: 60000)
+ *   timeout         — Request timeout in ms (default: 120000, min: 120000, max: 600000)
  *   followRedirects — Boolean (default: true)
  *   responseType    — "auto" (default) | "json" | "binary" — force binary handling
  */
@@ -30,7 +30,8 @@ import { ALLOW_LOCAL_REQUESTS } from "../config/env.js";
 import { assertSafeUrlResolved } from "../utils/ssrf.js";
 
 const MAX_RESPONSE_BYTES = 25 * 1024 * 1024; // 25 MB for binary downloads
-const MAX_TIMEOUT_MS = 60000;
+const MIN_TIMEOUT_MS = 120000;
+const MAX_TIMEOUT_MS = 600000;
 
 // The config panel collects headers and query params as [{ key, value }] rows;
 // older saved workflows stored them as plain objects. Accept both.
@@ -64,7 +65,7 @@ export default {
       body = null,
       credentialId,
       queryParams = {},
-      timeout = 15000,
+      timeout = 120000,
       followRedirects = true,
       responseType = "auto",
       workflowId,
@@ -99,7 +100,7 @@ export default {
     await guardUrl(url);
 
     const finalHeaders = { "Content-Type": "application/json", ...pairsToObject(headers) };
-    const clampedTimeout = Math.min(Math.max(timeout, 1000), MAX_TIMEOUT_MS);
+    const clampedTimeout = Math.min(Math.max(timeout, MIN_TIMEOUT_MS), MAX_TIMEOUT_MS);
 
     // Vault: resolve + decrypt credentials at runtime
     if (credentialId) {

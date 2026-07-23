@@ -12,7 +12,7 @@ export const BASE = "https://api.linear.app/graphql";
 export async function gql(query, variables, apiKey) {
   const res = await axios.post(BASE, { query, variables }, {
     headers: { Authorization: apiKey, "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   if (res.data.errors?.length) throw new Error(`Linear: ${res.data.errors[0].message}`);
   return res.data.data;

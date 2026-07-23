@@ -22,7 +22,7 @@ async function opSendEmail(config, token) {
   };
   if (config.replyTo) payload.reply_to = parseAddress(config.replyTo);
 
-  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 15000 });
+  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 120000 });
   const messageId = response.headers["x-message-id"] || null;
   return { sent: true, messageId, statusCode: response.status };
 }
@@ -42,7 +42,7 @@ async function opSendTemplate(config, token) {
   if (config.subject) payload.subject = config.subject;
   if (config.replyTo) payload.reply_to = parseAddress(config.replyTo);
 
-  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 15000 });
+  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 120000 });
   return { sent: true, messageId: response.headers["x-message-id"] || null, statusCode: response.status };
 }
 
@@ -74,7 +74,7 @@ async function opSendBulk(config, token) {
       : [{ type: "text/plain", value: config.body }];
   }
 
-  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 20000 });
+  const response = await axios.post(`${BASE}/mail/send`, payload, { headers: auth(token), timeout: 120000 });
   return { sent: true, recipientCount: recipients.length, statusCode: response.status };
 }
 

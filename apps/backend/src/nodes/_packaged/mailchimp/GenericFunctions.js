@@ -45,7 +45,7 @@ export function emailHash(email) {
 
 // Thin axios wrapper — all handlers go through this so timeout, auth, and
 // content-type stay consistent. `path` is appended to the DC base URL.
-export async function req(client, method, path, { params, body, timeout = 15000 } = {}) {
+export async function req(client, method, path, { params, body, timeout = 120000 } = {}) {
   const { data } = await axios({
     method,
     url: `${client.base}${path}`,

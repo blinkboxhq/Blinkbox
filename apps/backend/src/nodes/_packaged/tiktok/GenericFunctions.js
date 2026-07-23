@@ -33,7 +33,7 @@ export function makeHeaders(token) {
 }
 
 /** POST a JSON body to a v2 endpoint. */
-export async function post(token, path, body, { timeout = 15000, params } = {}) {
+export async function post(token, path, body, { timeout = 120000, params } = {}) {
   const { data } = await axios.post(`${BASE}${path}`, body, {
     headers: makeHeaders(token),
     ...(params ? { params } : {}),
@@ -43,7 +43,7 @@ export async function post(token, path, body, { timeout = 15000, params } = {}) 
 }
 
 /** GET a v2 endpoint (used by display fields queries). */
-export async function get(token, path, { params, timeout = 15000 } = {}) {
+export async function get(token, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.get(`${BASE}${path}`, {
     headers: makeHeaders(token),
     ...(params ? { params } : {}),

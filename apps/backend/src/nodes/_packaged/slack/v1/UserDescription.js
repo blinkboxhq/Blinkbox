@@ -11,7 +11,7 @@ async function opGetUser(config, token) {
   const response = await axios.get(`${API}/users.lookupByEmail`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { email },
-    timeout: 10000,
+    timeout: 120000,
   });
   if (!response.data.ok) {
     if (response.data.error === "users_not_found") throw new Error(`Slack getUser: No user found with email "${email}".`);
@@ -35,7 +35,7 @@ async function opGetUserInfo(config, token) {
   const response = await axios.get(`${API}/users.info`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { user },
-    timeout: 10000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack getUserInfo: ${response.data.error}`);
   const u = response.data.user;
@@ -46,7 +46,7 @@ async function opListUsers(config, token) {
   const response = await axios.get(`${API}/users.list`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { limit: Math.min(Number(config.limit) || 100, 1000) },
-    timeout: 15000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack listUsers: ${response.data.error}`);
   const members = (response.data.members || []).filter((m) => !m.deleted);

@@ -53,7 +53,7 @@ export function childrenUrl(folderPath) {
 export async function resolveContent(content) {
   if (/^https?:\/\//i.test(content)) {
     await assertSafeUrlResolved(content);
-    const dl = await axios.get(content, { responseType: "arraybuffer", timeout: 30000 });
+    const dl = await axios.get(content, { responseType: "arraybuffer", timeout: 120000 });
     return Buffer.from(dl.data);
   }
   return Buffer.from(content, "base64");

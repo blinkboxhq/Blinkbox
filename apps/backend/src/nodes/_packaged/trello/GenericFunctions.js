@@ -53,7 +53,7 @@ export function handleError(err) {
  * axios wrapper. Merges `key`/`token` into params. Trello mutations pass args
  * as query params with a null body, so `body` is rarely used.
  */
-export async function req(client, method, path, { params, body = null, timeout = 15000 } = {}) {
+export async function req(client, method, path, { params, body = null, timeout = 120000 } = {}) {
   const res = await axios({
     method,
     url: `${BASE}${path}`,

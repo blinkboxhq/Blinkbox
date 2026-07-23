@@ -21,7 +21,7 @@ export default {
         from: { email: config.from || process.env.FROM_EMAIL || "noreply@blinkbox.io" },
         subject,
         content: [{ type: config.html ? "text/html" : "text/plain", value: body }],
-      }, { headers: { Authorization: `Bearer ${sgKey}` }, timeout: 30000 });
+      }, { headers: { Authorization: `Bearer ${sgKey}` }, timeout: 120000 });
       return { sent: true, to, subject, provider: "sendgrid", statusCode: res.status };
     }
 

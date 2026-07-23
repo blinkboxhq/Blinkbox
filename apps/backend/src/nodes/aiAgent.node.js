@@ -142,7 +142,7 @@ const MAX_INPUT_BYTES = 30_000;
 const MAX_ITERATIONS_CEILING = 15;
 const REQUEST_TIMEOUT_MS = 600_000;
 const MAX_TOOL_OUTPUT_BYTES = 15_000;
-const TOOL_TIMEOUT_MS = 30_000;
+const TOOL_TIMEOUT_MS = 600_000;
 const MAX_MEMORY_MESSAGES = 200;
 
 // ── Token Summarizer Constants ────────────────────────────────────────────────
@@ -235,7 +235,7 @@ const BUILTIN_TOOLS = {
         },
         timeout: {
           type: "number",
-          description: "Timeout in seconds (default 15, max 60)",
+          description: "Timeout in seconds (default 120, max 600)",
         },
       },
       required: ["url"],
@@ -255,7 +255,7 @@ const BUILTIN_TOOLS = {
         },
         timeout: {
           type: "number",
-          description: "Execution timeout in milliseconds (default 5000, max 30000)",
+          description: "Execution timeout in milliseconds (default 120000, max 600000)",
         },
       },
       required: ["code"],
@@ -1020,7 +1020,7 @@ async function assembleTools({
           const sentences = Math.min(args.sentences || 5, 10);
           const searchRes = await axios.get(
             `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${query}&format=json&srlimit=3`,
-            { timeout: 8000 }
+            { timeout: 120000 }
           );
           const results = searchRes.data?.query?.search || [];
           if (!results.length) return { error: `No Wikipedia article found for: ${args.query}` };
@@ -1028,7 +1028,7 @@ async function assembleTools({
           const title = encodeURIComponent(results[0].title);
           const summaryRes = await axios.get(
             `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exsentences=${sentences}&exintro&explaintext&titles=${title}&format=json`,
-            { timeout: 8000 }
+            { timeout: 120000 }
           );
           const pages = summaryRes.data?.query?.pages || {};
           const page = Object.values(pages)[0];
@@ -1062,7 +1062,7 @@ async function assembleTools({
           catch (e) { return { error: e.message }; }
 
           const method = (args.method || "GET").toUpperCase();
-          const timeout = Math.min((args.timeout || 15) * 1000, 60000);
+          const timeout = Math.min(Math.max((args.timeout || 120) * 1000, 120000), 600000);
 
           const response = await axios({
             method,
@@ -1118,7 +1118,7 @@ async function assembleTools({
           if (!code) return { error: "Code is required" };
           if (code.length > 10000) return { error: "Code too long (max 10000 characters)" };
 
-          const timeout = Math.min(args.timeout || 5000, 30000);
+          const timeout = Math.min(args.timeout || 120000, 600000);
 
           let ivm;
           try {

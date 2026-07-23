@@ -36,7 +36,7 @@ export async function send(phoneNumberId, token, payload) {
   const url = `https://graph.facebook.com/${API_VERSION}/${encodeURIComponent(phoneNumberId)}/messages`;
   const response = await axios.post(url, payload, {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   if (response.data?.error) {
     const { message, code } = response.data.error;
@@ -71,7 +71,7 @@ export async function uploadMedia(phoneNumberId, token, attachment) {
   const { data } = await axios.post(
     `https://graph.facebook.com/v21.0/${encodeURIComponent(phoneNumberId)}/media`,
     form,
-    { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 }
+    { headers: { Authorization: `Bearer ${token}` }, timeout: 120000 }
   );
   return data.id;
 }

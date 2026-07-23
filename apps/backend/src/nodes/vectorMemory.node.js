@@ -35,7 +35,7 @@ async function getEmbedding(text, apiKey, model = "text-embedding-3-small") {
   const response = await axios.post(
     "https://api.openai.com/v1/embeddings",
     { model, input: String(text).slice(0, 8000) },
-    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 30000 },
+    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
   return response.data.data[0].embedding;
 }

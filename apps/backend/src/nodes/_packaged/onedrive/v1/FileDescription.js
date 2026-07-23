@@ -19,7 +19,7 @@ async function opUploadFile(config, ctx) {
 
   const res = await axios.put(uploadUrl, fileBuffer, {
     headers: { Authorization: headers.Authorization, "Content-Type": "application/octet-stream" },
-    timeout: 60000,
+    timeout: 120000,
   });
   return {
     success: true,
@@ -37,9 +37,9 @@ async function opDownloadFile(config, ctx) {
   if (!path) return { success: false, error: "OneDrive downloadFile: 'path' or item ID is required.", skipped: true };
 
   const base = itemUrl(path);
-  const metaRes = await axios.get(base, { headers, timeout: 15000 });
+  const metaRes = await axios.get(base, { headers, timeout: 120000 });
   const downloadUrl = metaRes.data["@microsoft.graph.downloadUrl"];
-  const fileRes = await axios.get(downloadUrl, { responseType: "arraybuffer", timeout: 60000 });
+  const fileRes = await axios.get(downloadUrl, { responseType: "arraybuffer", timeout: 120000 });
   const base64 = Buffer.from(fileRes.data).toString("base64");
 
   return {
@@ -56,7 +56,7 @@ async function opGetDownloadUrl(config, ctx) {
   const { headers } = ctx;
   const { path } = config;
   if (!path) return { success: false, error: "OneDrive getDownloadUrl: 'path' or item ID is required.", skipped: true };
-  const res = await axios.get(itemUrl(path), { headers, timeout: 15000 });
+  const res = await axios.get(itemUrl(path), { headers, timeout: 120000 });
   const url = res.data["@microsoft.graph.downloadUrl"];
   if (!url) return { success: false, error: "OneDrive getDownloadUrl: item has no download URL (may be a folder).", skipped: true };
   return { success: true, id: res.data.id, name: res.data.name, downloadUrl: url };
@@ -66,7 +66,7 @@ async function opDeleteFile(config, ctx) {
   const { headers } = ctx;
   const { path } = config;
   if (!path) return { success: false, error: "OneDrive deleteFile: 'path' or item ID is required.", skipped: true };
-  await axios.delete(itemUrl(path), { headers, timeout: 15000 });
+  await axios.delete(itemUrl(path), { headers, timeout: 120000 });
   return { success: true, deleted: path };
 }
 
@@ -78,12 +78,12 @@ async function opMoveFile(config, ctx) {
 
   const sourceBase = itemUrl(sourcePath);
   const destMetaUrl = `${GRAPH}/me/drive/root:/${encodePath(destPath)}`;
-  const destMeta = await axios.get(destMetaUrl, { headers, timeout: 15000 });
+  const destMeta = await axios.get(destMetaUrl, { headers, timeout: 120000 });
 
   const patchBody = { parentReference: { id: destMeta.data.id } };
   if (newName) patchBody.name = newName;
 
-  const res = await axios.patch(sourceBase, patchBody, { headers, timeout: 20000 });
+  const res = await axios.patch(sourceBase, patchBody, { headers, timeout: 120000 });
   return { success: true, id: res.data.id, name: res.data.name, webUrl: res.data.webUrl };
 }
 
@@ -94,11 +94,11 @@ async function opCopyFile(config, ctx) {
   if (!destPath) return { success: false, error: "OneDrive copyFile: 'destPath' (destination folder path) is required.", skipped: true };
 
   const destMetaUrl = `${GRAPH}/me/drive/root:/${encodePath(destPath)}`;
-  const destMeta = await axios.get(destMetaUrl, { headers, timeout: 15000 });
+  const destMeta = await axios.get(destMetaUrl, { headers, timeout: 120000 });
   const body = { parentReference: { id: destMeta.data.id } };
   if (newName) body.name = newName;
 
-  const res = await axios.post(`${itemUrl(sourcePath)}/copy`, body, { headers, timeout: 20000 });
+  const res = await axios.post(`${itemUrl(sourcePath)}/copy`, body, { headers, timeout: 120000 });
   return { success: true, accepted: true, monitorUrl: res.headers?.location, source: sourcePath, destPath };
 }
 
@@ -107,7 +107,7 @@ async function opRenameFile(config, ctx) {
   const { path, newName } = config;
   if (!path) return { success: false, error: "OneDrive renameFile: 'path' or item ID is required.", skipped: true };
   if (!newName) return { success: false, error: "OneDrive renameFile: 'newName' is required.", skipped: true };
-  const res = await axios.patch(itemUrl(path), { name: newName }, { headers, timeout: 15000 });
+  const res = await axios.patch(itemUrl(path), { name: newName }, { headers, timeout: 120000 });
   return { success: true, id: res.data.id, name: res.data.name, webUrl: res.data.webUrl };
 }
 
@@ -115,7 +115,7 @@ async function opGetFileInfo(config, ctx) {
   const { headers } = ctx;
   const { path } = config;
   if (!path) return { success: false, error: "OneDrive getFileInfo: 'path' or item ID is required.", skipped: true };
-  const res = await axios.get(itemUrl(path), { headers, timeout: 15000 });
+  const res = await axios.get(itemUrl(path), { headers, timeout: 120000 });
   return {
     success: true,
     id: res.data.id,

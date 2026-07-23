@@ -219,7 +219,7 @@ async function opCountTokens(config, input, apiKey) {
   const response = await axios.post(
     `${MODELS_URL}/${model}:countTokens`,
     { contents: [{ role: "user", parts: [{ text: String(source) }] }] },
-    { headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: 30000 },
+    { headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: 120000 },
   );
 
   return {

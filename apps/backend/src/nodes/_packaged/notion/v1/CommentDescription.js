@@ -12,7 +12,7 @@ async function opCreateComment(config, token) {
   const body = { rich_text: [{ text: { content: config.content } }] };
   if (config.discussionId) body.discussion_id = config.discussionId;
   else body.parent = { page_id: stripId(config.pageId) };
-  const response = await axios.post(`${BASE}/comments`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.post(`${BASE}/comments`, body, { headers: headers(token), timeout: 120000 });
   return { commentId: response.data.id, created: true };
 }
 
@@ -21,7 +21,7 @@ async function opGetComments(config, token) {
     return { success: false, error: "Notion getComments: 'blockId' or 'pageId' is required.", skipped: true };
   const params = { block_id: stripId(config.blockId || config.pageId), page_size: Math.min(Number(config.pageSize) || 50, 100) };
   if (config.startCursor) params.start_cursor = config.startCursor;
-  const response = await axios.get(`${BASE}/comments`, { headers: headers(token), params, timeout: 15000 });
+  const response = await axios.get(`${BASE}/comments`, { headers: headers(token), params, timeout: 120000 });
   return {
     comments: (response.data.results || []).map((c) => ({
       id: c.id, discussionId: c.discussion_id,

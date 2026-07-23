@@ -23,8 +23,8 @@ export function makeRequester({ apiKey, appKey, site }) {
     "DD-APPLICATION-KEY": appKey || "",
     "Content-Type": "application/json",
   };
-  const v1 = axios.create({ baseURL: `https://api.${site}/api/v1`, headers, timeout: 15000 });
-  const v2 = axios.create({ baseURL: `https://api.${site}/api/v2`, headers, timeout: 15000 });
+  const v1 = axios.create({ baseURL: `https://api.${site}/api/v1`, headers, timeout: 120000 });
+  const v2 = axios.create({ baseURL: `https://api.${site}/api/v2`, headers, timeout: 120000 });
   return { v1, v2, site, headers };
 }
 

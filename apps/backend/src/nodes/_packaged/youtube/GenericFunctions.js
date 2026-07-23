@@ -46,7 +46,7 @@ export function csvList(val) {
 }
 
 /** GET a Data API resource. Returns res.data. */
-export async function get(token, path, { params, timeout = 15000 } = {}) {
+export async function get(token, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.get(`${DATA_API}${path}`, {
     headers: authHeaders(token),
     ...(params ? { params } : {}),
@@ -56,7 +56,7 @@ export async function get(token, path, { params, timeout = 15000 } = {}) {
 }
 
 /** POST a JSON body to a Data API resource. */
-export async function post(token, path, body, { params, timeout = 15000 } = {}) {
+export async function post(token, path, body, { params, timeout = 120000 } = {}) {
   const { data } = await axios.post(`${DATA_API}${path}`, body, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
     ...(params ? { params } : {}),
@@ -66,7 +66,7 @@ export async function post(token, path, body, { params, timeout = 15000 } = {}) 
 }
 
 /** PUT a JSON body to a Data API resource. */
-export async function put(token, path, body, { params, timeout = 15000 } = {}) {
+export async function put(token, path, body, { params, timeout = 120000 } = {}) {
   const { data } = await axios.put(`${DATA_API}${path}`, body, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
     ...(params ? { params } : {}),
@@ -76,7 +76,7 @@ export async function put(token, path, body, { params, timeout = 15000 } = {}) {
 }
 
 /** DELETE a Data API resource. */
-export async function del(token, path, { params, timeout = 15000 } = {}) {
+export async function del(token, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.delete(`${DATA_API}${path}`, {
     headers: authHeaders(token),
     ...(params ? { params } : {}),

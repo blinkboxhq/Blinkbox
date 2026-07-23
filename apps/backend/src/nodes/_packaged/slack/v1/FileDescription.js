@@ -25,14 +25,14 @@ async function opUploadFile(config, token) {
     const urlRes = await axios.get(`${API}/files.getUploadURLExternal`, {
       headers: { Authorization: `Bearer ${token}` },
       params: { filename, length: binaryBuffer.length },
-      timeout: 15000,
+      timeout: 120000,
     });
     if (!urlRes.data.ok) throw new Error(`Slack: Failed to get upload URL — ${urlRes.data.error}`);
     const { upload_url: uploadUrl, file_id: fileId } = urlRes.data;
 
     await axios.post(uploadUrl, binaryBuffer, {
       headers: { "Content-Type": mimeType },
-      timeout: 60000,
+      timeout: 120000,
       maxBodyLength: MAX_UPLOAD_BYTES,
     });
 
@@ -42,7 +42,7 @@ async function opUploadFile(config, token) {
       initial_comment: config.text || undefined,
     }, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      timeout: 15000,
+      timeout: 120000,
     });
     if (!completeRes.data.ok) throw new Error(`Slack: Upload completion failed — ${completeRes.data.error}`);
     return { ok: true, fileId, fileName: filename };

@@ -19,7 +19,7 @@ async function opBulkCreate(config, token) {
       records: records.map((r) => ({ fields: r.fields || r })),
       typecast: config.typecast !== false,
     },
-    { headers: headers(token), timeout: 20000 },
+    { headers: headers(token), timeout: 120000 },
   );
   return {
     records: (response.data.records || []).map((r) => ({ id: r.id, fields: r.fields, createdTime: r.createdTime })),
@@ -42,7 +42,7 @@ async function opBulkUpdate(config, token) {
       records: records.map((r) => ({ id: r.id, fields: r.fields || {} })),
       typecast: config.typecast !== false,
     },
-    { headers: headers(token), timeout: 20000 },
+    { headers: headers(token), timeout: 120000 },
   );
   return {
     records: (response.data.records || []).map((r) => ({ id: r.id, fields: r.fields })),
@@ -60,7 +60,7 @@ async function opBulkDelete(config, token) {
   const url = tableUrl(config.baseId, config.tableName);
   const params = new URLSearchParams();
   ids.forEach((id) => params.append("records[]", id));
-  const response = await axios.delete(`${url}?${params.toString()}`, { headers: headers(token), timeout: 20000 });
+  const response = await axios.delete(`${url}?${params.toString()}`, { headers: headers(token), timeout: 120000 });
   return { records: response.data.records || [], deleted: (response.data.records || []).length };
 }
 

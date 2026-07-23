@@ -21,7 +21,7 @@ export function makeClient(storeUrl, consumerKey, consumerSecret) {
   return axios.create({
     baseURL: base,
     auth: { username: consumerKey, password: consumerSecret },
-    timeout: 20000,
+    timeout: 120000,
   });
 }
 

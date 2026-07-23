@@ -44,7 +44,7 @@ export async function resolveFileToBuffer(ref, { maxBytes = 25 * 1024 * 1024, la
   }
   if (/^https?:\/\//i.test(ref)) {
     await assertSafeUrlResolved(ref);
-    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 60000, maxContentLength: maxBytes, maxRedirects: 0 });
+    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 120000, maxContentLength: maxBytes, maxRedirects: 0 });
     return Buffer.from(res.data);
   }
   // assume raw base64
@@ -80,7 +80,7 @@ export function samplingParams(config) {
 export async function listModels(credentialId, workspaceId) {
   const apiKey = await getApiKey(credentialId, workspaceId);
   const response = await axios.get(`${BASE}/models`, {
-    headers: { Authorization: `Bearer ${apiKey}` }, timeout: 30000,
+    headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000,
   });
   return (response.data.data || [])
     .map(m => m.id)

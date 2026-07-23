@@ -14,7 +14,7 @@ async function opListBuckets(_config, ctx) {
   const { accessKey, secretKey, region, customEndpoint } = ctx;
   const url = `${serviceRoot(region, customEndpoint)}/`;
   const signed = signRequest("GET", url, {}, "", accessKey, secretKey, region);
-  const { data } = await axios.get(url, { headers: signed, timeout: 15000, responseType: "text" });
+  const { data } = await axios.get(url, { headers: signed, timeout: 120000, responseType: "text" });
   const names = xmlValues(data, "Name");
   const dates = xmlValues(data, "CreationDate");
   const buckets = names.map((n, i) => ({ name: n, creationDate: dates[i] }));
@@ -31,7 +31,7 @@ async function opCreateBucket(config, ctx) {
     extraHeaders["content-type"] = "application/xml";
   }
   const signed = signRequest("PUT", url, extraHeaders, body, accessKey, secretKey, region);
-  await axios.put(url, body, { headers: signed, timeout: 20000 });
+  await axios.put(url, body, { headers: signed, timeout: 120000 });
   return { success: true, created: true, bucket, region };
 }
 
@@ -39,7 +39,7 @@ async function opDeleteBucket(config, ctx) {
   const { accessKey, secretKey, region, bucket, base } = ctx;
   const url = `${base}/`;
   const signed = signRequest("DELETE", url, {}, "", accessKey, secretKey, region);
-  await axios.delete(url, { headers: signed, timeout: 20000 });
+  await axios.delete(url, { headers: signed, timeout: 120000 });
   return { success: true, deleted: true, bucket };
 }
 
@@ -47,7 +47,7 @@ async function opGetBucketLocation(config, ctx) {
   const { accessKey, secretKey, region, bucket, base } = ctx;
   const url = `${base}/?location`;
   const signed = signRequest("GET", url, {}, "", accessKey, secretKey, region);
-  const { data } = await axios.get(url, { headers: signed, timeout: 15000, responseType: "text" });
+  const { data } = await axios.get(url, { headers: signed, timeout: 120000, responseType: "text" });
   const loc = xmlValues(data, "LocationConstraint")[0] || "us-east-1";
   return { success: true, bucket, location: loc };
 }
@@ -57,7 +57,7 @@ async function opBucketExists(config, ctx) {
   const url = `${base}/`;
   const signed = signRequest("HEAD", url, {}, "", accessKey, secretKey, region);
   try {
-    await axios.head(url, { headers: signed, timeout: 10000 });
+    await axios.head(url, { headers: signed, timeout: 120000 });
     return { exists: true, bucket };
   } catch (e) {
     if (e.response?.status === 404) return { exists: false, bucket };

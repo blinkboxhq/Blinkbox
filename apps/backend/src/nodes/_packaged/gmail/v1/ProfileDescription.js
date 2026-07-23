@@ -5,7 +5,7 @@ import axios from "axios";
 import { BASE, auth } from "../GenericFunctions.js";
 
 async function opGetProfile(config, token) {
-  const response = await axios.get(`${BASE}/profile`, { headers: auth(token), timeout: 10000 });
+  const response = await axios.get(`${BASE}/profile`, { headers: auth(token), timeout: 120000 });
   return {
     emailAddress: response.data.emailAddress,
     messagesTotal: response.data.messagesTotal,

@@ -7,7 +7,7 @@ export default {
     if (!hostname) return { success: false, error: "ssl: 'hostname' is required.", skipped: true };
 
     return new Promise((resolve, reject) => {
-      const socket = tls.connect({ host: hostname, port, servername: hostname, timeout: 10000 }, () => {
+      const socket = tls.connect({ host: hostname, port, servername: hostname, timeout: 120000 }, () => {
         const cert = socket.getPeerCertificate();
         socket.destroy();
         if (!cert || !cert.subject) return reject(new Error("ssl: could not retrieve certificate."));

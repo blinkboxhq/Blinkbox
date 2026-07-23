@@ -35,7 +35,7 @@ export function handleError(err) {
  * Thin axios wrapper. Returns the unwrapped `data.data` payload (Asana wraps
  * every response in `{ data: ... }`); pass `raw:true` for the full body.
  */
-export async function req(client, method, path, { params, body, timeout = 15000, raw = false } = {}) {
+export async function req(client, method, path, { params, body, timeout = 120000, raw = false } = {}) {
   const res = await axios({
     method,
     url: `${BASE}${path}`,

@@ -35,19 +35,19 @@ export function enc(v) {
   return encodeURIComponent(v);
 }
 
-export async function apiGet(client, path, params, timeout = 15000) {
+export async function apiGet(client, path, params, timeout = 120000) {
   const res = await axios.get(`${API}${path}`, { headers: client.headers, params, timeout });
   return res.data;
 }
-export async function apiPost(client, path, body, timeout = 15000) {
+export async function apiPost(client, path, body, timeout = 120000) {
   const res = await axios.post(`${API}${path}`, body, { headers: client.headers, timeout });
   return res.data;
 }
-export async function apiPut(client, path, body, timeout = 20000) {
+export async function apiPut(client, path, body, timeout = 120000) {
   const res = await axios.put(`${API}${path}`, body, { headers: client.headers, timeout });
   return res.data;
 }
-export async function apiDelete(client, path, timeout = 15000) {
+export async function apiDelete(client, path, timeout = 120000) {
   const res = await axios.delete(`${API}${path}`, { headers: client.headers, timeout });
   return res.data;
 }
@@ -60,7 +60,7 @@ export async function uploadContent(client, buffer, attributes, filename) {
   form.append("file", buffer, { filename });
   const res = await axios.post(`${UPLOAD_API}/files/content`, form, {
     headers: { Authorization: `Bearer ${client.token}`, ...form.getHeaders() },
-    timeout: 60000,
+    timeout: 120000,
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
   });
@@ -68,7 +68,7 @@ export async function uploadContent(client, buffer, attributes, filename) {
 }
 
 /** Fetch a user-supplied URL (SSRF-guarded) into a Buffer for upload-from-url flows. */
-export async function fetchRemote(url, timeout = 60000) {
+export async function fetchRemote(url, timeout = 120000) {
   await assertSafeUrlResolved(url);
   const res = await axios.get(url, { responseType: "arraybuffer", timeout });
   return Buffer.from(res.data);

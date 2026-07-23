@@ -8,7 +8,7 @@ import { BASE, authHeaders, cal, startEnd, reminders, slimEvent } from "../Gener
 async function opListEvents(config, token) {
   const res = await axios.get(`${BASE}/calendars/${cal(config)}/events`, {
     headers: authHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
     params: {
       timeMin: config.timeMin || new Date().toISOString(),
       timeMax: config.timeMax || undefined,
@@ -30,7 +30,7 @@ async function opListEvents(config, token) {
 
 async function opGetEvent(config, token) {
   if (!config.eventId) return { success: false, error: "Google Calendar getEvent: 'eventId' is required.", skipped: true };
-  const res = await axios.get(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, { headers: authHeaders(token), timeout: 15000 });
+  const res = await axios.get(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, { headers: authHeaders(token), timeout: 120000 });
   return slimEvent(res.data);
 }
 
@@ -54,7 +54,7 @@ async function opCreateEvent(config, token) {
   };
   const res = await axios.post(`${BASE}/calendars/${cal(config)}/events`, body, {
     headers: authHeaders(token, true),
-    timeout: 15000,
+    timeout: 120000,
     params: {
       sendUpdates: config.sendUpdates || "none",
       conferenceDataVersion: config.addMeetLink ? 1 : undefined,
@@ -78,7 +78,7 @@ async function opUpdateEvent(config, token) {
   if (rem) patch.reminders = rem;
   const res = await axios.patch(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, patch, {
     headers: authHeaders(token, true),
-    timeout: 15000,
+    timeout: 120000,
     params: { sendUpdates: config.sendUpdates || "none" },
   });
   return { ...slimEvent(res.data), updated: true };
@@ -88,7 +88,7 @@ async function opDeleteEvent(config, token) {
   if (!config.eventId) return { success: false, error: "Google Calendar deleteEvent: 'eventId' is required.", skipped: true };
   await axios.delete(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, {
     headers: authHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
     params: { sendUpdates: config.sendUpdates || "none" },
   });
   return { deleted: true, eventId: config.eventId };
@@ -98,7 +98,7 @@ async function opQuickAddEvent(config, token) {
   if (!config.text) return { success: false, error: "Google Calendar quickAddEvent: 'text' is required (e.g. 'Lunch with Sam tomorrow 1pm').", skipped: true };
   const res = await axios.post(`${BASE}/calendars/${cal(config)}/events/quickAdd`, null, {
     headers: authHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
     params: { text: config.text, sendUpdates: config.sendUpdates || "none" },
   });
   return slimEvent(res.data);
@@ -109,7 +109,7 @@ async function opMoveEvent(config, token) {
   if (!config.destinationCalendarId) return { success: false, error: "Google Calendar moveEvent: 'destinationCalendarId' is required.", skipped: true };
   const res = await axios.post(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}/move`, null, {
     headers: authHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
     params: { destination: config.destinationCalendarId, sendUpdates: config.sendUpdates || "none" },
   });
   return { ...slimEvent(res.data), moved: true };
@@ -118,7 +118,7 @@ async function opMoveEvent(config, token) {
 async function opRespondToEvent(config, token) {
   if (!config.eventId) return { success: false, error: "Google Calendar respondToEvent: 'eventId' is required.", skipped: true };
   if (!config.responseStatus) return { success: false, error: "Google Calendar respondToEvent: 'responseStatus' is required (accepted/declined/tentative).", skipped: true };
-  const existing = await axios.get(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, { headers: authHeaders(token), timeout: 15000 });
+  const existing = await axios.get(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, { headers: authHeaders(token), timeout: 120000 });
   const me = config.attendeeEmail;
   const attendees = (existing.data.attendees || []).map((a) =>
     (me ? a.email === me : a.self) ? { ...a, responseStatus: config.responseStatus } : a
@@ -128,7 +128,7 @@ async function opRespondToEvent(config, token) {
   }
   const res = await axios.patch(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}`, { attendees }, {
     headers: authHeaders(token, true),
-    timeout: 15000,
+    timeout: 120000,
     params: { sendUpdates: config.sendUpdates || "none" },
   });
   return { ...slimEvent(res.data), responseStatus: config.responseStatus };
@@ -138,7 +138,7 @@ async function opListInstances(config, token) {
   if (!config.eventId) return { success: false, error: "Google Calendar listInstances: 'eventId' (recurring event) is required.", skipped: true };
   const res = await axios.get(`${BASE}/calendars/${cal(config)}/events/${encodeURIComponent(config.eventId)}/instances`, {
     headers: authHeaders(token),
-    timeout: 15000,
+    timeout: 120000,
     params: {
       timeMin: config.timeMin || undefined,
       timeMax: config.timeMax || undefined,
@@ -153,7 +153,7 @@ async function opImportEvent(config, token) {
   if (!config.startTime) return { success: false, error: "Google Calendar importEvent: 'startTime' is required.", skipped: true };
   const { start, end } = startEnd(config);
   const body = { iCalUID: config.iCalUID, summary: config.summary || "(no title)", description: config.description || undefined, location: config.location || undefined, start, end };
-  const res = await axios.post(`${BASE}/calendars/${cal(config)}/events/import`, body, { headers: authHeaders(token, true), timeout: 15000 });
+  const res = await axios.post(`${BASE}/calendars/${cal(config)}/events/import`, body, { headers: authHeaders(token, true), timeout: 120000 });
   return slimEvent(res.data);
 }
 

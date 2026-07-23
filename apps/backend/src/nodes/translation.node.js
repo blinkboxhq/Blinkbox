@@ -20,7 +20,7 @@ export default {
       if (!apiKey) return { success: false, error: "Translation (Google): API key required.", skipped: true };
       const { data } = await axios.post(
         `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(apiKey)}`,
-        { q: text, target, format: "text" }, { timeout: 15000 }
+        { q: text, target, format: "text" }, { timeout: 120000 }
       );
       const result = data.data.translations[0];
       return { translatedText: result.translatedText, detectedSourceLanguage: result.detectedSourceLanguage, targetLanguage: target, provider: "google" };
@@ -31,7 +31,7 @@ export default {
       const base = apiKey.endsWith(":fx") ? "https://api-free.deepl.com" : "https://api.deepl.com";
       const { data } = await axios.post(`${base}/v2/translate`,
         new URLSearchParams({ text, target_lang: target.toUpperCase() }),
-        { headers: { Authorization: `DeepL-Auth-Key ${apiKey}`, "Content-Type": "application/x-www-form-urlencoded" }, timeout: 15000 }
+        { headers: { Authorization: `DeepL-Auth-Key ${apiKey}`, "Content-Type": "application/x-www-form-urlencoded" }, timeout: 120000 }
       );
       return { translatedText: data.translations[0].text, detectedSourceLanguage: data.translations[0].detected_source_language, targetLanguage: target, provider: "deepl" };
     }
@@ -42,7 +42,7 @@ export default {
     if (provider === "anthropic") {
       const { data } = await axios.post("https://api.anthropic.com/v1/messages",
         { model: config.model || "claude-haiku-4-5-20251001", max_tokens: 2048, messages: [{ role: "user", content: `Translate the following text to ${target}. Return ONLY the translated text, nothing else:\n\n${text}` }] },
-        { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, timeout: 30000 }
+        { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, timeout: 120000 }
       );
       return { translatedText: data.content[0].text.trim(), targetLanguage: target, provider: "anthropic" };
     }
@@ -50,7 +50,7 @@ export default {
     // OpenAI
     const { data } = await axios.post("https://api.openai.com/v1/chat/completions",
       { model: config.model || "gpt-4o-mini", messages: [{ role: "system", content: "You are a professional translator. Return ONLY the translated text, nothing else." }, { role: "user", content: `Translate to ${target}:\n\n${text}` }] },
-      { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 30000 }
+      { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 }
     );
     return { translatedText: data.choices[0].message.content.trim(), targetLanguage: target, provider: "openai" };
   },

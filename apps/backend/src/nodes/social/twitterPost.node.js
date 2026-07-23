@@ -20,7 +20,7 @@ export default {
 
     const res = await axios.post("https://api.twitter.com/2/tweets", body, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      timeout: 30000,
+      timeout: 120000,
     });
     return { tweetId: res.data.data?.id, text: res.data.data?.text, url: `https://twitter.com/i/web/status/${res.data.data?.id}` };
   },

@@ -8,13 +8,13 @@ import axios from "axios";
 import { headers } from "../GenericFunctions.js";
 
 async function opListBases(config, token) {
-  const response = await axios.get("https://api.airtable.com/v0/meta/bases", { headers: headers(token), timeout: 15000 });
+  const response = await axios.get("https://api.airtable.com/v0/meta/bases", { headers: headers(token), timeout: 120000 });
   return { bases: (response.data.bases || []).map((b) => ({ id: b.id, name: b.name, permissionLevel: b.permissionLevel })) };
 }
 
 async function opListTables(config, token) {
   if (!config.baseId) return { success: false, error: "Airtable listTables: 'baseId' is required.", skipped: true };
-  const response = await axios.get(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, { headers: headers(token), timeout: 15000 });
+  const response = await axios.get(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, { headers: headers(token), timeout: 120000 });
   return {
     tables: (response.data.tables || []).map((t) => ({
       id: t.id, name: t.name, primaryFieldId: t.primaryFieldId,
@@ -34,7 +34,7 @@ async function opCreateTable(config, token) {
     tableFields = [{ name: "Name", type: "singleLineText" }];
   const body = { name: config.newTableName, fields: tableFields };
   if (config.tableDescription) body.description = config.tableDescription;
-  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables`, body, { headers: headers(token), timeout: 120000 });
   return { id: response.data.id, name: response.data.name };
 }
 
@@ -44,7 +44,7 @@ async function opCreateField(config, token) {
   if (!config.fieldName) return { success: false, error: "Airtable createField: 'fieldName' is required.", skipped: true };
   const body = { name: config.fieldName, type: config.fieldType || "singleLineText" };
   if (config.fieldOptions && typeof config.fieldOptions === "object") body.options = config.fieldOptions;
-  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables/${encodeURIComponent(config.tableId)}/fields`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.post(`https://api.airtable.com/v0/meta/bases/${encodeURIComponent(config.baseId)}/tables/${encodeURIComponent(config.tableId)}/fields`, body, { headers: headers(token), timeout: 120000 });
   return { id: response.data.id, name: response.data.name, type: response.data.type };
 }
 

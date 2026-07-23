@@ -16,7 +16,7 @@ async function opListAudiences(config, client) {
 async function opGetAudience(config, client) {
   const listId = config.listId;
   if (!listId) return { success: false, error: "Mailchimp getAudience: 'listId' is required.", skipped: true };
-  return req(client, "get", `/lists/${encodeURIComponent(listId)}`, { timeout: 10000 });
+  return req(client, "get", `/lists/${encodeURIComponent(listId)}`, { timeout: 120000 });
 }
 
 async function opCreateAudience(config, client) {
@@ -41,7 +41,7 @@ async function opCreateAudience(config, client) {
     },
     email_type_option: config.emailTypeOption === true || config.emailTypeOption === "true",
   };
-  const data = await req(client, "post", "/lists", { body, timeout: 10000 });
+  const data = await req(client, "post", "/lists", { body, timeout: 120000 });
   return { id: data.id, name: data.name, memberCount: data.stats?.member_count };
 }
 
@@ -57,21 +57,21 @@ async function opUpdateAudience(config, client) {
   if (config.city) contact.city = config.city;
   if (config.country) contact.country = config.country;
   if (Object.keys(contact).length) body.contact = contact;
-  const data = await req(client, "patch", `/lists/${encodeURIComponent(listId)}`, { body, timeout: 10000 });
+  const data = await req(client, "patch", `/lists/${encodeURIComponent(listId)}`, { body, timeout: 120000 });
   return { id: data.id, name: data.name };
 }
 
 async function opDeleteAudience(config, client) {
   const listId = config.listId;
   if (!listId) return { success: false, error: "Mailchimp deleteAudience: 'listId' is required.", skipped: true };
-  await req(client, "delete", `/lists/${encodeURIComponent(listId)}`, { timeout: 10000 });
+  await req(client, "delete", `/lists/${encodeURIComponent(listId)}`, { timeout: 120000 });
   return { success: true, listId, deleted: true };
 }
 
 async function opGetAudienceStats(config, client) {
   const listId = config.listId;
   if (!listId) return { success: false, error: "Mailchimp getAudienceStats: 'listId' is required.", skipped: true };
-  const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}`, { timeout: 10000 });
+  const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}`, { timeout: 120000 });
   return { id: data.id, name: data.name, stats: data.stats };
 }
 
@@ -91,7 +91,7 @@ async function opGetSubscriber(config, client) {
   const email = config.email || config.subscriberHash;
   if (!listId) return { success: false, error: "Mailchimp getSubscriber: 'listId' is required.", skipped: true };
   if (!email) return { success: false, error: "Mailchimp getSubscriber: 'email' is required.", skipped: true };
-  return req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { timeout: 10000 });
+  return req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { timeout: 120000 });
 }
 
 function buildMergeFields(config) {
@@ -119,7 +119,7 @@ async function opAddSubscriber(config, client) {
     ...(Object.keys(merge).length ? { merge_fields: merge } : {}),
     ...(config.tags ? { tags: String(config.tags).split(",").map(s => s.trim()).filter(Boolean) } : {}),
   };
-  const data = await req(client, "post", `/lists/${encodeURIComponent(listId)}/members`, { body, timeout: 10000 });
+  const data = await req(client, "post", `/lists/${encodeURIComponent(listId)}/members`, { body, timeout: 120000 });
   return { id: data.id, email: data.email_address, status: data.status };
 }
 
@@ -132,7 +132,7 @@ async function opUpdateSubscriber(config, client) {
   if (config.status) body.status = config.status;
   const merge = buildMergeFields(config);
   if (Object.keys(merge).length) body.merge_fields = merge;
-  const data = await req(client, "patch", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { body, timeout: 10000 });
+  const data = await req(client, "patch", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { body, timeout: 120000 });
   return { id: data.id, email: data.email_address, status: data.status };
 }
 
@@ -148,7 +148,7 @@ async function opUpsertSubscriber(config, client) {
     ...(config.status ? { status: config.status } : {}),
     ...(Object.keys(merge).length ? { merge_fields: merge } : {}),
   };
-  const data = await req(client, "put", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { body, timeout: 10000 });
+  const data = await req(client, "put", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { body, timeout: 120000 });
   return { id: data.id, email: data.email_address, status: data.status };
 }
 
@@ -157,7 +157,7 @@ async function opDeleteSubscriber(config, client) {
   const email = config.email;
   if (!listId) return { success: false, error: "Mailchimp deleteSubscriber: 'listId' is required.", skipped: true };
   if (!email) return { success: false, error: "Mailchimp deleteSubscriber: 'email' is required.", skipped: true };
-  await req(client, "post", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/actions/delete-permanent`, { body: {}, timeout: 10000 });
+  await req(client, "post", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/actions/delete-permanent`, { body: {}, timeout: 120000 });
   return { success: true, email, deleted: true };
 }
 
@@ -166,7 +166,7 @@ async function opArchiveSubscriber(config, client) {
   const email = config.email;
   if (!listId) return { success: false, error: "Mailchimp archiveSubscriber: 'listId' is required.", skipped: true };
   if (!email) return { success: false, error: "Mailchimp archiveSubscriber: 'email' is required.", skipped: true };
-  await req(client, "delete", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { timeout: 10000 });
+  await req(client, "delete", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}`, { timeout: 120000 });
   return { success: true, email, archived: true };
 }
 
@@ -177,7 +177,7 @@ async function opGetSubscriberActivity(config, client) {
   if (!email) return { success: false, error: "Mailchimp getSubscriberActivity: 'email' is required.", skipped: true };
   const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/activity-feed`, {
     params: { count: parseInt(config.limit) || 50 },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { activity: data.activity || [], total: data.total_items };
 }
@@ -189,7 +189,7 @@ async function opGetSubscriberTags(config, client) {
   const email = config.email;
   if (!listId) return { success: false, error: "Mailchimp getSubscriberTags: 'listId' is required.", skipped: true };
   if (!email) return { success: false, error: "Mailchimp getSubscriberTags: 'email' is required.", skipped: true };
-  const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/tags`, { timeout: 10000 });
+  const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/tags`, { timeout: 120000 });
   return { tags: data.tags || [], total: data.total_items };
 }
 
@@ -202,7 +202,7 @@ async function updateTags(config, client, status, label) {
   if (tags.length === 0) return { success: false, error: `Mailchimp ${label}: 'tags' (comma-separated) are required.`, skipped: true };
   await req(client, "post", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/tags`, {
     body: { tags: tags.map(name => ({ name, status })) },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { success: true, email, tags, status };
 }
@@ -219,7 +219,7 @@ async function opListSubscriberNotes(config, client) {
   if (!email) return { success: false, error: "Mailchimp listSubscriberNotes: 'email' is required.", skipped: true };
   const data = await req(client, "get", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/notes`, {
     params: { count: parseInt(config.limit) || 25 },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { notes: data.notes || [], total: data.total_items };
 }
@@ -232,7 +232,7 @@ async function opCreateSubscriberNote(config, client) {
   if (!config.note) return { success: false, error: "Mailchimp createSubscriberNote: 'note' text is required.", skipped: true };
   const data = await req(client, "post", `/lists/${encodeURIComponent(listId)}/members/${memberId(email)}/notes`, {
     body: { note: String(config.note).substring(0, 1000) },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { id: data.id, note: data.note, createdAt: data.created_at };
 }

@@ -19,7 +19,7 @@ async function opCaptureEvent(config, ctx) {
     .post(
       `https://${host}/api/${projectId}/store/`,
       { message: config.message || "BlinkBox event", level: config.level || "error", tags },
-      { headers: { "X-Sentry-Auth": `Sentry sentry_version=7,sentry_key=${key}` }, timeout: 10000 }
+      { headers: { "X-Sentry-Auth": `Sentry sentry_version=7,sentry_key=${key}` }, timeout: 120000 }
     )
     .then((r) => r.data);
   return { id: data.id, success: true };

@@ -15,7 +15,7 @@ async function opFreeBusy(config, token) {
     timeMax: config.timeMax,
     timeZone: config.timeZone || undefined,
     items: ids.map((id) => ({ id })),
-  }, { headers: authHeaders(token, true), timeout: 15000 });
+  }, { headers: authHeaders(token, true), timeout: 120000 });
   const calendars = res.data.calendars || {};
   return {
     busy: Object.fromEntries(Object.entries(calendars).map(([id, v]) => [id, v.busy || []])),
@@ -24,7 +24,7 @@ async function opFreeBusy(config, token) {
 }
 
 async function opGetColors(config, token) {
-  const res = await axios.get(`${BASE}/colors`, { headers: authHeaders(token), timeout: 15000 });
+  const res = await axios.get(`${BASE}/colors`, { headers: authHeaders(token), timeout: 120000 });
   return { event: res.data.event, calendar: res.data.calendar };
 }
 

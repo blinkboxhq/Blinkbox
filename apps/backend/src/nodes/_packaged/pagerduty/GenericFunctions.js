@@ -26,7 +26,7 @@ export function fromHeaders(config) {
 function client(token) {
   return axios.create({
     baseURL: BASE_URL,
-    timeout: 15000,
+    timeout: 120000,
     headers: {
       Authorization: `Token token=${token}`,
       Accept: "application/vnd.pagerduty+json;version=2",

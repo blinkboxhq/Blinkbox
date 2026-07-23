@@ -90,13 +90,13 @@ export const gitlab = {
     try {
       switch (operation) {
         case "listIssues": {
-          const res = await axios.get(`${api}/issues`, { headers, params: { state: config.state || "opened", per_page: Math.min(Number(config.limit || 20), 100) }, timeout: 15000 });
+          const res = await axios.get(`${api}/issues`, { headers, params: { state: config.state || "opened", per_page: Math.min(Number(config.limit || 20), 100) }, timeout: 120000 });
           return { items: res.data.map((i) => ({ id: i.id, iid: i.iid, title: i.title, state: i.state, web_url: i.web_url, author: i.author?.username })), count: res.data.length };
         }
 
         case "createIssue": {
           if (!config.title) return { success: false, error: "gitlab createIssue: 'title' is required.", skipped: true };
-          const res = await axios.post(`${api}/issues`, { title: config.title, description: config.description, labels: config.labels }, { headers, timeout: 15000 });
+          const res = await axios.post(`${api}/issues`, { title: config.title, description: config.description, labels: config.labels }, { headers, timeout: 120000 });
           return { id: res.data.id, iid: res.data.iid, title: res.data.title, state: res.data.state, web_url: res.data.web_url };
         }
 
@@ -107,26 +107,26 @@ export const gitlab = {
           if (config.description) body.description = config.description;
           if (config.labels) body.labels = config.labels;
           if (config.state_event) body.state_event = config.state_event;
-          const res = await axios.put(`${api}/issues/${config.issueIid}`, body, { headers, timeout: 15000 });
+          const res = await axios.put(`${api}/issues/${config.issueIid}`, body, { headers, timeout: 120000 });
           return { id: res.data.id, iid: res.data.iid, title: res.data.title, state: res.data.state, web_url: res.data.web_url };
         }
 
         case "commentIssue": {
           if (!config.issueIid) return { success: false, error: "gitlab commentIssue: 'issueIid' is required.", skipped: true };
           if (!config.body) return { success: false, error: "gitlab commentIssue: 'body' is required.", skipped: true };
-          const res = await axios.post(`${api}/issues/${config.issueIid}/notes`, { body: config.body }, { headers, timeout: 15000 });
+          const res = await axios.post(`${api}/issues/${config.issueIid}/notes`, { body: config.body }, { headers, timeout: 120000 });
           return { id: res.data.id, body: res.data.body, author: res.data.author?.username, created_at: res.data.created_at };
         }
 
         case "createMR": {
           if (!config.title || !config.sourceBranch) return { success: false, error: "gitlab createMR: 'title' and 'sourceBranch' are required.", skipped: true };
-          const res = await axios.post(`${api}/merge_requests`, { title: config.title, source_branch: config.sourceBranch, target_branch: config.targetBranch || "main", description: config.description }, { headers, timeout: 15000 });
+          const res = await axios.post(`${api}/merge_requests`, { title: config.title, source_branch: config.sourceBranch, target_branch: config.targetBranch || "main", description: config.description }, { headers, timeout: 120000 });
           return { id: res.data.id, iid: res.data.iid, title: res.data.title, state: res.data.state, web_url: res.data.web_url };
         }
 
         case "mergeMR": {
           if (!config.mrIid) return { success: false, error: "gitlab mergeMR: 'mrIid' is required.", skipped: true };
-          const res = await axios.put(`${api}/merge_requests/${config.mrIid}/merge`, {}, { headers, timeout: 15000 });
+          const res = await axios.put(`${api}/merge_requests/${config.mrIid}/merge`, {}, { headers, timeout: 120000 });
           return { id: res.data.id, iid: res.data.iid, state: res.data.state, merged_at: res.data.merged_at, web_url: res.data.web_url };
         }
 
@@ -141,12 +141,12 @@ export const gitlab = {
               ? Object.entries(vars).map(([key, value]) => ({ key, value: String(value) }))
               : [];
           if (pairs.length) body.variables = pairs;
-          const res = await axios.post(`${api}/pipeline`, body, { headers, timeout: 15000 });
+          const res = await axios.post(`${api}/pipeline`, body, { headers, timeout: 120000 });
           return { id: res.data.id, status: res.data.status, ref: res.data.ref, web_url: res.data.web_url };
         }
 
         case "getProject": {
-          const res = await axios.get(api, { headers, timeout: 15000 });
+          const res = await axios.get(api, { headers, timeout: 120000 });
           return { id: res.data.id, name: res.data.name, description: res.data.description, web_url: res.data.web_url, default_branch: res.data.default_branch, visibility: res.data.visibility, star_count: res.data.star_count, forks_count: res.data.forks_count };
         }
 
@@ -233,7 +233,7 @@ export const docker = {
     const socketPath = process.env.DOCKER_SOCKET || "/var/run/docker.sock";
 
     const dockerRequest = (method, path, data) =>
-      axios({ method, socketPath, url: `http://localhost${path}`, data, timeout: 30000 })
+      axios({ method, socketPath, url: `http://localhost${path}`, data, timeout: 120000 })
         .catch((err) => { throw new Error(`docker: ${err.response?.data?.message || err.message}`); });
 
     if (operation === "listContainers") {

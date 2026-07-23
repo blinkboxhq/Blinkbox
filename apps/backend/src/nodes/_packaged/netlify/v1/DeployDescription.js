@@ -20,7 +20,7 @@ async function opCreateDeploy(config, { api }) {
   const body = {};
   if (config.branch) body.branch = config.branch;
   if (config.message) body.title = config.message;
-  const res = await api.post(`/sites/${encodeURIComponent(config.siteId)}/deploys`, body, { timeout: 20000 });
+  const res = await api.post(`/sites/${encodeURIComponent(config.siteId)}/deploys`, body, { timeout: 120000 });
   return { success: true, ...deployShape(res.data) };
 }
 
@@ -57,7 +57,7 @@ async function opListDeployFiles(config, { api }) {
 
 async function opTriggerBuild(config, { api }) {
   const e = needSite(config, "triggerBuild"); if (e) return e;
-  const res = await api.post(`/sites/${encodeURIComponent(config.siteId)}/builds`, {}, { timeout: 20000 });
+  const res = await api.post(`/sites/${encodeURIComponent(config.siteId)}/builds`, {}, { timeout: 120000 });
   return { success: true, id: res.data.id, deploy_id: res.data.deploy_id, created_at: res.data.created_at };
 }
 

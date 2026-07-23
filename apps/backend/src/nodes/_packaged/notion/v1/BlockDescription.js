@@ -22,7 +22,7 @@ async function opAppendBlock(config, token) {
   }
 
   const response = await axios.patch(`${BASE}/blocks/${encodeURIComponent(stripId(config.pageId))}/children`, { children }, {
-    headers: headers(token), timeout: 15000,
+    headers: headers(token), timeout: 120000,
   });
   return { appended: response.data.results?.length || 0, blockIds: (response.data.results || []).map((b) => b.id) };
 }
@@ -31,13 +31,13 @@ async function opGetBlockChildren(config, token) {
   if (!config.blockId) return { success: false, error: "Notion getBlockChildren: 'blockId' (page or block ID) is required.", skipped: true };
   const params = { page_size: Math.min(Number(config.pageSize) || 50, 100) };
   if (config.startCursor) params.start_cursor = config.startCursor;
-  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}/children`, { headers: headers(token), params, timeout: 15000 });
+  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}/children`, { headers: headers(token), params, timeout: 120000 });
   return { results: response.data.results, hasMore: response.data.has_more, nextCursor: response.data.next_cursor, total: response.data.results?.length || 0 };
 }
 
 async function opGetBlock(config, token) {
   if (!config.blockId) return { success: false, error: "Notion getBlock: 'blockId' is required.", skipped: true };
-  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 15000 });
+  const response = await axios.get(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 120000 });
   return { block: response.data };
 }
 
@@ -49,13 +49,13 @@ async function opUpdateBlock(config, token) {
     const blockType = config.blockType || "paragraph";
     body = { [blockType]: { rich_text: [{ text: { content: config.content } }] } };
   } else return { success: false, error: "Notion updateBlock: provide 'content' or 'blockJson'.", skipped: true };
-  const response = await axios.patch(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.patch(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, body, { headers: headers(token), timeout: 120000 });
   return { blockId: response.data.id, type: response.data.type, updated: true };
 }
 
 async function opDeleteBlock(config, token) {
   if (!config.blockId) return { success: false, error: "Notion deleteBlock: 'blockId' is required.", skipped: true };
-  const response = await axios.delete(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 15000 });
+  const response = await axios.delete(`${BASE}/blocks/${encodeURIComponent(stripId(config.blockId))}`, { headers: headers(token), timeout: 120000 });
   return { blockId: response.data.id, archived: response.data.archived, deleted: true };
 }
 

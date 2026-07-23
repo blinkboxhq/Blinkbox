@@ -36,7 +36,7 @@ export function num(v, fallback) {
 }
 
 /** RPC (JSON) call to api.dropboxapi.com. */
-export async function rpc(client, endpoint, body, timeout = 15000) {
+export async function rpc(client, endpoint, body, timeout = 120000) {
   const res = await axios.post(`${RPC}${endpoint}`, body ?? null, {
     headers: client.headers,
     timeout,
@@ -45,7 +45,7 @@ export async function rpc(client, endpoint, body, timeout = 15000) {
 }
 
 /** Content-download call — returns { data (Buffer), meta } from the API result header. */
-export async function contentDownload(client, endpoint, arg, timeout = 60000) {
+export async function contentDownload(client, endpoint, arg, timeout = 120000) {
   const res = await axios.post(`${CONTENT}${endpoint}`, null, {
     headers: {
       Authorization: `Bearer ${client.token}`,
@@ -60,7 +60,7 @@ export async function contentDownload(client, endpoint, arg, timeout = 60000) {
 }
 
 /** Content-upload call — sends an octet-stream body with a Dropbox-API-Arg header. */
-export async function contentUpload(client, endpoint, arg, buffer, timeout = 60000) {
+export async function contentUpload(client, endpoint, arg, buffer, timeout = 120000) {
   const res = await axios.post(`${CONTENT}${endpoint}`, buffer, {
     headers: {
       Authorization: `Bearer ${client.token}`,
@@ -73,7 +73,7 @@ export async function contentUpload(client, endpoint, arg, buffer, timeout = 600
 }
 
 /** Fetch a user-supplied URL (SSRF-guarded) into a base64 string for save_url-style flows. */
-export async function fetchRemote(url, timeout = 60000) {
+export async function fetchRemote(url, timeout = 120000) {
   await assertSafeUrlResolved(url);
   const res = await axios.get(url, { responseType: "arraybuffer", timeout });
   return Buffer.from(res.data);

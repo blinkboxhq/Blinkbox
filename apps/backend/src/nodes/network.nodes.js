@@ -52,7 +52,7 @@ export const ssl = {
     if (!hostname) return { success: false, error: "ssl: 'hostname' is required.", skipped: true };
 
     return new Promise((resolve, reject) => {
-      const socket = tls.connect({ host: hostname, port, servername: hostname, timeout: 10000 }, () => {
+      const socket = tls.connect({ host: hostname, port, servername: hostname, timeout: 120000 }, () => {
         const cert = socket.getPeerCertificate();
         socket.destroy();
         if (!cert || !cert.subject) return reject(new Error("ssl: could not retrieve certificate."));
@@ -135,7 +135,7 @@ export const ip_lookup = {
     if (!ip) return { success: false, error: "ip_lookup: 'ip' is required.", skipped: true };
 
     try {
-      const res = await axios.get(`https://ipapi.co/${ip}/json/`, { timeout: 10000 });
+      const res = await axios.get(`https://ipapi.co/${ip}/json/`, { timeout: 120000 });
       const d = res.data;
       if (d.error) throw new Error(d.reason || "Invalid IP");
       return {

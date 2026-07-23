@@ -12,7 +12,7 @@ async function opSendEmail(config, token) {
   if (config.threadId) body.threadId = config.threadId;
   const response = await axios.post(`${BASE}/messages/send`, body, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 30000,
+    timeout: 120000,
   });
   return { messageId: response.data.id, threadId: response.data.threadId, labelIds: response.data.labelIds };
 }
@@ -22,7 +22,7 @@ async function opReadEmail(config, token) {
   const response = await axios.get(`${BASE}/messages/${encodeURIComponent(config.messageId)}`, {
     headers: auth(token),
     params: { format: "full" },
-    timeout: 15000,
+    timeout: 120000,
   });
   const msg = response.data;
   const headers = Object.fromEntries((msg.payload?.headers || []).map((h) => [h.name.toLowerCase(), h.value]));
@@ -46,7 +46,7 @@ async function opSearchEmails(config, token) {
   const response = await axios.get(`${BASE}/messages`, {
     headers: auth(token),
     params: { q: config.query, maxResults: Math.min(config.maxResults || 10, 100) },
-    timeout: 15000,
+    timeout: 120000,
   });
   const messages = response.data.messages || [];
   return { messages, total: response.data.resultSizeEstimate || messages.length };
@@ -58,7 +58,7 @@ async function opReplyToEmail(config, token) {
   const raw = buildRawEmail(config);
   const response = await axios.post(`${BASE}/messages/send`, { raw, threadId: config.threadId }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { messageId: response.data.id, threadId: response.data.threadId };
 }
@@ -69,7 +69,7 @@ async function opForwardEmail(config, token) {
   const orig = await axios.get(`${BASE}/messages/${encodeURIComponent(config.messageId)}`, {
     headers: auth(token),
     params: { format: "full" },
-    timeout: 15000,
+    timeout: 120000,
   });
   const msg = orig.data;
   const oh = Object.fromEntries((msg.payload?.headers || []).map((h) => [h.name.toLowerCase(), h.value]));
@@ -83,7 +83,7 @@ async function opForwardEmail(config, token) {
   const raw = buildRawEmail({ ...config, subject: config.subject || `Fwd: ${oh["subject"] || ""}`, body: fwdBody });
   const response = await axios.post(`${BASE}/messages/send`, { raw }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 30000,
+    timeout: 120000,
   });
   return { messageId: response.data.id, threadId: response.data.threadId, forwardedFrom: config.messageId };
 }
@@ -94,7 +94,7 @@ async function opMarkRead(config, token) {
     removeLabelIds: ["UNREAD"],
   }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { messageId: config.messageId, marked: "read" };
 }
@@ -119,7 +119,7 @@ async function opDeleteEmail(config, token) {
   if (!config.messageId) return { success: false, error: "Gmail deleteEmail: 'messageId' is required.", skipped: true };
   await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/trash`, {}, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { messageId: config.messageId, trashed: true };
 }
@@ -128,7 +128,7 @@ async function opUntrashEmail(config, token) {
   if (!config.messageId) return { success: false, error: "Gmail untrashEmail: 'messageId' is required.", skipped: true };
   await axios.post(`${BASE}/messages/${encodeURIComponent(config.messageId)}/untrash`, {}, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { messageId: config.messageId, untrashed: true };
 }

@@ -20,6 +20,7 @@ export async function getDb(credentialId, workspaceId, dbName) {
     dbName: dbName || undefined,
     serverSelectionTimeoutMS: 10000,
     connectTimeoutMS: 10000,
+    socketTimeoutMS: 60000,
   }).asPromise();
 
   clients.set(key, conn);

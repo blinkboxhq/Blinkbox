@@ -12,7 +12,7 @@ export async function opReadRange(config, token) {
   const response = await axios.get(url, {
     headers: authHeaders(token),
     params: { valueRenderOption: "UNFORMATTED_VALUE", dateTimeRenderOption: "FORMATTED_STRING" },
-    timeout: 15000,
+    timeout: 120000,
   });
   const rows = response.data.values || [];
   return { values: rows, rowCount: rows.length, range: response.data.range };
@@ -29,7 +29,7 @@ export async function opWriteRange(config, token) {
   }, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
     params: { valueInputOption: config.rawInput ? "RAW" : "USER_ENTERED" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     updatedRange: response.data.updatedRange,
@@ -49,7 +49,7 @@ async function opAppendRow(config, token) {
   }, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
     params: { valueInputOption: config.rawInput ? "RAW" : "USER_ENTERED", insertDataOption: "INSERT_ROWS" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     updatedRange: response.data.updates?.updatedRange,
@@ -63,7 +63,7 @@ async function opClearRange(config, token) {
   const url = `${BASE}/${encodeURIComponent(config.spreadsheetId)}/values/${encodeURIComponent(config.range)}:clear`;
   const response = await axios.post(url, {}, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { clearedRange: response.data.clearedRange };
 }
@@ -77,7 +77,7 @@ async function opBatchGet(config, token) {
   const params = new URLSearchParams();
   ranges.forEach((r) => params.append("ranges", r));
   params.append("valueRenderOption", "UNFORMATTED_VALUE");
-  const response = await axios.get(`${url}?${params.toString()}`, { headers: authHeaders(token), timeout: 20000 });
+  const response = await axios.get(`${url}?${params.toString()}`, { headers: authHeaders(token), timeout: 120000 });
   return { valueRanges: (response.data.valueRanges || []).map((vr) => ({ range: vr.range, values: vr.values || [] })) };
 }
 

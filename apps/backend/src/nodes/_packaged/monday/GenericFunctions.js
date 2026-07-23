@@ -31,7 +31,7 @@ export async function gql(client, query, variables = {}) {
           "Content-Type": "application/json",
           "API-Version": "2024-01",
         },
-        timeout: 20000,
+        timeout: 120000,
       }
     );
   } catch (err) {

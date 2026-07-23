@@ -124,7 +124,7 @@ async function opCountTokens(config, input, apiKey) {
     ...(config.systemPrompt ? { system: config.systemPrompt } : {}),
   };
   const response = await axios.post("https://api.anthropic.com/v1/messages/count_tokens", body, {
-    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 30000,
+    headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 120000,
   });
   return { inputTokens: response.data.input_tokens, model, provider: "anthropic", operation: "countTokens" };
 }
@@ -177,7 +177,7 @@ async function opPromptCaching(config, input, apiKey) {
 
 async function opListModels(config, input, apiKey) {
   const response = await axios.get(MODELS_URL, {
-    headers: { "x-api-key": apiKey, "anthropic-version": ANTHROPIC_VERSION }, timeout: 30000,
+    headers: { "x-api-key": apiKey, "anthropic-version": ANTHROPIC_VERSION }, timeout: 120000,
   });
   const models = (response.data.data || []).map(m => ({ id: m.id, displayName: m.display_name, createdAt: m.created_at }));
   return { models, count: models.length, provider: "anthropic", operation: "listModels" };

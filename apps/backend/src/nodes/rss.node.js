@@ -18,7 +18,7 @@ export default {
     for (let hop = 0; hop < 5; hop++) {
       res = await axios.get(currentUrl, {
         headers: { "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*", "User-Agent": "BlinkBox/1.0 RSS Reader" },
-        timeout: 15000,
+        timeout: 120000,
         maxRedirects: 0,
         validateStatus: (s) => (s >= 200 && s < 300) || (s >= 300 && s < 400),
       });

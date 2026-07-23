@@ -10,7 +10,7 @@ async function opSearchPages(config, token) {
   if (config.filter) body.filter = { value: config.filter, property: "object" }; // "page" or "database"
   body.page_size = Math.min(Number(config.pageSize) || 10, 100);
 
-  const response = await axios.post(`${BASE}/search`, body, { headers: headers(token), timeout: 15000 });
+  const response = await axios.post(`${BASE}/search`, body, { headers: headers(token), timeout: 120000 });
   return {
     results: (response.data.results || []).map((r) => ({
       id: r.id,

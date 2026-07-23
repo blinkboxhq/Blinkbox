@@ -27,12 +27,12 @@ export function ctxFor(config, pat) {
   return { org, ORG, PROJ, headers };
 }
 
-export const get = (url, ctx) => axios.get(url, { headers: ctx.headers, timeout: 20000 }).then((r) => r.data);
+export const get = (url, ctx) => axios.get(url, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
 export const post = (url, body, ctx, ct) =>
-  axios.post(url, body, { headers: { ...ctx.headers, ...(ct ? { "Content-Type": ct } : {}) }, timeout: 20000 }).then((r) => r.data);
+  axios.post(url, body, { headers: { ...ctx.headers, ...(ct ? { "Content-Type": ct } : {}) }, timeout: 120000 }).then((r) => r.data);
 export const patch = (url, body, ctx, ct) =>
-  axios.patch(url, body, { headers: { ...ctx.headers, ...(ct ? { "Content-Type": ct } : {}) }, timeout: 20000 }).then((r) => r.data);
-export const del = (url, ctx) => axios.delete(url, { headers: ctx.headers, timeout: 20000 }).then((r) => r.data);
+  axios.patch(url, body, { headers: { ...ctx.headers, ...(ct ? { "Content-Type": ct } : {}) }, timeout: 120000 }).then((r) => r.data);
+export const del = (url, ctx) => axios.delete(url, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
 
 export function jsonPatch(ops) {
   return ops.filter((o) => o.value !== undefined && o.value !== "");

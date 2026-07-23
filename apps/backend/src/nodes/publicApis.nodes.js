@@ -115,7 +115,7 @@ export const hackernews = {
     const idsRes = await axios.get(`https://hacker-news.firebaseio.com/v0/${endpoint}.json`, { timeout: TIMEOUT });
     const ids = (idsRes.data || []).slice(0, limit);
     const stories = await Promise.all(ids.map((id) =>
-      axios.get(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { timeout: 8000 }).then((r) => ({
+      axios.get(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { timeout: 120000 }).then((r) => ({
         id: r.data.id, title: r.data.title, url: r.data.url, score: r.data.score,
         by: r.data.by, time: new Date(r.data.time * 1000).toISOString(),
         descendants: r.data.descendants || 0, type: r.data.type,

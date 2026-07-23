@@ -25,7 +25,7 @@ async function opPublishVideo(config, token) {
   const initData = await post(token, `/post/publish/video/init/`, {
     post_info: buildPostInfo(config),
     source_info: { source: "PULL_FROM_URL", video_url: config.videoUrl },
-  }, { timeout: 30000 });
+  }, { timeout: 120000 });
 
   const publishId = initData.data?.publish_id;
   if (!publishId) throw new Error(`TikTok publishVideo: No publish_id returned — ${JSON.stringify(initData)}`);
@@ -62,7 +62,7 @@ async function opInitVideoUpload(config, token) {
       chunk_size: chunkSize,
       total_chunk_count: Math.max(1, Math.ceil(size / chunkSize)),
     },
-  }, { timeout: 30000 });
+  }, { timeout: 120000 });
   return { publishId: data.data?.publish_id, uploadUrl: data.data?.upload_url };
 }
 
@@ -70,7 +70,7 @@ async function opUploadToInbox(config, token) {
   if (!config.videoUrl) return { success: false, error: "TikTok uploadToInbox: 'videoUrl' is required.", skipped: true };
   const data = await post(token, `/post/publish/inbox/video/init/`, {
     source_info: { source: "PULL_FROM_URL", video_url: config.videoUrl },
-  }, { timeout: 30000 });
+  }, { timeout: 120000 });
   return { publishId: data.data?.publish_id, status: "uploaded_to_inbox" };
 }
 
@@ -88,7 +88,7 @@ async function opPublishPhoto(config, token) {
     source_info: { source: "PULL_FROM_URL", photo_cover_index: Number(config.coverIndex) || 0, photo_images: urls },
     post_mode: config.postMode || "DIRECT_POST",
     media_type: "PHOTO",
-  }, { timeout: 30000 });
+  }, { timeout: 120000 });
   return { publishId: data.data?.publish_id, success: true };
 }
 
@@ -99,13 +99,13 @@ async function opGetPublishStatus(config, token) {
 }
 
 async function opGetCreatorInfo(config, token) {
-  const data = await post(token, `/post/publish/creator_info/query/`, {}, { timeout: 10000 });
+  const data = await post(token, `/post/publish/creator_info/query/`, {}, { timeout: 120000 });
   return data.data || data;
 }
 
 async function opGetVideo(config, token) {
   if (!config.videoId) return { success: false, error: "TikTok getVideo: 'videoId' is required.", skipped: true };
-  const data = await post(token, `/video/query/`, { video_ids: [config.videoId], fields: VIDEO_FIELDS }, { timeout: 10000 });
+  const data = await post(token, `/video/query/`, { video_ids: [config.videoId], fields: VIDEO_FIELDS }, { timeout: 120000 });
   return data.data?.videos?.[0] || data;
 }
 

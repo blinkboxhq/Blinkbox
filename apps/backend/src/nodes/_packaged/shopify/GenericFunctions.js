@@ -21,7 +21,7 @@ export function makeApi(shop, token) {
   return axios.create({
     baseURL: `https://${host}/admin/api/${API_VERSION}`,
     headers: { "X-Shopify-Access-Token": token, "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
 }
 

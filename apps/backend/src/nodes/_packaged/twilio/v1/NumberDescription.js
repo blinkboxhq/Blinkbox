@@ -12,7 +12,7 @@ async function opLookupNumber(config, { accountSid, authToken }) {
   const response = await axios.get(url, {
     auth: { username: accountSid, password: authToken },
     params: { Type: "carrier" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return {
     phoneNumber: response.data.phone_number,
@@ -27,7 +27,7 @@ async function opListNumbers(config, { accountSid, authToken }) {
   const response = await axios.get(url, {
     auth: { username: accountSid, password: authToken },
     params: { PageSize: Math.min(config.maxResults || 20, 100) },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     numbers: (response.data.incoming_phone_numbers || []).map((n) => ({

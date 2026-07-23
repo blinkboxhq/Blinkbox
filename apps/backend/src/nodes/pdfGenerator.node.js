@@ -26,7 +26,7 @@ export default {
     const page = await browser.newPage();
 
     try {
-      await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 30000 });
+      await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 120000 });
       const pdfBuffer = await page.pdf({
         format,
         margin: {

@@ -18,7 +18,7 @@ export async function getToken(credentialId, workspaceId) {
 export function client(token) {
   return axios.create({
     baseURL: BASE_URL,
-    timeout: 15000,
+    timeout: 120000,
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",

@@ -19,7 +19,7 @@ export function makeClient(token) {
   return axios.create({
     baseURL: BASE,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
 }
 

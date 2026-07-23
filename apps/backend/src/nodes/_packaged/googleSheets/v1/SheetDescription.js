@@ -11,7 +11,7 @@ export async function opGetSheet(config, token) {
   const response = await axios.get(url, {
     headers: authHeaders(token),
     params: { fields: "spreadsheetId,properties.title,sheets.properties" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     spreadsheetId: response.data.spreadsheetId,
@@ -43,7 +43,7 @@ async function opCreateSpreadsheet(config, token) {
   }
   const response = await axios.post(BASE, body, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { spreadsheetId: response.data.spreadsheetId, spreadsheetUrl: response.data.spreadsheetUrl, title: response.data.properties?.title };
 }

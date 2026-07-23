@@ -36,7 +36,7 @@ export default {
           { type: "image_url", image_url: { url: imageUrl } },
         ]}],
         max_tokens: parseInt(config.maxTokens || 1024),
-      }, { headers, timeout: 90000 });
+      }, { headers, timeout: 120000 });
       return {
         reply:      res.data.choices?.[0]?.message?.content || "",
         model:      res.data.model,
@@ -59,7 +59,7 @@ export default {
       ],
       max_tokens:  parseInt(config.maxTokens || 1024),
       temperature: parseFloat(config.temperature || 0.7),
-    }, { headers, timeout: 90000 });
+    }, { headers, timeout: 120000 });
 
     return {
       reply:      res.data.choices?.[0]?.message?.content || "",

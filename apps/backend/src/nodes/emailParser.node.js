@@ -195,7 +195,7 @@ ${hint ? `Note: ${hint}\n` : ""}Use null for any field not found. Do not guess â
             "anthropic-version": "2023-06-01",
             "Content-Type": "application/json",
           },
-          timeout: 30000,
+          timeout: 120000,
         },
       );
       const raw = response.data.content[0].text;
@@ -215,7 +215,7 @@ ${hint ? `Note: ${hint}\n` : ""}Use null for any field not found. Do not guess â
           response_format: { type: "json_object" },
           max_tokens: 1000,
         },
-        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 30000 },
+        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
       );
       const raw = response.data.choices[0].message.content;
       try { extracted = JSON.parse(raw); } catch { throw new Error(`Email Parser: Invalid JSON from model: ${raw.slice(0, 200)}`); }

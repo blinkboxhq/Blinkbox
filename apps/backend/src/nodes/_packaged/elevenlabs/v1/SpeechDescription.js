@@ -24,7 +24,7 @@ async function opTextToSpeech(config, apiKey) {
     {
       headers: jsonHeaders(apiKey),
       responseType: "arraybuffer",
-      timeout: 30000,
+      timeout: 120000,
     },
   );
 
@@ -52,7 +52,7 @@ async function opTextToSpeechStream(config, apiKey) {
         similarity_boost: num(config.similarityBoost, 0.75),
       },
     },
-    { headers: jsonHeaders(apiKey), responseType: "arraybuffer", timeout: 30000 },
+    { headers: jsonHeaders(apiKey), responseType: "arraybuffer", timeout: 120000 },
   );
   return {
     audioBase64: Buffer.from(res.data).toString("base64"),
@@ -74,7 +74,7 @@ async function opSpeechToSpeech(config, apiKey) {
   const res = await axios.post(`${BASE}/speech-to-speech/${encodeURIComponent(voiceId)}`, form, {
     headers: { "xi-api-key": apiKey, ...form.getHeaders() },
     responseType: "arraybuffer",
-    timeout: 30000,
+    timeout: 120000,
   });
   return { audioBase64: Buffer.from(res.data).toString("base64"), mimeType: "audio/mpeg", voiceId, model };
 }
@@ -87,7 +87,7 @@ async function opSoundGeneration(config, apiKey) {
   const res = await axios.post(`${BASE}/sound-generation`, body, {
     headers: jsonHeaders(apiKey),
     responseType: "arraybuffer",
-    timeout: 30000,
+    timeout: 120000,
   });
   return { audioBase64: Buffer.from(res.data).toString("base64"), mimeType: "audio/mpeg", characterCount: config.text.length };
 }

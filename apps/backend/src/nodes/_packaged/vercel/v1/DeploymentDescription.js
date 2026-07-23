@@ -26,14 +26,14 @@ async function opTriggerDeploy(config, { api }) {
     target: config.target || "production",
     gitSource: { type: config.gitType || "github", ref: config.branch || "main" },
   };
-  const res = await api.post(`/v13/deployments`, body, { timeout: 30000 });
+  const res = await api.post(`/v13/deployments`, body, { timeout: 120000 });
   return { success: true, ...deployShape(res.data) };
 }
 
 async function opRedeploy(config, { api }) {
   if (!config.deploymentId) return skip("redeploy", "'deploymentId' is required.");
   const body = { deploymentId: config.deploymentId, name: config.app || config.projectId, target: config.target || "production" };
-  const res = await api.post(`/v13/deployments`, body, { timeout: 30000 });
+  const res = await api.post(`/v13/deployments`, body, { timeout: 120000 });
   return { success: true, ...deployShape(res.data) };
 }
 

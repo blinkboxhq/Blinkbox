@@ -14,7 +14,7 @@ async function opShareFile(config, ctx) {
   const res = await axios.post(
     `${itemUrl(path)}/createLink`,
     { type: linkType || "view", scope: scope || "anonymous" },
-    { headers, timeout: 15000 }
+    { headers, timeout: 120000 }
   );
   return { success: true, link: res.data.link?.webUrl, type: res.data.link?.type, scope: res.data.link?.scope };
 }
@@ -23,7 +23,7 @@ async function opListPermissions(config, ctx) {
   const { headers } = ctx;
   const { path } = config;
   if (!path) return { success: false, error: "OneDrive listPermissions: 'path' or item ID is required.", skipped: true };
-  const res = await axios.get(`${itemUrl(path)}/permissions`, { headers, timeout: 15000 });
+  const res = await axios.get(`${itemUrl(path)}/permissions`, { headers, timeout: 120000 });
   return {
     success: true,
     count: res.data.value.length,
@@ -42,7 +42,7 @@ async function opDeletePermission(config, ctx) {
   const { path, permissionId } = config;
   if (!path) return { success: false, error: "OneDrive deletePermission: 'path' or item ID is required.", skipped: true };
   if (!permissionId) return { success: false, error: "OneDrive deletePermission: 'permissionId' is required.", skipped: true };
-  await axios.delete(`${itemUrl(path)}/permissions/${permissionId}`, { headers, timeout: 15000 });
+  await axios.delete(`${itemUrl(path)}/permissions/${permissionId}`, { headers, timeout: 120000 });
   return { success: true, deleted: true, permissionId };
 }
 
@@ -59,7 +59,7 @@ async function opInvite(config, ctx) {
     sendInvitation: config.sendInvitation !== false,
     message: config.message || "",
   };
-  const res = await axios.post(`${itemUrl(path)}/invite`, body, { headers, timeout: 15000 });
+  const res = await axios.post(`${itemUrl(path)}/invite`, body, { headers, timeout: 120000 });
   return { success: true, invited: emails, count: res.data.value?.length ?? emails.length };
 }
 

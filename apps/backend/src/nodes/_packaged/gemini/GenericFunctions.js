@@ -50,7 +50,7 @@ export async function resolveInlinePart(ref, { fallbackMime, label = "file", max
   }
   if (/^https?:\/\//i.test(ref)) {
     await assertSafeUrlResolved(ref);
-    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 60000, maxContentLength: maxBytes, maxRedirects: 0 });
+    const res = await axios.get(ref, { responseType: "arraybuffer", timeout: 120000, maxContentLength: maxBytes, maxRedirects: 0 });
     const mimeType = (res.headers["content-type"] || fallbackMime || "application/octet-stream").split(";")[0];
     return { inlineData: { mimeType, data: Buffer.from(res.data).toString("base64") } };
   }
@@ -104,7 +104,7 @@ export async function callGemini(apiKey, model, { systemInstruction, parts, gen,
 export async function listModels(credentialId, workspaceId) {
   const apiKey = await getApiKey(credentialId, workspaceId);
   const response = await axios.get(MODELS_URL, {
-    headers: { "x-goog-api-key": apiKey }, timeout: 30000, params: { pageSize: 200 },
+    headers: { "x-goog-api-key": apiKey }, timeout: 120000, params: { pageSize: 200 },
   });
   return (response.data.models || [])
     .filter(m => (m.supportedGenerationMethods || []).some(x => x === "generateContent" || x === "embedContent"))

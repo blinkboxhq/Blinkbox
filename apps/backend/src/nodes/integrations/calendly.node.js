@@ -25,7 +25,7 @@ export default {
     const api = axios.create({
       baseURL: BASE_URL,
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      timeout: 15000,
+      timeout: 120000,
     });
 
     return runCalendly(config, { api });

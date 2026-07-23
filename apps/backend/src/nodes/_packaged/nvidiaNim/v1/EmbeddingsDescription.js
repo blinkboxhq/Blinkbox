@@ -18,7 +18,7 @@ async function opEmbeddings(config, input, apiKey) {
     model,
     encoding_format: "float",
     input_type: inputType,
-  }, { headers: authHeaders(apiKey), timeout: 60000 });
+  }, { headers: authHeaders(apiKey), timeout: 120000 });
 
   const data = res.data;
   const vectors = (data.data || []).map(d => d.embedding);

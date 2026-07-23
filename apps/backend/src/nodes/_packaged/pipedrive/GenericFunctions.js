@@ -32,7 +32,7 @@ export function buildClient(apiToken) {
   return axios.create({
     baseURL: BASE_URL,
     params: { api_token: apiToken },
-    timeout: 15000,
+    timeout: 120000,
   });
 }
 

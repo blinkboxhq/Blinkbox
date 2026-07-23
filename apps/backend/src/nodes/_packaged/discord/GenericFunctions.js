@@ -41,7 +41,7 @@ export function webhookId(url) {
 export async function post(webhookUrl, payload) {
   const response = await axios.post(webhookUrl, payload, {
     headers: { "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
     validateStatus: null,
   });
 
@@ -70,7 +70,7 @@ export async function bot(token, method, path, data, params) {
     headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json" },
     data,
     params,
-    timeout: 15000,
+    timeout: 120000,
     validateStatus: null,
   });
   if (response.status >= 200 && response.status < 300) return response.data;

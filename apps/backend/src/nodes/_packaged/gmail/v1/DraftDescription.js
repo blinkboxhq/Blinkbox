@@ -9,7 +9,7 @@ async function opCreateDraft(config, token) {
   const raw = buildRawEmail(config);
   const response = await axios.post(`${BASE}/drafts`, { message: { raw } }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { draftId: response.data.id, messageId: response.data.message?.id };
 }
@@ -18,7 +18,7 @@ async function opListDrafts(config, token) {
   const response = await axios.get(`${BASE}/drafts`, {
     headers: auth(token),
     params: { maxResults: Math.min(config.maxResults || 10, 100) },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { drafts: response.data.drafts || [], total: response.data.resultSizeEstimate || 0 };
 }
@@ -27,14 +27,14 @@ async function opSendDraft(config, token) {
   if (!config.draftId) return { success: false, error: "Gmail sendDraft: 'draftId' is required.", skipped: true };
   const response = await axios.post(`${BASE}/drafts/send`, { id: config.draftId }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 30000,
+    timeout: 120000,
   });
   return { messageId: response.data.id, threadId: response.data.threadId, sentFromDraft: config.draftId };
 }
 
 async function opDeleteDraft(config, token) {
   if (!config.draftId) return { success: false, error: "Gmail deleteDraft: 'draftId' is required.", skipped: true };
-  await axios.delete(`${BASE}/drafts/${encodeURIComponent(config.draftId)}`, { headers: auth(token), timeout: 10000 });
+  await axios.delete(`${BASE}/drafts/${encodeURIComponent(config.draftId)}`, { headers: auth(token), timeout: 120000 });
   return { draftId: config.draftId, deleted: true };
 }
 

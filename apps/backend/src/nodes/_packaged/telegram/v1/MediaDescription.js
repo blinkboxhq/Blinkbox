@@ -18,7 +18,7 @@ async function opSendPhoto(config, token) {
     form.append("chat_id", chatId);
     form.append("photo", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "image/jpeg" }), name || "photo.jpg");
     if (config.caption) form.append("caption", config.caption);
-    const res = await axios.post(`${BASE_URL}${token}/sendPhoto`, form, { timeout: 30000 });
+    const res = await axios.post(`${BASE_URL}${token}/sendPhoto`, form, { timeout: 120000 });
     return msgResult(res.data);
   }
 
@@ -44,7 +44,7 @@ async function opSendDocument(config, token) {
     form.append("chat_id", chatId);
     form.append("document", new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || "application/octet-stream" }), name || "file");
     if (config.caption) form.append("caption", config.caption);
-    const res = await axios.post(`${BASE_URL}${token}/sendDocument`, form, { timeout: 30000 });
+    const res = await axios.post(`${BASE_URL}${token}/sendDocument`, form, { timeout: 120000 });
     return msgResult(res.data);
   }
 

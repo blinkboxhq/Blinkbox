@@ -18,7 +18,7 @@ async function opSendSms(config, { accountSid, authToken }) {
   }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     messageSid: response.data.sid,
@@ -44,7 +44,7 @@ async function opSendMms(config, { accountSid, authToken }) {
   }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { messageSid: response.data.sid, status: response.data.status, to: response.data.to, numMedia: response.data.num_media };
 }
@@ -60,7 +60,7 @@ async function opSendWhatsApp(config, { accountSid, authToken }) {
   const response = await axios.post(url, encodeForm(payload), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { messageSid: response.data.sid, status: response.data.status, to: response.data.to };
 }
@@ -68,7 +68,7 @@ async function opSendWhatsApp(config, { accountSid, authToken }) {
 async function opGetMessage(config, { accountSid, authToken }) {
   if (!config.messageSid) return { success: false, error: "Twilio getMessage: 'messageSid' is required.", skipped: true };
   const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages/${encodeURIComponent(config.messageSid)}.json`;
-  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 120000 });
   return {
     messageSid: response.data.sid,
     status: response.data.status,
@@ -86,14 +86,14 @@ async function opListMessages(config, { accountSid, authToken }) {
   if (config.to) params.To = config.to;
   if (config.from) params.From = config.from;
   const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
-  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 15000 });
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 120000 });
   return { messages: response.data.messages || [], count: (response.data.messages || []).length };
 }
 
 async function opDeleteMessage(config, { accountSid, authToken }) {
   if (!config.messageSid) return { success: false, error: "Twilio deleteMessage: 'messageSid' is required.", skipped: true };
   const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Messages/${encodeURIComponent(config.messageSid)}.json`;
-  await axios.delete(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  await axios.delete(url, { auth: { username: accountSid, password: authToken }, timeout: 120000 });
   return { messageSid: config.messageSid, deleted: true };
 }
 

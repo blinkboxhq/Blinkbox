@@ -18,7 +18,7 @@ async function opUpsert(config, apiKey) {
   const body = { vectors };
   if (config.namespace) body.namespace = config.namespace;
 
-  const res = await axios.post(`${host}/vectors/upsert`, body, { headers: buildHeaders(apiKey), timeout: 30000 });
+  const res = await axios.post(`${host}/vectors/upsert`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { upsertedCount: res.data.upsertedCount ?? vectors.length, namespace: config.namespace || "" };
 }
 
@@ -39,7 +39,7 @@ async function opQuery(config, apiKey) {
   };
   if (config.namespace) body.namespace = config.namespace;
 
-  const res = await axios.post(`${host}/query`, body, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.post(`${host}/query`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { matches: res.data.matches || [], namespace: config.namespace || "" };
 }
 
@@ -59,7 +59,7 @@ async function opDelete(config, apiKey) {
   }
   if (config.namespace) body.namespace = config.namespace;
 
-  await axios.post(`${host}/vectors/delete`, body, { headers: buildHeaders(apiKey), timeout: 15000 });
+  await axios.post(`${host}/vectors/delete`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { deleted: true, namespace: config.namespace || "" };
 }
 
@@ -76,7 +76,7 @@ async function opFetchById(config, apiKey) {
   ids.forEach((id) => params.append("ids", id));
   if (config.namespace) params.set("namespace", config.namespace);
 
-  const res = await axios.get(`${host}/vectors/fetch?${params.toString()}`, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.get(`${host}/vectors/fetch?${params.toString()}`, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { vectors: res.data.vectors || {}, namespace: config.namespace || "" };
 }
 
@@ -93,7 +93,7 @@ async function opUpdate(config, apiKey) {
   if (setMetadata) body.setMetadata = setMetadata;
   if (config.namespace) body.namespace = config.namespace;
 
-  await axios.post(`${host}/vectors/update`, body, { headers: buildHeaders(apiKey), timeout: 15000 });
+  await axios.post(`${host}/vectors/update`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { updated: true, id: config.id, namespace: config.namespace || "" };
 }
 
@@ -106,7 +106,7 @@ async function opDescribeIndexStats(config, apiKey) {
   const filter = parseObject(config.filter);
   if (filter) body.filter = filter;
 
-  const res = await axios.post(`${host}/describe_index_stats`, body, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.post(`${host}/describe_index_stats`, body, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { stats: res.data, namespaces: res.data?.namespaces || {}, dimension: res.data?.dimension, totalVectorCount: res.data?.totalVectorCount };
 }
 
@@ -121,7 +121,7 @@ async function opListVectors(config, apiKey) {
   params.set("limit", String(parseInt(config.limit) || 100));
   if (config.paginationToken) params.set("paginationToken", config.paginationToken);
 
-  const res = await axios.get(`${host}/vectors/list?${params.toString()}`, { headers: buildHeaders(apiKey), timeout: 15000 });
+  const res = await axios.get(`${host}/vectors/list?${params.toString()}`, { headers: buildHeaders(apiKey), timeout: 120000 });
   return { vectors: res.data.vectors || [], pagination: res.data.pagination || null, namespace: config.namespace || "" };
 }
 

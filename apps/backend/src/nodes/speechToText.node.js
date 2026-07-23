@@ -21,7 +21,7 @@ export default {
     if (!apiKey) return { success: false, error: "Speech to Text: API key required.", skipped: true };
 
     // Download the audio file
-    const audioRes = await axios.get(audioUrl, { responseType: "arraybuffer", timeout: 30000 });
+    const audioRes = await axios.get(audioUrl, { responseType: "arraybuffer", timeout: 120000 });
     const audioBuffer = Buffer.from(audioRes.data);
     const contentType = audioRes.headers["content-type"] || "audio/mpeg";
     const ext = contentType.includes("wav") ? "wav" : contentType.includes("webm") ? "webm" : contentType.includes("ogg") ? "ogg" : "mp3";
@@ -29,12 +29,12 @@ export default {
     if (provider === "assemblyai") {
       // Upload to AssemblyAI
       const uploadRes = await axios.post("https://api.assemblyai.com/v2/upload", audioBuffer,
-        { headers: { authorization: apiKey, "Content-Type": "application/octet-stream" }, timeout: 60000 }
+        { headers: { authorization: apiKey, "Content-Type": "application/octet-stream" }, timeout: 120000 }
       );
       // Request transcription
       const transcriptRes = await axios.post("https://api.assemblyai.com/v2/transcript",
         { audio_url: uploadRes.data.upload_url, language_code: language },
-        { headers: { authorization: apiKey }, timeout: 15000 }
+        { headers: { authorization: apiKey }, timeout: 120000 }
       );
       const id = transcriptRes.data.id;
       // Poll for completion (up to 2 min)

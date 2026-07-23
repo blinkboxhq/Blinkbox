@@ -33,7 +33,7 @@ export default {
 
     const res = await axios.post("https://api.linkedin.com/v2/ugcPosts", body, {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Restli-Protocol-Version": "2.0.0" },
-      timeout: 30000,
+      timeout: 120000,
     });
     return { postId: res.headers["x-restli-id"], authorUrn };
   },

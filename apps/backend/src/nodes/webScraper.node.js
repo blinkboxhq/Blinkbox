@@ -89,7 +89,7 @@ export default {
       try {
         const response = await axios.get(`${JINA_READER_URL}${source}`, {
           headers,
-          timeout: 30000,
+          timeout: 120000,
           maxContentLength: 5 * 1024 * 1024,
         });
 
@@ -117,7 +117,7 @@ export default {
 
         const response = await page.goto(data.source, {
           waitUntil: "networkidle2",
-          timeout: 45000,
+          timeout: 120000,
         });
 
         // Optional: wait for a specific element

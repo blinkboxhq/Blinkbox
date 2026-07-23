@@ -25,7 +25,7 @@ export async function slackCall(token, method, payload) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json; charset=utf-8",
       },
-      timeout: 15000,
+      timeout: 120000,
     });
   } catch (err) {
     if (err.response?.status === 401) throw new Error("Slack: Invalid or expired Bot Token.");

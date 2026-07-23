@@ -8,7 +8,7 @@ import { BASE } from "../GenericFunctions.js";
 
 async function opListModels(config, input, apiKey) {
   const response = await axios.get(`${BASE}/models`, {
-    headers: { Authorization: `Bearer ${apiKey}` }, timeout: 30000,
+    headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000,
   });
   let ids = (response.data.data || []).map((m) => m.id).filter(Boolean);
   const filter = config.filter || "all";
@@ -27,7 +27,7 @@ async function opFineTune(config, input, apiKey) {
   if (config.suffix) body.suffix = config.suffix;
 
   const response = await axios.post(`${BASE}/fine_tuning/jobs`, body, {
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000,
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000,
   });
   const job = response.data || {};
   return { jobId: job.id, status: job.status, model: job.model, fineTunedModel: job.fine_tuned_model || null, provider: "openai", operation: "fineTune" };

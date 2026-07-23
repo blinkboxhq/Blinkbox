@@ -72,7 +72,7 @@ export async function chat(apiKey, body, timeout = 120000) {
 export async function listModels(credentialId, workspaceId) {
   const apiKey = await getApiKey(credentialId, workspaceId);
   try {
-    const resp = await axios.get(`${BASE}/models`, { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 30000 });
+    const resp = await axios.get(`${BASE}/models`, { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000 });
     const ids = (resp.data.data || resp.data.models || [])
       .map(m => (typeof m === "string" ? m : m.id))
       .filter(Boolean);

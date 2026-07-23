@@ -39,7 +39,7 @@ async function waitForRun(threadId, runId, apiKey, timeoutMs = 60000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     await new Promise((r) => setTimeout(r, 1500));
-    const res = await axios.get(`${BASE}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}`, { headers: headers(apiKey), timeout: 10000 });
+    const res = await axios.get(`${BASE}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}`, { headers: headers(apiKey), timeout: 120000 });
     const status = res.data.status;
     if (status === "completed") return res.data;
     if (["failed", "cancelled", "expired"].includes(status)) {
@@ -54,7 +54,7 @@ async function waitForRun(threadId, runId, apiKey, timeoutMs = 60000) {
 }
 
 async function opCreateThread(config, apiKey) {
-  const res = await axios.post(`${BASE}/threads`, {}, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.post(`${BASE}/threads`, {}, { headers: headers(apiKey), timeout: 120000 });
   return { threadId: res.data.id, createdAt: new Date().toISOString() };
 }
 
@@ -66,7 +66,7 @@ async function opAddMessageAndRun(config, apiKey) {
 
   // Auto-create thread if blank
   if (!threadId) {
-    const t = await axios.post(`${BASE}/threads`, {}, { headers: headers(apiKey), timeout: 10000 });
+    const t = await axios.post(`${BASE}/threads`, {}, { headers: headers(apiKey), timeout: 120000 });
     threadId = t.data.id;
   }
 
@@ -74,7 +74,7 @@ async function opAddMessageAndRun(config, apiKey) {
   await axios.post(
     `${BASE}/threads/${encodeURIComponent(threadId)}/messages`,
     { role: "user", content: config.message },
-    { headers: headers(apiKey), timeout: 10000 },
+    { headers: headers(apiKey), timeout: 120000 },
   );
 
   // Start run
@@ -86,7 +86,7 @@ async function opAddMessageAndRun(config, apiKey) {
   if (config.enableCodeInterpreter) tools.push({ type: "code_interpreter" });
   if (tools.length) runBody.tools = tools;
 
-  const runRes = await axios.post(`${BASE}/threads/${encodeURIComponent(threadId)}/runs`, runBody, { headers: headers(apiKey), timeout: 15000 });
+  const runRes = await axios.post(`${BASE}/threads/${encodeURIComponent(threadId)}/runs`, runBody, { headers: headers(apiKey), timeout: 120000 });
   const runId = runRes.data.id;
 
   // Poll until complete
@@ -95,7 +95,7 @@ async function opAddMessageAndRun(config, apiKey) {
   // Fetch messages
   const msgRes = await axios.get(
     `${BASE}/threads/${encodeURIComponent(threadId)}/messages?order=asc&limit=20`,
-    { headers: headers(apiKey), timeout: 10000 },
+    { headers: headers(apiKey), timeout: 120000 },
   );
 
   const messages = (msgRes.data.data || []).map((m) => ({
@@ -120,7 +120,7 @@ async function opListMessages(config, apiKey) {
   const limit = Math.min(parseInt(config.limit) || 20, 100);
   const res = await axios.get(
     `${BASE}/threads/${encodeURIComponent(config.threadId)}/messages?order=asc&limit=${limit}`,
-    { headers: headers(apiKey), timeout: 10000 },
+    { headers: headers(apiKey), timeout: 120000 },
   );
   const messages = (res.data.data || []).map((m) => ({
     role: m.role,
@@ -132,7 +132,7 @@ async function opListMessages(config, apiKey) {
 
 async function opDeleteThread(config, apiKey) {
   if (!config.threadId) return { success: false, error: "OpenAI Assistants deleteThread: 'threadId' is required.", skipped: true };
-  await axios.delete(`${BASE}/threads/${encodeURIComponent(config.threadId)}`, { headers: headers(apiKey), timeout: 10000 });
+  await axios.delete(`${BASE}/threads/${encodeURIComponent(config.threadId)}`, { headers: headers(apiKey), timeout: 120000 });
   return { deleted: true, threadId: config.threadId };
 }
 

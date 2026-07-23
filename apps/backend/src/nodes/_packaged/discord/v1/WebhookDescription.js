@@ -56,7 +56,7 @@ async function opSendFile(config) {
     form.append("file", new Blob([content], { type: "text/plain" }), config.filename || "output.txt");
   }
 
-  const response = await axios.post(webhookUrl, form, { timeout: 30000, validateStatus: null });
+  const response = await axios.post(webhookUrl, form, { timeout: 120000, validateStatus: null });
   if (response.status >= 200 && response.status < 300) {
     return { ok: true, webhookId: webhookId(webhookUrl) };
   }

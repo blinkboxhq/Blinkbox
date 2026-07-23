@@ -28,7 +28,7 @@ export async function getAccessToken(clientId, clientSecret) {
     "grant_type=client_credentials",
     {
       headers: { Authorization: `Basic ${b64}`, "Content-Type": "application/x-www-form-urlencoded" },
-      timeout: 15000,
+      timeout: 120000,
     },
   );
   if (!data.access_token) throw new Error("PayPal OAuth token exchange returned no access_token.");

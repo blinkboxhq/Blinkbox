@@ -17,7 +17,7 @@ export async function getApiKey(credentialId, workspaceId) {
 export async function post(path, payload) {
   const { data } = await axios.post(`${BASE}${path}`, payload, {
     headers: { "Content-Type": "application/json" },
-    timeout: 30000,
+    timeout: 120000,
     maxContentLength: 5 * 1024 * 1024,
   });
   return data;

@@ -57,7 +57,7 @@ async function opAddPRReviewer(config, ctx) {
     .put(
       `${ctx.PROJ}/_apis/git/repositories/${enc(config.repositoryId)}/pullrequests/${enc(config.pullRequestId)}/reviewers/${enc(config.reviewerId)}?api-version=${API}`,
       { vote: 0 },
-      { headers: ctx.headers, timeout: 20000 }
+      { headers: ctx.headers, timeout: 120000 }
     )
     .then((r) => r.data);
   return { reviewerId: data.id, added: true };

@@ -13,7 +13,7 @@ async function opGetCompany(config, token) {
   if (!id) return { success: false, error: "LinkedIn getCompany: 'companyId' is required.", skipped: true };
   const { data } = await axios.get(
     `${BASE}/organizations/${encodeURIComponent(id)}?projection=(id,name,vanityName,description,websiteUrl,logoV2)`,
-    { headers: headers(token), timeout: 10000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const name = data.name?.localized?.en_US || Object.values(data.name?.localized || {})[0] || "";
   return {
@@ -30,7 +30,7 @@ async function opGetCompanyByName(config, token) {
   if (!vanity) return { success: false, error: "LinkedIn getCompanyByName: 'vanityName' is required.", skipped: true };
   const { data } = await axios.get(
     `${BASE}/organizations?q=vanityName&vanityName=${encodeURIComponent(vanity)}`,
-    { headers: headers(token), timeout: 10000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const org = data.elements?.[0];
   if (!org) return { success: false, error: `LinkedIn getCompanyByName: no organization found for "${vanity}".`, skipped: true };
@@ -46,7 +46,7 @@ async function opGetCompanyByName(config, token) {
 async function opListAdministeredOrgs(config, token) {
   const { data } = await axios.get(
     `${BASE}/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED&projection=(elements*(organization~(id,localizedName,vanityName)))`,
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const orgs = (data.elements || []).map((el) => {
     const o = el["organization~"] || {};
@@ -61,7 +61,7 @@ async function opGetFollowerCount(config, token) {
   const orgUrn = encodeURIComponent(`urn:li:organization:${orgId}`);
   const { data } = await axios.get(
     `${BASE}/networkSizes/${orgUrn}?edgeType=CompanyFollowedByMember`,
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   return { orgId, followerCount: data.firstDegreeSize ?? null };
 }
@@ -72,7 +72,7 @@ async function opGetShareStatistics(config, token) {
   const orgUrn = encodeURIComponent(`urn:li:organization:${orgId}`);
   const { data } = await axios.get(
     `${BASE}/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${orgUrn}`,
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   const el = data.elements?.[0]?.totalShareStatistics || {};
   return {

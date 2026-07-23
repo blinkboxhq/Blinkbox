@@ -21,7 +21,7 @@ async function opListCampaigns(config, client) {
 async function opGetCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp getCampaign: 'campaignId' is required.", skipped: true };
-  return req(client, "get", `/campaigns/${encodeURIComponent(id)}`, { timeout: 10000 });
+  return req(client, "get", `/campaigns/${encodeURIComponent(id)}`, { timeout: 120000 });
 }
 
 async function opCreateCampaign(config, client) {
@@ -39,7 +39,7 @@ async function opCreateCampaign(config, client) {
       ...(config.toName ? { to_name: config.toName } : {}),
     },
   };
-  const data = await req(client, "post", "/campaigns", { body, timeout: 10000 });
+  const data = await req(client, "post", "/campaigns", { body, timeout: 120000 });
   return { id: data.id, webId: data.web_id, status: data.status, type: data.type };
 }
 
@@ -53,21 +53,21 @@ async function opUpdateCampaign(config, client) {
   if (config.replyTo) settings.reply_to = config.replyTo;
   if (config.previewText) settings.preview_text = config.previewText;
   const body = Object.keys(settings).length ? { settings } : {};
-  const data = await req(client, "patch", `/campaigns/${encodeURIComponent(id)}`, { body, timeout: 10000 });
+  const data = await req(client, "patch", `/campaigns/${encodeURIComponent(id)}`, { body, timeout: 120000 });
   return { id: data.id, status: data.status };
 }
 
 async function opDeleteCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp deleteCampaign: 'campaignId' is required.", skipped: true };
-  await req(client, "delete", `/campaigns/${encodeURIComponent(id)}`, { timeout: 10000 });
+  await req(client, "delete", `/campaigns/${encodeURIComponent(id)}`, { timeout: 120000 });
   return { success: true, campaignId: id, deleted: true };
 }
 
 async function opSendCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp sendCampaign: 'campaignId' is required.", skipped: true };
-  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/send`, { body: {}, timeout: 10000 });
+  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/send`, { body: {}, timeout: 120000 });
   return { success: true, campaignId: id, sent: true };
 }
 
@@ -78,7 +78,7 @@ async function opSendTestCampaign(config, client) {
   if (emails.length === 0) return { success: false, error: "Mailchimp sendTestCampaign: 'testEmails' (comma-separated) are required.", skipped: true };
   await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/test`, {
     body: { test_emails: emails, send_type: config.sendType || "html" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { success: true, campaignId: id, testSent: emails };
 }
@@ -89,7 +89,7 @@ async function opScheduleCampaign(config, client) {
   if (!config.scheduleTime) return { success: false, error: "Mailchimp scheduleCampaign: 'scheduleTime' (ISO datetime) is required.", skipped: true };
   await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/schedule`, {
     body: { schedule_time: config.scheduleTime },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { success: true, campaignId: id, scheduledFor: config.scheduleTime };
 }
@@ -97,35 +97,35 @@ async function opScheduleCampaign(config, client) {
 async function opUnscheduleCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp unscheduleCampaign: 'campaignId' is required.", skipped: true };
-  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/unschedule`, { body: {}, timeout: 10000 });
+  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/unschedule`, { body: {}, timeout: 120000 });
   return { success: true, campaignId: id, unscheduled: true };
 }
 
 async function opPauseCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp pauseCampaign: 'campaignId' is required.", skipped: true };
-  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/pause`, { body: {}, timeout: 10000 });
+  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/pause`, { body: {}, timeout: 120000 });
   return { success: true, campaignId: id, paused: true };
 }
 
 async function opResumeCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp resumeCampaign: 'campaignId' is required.", skipped: true };
-  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/resume`, { body: {}, timeout: 10000 });
+  await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/resume`, { body: {}, timeout: 120000 });
   return { success: true, campaignId: id, resumed: true };
 }
 
 async function opReplicateCampaign(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp replicateCampaign: 'campaignId' is required.", skipped: true };
-  const data = await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/replicate`, { body: {}, timeout: 10000 });
+  const data = await req(client, "post", `/campaigns/${encodeURIComponent(id)}/actions/replicate`, { body: {}, timeout: 120000 });
   return { id: data.id, webId: data.web_id, status: data.status, replicatedFrom: id };
 }
 
 async function opGetCampaignContent(config, client) {
   const id = config.campaignId;
   if (!id) return { success: false, error: "Mailchimp getCampaignContent: 'campaignId' is required.", skipped: true };
-  return req(client, "get", `/campaigns/${encodeURIComponent(id)}/content`, { timeout: 15000 });
+  return req(client, "get", `/campaigns/${encodeURIComponent(id)}/content`, { timeout: 120000 });
 }
 
 async function opSetCampaignContent(config, client) {
@@ -136,7 +136,7 @@ async function opSetCampaignContent(config, client) {
   if (config.plainText) body.plain_text = config.plainText;
   if (config.templateId) body.template = { id: Number(config.templateId) };
   if (Object.keys(body).length === 0) return { success: false, error: "Mailchimp setCampaignContent: provide 'html', 'plainText', or 'templateId'.", skipped: true };
-  const data = await req(client, "put", `/campaigns/${encodeURIComponent(id)}/content`, { body, timeout: 15000 });
+  const data = await req(client, "put", `/campaigns/${encodeURIComponent(id)}/content`, { body, timeout: 120000 });
   return { success: true, campaignId: id, plainText: data.plain_text ? true : false };
 }
 

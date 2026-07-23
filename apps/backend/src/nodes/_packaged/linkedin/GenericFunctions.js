@@ -65,7 +65,7 @@ export function localized(field) {
   return loc.en_US || Object.values(loc)[0] || "";
 }
 
-export async function get(token, url, { timeout = 15000, versioned = false } = {}) {
+export async function get(token, url, { timeout = 120000, versioned = false } = {}) {
   const { data } = await axios.get(url, {
     headers: versioned ? restHeaders(token) : headers(token),
     timeout,
@@ -73,7 +73,7 @@ export async function get(token, url, { timeout = 15000, versioned = false } = {
   return data;
 }
 
-export async function post(token, url, body = {}, { timeout = 15000, versioned = false } = {}) {
+export async function post(token, url, body = {}, { timeout = 120000, versioned = false } = {}) {
   const { data, headers: respHeaders } = await axios.post(url, body, {
     headers: versioned ? restHeaders(token) : headers(token),
     timeout,
@@ -81,7 +81,7 @@ export async function post(token, url, body = {}, { timeout = 15000, versioned =
   return { data, respHeaders };
 }
 
-export async function del(token, url, { timeout = 15000, versioned = false } = {}) {
+export async function del(token, url, { timeout = 120000, versioned = false } = {}) {
   const { data } = await axios.delete(url, {
     headers: versioned ? restHeaders(token) : headers(token),
     timeout,
@@ -91,7 +91,7 @@ export async function del(token, url, { timeout = 15000, versioned = false } = {
 
 /** Resolve the authenticated member's person URN. */
 export async function getPersonUrn(token) {
-  const { data } = await axios.get(`${BASE}/me`, { headers: headers(token), timeout: 10000 });
+  const { data } = await axios.get(`${BASE}/me`, { headers: headers(token), timeout: 120000 });
   return `urn:li:person:${data.id}`;
 }
 
@@ -123,7 +123,7 @@ export async function uploadMedia(token, authorUrn, mediaUrl, mediaType) {
   const { data: regData } = await axios.post(
     `${UPLOAD_BASE}/assets?action=registerUpload`,
     registerPayload,
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
 
   const asset = regData.value?.asset;
@@ -131,7 +131,7 @@ export async function uploadMedia(token, authorUrn, mediaUrl, mediaType) {
   if (!uploadUrl || !asset) throw new Error("LinkedIn: Failed to register media upload.");
 
   await assertSafeUrlResolved(mediaUrl);
-  const mediaResp = await axios.get(mediaUrl, { responseType: "arraybuffer", timeout: 60000 });
+  const mediaResp = await axios.get(mediaUrl, { responseType: "arraybuffer", timeout: 120000 });
   await axios.put(uploadUrl, Buffer.from(mediaResp.data), {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/octet-stream" },
     timeout: 120000,

@@ -59,7 +59,7 @@ async function embed(text, apiKey, model) {
   const res = await axios.post(
     "https://api.openai.com/v1/embeddings",
     { model: model || "text-embedding-3-small", input: String(text).slice(0, 8000) },
-    { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 30000 },
+    { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000 },
   );
   return res.data.data[0].embedding;
 }

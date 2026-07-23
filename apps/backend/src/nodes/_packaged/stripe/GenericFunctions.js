@@ -47,7 +47,7 @@ export function makeReq(apiKey) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": method !== "GET" ? "application/x-www-form-urlencoded" : undefined,
       },
-      timeout: 15000,
+      timeout: 120000,
     }).then((r) => r.data);
   };
 }

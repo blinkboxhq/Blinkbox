@@ -98,7 +98,7 @@ async function opModerateContent(config, input, apiKey) {
   const response = await axios.post(
     `${BASE}/moderations`,
     { input: payloadInput, model: "omni-moderation-latest" },
-    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 30000 },
+    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
   const result = response.data.results?.[0];
@@ -243,7 +243,7 @@ async function opEmbeddings(config, input, apiKey) {
   if (config.dimensions) body.dimensions = Number(config.dimensions);
 
   const response = await axios.post(`${BASE}/embeddings`, body, {
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000,
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000,
   });
 
   const data = response.data.data || [];
@@ -275,7 +275,7 @@ async function opGeneratePrompt(config, input, apiKey) {
       max_tokens: 1000,
       temperature: 0.8,
     },
-    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000 },
+    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
   const result = response.data.choices?.[0]?.message?.content || "";
@@ -298,7 +298,7 @@ async function opImprovePrompt(config, input, apiKey) {
       max_tokens: 1000,
       temperature: 0.7,
     },
-    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 60000 },
+    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
   const result = response.data.choices?.[0]?.message?.content || "";

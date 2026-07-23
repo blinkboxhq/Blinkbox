@@ -122,7 +122,7 @@ export const tool_tavily = {
     const resp = await axios.post(
       "https://api.tavily.com/search",
       { query: args.query, max_results: args.max_results || 5 },
-      { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 15000 }
+      { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 120000 }
     );
     return resp.data;
   },
@@ -144,7 +144,7 @@ export const tool_google_search = {
     if (!key || !cx) throw new Error("[tool_google_search] API key and Search Engine ID required");
     const resp = await axios.get("https://www.googleapis.com/customsearch/v1", {
       params: { key, cx, q: args.query, num: Math.min(args.num || 5, 10) },
-      timeout: 10000,
+      timeout: 120000,
     });
     return {
       results: resp.data.items?.map((i) => ({
@@ -171,7 +171,7 @@ export const tool_news = {
     if (!key) throw new Error("[tool_news] NewsAPI key required");
     const resp = await axios.get("https://newsapi.org/v2/everything", {
       params: { q: args.query, language: args.language || "en", pageSize: 5, apiKey: key },
-      timeout: 10000,
+      timeout: 120000,
     });
     return {
       articles: resp.data.articles?.map((a) => ({
@@ -206,7 +206,7 @@ export const tool_translate = {
         target: args.target,
         api_key: config.apiKey || process.env.LIBRETRANSLATE_API_KEY || "",
       },
-      { timeout: 15000 }
+      { timeout: 120000 }
     );
     return { translatedText: resp.data.translatedText, detectedLanguage: resp.data.detectedLanguage };
   },
@@ -332,7 +332,7 @@ export const tool_slack = {
     if (!webhookUrl) throw new Error("[tool_slack] Slack webhook URL required");
     const payload = { text: args.message };
     if (args.channel) payload.channel = args.channel;
-    const resp = await axios.post(webhookUrl, payload, { timeout: 8000 });
+    const resp = await axios.post(webhookUrl, payload, { timeout: 120000 });
     return { success: resp.data === "ok", response: resp.data };
   },
 };
@@ -353,7 +353,7 @@ export const tool_discord = {
     const resp = await axios.post(webhookUrl, {
       content: args.content,
       username: args.username || "Blinkbox Agent",
-    }, { timeout: 8000 });
+    }, { timeout: 120000 });
     return { success: true, status: resp.status };
   },
 };
@@ -374,7 +374,7 @@ export const tool_telegram = {
     const resp = await axios.post(
       `https://api.telegram.org/bot${token}/sendMessage`,
       { chat_id: args.chatId, text: args.text, parse_mode: "HTML" },
-      { timeout: 8000 }
+      { timeout: 120000 }
     );
     return resp.data;
   },
@@ -536,7 +536,7 @@ export const tool_pdf = {
     }
     let buffer;
     if (args.source.startsWith("http")) {
-      const resp = await axios.get(args.source, { responseType: "arraybuffer", timeout: 30000 });
+      const resp = await axios.get(args.source, { responseType: "arraybuffer", timeout: 120000 });
       buffer = Buffer.from(resp.data);
     } else {
       assertSafePath(args.source);
@@ -592,7 +592,7 @@ export const tool_ocr = {
       language: args.language || "eng",
       isOverlayRequired: "false",
     });
-    const resp = await axios.post("https://api.ocr.space/parse/image", formData, { timeout: 30000 });
+    const resp = await axios.post("https://api.ocr.space/parse/image", formData, { timeout: 120000 });
     const text = resp.data?.ParsedResults?.[0]?.ParsedText || "";
     return { text, exitCode: resp.data?.OCRExitCode };
   },
@@ -623,7 +623,7 @@ export const tool_js = {
       try { __result = (function() { ${args.code} })(); } catch(e) { __result = { error: e.message }; }
       JSON.stringify(__result);
     `);
-    const result = await script.run(context, { timeout: 5000 });
+    const result = await script.run(context, { timeout: 120000 });
     return { result: JSON.parse(result || "null") };
   },
 };
@@ -878,14 +878,14 @@ export const tool_calendar = {
       const resp = await axios.get(`https://www.googleapis.com/calendar/v3/calendars/${calId}/events`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { timeMin: new Date().toISOString(), maxResults: 10, singleEvents: true, orderBy: "startTime" },
-        timeout: 10000,
+        timeout: 120000,
       });
       return { events: resp.data.items };
     }
     const resp = await axios.post(
       `https://www.googleapis.com/calendar/v3/calendars/${calId}/events`,
       { summary: args.summary, start: { dateTime: args.start }, end: { dateTime: args.end } },
-      { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+      { headers: { Authorization: `Bearer ${token}` }, timeout: 120000 }
     );
     return { id: resp.data.id, htmlLink: resp.data.htmlLink };
   },

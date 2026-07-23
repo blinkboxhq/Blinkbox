@@ -41,7 +41,7 @@ async function opDeleteFolder(config, client) {
   const res = await axios.delete(`${API}/folders/${enc(folderId)}`, {
     headers: client.headers,
     params: { recursive: recursive === undefined ? true : !!recursive },
-    timeout: 20000,
+    timeout: 120000,
   });
   return { success: true, deleted: folderId, status: res.status };
 }

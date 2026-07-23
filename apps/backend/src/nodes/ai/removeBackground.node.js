@@ -22,7 +22,7 @@ export default {
     const res = await axios.post("https://api.remove.bg/v1.0/removebg", form, {
       headers: { "X-Api-Key": apiKey, ...form.getHeaders() },
       responseType: "arraybuffer",
-      timeout: 60000,
+      timeout: 120000,
     });
     const base64 = Buffer.from(res.data).toString("base64");
     return { result: `data:image/png;base64,${base64}`, format: "png", originalUrl: imageUrl };

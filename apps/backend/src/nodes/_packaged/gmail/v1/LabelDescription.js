@@ -16,7 +16,7 @@ async function opRemoveLabel(config, token) {
 }
 
 async function opListLabels(config, token) {
-  const response = await axios.get(`${BASE}/labels`, { headers: auth(token), timeout: 10000 });
+  const response = await axios.get(`${BASE}/labels`, { headers: auth(token), timeout: 120000 });
   return { labels: response.data.labels || [] };
 }
 
@@ -28,14 +28,14 @@ async function opCreateLabel(config, token) {
     messageListVisibility: config.messageListVisibility || "show",
   }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { labelId: response.data.id, name: response.data.name };
 }
 
 async function opDeleteLabel(config, token) {
   if (!config.labelId) return { success: false, error: "Gmail deleteLabel: 'labelId' is required.", skipped: true };
-  await axios.delete(`${BASE}/labels/${encodeURIComponent(config.labelId)}`, { headers: auth(token), timeout: 10000 });
+  await axios.delete(`${BASE}/labels/${encodeURIComponent(config.labelId)}`, { headers: auth(token), timeout: 120000 });
   return { labelId: config.labelId, deleted: true };
 }
 

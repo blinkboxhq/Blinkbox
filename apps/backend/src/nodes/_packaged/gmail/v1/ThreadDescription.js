@@ -9,7 +9,7 @@ async function opGetThread(config, token) {
   const response = await axios.get(`${BASE}/threads/${encodeURIComponent(config.threadId)}`, {
     headers: auth(token),
     params: { format: config.format || "metadata" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { threadId: response.data.id, messages: response.data.messages || [], historyId: response.data.historyId };
 }
@@ -18,7 +18,7 @@ async function opListThreads(config, token) {
   const response = await axios.get(`${BASE}/threads`, {
     headers: auth(token),
     params: { q: config.query || undefined, maxResults: Math.min(config.maxResults || 10, 100) },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { threads: response.data.threads || [], total: response.data.resultSizeEstimate || 0 };
 }

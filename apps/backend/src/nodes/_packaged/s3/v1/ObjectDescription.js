@@ -14,7 +14,7 @@ async function opListObjects(config, ctx) {
   const maxKeys = num(config.limit, 100);
   const url = `${base}/?list-type=2&prefix=${encodeURIComponent(prefix)}&max-keys=${maxKeys}`;
   const signed = signRequest("GET", url, {}, "", accessKey, secretKey, region);
-  const { data } = await axios.get(url, { headers: signed, timeout: 15000 });
+  const { data } = await axios.get(url, { headers: signed, timeout: 120000 });
   const keys  = xmlValues(data, "Key");
   const sizes = xmlValues(data, "Size");
   const dates = xmlValues(data, "LastModified");
@@ -28,7 +28,7 @@ async function opGetObject(config, ctx) {
   if (!key) return { success: false, error: "S3 getObject: 'key' is required.", skipped: true };
   const url = `${base}/${encodeURIComponent(key)}`;
   const signed = signRequest("GET", url, {}, "", accessKey, secretKey, region);
-  const { data, headers: resHeaders } = await axios.get(url, { headers: signed, timeout: 30000, responseType: "text" });
+  const { data, headers: resHeaders } = await axios.get(url, { headers: signed, timeout: 120000, responseType: "text" });
   return { content: data, key, bucket, contentType: resHeaders["content-type"], contentLength: resHeaders["content-length"] };
 }
 
@@ -42,7 +42,7 @@ async function opPutObject(config, ctx) {
   const acl = config.acl || "private";
   const extraHeaders = { "content-type": contentType, "x-amz-acl": acl };
   const signed = signRequest("PUT", url, extraHeaders, content, accessKey, secretKey, region);
-  await axios.put(url, content, { headers: signed, timeout: 30000 });
+  await axios.put(url, content, { headers: signed, timeout: 120000 });
   const publicUrl = customEndpoint
     ? `${customEndpoint}/${bucket}/${key}`
     : `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
@@ -55,7 +55,7 @@ async function opDeleteObject(config, ctx) {
   if (!key) return { success: false, error: "S3 deleteObject: 'key' is required.", skipped: true };
   const url = `${base}/${encodeURIComponent(key)}`;
   const signed = signRequest("DELETE", url, {}, "", accessKey, secretKey, region);
-  await axios.delete(url, { headers: signed, timeout: 15000 });
+  await axios.delete(url, { headers: signed, timeout: 120000 });
   return { success: true, deleted: true, key, bucket };
 }
 
@@ -77,7 +77,7 @@ async function opExists(config, ctx) {
   const url = `${base}/${encodeURIComponent(key)}`;
   const signed = signRequest("HEAD", url, {}, "", accessKey, secretKey, region);
   try {
-    const { headers: resHeaders } = await axios.head(url, { headers: signed, timeout: 10000 });
+    const { headers: resHeaders } = await axios.head(url, { headers: signed, timeout: 120000 });
     return { exists: true, key, bucket, size: resHeaders["content-length"] ? Number(resHeaders["content-length"]) : undefined, contentType: resHeaders["content-type"] };
   } catch (e) {
     if (e.response?.status === 404) return { exists: false, key, bucket };
@@ -91,7 +91,7 @@ async function opGetObjectMeta(config, ctx) {
   if (!key) return { success: false, error: "S3 getObjectMeta: 'key' is required.", skipped: true };
   const url = `${base}/${encodeURIComponent(key)}`;
   const signed = signRequest("HEAD", url, {}, "", accessKey, secretKey, region);
-  const { headers: h } = await axios.head(url, { headers: signed, timeout: 10000 });
+  const { headers: h } = await axios.head(url, { headers: signed, timeout: 120000 });
   return {
     success: true, key, bucket,
     contentType: h["content-type"],
@@ -111,7 +111,7 @@ async function opCopyObject(config, ctx) {
   const url = `${base}/${encodeURIComponent(key)}`;
   const extraHeaders = { "x-amz-copy-source": src };
   const signed = signRequest("PUT", url, extraHeaders, "", accessKey, secretKey, region);
-  const { data } = await axios.put(url, "", { headers: signed, timeout: 30000, responseType: "text" });
+  const { data } = await axios.put(url, "", { headers: signed, timeout: 120000, responseType: "text" });
   return { success: true, key, bucket, copiedFrom: src, etag: xmlValues(data, "ETag")[0] };
 }
 
@@ -126,7 +126,7 @@ async function opDeleteObjects(config, ctx) {
   const url = `${base}/?delete`;
   const extraHeaders = { "content-md5": md5, "content-type": "application/xml" };
   const signed = signRequest("POST", url, extraHeaders, body, accessKey, secretKey, region);
-  const { data } = await axios.post(url, body, { headers: signed, timeout: 30000, responseType: "text" });
+  const { data } = await axios.post(url, body, { headers: signed, timeout: 120000, responseType: "text" });
   const errored = xmlValues(data, "Error");
   return { success: true, bucket, deletedCount: keys.length - errored.length, requested: keys.length };
 }
@@ -137,7 +137,7 @@ async function opGetObjectTagging(config, ctx) {
   if (!key) return { success: false, error: "S3 getObjectTagging: 'key' is required.", skipped: true };
   const url = `${base}/${encodeURIComponent(key)}?tagging`;
   const signed = signRequest("GET", url, {}, "", accessKey, secretKey, region);
-  const { data } = await axios.get(url, { headers: signed, timeout: 15000, responseType: "text" });
+  const { data } = await axios.get(url, { headers: signed, timeout: 120000, responseType: "text" });
   const kk = xmlValues(data, "Key");
   const vv = xmlValues(data, "Value");
   const tags = kk.map((k, i) => ({ key: k, value: vv[i] }));
@@ -156,7 +156,7 @@ async function opPutObjectTagging(config, ctx) {
   const url = `${base}/${encodeURIComponent(key)}?tagging`;
   const extraHeaders = { "content-md5": md5, "content-type": "application/xml" };
   const signed = signRequest("PUT", url, extraHeaders, body, accessKey, secretKey, region);
-  await axios.put(url, body, { headers: signed, timeout: 15000 });
+  await axios.put(url, body, { headers: signed, timeout: 120000 });
   return { success: true, key, bucket, tagCount: entries.length };
 }
 

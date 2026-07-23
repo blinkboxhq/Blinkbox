@@ -24,7 +24,7 @@ export default {
     const initRes = await axios.post(
       "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
       metadata,
-      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Upload-Content-Type": "video/*" }, timeout: 30000 },
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Upload-Content-Type": "video/*" }, timeout: 120000 },
     );
 
     const uploadUrl = initRes.headers.location;

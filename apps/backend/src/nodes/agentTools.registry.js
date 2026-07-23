@@ -131,7 +131,7 @@ register({
         max_results: Math.min(args.max_results || 5, 10),
         include_answer: true,
       },
-      { timeout: 30_000 }
+      { timeout: 120000 }
     );
 
     return {
@@ -196,7 +196,7 @@ register({
       method,
       url,
       headers: { "Content-Type": "application/json", ...(args.headers || {}) },
-      timeout: 30_000,
+      timeout: 120000,
       maxContentLength: 5 * 1024 * 1024,
       maxRedirects: 5,
       beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
@@ -745,7 +745,7 @@ register({
       const res = await axios.post(
         "https://api.openai.com/v1/audio/speech",
         { model: "tts-1", input: args.text, voice: args.voice || "nova", speed: args.speed || 1.0 },
-        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 30000 },
+        { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 120000 },
       );
       return {
         audioBase64: Buffer.from(res.data).toString("base64"),
@@ -821,7 +821,7 @@ register({
       // Fetch page content
       const fetchRes = await axios.get(args.url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; BlinkBox/1.0)" },
-        timeout: 15000,
+        timeout: 120000,
         maxContentLength: 500000,
         beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
       });

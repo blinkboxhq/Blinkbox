@@ -10,7 +10,7 @@ export default {
     let inputBuffer;
     if (/^https?:\/\//i.test(source)) {
       await assertSafeUrlResolved(source);
-      const res = await axios.get(source, { responseType: "arraybuffer", timeout: 15000 });
+      const res = await axios.get(source, { responseType: "arraybuffer", timeout: 120000 });
       inputBuffer = Buffer.from(res.data);
     } else {
       // Base64 data URL or raw base64

@@ -21,7 +21,7 @@ async function opCreatePayout(config, client) {
       },
     ],
   };
-  const { data } = await client.post(`/v1/payments/payouts`, body, { timeout: 20000 });
+  const { data } = await client.post(`/v1/payments/payouts`, body, { timeout: 120000 });
   return { success: true, batchId: data.batch_header?.payout_batch_id, status: data.batch_header?.batch_status };
 }
 
@@ -52,7 +52,7 @@ async function opCancelPayoutItem(config, client) {
 async function opListTransactions(config, client) {
   if (!config.startDate || !config.endDate) return { success: false, error: "PayPal listTransactions: 'startDate' and 'endDate' are required (ISO 8601).", skipped: true };
   const { data } = await client.get(`/v1/reporting/transactions`, {
-    timeout: 20000,
+    timeout: 120000,
     params: { start_date: config.startDate, end_date: config.endDate, fields: "all", page_size: num(config.limit, 25, 500) },
   });
   return { success: true, transactions: data.transaction_details ?? [], totalPages: data.total_pages, totalItems: data.total_items };

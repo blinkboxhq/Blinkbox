@@ -97,7 +97,7 @@ async function opListChannels(config, token) {
       limit: Math.min(Number(config.limit) || 100, 1000),
       exclude_archived: config.excludeArchived !== false,
     },
-    timeout: 15000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack listChannels: ${response.data.error}`);
   return {
@@ -113,7 +113,7 @@ async function opGetChannelHistory(config, token) {
   const response = await axios.get(`${API}/conversations.history`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { channel, limit: Math.min(Number(config.limit) || 50, 1000) },
-    timeout: 15000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack getChannelHistory: ${response.data.error}`);
   return {
@@ -129,7 +129,7 @@ async function opGetChannelInfo(config, token) {
   const response = await axios.get(`${API}/conversations.info`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { channel },
-    timeout: 10000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack getChannelInfo: ${response.data.error}`);
   const c = response.data.channel;

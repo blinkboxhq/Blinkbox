@@ -19,7 +19,7 @@ async function opMakeCall(config, { accountSid, authToken }) {
   }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return {
     callSid: response.data.sid,
@@ -33,7 +33,7 @@ async function opMakeCall(config, { accountSid, authToken }) {
 async function opGetCall(config, { accountSid, authToken }) {
   if (!config.callSid) return { success: false, error: "Twilio getCall: 'callSid' is required.", skipped: true };
   const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls/${encodeURIComponent(config.callSid)}.json`;
-  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 10000 });
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, timeout: 120000 });
   return {
     callSid: response.data.sid,
     status: response.data.status,
@@ -51,7 +51,7 @@ async function opListCalls(config, { accountSid, authToken }) {
   if (config.from) params.From = config.from;
   if (config.status) params.Status = config.status;
   const url = `${BASE}/Accounts/${encodeURIComponent(accountSid)}/Calls.json`;
-  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 15000 });
+  const response = await axios.get(url, { auth: { username: accountSid, password: authToken }, params, timeout: 120000 });
   return { calls: response.data.calls || [], count: (response.data.calls || []).length };
 }
 
@@ -61,7 +61,7 @@ async function opHangupCall(config, { accountSid, authToken }) {
   const response = await axios.post(url, encodeForm({ Status: "completed" }), {
     auth: { username: accountSid, password: authToken },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { callSid: response.data.sid, status: response.data.status };
 }

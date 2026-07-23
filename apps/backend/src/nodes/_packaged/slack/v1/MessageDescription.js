@@ -126,7 +126,7 @@ async function opGetPermalink(config, token) {
   const response = await axios.get(`${API}/chat.getPermalink`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { channel, message_ts: ts },
-    timeout: 10000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack getPermalink: ${response.data.error}`);
   return { ok: true, permalink: response.data.permalink };
@@ -160,7 +160,7 @@ async function opGetReactions(config, token) {
   const response = await axios.get(`${API}/reactions.get`, {
     headers: { Authorization: `Bearer ${token}` },
     params: { channel, timestamp: ts },
-    timeout: 10000,
+    timeout: 120000,
   });
   if (!response.data.ok) throw new Error(`Slack getReactions: ${response.data.error}`);
   const reactions = response.data.message?.reactions || [];

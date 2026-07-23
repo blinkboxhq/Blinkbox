@@ -6,7 +6,7 @@ export default {
     if (!ip) return { success: false, error: "ip_lookup: 'ip' is required.", skipped: true };
 
     try {
-      const res = await axios.get(`https://ipapi.co/${ip}/json/`, { timeout: 10000 });
+      const res = await axios.get(`https://ipapi.co/${ip}/json/`, { timeout: 120000 });
       const d = res.data;
       if (d.error) throw new Error(d.reason || "Invalid IP");
       return {

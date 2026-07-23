@@ -21,7 +21,7 @@ export default {
       const { data } = await axios.post(
         `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`,
         { text, model_id: config.model || "eleven_multilingual_v2", voice_settings: { stability: config.stability || 0.5, similarity_boost: config.similarityBoost || 0.75 } },
-        { headers: { "xi-api-key": apiKey, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 60000 }
+        { headers: { "xi-api-key": apiKey, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 120000 }
       );
       const base64 = Buffer.from(data).toString("base64");
       return { audioBase64: base64, mimeType: "audio/mpeg", provider: "elevenlabs", voiceId };
@@ -30,7 +30,7 @@ export default {
     // OpenAI TTS
     const { data } = await axios.post("https://api.openai.com/v1/audio/speech",
       { model: config.model || "tts-1", input: text, voice: config.voice || "alloy", response_format: "mp3", speed: config.speed || 1.0 },
-      { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 60000 }
+      { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, responseType: "arraybuffer", timeout: 120000 }
     );
     const base64 = Buffer.from(data).toString("base64");
     return { audioBase64: base64, mimeType: "audio/mpeg", provider: "openai", voice: config.voice || "alloy" };

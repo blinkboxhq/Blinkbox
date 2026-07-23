@@ -34,7 +34,7 @@ export function clampResults(val, min, max, def = 10) {
   return Math.min(Math.max(min, Number(val ?? def)), max);
 }
 
-export async function req(client, method, path, { params, body, timeout = 15000 } = {}) {
+export async function req(client, method, path, { params, body, timeout = 120000 } = {}) {
   const res = await axios({
     method,
     url: `${BASE}${path}`,

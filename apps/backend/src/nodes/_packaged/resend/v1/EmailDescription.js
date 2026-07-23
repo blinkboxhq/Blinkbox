@@ -23,7 +23,7 @@ async function opSendEmail(config, apiKey) {
   if (config.replyTo) body.reply_to = config.replyTo;
   if (config.scheduledAt) body.scheduled_at = config.scheduledAt;
 
-  const res = await axios.post(`${BASE}/emails`, body, { headers: headers(apiKey), timeout: 15000 });
+  const res = await axios.post(`${BASE}/emails`, body, { headers: headers(apiKey), timeout: 120000 });
   return {
     id: res.data.id,
     from: config.from,
@@ -39,26 +39,26 @@ async function opSendBatch(config, apiKey) {
   if (typeof emails === "string") { try { emails = JSON.parse(emails); } catch { emails = []; } }
   if (!Array.isArray(emails) || emails.length === 0) return { success: false, error: "Resend sendBatch: 'emails' must be a non-empty array — configure this field.", skipped: true };
 
-  const res = await axios.post(`${BASE}/emails/batch`, emails, { headers: headers(apiKey), timeout: 15000 });
+  const res = await axios.post(`${BASE}/emails/batch`, emails, { headers: headers(apiKey), timeout: 120000 });
   return { data: res.data.data || [], count: emails.length };
 }
 
 async function opGetEmail(config, apiKey) {
   if (!config.emailId) return { success: false, error: "Resend getEmail: 'emailId' is required — configure this field.", skipped: true };
-  const res = await axios.get(`${BASE}/emails/${encodeURIComponent(config.emailId)}`, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.get(`${BASE}/emails/${encodeURIComponent(config.emailId)}`, { headers: headers(apiKey), timeout: 120000 });
   return res.data;
 }
 
 async function opCancelEmail(config, apiKey) {
   if (!config.emailId) return { success: false, error: "Resend cancelEmail: 'emailId' is required — configure this field.", skipped: true };
-  const res = await axios.post(`${BASE}/emails/${encodeURIComponent(config.emailId)}/cancel`, {}, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.post(`${BASE}/emails/${encodeURIComponent(config.emailId)}/cancel`, {}, { headers: headers(apiKey), timeout: 120000 });
   return { cancelled: true, ...res.data };
 }
 
 async function opUpdateEmail(config, apiKey) {
   if (!config.emailId) return { success: false, error: "Resend updateEmail: 'emailId' is required — configure this field.", skipped: true };
   if (!config.scheduledAt) return { success: false, error: "Resend updateEmail: 'scheduledAt' is required — configure this field.", skipped: true };
-  const res = await axios.patch(`${BASE}/emails/${encodeURIComponent(config.emailId)}`, { scheduled_at: config.scheduledAt }, { headers: headers(apiKey), timeout: 10000 });
+  const res = await axios.patch(`${BASE}/emails/${encodeURIComponent(config.emailId)}`, { scheduled_at: config.scheduledAt }, { headers: headers(apiKey), timeout: 120000 });
   return { updated: true, id: res.data?.id ?? config.emailId, scheduledAt: config.scheduledAt };
 }
 

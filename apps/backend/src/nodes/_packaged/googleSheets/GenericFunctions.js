@@ -26,7 +26,7 @@ export async function batchUpdate(spreadsheetId, requests, token) {
   const url = `${BASE}/${encodeURIComponent(spreadsheetId)}:batchUpdate`;
   const response = await axios.post(url, { requests }, {
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    timeout: 20000,
+    timeout: 120000,
   });
   return response.data;
 }

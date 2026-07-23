@@ -57,7 +57,7 @@ async function opUploadVideo(config, token) {
     },
     maxRedirects: 0,
     validateStatus: (s) => s < 400,
-    timeout: 20000,
+    timeout: 120000,
   });
 
   const resumableUrl = initRes.headers?.location;
@@ -82,10 +82,10 @@ async function opUploadVideo(config, token) {
 
   if (config.thumbnail) {
     try {
-      const thumbBuf = await fetchBinary(config.thumbnail, { timeout: 30000, maxBytes: 4 * 1024 * 1024 });
+      const thumbBuf = await fetchBinary(config.thumbnail, { timeout: 120000, maxBytes: 4 * 1024 * 1024 });
       await axios.post(`${DATA_API}/thumbnails/set?videoId=${videoId}`, thumbBuf, {
         headers: { ...authHeaders(token), "Content-Type": "image/jpeg" },
-        timeout: 30000,
+        timeout: 120000,
       });
       result.thumbnailSet = true;
     } catch {
@@ -129,7 +129,7 @@ async function opGetVideo(config, token) {
   if (!config.videoId) return { success: false, error: "YouTube getVideo: 'videoId' is required.", skipped: true };
   const data = await get(token, `/videos`, {
     params: { part: config.part || "snippet,statistics,contentDetails,status", id: config.videoId },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { success: true, ...data.items?.[0] };
 }
@@ -192,10 +192,10 @@ async function opReportAbuse(config, token) {
 async function opSetThumbnail(config, token) {
   if (!config.videoId) return { success: false, error: "YouTube setThumbnail: 'videoId' is required.", skipped: true };
   if (!config.thumbnail) return { success: false, error: "YouTube setThumbnail: 'thumbnail' URL is required.", skipped: true };
-  const thumbBuf = await fetchBinary(config.thumbnail, { timeout: 30000, maxBytes: 4 * 1024 * 1024 });
+  const thumbBuf = await fetchBinary(config.thumbnail, { timeout: 120000, maxBytes: 4 * 1024 * 1024 });
   const { data } = await axios.post(`${DATA_API}/thumbnails/set?videoId=${config.videoId}`, thumbBuf, {
     headers: { ...authHeaders(token), "Content-Type": "image/jpeg" },
-    timeout: 30000,
+    timeout: 120000,
   });
   return { success: true, videoId: config.videoId, thumbnails: data.items?.[0] };
 }

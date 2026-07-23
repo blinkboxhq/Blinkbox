@@ -53,7 +53,7 @@ export async function call(token, method, payload) {
   const response = await axios.post(
     `${BASE_URL}${token}/${method}`,
     payload,
-    { headers: { "Content-Type": "application/json" }, timeout: 15000 },
+    { headers: { "Content-Type": "application/json" }, timeout: 120000 },
   );
   const data = response.data;
   if (!data.ok) {
@@ -88,7 +88,7 @@ export async function sendMediaByUrlOrInline(config, token, method, field, mimeD
     form.append("chat_id", chatId);
     form.append(field, new Blob([Buffer.from(base64Data, "base64")], { type: mimeType || mimeDefault }), name || fileNameDefault);
     if (config.caption) form.append("caption", config.caption);
-    const res = await axios.post(`${BASE_URL}${token}/${method}`, form, { timeout: 60000 });
+    const res = await axios.post(`${BASE_URL}${token}/${method}`, form, { timeout: 120000 });
     return msgResult(res.data);
   }
 

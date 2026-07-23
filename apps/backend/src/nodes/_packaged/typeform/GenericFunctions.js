@@ -17,10 +17,10 @@ export function makeClient(token) {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   return {
     headers,
-    get: (path, opts = {}) => axios.get(`${BASE}${path}`, { headers, timeout: 15000, ...opts }),
-    post: (path, body, opts = {}) => axios.post(`${BASE}${path}`, body, { headers, timeout: 15000, ...opts }),
-    put: (path, body, opts = {}) => axios.put(`${BASE}${path}`, body, { headers, timeout: 15000, ...opts }),
-    del: (path, opts = {}) => axios.delete(`${BASE}${path}`, { headers, timeout: 15000, ...opts }),
+    get: (path, opts = {}) => axios.get(`${BASE}${path}`, { headers, timeout: 120000, ...opts }),
+    post: (path, body, opts = {}) => axios.post(`${BASE}${path}`, body, { headers, timeout: 120000, ...opts }),
+    put: (path, body, opts = {}) => axios.put(`${BASE}${path}`, body, { headers, timeout: 120000, ...opts }),
+    del: (path, opts = {}) => axios.delete(`${BASE}${path}`, { headers, timeout: 120000, ...opts }),
   };
 }
 

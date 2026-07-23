@@ -8,7 +8,7 @@ const VIDEO_FIELDS = ["id", "title", "video_description", "create_time", "like_c
 const USER_FIELDS = ["open_id", "union_id", "avatar_url", "display_name", "bio_description", "follower_count", "following_count", "likes_count", "video_count"];
 
 async function opGetUserInfo(config, token) {
-  const data = await post(token, `/user/info/`, { fields: USER_FIELDS }, { timeout: 10000 });
+  const data = await post(token, `/user/info/`, { fields: USER_FIELDS }, { timeout: 120000 });
   return data.data?.user || data;
 }
 

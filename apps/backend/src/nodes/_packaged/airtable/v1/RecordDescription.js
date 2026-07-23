@@ -10,7 +10,7 @@ async function opCreate(config, token) {
   const url = tableUrl(config.baseId, config.tableName);
   const response = await axios.post(url,
     { fields: config.fields || {}, typecast: config.typecast !== false },
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   return { id: response.data.id, fields: response.data.fields, createdTime: response.data.createdTime };
 }
@@ -27,7 +27,7 @@ export async function opRead(config, token) {
     });
   }
 
-  const response = await axios.get(url, { headers: headers(token), params, timeout: 30000 });
+  const response = await axios.get(url, { headers: headers(token), params, timeout: 120000 });
   return {
     records: (response.data.records || []).map((r) => ({ id: r.id, fields: r.fields, createdTime: r.createdTime })),
     totalRecords: response.data.records?.length || 0,
@@ -40,7 +40,7 @@ async function opUpdate(config, token) {
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
   const response = await axios.patch(url,
     { fields: config.fields || {}, typecast: config.typecast !== false },
-    { headers: headers(token), timeout: 15000 },
+    { headers: headers(token), timeout: 120000 },
   );
   return { id: response.data.id, fields: response.data.fields };
 }
@@ -48,14 +48,14 @@ async function opUpdate(config, token) {
 async function opDelete(config, token) {
   if (!config.recordId) return { success: false, error: "Airtable delete: 'recordId' is required — configure this field.", skipped: true };
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
-  const response = await axios.delete(url, { headers: headers(token), timeout: 15000 });
+  const response = await axios.delete(url, { headers: headers(token), timeout: 120000 });
   return { id: response.data.id, deleted: response.data.deleted };
 }
 
 async function opGetRecord(config, token) {
   if (!config.recordId) return { success: false, error: "Airtable getRecord: 'recordId' is required — configure this field.", skipped: true };
   const url = `${tableUrl(config.baseId, config.tableName)}/${encodeURIComponent(config.recordId)}`;
-  const response = await axios.get(url, { headers: headers(token), timeout: 15000 });
+  const response = await axios.get(url, { headers: headers(token), timeout: 120000 });
   return { id: response.data.id, fields: response.data.fields, createdTime: response.data.createdTime };
 }
 

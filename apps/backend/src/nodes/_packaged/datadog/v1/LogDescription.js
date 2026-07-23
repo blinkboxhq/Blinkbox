@@ -15,7 +15,7 @@ async function opSendLog(config, { site, headers }) {
   }];
   await axios.post(`https://http-intake.logs.${site}/api/v2/logs`, payload, {
     headers: { "DD-API-KEY": headers["DD-API-KEY"], "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { success: true, status: "accepted" };
 }

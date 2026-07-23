@@ -46,7 +46,7 @@ export default {
       baseURL: `https://${sub}.zendesk.com/api/v2`,
       auth: { username: `${email}/token`, password: token },
       headers: { "Content-Type": "application/json" },
-      timeout: 15000,
+      timeout: 120000,
     });
 
     return runZendesk(config, { api });

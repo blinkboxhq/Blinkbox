@@ -38,7 +38,7 @@ export async function getRedditToken(clientId, clientSecret) {
     const { data } = await axios.post(
       "https://www.reddit.com/api/v1/access_token",
       new URLSearchParams({ grant_type: "client_credentials" }),
-      { auth: { username: clientId, password: clientSecret }, headers: { "User-Agent": USER_AGENT }, timeout: 10000 },
+      { auth: { username: clientId, password: clientSecret }, headers: { "User-Agent": USER_AGENT }, timeout: 120000 },
     );
     return data.access_token;
   } catch (e) {
@@ -57,7 +57,7 @@ export function boundLimit(val, def = 25) {
 }
 
 /** GET a JSON endpoint. Returns res.data. */
-export async function get(client, path, { params, timeout = 10000 } = {}) {
+export async function get(client, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.get(`${BASE}${path}`, {
     headers: client.headers,
     ...(params ? { params } : {}),
@@ -67,7 +67,7 @@ export async function get(client, path, { params, timeout = 10000 } = {}) {
 }
 
 /** POST a urlencoded form body. Returns res.data. */
-export async function postForm(client, path, form, { timeout = 15000 } = {}) {
+export async function postForm(client, path, form, { timeout = 120000 } = {}) {
   const body = new URLSearchParams();
   for (const [k, v] of Object.entries(form)) {
     if (v !== undefined && v !== null) body.append(k, String(v));

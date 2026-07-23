@@ -11,7 +11,7 @@ async function opGetUserMedia(config, token) {
       fields: "id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink",
       limit: config.limit || 20,
     },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { media: data.data, cursor: data.paging?.cursors };
 }

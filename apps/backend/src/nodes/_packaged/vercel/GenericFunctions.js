@@ -46,7 +46,7 @@ export function makeApi(token, config = {}) {
     baseURL: API,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     params: teamParams,
-    timeout: 15000,
+    timeout: 120000,
   });
 }
 

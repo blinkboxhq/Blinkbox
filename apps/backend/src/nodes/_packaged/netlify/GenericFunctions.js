@@ -47,7 +47,7 @@ export function makeReq(token) {
   const api = axios.create({
     baseURL: API,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    timeout: 15000,
+    timeout: 120000,
   });
   return { api };
 }

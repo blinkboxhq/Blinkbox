@@ -35,7 +35,7 @@ export function handleError(err) {
 }
 
 /** GET against the Graph API with `access_token` folded into params. */
-export async function get(token, path, { params, timeout = 10000 } = {}) {
+export async function get(token, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.get(`${BASE}${path}`, {
     params: { access_token: token, ...(params || {}) },
     timeout,
@@ -45,7 +45,7 @@ export async function get(token, path, { params, timeout = 10000 } = {}) {
 
 /** POST against the Graph API. Instagram write endpoints carry args as query
  * params with a null body. */
-export async function post(token, path, { params, body = null, timeout = 15000 } = {}) {
+export async function post(token, path, { params, body = null, timeout = 120000 } = {}) {
   const { data } = await axios.post(`${BASE}${path}`, body, {
     params: { access_token: token, ...(params || {}) },
     timeout,
@@ -53,7 +53,7 @@ export async function post(token, path, { params, body = null, timeout = 15000 }
   return data;
 }
 
-export async function del(token, path, { params, timeout = 10000 } = {}) {
+export async function del(token, path, { params, timeout = 120000 } = {}) {
   const { data } = await axios.delete(`${BASE}${path}`, {
     params: { access_token: token, ...(params || {}) },
     timeout,

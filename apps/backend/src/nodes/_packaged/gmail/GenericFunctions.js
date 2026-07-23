@@ -97,7 +97,7 @@ export async function modifyLabels(config, token, add, remove) {
     removeLabelIds: remove,
   }, {
     headers: { ...auth(token), "Content-Type": "application/json" },
-    timeout: 10000,
+    timeout: 120000,
   });
   return { messageId: config.messageId, labelIds: response.data.labelIds };
 }

@@ -17,10 +17,10 @@ export function skip(op, msg) {
   return { success: false, error: `Sentry ${op}: ${msg}.`, skipped: true };
 }
 
-export const get = (url, ctx) => axios.get(url, { headers: ctx.headers, timeout: 15000 }).then((r) => r.data);
-export const post = (url, body, ctx) => axios.post(url, body, { headers: ctx.headers, timeout: 15000 }).then((r) => r.data);
-export const put = (url, body, ctx) => axios.put(url, body, { headers: ctx.headers, timeout: 15000 }).then((r) => r.data);
-export const del = (url, ctx) => axios.delete(url, { headers: ctx.headers, timeout: 15000 }).then((r) => r.data);
+export const get = (url, ctx) => axios.get(url, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
+export const post = (url, body, ctx) => axios.post(url, body, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
+export const put = (url, body, ctx) => axios.put(url, body, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
+export const del = (url, ctx) => axios.delete(url, { headers: ctx.headers, timeout: 120000 }).then((r) => r.data);
 
 export const needOrg = (config, ctx, op) => (ctx.org ? null : skip(op, "'organization' slug required"));
 export const needIssue = (config, op) => (config.issueId ? null : skip(op, "'issueId' required"));

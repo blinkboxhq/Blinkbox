@@ -45,13 +45,13 @@ export function makeClient(headers) {
     headers,
     enc,
     get: (path, params, opts = {}) =>
-      axios.get(`${GRAPH}${path}`, { headers, params, timeout: 15000, ...opts }),
+      axios.get(`${GRAPH}${path}`, { headers, params, timeout: 120000, ...opts }),
     post: (path, body, opts = {}) =>
-      axios.post(`${GRAPH}${path}`, body, { headers, timeout: 20000, ...opts }),
+      axios.post(`${GRAPH}${path}`, body, { headers, timeout: 120000, ...opts }),
     patch: (path, body, opts = {}) =>
-      axios.patch(`${GRAPH}${path}`, body, { headers, timeout: 15000, ...opts }),
+      axios.patch(`${GRAPH}${path}`, body, { headers, timeout: 120000, ...opts }),
     del: (path, opts = {}) =>
-      axios.delete(`${GRAPH}${path}`, { headers, timeout: 15000, ...opts }),
+      axios.delete(`${GRAPH}${path}`, { headers, timeout: 120000, ...opts }),
   };
 }
 

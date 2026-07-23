@@ -17,7 +17,7 @@ async function pingOllama(baseUrl) {
     : SERVER_OLLAMA_BASE;
 
   try {
-    const res = await axios.get(`${base}/api/tags`, { timeout: 5000 });
+    const res = await axios.get(`${base}/api/tags`, { timeout: 120000 });
     const models = (res.data?.models || []).map((m) => m.name).filter(Boolean);
     return {
       status: "connected",
@@ -48,7 +48,7 @@ async function pingOpenAICompat(baseUrl, providerLabel) {
     .replace(/\/v1$/, "");
 
   try {
-    const res = await axios.get(`${base}/v1/models`, { timeout: 5000 });
+    const res = await axios.get(`${base}/v1/models`, { timeout: 120000 });
     const models = (res.data?.data || []).map((m) => m.id || m.name).filter(Boolean);
     return {
       status: "connected",
