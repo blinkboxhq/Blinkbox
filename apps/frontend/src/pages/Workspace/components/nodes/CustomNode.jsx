@@ -136,17 +136,11 @@ const AGENT_BOTTOM_SLOTS = [
   },
 ];
 
+export const AGENT_CARD_W = 212;
+export const AGENT_SLOT_PAD = 30;
 export const AGENT_SUB_D = 50;
 export const AGENT_SUB_DROP = 160;
-export const AGENT_SLOT_PAD = 30;
-
-// Sub-nodes hang straight under their dot, so dot spacing *is* sub-node spacing:
-// the pitch has to clear a 50px circle plus breathing room, and the card is sized
-// to fit rather than the other way round.
-export const AGENT_SLOT_PITCH = 110;
-export const AGENT_CARD_W =
-  AGENT_SLOT_PAD * 2 + AGENT_SLOT_PITCH * (AGENT_BOTTOM_SLOTS.length - 1);
-const agentSlotStep = () => AGENT_SLOT_PITCH;
+const agentSlotStep = () => (AGENT_CARD_W - AGENT_SLOT_PAD * 2) / (AGENT_BOTTOM_SLOTS.length - 1);
 export const agentSlotX = (i) => AGENT_SLOT_PAD + agentSlotStep() * i;
 
 // A sub-node's handle sits dead centre of its 50px circle, so parking that
