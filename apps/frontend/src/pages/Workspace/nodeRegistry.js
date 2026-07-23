@@ -263,6 +263,14 @@ import AgentSkillNode from "@nodes/agent_skill/ConfigPanel.jsx";
 import makeAgentModelPanel from "@nodes/agent_model_panel/ConfigPanel.jsx";
 import makeAgentMemoryPanel from "@nodes/agent_memory_panel/ConfigPanel.jsx";
 import makeAgentToolPanel from "@nodes/agent_tool_panel/ConfigPanel.jsx";
+import ToolHttpRequestPanel from "@nodes/tool_http_request/ConfigPanel.jsx";
+import ToolScraperPanel from "@nodes/tool_scraper/ConfigPanel.jsx";
+import ToolWebhookPanel from "@nodes/tool_webhook/ConfigPanel.jsx";
+import ToolMcpClientPanel from "@nodes/tool_mcp_client/ConfigPanel.jsx";
+import ToolCallWorkflowPanel from "@nodes/tool_call_workflow/ConfigPanel.jsx";
+import ToolThinkPanel from "@nodes/tool_think/ConfigPanel.jsx";
+import ToolSqlPanel from "@nodes/tool_sql/ConfigPanel.jsx";
+import ToolMongodbPanel from "@nodes/tool_mongodb/ConfigPanel.jsx";
 import VirtualComputerPanel from "@nodes/virtual_computer/ConfigPanel.jsx";
 import DataMapperNode from "@nodes/data_mapper/ConfigPanel.jsx";
 import LoopNode from "@nodes/loop/ConfigPanel.jsx";
@@ -1355,18 +1363,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Scrape content from any URL",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Web Scraper",
-      description: "Extract text and data from web pages",
-      fields: [
-        {
-          key: "selector",
-          label: "CSS Selector (optional)",
-          type: "text",
-          placeholder: "article, .content, body",
-        },
-      ],
-    }),
+    ConfigPanel: ToolScraperPanel,
   },
   tool_http_request: {
     label: "HTTP Request",
@@ -1376,18 +1373,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Make any HTTP request and return the response",
-    ConfigPanel: makeAgentToolPanel({
-      label: "HTTP Request",
-      description: "Call any REST API endpoint",
-      fields: [
-        {
-          key: "baseUrl",
-          label: "Base URL (optional)",
-          type: "text",
-          placeholder: "https://api.example.com",
-        },
-      ],
-    }),
+    ConfigPanel: ToolHttpRequestPanel,
   },
 
   // ── Agent Tools — Files & Data (7) ──────────────────────────────────────────
@@ -1478,18 +1464,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Run SQL queries on any database",
-    ConfigPanel: makeAgentToolPanel({
-      label: "SQL Query",
-      description: "Execute SQL against a relational database",
-      fields: [
-        {
-          key: "connectionString",
-          label: "Connection String",
-          type: "text",
-          placeholder: "postgresql://user:pass@host/db",
-        },
-      ],
-    }),
+    ConfigPanel: ToolSqlPanel,
   },
   tool_mongodb: {
     label: "MongoDB Query",
@@ -1500,18 +1475,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Query and update MongoDB collections",
-    ConfigPanel: makeAgentToolPanel({
-      label: "MongoDB Query",
-      description: "Run queries against MongoDB",
-      fields: [
-        {
-          key: "connectionString",
-          label: "Connection String",
-          type: "text",
-          placeholder: "mongodb+srv://...",
-        },
-      ],
-    }),
+    ConfigPanel: ToolMongodbPanel,
   },
 
   // ── Agent Tools — Communication (6) ─────────────────────────────────────────
@@ -1611,18 +1575,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Trigger an outbound webhook URL",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Webhook Call",
-      description: "POST data to a webhook endpoint",
-      fields: [
-        {
-          key: "url",
-          label: "Webhook URL",
-          type: "text",
-          placeholder: "https://hooks.example.com/...",
-        },
-      ],
-    }),
+    ConfigPanel: ToolWebhookPanel,
   },
 
   // ── Agent Tools — AI Specialized ────────────────────────────────────────────
@@ -1695,10 +1648,7 @@ export const NodeRegistry = {
     agentOnly: true,
     description:
       "Internal reasoning scratchpad — improves agent logic before acting",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Think",
-      description: "Let the agent reason step-by-step before acting",
-    }),
+    ConfigPanel: ToolThinkPanel,
   },
   tool_call_workflow: {
     label: "Call Workflow",
@@ -1708,18 +1658,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Run any Blinkbox workflow as an agent tool",
-    ConfigPanel: makeAgentToolPanel({
-      label: "Call Workflow",
-      description: "Invoke a workflow from within the agent",
-      fields: [
-        {
-          key: "workflowId",
-          label: "Workflow ID",
-          type: "text",
-          placeholder: "workflow id or name",
-        },
-      ],
-    }),
+    ConfigPanel: ToolCallWorkflowPanel,
   },
   tool_mcp_client: {
     label: "MCP Client",
@@ -1731,24 +1670,7 @@ export const NodeRegistry = {
     category: "ai_agent",
     agentOnly: true,
     description: "Connect to any MCP server — one node exposes dozens of tools",
-    ConfigPanel: makeAgentToolPanel({
-      label: "MCP Client",
-      description: "Connect to a Model Context Protocol server",
-      fields: [
-        {
-          key: "serverUrl",
-          label: "MCP Server URL",
-          type: "text",
-          placeholder: "http://localhost:8080",
-        },
-        {
-          key: "transport",
-          label: "Transport",
-          type: "text",
-          placeholder: "http (default) or sse",
-        },
-      ],
-    }),
+    ConfigPanel: ToolMcpClientPanel,
   },
   tool_memory_store: {
     label: "Memory Store",

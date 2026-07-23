@@ -1,32 +1,25 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Brain, Database, Wrench, ArrowLeft, X, Search, Code2, Globe, FileText,
-  Mail, Calculator, CheckSquare, Server, Shield, BookOpen, GitBranch,
+import { Brain, Database, Wrench, ArrowLeft, X, Search,
   Bot, Plug, Sparkles, CheckCircle2, Plus, ChevronRight, Layers } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 import { NodeRegistry } from "../nodeRegistry";
 
-const TOOL_SUBCATEGORIES = [
-  { id: "search",        label: "Search",             icon: Search,      nodes: ["tool_wikipedia","tool_google_search","tool_bing_search","tool_brave_search","tool_tavily","tool_exa","tool_duckduckgo","tool_searxng","tool_youtube_search","tool_news","tool_arxiv","tool_wolfram"] },
-  { id: "code",          label: "Code & Terminal",    icon: Code2,       nodes: ["tool_js","tool_python","tool_bash","tool_ssh","tool_docker_exec","tool_git","tool_npm","tool_virtual_computer"] },
-  { id: "web",           label: "Browser & Web",      icon: Globe,       nodes: ["tool_scraper","tool_screenshot","tool_form_fill","tool_link_checker","tool_sitemap","tool_http_request"] },
-  { id: "files",         label: "Files & Data",       icon: FileText,    nodes: ["tool_file_read","tool_file_write","tool_csv","tool_pdf","tool_json","tool_excel","tool_image_analyze"] },
-  { id: "databases",     label: "Databases",          icon: Database,    nodes: ["tool_sql","tool_mongodb","tool_redis","tool_elasticsearch","tool_supabase"] },
-  { id: "comms",         label: "Communication",      icon: Mail,        nodes: ["tool_email","tool_slack","tool_discord","tool_telegram","tool_sms","tool_webhook"] },
-  { id: "ai_spec",       label: "AI Specialized",     icon: Brain,       nodes: ["tool_summarize","tool_translate","tool_sentiment","tool_entity_extract","tool_classify","tool_image_generate","tool_stt","tool_tts","tool_ocr"] },
-  { id: "compute",       label: "Math & Compute",     icon: Calculator,  nodes: ["tool_calculator","tool_unit_convert","tool_currency","tool_datetime","tool_statistics","tool_regex"] },
-  { id: "productivity",  label: "Productivity",       icon: CheckSquare, nodes: ["tool_calendar","tool_task","tool_note","tool_reminder","tool_approval","tool_timer"] },
-  { id: "infra",         label: "Infrastructure",     icon: Server,      nodes: ["tool_aws","tool_gcp","tool_azure","tool_kubernetes","tool_terraform","tool_docker_compose","tool_ansible","tool_vercel_deploy"] },
-  { id: "security",      label: "Security & Network", icon: Shield,      nodes: ["tool_password","tool_hash","tool_jwt","tool_ip_geo","tool_whois","tool_nmap","tool_ssl_check"] },
-  { id: "reference",     label: "Reference",          icon: BookOpen,    nodes: ["tool_dictionary","tool_weather","tool_stock","tool_crypto","tool_timezone","tool_exchange_rate"] },
-  { id: "utils",         label: "Utilities",          icon: Wrench,      nodes: ["tool_url_shortener","tool_qr","tool_uuid","tool_data_diff","tool_html_parse","tool_xml_parse","tool_base64"] },
-  { id: "orchestration", label: "Orchestration",      icon: GitBranch,   nodes: ["tool_think","tool_sub_agent","tool_call_workflow","tool_mcp_client","tool_memory_store"] },
+const AGENT_TOOLS = [
+  "tool_http_request",
+  "tool_scraper",
+  "tool_webhook",
+  "tool_mcp_client",
+  "tool_call_workflow",
+  "tool_think",
+  "tool_sql",
+  "tool_mongodb",
 ];
 
 const AGENT_CATEGORIES = [
   { id: "chat_model",   label: "Chat Model",   icon: Brain,   slotId: "llm",         nodes: ["agent_openai","agent_anthropic","agent_gemini","agent_perplexity","agent_xai","agent_deepseek","agent_moonshot","agent_nvidia_nim", "agent_openrouter", "agent_zai", "agent_minimax", "agent_sakana"] },
   { id: "memory",       label: "Memory",       icon: Database,slotId: "memory",       nodes: ["agent_memory","agent_memory_window"] },
-  { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        subCategories: TOOL_SUBCATEGORIES },
+  { id: "tools",        label: "Tools",        icon: Wrench,  slotId: "tools",        nodes: AGENT_TOOLS },
   { id: "integration",  label: "Integration",  icon: Plug,    slotId: "integration",  nodes: ["slack","gmail","discord","telegram","notion","airtable","google_sheets","google_calendar","google_drive","outlook","github","linear","hubspot","jira","asana","stripe","shopify","clickup","twilio","mongodb","postgres","redis_node","azure_devops","calendly","datadog","elevenlabs","firebase","instagram","intercom","linkedin","mailchimp","monday","netlify","onedrive","pagerduty","pinecone","pipedrive","reddit","resend","s3","sendgrid","sentry","sftp","sharepoint","supabase","teams","tiktok","trello","typeform","vercel","web_search","whatsapp","woocommerce","youtube","zendesk","zoom"] },
   { id: "skills",       label: "Skills",       icon: Sparkles,slotId: "skills",       nodes: ["agent_skill"] },
 ];
@@ -122,17 +115,9 @@ export default function AgentPicker() {
 
   // Derive current node list for the current page
   const currentCat    = AGENT_CATEGORIES.find(c => c.id === page);
-  const isSubCatPage  = page.startsWith("tools:");
-  const subCatId      = isSubCatPage ? page.split(":")[1] : null;
-  const currentSubCat = subCatId ? TOOL_SUBCATEGORIES.find(s => s.id === subCatId) : null;
+  const currentSlotId = currentCat?.slotId || "tools";
 
-  const currentSlotId = currentSubCat
-    ? "tools"
-    : currentCat?.slotId || "tools";
-
-  const currentNodes = currentSubCat
-    ? currentSubCat.nodes.map(k => ({ key: k, ...NodeRegistry[k] })).filter(n => n.label)
-    : currentCat?.nodes
+  const currentNodes = currentCat?.nodes
     ? currentCat.nodes.map(k => ({ key: k, ...NodeRegistry[k] })).filter(n => n.label)
     : [];
 
@@ -143,18 +128,17 @@ export default function AgentPicker() {
 
   useEffect(() => { setFocusIdx(0); }, [search, page]);
 
-  const isListPage = page !== "home" && page !== "tools" && currentNodes.length > 0;
+  const isListPage = page !== "home" && currentNodes.length > 0;
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
-        if (isSubCatPage) { setPage("tools"); setSearch(""); return; }
         if (page !== "home") { setPage("home"); setSearch(""); return; }
         if (search) { setSearch(""); return; }
         close();
         return;
       }
-      if (!isListPage && !isSubCatPage) return;
+      if (!isListPage) return;
       if (e.key === "ArrowDown") { e.preventDefault(); setFocusIdx(i => Math.min(i + 1, visibleNodes.length - 1)); }
       if (e.key === "ArrowUp")   { e.preventDefault(); setFocusIdx(i => Math.max(i - 1, 0)); }
       if (e.key === "Enter" && visibleNodes[focusIdx]) {
@@ -164,23 +148,15 @@ export default function AgentPicker() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close, isListPage, isSubCatPage, visibleNodes, focusIdx, selected, currentSlotId, page, search, commitSingle, toggleSelect]);
+  }, [close, isListPage, visibleNodes, focusIdx, selected, currentSlotId, page, search, commitSingle, toggleSelect]);
 
   const totalCount = AGENT_CATEGORIES.reduce(
-    (a, c) =>
-      a +
-      (c.subCategories
-        ? c.subCategories.reduce((b, sub) => b + sub.nodes.filter(k => NodeRegistry[k]).length, 0)
-        : c.nodes.filter(k => NodeRegistry[k]).length),
+    (a, c) => a + c.nodes.filter(k => NodeRegistry[k]).length,
     0,
   );
 
-  const title = currentSubCat ? currentSubCat.label : currentCat ? currentCat.label : "Add to Agent";
-  const subtitle = currentSubCat
-    ? `${currentSubCat.nodes.filter(k => NodeRegistry[k]).length} tools`
-    : currentCat
-    ? CAT_DESC[currentCat.id]
-    : "Everything an agent can plug into";
+  const title = currentCat ? currentCat.label : "Add to Agent";
+  const subtitle = currentCat ? CAT_DESC[currentCat.id] : "Everything an agent can plug into";
 
   return (
     <>
@@ -192,7 +168,7 @@ export default function AgentPicker() {
         <div className="shrink-0 px-5 pt-5 pb-3 flex items-start gap-3">
           {page !== "home" && (
             <button
-              onClick={() => { setPage(isSubCatPage ? "tools" : "home"); setSearch(""); }}
+              onClick={() => { setPage("home"); setSearch(""); }}
               className="w-7 h-7 -ml-1 mt-0.5 shrink-0 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
               <ArrowLeft size={15} />
@@ -210,7 +186,7 @@ export default function AgentPicker() {
           </button>
         </div>
 
-        {(isListPage || isSubCatPage) && (
+        {isListPage && (
           <div className="shrink-0 px-5 pb-3">
             <div className="bb-input bb-glow-border flex items-center gap-2.5 px-3.5 h-11 rounded-xl focus-within:border-white/[0.22] transition-all">
               <Search size={15} className="text-neutral-600 shrink-0" />
@@ -237,9 +213,7 @@ export default function AgentPicker() {
         >
           {page === "home" && AGENT_CATEGORIES.map(cat => {
             const CatIcon = cat.icon;
-            const count = cat.subCategories
-              ? cat.subCategories.reduce((a, sub) => a + sub.nodes.filter(k => NodeRegistry[k]).length, 0)
-              : cat.nodes.filter(k => NodeRegistry[k]).length;
+            const count = cat.nodes.filter(k => NodeRegistry[k]).length;
             return (
               <button
                 key={cat.id}
@@ -263,27 +237,7 @@ export default function AgentPicker() {
             );
           })}
 
-          {page === "tools" && TOOL_SUBCATEGORIES.map(sub => {
-            const SubIcon = sub.icon;
-            const count = sub.nodes.filter(k => NodeRegistry[k]).length;
-            if (count === 0) return null;
-            return (
-              <button
-                key={sub.id}
-                onClick={() => setPage(`tools:${sub.id}`)}
-                className="bb-nav-item flex items-center gap-3.5 w-full px-3.5 py-3 rounded-xl text-left group"
-              >
-                <SubIcon size={22} strokeWidth={1.7} className="shrink-0 text-neutral-400" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold text-white leading-tight">{sub.label}</div>
-                  <div className="text-[11.5px] text-neutral-500 mt-0.5">{count} tools</div>
-                </div>
-                <ChevronRight size={16} className="text-neutral-700 shrink-0 group-hover:text-neutral-400 transition-colors" />
-              </button>
-            );
-          })}
-
-          {(isListPage || isSubCatPage) && (
+          {isListPage && (
             visibleNodes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Search size={28} className="text-neutral-700" />

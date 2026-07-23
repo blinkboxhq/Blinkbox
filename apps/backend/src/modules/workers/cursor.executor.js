@@ -348,9 +348,11 @@ export async function processCursor({ executionId, cursorId }) {
                 if (toolHandler?.toolDefinition) {
                   const toolDef = { ...toolHandler.toolDefinition };
                   const savedConfig = sourceNode.data || {};
+                  // Config and args must stay separate: merging let the model's
+                  // args overwrite a pinned url/workflowId/allowlist, which is
+                  // the exact thing pinning them was supposed to prevent.
                   toolDef.execute = async (agentArgs) => {
-                    const mergedConfig = { ...savedConfig, ...agentArgs };
-                    return toolHandler.run(mergedConfig, agentArgs, {
+                    return toolHandler.run(savedConfig, agentArgs, {
                       workspaceId: execution.workspaceId,
                       executionId: execution._id?.toString(),
                     });

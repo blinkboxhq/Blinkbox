@@ -39,6 +39,60 @@ async function safeUrl(rawUrl) {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
+// An agent tool has two inputs: the config a human pinned on the node, and the
+// args the model invented at call time. Config always wins — it is the only
+// half anyone vetted.
+
+function hostAllowed(url, allowList) {
+  const hosts = String(allowList || "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+  if (hosts.length === 0) return true;
+  const host = new URL(url).hostname.toLowerCase();
+  return hosts.some((h) => host === h || host.endsWith(`.${h}`));
+}
+
+async function pinnedUrl(config, argUrl, field = null) {
+  const url = await safeUrl((field && config[field]) || argUrl);
+  if (!hostAllowed(url, config.allowedHosts)) {
+    throw new Error(`Host not in this node's allowed list: ${new URL(url).hostname}`);
+  }
+  return url;
+}
+
+// "Key: value" per line — users never see or type raw JSON.
+function parseHeaderLines(raw) {
+  const out = {};
+  for (const line of String(raw || "").split("\n")) {
+    const i = line.indexOf(":");
+    if (i < 1) continue;
+    const k = line.slice(0, i).trim();
+    if (k) out[k] = line.slice(i + 1).trim();
+  }
+  return out;
+}
+
+const num = (v, fallback) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : fallback);
+const isOn = (v, dflt = false) => (v === undefined || v === null || v === "" ? dflt : v === true || v === "true");
+
+// A model that writes `SELECT 1; DROP TABLE users` passes any check that only
+// looks at the first keyword, so strip comments and reject anything with a
+// second statement before deciding the verb is safe.
+function assertReadOnlySql(query) {
+  const stripped = String(query)
+    .replace(/--[^\n]*/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .trim()
+    .replace(/;\s*$/, "");
+  if (stripped.includes(";")) {
+    throw new Error("Read-only mode: only one statement per call is allowed");
+  }
+  if (!/^\s*(select|with)\b/i.test(stripped)) {
+    throw new Error("Read-only mode: only SELECT and WITH queries are allowed on this node");
+  }
+  if (/\b(insert|update|delete|drop|alter|truncate|create|grant|revoke|copy)\b/i.test(stripped)) {
+    throw new Error("Read-only mode: this query contains a write keyword");
+  }
+}
+
 function td(name, description, properties = {}, required = []) {
   return {
     name,
@@ -171,14 +225,20 @@ export const tool_http_request = {
     ["url"]
   ),
   async run(config, args) {
-    const url = await safeUrl(args.url);
+    const url = await pinnedUrl(config, args.url);
+    const allowed = String(config.allowedMethods || "").split(",").map((m) => m.trim().toUpperCase()).filter(Boolean);
+    const method = (args.method || "GET").toUpperCase();
+    if (allowed.length && !allowed.includes(method)) {
+      throw new Error(`Method ${method} is not enabled on this node`);
+    }
     const resp = await axios({
-      method: args.method || "GET",
+      method,
       url,
-      headers: args.headers || {},
+      headers: { ...(args.headers || {}), ...parseHeaderLines(config.headers) },
       params: args.params,
       data: args.body,
-      timeout: 30000,
+      timeout: num(config.timeoutMs, 30000),
+      maxContentLength: num(config.maxResponseKb, 2048) * 1024,
       maxRedirects: 5,
       beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
     });
@@ -197,21 +257,28 @@ export const tool_scraper = {
     ["url"]
   ),
   async run(config, args) {
-    const url = await safeUrl(args.url);
+    const url = await pinnedUrl(config, args.url);
     const resp = await axios.get(url, {
-      timeout: 20000,
+      timeout: num(config.timeoutMs, 20000),
       maxRedirects: 5,
+      maxContentLength: 5 * 1024 * 1024,
       beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; Blinkbox/1.0)" },
+      headers: { "User-Agent": config.userAgent || "Mozilla/5.0 (compatible; Blinkbox/1.0)" },
     });
-    let html = resp.data;
+    let html = String(resp.data ?? "");
+    const selector = args.selector || config.selector;
+    if (selector) {
+      const tag = selector.replace(/[^a-z0-9]/gi, "");
+      const m = tag && html.match(new RegExp(`<${tag}[\\s>][\\s\\S]*?</${tag}>`, "i"));
+      if (m) html = m[0];
+    }
     // Strip tags and scripts naively for text extraction
     const text = html.replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?<\/style>/gi, "")
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 5000);
+      .slice(0, num(config.maxChars, 5000));
     return { url, text, length: text.length };
   },
 };
@@ -324,10 +391,14 @@ export const tool_webhook = {
     ["url", "payload"]
   ),
   async run(config, args) {
-    const url = await safeUrl(args.url);
+    const url = await pinnedUrl(config, args.url, "url");
     const resp = await axios.post(url, args.payload, {
-      headers: { "Content-Type": "application/json", ...(args.headers || {}) },
-      timeout: 15000,
+      headers: {
+        "Content-Type": "application/json",
+        ...(args.headers || {}),
+        ...parseHeaderLines(config.headers),
+      },
+      timeout: num(config.timeoutMs, 15000),
       maxRedirects: 5,
       beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
     });
@@ -672,14 +743,25 @@ export const tool_sql = {
     ["query"]
   ),
   async run(config, args) {
+    const query = String(args.query || "").trim();
+    if (isOn(config.readOnly, true)) assertReadOnlySql(query);
+
     const { Pool } = (await import("pg")).default || (await import("pg"));
     const pool = new Pool({
       connectionString: config.connectionString || process.env.POSTGRES_URL,
-      ssl: config.ssl === "true" ? { rejectUnauthorized: false } : undefined,
+      ssl: isOn(config.ssl) ? { rejectUnauthorized: false } : undefined,
+      statement_timeout: num(config.timeoutMs, 15000),
     });
     try {
-      const result = await pool.query(args.query, args.params || []);
-      return { rows: result.rows, rowCount: result.rowCount, command: result.command };
+      const result = await pool.query(query, args.params || []);
+      const maxRows = num(config.maxRows, 100);
+      const rows = (result.rows || []).slice(0, maxRows);
+      return {
+        rows,
+        rowCount: result.rowCount,
+        truncated: (result.rows || []).length > rows.length,
+        command: result.command,
+      };
     } finally {
       await pool.end();
     }
@@ -703,16 +785,27 @@ export const tool_mongodb = {
     const mongoose = (await import("mongoose")).default;
     const uri = config.uri || process.env.MONGODB_URI;
     if (!uri) throw new Error("[tool_mongodb] MongoDB URI required");
+
+    const readOnly = isOn(config.readOnly, true);
+    if (readOnly && !["find", "aggregate"].includes(args.operation)) {
+      throw new Error(`Read-only mode: ${args.operation} is not allowed on this node`);
+    }
+    const allowed = String(config.allowedCollections || "").split(",").map((c) => c.trim()).filter(Boolean);
+    if (allowed.length && !allowed.includes(args.collection)) {
+      throw new Error(`Collection not in this node's allowed list: ${args.collection}`);
+    }
+    const maxDocs = num(config.maxDocs, 50);
+
     const conn = await mongoose.createConnection(uri).asPromise();
     try {
       const col = conn.collection(args.collection);
       switch (args.operation) {
-        case "find": return { results: await col.find(args.filter || {}).limit(args.options?.limit || 50).toArray() };
+        case "find": return { results: await col.find(args.filter || {}).limit(Math.min(args.options?.limit || maxDocs, maxDocs)).toArray() };
         case "insertOne": return await col.insertOne(args.filter || {});
         case "insertMany": return await col.insertMany(Array.isArray(args.filter) ? args.filter : [args.filter]);
         case "updateOne": return await col.updateOne(args.filter || {}, args.update || {});
         case "deleteOne": return await col.deleteOne(args.filter || {});
-        case "aggregate": return { results: await col.aggregate(args.filter || []).toArray() };
+        case "aggregate": return { results: (await col.aggregate(args.filter || []).toArray()).slice(0, maxDocs) };
         default: throw new Error(`Unknown operation: ${args.operation}`);
       }
     } finally {
@@ -800,22 +893,26 @@ export const tool_calendar = {
 export const tool_call_workflow = {
   toolDefinition: td(
     "tool_call_workflow",
-    "Trigger another Blinkbox workflow by ID and optionally wait for the result",
+    "Trigger another Blinkbox workflow by ID. Returns immediately with an execution id.",
     {
       workflowId: { type: "string", description: "ID of the workflow to trigger" },
       payload: { type: "object", description: "Input payload for the workflow" },
-      waitForResult: { type: "boolean", description: "Wait for workflow to complete (default false)" },
     },
     ["workflowId"]
   ),
   async run(config, args, ctx) {
+    const workflowId = config.workflowId || args.workflowId;
+    if (!workflowId) throw new Error("[tool_call_workflow] No workflow selected");
+    if (config.workflowId && args.workflowId && args.workflowId !== config.workflowId) {
+      throw new Error("This node is pinned to one workflow and cannot trigger another");
+    }
     const baseUrl = process.env.BACKEND_URL || "http://localhost:3000";
     const resp = await axios.post(
-      `${baseUrl}/api/workflows/${args.workflowId}/trigger`,
-      { payload: args.payload || {} },
-      { headers: { Authorization: `Bearer ${ctx?.token || ""}` }, timeout: 10000 }
+      `${baseUrl}/api/automation/${workflowId}/execute`,
+      args.payload || {},
+      { headers: { Authorization: `Bearer ${ctx?.token || ""}` }, timeout: num(config.timeoutMs, 10000) }
     );
-    return { triggered: true, executionId: resp.data?.executionId };
+    return { triggered: true, workflowId, executionId: resp.data?.executionId };
   },
 };
 
@@ -831,13 +928,20 @@ export const tool_mcp_client = {
     ["serverUrl", "toolName"]
   ),
   async run(config, args) {
-    const base = (await safeUrl(args.serverUrl)).replace(/\/$/, "");
+    const allowed = String(config.allowedTools || "").split(",").map((t) => t.trim()).filter(Boolean);
+    if (allowed.length && !allowed.includes(args.toolName)) {
+      throw new Error(`Tool not in this node's allowed list: ${args.toolName}`);
+    }
+    const base = (await pinnedUrl(config, args.serverUrl, "serverUrl")).replace(/\/$/, "");
     const resp = await axios.post(
       `${base}/tools/call`,
       { name: args.toolName, arguments: args.arguments || {} },
       {
-        headers: { "Content-Type": "application/json" },
-        timeout: 30000,
+        headers: {
+          "Content-Type": "application/json",
+          ...(config.authToken ? { Authorization: `Bearer ${config.authToken}` } : {}),
+        },
+        timeout: num(config.timeoutMs, 30000),
         maxRedirects: 5,
         beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
       }
