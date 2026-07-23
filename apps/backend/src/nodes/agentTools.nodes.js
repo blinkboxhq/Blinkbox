@@ -928,13 +928,23 @@ export const tool_mcp_client = {
     },
     ["serverUrl", "toolName"]
   ),
-  async run(config, args) {
+  async run(config, args, ctx) {
     const allowed = String(config.allowedTools || "").split(",").map((t) => t.trim()).filter(Boolean);
     if (allowed.length && !allowed.includes(args.toolName)) {
       throw new Error(`Tool not in this node's allowed list: ${args.toolName}`);
     }
-    const serverUrl = await pinnedUrl(config, args.serverUrl, "serverUrl");
-    return callMcpTool({ ...config, serverUrl }, args.toolName, args.arguments);
+    // An OAuth sign-in already pins the server it was issued for, so an empty
+    // URL field there means "use that one" rather than "let the agent pick".
+    const signedIn = config.authType === "oauth" && config.credentialId;
+    const serverUrl =
+      signedIn && !String(config.serverUrl || "").trim()
+        ? ""
+        : await pinnedUrl(config, args.serverUrl, "serverUrl");
+    return callMcpTool(
+      { ...config, serverUrl, workspaceId: ctx?.workspaceId },
+      args.toolName,
+      args.arguments,
+    );
   },
 };
 

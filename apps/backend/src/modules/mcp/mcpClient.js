@@ -10,6 +10,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { assertSafeUrlResolved } from "../../utils/ssrf.js";
+import { getMcpAccessToken, getMcpCredentialServerUrl } from "./mcpOauth.js";
 
 const CLIENT_INFO = { name: "blinkbox", version: "1.0.0" };
 const DEFAULT_TIMEOUT = 30000;
@@ -36,6 +37,29 @@ export function mcpHeaders(config = {}) {
   if (token && mode === "bearer") out.Authorization = `Bearer ${token}`;
   if (token && mode === "header") out[String(config.authHeader || "X-API-Key").trim()] = token;
   return out;
+}
+
+// OAuth tokens are minted by a browser sign-in and expire, so they live in the
+// vault rather than in the node config — resolved (and silently refreshed) here.
+async function resolveHeaders(config) {
+  const headers = mcpHeaders(config);
+  if (config.authType === "oauth") {
+    if (!config.credentialId) {
+      throw new Error("This server needs a sign-in. Click Sign in on the node first.");
+    }
+    headers.Authorization = `Bearer ${await getMcpAccessToken(config.credentialId, config.workspaceId)}`;
+  }
+  return headers;
+}
+
+async function resolveServerUrl(config) {
+  const typed = String(config.serverUrl || "").trim();
+  if (typed) return normalizeUrl(typed);
+  if (config.authType === "oauth" && config.credentialId) {
+    const stored = await getMcpCredentialServerUrl(config.credentialId, config.workspaceId);
+    if (stored) return normalizeUrl(stored);
+  }
+  return normalizeUrl(typed);
 }
 
 function withDeadline(promise, ms, label) {
@@ -85,10 +109,10 @@ async function connect(url, headers, timeout) {
 }
 
 async function withMcpClient(config, fn) {
-  const url = normalizeUrl(config.serverUrl);
+  const url = await resolveServerUrl(config);
   await assertSafeUrlResolved(url);
   const timeout = num(config.timeoutMs, DEFAULT_TIMEOUT);
-  const client = await connect(url, mcpHeaders(config), timeout);
+  const client = await connect(url, await resolveHeaders(config), timeout);
   try {
     return await fn(client, timeout);
   } finally {

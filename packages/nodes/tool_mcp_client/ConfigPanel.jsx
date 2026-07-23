@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Network, Server, KeyRound, ListFilter, Timer, ShieldCheck, List, Tag } from 'lucide-react';
-import api from '@/lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import { Network, Server, KeyRound, ListFilter, Timer, ShieldCheck, List, Tag, Unlink } from 'lucide-react';
+import api, { API_URL } from '@/lib/api';
 import {
   ConfigSection,
   ConfigDivider,
@@ -19,6 +19,7 @@ const ACCENT = '#2dd4bf';
 
 const AUTH_MODES = [
   { value: 'none', label: 'None' },
+  { value: 'oauth', label: 'Sign In' },
   { value: 'bearer', label: 'Bearer Token' },
   { value: 'header', label: 'API Key Header' },
 ];
@@ -26,12 +27,14 @@ const AUTH_MODES = [
 export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }) {
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
 
   const serverUrl = (config.serverUrl || '').trim();
   const authType = config.authType || (config.authToken ? 'bearer' : 'none');
   const discovered = Array.isArray(config.discoveredTools) ? config.discoveredTools : [];
+  const signedIn = authType === 'oauth' && !!config.credentialId;
 
-  const connect = async () => {
+  const connect = useCallback(async () => {
     setStatus('loading');
     setMessage('');
     try {
@@ -42,6 +45,7 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
         authHeader: config.authHeader,
         headers: config.headers,
         timeoutMs: config.timeoutMs,
+        credentialId: config.credentialId,
       });
       const tools = data.tools || [];
       updateConfig('discoveredTools', tools);
@@ -51,9 +55,79 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
         `Connected to ${data.server?.name || 'server'} — ${tools.length} tool${tools.length === 1 ? '' : 's'} available.`,
       );
     } catch (err) {
+      const res = err.response?.data;
       setStatus('error');
-      setMessage(err.response?.data?.message || err.message || 'Could not reach that server.');
+      setMessage(
+        res?.needsAuth
+          ? 'This server requires a sign-in. Switch Authentication to Sign In and log in.'
+          : res?.message || err.message || 'Could not reach that server.',
+      );
     }
+  }, [serverUrl, authType, config.authToken, config.authHeader, config.headers, config.timeoutMs, config.credentialId, updateConfig]);
+
+  // The consent screen runs on the MCP server's own domain, so the only way back
+  // is the popup posting its result to us.
+  useEffect(() => {
+    const onMessage = (event) => {
+      if (event.data?.type !== 'blinkbox:mcp-oauth') return;
+      const payload = event.data.payload;
+      setSigningIn(false);
+      if (payload?.error) {
+        setStatus('error');
+        setMessage(payload.error);
+        return;
+      }
+      if (payload?.success && payload?.credential?._id) {
+        updateConfig('credentialId', payload.credential._id);
+        updateConfig('credentialName', payload.credential.name);
+        if (!serverUrl && payload.credential.serverUrl) {
+          updateConfig('serverUrl', payload.credential.serverUrl);
+        }
+        setStatus('idle');
+        setMessage(`Signed in as ${payload.credential.name}. Hit Connect to load tools.`);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [updateConfig, serverUrl]);
+
+  const signIn = () => {
+    const token = localStorage.getItem('blinkbox_token');
+    if (!token) {
+      setStatus('error');
+      setMessage('Not authenticated. Log in again.');
+      return;
+    }
+    setSigningIn(true);
+    setStatus('idle');
+    setMessage('');
+
+    const params = new URLSearchParams({ token, serverUrl });
+    if (config.oauthClientId) params.set('clientId', config.oauthClientId);
+    const w = 600;
+    const h = 700;
+    const left = window.screenX + (window.innerWidth - w) / 2;
+    const top = window.screenY + (window.innerHeight - h) / 2;
+    const popup = window.open(
+      `${API_URL}/api/mcp-client/oauth/authorize?${params.toString()}`,
+      'blinkbox_mcp_oauth',
+      `width=${w},height=${h},left=${left},top=${top},popup=1`,
+    );
+
+    const poll = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(poll);
+        setSigningIn(false);
+      }
+    }, 500);
+  };
+
+  const signOut = () => {
+    updateConfig('credentialId', '');
+    updateConfig('credentialName', '');
+    updateConfig('discoveredTools', []);
+    setStatus('idle');
+    setMessage('');
   };
 
   return (
@@ -90,6 +164,45 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
         options={AUTH_MODES}
       />
 
+      {authType === 'oauth' && (
+        <>
+          {signedIn ? (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-[#2b2b2b] bg-[#0f0f0f] px-3 py-2.5">
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-mono text-neutral-300 truncate">
+                  {config.credentialName || 'Signed in'}
+                </span>
+                <span className="text-[10px] text-neutral-600">Token refreshes automatically.</span>
+              </div>
+              <button
+                type="button"
+                onClick={signOut}
+                className="shrink-0 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                <Unlink className="w-3 h-3" />
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <ConnectButton
+              label="Sign in with browser"
+              accentColor={ACCENT}
+              status={signingIn ? 'loading' : 'idle'}
+              disabled={!serverUrl}
+              onClick={signIn}
+            />
+          )}
+
+          <ConfigInput
+            label="Client ID (optional)"
+            icon={KeyRound}
+            value={config.oauthClientId || ''}
+            onChange={(v) => updateConfig('oauthClientId', v)}
+            placeholder="Only if the server has no self-registration"
+          />
+        </>
+      )}
+
       {authType === 'header' && (
         <ConfigInput
           label="Header Name"
@@ -100,7 +213,7 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
         />
       )}
 
-      {authType !== 'none' && (
+      {(authType === 'bearer' || authType === 'header') && (
         <ConfigInput
           label={authType === 'bearer' ? 'Bearer Token' : 'Key Value'}
           icon={KeyRound}
@@ -126,7 +239,7 @@ export default function ToolMcpClientPanel({ config = {}, updateConfig, nodeId }
         accentColor={ACCENT}
         status={status}
         message={message}
-        disabled={!serverUrl}
+        disabled={!serverUrl && !signedIn}
         onClick={connect}
       />
 
