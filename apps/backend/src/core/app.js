@@ -20,6 +20,7 @@ import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
 import mcpRoutes from "../modules/mcp/mcp.routes.js";
 import mcpOauthRoutes from "../modules/mcp/oauth.routes.js";
+import mcpClientRoutes from "../modules/mcp/mcpClient.routes.js";
 import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import { verifyToken } from "../modules/auth/auth.middleware.js";
@@ -260,6 +261,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/keys", apiKeyRoutes);
 app.use("/api/mcp", mcpRoutes);
+app.use("/api/mcp-client", mcpClientRoutes);
 app.use("/api/vc", verifyToken, vcRouter);
 app.use("/api/ollama", ollamaRoutes);
 

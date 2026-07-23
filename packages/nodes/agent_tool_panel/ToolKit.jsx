@@ -1,7 +1,8 @@
+import { Loader2, Plug, CheckCircle2, AlertTriangle } from 'lucide-react';
 import SmartVariableInput from '@/components/ui/SmartVariableInput';
 import { ConfigLabel, ConfigInput, ConfigPills, ConfigBanner, ConfigHeader, ConfigBadge } from '@/components/ui/ConfigKit';
 
-export { ConfigSection, ConfigLabel, ConfigInput, ConfigDivider, ConfigSelect, ConfigTextarea, ConfigToggleRow, ConfigBanner, ConfigHeader } from '@/components/ui/ConfigKit';
+export { ConfigSection, ConfigLabel, ConfigInput, ConfigDivider, ConfigSelect, ConfigPills, ConfigTextarea, ConfigToggleRow, ConfigBanner, ConfigHeader } from '@/components/ui/ConfigKit';
 
 export function ToolHeader({ icon, logoUrl, imgFilter, iconColor, title, subtitle }) {
   return (
@@ -50,6 +51,33 @@ export function NumberField({ label, icon, value, onChange, placeholder, hint })
       placeholder={placeholder}
       hint={hint}
     />
+  );
+}
+
+// A live handshake button. Status lives next to the button rather than in a
+// toast because the thing it reports on — "is this server reachable with these
+// credentials" — is only meaningful while you are looking at those fields.
+export function ConnectButton({ label = 'Connect', status = 'idle', message, accentColor, disabled, onClick }) {
+  const busy = status === 'loading';
+  const Icon = busy ? Loader2 : status === 'ok' ? CheckCircle2 : status === 'error' ? AlertTriangle : Plug;
+  const tone = status === 'ok' ? accentColor : status === 'error' ? '#f87171' : '#a3a3a3';
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled || busy}
+        className="bb-glow-border w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-[11px] font-mono font-semibold uppercase tracking-wider bg-[#0f0f0f] border border-[#3b3b3b] text-neutral-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        style={status === 'ok' ? { borderColor: `${accentColor}55` } : undefined}
+      >
+        <Icon className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} style={{ color: tone }} />
+        {busy ? 'Connecting…' : label}
+      </button>
+      {message ? (
+        <p className="text-[10px] font-mono leading-relaxed" style={{ color: tone }}>{message}</p>
+      ) : null}
+    </div>
   );
 }
 

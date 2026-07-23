@@ -18,6 +18,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createRequire } from "module";
 import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
+import { callMcpTool } from "../modules/mcp/mcpClient.js";
 
 // Agents (and humans) routinely omit the protocol — "google.com" instead of
 // "https://google.com" — which makes `new URL()` throw before navigation
@@ -932,21 +933,8 @@ export const tool_mcp_client = {
     if (allowed.length && !allowed.includes(args.toolName)) {
       throw new Error(`Tool not in this node's allowed list: ${args.toolName}`);
     }
-    const base = (await pinnedUrl(config, args.serverUrl, "serverUrl")).replace(/\/$/, "");
-    const resp = await axios.post(
-      `${base}/tools/call`,
-      { name: args.toolName, arguments: args.arguments || {} },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(config.authToken ? { Authorization: `Bearer ${config.authToken}` } : {}),
-        },
-        timeout: num(config.timeoutMs, 30000),
-        maxRedirects: 5,
-        beforeRedirect: (opts) => assertSafeUrl(`${opts.protocol}//${opts.hostname}${opts.path || ""}`),
-      }
-    );
-    return resp.data;
+    const serverUrl = await pinnedUrl(config, args.serverUrl, "serverUrl");
+    return callMcpTool({ ...config, serverUrl }, args.toolName, args.arguments);
   },
 };
 
