@@ -1,72 +1,45 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Play, Sparkles } from 'lucide-react';
-import SideRays from '../../components/SideRays';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import logo from '../../assets/logo.svg';
+import productShot from './assets/image.png';
 
 const ease = [0.22, 1, 0.36, 1];
 
 export default function Hero() {
   const reduce = useReducedMotion();
 
-  const container = {
-    hidden: {},
-    show: {
-      transition: { staggerChildren: reduce ? 0 : 0.09, delayChildren: reduce ? 0 : 0.15 },
-    },
-  };
-  const rise = {
-    hidden: { opacity: 0, y: reduce ? 0 : 22 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease } },
-  };
-
   return (
-    <section className="relative min-h-dvh w-full overflow-hidden bg-[#0a0a0c]">
-      <div className="absolute inset-0">
-        <SideRays
-          origin="top-right"
-          rayColor1="#6f97e8"
-          rayColor2="#a9c0ef"
-          speed={2.5}
-          intensity={2}
-          spread={2}
-          tilt={0}
-          saturation={1.5}
-          blend={0.75}
-          falloff={1.6}
-          opacity={1.0}
+    <section className="relative w-full overflow-hidden bg-[#060608] pb-24">
+      {/* ambient stage light behind the screenshot */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute left-1/2 top-[36%] h-[620px] w-[1150px] -translate-x-1/2 rounded-full opacity-60 blur-[130px]"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(120,132,168,0.28), rgba(111,151,232,0.10) 45%, transparent 68%)' }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-[340px]"
+          style={{ background: 'linear-gradient(180deg, rgba(6,6,8,0.9), transparent)' }}
         />
       </div>
 
-      {/* legibility scrim — darkens the bottom-left where copy lives */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(120% 90% at 12% 78%, rgba(5,5,7,0.92) 0%, rgba(5,5,7,0.55) 34%, rgba(5,5,7,0) 62%), linear-gradient(180deg, rgba(5,5,7,0.35) 0%, rgba(5,5,7,0) 22%, rgba(5,5,7,0) 70%, rgba(5,5,7,0.7) 100%)',
-        }}
-      />
-
-      {/* top nav */}
+      {/* slim nav */}
       <motion.header
-        initial={{ opacity: 0, y: reduce ? 0 : -14 }}
+        initial={{ opacity: 0, y: reduce ? 0 : -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease }}
-        className="absolute inset-x-0 top-0 z-20"
+        transition={{ duration: 0.6, ease }}
+        className="relative z-20"
       >
-        <nav className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-5 sm:px-8">
+        <nav className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6 sm:px-8">
           <Link to="/" className="group flex items-center gap-2.5">
             <img
               src={logo}
               alt="Blinkbox"
-              className="h-7 w-7 transition-transform duration-300 group-hover:rotate-[8deg]"
-              style={{ filter: 'drop-shadow(0 0 12px rgba(111,151,232,0.35))' }}
+              className="h-6 w-6 transition-transform duration-300 group-hover:rotate-[8deg]"
+              style={{ filter: 'drop-shadow(0 0 10px rgba(111,151,232,0.3))' }}
             />
-            <span className="text-[15px] font-semibold tracking-tight text-[#fafafa]">
-              blinkbox
-            </span>
+            <span className="text-[14px] font-semibold tracking-tight text-[#fafafa]">blinkbox</span>
           </Link>
-
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/login"
@@ -85,67 +58,62 @@ export default function Hero() {
         </nav>
       </motion.header>
 
-      {/* hero copy */}
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-[1200px] flex-col justify-center px-6 sm:px-8">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="max-w-[760px]"
+      {/* headline + announcement */}
+      <div className="relative z-10 mx-auto max-w-[1200px] px-6 pt-14 sm:px-8 sm:pt-20">
+        <motion.h1
+          initial={{ opacity: 0, y: reduce ? 0 : 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.08 }}
+          className="max-w-[900px] font-medium leading-[1.02] tracking-[-0.03em] text-[#f4f4f5]"
+          style={{ fontSize: 'clamp(2.5rem, 6.4vw, 4.7rem)' }}
         >
-          <motion.div variants={rise}>
-            <span className="bb-pill inline-flex items-center gap-2 text-[11px] font-medium tracking-wide text-[#b6b6b6]">
-              <Sparkles className="h-3.5 w-3.5 text-[#a9c0ef]" strokeWidth={2} />
-              251 integrations · one canvas
+          The automation platform
+          <br className="hidden sm:block" /> for teams and agents
+        </motion.h1>
+
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.2 }}
+          className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <p className="max-w-[520px] text-[15px] leading-relaxed text-[#8c8c8c] sm:text-[16px]">
+            Purpose-built for building and running workflows. Designed for the AI era.
+          </p>
+          <Link to="/login" className="group flex shrink-0 items-center gap-2 text-[14px]">
+            <span className="font-medium text-[#f4f4f5]">New</span>
+            <span className="flex items-center gap-1 text-[#8c8c8c] transition-colors duration-150 group-hover:text-[#b6b6b6]">
+              Brian AI copilot
+              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2} />
             </span>
-          </motion.div>
+          </Link>
+        </motion.div>
 
-          <motion.h1
-            variants={rise}
-            className="mt-6 font-semibold leading-[0.98] tracking-[-0.03em] text-[#fafafa]"
-            style={{ fontSize: 'clamp(2.9rem, 7vw, 5.4rem)' }}
+        {/* product screenshot on a lit stage */}
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 40, scale: reduce ? 1 : 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1, ease, delay: reduce ? 0 : 0.34 }}
+          className="relative mt-16 sm:mt-24"
+        >
+          {/* floor shadow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-10 left-1/2 h-24 w-[85%] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85), transparent 70%)' }}
+          />
+          <div
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08]"
+            style={{ boxShadow: '0 50px 140px -30px rgba(0,0,0,0.85), 0 1px 0 0 rgba(255,255,255,0.06) inset' }}
           >
-            Automation that
-            <br />
-            <span
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(105deg, #a9c0ef 0%, #6f97e8 48%, #fafafa 100%)' }}
-            >
-              builds itself.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            variants={rise}
-            className="mt-6 max-w-[520px] text-[15px] leading-relaxed text-[#b6b6b6] sm:text-[17px]"
-          >
-            Wire apps, data, and AI into workflows that just run. All the power of
-            Zapier, Make, and n8n — without the wiring, the JSON, or the per-task bill.
-          </motion.p>
-
-          <motion.div variants={rise} className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              to="/login"
-              className="bb-btn bb-btn-primary group flex items-center gap-2 px-5 py-3 text-[14px] font-semibold"
-            >
-              Start building free
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
-            </Link>
-            <button
-              type="button"
-              className="bb-btn bb-btn-ghost group flex items-center gap-2 px-5 py-3 text-[14px] font-medium"
-            >
-              <Play className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
-              See it run
-            </button>
-          </motion.div>
-
-          <motion.p
-            variants={rise}
-            className="mt-8 text-[12px] tracking-wide text-[#6d6d6d]"
-          >
-            No credit card · Free forever tier · Self-host anytime
-          </motion.p>
+            <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full" />
+            {/* top edge highlight */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)' }}
+            />
+          </div>
         </motion.div>
       </div>
     </section>
