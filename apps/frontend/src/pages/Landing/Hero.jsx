@@ -10,7 +10,7 @@ export default function Hero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#120f17] pb-24">
+    <section className="relative w-full overflow-hidden bg-[#060608] pb-24">
       {/* pixel-blast field behind the hero — interactive, catches pointer events */}
       <div className="absolute inset-0">
         <PixelBlast
@@ -33,11 +33,11 @@ export default function Hero() {
           />
           <div
             className="absolute inset-x-0 top-0 h-[220px]"
-            style={{ background: 'linear-gradient(180deg, #120f17, transparent)' }}
+            style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
           />
           <div
             className="absolute inset-x-0 bottom-0 h-[320px]"
-            style={{ background: 'linear-gradient(0deg, #120f17, transparent)' }}
+            style={{ background: 'linear-gradient(0deg, #060608, transparent)' }}
           />
         </div>
       </div>
