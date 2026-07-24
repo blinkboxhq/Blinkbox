@@ -101,17 +101,26 @@ export default function Hero() {
           />
           <div
             ref={frameRef}
-            className="relative overflow-hidden rounded-xl p-[3px]"
-            style={{
-              background: 'linear-gradient(150deg, #4a4a4d 0%, #17171a 32%, #050506 56%, #303034 100%)',
-              boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9), 0 1px 0 0 rgba(255,255,255,0.05) inset',
-            }}
+            className="relative rounded-xl p-[3px]"
+            style={{ boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9)' }}
           >
+            {/* metallic border ring — even, opaque, no bright corners */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-20 rounded-xl"
+              style={{
+                padding: 3,
+                background: 'linear-gradient(180deg, #34343a, #17171a 55%, #121214)',
+                WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+              }}
+            />
             {flash && (
               <motion.div
                 key={flash.id}
                 aria-hidden
-                className="pointer-events-none absolute inset-0 z-20 rounded-xl"
+                className="pointer-events-none absolute inset-0 z-30 rounded-xl"
                 style={{
                   padding: 3,
                   background: `radial-gradient(200px 200px at ${flash.x}px ${flash.y}px, rgba(255,255,255,0.95), rgba(150,190,255,0.55) 32%, transparent 62%)`,
@@ -125,12 +134,12 @@ export default function Hero() {
               />
             )}
             <div className="relative z-10 overflow-hidden rounded-[9px]">
-              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-80" />
+              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
               {/* top edge highlight */}
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 top-0 h-px"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)' }}
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 50%, transparent)' }}
               />
             </div>
           </div>
