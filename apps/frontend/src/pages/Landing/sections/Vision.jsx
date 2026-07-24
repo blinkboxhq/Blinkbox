@@ -13,13 +13,13 @@ const ACCENT_WORDS = new Set(['intelligence', 'wires', 'the', 'rest']);
 const HORIZONS = [
   {
     icon: Sparkles,
-    title: 'AI-native, not bolted on',
-    body: 'Brian reads your canvas, plans a workflow end to end, and fills every node — an agent that builds alongside you.',
+    title: 'Intelligence at the core',
+    body: 'Describe an outcome and the platform composes the flow — the logic, the timing, the recovery, handled for you.',
   },
   {
     icon: ShieldCheck,
     title: 'Runs you can trust',
-    body: 'Atomic locks, idempotency and crash recovery. A restart never double-sends. Every run replayable, down to the node.',
+    body: 'Atomic locks, idempotency and crash recovery. A restart never double-sends — every run replayable, down to the node.',
   },
   {
     icon: ToggleRight,
@@ -124,7 +124,7 @@ export default function Vision() {
           })}
         </h2>
 
-        <div className="mt-20 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
+        <div className="mt-20 grid grid-cols-1 gap-5 md:grid-cols-3">
           {HORIZONS.map((h, i) => {
             const Icon = h.icon;
             return (
@@ -134,12 +134,16 @@ export default function Vision() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.6, ease, delay: reduce ? 0 : i * 0.1 }}
-                className="relative flex flex-col items-start"
+                className="bb-glass bb-glass-hover group relative flex flex-col items-start overflow-hidden p-6 transition-all duration-200"
               >
-                <div className="mb-5 h-px w-10 bg-gradient-to-r from-[#6f97e8] to-transparent" />
-                <Icon className="mb-4 h-5 w-5 text-[#6f97e8]" strokeWidth={1.75} />
-                <h3 className="text-[16px] font-semibold tracking-tight text-[#fafafa]">{h.title}</h3>
-                <p className="mt-2.5 text-[13.5px] leading-relaxed text-[#8c8c8c]">{h.body}</p>
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: 'radial-gradient(circle, var(--bb-accent-soft), transparent 70%)' }}
+                />
+                <Icon className="mb-4 h-5 w-5 text-[var(--bb-accent-hot)]" strokeWidth={1.75} />
+                <h3 className="text-[15px] font-semibold tracking-tight text-[var(--bb-text-hi)]">{h.title}</h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-[var(--bb-text-lo)]">{h.body}</p>
               </motion.div>
             );
           })}
