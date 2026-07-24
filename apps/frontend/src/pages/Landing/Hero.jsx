@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
+import PixelBlast from '../../components/PixelBlast';
 import productShot from './assets/image.png';
 
 const ease = [0.22, 1, 0.36, 1];
@@ -10,16 +11,44 @@ export default function Hero() {
 
   return (
     <section className="relative w-full overflow-hidden bg-[#060608] pb-24">
-      {/* ambient stage light behind the screenshot */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute left-1/2 top-[36%] h-[620px] w-[1150px] -translate-x-1/2 rounded-full opacity-60 blur-[130px]"
-          style={{ background: 'radial-gradient(ellipse at center, rgba(120,132,168,0.28), rgba(111,151,232,0.10) 45%, transparent 68%)' }}
-        />
-        <div
-          className="absolute inset-x-0 top-0 h-[340px]"
-          style={{ background: 'linear-gradient(180deg, rgba(6,6,8,0.9), transparent)' }}
-        />
+      {/* pixel-blast field behind the hero */}
+      <div className="absolute inset-0">
+        {!reduce && (
+          <PixelBlast
+            variant="circle"
+            pixelSize={4}
+            color="#6f97e8"
+            patternScale={3}
+            patternDensity={1.1}
+            pixelSizeJitter={0.4}
+            enableRipples
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.4}
+            liquid
+            liquidStrength={0.1}
+            liquidRadius={1.2}
+            liquidWobbleSpeed={5}
+            speed={0.5}
+            edgeFade={0.3}
+            transparent
+            className="opacity-70"
+          />
+        )}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute left-1/2 top-[32%] h-[560px] w-[1000px] -translate-x-1/2 rounded-full opacity-40 blur-[130px]"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(111,151,232,0.22), transparent 68%)' }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 h-[220px]"
+            style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-[320px]"
+            style={{ background: 'linear-gradient(0deg, #060608, transparent)' }}
+          />
+        </div>
       </div>
 
       {/* headline + announcement */}
