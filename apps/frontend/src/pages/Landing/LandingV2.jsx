@@ -1,6 +1,7 @@
 import Header from './sections/Header';
 import Hero from './Hero';
 import Vision from './sections/Vision';
+import Footer from './sections/Footer';
 
 export default function LandingV2() {
   return (
@@ -8,6 +9,7 @@ export default function LandingV2() {
       <Header />
       <Hero />
       <Vision />
+      <Footer />
     </div>
   );
 }

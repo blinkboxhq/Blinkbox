@@ -1,9 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
-
-const ease = [0.22, 1, 0.36, 1];
 
 const COLUMNS = [
   { title: 'Product', links: ['Features', 'Integrations', 'Pricing', 'Changelog'] },
@@ -12,40 +8,8 @@ const COLUMNS = [
 ];
 
 export default function Footer() {
-  const reduce = useReducedMotion();
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.06] bg-[#08080a]">
-      {/* final CTA band */}
-      <div className="relative border-b border-white/[0.06] py-28">
-        <div
-          className="pointer-events-none absolute left-1/2 top-0 h-64 w-[680px] -translate-x-1/2 opacity-70 blur-[90px]"
-          style={{ background: 'radial-gradient(circle, rgba(111,151,232,0.35), transparent 70%)' }}
-        />
-        <motion.div
-          initial={{ opacity: 0, y: reduce ? 0 : 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7, ease }}
-          className="relative mx-auto max-w-[720px] px-6 text-center"
-        >
-          <h2 className="font-semibold tracking-[-0.02em] text-[#fafafa]" style={{ fontSize: 'clamp(2.2rem, 5vw, 3.6rem)' }}>
-            Automate the boring part.
-          </h2>
-          <p className="mx-auto mt-4 max-w-[440px] text-[15px] text-[#8c8c8c]">
-            Your first workflow is running before your coffee’s cold. Free to start.
-          </p>
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link to="/login" className="bb-btn bb-btn-primary group flex items-center gap-2 px-6 py-3 text-[14px] font-semibold">
-              Start building free
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
-            </Link>
-            <Link to="/login" className="bb-btn bb-btn-ghost px-6 py-3 text-[14px] font-medium">
-              Book a demo
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-
       {/* link columns */}
       <div className="mx-auto max-w-[1200px] px-6 py-16 sm:px-8">
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 md:grid-cols-5">
