@@ -80,8 +80,7 @@ export default function App() {
         <Toaster theme="dark" position="top-center" richColors expand={false} closeButton duration={5000} />
 <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<RequireGuest><Landing /></RequireGuest>} />
-            <Route path="/v2" element={<LandingV2 />} />
+            <Route path="/" element={<RequireGuest><LandingV2 /></RequireGuest>} />
             <Route path="/login" element={<RequireGuest><Auth /></RequireGuest>} />
             <Route path="/reset-password" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
