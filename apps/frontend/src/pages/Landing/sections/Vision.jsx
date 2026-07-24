@@ -45,17 +45,6 @@ export default function Vision() {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(111,151,232,1) 1px, transparent 1px), linear-gradient(90deg, rgba(111,151,232,1) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 72%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 72%)',
-        }}
-      />
-      <div
-        aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-44"
         style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
       />
