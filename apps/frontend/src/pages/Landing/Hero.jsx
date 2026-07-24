@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import logo from '../../assets/logo.svg';
+import { ArrowUpRight } from 'lucide-react';
 import productShot from './assets/image.png';
 
 const ease = [0.22, 1, 0.36, 1];
@@ -23,43 +22,8 @@ export default function Hero() {
         />
       </div>
 
-      {/* slim nav */}
-      <motion.header
-        initial={{ opacity: 0, y: reduce ? 0 : -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease }}
-        className="relative z-20"
-      >
-        <nav className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6 sm:px-8">
-          <Link to="/" className="group flex items-center gap-2.5">
-            <img
-              src={logo}
-              alt="Blinkbox"
-              className="h-6 w-6 transition-transform duration-300 group-hover:rotate-[8deg]"
-              style={{ filter: 'drop-shadow(0 0 10px rgba(111,151,232,0.3))' }}
-            />
-            <span className="text-[14px] font-semibold tracking-tight text-[#fafafa]">blinkbox</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/login"
-              className="hidden rounded-[10px] px-3.5 py-2 text-[13px] font-medium text-[#b6b6b6] transition-colors duration-150 hover:text-[#fafafa] sm:block"
-            >
-              Log in
-            </Link>
-            <Link
-              to="/login"
-              className="bb-btn bb-btn-accent group flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold"
-            >
-              Get started
-              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
-            </Link>
-          </div>
-        </nav>
-      </motion.header>
-
       {/* headline + announcement */}
-      <div className="relative z-10 mx-auto max-w-[1200px] px-6 pt-14 sm:px-8 sm:pt-20">
+      <div className="relative z-10 mx-auto max-w-[1200px] px-6 pt-16 sm:px-8 sm:pt-24">
         <motion.h1
           initial={{ opacity: 0, y: reduce ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
