@@ -80,7 +80,7 @@ export default function Header() {
           </Link>
           <Link
             to="/login"
-            className="bb-btn bb-btn-accent group hidden items-center gap-1.5 px-4 py-2 text-[13px] font-semibold sm:flex"
+            className="bb-btn bb-btn-primary group hidden items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold sm:flex"
           >
             Get started
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
@@ -121,7 +121,7 @@ export default function Header() {
                 <Link to="/login" className="bb-btn bb-btn-ghost justify-center py-2.5 text-[14px] font-medium">
                   Log in
                 </Link>
-                <Link to="/login" className="bb-btn bb-btn-accent justify-center py-2.5 text-[14px] font-semibold">
+                <Link to="/login" className="bb-btn bb-btn-primary justify-center rounded-full py-2.5 text-[14px] font-semibold">
                   Get started
                 </Link>
               </div>
