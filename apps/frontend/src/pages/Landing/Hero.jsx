@@ -64,7 +64,7 @@ export default function Hero() {
         >
           The{' '}
           <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
-            Automation platform
+            automation platform
           </span>
           <br className="hidden sm:block" /> for teams and agents
         </motion.h1>
