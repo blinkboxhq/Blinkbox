@@ -131,7 +131,7 @@ export default function Hero() {
               />
             )}
             <div className="relative z-10 overflow-hidden rounded-[9px]">
-              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
+              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-95" />
               {/* top edge highlight */}
               <div
                 aria-hidden
