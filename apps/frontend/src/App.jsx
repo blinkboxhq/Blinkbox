@@ -5,6 +5,7 @@ import TopProgressBar from './components/TopProgressBar';
 import useGlowBorder from './hooks/useGlowBorder';
 import useCredentialsStore from './store/credentialsStore';
 const Landing      = lazy(() => import('./pages/Landing'));
+const LandingV2    = lazy(() => import('./pages/Landing/LandingV2'));
 const Auth         = lazy(() => import('./pages/auth'));
 const VerifyEmail  = lazy(() => import('./pages/auth/VerifyEmail'));
 const Dashboard    = lazy(() => import('./pages/Dashboard'));
@@ -80,6 +81,7 @@ export default function App() {
 <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<RequireGuest><Landing /></RequireGuest>} />
+            <Route path="/v2" element={<LandingV2 />} />
             <Route path="/login" element={<RequireGuest><Auth /></RequireGuest>} />
             <Route path="/reset-password" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
