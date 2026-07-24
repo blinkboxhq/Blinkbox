@@ -19,9 +19,9 @@ function FloatingLogo({ reduce }) {
   const rotateY = useSpring(useTransform(mx, [-90, 90], [-18, 18]), { stiffness: 150, damping: 12 });
 
   return (
-    <motion.div
-      className="relative hidden items-center justify-center lg:flex"
-      style={{ perspective: 600 }}
+    <div
+      className="relative hidden lg:block"
+      style={{ perspective: 900 }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         mx.set(e.clientX - r.left - r.width / 2);
@@ -32,22 +32,21 @@ function FloatingLogo({ reduce }) {
         my.set(0);
       }}
     >
-      <div
-        aria-hidden
-        className="absolute h-80 w-80 rounded-full opacity-60 blur-[80px]"
-        style={{ background: 'radial-gradient(circle, rgba(111,151,232,0.5), transparent 70%)' }}
-      />
-      <motion.img
-        src={logo}
-        alt="Blinkbox"
-        draggable={false}
-        className="relative h-56 w-56 cursor-pointer select-none"
+      <motion.div
+        className="bb-glass relative flex h-full w-full cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-white/[0.08]"
         style={{ rotateX, rotateY }}
-        animate={reduce ? undefined : { y: [0, -12, 0] }}
+        animate={reduce ? undefined : { y: [0, -10, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        whileTap={{ scale: 0.88 }}
-      />
-    </motion.div>
+        whileTap={{ scale: 0.97 }}
+      >
+        <div
+          aria-hidden
+          className="absolute h-96 w-96 rounded-full opacity-60 blur-[90px]"
+          style={{ background: 'radial-gradient(circle, rgba(111,151,232,0.5), transparent 70%)' }}
+        />
+        <img src={logo} alt="Blinkbox" draggable={false} className="relative h-64 w-64 select-none" />
+      </motion.div>
+    </div>
   );
 }
 
@@ -56,7 +55,7 @@ export default function Vision() {
 
   return (
     <section className="relative overflow-hidden bg-[#060608] pt-36 sm:pt-48">
-      <div className="relative mx-auto max-w-[1160px] px-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-stretch lg:gap-20">
+      <div className="relative mx-auto max-w-[1360px] px-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-stretch lg:gap-20">
         <ScrollReveal
           baseOpacity={0.08}
           enableBlur
@@ -64,7 +63,7 @@ export default function Vision() {
           blurStrength={9}
           rotationEnd="bottom center"
           wordAnimationEnd="bottom center"
-          containerClassName="max-w-[920px]"
+          containerClassName="max-w-[960px]"
           textClassName="font-medium tracking-[-0.01em] text-white"
           accentWords={ACCENT_WORDS}
           accentClassName="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent"
