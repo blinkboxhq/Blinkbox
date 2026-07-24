@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
@@ -8,9 +9,13 @@ const ease = [0.22, 1, 0.36, 1];
 
 export default function Hero() {
   const reduce = useReducedMotion();
+  const [shine, setShine] = useState(0);
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#060608] pb-24">
+    <section
+      onPointerDown={() => setShine((n) => n + 1)}
+      className="relative w-full overflow-hidden bg-[#060608] pb-44"
+    >
       {/* pixel-blast field behind the hero — interactive, catches pointer events */}
       <div className="absolute inset-0">
         <PixelBlast
@@ -24,7 +29,7 @@ export default function Hero() {
           rippleThickness={0.07}
           rippleIntensityScale={0.4}
           speed={2}
-          edgeFade={0.2}
+          edgeFade={0.15}
         />
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div
@@ -87,16 +92,32 @@ export default function Hero() {
             style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85), transparent 70%)' }}
           />
           <div
-            className="relative overflow-hidden rounded-xl border-[3px] border-[#3b82f6]/30"
-            style={{ boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9), 0 0 80px -14px rgba(59,130,246,0.4), 0 1px 0 0 rgba(255,255,255,0.06) inset' }}
+            className="relative overflow-hidden rounded-xl p-[3px]"
+            style={{
+              background: 'linear-gradient(150deg, #4a4a4d 0%, #17171a 32%, #050506 56%, #303034 100%)',
+              boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9), 0 1px 0 0 rgba(255,255,255,0.05) inset',
+            }}
           >
-            <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
-            {/* top edge highlight */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)' }}
-            />
+            {shine > 0 && (
+              <motion.div
+                key={shine}
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 z-0 w-1/3 -skew-x-12"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)' }}
+                initial={{ left: '-45%', opacity: 0 }}
+                animate={{ left: '115%', opacity: [0, 0.9, 0] }}
+                transition={{ duration: 0.8, ease }}
+              />
+            )}
+            <div className="relative z-10 overflow-hidden rounded-[9px]">
+              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
+              {/* top edge highlight */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-px"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)' }}
+              />
+            </div>
           </div>
         </motion.div>
       </div>
