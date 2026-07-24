@@ -1,7 +1,5 @@
 import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
 import PixelBlast from '../../components/PixelBlast';
 import productShot from './assets/image.png';
 
@@ -61,34 +59,21 @@ export default function Hero() {
           initial={{ opacity: 0, y: reduce ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.08 }}
-          className="max-w-[900px] bg-gradient-to-br from-white via-[#cddafb] to-[#3b82f6] bg-clip-text font-medium leading-[1.02] tracking-[-0.03em] text-transparent"
+          className="max-w-[900px] font-medium leading-[1.02] tracking-[-0.03em] text-white"
           style={{ fontSize: 'clamp(2.5rem, 6.4vw, 4.7rem)' }}
         >
-          The automation platform
+          <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text uppercase text-transparent">
+            The automation platform
+          </span>
           <br className="hidden sm:block" /> for teams and agents
         </motion.h1>
-
-        <motion.div
-          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.2 }}
-          className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-end"
-        >
-          <Link to="/login" className="group pointer-events-auto flex shrink-0 items-center gap-2 text-[14px]">
-            <span className="font-medium text-[#f4f4f5]">New</span>
-            <span className="flex items-center gap-1 text-[#8c8c8c] transition-colors duration-150 group-hover:text-[#b6b6b6]">
-              Brian AI copilot
-              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2} />
-            </span>
-          </Link>
-        </motion.div>
 
         {/* product screenshot on a lit stage */}
         <motion.div
           initial={{ opacity: 0, y: reduce ? 0 : 40, scale: reduce ? 1 : 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1, ease, delay: reduce ? 0 : 0.34 }}
-          className="relative mt-16 sm:mt-24"
+          className="relative mt-10 sm:mt-12"
         >
           {/* floor shadow */}
           <div
