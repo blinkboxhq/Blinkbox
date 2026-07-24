@@ -13,7 +13,7 @@ const ScrollFloat = ({
   ease = 'back.inOut(2)',
   scrollStart = 'center bottom+=50%',
   scrollEnd = 'bottom bottom-=40%',
-  stagger = 0.03,
+  stagger = 0.03
 }) => {
   const containerRef = useRef(null);
 
@@ -30,15 +30,11 @@ const ScrollFloat = ({
     const el = containerRef.current;
     if (!el) return;
 
-    const charElements = el.querySelectorAll('.inline-block');
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      gsap.set(charElements, { opacity: 1, yPercent: 0, scaleY: 1, scaleX: 1 });
-      return;
-    }
-
     const scroller = scrollContainerRef && scrollContainerRef.current ? scrollContainerRef.current : window;
 
-    const anim = gsap.fromTo(
+    const charElements = el.querySelectorAll('.inline-block');
+
+    gsap.fromTo(
       charElements,
       {
         willChange: 'opacity, transform',
@@ -46,35 +42,30 @@ const ScrollFloat = ({
         yPercent: 120,
         scaleY: 2.3,
         scaleX: 0.7,
-        transformOrigin: '50% 0%',
+        transformOrigin: '50% 0%'
       },
       {
         duration: animationDuration,
-        ease,
+        ease: ease,
         opacity: 1,
         yPercent: 0,
         scaleY: 1,
         scaleX: 1,
-        stagger,
+        stagger: stagger,
         scrollTrigger: {
           trigger: el,
           scroller,
           start: scrollStart,
           end: scrollEnd,
-          scrub: true,
-        },
+          scrub: true
+        }
       }
     );
-
-    return () => {
-      anim.scrollTrigger?.kill();
-      anim.kill();
-    };
   }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
 
   return (
     <h2 ref={containerRef} className={`my-5 overflow-hidden ${containerClassName}`}>
-      <span className={`inline-block text-[clamp(2rem,5.5vw,4rem)] leading-[1.25] ${textClassName}`}>{splitText}</span>
+      <span className={`inline-block text-[clamp(1.6rem,4vw,3rem)] leading-[1.5] ${textClassName}`}>{splitText}</span>
     </h2>
   );
 };

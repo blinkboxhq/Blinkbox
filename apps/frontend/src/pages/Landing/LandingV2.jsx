@@ -16,6 +16,11 @@ export default function LandingV2() {
           <ScrollFloat
             containerClassName="!my-0"
             textClassName="font-semibold tracking-[-0.02em] text-[#fafafa]"
+            animationDuration={1}
+            ease="back.inOut(2)"
+            scrollStart="center bottom+=50%"
+            scrollEnd="bottom bottom-=40%"
+            stagger={0.07}
           >
             Welcome to autonomous orchestration
           </ScrollFloat>
