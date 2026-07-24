@@ -66,16 +66,16 @@ export default function Vision() {
       />
 
       <div className="relative mx-auto max-w-[1000px] px-6 sm:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: reduce ? 0 : 12 }}
+        <motion.h2
+          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6, ease }}
-          className="mb-8 flex items-center gap-3"
+          transition={{ duration: 0.7, ease }}
+          className="mb-10 bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text font-semibold tracking-[-0.02em] text-transparent"
+          style={{ fontSize: 'clamp(2rem, 5vw, 3.4rem)' }}
         >
-          <span className="h-px w-8 bg-gradient-to-r from-[#6f97e8] to-transparent" />
-          <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#6f97e8]">Our vision</span>
-        </motion.div>
+          Our vision
+        </motion.h2>
         <ScrollReveal
           baseOpacity={0.08}
           enableBlur
