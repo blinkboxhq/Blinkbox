@@ -69,23 +69,19 @@ export default function Hero() {
         <SideRays
           origin="top-right"
           rayColor1="#7aa2ff"
-          rayColor2="#b7ccff"
-          speed={1.6}
-          intensity={1.35}
-          spread={1.7}
-          tilt={-4}
-          saturation={0.85}
-          blend={0.62}
-          falloff={1.9}
-          opacity={0.5}
+          rayColor2="#c3d5ff"
+          speed={1.8}
+          intensity={2.1}
+          spread={1.8}
+          tilt={-6}
+          saturation={1.1}
+          blend={0.6}
+          falloff={1.7}
+          opacity={0.9}
         />
       </div>
 
-      {/* Depth: radial vignette to seat the copy + a faint floor glow */}
-      <div
-        className="pointer-events-none absolute inset-0 z-[1]"
-        style={{ background: 'radial-gradient(120% 90% at 50% 0%, rgba(5,5,7,0) 40%, rgba(5,5,7,0.55) 100%)' }}
-      />
+      {/* Floor fade only — keep the ray zone (top-right) undimmed */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-40"
         style={{ background: 'linear-gradient(to top, #050507, rgba(5,5,7,0))' }}
