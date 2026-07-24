@@ -72,11 +72,8 @@ export default function Hero() {
           initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.2 }}
-          className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+          className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-end"
         >
-          <p className="max-w-[520px] text-[15px] leading-relaxed text-[#8c8c8c] sm:text-[16px]">
-            Purpose-built for building and running workflows. Designed for the AI era.
-          </p>
           <Link to="/login" className="group pointer-events-auto flex shrink-0 items-center gap-2 text-[14px]">
             <span className="font-medium text-[#f4f4f5]">New</span>
             <span className="flex items-center gap-1 text-[#8c8c8c] transition-colors duration-150 group-hover:text-[#b6b6b6]">
