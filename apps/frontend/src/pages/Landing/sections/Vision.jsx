@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import ScrollReveal from '../../../components/ScrollReveal';
 
+const ease = [0.22, 1, 0.36, 1];
+
 const MANIFESTO =
   'Automation should feel effortless. Drag a few boxes, decide what happens when, and let it run — every branch, every retry, every schedule handled for you, so your work happens whether you are watching or not.';
 
@@ -19,7 +21,7 @@ export default function Vision() {
   const glowShift = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#060608] py-36 sm:py-48">
+    <section ref={ref} className="relative overflow-hidden bg-[#060608] pt-36 pb-[55vh] sm:pt-48">
       {/* accent field — layered blue blooms + fine grid, breathing with scroll */}
       <motion.div
         aria-hidden
@@ -64,6 +66,16 @@ export default function Vision() {
       />
 
       <div className="relative mx-auto max-w-[1000px] px-6 sm:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease }}
+          className="mb-8 flex items-center gap-3"
+        >
+          <span className="h-px w-8 bg-gradient-to-r from-[#6f97e8] to-transparent" />
+          <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#6f97e8]">Our vision</span>
+        </motion.div>
         <ScrollReveal
           baseOpacity={0.08}
           enableBlur
