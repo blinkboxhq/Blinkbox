@@ -62,7 +62,7 @@ export default function Hero() {
           className="max-w-[900px] font-medium leading-[1.02] tracking-[-0.03em] text-white"
           style={{ fontSize: 'clamp(2.5rem, 6.4vw, 4.7rem)' }}
         >
-          <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text uppercase text-transparent">
+          <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
             The automation platform
           </span>
           <br className="hidden sm:block" /> for teams and agents
