@@ -116,6 +116,12 @@ export default function Hero() {
                 transition={{ duration: 0.7, ease }}
               />
             )}
+            {/* bottom fade — dissolve the screenshot into the page below */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-2/5 rounded-b-xl"
+              style={{ background: 'linear-gradient(to top, #060608 14%, transparent)' }}
+            />
             <div className="relative z-10 overflow-hidden rounded-[9px]">
               <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-[0.85]" />
               {/* top edge highlight */}
