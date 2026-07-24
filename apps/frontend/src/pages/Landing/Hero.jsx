@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
-import SideRays from '../../components/SideRays';
+import LightRays from '../../components/LightRays';
 import logo from '../../assets/logo.svg';
 
 const LOGIN = 'https://blinkbox.net/login';
@@ -64,24 +64,24 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-dvh w-full overflow-hidden bg-[#050507] text-white">
-      {/* Ambient light rays — top-right origin, on-brand cool tones */}
+      {/* Ambient god-rays — top-center, on-brand cool blue */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <SideRays
-          origin="top-right"
-          rayColor1="#7aa2ff"
-          rayColor2="#c3d5ff"
-          speed={1.8}
-          intensity={2.1}
-          spread={1.8}
-          tilt={-6}
-          saturation={1.1}
-          blend={0.6}
-          falloff={1.7}
-          opacity={0.9}
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#8ab4ff"
+          raysSpeed={0.9}
+          lightSpread={0.85}
+          rayLength={1.7}
+          fadeDistance={1.15}
+          saturation={1.05}
+          followMouse
+          mouseInfluence={0.08}
+          noiseAmount={0.06}
+          distortion={0.02}
         />
       </div>
 
-      {/* Floor fade only — keep the ray zone (top-right) undimmed */}
+      {/* Floor fade only — keep the ray zone (top-center) undimmed */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-40"
         style={{ background: 'linear-gradient(to top, #050507, rgba(5,5,7,0))' }}
