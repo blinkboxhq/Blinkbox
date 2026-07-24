@@ -5,37 +5,61 @@ import ScrollReveal from '../../../components/ScrollReveal';
 const MANIFESTO =
   'Automation should feel effortless. Drag a few boxes, decide what happens when, and let it run — every branch, every retry, every schedule handled for you, so your work happens whether you are watching or not.';
 
+const ACCENT_WORDS = ['effortless', 'run', 'handled'];
+
 export default function Vision() {
   const reduce = useReducedMotion();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start 0.85', 'end 0.55'],
+    offset: ['start 0.9', 'end 0.4'],
   });
 
-  const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.15, 0.45, 0.2]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.2, 0.6, 0.28]);
+  const glowShift = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#060608] py-32 sm:py-40">
-      {/* ambient blue glow that breathes with scroll */}
+    <section ref={ref} className="relative overflow-hidden bg-[#060608] py-36 sm:py-48">
+      {/* accent field — layered blue blooms + fine grid, breathing with scroll */}
       <motion.div
         aria-hidden
-        style={{ opacity: reduce ? 0.3 : glowOpacity }}
-        className="pointer-events-none absolute left-1/2 top-1/3 h-[520px] w-[900px] -translate-x-1/2 rounded-full blur-[140px]"
+        style={{ opacity: reduce ? 0.4 : glowOpacity, x: reduce ? '0%' : glowShift }}
+        className="pointer-events-none absolute left-1/2 top-[38%] h-[620px] w-[1040px] -translate-x-1/2 rounded-full blur-[150px]"
       >
         <div
           className="h-full w-full"
-          style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.28), transparent 68%)' }}
+          style={{ background: 'radial-gradient(ellipse at center, rgba(111,151,232,0.55), transparent 66%)' }}
         />
       </motion.div>
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-40"
+        className="pointer-events-none absolute -left-32 top-10 h-[420px] w-[420px] rounded-full opacity-40 blur-[130px]"
+        style={{ background: 'radial-gradient(circle at center, rgba(111,151,232,0.4), transparent 70%)' }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 bottom-0 h-[460px] w-[460px] rounded-full opacity-30 blur-[140px]"
+        style={{ background: 'radial-gradient(circle at center, rgba(29,95,224,0.42), transparent 70%)' }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(111,151,232,1) 1px, transparent 1px), linear-gradient(90deg, rgba(111,151,232,1) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 72%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 72%)',
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-44"
         style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-44"
         style={{ background: 'linear-gradient(0deg, #060608, transparent)' }}
       />
 
@@ -44,9 +68,13 @@ export default function Vision() {
           baseOpacity={0.08}
           enableBlur
           baseRotation={3}
-          blurStrength={8}
+          blurStrength={9}
+          rotationEnd="bottom center"
+          wordAnimationEnd="bottom center"
           containerClassName="max-w-[920px]"
           textClassName="font-medium tracking-[-0.01em] text-white"
+          accentWords={ACCENT_WORDS}
+          accentClassName="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent"
         >
           {MANIFESTO}
         </ScrollReveal>

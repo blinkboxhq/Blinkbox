@@ -13,6 +13,8 @@ const ScrollReveal = ({
   blurStrength = 4,
   containerClassName = '',
   textClassName = '',
+  accentWords = [],
+  accentClassName = '',
   rotationEnd = 'bottom bottom',
   wordAnimationEnd = 'bottom bottom'
 }) => {
@@ -20,15 +22,17 @@ const ScrollReveal = ({
 
   const splitText = useMemo(() => {
     const text = typeof children === 'string' ? children : '';
+    const accents = new Set(accentWords.map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, '')));
     return text.split(/(\s+)/).map((word, index) => {
       if (word.match(/^\s+$/)) return word;
+      const isAccent = accents.has(word.toLowerCase().replace(/[^a-z0-9]/g, ''));
       return (
-        <span className="inline-block word" key={index}>
+        <span className={`inline-block word ${isAccent ? accentClassName : ''}`} key={index}>
           {word}
         </span>
       );
     });
-  }, [children]);
+  }, [children, accentWords, accentClassName]);
 
   useEffect(() => {
     const el = containerRef.current;
