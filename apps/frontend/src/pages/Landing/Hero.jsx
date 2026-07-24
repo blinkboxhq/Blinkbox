@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
@@ -9,11 +9,19 @@ const ease = [0.22, 1, 0.36, 1];
 
 export default function Hero() {
   const reduce = useReducedMotion();
-  const [shine, setShine] = useState(0);
+  const frameRef = useRef(null);
+  const [flash, setFlash] = useState(null);
+
+  const onBgClick = (e) => {
+    const el = frameRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setFlash({ id: e.timeStamp, x: e.clientX - r.left, y: e.clientY - r.top });
+  };
 
   return (
     <section
-      onPointerDown={() => setShine((n) => n + 1)}
+      onPointerDown={onBgClick}
       className="relative w-full overflow-hidden bg-[#060608] pb-44"
     >
       {/* pixel-blast field behind the hero — interactive, catches pointer events */}
@@ -92,25 +100,32 @@ export default function Hero() {
             style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85), transparent 70%)' }}
           />
           <div
+            ref={frameRef}
             className="relative overflow-hidden rounded-xl p-[3px]"
             style={{
               background: 'linear-gradient(150deg, #4a4a4d 0%, #17171a 32%, #050506 56%, #303034 100%)',
               boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9), 0 1px 0 0 rgba(255,255,255,0.05) inset',
             }}
           >
-            {shine > 0 && (
+            {flash && (
               <motion.div
-                key={shine}
+                key={flash.id}
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 z-0 w-1/3 -skew-x-12"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)' }}
-                initial={{ left: '-45%', opacity: 0 }}
-                animate={{ left: '115%', opacity: [0, 0.9, 0] }}
-                transition={{ duration: 0.8, ease }}
+                className="pointer-events-none absolute inset-0 z-20 rounded-xl"
+                style={{
+                  padding: 3,
+                  background: `radial-gradient(200px 200px at ${flash.x}px ${flash.y}px, rgba(255,255,255,0.95), rgba(150,190,255,0.55) 32%, transparent 62%)`,
+                  WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.7, ease }}
               />
             )}
             <div className="relative z-10 overflow-hidden rounded-[9px]">
-              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
+              <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-[0.7]" />
               {/* top edge highlight */}
               <div
                 aria-hidden
