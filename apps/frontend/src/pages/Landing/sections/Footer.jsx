@@ -10,6 +10,11 @@ const COLUMNS = [
 export default function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.06] bg-[#08080a]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 h-px w-[360px] -translate-x-1/2"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(111,151,232,0.6), transparent)' }}
+      />
       {/* link columns */}
       <div className="mx-auto max-w-[1200px] px-6 py-16 sm:px-8">
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 md:grid-cols-5">

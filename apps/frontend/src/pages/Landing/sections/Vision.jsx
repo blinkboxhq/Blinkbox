@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ScrollReveal from '../../../components/ScrollReveal';
 import GridScan from '../../../components/GridScan';
+import logo from '../../../assets/logo.svg';
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -11,12 +12,74 @@ const MANIFESTO =
 
 const ACCENT_WORDS = ['effortless', 'run', 'handled'];
 
+function WireBeam({ className, travel, reduce }) {
+  return (
+    <div aria-hidden className={`pointer-events-none relative w-px overflow-hidden ${className}`}>
+      <div
+        className="h-full w-full"
+        style={{ background: 'linear-gradient(180deg, transparent, rgba(111,151,232,0.45), transparent)' }}
+      />
+      {!reduce && (
+        <motion.div
+          className="absolute left-0 top-0 h-12 w-px"
+          style={{ background: 'linear-gradient(180deg, transparent, #b7cdfa, transparent)' }}
+          initial={{ y: -48 }}
+          animate={{ y: travel + 48 }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.9 }}
+        />
+      )}
+    </div>
+  );
+}
+
+function FloatingLogo({ reduce }) {
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const rotateX = useSpring(useTransform(my, [-90, 90], [18, -18]), { stiffness: 150, damping: 12 });
+  const rotateY = useSpring(useTransform(mx, [-90, 90], [-18, 18]), { stiffness: 150, damping: 12 });
+
+  return (
+    <motion.div
+      className="relative hidden items-center justify-center lg:flex"
+      style={{ perspective: 600 }}
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        mx.set(e.clientX - r.left - r.width / 2);
+        my.set(e.clientY - r.top - r.height / 2);
+      }}
+      onMouseLeave={() => {
+        mx.set(0);
+        my.set(0);
+      }}
+    >
+      <div
+        aria-hidden
+        className="absolute h-44 w-44 rounded-full opacity-60 blur-[64px]"
+        style={{ background: 'radial-gradient(circle, rgba(111,151,232,0.5), transparent 70%)' }}
+      />
+      <motion.img
+        src={logo}
+        alt="Blinkbox"
+        draggable={false}
+        className="relative h-24 w-24 cursor-pointer select-none"
+        style={{ rotateX, rotateY }}
+        animate={reduce ? undefined : { y: [0, -12, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        whileTap={{ scale: 0.88 }}
+      />
+    </motion.div>
+  );
+}
+
 export default function Vision() {
   const reduce = useReducedMotion();
 
   return (
     <section className="relative overflow-hidden bg-[#060608] pt-36 sm:pt-48">
-      <div className="relative mx-auto max-w-[1000px] px-6 sm:px-8">
+      {/* wire in from the hero */}
+      <WireBeam className="absolute left-1/2 top-0 h-40 -translate-x-1/2" travel={160} reduce={reduce} />
+
+      <div className="relative mx-auto max-w-[1160px] px-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center lg:gap-12">
         <ScrollReveal
           baseOpacity={0.08}
           enableBlur
@@ -28,12 +91,17 @@ export default function Vision() {
           textClassName="font-medium tracking-[-0.01em] text-white"
           accentWords={ACCENT_WORDS}
           accentClassName="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent"
+          wordClassName="transition-colors duration-300 hover:text-[#8fb4ff]"
         >
           {MANIFESTO}
         </ScrollReveal>
+        <FloatingLogo reduce={reduce} />
       </div>
 
-      <div className="relative mt-24 h-[85vh] min-h-[680px] w-full">
+      {/* wire into the grid */}
+      <WireBeam className="mx-auto mt-16 h-28" travel={112} reduce={reduce} />
+
+      <div className="relative h-[85vh] min-h-[680px] w-full">
         <GridScan
           sensitivity={0.55}
           lineThickness={4}
