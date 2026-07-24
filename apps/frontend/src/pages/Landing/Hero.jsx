@@ -48,7 +48,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: reduce ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.08 }}
-          className="max-w-[900px] font-medium leading-[1.02] tracking-[-0.03em] text-[#f4f4f5]"
+          className="max-w-[900px] bg-gradient-to-br from-white via-[#cddafb] to-[#3b82f6] bg-clip-text font-medium leading-[1.02] tracking-[-0.03em] text-transparent"
           style={{ fontSize: 'clamp(2.5rem, 6.4vw, 4.7rem)' }}
         >
           The automation platform
@@ -87,10 +87,10 @@ export default function Hero() {
             style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85), transparent 70%)' }}
           />
           <div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08]"
-            style={{ boxShadow: '0 50px 140px -30px rgba(0,0,0,0.85), 0 1px 0 0 rgba(255,255,255,0.06) inset' }}
+            className="relative overflow-hidden rounded-xl border-[3px] border-[#3b82f6]/30"
+            style={{ boxShadow: '0 60px 150px -30px rgba(0,0,0,0.9), 0 0 80px -14px rgba(59,130,246,0.4), 0 1px 0 0 rgba(255,255,255,0.06) inset' }}
           >
-            <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full" />
+            <img src={productShot} alt="Blinkbox workflow canvas" className="block w-full opacity-90" />
             {/* top edge highlight */}
             <div
               aria-hidden
