@@ -5,10 +5,10 @@ import { Sparkles, ShieldCheck, ToggleRight } from 'lucide-react';
 const ease = [0.22, 1, 0.36, 1];
 
 const MANIFESTO =
-  'Automation should not need an engineer. Describe the outcome, and intelligence wires the rest — every trigger, every branch, every retry — running quietly while you build what actually matters.';
+  'Automation should feel effortless. Drag a few boxes, decide what happens when, and let it run — every branch, every retry, every schedule handled for you, so your work happens whether you are watching or not.';
 
 const WORDS = MANIFESTO.split(' ');
-const ACCENT_WORDS = new Set(['intelligence', 'wires', 'the', 'rest']);
+const ACCENT_WORDS = new Set(['effortless.']);
 
 const HORIZONS = [
   {
@@ -54,7 +54,6 @@ export default function Vision() {
     offset: ['start 0.85', 'end 0.55'],
   });
 
-  const beamScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const glowOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.15, 0.45, 0.2]);
 
   return (
@@ -82,17 +81,6 @@ export default function Vision() {
       />
 
       <div className="relative mx-auto max-w-[1000px] px-6 sm:px-8">
-        <div className="mb-14 flex items-center gap-4">
-          {/* scroll-fill beam */}
-          <div className="relative hidden h-14 w-px shrink-0 bg-white/[0.08] sm:block">
-            <motion.div
-              style={{ scaleY: reduce ? 1 : beamScale }}
-              className="absolute inset-x-0 top-0 h-full origin-top bg-gradient-to-b from-[#8fb4ff] to-[#1d5fe0]"
-            />
-          </div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">Our vision</p>
-        </div>
-
         <h2 className="max-w-[900px] font-medium leading-[1.32] tracking-[-0.01em] text-white sm:leading-[1.28]" style={{ fontSize: 'clamp(1.55rem, 3.6vw, 2.85rem)' }}>
           {WORDS.map((word, i) => {
             const step = 1 / WORDS.length;
