@@ -1,8 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import ScrollReveal from '../../../components/ScrollReveal';
-
-const ease = [0.22, 1, 0.36, 1];
+import GridScan from '../../../components/GridScan';
 
 const MANIFESTO =
   'Automation should feel effortless. Drag a few boxes, decide what happens when, and let it run — every branch, every retry, every schedule handled for you, so your work happens whether you are watching or not.';
@@ -21,7 +20,7 @@ export default function Vision() {
   const glowShift = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#060608] pt-36 pb-[55vh] sm:pt-48">
+    <section ref={ref} className="relative overflow-hidden bg-[#060608] pt-36 pb-24 sm:pt-48">
       {/* accent field — layered blue blooms + fine grid, breathing with scroll */}
       <motion.div
         aria-hidden
@@ -55,16 +54,6 @@ export default function Vision() {
       />
 
       <div className="relative mx-auto max-w-[1000px] px-6 sm:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7, ease }}
-          className="mb-10 bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text font-semibold tracking-[-0.02em] text-transparent"
-          style={{ fontSize: 'clamp(2rem, 5vw, 3.4rem)' }}
-        >
-          Our vision
-        </motion.h2>
         <ScrollReveal
           baseOpacity={0.08}
           enableBlur
@@ -79,6 +68,29 @@ export default function Vision() {
         >
           {MANIFESTO}
         </ScrollReveal>
+      </div>
+
+      <div className="relative mt-24 h-[600px] w-full">
+        <GridScan
+          sensitivity={0.55}
+          lineThickness={4}
+          linesColor="#94a3b8"
+          gridScale={0.17}
+          scanColor="#5495ff"
+          scanOpacity={0.4}
+          lineJitter={0.04}
+          enablePost
+          bloomIntensity={0.6}
+          chromaticAberration={0}
+          noiseIntensity={0}
+          scanGlow={0.6}
+          scanSoftness={3.2}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-32"
+          style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
+        />
       </div>
     </section>
   );
