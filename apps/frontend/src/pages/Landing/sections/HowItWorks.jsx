@@ -27,7 +27,7 @@ const STEPS = [
 export default function HowItWorks() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative border-t border-white/[0.06] bg-[#08080a] py-28">
+    <section className="relative bg-[#08080a] py-28">
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="mb-16 text-center">
           <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">
