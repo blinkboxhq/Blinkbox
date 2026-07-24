@@ -1,6 +1,7 @@
 import Header from './sections/Header';
 import Hero from './Hero';
 import HowItWorks from './sections/HowItWorks';
+import Platform from './sections/Platform';
 import Pricing from './sections/Pricing';
 import Footer from './sections/Footer';
 
@@ -12,6 +13,7 @@ export default function LandingV2() {
       <div id="how" className="scroll-mt-20">
         <HowItWorks />
       </div>
+      <Platform />
       <div id="pricing" className="scroll-mt-20">
         <Pricing />
       </div>
