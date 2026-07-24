@@ -13,28 +13,22 @@ export default function Hero() {
     <section className="relative w-full overflow-hidden bg-[#060608] pb-24">
       {/* pixel-blast field behind the hero */}
       <div className="absolute inset-0">
-        {!reduce && (
-          <PixelBlast
-            variant="circle"
-            pixelSize={4}
-            color="#6f97e8"
-            patternScale={3}
-            patternDensity={1.1}
-            pixelSizeJitter={0.4}
-            enableRipples
-            rippleSpeed={0.4}
-            rippleThickness={0.12}
-            rippleIntensityScale={1.4}
-            liquid
-            liquidStrength={0.1}
-            liquidRadius={1.2}
-            liquidWobbleSpeed={5}
-            speed={0.5}
-            edgeFade={0.3}
-            transparent
-            className="opacity-70"
-          />
-        )}
+        <PixelBlast
+          variant="circle"
+          pixelSize={5}
+          color="#6f97e8"
+          patternScale={3}
+          patternDensity={1.25}
+          pixelSizeJitter={0.4}
+          enableRipples={!reduce}
+          rippleSpeed={0.4}
+          rippleThickness={0.12}
+          rippleIntensityScale={1.5}
+          speed={reduce ? 0 : 0.5}
+          edgeFade={0.25}
+          transparent
+          className="opacity-90"
+        />
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div
             className="absolute left-1/2 top-[32%] h-[560px] w-[1000px] -translate-x-1/2 rounded-full opacity-40 blur-[130px]"
