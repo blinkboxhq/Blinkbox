@@ -2,10 +2,7 @@ import Header from './sections/Header';
 import Hero from './Hero';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Marquee from './sections/Marquee';
-import Features from './sections/Features';
-import Platform from './sections/Platform';
-import HowItWorks from './sections/HowItWorks';
-import Pricing from './sections/Pricing';
+import StackDeck from './sections/StackDeck';
 import Vision from './sections/Vision';
 import Footer from './sections/Footer';
 
@@ -23,10 +20,7 @@ export default function LandingV2() {
       <Header />
       <Hero />
       <Marquee />
-      <Features />
-      <Platform />
-      <HowItWorks />
-      <Pricing />
+      <StackDeck />
       <Vision />
       <Footer />
     </div>
