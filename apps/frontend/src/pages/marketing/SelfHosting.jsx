@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: '01',
     title: 'Clone and install',
-    code: `git clone <your-licensed-repo> blinkbox
+    code: `git clone https://github.com/blinkboxhq/Blinkbox.git blinkbox
 cd blinkbox && npm install`,
   },
   {
