@@ -35,8 +35,8 @@ export default function Security() {
         <h2 className="text-[15px] font-semibold tracking-tight text-[#fafafa]">Found a vulnerability?</h2>
         <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-[#8c8c8c]">
           We take reports seriously and respond quickly. Email{' '}
-          <a href="mailto:blinkbox.co.in@gmail.com?subject=Security%20report" className="text-[#8fb4ff] hover:underline">
-            blinkbox.co.in@gmail.com
+          <a href="mailto:security@blinkbox.net?subject=Security%20report" className="text-[#8fb4ff] hover:underline">
+            security@blinkbox.net
           </a>{' '}
           with steps to reproduce — please give us a reasonable window to fix before public disclosure.
         </p>

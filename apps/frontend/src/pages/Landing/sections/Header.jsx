@@ -12,8 +12,6 @@ const NAV = [
     items: [
       { label: 'Features', to: '/product' },
       { label: 'Integrations', to: '/integrations' },
-      { label: 'Pricing', to: '/pricing' },
-      { label: 'Changelog', to: '/changelog' },
     ],
   },
   {
@@ -23,15 +21,6 @@ const NAV = [
       { label: 'API', to: '/api' },
       { label: 'Self-hosting', to: '/self-hosting' },
       { label: 'Status', to: '/status' },
-    ],
-  },
-  {
-    label: 'Company',
-    items: [
-      { label: 'About', to: '/about' },
-      { label: 'Blog', to: '/blog' },
-      { label: 'Careers', to: '/careers' },
-      { label: 'Contact', to: '/contact' },
     ],
   },
 ];

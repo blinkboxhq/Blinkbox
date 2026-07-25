@@ -5,7 +5,7 @@ const CHECK_INTERVAL_MS = 5 * 60 * 1000; // every 5 minutes
 const CHECK_TIMEOUT_MS  = 10_000;
 
 const TARGET_URL  = process.env.MONITOR_URL      || "https://blinkbox.net";
-const ALERT_TO    = process.env.ALERT_EMAIL_TO   || "blinkbox.co.in@gmail.com";
+const ALERT_TO    = process.env.ALERT_EMAIL_TO   || "support@blinkbox.net";
 const ALERT_FROM  = process.env.ALERT_EMAIL_FROM || "";
 const ALERT_PASS  = process.env.ALERT_EMAIL_PASS || "";
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";

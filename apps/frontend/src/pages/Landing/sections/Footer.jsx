@@ -10,8 +10,6 @@ const COLUMNS = [
     links: [
       { label: 'Features', to: '/product' },
       { label: 'Integrations', to: '/integrations' },
-      { label: 'Pricing', to: '/pricing' },
-      { label: 'Changelog', to: '/changelog' },
     ],
   },
   {
@@ -21,15 +19,6 @@ const COLUMNS = [
       { label: 'API', to: '/api' },
       { label: 'Self-hosting', to: '/self-hosting' },
       { label: 'Status', to: '/status' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About', to: '/about' },
-      { label: 'Blog', to: '/blog' },
-      { label: 'Careers', to: '/careers' },
-      { label: 'Contact', to: '/contact' },
     ],
   },
 ];
@@ -45,7 +34,7 @@ export default function Footer() {
       />
       {/* link columns */}
       <div className="mx-auto max-w-[1200px] px-6 py-16 sm:px-8">
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           <motion.div
             initial={{ opacity: 0, y: reduce ? 0 : 18 }}
             whileInView={{ opacity: 1, y: 0 }}

@@ -68,10 +68,8 @@ export default function SelfHosting() {
       </div>
 
       <p className="mt-12 max-w-[560px] text-[13px] leading-relaxed text-[#8c8c8c]">
-        Self-hosting is included in the{' '}
-        <a href="/pricing" className="text-[#8fb4ff] hover:underline">Team plan</a>. Licenses include update access and
-        migration support —{' '}
-        <a href="mailto:blinkbox.co.in@gmail.com" className="text-[#8fb4ff] hover:underline">talk to us</a> to get set up.
+        Self-hosting licenses include update access and migration support —{' '}
+        <a href="mailto:hello@blinkbox.net" className="text-[#8fb4ff] hover:underline">talk to us</a> to get set up.
       </p>
     </MarketingLayout>
   );

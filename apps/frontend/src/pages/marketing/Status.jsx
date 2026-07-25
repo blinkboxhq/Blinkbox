@@ -48,7 +48,7 @@ export default function Status() {
 
       <p className="mt-6 text-[12px] text-[#6d6d6d]">
         Uptime shown for the last 30 days. Incident history and subscriptions are coming soon — for anything urgent, email{' '}
-        <a href="mailto:blinkbox.co.in@gmail.com" className="text-[#8fb4ff] hover:underline">blinkbox.co.in@gmail.com</a>.
+        <a href="mailto:support@blinkbox.net" className="text-[#8fb4ff] hover:underline">support@blinkbox.net</a>.
       </p>
     </MarketingLayout>
   );

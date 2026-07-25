@@ -25,7 +25,7 @@ router.post("/", verifyToken, feedbackRateLimit, async (req, res) => {
 
   const from = process.env.ALERT_EMAIL_FROM || "";
   const pass = process.env.ALERT_EMAIL_PASS || "";
-  const to   = process.env.ALERT_EMAIL_TO   || "blinkbox.co.in@gmail.com";
+  const to   = process.env.ALERT_EMAIL_TO   || "support@blinkbox.net";
 
   const user = req.user;
   const subject = `[Blinkbox Beta] ${type === "bug" ? "🐛 Bug Report" : type === "idea" ? "💡 Feature Idea" : "💬 Feedback"} from ${user.email || user.id}`;

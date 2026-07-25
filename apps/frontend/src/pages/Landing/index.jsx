@@ -253,7 +253,7 @@ function FinalCta() {
       <div className="mt-16 flex items-center gap-6 text-[12px] text-neutral-600">
         <a href="/privacy" className="hover:text-neutral-300 transition-colors">Privacy</a>
         <a href="/terms" className="hover:text-neutral-300 transition-colors">Terms</a>
-        <a href="mailto:blinkbox.co.in@gmail.com" className="hover:text-neutral-300 transition-colors">Contact</a>
+        <a href="mailto:hello@blinkbox.net" className="hover:text-neutral-300 transition-colors">Contact</a>
         <span>&copy; {new Date().getFullYear()} Blinkbox</span>
       </div>
       </div>

@@ -44,7 +44,7 @@ export default function Privacy() {
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-white mb-3">6. Contact</h2>
           <p className="text-[14px] leading-relaxed text-zinc-400">
-            Questions? Email us at <a href="mailto:blinkbox.co.in@gmail.com" className="text-violet-400 hover:underline">blinkbox.co.in@gmail.com</a>
+            Questions? Email us at <a href="mailto:hello@blinkbox.net" className="text-violet-400 hover:underline">hello@blinkbox.net</a>
           </p>
         </section>
       </div>
