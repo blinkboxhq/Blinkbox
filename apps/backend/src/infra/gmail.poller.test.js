@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGmailQuery } from "./gmail.poller.js";
+
+// gmail.poller.js pulls config/env.js, which throws at import time when these
+// are unset. CI has no .env, so seed them before the dynamic import.
+process.env.JWT_SECRET ||= "test-jwt-secret";
+process.env.ENCRYPTION_KEY ||= "0123456789abcdef0123456789abcdef";
+
+const { buildGmailQuery } = await import("./gmail.poller.js");
 
 test("excludes the account's own mail so a sent reply cannot retrigger the workflow", () => {
   assert.equal(buildGmailQuery({ query: "in:inbox" }), "in:inbox -in:sent -in:draft -in:chats");
