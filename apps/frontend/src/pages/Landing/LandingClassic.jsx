@@ -1021,11 +1021,10 @@ function Footer() {
             </div>
             <p className="text-[12px] text-neutral-600">The automation engine for teams that move fast.</p>
           </div>
-          <div className="grid grid-cols-3 gap-10">
+          <div className="grid grid-cols-2 gap-10">
             {[
-              { header: 'Product',   links: [{ label: 'Features', href: '/product' }, { label: 'Integrations', href: '/integrations' }, { label: 'Pricing', href: '#pricing' }, { label: 'Changelog', href: 'https://blinkbox.net/login' }] },
-              { header: 'Resources', links: [{ label: 'Docs', href: '/docs' }, { label: 'Blog', href: 'https://blinkbox.net/login' }, { label: 'Templates', href: 'https://blinkbox.net/login' }, { label: 'Status', href: 'https://blinkbox.net/login' }] },
-              { header: 'Company',   links: [{ label: 'About', href: '#' }, { label: 'Privacy', href: '/policy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: 'mailto:hello@blinkbox.net' }] },
+              { header: 'Product',    links: [{ label: 'Features', href: '/product' }, { label: 'Integrations', href: '/integrations' }] },
+              { header: 'Developers', links: [{ label: 'Docs', href: '/docs' }, { label: 'API', href: '/api' }, { label: 'Self-hosting', href: '/self-hosting' }, { label: 'Status', href: '/status' }] },
             ].map(col => (
               <div key={col.header}>
                 <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-wider mb-3">{col.header}</p>
