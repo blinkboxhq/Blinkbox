@@ -7,10 +7,8 @@ import logo from '../../../assets/logo.svg';
 const ease = [0.22, 1, 0.36, 1];
 
 const LINKS = [
-  { label: 'Features', id: 'features' },
-  { label: 'Platform', id: 'platform' },
-  { label: 'How it works', id: 'how' },
-  { label: 'Pricing', id: 'pricing' },
+  { label: 'Integrations', id: 'integrations' },
+  { label: 'Vision', id: 'vision' },
 ];
 
 function scrollTo(id) {

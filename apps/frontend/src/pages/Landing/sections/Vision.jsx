@@ -54,7 +54,7 @@ export default function Vision() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative overflow-hidden bg-[#060608] pt-36 sm:pt-48">
+    <section id="vision" className="relative overflow-hidden bg-[#060608] pt-36 sm:pt-48">
       <div className="relative mx-auto max-w-[1360px] px-6 sm:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-stretch lg:gap-20">
         <ScrollReveal
           baseOpacity={0.08}

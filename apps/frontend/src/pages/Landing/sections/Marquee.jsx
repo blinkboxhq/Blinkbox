@@ -37,7 +37,7 @@ const ease = [0.22, 1, 0.36, 1];
 export default function Marquee() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative overflow-hidden bg-[#060608]">
+    <section id="integrations" className="relative overflow-hidden bg-[#060608]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24"
