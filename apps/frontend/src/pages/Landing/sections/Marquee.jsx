@@ -81,8 +81,7 @@ export default function Marquee() {
             openedImageBorderRadius="20px"
             openedImageWidth="260px"
             openedImageHeight="260px"
-            fit={1}
-            minRadius={300}
+            fit={0.6}
             maxVerticalRotationDeg={0}
             segments={34}
             dragDampening={4.8}
