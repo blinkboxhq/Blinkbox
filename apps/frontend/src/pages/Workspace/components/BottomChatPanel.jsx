@@ -5,6 +5,13 @@ import { useParams } from 'react-router-dom';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import { MarkdownRenderer } from './ChatMarkdown';
 
+function formatReply(data) {
+  if (typeof data?.reply === 'string') return data.reply;
+  const output = data?.output ?? data ?? {};
+  if (typeof output === 'string') return output;
+  return '```json\n' + JSON.stringify(output, null, 2) + '\n```';
+}
+
 function BotAvatar() {
   return (
     <div className="w-5 h-5 rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
@@ -113,8 +120,7 @@ export default function BottomChatPanel({ height, onResizeStart }) {
         message: txt,
         sessionId: sessionIdRef.current,
       }, { timeout: 120000 });
-      const reply = r.data?.reply || JSON.stringify(r.data?.output ?? {});
-      setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: reply }]);
+      setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: formatReply(r.data) }]);
     } catch (e) {
       setMessages(p => [...p, { id: Date.now() + 1, role: 'bot', text: e.response?.data?.error || 'Workflow execution failed.' }]);
     } finally {
