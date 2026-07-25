@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { ArrowUp, RotateCcw } from 'lucide-react';
-import brianLogo from '../../../assets/brian.webp';
+import brianLogo from '../../../assets/brian.svg';
 
 const SUGGESTIONS = [
   'Webhook to Slack alert',

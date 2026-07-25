@@ -5,7 +5,7 @@ import {
   Zap, Mail, Clock, Globe, GitBranch, Database,
 } from 'lucide-react';
 import api from '../../../lib/api';
-import brianLogo from '../../../assets/brian.webp';
+import brianLogo from '../../../assets/brian.svg';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 

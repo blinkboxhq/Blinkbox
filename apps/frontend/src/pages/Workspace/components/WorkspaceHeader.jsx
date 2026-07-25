@@ -13,7 +13,7 @@ import CollabDMChat from './CollabDMChat';
 import NotificationBell from '../../../components/NotificationBell';
 import githubLogo from '../../../assets/credentials/github.svg';
 import { getSocket } from '../../../lib/socket';
-import brianLogo from '../../../assets/brian.webp';
+import brianLogo from '../../../assets/brian.svg';
 
 // ── Unified button tokens ─────────────────────────────────────────────────────
 const H = 'h-7';

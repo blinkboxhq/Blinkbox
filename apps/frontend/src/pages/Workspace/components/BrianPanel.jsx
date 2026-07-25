@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useReactFlow } from '@xyflow/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import brianLogo from '../../../assets/brian.webp';
+import brianLogo from '../../../assets/brian.svg';
 import useWorkspaceStore from '../../../store/workspaceStore';
 import BrianWorkflowPlan from './BrianWorkflowPlan';
 import { mergeBrianFlow } from '../brianFlowMerge';
