@@ -69,7 +69,13 @@ export default function Marquee() {
             </span>
           </h2>
         </motion.div>
-        <div className="relative h-[440px] w-full sm:h-[560px] lg:-mr-12">
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 28, scale: reduce ? 1 : 0.97 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.9, ease, delay: reduce ? 0 : 0.1 }}
+          className="relative h-[440px] w-full sm:h-[560px] lg:-mr-12"
+        >
           <DomeGallery
             images={LOGOS}
             grayscale={false}
@@ -82,8 +88,10 @@ export default function Marquee() {
             maxVerticalRotationDeg={0}
             segments={34}
             dragDampening={4.8}
+            autoRotate
+            autoRotateSpeed={6}
           />
-        </div>
+        </motion.div>
       </div>
     </section>
   );

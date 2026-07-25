@@ -19,8 +19,12 @@ function FloatingLogo({ reduce }) {
   const rotateY = useSpring(useTransform(mx, [-90, 90], [-18, 18]), { stiffness: 150, damping: 12 });
 
   return (
-    <div
+    <motion.div
       className="relative hidden lg:block"
+      initial={{ opacity: 0, y: reduce ? 0 : 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.8, ease }}
       style={{ perspective: 900 }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
@@ -46,7 +50,7 @@ function FloatingLogo({ reduce }) {
         />
         <img src={logo} alt="Blinkbox" draggable={false} className="relative h-64 w-64 select-none" />
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 

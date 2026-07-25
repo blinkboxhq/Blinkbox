@@ -57,7 +57,8 @@ export default function Hero() {
       <div className="pointer-events-none relative z-10 mx-auto max-w-[1200px] px-6 pt-16 sm:px-8 sm:pt-24">
         <motion.h1
           initial={{ opacity: 0, y: reduce ? 0 : 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8, ease, delay: reduce ? 0 : 0.08 }}
           className="max-w-[900px] font-medium leading-[1.02] tracking-[-0.03em] text-white"
           style={{ fontSize: 'clamp(2.5rem, 6.4vw, 4.7rem)' }}
@@ -72,7 +73,8 @@ export default function Hero() {
         {/* product screenshot on a lit stage */}
         <motion.div
           initial={{ opacity: 0, y: reduce ? 0 : 40, scale: reduce ? 1 : 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 1, ease, delay: reduce ? 0 : 0.34 }}
           className="relative mt-10 sm:mt-12"
         >
