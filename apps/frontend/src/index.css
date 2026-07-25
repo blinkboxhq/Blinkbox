@@ -489,7 +489,8 @@ html {
 .bb-hbtn,
 .bb-edge-right,
 .bb-edge-left,
-.bb-edge-bottom {
+.bb-edge-bottom,
+.bb-edge-top {
   position: relative;
   --gx: -200px;
   --gy: -200px;
@@ -531,9 +532,11 @@ html {
 .bb-edge-right, .bb-liquid.bb-edge-right { border-right: 2px solid var(--bb-border-strong); }
 .bb-edge-left, .bb-liquid.bb-edge-left { border-left: 2px solid var(--bb-border-strong); }
 .bb-edge-bottom, .bb-liquid.bb-edge-bottom { border-bottom: 2px solid var(--bb-border-strong); }
+.bb-edge-top, .bb-liquid.bb-edge-top { border-top: 2px solid var(--bb-border-strong); }
 .bb-edge-right::after,
 .bb-edge-left::after,
-.bb-edge-bottom::after {
+.bb-edge-bottom::after,
+.bb-edge-top::after {
   content: "";
   position: absolute;
   pointer-events: none;
@@ -571,6 +574,19 @@ html {
   left: 0;
   right: 0;
   bottom: -2px;
+  height: 3px;
+  background: radial-gradient(
+    200px circle at var(--gx) center,
+    rgba(255, 255, 255, 0.45),
+    rgba(210, 210, 220, 0.2) 45%,
+    transparent 72%
+  );
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
+}
+.bb-edge-top::after {
+  left: 0;
+  right: 0;
+  top: -2px;
   height: 3px;
   background: radial-gradient(
     200px circle at var(--gx) center,
