@@ -24,6 +24,14 @@ const SEEN_TTL = 30 * 24 * 60 * 60;
 let gmailQueue = null;
 let gmailWorker = null;
 
+// Mail this account sent is never an inbound event. A workflow that replies
+// puts its own message in the thread — and when the reply is addressed to the
+// account itself, in INBOX too — so without this the next poll picks the reply
+// up as "new" and the workflow retriggers itself forever.
+const SELF_SENT_EXCLUSION = "-in:sent -in:draft -in:chats";
+const WANTS_OWN_MAIL = /\bin:(sent|drafts?|chats|anywhere)\b/i;
+const SELF_SENT_LABELS = new Set(["SENT", "DRAFT", "CHAT"]);
+
 // Compose the final Gmail `q` from the event's base query (configExtra.query)
 // plus any friendly per-event fields. Each event is a genuinely different slice.
 export function buildGmailQuery(cfg = {}) {
@@ -33,8 +41,8 @@ export function buildGmailQuery(cfg = {}) {
   if (cfg.subjectKeyword) parts.push(`subject:(${cfg.subjectKeyword})`);
   if (cfg.labelName) parts.push(`label:${cfg.labelName.replace(/\s+/g, "-")}`);
   if (cfg.largerThan) parts.push(`larger:${cfg.largerThan}`);
-  const q = parts.join(" ").trim();
-  return q || "is:unread";
+  const q = parts.join(" ").trim() || "is:unread";
+  return WANTS_OWN_MAIL.test(q) ? q : `${q} ${SELF_SENT_EXCLUSION}`;
 }
 
 async function gmailGet(token, path, params = {}) {
@@ -109,6 +117,7 @@ export async function pollGmail(automationId, triggerNodeId, credentialId, query
 
   try {
     const token = await getOAuthToken(credentialId, workspaceId, "Gmail Trigger");
+    const allowOwnMail = WANTS_OWN_MAIL.test(query || "");
 
     const params = {
       maxResults: String(maxResults || 10),
@@ -133,6 +142,15 @@ export async function pollGmail(automationId, triggerNodeId, credentialId, query
       try {
         const full = await gmailGet(token, `users/me/messages/${id}`, { format: "full" });
         const parsed = parseMessage(full);
+
+        // Gmail's search index lags a few seconds, so `-in:sent` alone can still
+        // let a just-sent reply through. Labels on the fetched message are
+        // authoritative — this is the hard stop on the self-trigger loop.
+        if (!allowOwnMail && parsed.labels.some((l) => SELF_SENT_LABELS.has(l))) {
+          console.log(`[GmailPoller] Skipped own ${parsed.labels.find((l) => SELF_SENT_LABELS.has(l))} message ${id}`);
+          continue;
+        }
+
         await executeAutomation(automation, parsed, {
           workspaceId: automation.workspaceId,
           entryNodeId: triggerNodeId || automation.entryNodeId,
