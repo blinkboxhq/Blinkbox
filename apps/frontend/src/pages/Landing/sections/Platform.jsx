@@ -76,12 +76,15 @@ function CanvasNode({ node, reduce }) {
 export default function Platform() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative bg-[#09090b] py-28">
+    <section id="platform" className="relative overflow-hidden bg-[#060608] py-28">
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="mb-14 text-center">
           <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">The platform</p>
           <h2 className="mx-auto max-w-[640px] font-semibold tracking-[-0.02em] text-[#fafafa]" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-            Simple on top. Serious underneath.
+            Simple on top.{' '}
+            <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
+              Serious underneath.
+            </span>
           </h2>
           <p className="mx-auto mt-4 max-w-[480px] text-[15px] leading-relaxed text-[#8c8c8c]">
             Build it by dragging boxes and flipping toggles. Under the hood, an execution engine that treats every run like it matters.
@@ -94,8 +97,20 @@ export default function Platform() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease }}
-          className="relative overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#0b0b0f] p-4 sm:p-8"
+          className="relative overflow-hidden rounded-[24px] bg-[#0b0b0f] p-4 sm:p-8"
+          style={{ boxShadow: '0 60px 150px -40px rgba(0,0,0,0.9)' }}
         >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-20 rounded-[24px]"
+            style={{
+              padding: 2,
+              background: 'linear-gradient(180deg, #34343a, #17171a 55%, #121214)',
+              WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+            }}
+          />
           <div
             className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[70%] -translate-x-1/2 rounded-full opacity-50 blur-[120px]"
             style={{ background: 'radial-gradient(ellipse at center, rgba(111,151,232,0.28), transparent 70%)' }}

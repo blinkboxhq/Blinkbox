@@ -31,36 +31,45 @@ const LOGOS = [
   { src: zoom, name: 'Zoom' },
 ];
 
+function Row({ logos, reverse, duration, reduce }) {
+  const row = [...logos, ...logos];
+  return (
+    <div
+      className="relative overflow-hidden"
+      style={{ maskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)' }}
+    >
+      <motion.div
+        className="flex w-max items-center gap-16 pr-16"
+        animate={reduce ? {} : { x: reverse ? ['-50%', '0%'] : ['0%', '-50%'] }}
+        transition={{ duration, ease: 'linear', repeat: Infinity }}
+      >
+        {row.map((logo, i) => (
+          <img
+            key={i}
+            src={logo.src}
+            alt={logo.name}
+            title={logo.name}
+            className="h-7 w-auto shrink-0 opacity-45 transition-opacity duration-300 hover:opacity-90"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Marquee() {
   const reduce = useReducedMotion();
-  const row = [...LOGOS, ...LOGOS];
 
   return (
-    <section className="relative border-y border-white/[0.06] bg-[#08080a] py-14">
+    <section className="relative border-y border-white/[0.06] bg-[#060608] py-14">
       <p className="mb-9 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-[#6d6d6d]">
         Connects everything you already run
       </p>
 
-      <div
-        className="relative overflow-hidden"
-        style={{ maskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)' }}
-      >
-        <motion.div
-          className="flex w-max items-center gap-16 pr-16"
-          animate={reduce ? {} : { x: ['0%', '-50%'] }}
-          transition={{ duration: 38, ease: 'linear', repeat: Infinity }}
-        >
-          {row.map((logo, i) => (
-            <img
-              key={i}
-              src={logo.src}
-              alt={logo.name}
-              title={logo.name}
-              className="h-7 w-auto shrink-0 opacity-45 transition-opacity duration-300 hover:opacity-90"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
-          ))}
-        </motion.div>
+      <div className="flex flex-col gap-8">
+        <Row logos={LOGOS} duration={38} reduce={reduce} />
+        <Row logos={[...LOGOS].reverse()} reverse duration={46} reduce={reduce} />
       </div>
     </section>
   );

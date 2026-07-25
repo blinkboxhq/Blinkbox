@@ -37,12 +37,20 @@ const TIERS = [
 export default function Pricing() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative bg-[#0a0a0c] py-28">
-      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
+    <section id="pricing" className="relative overflow-hidden bg-[#060608] py-28">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[480px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25 blur-[130px]"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.3), transparent 70%)' }}
+      />
+      <div className="relative mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="mb-16 text-center">
           <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">Pricing</p>
           <h2 className="mx-auto max-w-[620px] font-semibold tracking-[-0.02em] text-[#fafafa]" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-            Priced per plan, not per task.
+            Priced per plan,{' '}
+            <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
+              not per task.
+            </span>
           </h2>
           <p className="mx-auto mt-4 max-w-[440px] text-[15px] text-[#8c8c8c]">
             No metered surprises. No paying for every step. Just run your automations.
@@ -57,10 +65,10 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.6, ease, delay: reduce ? 0 : i * 0.08 }}
-              className={`relative flex flex-col rounded-[20px] border p-7 ${
+              className={`relative flex flex-col rounded-[20px] border p-7 transition-all duration-300 hover:-translate-y-1 ${
                 tier.featured
-                  ? 'border-[#6f97e8]/40 bg-gradient-to-b from-[#6f97e8]/[0.10] to-[#0d0d10]'
-                  : 'border-white/[0.07] bg-[#101013]'
+                  ? 'border-[#6f97e8]/40 bg-gradient-to-b from-[#6f97e8]/[0.10] to-[#0d0d10] hover:border-[#6f97e8]/60'
+                  : 'border-white/[0.07] bg-[#101013] hover:border-white/[0.14]'
               }`}
             >
               {tier.featured && (

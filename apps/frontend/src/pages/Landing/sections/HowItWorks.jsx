@@ -27,19 +27,28 @@ const STEPS = [
 export default function HowItWorks() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative bg-[#08080a] py-28">
+    <section id="how" className="relative overflow-hidden bg-[#060608] py-28">
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="mb-16 text-center">
           <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">
             From idea to live in minutes
           </p>
           <h2 className="mx-auto max-w-[620px] font-semibold tracking-[-0.02em] text-[#fafafa]" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-            Three steps. Zero wiring.
+            Three steps.{' '}
+            <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
+              Zero wiring.
+            </span>
           </h2>
         </div>
 
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="pointer-events-none absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/10 to-transparent md:block" />
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: reduce ? 0 : 1.1, ease }}
+            className="pointer-events-none absolute left-0 right-0 top-8 hidden h-px origin-left bg-gradient-to-r from-transparent via-[#6f97e8]/40 to-transparent md:block"
+          />
           {STEPS.map((step, i) => {
             const Icon = step.icon;
             return (
