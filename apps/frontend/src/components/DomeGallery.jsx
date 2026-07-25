@@ -409,8 +409,8 @@ export default function DomeGallery({
         z-index: 9999;
         border-radius: ${openedImageBorderRadius};
         overflow: hidden;
-        background: #0d0d11;
-        border: 1px solid rgba(255,255,255,0.08);
+        background: #22222b;
+        border: 1px solid rgba(255,255,255,0.12);
         box-shadow: 0 10px 30px rgba(0,0,0,.35);
         transition: all ${enlargeTransitionMs}ms ease-out;
         pointer-events: none;
@@ -559,8 +559,8 @@ export default function DomeGallery({
     overlay.style.transition = `transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease`;
     overlay.style.borderRadius = openedImageBorderRadius;
     overlay.style.overflow = 'hidden';
-    overlay.style.background = '#0d0d11';
-    overlay.style.border = '1px solid rgba(255,255,255,0.08)';
+    overlay.style.background = '#22222b';
+    overlay.style.border = '1px solid rgba(255,255,255,0.12)';
     overlay.style.boxShadow = '0 10px 30px rgba(0,0,0,.35)';
 
     const rawSrc = parent.dataset.src || el.querySelector('img')?.src || '';
@@ -765,7 +765,7 @@ export default function DomeGallery({
                   }}
                 >
                   <div
-                    className="item__image absolute block overflow-hidden cursor-pointer border border-white/[0.08] bg-[#0d0d11] transition-transform duration-300"
+                    className="item__image absolute block overflow-hidden cursor-pointer border border-white/[0.12] bg-[#22222b] transition-transform duration-300"
                     role="button"
                     tabIndex={0}
                     aria-label={it.alt || 'Open image'}
