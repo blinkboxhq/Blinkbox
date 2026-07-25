@@ -17,6 +17,16 @@ const Product      = lazy(() => import('./pages/Product'));
 const Integrations = lazy(() => import('./pages/Integrations'));
 const Docs         = lazy(() => import('./pages/Docs'));
 const Upgrade      = lazy(() => import('./pages/Upgrade'));
+const PricingPage  = lazy(() => import('./pages/marketing/Pricing'));
+const Changelog    = lazy(() => import('./pages/marketing/Changelog'));
+const ApiPage      = lazy(() => import('./pages/marketing/ApiPage'));
+const SelfHosting  = lazy(() => import('./pages/marketing/SelfHosting'));
+const Status       = lazy(() => import('./pages/marketing/Status'));
+const About        = lazy(() => import('./pages/marketing/About'));
+const Blog         = lazy(() => import('./pages/marketing/Blog'));
+const Careers      = lazy(() => import('./pages/marketing/Careers'));
+const Contact      = lazy(() => import('./pages/marketing/Contact'));
+const Security     = lazy(() => import('./pages/marketing/Security'));
 
 const PageLoader = () => (
   <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -94,6 +104,16 @@ export default function App() {
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/upgrade" element={<RequireAuth><Upgrade /></RequireAuth>} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/changelog" element={<Changelog />} />
+            <Route path="/api" element={<ApiPage />} />
+            <Route path="/self-hosting" element={<SelfHosting />} />
+            <Route path="/status" element={<Status />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/security" element={<Security />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

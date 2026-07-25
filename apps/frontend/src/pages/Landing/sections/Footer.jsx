@@ -2,9 +2,33 @@ import { Link } from 'react-router-dom';
 import logo from '../../../assets/logo.svg';
 
 const COLUMNS = [
-  { title: 'Product', links: ['Features', 'Integrations', 'Pricing', 'Changelog'] },
-  { title: 'Developers', links: ['Docs', 'API', 'Self-hosting', 'Status'] },
-  { title: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', to: '/product' },
+      { label: 'Integrations', to: '/integrations' },
+      { label: 'Pricing', to: '/pricing' },
+      { label: 'Changelog', to: '/changelog' },
+    ],
+  },
+  {
+    title: 'Developers',
+    links: [
+      { label: 'Docs', to: '/docs' },
+      { label: 'API', to: '/api' },
+      { label: 'Self-hosting', to: '/self-hosting' },
+      { label: 'Status', to: '/status' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', to: '/about' },
+      { label: 'Blog', to: '/blog' },
+      { label: 'Careers', to: '/careers' },
+      { label: 'Contact', to: '/contact' },
+    ],
+  },
 ];
 
 export default function Footer() {
@@ -33,10 +57,10 @@ export default function Footer() {
               <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#8c8c8c]">{col.title}</p>
               <ul className="flex flex-col gap-2.5">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-[13px] text-[#6d6d6d] transition-colors duration-150 hover:text-[#fafafa]">
-                      {link}
-                    </a>
+                  <li key={link.to}>
+                    <Link to={link.to} className="text-[13px] text-[#6d6d6d] transition-colors duration-150 hover:text-[#fafafa]">
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -47,9 +71,9 @@ export default function Footer() {
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-8 sm:flex-row">
           <p className="text-[12px] text-[#6d6d6d]">© {new Date().getFullYear()} Blinkbox. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Privacy</a>
-            <a href="#" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Terms</a>
-            <a href="#" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Security</a>
+            <Link to="/privacy" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Privacy</Link>
+            <Link to="/terms" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Terms</Link>
+            <Link to="/security" className="text-[12px] text-[#6d6d6d] transition-colors hover:text-[#b6b6b6]">Security</Link>
           </div>
         </div>
       </div>

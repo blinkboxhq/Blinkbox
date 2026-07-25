@@ -1,25 +1,46 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X, ChevronDown } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 
 const ease = [0.22, 1, 0.36, 1];
 
-const LINKS = [
-  { label: 'Integrations', id: 'integrations' },
-  { label: 'Vision', id: 'vision' },
+const NAV = [
+  {
+    label: 'Product',
+    items: [
+      { label: 'Features', to: '/product' },
+      { label: 'Integrations', to: '/integrations' },
+      { label: 'Pricing', to: '/pricing' },
+      { label: 'Changelog', to: '/changelog' },
+    ],
+  },
+  {
+    label: 'Developers',
+    items: [
+      { label: 'Docs', to: '/docs' },
+      { label: 'API', to: '/api' },
+      { label: 'Self-hosting', to: '/self-hosting' },
+      { label: 'Status', to: '/status' },
+    ],
+  },
+  {
+    label: 'Company',
+    items: [
+      { label: 'About', to: '/about' },
+      { label: 'Blog', to: '/blog' },
+      { label: 'Careers', to: '/careers' },
+      { label: 'Contact', to: '/contact' },
+    ],
+  },
 ];
-
-function scrollTo(id) {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 export default function Header() {
   const reduce = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -27,11 +48,6 @@ export default function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const go = (id) => {
-    setOpen(false);
-    scrollTo(id);
-  };
 
   return (
     <motion.header
@@ -56,16 +72,51 @@ export default function Header() {
           <span className="text-[14px] font-semibold tracking-tight text-[#fafafa]">blinkbox</span>
         </Link>
 
-        {/* center — links (desktop) */}
+        {/* center — dropdown groups (desktop) */}
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
-          {LINKS.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => go(l.id)}
-              className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#8c8c8c] transition-colors duration-150 hover:bg-white/[0.05] hover:text-[#fafafa]"
+          {NAV.map((group) => (
+            <div
+              key={group.label}
+              className="relative"
+              onMouseEnter={() => setMenu(group.label)}
+              onMouseLeave={() => setMenu(null)}
             >
-              {l.label}
-            </button>
+              <button
+                className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 ${
+                  menu === group.label ? 'bg-white/[0.05] text-[#fafafa]' : 'text-[#8c8c8c] hover:text-[#fafafa]'
+                }`}
+              >
+                {group.label}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${menu === group.label ? 'rotate-180' : ''}`}
+                  strokeWidth={2}
+                />
+              </button>
+              <AnimatePresence>
+                {menu === group.label && (
+                  <motion.div
+                    initial={{ opacity: 0, y: reduce ? 0 : 6, scale: reduce ? 1 : 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: reduce ? 0 : 6, scale: reduce ? 1 : 0.98 }}
+                    transition={{ duration: 0.18, ease }}
+                    className="absolute left-1/2 top-full w-[180px] -translate-x-1/2 pt-2"
+                  >
+                    <div className="rounded-xl border border-white/[0.08] bg-neutral-900/80 p-1.5 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md">
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setMenu(null)}
+                          className="block rounded-lg px-3 py-2 text-[13px] font-medium text-[#8c8c8c] transition-colors duration-150 hover:bg-white/[0.05] hover:text-[#fafafa]"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           ))}
         </div>
 
@@ -106,17 +157,27 @@ export default function Header() {
             transition={{ duration: 0.25, ease }}
             className="overflow-hidden md:hidden"
           >
-            <div className="flex flex-col gap-1 px-6 pb-5 pt-1">
-              {LINKS.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => go(l.id)}
-                  className="rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-[#b6b6b6] transition-colors hover:bg-white/[0.05] hover:text-[#fafafa]"
-                >
-                  {l.label}
-                </button>
+            <div className="flex flex-col gap-5 px-6 pb-5 pt-2">
+              {NAV.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6d6d6d]">
+                    {group.label}
+                  </p>
+                  <div className="flex flex-col">
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        className="rounded-lg px-3 py-2 text-[14px] font-medium text-[#b6b6b6] transition-colors hover:bg-white/[0.05] hover:text-[#fafafa]"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ))}
-              <div className="mt-2 flex flex-col gap-2 border-t border-white/[0.06] pt-4">
+              <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4">
                 <Link to="/login" className="bb-btn bb-btn-ghost justify-center py-2.5 text-[14px] font-medium">
                   Log in
                 </Link>
