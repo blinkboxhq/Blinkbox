@@ -37,13 +37,23 @@ const ease = [0.22, 1, 0.36, 1];
 export default function Marquee() {
   const reduce = useReducedMotion();
   return (
-    <section className="relative overflow-hidden border-y border-white/[0.06] bg-[#060608]">
+    <section className="relative overflow-hidden bg-[#060608]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24"
+        style={{ background: 'linear-gradient(180deg, #060608, transparent)' }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24"
+        style={{ background: 'linear-gradient(0deg, #060608, transparent)' }}
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute right-0 top-1/2 h-[360px] w-[720px] -translate-y-1/2 translate-x-1/4 rounded-full opacity-25 blur-[130px]"
         style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.3), transparent 70%)' }}
       />
-      <div className="relative mx-auto grid max-w-[1360px] grid-cols-1 items-center px-6 sm:px-8 lg:grid-cols-2 lg:gap-8">
+      <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 items-center px-6 sm:px-8 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-10">
         <motion.div
           initial={{ opacity: 0, y: reduce ? 0 : 22 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -62,7 +72,7 @@ export default function Marquee() {
             Slack, Stripe, Sheets, OpenAI — 251 apps, all first-class. Drop any of them on the canvas and they just talk to each other.
           </p>
         </motion.div>
-        <div className="relative h-[420px] w-full sm:h-[520px]">
+        <div className="relative h-[440px] w-full sm:h-[560px] lg:-mr-12">
           <DomeGallery
             images={LOGOS}
             grayscale={false}
