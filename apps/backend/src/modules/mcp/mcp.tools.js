@@ -1,6 +1,10 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, FRONTEND_URL } from "../../config/env.js";
+import { listPickerNodes, getPickerNode, PICKER_NODES } from "../../nodes/nodeCatalog.js";
+import { listActions, defaultOperation } from "../../nodes/integrationManifest.js";
+import { listResourceKinds } from "../../nodes/integrationResources.js";
+import { NODE_KB } from "../brian/brian.nodes.js";
 
 // Tools reach the platform through its own REST API over loopback, authenticating
 // with a short-lived JWT minted for the connector's owner. This reuses every
@@ -125,6 +129,97 @@ function normalizeApiPath(raw) {
     );
   }
   return { path: p, segment };
+}
+
+// ── Node-catalog helpers ──────────────────────────────────────────────────────
+// The connector may only ever name a node the user can reach from a picker —
+// anything else is invisible in the builder, so a workflow containing it would
+// be uneditable. resolveNode is the single gate that enforces that.
+function resolveNode(ref) {
+  const raw = String(ref || "").trim();
+  if (!raw) throw new Error("Provide a node key. Run list_nodes to browse the catalog.");
+  const hit = getPickerNode(raw) || getPickerNode(raw.toLowerCase());
+  if (hit) return hit;
+  const needle = raw.toLowerCase().replace(/[\s-]+/g, "_");
+  const stem = needle.slice(0, 3);
+  const near = PICKER_NODES.filter((n) => {
+    const k = n.key.toLowerCase();
+    const l = n.label.toLowerCase();
+    return (
+      k.includes(needle) ||
+      l.includes(needle) ||
+      (stem.length === 3 && (k.startsWith(stem) || l.startsWith(stem)))
+    );
+  }).slice(0, 8);
+  throw new Error(
+    `"${raw}" is not a node the user can see in any Blinkbox picker, so it can't be used.` +
+      (near.length
+        ? ` Closest matches: ${near.map((n) => n.key).join(", ")}.`
+        : " Run list_nodes to browse what's available."),
+  );
+}
+
+function isTrigger(n) {
+  return n.category === "trigger" || n.pickers.join() === "trigger";
+}
+
+function nodeLine(n) {
+  const tags = [n.pickers.join("+")];
+  if (n.category && n.category !== "trigger") tags.push(n.category);
+  if (n.integration && !isTrigger(n)) tags.push("has actions");
+  if (n.oauthProvider) tags.push(`${n.oauthProvider} oauth`);
+  if (!n.executable) tags.push("⚠ not runnable yet");
+  return `• ${n.key} — ${n.label} [${tags.join(", ")}]`;
+}
+
+function kbFor(n) {
+  const base = n.key.replace(/_trigger$/, "");
+  if (NODE_KB[n.key]) return { schema: NODE_KB[n.key], from: n.key };
+  if (NODE_KB[base]) return { schema: NODE_KB[base], from: base };
+  return { schema: null, from: null };
+}
+
+// Output handles mirror CustomNode.jsx: `condition` always forks true/false,
+// loop/merge and triggers are single-output, and every other action node can opt
+// into a success/failed fork by setting config.splitOutputs = true.
+const NO_SPLIT = new Set(["condition", "loop", "merge"]);
+
+function handlesFor(n) {
+  if (n.key === "condition")
+    return 'Two outputs: sourceHandle "true" and sourceHandle "false" — connect both branches.';
+  if (n.category === "trigger" || NO_SPLIT.has(n.key)) return 'Single output (sourceHandle "output").';
+  return 'Single output (sourceHandle "output"). Set config.splitOutputs = true to fork into "success" and "failed" handles.';
+}
+
+// The 7 providers whose credentials are minted by a browser consent screen —
+// they can never be created from chat, only linked from the Credentials page.
+const OAUTH_PROVIDERS = new Set(["google", "slack", "microsoft", "github", "airtable", "notion", "meta"]);
+
+function credentialsPageHint(provider) {
+  return (
+    `${provider} uses OAuth, so it can't be connected from chat — it needs a browser consent screen. ` +
+    `Ask the user to open ${FRONTEND_URL}/credentials and click Connect on ${provider}, then run list_credentials again. ` +
+    `Never ask them to paste an OAuth token.`
+  );
+}
+
+function matchesNode(cred, n) {
+  const t = String(cred.type || "").toLowerCase();
+  const p = String(cred.provider || "").toLowerCase();
+  return (
+    (n.oauthProvider && (p === n.oauthProvider || t === n.oauthProvider)) ||
+    t === n.key ||
+    (n.integration && t === n.integration)
+  );
+}
+
+async function userCredentials(api) {
+  try {
+    const data = pick(await api.get("/credentials"));
+    return data.credentials || [];
+  } catch {
+    return [];
+  }
 }
 
 export const TOOLS = [
@@ -328,15 +423,282 @@ export const TOOLS = [
     },
   },
   {
+    name: "list_nodes",
+    description:
+      "Browse or search Blinkbox's node catalog — the building blocks of a workflow. Only nodes the user can actually reach from a picker are listed, so anything returned here is safe to build with. " +
+      "Filter by picker ('trigger' = what starts a workflow, 'action' = a step, 'agent' = AI-agent models/memory/tools), by category, or by free-text search over the name and key. " +
+      "Use this to find real node keys before create_automation, then get_node to learn how to configure one.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        search: {
+          type: "string",
+          description: "Free-text match on node name or key, e.g. 'slack', 'sheet', 'delay'",
+        },
+        picker: {
+          type: "string",
+          enum: ["trigger", "action", "agent"],
+          description: "Restrict to one picker surface",
+        },
+        category: {
+          type: "string",
+          description: "Restrict to one category, e.g. 'apps', 'logic', 'ai_agent', 'trigger'",
+        },
+        include_unavailable: {
+          type: "boolean",
+          description:
+            "Include catalog-only nodes that have no backend handler yet. They appear in the UI but cannot run — default false.",
+        },
+      },
+      additionalProperties: false,
+    },
+    handler: async (args) => {
+      const needle = String(args.search || "").trim().toLowerCase();
+      let rows = listPickerNodes({
+        picker: args.picker,
+        category: args.category,
+        buildableOnly: args.include_unavailable !== true,
+      });
+      if (needle) {
+        rows = rows.filter(
+          (n) => n.key.toLowerCase().includes(needle) || n.label.toLowerCase().includes(needle),
+        );
+      }
+      if (!rows.length) {
+        return `Nothing in the catalog matches that (${PICKER_NODES.length} picker-visible nodes total). Try a broader search, or drop the picker/category filter.`;
+      }
+      const shown = rows.slice(0, 120);
+      const more =
+        rows.length > shown.length
+          ? `\n…and ${rows.length - shown.length} more — narrow it with search, picker or category.`
+          : "";
+      return `${rows.length} node(s):\n${shown.map(nodeLine).join("\n")}${more}`;
+    },
+  },
+  {
+    name: "get_node",
+    description:
+      "Get everything needed to configure one node: its config fields (key, type, whether it's required, an example value, what it means), the output fields later steps can reference as {{ $json.field }}, whether it needs a credential and whether the user already has one, its output handles, and whether it exposes app actions. " +
+      "This is the node's configuration panel expressed as data — read it before filling a node's config instead of guessing field names.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        node: {
+          type: "string",
+          description: "Node key from list_nodes, e.g. 'slack', 'http_request', 'gmail_trigger'",
+        },
+      },
+      required: ["node"],
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      const n = resolveNode(args.node);
+      const { schema, from } = kbFor(n);
+      const out = [
+        `${n.label} (${n.key})`,
+        `Category: ${n.category || "—"} · Pickers: ${n.pickers.join(", ")}`,
+      ];
+
+      if (!n.executable) {
+        out.push(
+          "⚠️ NOT RUNNABLE: this node appears in the builder but has no backend handler yet. Do not put it in a workflow — pick a different node.",
+        );
+      }
+
+      if (schema) {
+        const fields = schema.fields || [];
+        if (fields.length) {
+          const req = fields.filter((f) => f.r);
+          const opt = fields.filter((f) => !f.r);
+          const render = (f) =>
+            `  - ${f.k} (${f.t})${f.d ? ` — ${f.d}` : ""}${f.ex !== undefined ? `  e.g. ${JSON.stringify(f.ex)}` : ""}`;
+          out.push(`Config fields:`);
+          if (req.length) out.push(` Required:\n${req.map(render).join("\n")}`);
+          if (opt.length) out.push(` Optional:\n${opt.map(render).join("\n")}`);
+        } else {
+          out.push("Config fields: none — this node needs no configuration.");
+        }
+        if (schema.out?.length) {
+          out.push(
+            `Outputs (reference downstream as {{ $json.<field> }}): ${schema.out.join(", ")}`,
+          );
+        }
+        if (from && from !== n.key) out.push(`(field schema shared with "${from}")`);
+      } else {
+        out.push(
+          "Config fields: not documented yet. Configure it in the builder, or inspect an existing automation that already uses it before assuming field names.",
+        );
+      }
+
+      out.push(`Handles: ${handlesFor(n)}`);
+
+      // A trigger only listens; the app's operations belong to its action node, so
+      // never advertise them here or the model will wire an `operation` into a trigger.
+      if (n.integration && isTrigger(n)) {
+        out.push(
+          `This node only listens for events. To act on ${n.integration}, add the "${n.integration}" action node and see list_node_actions.`,
+        );
+      } else if (n.integration) {
+        const actions = await listActions(n.integration);
+        const def = await defaultOperation(n.integration);
+        out.push(
+          `Actions: ${actions.length} operation(s)${def ? `, default "${def}"` : ""} — run list_node_actions with node "${n.key}" to see them and their parameters.`,
+        );
+      }
+
+      if (n.oauthProvider || n.integration) {
+        const creds = (await userCredentials(api)).filter((c) => matchesNode(c, n));
+        const need = n.oauthProvider
+          ? `Needs a ${n.oauthProvider} OAuth credential.`
+          : "May need a credential (API key or token).";
+        out.push(
+          creds.length
+            ? `${need} Already connected: ${creds.map((c) => `${c.name} (id: ${c._id})`).join(", ")} — set config.credentialId to one of these ids.`
+            : `${need} None saved yet — ${n.oauthProvider ? `have the user connect it at ${FRONTEND_URL}/credentials` : "use create_credential"}.`,
+        );
+      }
+
+      return out.join("\n");
+    },
+  },
+  {
+    name: "list_node_actions",
+    description:
+      "List the operations an app node can perform — e.g. slack → send_message, list_channels — with what each one does, the OAuth scopes it needs, and which is the default. Also lists the resource pickers the node offers (channels, sheets, bases…) that resolve live from the user's credential. " +
+      "Use this to choose a node's 'operation' value and know which parameters go with it.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        node: { type: "string", description: "App node key, e.g. 'slack', 'github', 'google_sheets'" },
+        search: { type: "string", description: "Optional filter over operation keys and labels" },
+      },
+      required: ["node"],
+      additionalProperties: false,
+    },
+    handler: async (args) => {
+      const n = resolveNode(args.node);
+      if (!n.integration) {
+        return `${n.label} (${n.key}) has no operation list — it's a single-purpose node. Run get_node for its config fields.`;
+      }
+      if (isTrigger(n)) {
+        return `${n.label} (${n.key}) is a trigger — it listens for events rather than performing operations. Run get_node for how to configure it; to act on ${n.integration}, use the "${n.integration}" action node.`;
+      }
+      const all = await listActions(n.integration);
+      const def = await defaultOperation(n.integration);
+      const needle = String(args.search || "").trim().toLowerCase();
+      const actions = needle
+        ? all.filter(
+            (a) =>
+              a.key.toLowerCase().includes(needle) || a.label.toLowerCase().includes(needle),
+          )
+        : all;
+      if (!actions.length) {
+        return `No operations on ${n.key} match "${args.search}". It has ${all.length} in total — call again without a search.`;
+      }
+
+      const lines = actions.slice(0, 150).map((a) => {
+        const bits = [];
+        if (a.recommended || a.key === def) bits.push("default");
+        if (a.scopes.length) bits.push(`scopes: ${a.scopes.join(" ")}`);
+        const params = a.params ? Object.keys(a.params) : null;
+        if (params?.length) bits.push(`params: ${params.join(", ")}`);
+        return `• ${a.key} — ${a.label}${a.description ? ` — ${a.description}` : ""}${bits.length ? ` [${bits.join(" · ")}]` : ""}`;
+      });
+
+      const out = [
+        `${n.label} (${n.key}) — ${actions.length}${actions.length !== all.length ? ` of ${all.length}` : ""} operation(s)${def ? `, default "${def}"` : ""}:`,
+        ...lines,
+      ];
+      if (actions.length > 150) out.push(`…and ${actions.length - 150} more — narrow with search.`);
+
+      const kinds = listResourceKinds(n.integration);
+      if (kinds.length) {
+        out.push(
+          `Resource pickers (resolve live once a credential is set): ${kinds.map((k) => `${k.kind} → config.${k.param}`).join(", ")}`,
+        );
+      }
+      if (!actions.some((a) => a.params)) {
+        out.push(
+          "Parameters aren't declared for this app yet — pass the app's own field names in the node config and confirm with a test run.",
+        );
+      }
+      return out.join("\n");
+    },
+  },
+  {
     name: "list_credentials",
     description:
-      "List the user's saved credentials by name and type. Secrets are never returned.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
-    handler: async (_args, api) => {
-      const data = pick(await api.get("/credentials"));
-      const creds = data.credentials || [];
-      if (!creds.length) return "No saved credentials.";
-      return creds.map((c) => `• ${c.name} (${c.type || c.provider || "credential"})`).join("\n");
+      "List the user's saved credentials by name, type and id. Secrets are never returned. " +
+      "Pass a node key to see only the credentials that node can use, plus what's still missing for it.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        node: {
+          type: "string",
+          description: "Optional node key — narrows the list to credentials that node accepts",
+        },
+      },
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      const creds = (await userCredentials(api)).map((c) => ({
+        line: `• ${c.name} (${c.type || c.provider || "credential"}) — id: ${c._id}`,
+        raw: c,
+      }));
+      if (!args.node) {
+        return creds.length
+          ? `${creds.length} saved credential(s):\n${creds.map((c) => c.line).join("\n")}`
+          : "No saved credentials yet. Use create_credential for API keys, or have the user connect an app at " +
+              `${FRONTEND_URL}/credentials for OAuth apps.`;
+      }
+      const n = resolveNode(args.node);
+      const mine = creds.filter((c) => matchesNode(c.raw, n));
+      if (mine.length) {
+        return `${n.label} (${n.key}) can use:\n${mine.map((c) => c.line).join("\n")}\nSet config.credentialId to one of these ids.`;
+      }
+      return n.oauthProvider
+        ? `${n.label} (${n.key}) has no credential yet. ${credentialsPageHint(n.oauthProvider)}`
+        : `${n.label} (${n.key}) has no credential yet. If it needs an API key, use create_credential with node "${n.key}".`;
+    },
+  },
+  {
+    name: "create_credential",
+    description:
+      "Save a new credential so nodes can authenticate. Use this for API-key / token style credentials — pass a name and the secret value. " +
+      "OAuth apps (Google/Gmail/Sheets/Drive/Calendar, Slack, Microsoft/Outlook/Teams, GitHub, Airtable, Notion, Meta/WhatsApp) cannot be connected from chat because they need a browser consent screen; for those this returns the page to click Connect on instead. Never ask the user to paste an OAuth token.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Label for the credential, e.g. 'Stripe live key'" },
+        secret: { type: "string", description: "The API key or token value. Required for non-OAuth credentials." },
+        node: {
+          type: "string",
+          description:
+            "Node key this credential is for, e.g. 'stripe' — sets the credential type and detects OAuth apps",
+        },
+        type: {
+          type: "string",
+          description: "Credential type override; defaults to the node key, or 'api_key'",
+        },
+      },
+      required: ["name"],
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      const n = args.node ? resolveNode(args.node) : null;
+      const provider = n?.oauthProvider || (OAUTH_PROVIDERS.has(args.type) ? args.type : null);
+      if (provider) return credentialsPageHint(provider);
+      if (!args.secret) {
+        throw new Error(
+          "secret is required to save an API-key credential. Ask the user for the key from the app's own dashboard.",
+        );
+      }
+      const type = args.type || n?.integration || n?.key || "api_key";
+      const data = pick(
+        await api.post("/credentials", { name: args.name, secret: args.secret, type }),
+      );
+      const saved = data.credential || {};
+      return `✅ Saved credential "${saved.name || args.name}" (${saved.type || type}) — id: ${saved._id || "?"}. Set config.credentialId to that id on the nodes that need it. The secret is stored encrypted and never read back.`;
     },
   },
   {
