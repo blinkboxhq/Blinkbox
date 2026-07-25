@@ -1054,6 +1054,157 @@ export const NODE_KB = {
       { k: "subject", t: "string", r: false, ex: "BlinkBox Alert", d: "Subject line (for email channel)" },
     ],
   },
+
+  // ─── AI TOOLING / MEDIA / UTILITY ──────────────────────────────────────────
+  // Field names below were read out of each handler, not inferred — the executor
+  // silently ignores a key the handler never looks at.
+  agent_memory: {
+    label: "Vector Memory",
+    out: ["memories", "count", "namespace"],
+    fields: [
+      { k: "operation", t: "select", r: true, ex: "remember", d: "remember|recall|forget|listMemories|clearAll" },
+      { k: "text", t: "string", r: true, ex: "{{$json.message}}", d: "Text to store (remember) or search for (recall)" },
+      { k: "memoryKey", t: "string", r: false, ex: "customer-123", d: "Key to store under — required for forget" },
+      { k: "namespace", t: "string", r: false, ex: "support", d: "Isolates one memory set from another" },
+      { k: "tags", t: "array", r: false, ex: ["support"], d: "Tags saved with the memory for filtering" },
+      { k: "topK", t: "number", r: false, ex: 5, d: "How many memories recall returns" },
+      { k: "threshold", t: "number", r: false, ex: 0.7, d: "Minimum similarity score (0-1) for recall" },
+      { k: "credentialId", t: "credential", r: false, ex: "", d: "Embedding provider credential" },
+    ],
+  },
+  agent_memory_window: {
+    label: "Window Buffer Memory",
+    out: ["memories", "count", "namespace"],
+    fields: [
+      { k: "operation", t: "select", r: true, ex: "recall", d: "remember|recall|forget|listMemories|clearAll" },
+      { k: "text", t: "string", r: true, ex: "{{$json.message}}", d: "Turn to buffer, or the query to recall against" },
+      { k: "namespace", t: "string", r: false, ex: "chat-{{$json.sessionId}}", d: "One buffer per conversation" },
+      { k: "topK", t: "number", r: false, ex: 10, d: "How many recent turns to return" },
+      { k: "credentialId", t: "credential", r: false, ex: "", d: "Embedding provider credential" },
+    ],
+  },
+  tool_think: {
+    label: "Think",
+    out: ["thought"],
+    fields: [
+      { k: "thought", t: "string", r: true, ex: "Check whether the order is already refunded", d: "Scratchpad text the agent reasons with — no side effects" },
+    ],
+  },
+  json_transform: {
+    label: "JSON Transform",
+    out: ["success"],
+    fields: [
+      { k: "operation", t: "select", r: true, ex: "extract", d: "extract|parse|stringify|keys|values" },
+      { k: "source", t: "string", r: true, ex: "{{$json.body}}", d: "Value to transform" },
+      { k: "path", t: "string", r: false, ex: "data.items[0].id", d: "Dot path to pull (extract only)" },
+      { k: "outputField", t: "string", r: false, ex: "orderId", d: "Field name to write the result to" },
+      { k: "fallback", t: "string", r: false, ex: "", d: "Value used when the path is missing" },
+      { k: "pretty", t: "boolean", r: false, ex: true, d: "Indent the output (stringify only)" },
+    ],
+  },
+  ocr: {
+    label: "OCR / Image to Text",
+    out: ["text", "provider", "model", "tokensUsed"],
+    fields: [
+      { k: "imageUrl", t: "string", r: true, ex: "{{$json.fileUrl}}", d: "Public URL of the image to read" },
+      { k: "provider", t: "select", r: false, ex: "openai", d: "openai|anthropic" },
+      { k: "prompt", t: "string", r: false, ex: "Extract the invoice total", d: "What to pull out of the image" },
+      { k: "model", t: "string", r: false, ex: "gpt-4o-mini", d: "Vision model override" },
+      { k: "detail", t: "select", r: false, ex: "auto", d: "auto|low|high image detail" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Credential for the chosen provider" },
+    ],
+  },
+  rss: {
+    label: "Read RSS Feed",
+    out: ["items", "count", "feedTitle", "feedUrl"],
+    fields: [
+      { k: "url", t: "string", r: true, ex: "https://news.ycombinator.com/rss", d: "Feed URL" },
+      { k: "limit", t: "number", r: false, ex: 10, d: "Maximum items to return" },
+    ],
+  },
+  speech_to_text: {
+    label: "Speech to Text",
+    out: ["text", "confidence", "words", "provider"],
+    fields: [
+      { k: "audioUrl", t: "string", r: true, ex: "{{$json.recordingUrl}}", d: "Public URL of the audio file" },
+      { k: "provider", t: "select", r: false, ex: "openai", d: "openai|assemblyai" },
+      { k: "language", t: "string", r: false, ex: "en", d: "Spoken language hint (ISO code)" },
+      { k: "model", t: "string", r: false, ex: "whisper-1", d: "Model override" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Credential for the chosen provider" },
+    ],
+  },
+  text_to_speech: {
+    label: "Text to Speech",
+    out: ["audioBase64", "mimeType", "provider", "voiceId"],
+    fields: [
+      { k: "text", t: "string", r: true, ex: "{{$json.summary}}", d: "Text to speak" },
+      { k: "provider", t: "select", r: false, ex: "openai", d: "openai|elevenlabs" },
+      { k: "voice", t: "string", r: false, ex: "alloy", d: "OpenAI voice name" },
+      { k: "voiceId", t: "string", r: false, ex: "21m00Tcm4TlvDq8ikWAM", d: "ElevenLabs voice id" },
+      { k: "model", t: "string", r: false, ex: "tts-1", d: "Model override" },
+      { k: "speed", t: "number", r: false, ex: 1, d: "Playback speed (OpenAI)" },
+      { k: "stability", t: "number", r: false, ex: 0.5, d: "Voice stability 0-1 (ElevenLabs)" },
+      { k: "similarityBoost", t: "number", r: false, ex: 0.75, d: "Voice similarity 0-1 (ElevenLabs)" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Credential for the chosen provider" },
+    ],
+  },
+  translation: {
+    label: "Translate Text",
+    out: ["translatedText", "detectedSourceLanguage", "targetLanguage", "provider"],
+    fields: [
+      { k: "text", t: "string", r: true, ex: "{{$json.body}}", d: "Text to translate" },
+      { k: "targetLanguage", t: "string", r: true, ex: "es", d: "Target language code" },
+      { k: "language", t: "string", r: false, ex: "en", d: "Source language — omit to auto-detect" },
+      { k: "provider", t: "select", r: false, ex: "google", d: "google|deepl" },
+      { k: "model", t: "string", r: false, ex: "", d: "Model override where the provider supports it" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "Credential for the chosen provider" },
+    ],
+  },
+  ssh: {
+    label: "SSH",
+    out: ["stdout", "stderr", "code", "files"],
+    fields: [
+      { k: "operation", t: "select", r: true, ex: "executeCommand", d: "executeCommand|uploadFile|downloadFile|listFiles" },
+      { k: "command", t: "string", r: false, ex: "systemctl restart api", d: "Shell command (executeCommand)" },
+      { k: "remotePath", t: "string", r: false, ex: "/var/log/app.log", d: "Remote path for file operations" },
+      { k: "content", t: "string", r: false, ex: "{{$json.csv}}", d: "File contents to upload" },
+      { k: "timeout", t: "number", r: false, ex: 30000, d: "Command timeout in ms" },
+      { k: "credentialId", t: "credential", r: true, ex: "", d: "SSH credential (host, user, key)" },
+    ],
+  },
+  ssl_check: {
+    label: "SSL Certificate Check",
+    out: ["valid", "daysUntilExpiry", "expired", "expiringSoon", "issuer", "validTo"],
+    fields: [
+      { k: "hostname", t: "string", r: true, ex: "blinkbox.co.in", d: "Host to check — no scheme" },
+      { k: "port", t: "number", r: false, ex: 443, d: "TLS port" },
+    ],
+  },
+  rate_limiter: {
+    label: "Rate Limiter",
+    out: ["count", "rateLimited", "dropped"],
+    fields: [
+      { k: "limit", t: "number", r: true, ex: 100, d: "Maximum runs allowed per window" },
+      { k: "window", t: "number", r: true, ex: 60, d: "Window length in seconds" },
+      { k: "strategy", t: "select", r: false, ex: "drop", d: "drop stops the branch; queue delays it" },
+    ],
+  },
+  retry: {
+    label: "Retry",
+    out: [],
+    fields: [
+      { k: "maxRetries", t: "number", r: false, ex: 3, d: "Attempts before the branch fails" },
+      { k: "delayMs", t: "number", r: false, ex: 1000, d: "Wait between attempts in ms" },
+      { k: "backoff", t: "select", r: false, ex: "exponential", d: "fixed|exponential" },
+    ],
+  },
+  jotform_trigger: {
+    label: "JotForm Trigger",
+    out: ["formId", "formTitle", "submissionId", "submittedAt", "fields", "raw"],
+    fields: [
+      { k: "formId", t: "string", r: true, ex: "240123456789012", d: "Form id — point the form's webhook at this automation" },
+    ],
+  },
 };
 
 // Build a compact text representation for the system prompt

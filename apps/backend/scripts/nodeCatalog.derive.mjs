@@ -146,7 +146,8 @@ export function derive() {
   const keys = [...new Set([...actionPicker, ...triggerPicker, ...agentPicker])].sort();
   const nodes = keys.map((key) => {
     const m = meta.get(key) || {};
-    const base = key.replace(/_trigger$/, "");
+    // agent_xai / xai_trigger both run the xai integration router.
+    const base = key.replace(/_trigger$/, "").replace(/^agent_/, "");
     const entry = {
       key,
       label: m.label || variantLabels.get(key) || key,

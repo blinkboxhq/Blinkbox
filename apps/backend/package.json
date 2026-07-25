@@ -7,7 +7,7 @@
     "start": "tsx src/index.js",
     "test": "node --import tsx --experimental-test-module-mocks --test \"src/**/*.test.js\" \"e2e/**/*.test.js\"",
     "typecheck": "tsc --noEmit",
-    "catalog": "node scripts/generate-node-catalog.mjs",
+    "catalog": "node scripts/generate-node-catalog.mjs && node scripts/generate-trigger-fields.mjs",
     "eval": "node evals/run.js",
     "eval:vc": "node evals/run.js --vc",
     "eval:agent": "node evals/run.js --agent"

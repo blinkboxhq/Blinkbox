@@ -4,7 +4,7 @@ import { JWT_SECRET, FRONTEND_URL } from "../../config/env.js";
 import { listPickerNodes, getPickerNode, PICKER_NODES } from "../../nodes/nodeCatalog.js";
 import { listActions, defaultOperation } from "../../nodes/integrationManifest.js";
 import { listResourceKinds } from "../../nodes/integrationResources.js";
-import { NODE_KB } from "../brian/brian.nodes.js";
+import { describeNodeFields, credentialTypesFor } from "../../nodes/nodeFields.js";
 
 // Tools reach the platform through its own REST API over loopback, authenticating
 // with a short-lived JWT minted for the connector's owner. This reuses every
@@ -172,13 +172,6 @@ function nodeLine(n) {
   return `• ${n.key} — ${n.label} [${tags.join(", ")}]`;
 }
 
-function kbFor(n) {
-  const base = n.key.replace(/_trigger$/, "");
-  if (NODE_KB[n.key]) return { schema: NODE_KB[n.key], from: n.key };
-  if (NODE_KB[base]) return { schema: NODE_KB[base], from: base };
-  return { schema: null, from: null };
-}
-
 // Output handles mirror CustomNode.jsx: `condition` always forks true/false,
 // loop/merge and triggers are single-output, and every other action node can opt
 // into a success/failed fork by setting config.splitOutputs = true.
@@ -206,11 +199,27 @@ function credentialsPageHint(provider) {
 function matchesNode(cred, n) {
   const t = String(cred.type || "").toLowerCase();
   const p = String(cred.provider || "").toLowerCase();
+  const panelTypes = credentialTypesFor(n);
   return (
     (n.oauthProvider && (p === n.oauthProvider || t === n.oauthProvider)) ||
     t === n.key ||
-    (n.integration && t === n.integration)
+    (n.integration && t === n.integration) ||
+    panelTypes.includes(t) ||
+    panelTypes.includes(p)
   );
+}
+
+// What `type` a credential for this node should be stored under, so the node's
+// panel finds it later.
+function credentialTypeFor(n) {
+  return credentialTypesFor(n)[0] || n?.integration || n?.key || "api_key";
+}
+
+// Which config key holds the credential id. Most nodes use credentialId, but a
+// trigger panel names its own (figma_trigger stores it under `token`).
+async function credentialSlot(n) {
+  const fields = (await describeNodeFields(n)).fields.filter((f) => f.t === "credential");
+  return fields.length === 1 ? fields[0].k : "credentialId";
 }
 
 async function userCredentials(api) {
@@ -487,13 +496,18 @@ export const TOOLS = [
           type: "string",
           description: "Node key from list_nodes, e.g. 'slack', 'http_request', 'gmail_trigger'",
         },
+        event: {
+          type: "string",
+          description:
+            "For a trigger: the event id to configure for. Returns that event's exact config skeleton plus any fields only it needs.",
+        },
       },
       required: ["node"],
       additionalProperties: false,
     },
     handler: async (args, api) => {
       const n = resolveNode(args.node);
-      const { schema, from } = kbFor(n);
+      const schema = await describeNodeFields(n, args.event);
       const out = [
         `${n.label} (${n.key})`,
         `Category: ${n.category || "—"} · Pickers: ${n.pickers.join(", ")}`,
@@ -504,29 +518,63 @@ export const TOOLS = [
           "⚠️ NOT RUNNABLE: this node appears in the builder but has no backend handler yet. Do not put it in a workflow — pick a different node.",
         );
       }
+      if (schema.hint) out.push(`How it connects: ${schema.hint}`);
 
-      if (schema) {
-        const fields = schema.fields || [];
-        if (fields.length) {
-          const req = fields.filter((f) => f.r);
-          const opt = fields.filter((f) => !f.r);
-          const render = (f) =>
-            `  - ${f.k} (${f.t})${f.d ? ` — ${f.d}` : ""}${f.ex !== undefined ? `  e.g. ${JSON.stringify(f.ex)}` : ""}`;
-          out.push(`Config fields:`);
-          if (req.length) out.push(` Required:\n${req.map(render).join("\n")}`);
-          if (opt.length) out.push(` Optional:\n${opt.map(render).join("\n")}`);
-        } else {
-          out.push("Config fields: none — this node needs no configuration.");
-        }
-        if (schema.out?.length) {
-          out.push(
-            `Outputs (reference downstream as {{ $json.<field> }}): ${schema.out.join(", ")}`,
-          );
-        }
-        if (from && from !== n.key) out.push(`(field schema shared with "${from}")`);
-      } else {
+      if (args.event && schema.events && !schema.event) {
+        out.push(
+          `⚠️ "${args.event}" is not an event of this trigger — pick one of the ids listed below.`,
+        );
+      }
+
+      if (schema.source === "none") {
         out.push(
           "Config fields: not documented yet. Configure it in the builder, or inspect an existing automation that already uses it before assuming field names.",
+        );
+      } else if (schema.fields.length) {
+        const req = schema.fields.filter((f) => f.r);
+        const opt = schema.fields.filter((f) => !f.r);
+        const render = (f) =>
+          `  - ${f.k} (${f.t})${f.d ? ` — ${f.d}` : ""}` +
+          (f.opts ? `  one of: ${f.opts.join(" | ")}` : "") +
+          (f.ex !== undefined && f.ex !== "" ? `  e.g. ${JSON.stringify(f.ex)}` : "");
+        out.push(`Config fields:`);
+        if (req.length) out.push(` Required:\n${req.map(render).join("\n")}`);
+        if (opt.length) out.push(` Optional:\n${opt.map(render).join("\n")}`);
+      } else {
+        out.push("Config fields: none — this node needs no configuration.");
+      }
+
+      if (schema.event) {
+        out.push(
+          `Event "${schema.event.id}" (${schema.event.label}) — start from this exact config and add the fields above:\n  ${JSON.stringify(schema.event.cfg)}`,
+        );
+      } else if (schema.events?.length) {
+        const listed = schema.events.slice(0, 40);
+        out.push(
+          `Events (${schema.events.length}) — pick one and re-run get_node with event: "<id>" for its exact config:\n` +
+            listed.map((e) => `  - ${e.id}${e.d ? ` — ${e.d}` : ` — ${e.label}`}`).join("\n") +
+            (schema.events.length > listed.length
+              ? `\n  …and ${schema.events.length - listed.length} more`
+              : ""),
+        );
+      }
+
+      if (schema.outDocs?.length) {
+        out.push(
+          `Outputs (reference downstream as {{ $json.<field> }}):\n` +
+            schema.outDocs.map(([k, d]) => `  - ${k}${d ? ` — ${d}` : ""}`).join("\n"),
+        );
+      } else if (schema.out?.length) {
+        out.push(`Outputs (reference downstream as {{ $json.<field> }}): ${schema.out.join(", ")}`);
+      } else if (schema.passthrough) {
+        out.push(
+          "Outputs: whatever the app's API returns for the chosen operation — run the node once and read the execution log to see the shape.",
+        );
+      }
+
+      if (schema.passthrough) {
+        out.push(
+          "Any other parameters the operation takes go in the same config object alongside `operation` — see list_node_actions.",
         );
       }
 
@@ -546,14 +594,27 @@ export const TOOLS = [
         );
       }
 
-      if (n.oauthProvider || n.integration) {
-        const creds = (await userCredentials(api)).filter((c) => matchesNode(c, n));
+      // A trigger panel names its own credential field and type (e.g. token /
+      // credType "figma"), so match on that too — not just the node's provider.
+      const credFields = schema.fields.filter((f) => f.t === "credential");
+      const credTypes = [...new Set(credFields.map((f) => f.credType).filter(Boolean))];
+      if (n.oauthProvider || n.integration || credFields.length) {
+        const all = await userCredentials(api);
+        const creds = all.filter(
+          (c) =>
+            matchesNode(c, n) ||
+            credTypes.includes(String(c.type || "").toLowerCase()) ||
+            credTypes.includes(String(c.provider || "").toLowerCase()),
+        );
+        const slot = credFields.length === 1 ? credFields[0].k : "credentialId";
         const need = n.oauthProvider
           ? `Needs a ${n.oauthProvider} OAuth credential.`
-          : "May need a credential (API key or token).";
+          : credTypes.length
+            ? `Needs a saved ${credTypes.join(" or ")} credential.`
+            : "May need a credential (API key or token).";
         out.push(
           creds.length
-            ? `${need} Already connected: ${creds.map((c) => `${c.name} (id: ${c._id})`).join(", ")} — set config.credentialId to one of these ids.`
+            ? `${need} Already connected: ${creds.map((c) => `${c.name} (id: ${c._id})`).join(", ")} — set config.${slot} to one of these ids.`
             : `${need} None saved yet — ${n.oauthProvider ? `have the user connect it at ${FRONTEND_URL}/credentials` : "use create_credential"}.`,
         );
       }
@@ -654,7 +715,7 @@ export const TOOLS = [
       const n = resolveNode(args.node);
       const mine = creds.filter((c) => matchesNode(c.raw, n));
       if (mine.length) {
-        return `${n.label} (${n.key}) can use:\n${mine.map((c) => c.line).join("\n")}\nSet config.credentialId to one of these ids.`;
+        return `${n.label} (${n.key}) can use:\n${mine.map((c) => c.line).join("\n")}\nSet config.${await credentialSlot(n)} to one of these ids.`;
       }
       return n.oauthProvider
         ? `${n.label} (${n.key}) has no credential yet. ${credentialsPageHint(n.oauthProvider)}`
@@ -678,7 +739,8 @@ export const TOOLS = [
         },
         type: {
           type: "string",
-          description: "Credential type override; defaults to the node key, or 'api_key'",
+          description:
+            "Credential type override. Leave empty — it defaults to the type the node's own config panel looks for, which is what makes the credential show up there.",
         },
       },
       required: ["name"],
@@ -693,12 +755,13 @@ export const TOOLS = [
           "secret is required to save an API-key credential. Ask the user for the key from the app's own dashboard.",
         );
       }
-      const type = args.type || n?.integration || n?.key || "api_key";
+      const type = args.type || credentialTypeFor(n);
       const data = pick(
         await api.post("/credentials", { name: args.name, secret: args.secret, type }),
       );
       const saved = data.credential || {};
-      return `✅ Saved credential "${saved.name || args.name}" (${saved.type || type}) — id: ${saved._id || "?"}. Set config.credentialId to that id on the nodes that need it. The secret is stored encrypted and never read back.`;
+      const slot = n ? await credentialSlot(n) : "credentialId";
+      return `✅ Saved credential "${saved.name || args.name}" (${saved.type || type}) — id: ${saved._id || "?"}. Set config.${slot} to that id on the nodes that need it. The secret is stored encrypted and never read back.`;
     },
   },
   {
