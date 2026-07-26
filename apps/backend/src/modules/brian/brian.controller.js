@@ -122,6 +122,30 @@ LAYOUT:
 USE FOR: Route by category, priority, value threshold, user type
 \`\`\`
 
+### Pattern 2b — Success / Failed Split (error handling)
+
+Any action node can fork on its own outcome. Set \`config.splitOutputs: true\` on that
+node and it grows two dots instead of one: \`success\` (ran fine) and \`failed\` (threw).
+The failed branch runs INSTEAD of stopping the automation, so use it whenever a step
+talks to the outside world and the user cares what happens when it breaks.
+
+\`\`\`
+VISUAL:                 [http_request]  ← config.splitOutputs: true
+                         ✓/          ✗\\
+                  [Next step]        [slack: alert me]
+LAYOUT:
+  n2: http_request  x:400, y:300   config: { ..., splitOutputs: true }
+  n3: happy path    x:680, y:520   (edge: sourceHandle "success")
+  n4: failure path  x:120, y:520   (edge: sourceHandle "failed")
+USE FOR: API/HTTP calls, scraping, sending email, any paid or flaky service
+\`\`\`
+
+RULES:
+- Only set \`splitOutputs\` when you also wire BOTH \`success\` and \`failed\` edges.
+- Never on a trigger, and never on \`condition\` / \`loop\` / \`merge\` — those have their own outputs.
+- Reach for it (not a bare linear chain) when the user says "if it fails", "let me know
+  when it breaks", "retry", "fallback", or the flow hits an external API worth alerting on.
+
 ### Pattern 3 — Parallel Fan-out (broadcast)
 \`\`\`
 VISUAL:  [Trigger]──[Action]──●──[A]  [B]  [C]
@@ -449,7 +473,7 @@ const WORKFLOW_TOOL = {
             id:           { type: "string" },
             source:       { type: "string" },
             target:       { type: "string" },
-            sourceHandle: { type: "string", description: "Only for condition nodes: 'true' or 'false'" },
+            sourceHandle: { type: "string", description: "The output dot this edge leaves from. 'true'/'false' on a condition node. 'success'/'failed' when the source node has config.splitOutputs = true. 'output' for a plain single-output node. Omit only when unsure." },
             targetHandle: { type: "string", description: "For ai_agent inputs only: 'llm', 'integration', 'tools', or 'memory'. Omit for all other nodes. Legacy 'chat_model' is accepted but do not emit it." },
           },
           required: ["id", "source", "target"],

@@ -1,3 +1,5 @@
+import { normalizeEdgeHandles } from "../../store/edgeHandles";
+
 export function brianEdgeKey(edge) {
   return [
     edge.source,
@@ -179,6 +181,10 @@ export function mergeBrianFlow(existingNodes = [], existingEdges = [], flow = {}
     mergedNodes = mergedNodes.filter((n) => !triggerRemap.has(n.id));
   }
 
+  // Resolve incoming null handles before keying, or an existing edge on "output"
+  // and the same incoming edge on null hash to two different keys and both stay.
+  const incomingEdges = normalizeEdgeHandles(mergedNodes, repairedFlow.edges || []);
+
   const edgeMap = new Map();
   const idMap = new Map();
   const remapEdge = (edge) => {
@@ -193,7 +199,7 @@ export function mergeBrianFlow(existingNodes = [], existingEdges = [], flow = {}
     edgeMap.set(brianEdgeKey(e), e);
     if (e.id) idMap.set(e.id, brianEdgeKey(e));
   }
-  for (const edge of repairedFlow.edges || []) {
+  for (const edge of incomingEdges) {
     const e = remapEdge(edge);
     const key = brianEdgeKey(e);
     const oldKey = e.id ? idMap.get(e.id) : null;

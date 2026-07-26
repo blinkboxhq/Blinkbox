@@ -8,6 +8,7 @@ import {
   inferSchemaFromValue,
   validateAllNodeMappings,
 } from "./schemaEngine";
+import { normalizeEdgeHandles } from "./edgeHandles";
 
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 80;
@@ -442,8 +443,9 @@ export const createGraphSlice = (set, get) => ({
 
   // Replace the full graph from a collab:graph_sync event (after a remote save).
   // Skips nodes/edges that are already identical to avoid unnecessary re-renders.
-  applyGraphSync: (incomingNodes, incomingEdges) => {
+  applyGraphSync: (incomingNodes, rawEdges) => {
     const state = get();
+    const incomingEdges = normalizeEdgeHandles(incomingNodes, rawEdges);
     const newVars = calculateAllAvailableVariables(incomingNodes, incomingEdges, state.nodeOutputSchemas);
     set({
       nodes: incomingNodes,
@@ -455,8 +457,9 @@ export const createGraphSlice = (set, get) => ({
   },
 
   // Bulk-set nodes + edges (used by loadEngine)
-  setGraph: (nodes, edges) => {
+  setGraph: (nodes, rawEdges) => {
     const state = get();
+    const edges = normalizeEdgeHandles(nodes, rawEdges);
     const newVars = calculateAllAvailableVariables(
       nodes,
       edges,

@@ -24,7 +24,7 @@ test("toolToCanvas flips reversed agent satellite edges", () => {
       id: "e2",
       source: "n3",
       target: "n2",
-      sourceHandle: null,
+      sourceHandle: "agent_out",
       targetHandle: "llm",
       type: "configurable",
       data: { conditionPath: "" },

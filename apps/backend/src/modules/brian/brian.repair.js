@@ -49,6 +49,27 @@ function canonicalAgentHandle(handle) {
   return handle === "chat_model" ? "llm" : handle;
 }
 
+const NO_SPLIT = new Set(["condition", "loop", "merge"]);
+
+// Each source dot on a card is a handle with an id, and the canvas only hides a
+// card's "add step" stub when an edge claims that exact id. A null sourceHandle
+// claims nothing, so the stub lingers on a node that is visibly connected. The
+// executor already treats null as the success path, so resolving it to whichever
+// handle that path is on the source node is behavior-preserving.
+function normalizeSourceHandles(nodes, edges) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  return edges.map((e) => {
+    if (e.sourceHandle) return e;
+    const node = byId.get(e.source);
+    const bt = node?.data?.backendType;
+    let sourceHandle = "output";
+    if (e.targetHandle && AI_AGENT_HANDLES.has(e.targetHandle)) sourceHandle = "agent_out";
+    else if (bt === "condition") sourceHandle = "true";
+    else if (node?.data?.type !== "trigger" && !NO_SPLIT.has(bt) && node?.data?.config?.splitOutputs) sourceHandle = "success";
+    return { ...e, sourceHandle };
+  });
+}
+
 function integrationXs(count) {
   const predefined = AGENT_LAYOUT.integrationX[Math.min(count, AGENT_LAYOUT.integrationX.length - 1)];
   if (predefined?.length === count) return predefined;
@@ -426,6 +447,7 @@ export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
     positionsSeen.add(`${n.position.x},${n.position.y}`);
   });
 
+  canvasEdges = normalizeSourceHandles(canvasNodes, canvasEdges);
   canvasEdges = dedupeEdges(canvasEdges);
 
   const validation = validateGeneratedNodes(nodes, canvasNodes, canvasEdges);

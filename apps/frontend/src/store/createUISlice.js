@@ -1,6 +1,7 @@
 import api from "../lib/api";
 import { playBottomPanel, playConnect } from "../lib/sounds";
 import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
+import { defaultSourceHandle, normalizeEdgeHandles } from "./edgeHandles";
 
 // Build a reverse map: backendType → first matching variantId
 // (used to restore triggerVariant on load when it wasn't saved to backend)
@@ -137,6 +138,8 @@ export const createUISlice = (set, get) => ({
       edges: [...state.edges, {
         id: `e-${sourceNodeId}-${newId}`,
         source: sourceNodeId, target: newId,
+        sourceHandle: defaultSourceHandle(sourceNode),
+        targetHandle: null,
         type: 'configurable', data: { conditionPath: '' }, style: {},
       }],
       suggestionNode: null,
@@ -194,16 +197,19 @@ export const createUISlice = (set, get) => ({
         };
       });
 
-      const loadedEdges = workflow.edges.map((e) => ({
-        id: e.id || `edge-${e.source}-${e.target}`,
-        source: e.source,
-        target: e.target,
-        sourceHandle: e.sourceHandle || null,
-        targetHandle: e.targetHandle || null,
-        type: "configurable",
-        data: { conditionPath: e.conditionPath || "" },
-        style: {},
-      }));
+      const loadedEdges = normalizeEdgeHandles(
+        loadedNodes,
+        workflow.edges.map((e) => ({
+          id: e.id || `edge-${e.source}-${e.target}`,
+          source: e.source,
+          target: e.target,
+          sourceHandle: e.sourceHandle || null,
+          targetHandle: e.targetHandle || null,
+          type: "configurable",
+          data: { conditionPath: e.conditionPath || "" },
+          style: {},
+        })),
+      );
 
       // Cross-slice write: update graph + UI in one atomic set.
       // Reset ALL execution state so a freshly loaded workflow never inherits
