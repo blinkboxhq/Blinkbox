@@ -24,14 +24,15 @@ import { record } from "./mcp.routes.js";
  *      → learns this host is its own auth server (stable `resource`, no key).
  *   2. Client POSTs /oauth/register → throwaway client_id.
  *   3. Client opens /oauth/authorize in a popup. We render a real Blinkbox
- *      login + "Allow Claude to access your workspace" consent screen.
+ *      login + consent screen naming whichever client registered (never a
+ *      hardcoded vendor — any AI client can connect here).
  *   4. User signs in and clicks Allow → we mint a fresh, labeled bb_live_ key
  *      bound to that user, sign a 5-min auth code carrying it + the PKCE
  *      challenge, and 302 back to the client's redirect_uri.
  *   5. Client POSTs /oauth/token with the code + PKCE verifier → we return the
  *      bb_live_ key as the access_token. verifyMcpAuth already accepts it.
  *
- * Each connection gets its OWN key (labeled "Claude (web) — <date>"), so a user
+ * Each connection gets its OWN key (labeled "<client name> — <date>"), so a user
  * can revoke one connector without breaking the others, and no permanent key is
  * ever pasted into a URL.
  */
@@ -123,6 +124,17 @@ function mcpResource(req) {
 
 function sha256base64url(input) {
   return crypto.createHash("sha256").update(input).digest("base64url");
+}
+
+// Display name for whichever AI client is connecting — the name it sent at
+// dynamic registration. Any MCP client can register, so this page must never
+// assume a vendor. Registration is open, so the string is untrusted: clamp it
+// here, HTML-escape it at render. Empty means "unnamed", and the copy falls back
+// to neutral wording.
+function clientLabel(client) {
+  const raw = String(client?.clientName || "").trim();
+  if (!raw || raw.toLowerCase() === "mcp client") return "";
+  return raw.slice(0, 40);
 }
 
 // Mint a fresh MCP key bound to a user — same shape as the dashboard key route,
@@ -263,11 +275,14 @@ async function validateClient(clientId, redirectUri) {
 // component rules are inlined below. The OAuth params ride through as hidden
 // fields so the POST can rebuild the redirect. `error` shows a failed login
 // inline without losing the flow.
-function consentPage({ params, error, googleClientId }) {
+function consentPage({ params, error, googleClientId, clientName }) {
   const esc = (s) =>
     String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
     );
+  // Vendor-neutral: named clients get their own name, unnamed ones get "this app".
+  const who = clientName ? esc(clientName) : "this app";
+  const heading = clientName ? `Connect to ${esc(clientName)}` : "Connect your AI assistant";
   const hidden = ["redirect_uri", "state", "code_challenge", "code_challenge_method", "client_id", "scope", "resource"]
     .map((k) => `<input type="hidden" name="${k}" value="${esc(params[k])}" />`)
     .join("");
@@ -451,8 +466,8 @@ function consentPage({ params, error, googleClientId }) {
 
   <div class="card">
     <div class="intro">
-      <h1 class="head">Connect to Claude</h1>
-      <p class="sub">Sign in to let <b>Claude</b> access your workspace — list, run, and build automations on your behalf.</p>
+      <h1 class="head">${heading}</h1>
+      <p class="sub">Sign in to let <b>${who}</b> access your workspace — list, run, and build automations on your behalf.</p>
     </div>
     ${errBanner}
     <form method="POST" action="/oauth/authorize">
@@ -475,7 +490,7 @@ function consentPage({ params, error, googleClientId }) {
     ${googleBlock}
   </div>
 
-  <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
+  <p class="foot">Connecting grants ${who} a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
 <script>
 (function () {
   var amb = document.querySelector(".bb-ambient"), raf = 0;
@@ -511,7 +526,14 @@ router.get("/oauth/authorize", async (req, res) => {
     return res.status(400).json({ error: "invalid_request", error_description: check.reason });
   }
   res.set("Content-Type", "text/html; charset=utf-8");
-  res.send(consentPage({ params: req.query, error: null, googleClientId: GOOGLE_CLIENT_ID }));
+  res.send(
+    consentPage({
+      params: req.query,
+      error: null,
+      googleClientId: GOOGLE_CLIENT_ID,
+      clientName: clientLabel(check.client),
+    }),
+  );
 });
 
 // ── Authorize (POST) — authenticate, mint key, issue code ─────────────────────
@@ -528,9 +550,10 @@ router.post("/oauth/authorize", async (req, res) => {
     return res.status(400).json({ error: "invalid_request", error_description: check.reason });
   }
 
+  const clientName = clientLabel(check.client);
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.status(401).send(consentPage({ params: body, error, googleClientId: GOOGLE_CLIENT_ID }));
+    res.status(401).send(consentPage({ params: body, error, googleClientId: GOOGLE_CLIENT_ID, clientName }));
   };
 
   if (!email || !password) {
@@ -548,7 +571,7 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Invalid email or password.");
   }
   if (!user.password) {
-    return reRender("This account uses Google sign-in. Create a password in Blinkbox settings to connect Claude.");
+    return reRender("This account uses Google sign-in. Create a password in Blinkbox settings to connect this app.");
   }
   const ok = await bcrypt.compare(String(password), user.password);
   if (!ok) {
@@ -558,7 +581,7 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Please verify your email at blinkbox.net before connecting.");
   }
 
-  return issueCodeAndRedirect(req, res, user, { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope }, reRender);
+  return issueCodeAndRedirect(req, res, user, { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope, clientName }, reRender);
 });
 
 // Shared tail for both password and Google sign-in: mint a per-connection key,
@@ -567,11 +590,11 @@ router.post("/oauth/authorize", async (req, res) => {
 // without it, strict clients (Claude/ChatGPT) discard the freshly issued token
 // and loop the whole OAuth flow with a new client_id instead of calling /api/mcp.
 async function issueCodeAndRedirect(req, res, user, params, onError) {
-  const { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope } = params;
+  const { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope, clientName } = params;
   const today = new Date().toISOString().slice(0, 10);
   let rawKey;
   try {
-    rawKey = await mintKeyForUser(user._id, `Claude connector — ${today}`);
+    rawKey = await mintKeyForUser(user._id, `${clientName || "AI connector"} — ${today}`);
   } catch (e) {
     console.error("[mcp issueCode] mint key failed:", e?.message || e);
     return onError(`Could not create a connection key. (debug: ${e?.message || "unknown"})`);
@@ -635,6 +658,7 @@ router.get("/oauth/google/start", async (req, res) => {
         params: req.query,
         error: "Google sign-in isn't configured. Use your email and password.",
         googleClientId: null,
+        clientName: clientLabel(check.client),
       }),
     );
   }
@@ -647,6 +671,7 @@ router.get("/oauth/google/start", async (req, res) => {
       cc: code_challenge ? String(code_challenge) : null,
       ccm: code_challenge_method ? String(code_challenge_method) : null,
       sc: scope ? String(scope) : null,
+      cn: clientLabel(check.client) || null,
       t: "mcp_google_state",
     },
     JWT_SECRET,
@@ -678,10 +703,11 @@ router.get("/oauth/google/callback", async (req, res) => {
     console.error("[mcp google callback] state verify failed:", e?.message || e);
     return res.status(400).json({ error: "invalid_request", error_description: "Google sign-in expired. Start again." });
   }
-  const params = { redirect_uri: st.ru, client_id: st.ci, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm, scope: st.sc };
+  const clientName = st.cn ? String(st.cn).slice(0, 40) : "";
+  const params = { redirect_uri: st.ru, client_id: st.ci, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm, scope: st.sc, clientName };
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.status(401).send(consentPage({ params, error, googleClientId: GOOGLE_CLIENT_ID }));
+    res.status(401).send(consentPage({ params, error, googleClientId: GOOGLE_CLIENT_ID, clientName }));
   };
 
   if (gError) return reRender("Google sign-in was cancelled. Try again or use your email and password.");
