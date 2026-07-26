@@ -9,7 +9,7 @@ export function brianEdgeKey(edge) {
   ].join("|");
 }
 
-const MODEL_BT = new Set(["agent_anthropic", "agent_openai", "agent_gemini", "agent_xai", "agent_deepseek", "agent_moonshot", "agent_nvidia_nim", "agent_perplexity", "agent_openrouter", "agent_zai", "agent_minimax", "agent_sakana"]);
+const MODEL_BT = new Set(["agent_anthropic", "agent_openai", "agent_gemini", "agent_xai", "agent_deepseek", "agent_moonshot", "agent_nvidia_nim", "agent_perplexity", "agent_openrouter", "agent_zai", "agent_minimax", "agent_sakana", "agent_groq", "agent_gemma", "agent_ollama", "agent_lmstudio", "agent_llm"]);
 const isMemoryBT = (bt) => bt === "agent_memory" || bt.startsWith("agent_memory_");
 const TOOL_BT = new Set(["agent_tool"]);
 const INTEG_PREFIX = "agent_integration_";
@@ -47,16 +47,72 @@ function integrationXs(count) {
   return Array.from({ length: count }, (_, i) => Math.round(start + i * gap));
 }
 
+function uniqueNodeId(nodes, base) {
+  const ids = new Set(nodes.map((node) => String(node.id)));
+  if (!ids.has(base)) return base;
+  let i = 2;
+  while (ids.has(`${base}_${i}`)) i += 1;
+  return `${base}_${i}`;
+}
+
+// An agent satellite (model, memory, tool, integration) is a sub-node, never a
+// step in the chain. With no hub to feed it renders as an orphan circle and the
+// flow can't run as an agent, so build the hub the satellite implies and route
+// the chain through it: whatever pointed at the satellite now points at the hub,
+// and whatever the satellite fed now feeds off the hub.
+function synthesizeAgentHub(nodes, rawEdges) {
+  const satellites = nodes.filter((node) => slotFor(node));
+  if (!satellites.length) return null;
+
+  const satIds = new Set(satellites.map((node) => String(node.id)));
+  const seed = satellites.find((node) => MODEL_BT.has(backendType(node))) || satellites[0];
+  const seedConfig = seed.data?.config || {};
+  const hub = {
+    id: uniqueNodeId(nodes, "n_ai_agent"),
+    type: "custom",
+    position: { ...LAYOUT.hub },
+    data: {
+      label: "AI Agent",
+      backendType: "ai_agent",
+      type: "action",
+      config: {
+        prompt: seedConfig.prompt || "{{$json.message}}",
+        ...(seedConfig.systemPrompt ? { systemPrompt: seedConfig.systemPrompt } : {}),
+      },
+    },
+  };
+
+  const edges = (rawEdges || []).map((edge) => {
+    const source = String(edge.source || "");
+    const target = String(edge.target || "");
+    if (satIds.has(target) && !satIds.has(source)) return { ...edge, target: hub.id, targetHandle: null };
+    if (satIds.has(source) && !satIds.has(target)) return { ...edge, source: hub.id, sourceHandle: "output" };
+    return edge;
+  });
+
+  return { hub, edges };
+}
+
 function visualRepairBrianFlow(flow = {}) {
   const nodes = (flow.nodes || []).map((node) => ({
     ...node,
     position: { ...(node.position || { x: 0, y: 0 }) },
     data: { ...(node.data || {}), config: { ...(node.data?.config || {}) } },
   }));
-  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
-  const agent = nodes.find((node) => backendType(node) === "ai_agent");
 
-  let edges = (flow.edges || [])
+  let rawEdges = flow.edges || [];
+  let agent = nodes.find((node) => backendType(node) === "ai_agent");
+  if (!agent) {
+    const synthesized = synthesizeAgentHub(nodes, rawEdges);
+    if (synthesized) {
+      agent = synthesized.hub;
+      rawEdges = synthesized.edges;
+      nodes.push(agent);
+    }
+  }
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+
+  let edges = rawEdges
     .map((edge, i) => ({
       id: edge.id || `e_brian_${i + 1}`,
       source: String(edge.source || ""),
@@ -215,6 +271,18 @@ export function mergeBrianFlow(existingNodes = [], existingEdges = [], flow = {}
   );
 
   return { nodes: mergedNodes, edges };
+}
+
+// Saved graphs can already be missing their hub (written straight through the
+// API by an assistant). Heal them on load, but only then — repairing a graph
+// that has a hub would also re-run the canonical layout and move nodes the user
+// placed by hand.
+export function healAgentHub(nodes = [], edges = []) {
+  const hasHub = nodes.some((node) => backendType(node) === "ai_agent");
+  const hasSatellite = nodes.some((node) => slotFor(node));
+  if (hasHub || !hasSatellite) return { nodes, edges };
+  const repaired = visualRepairBrianFlow({ nodes, edges });
+  return { nodes: repaired.nodes, edges: repaired.edges };
 }
 
 export { visualRepairBrianFlow };

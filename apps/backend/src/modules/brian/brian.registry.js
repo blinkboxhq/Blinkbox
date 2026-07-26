@@ -11,18 +11,38 @@ export const TRIGGER_BT = new Set([
   "google_calendar_trigger", "form_trigger", "chat_trigger", "db_trigger",
 ]);
 
+// Every language-model sub-node the backend registry can run. A type missing
+// here has no hub slot, so it would be wired as a step in the chain instead of
+// into the agent's `llm` handle.
 export const MODEL_BT = new Set([
   "agent_anthropic",
   "agent_openai",
   "agent_gemini",
   "agent_groq",
+  "agent_deepseek",
+  "agent_moonshot",
+  "agent_perplexity",
+  "agent_xai",
+  "agent_nvidia_nim",
+  "agent_openrouter",
+  "agent_zai",
+  "agent_minimax",
+  "agent_sakana",
+  "agent_gemma",
+  "agent_ollama",
+  "agent_lmstudio",
+  "agent_llm",
 ]);
 
 export const MEMORY_BT = new Set([
+  "agent_memory",
   "agent_memory_supabase",
   "agent_memory_pinecone",
   "agent_memory_postgres",
   "agent_memory_redis",
+  "agent_memory_mongodb",
+  "agent_memory_window",
+  "agent_memory_zep",
 ]);
 
 // Legacy agent_integration_* aliases. Any app node can now feed an agent's

@@ -61,7 +61,11 @@ function flowToWorkflow(flow, name) {
     .map((n) => ({
       id: n.id,
       type: n.backendType || n.data?.backendType || n.type || n.data?.type,
-      data: n.data || {},
+      // `data` on the save schema is the node's flat config and `description` is
+      // its display name. Passing the canvas node's nested data through instead
+      // buries the config one level deep (config.config) and loses the name.
+      data: n.data?.config || n.config || {},
+      description: n.data?.label || n.label || "",
       position: n.position || { x: n.x || 0, y: n.y || 0 },
     }))
     .filter((n) => n.id && n.type);

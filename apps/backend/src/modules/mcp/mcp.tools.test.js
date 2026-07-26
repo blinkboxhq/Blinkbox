@@ -1,8 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { TOOLS, listToolSpecs } from "./mcp.tools.js";
 import { PICKER_NODES } from "../../nodes/nodeCatalog.js";
 import { NODE_KB } from "../brian/brian.nodes.js";
+
+// mcp.tools.js pulls config/env.js, which throws at import time when these are
+// unset. CI has no .env, so seed them before the dynamic import.
+process.env.JWT_SECRET ||= "test-jwt-secret";
+process.env.ENCRYPTION_KEY ||= "0123456789abcdef0123456789abcdef";
+
+const { TOOLS, listToolSpecs } = await import("./mcp.tools.js");
 
 const call = (name, args, api) => TOOLS.find((t) => t.name === name).handler(args, api);
 

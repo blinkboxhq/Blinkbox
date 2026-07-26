@@ -400,7 +400,7 @@ export const NODE_KB = {
     out: ["response", "toolCalls", "usage"],
     fields: [
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant that processes customer requests.", d: "Agent system instructions" },
-      { k: "userMessage", t: "string", r: true, ex: "{{$json.message}}", d: "User input to the agent" },
+      { k: "prompt", t: "string", r: true, ex: "{{$json.message}}", d: "User input to the agent" },
       { k: "model", t: "select", r: false, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|gpt-4o|gpt-4o-mini" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "AI model credential" },
     ],
@@ -462,7 +462,7 @@ export const NODE_KB = {
     fields: [
       { k: "model", t: "select", r: true, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|claude-haiku-4-5-20251001" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
-      { k: "userMessage", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
+      { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "maxTokens", t: "number", r: false, ex: 1024, d: "Max output tokens" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Anthropic API key credential" },
     ],
@@ -473,7 +473,7 @@ export const NODE_KB = {
     fields: [
       { k: "model", t: "select", r: true, ex: "gpt-4o-mini", d: "gpt-4o|gpt-4o-mini|gpt-4-turbo|o1-mini" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
-      { k: "userMessage", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
+      { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "maxTokens", t: "number", r: false, ex: 1024, d: "Max output tokens" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "OpenAI API key credential" },
     ],
@@ -484,7 +484,7 @@ export const NODE_KB = {
     fields: [
       { k: "model", t: "select", r: true, ex: "gemini-2.0-flash", d: "gemini-2.0-flash|gemini-1.5-pro|gemini-1.5-flash" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
-      { k: "userMessage", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
+      { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Google AI credential" },
     ],
   },
@@ -493,7 +493,7 @@ export const NODE_KB = {
     out: ["content", "usage"],
     fields: [
       { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|mixtral-8x7b" },
-      { k: "userMessage", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
+      { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Groq API key credential" },
     ],
   },

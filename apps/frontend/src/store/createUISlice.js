@@ -1,5 +1,6 @@
 import api from "../lib/api";
 import { playBottomPanel, playConnect } from "../lib/sounds";
+import { healAgentHub } from "../pages/Workspace/brianFlowMerge";
 import { TRIGGER_VARIANTS } from "../pages/Workspace/triggerVariants";
 import { defaultSourceHandle, normalizeEdgeHandles } from "./edgeHandles";
 
@@ -189,7 +190,10 @@ export const createUISlice = (set, get) => ({
           type: "custom",
           position: n.position || { x: 400 + index * 250, y: 350 },
           data: {
-            label: n.description || resolvedType,
+            // `description` holds the display name, but assistant-written
+            // automations often set it to the backendType — fall back to the
+            // name they did save inside data.
+            label: (n.description && n.description !== n.type ? n.description : null) || n.data?.label || resolvedType,
             backendType: resolvedType,
             type: isTriggerNode ? "trigger" : "action",
             config,
@@ -211,12 +215,14 @@ export const createUISlice = (set, get) => ({
         })),
       );
 
+      const healed = healAgentHub(loadedNodes, loadedEdges);
+
       // Cross-slice write: update graph + UI in one atomic set.
       // Reset ALL execution state so a freshly loaded workflow never inherits
       // live/running indicators from a previous workflow's run.
       set({
-        nodes: loadedNodes,
-        edges: loadedEdges,
+        nodes: healed.nodes,
+        edges: healed.edges,
         workflowName: workflow.name,
         isActive: workflow.active === true || workflow.status === "active",
         isLoading: false,

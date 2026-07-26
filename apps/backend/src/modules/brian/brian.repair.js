@@ -137,7 +137,7 @@ function upgradeLinearServicesToAgent(nodes, edges, userText = "") {
       y: AGENT_LAYOUT.hub.y,
       config: {
         systemPrompt: "You are a signup automation agent. When a signup event arrives, read the user's email from the trigger payload, send a warm thank-you email through the Gmail integration, and append the signup email plus timestamp to the Google Sheets integration.",
-        userMessage: "New signup payload: {{$json}}",
+        prompt: "New signup payload: {{$json}}",
       },
     },
     {
@@ -185,6 +185,48 @@ function upgradeLinearServicesToAgent(nodes, edges, userText = "") {
     nodes: [...upgradedNodes, ...passthroughNodes],
     edges: upgradedEdges,
   };
+}
+
+// An agent satellite (model, memory, tool, integration) is a sub-node, never a
+// step in the chain. With no hub to feed it renders as an orphan circle and the
+// flow can't run as an agent, so build the hub the satellite implies and route
+// the chain through it. Slot wiring is left to the auto-wire pass below, which
+// already connects every unwired satellite to the hub.
+function ensureAgentHub(nodes, edges) {
+  if (nodes.some((node) => node.backendType === "ai_agent")) return { nodes, edges };
+
+  const satellites = nodes.filter((node) => HUB_SLOT.get(node.backendType));
+  if (!satellites.length) return { nodes, edges };
+
+  const satIds = new Set(satellites.map((node) => String(node.id)));
+  const seed = satellites.find((node) => MODEL_BT.has(node.backendType)) || satellites[0];
+  const hubId = uniqueNodeId(nodes, "n_ai_agent");
+  const hub = {
+    id: hubId,
+    backendType: "ai_agent",
+    label: "AI Agent",
+    nodeType: "action",
+    x: AGENT_LAYOUT.hub.x,
+    y: AGENT_LAYOUT.hub.y,
+    config: {
+      prompt: seed.config?.prompt || "{{$json.message}}",
+      ...(seed.config?.systemPrompt ? { systemPrompt: seed.config.systemPrompt } : {}),
+    },
+  };
+
+  const rewired = edges.map((edge) => {
+    const source = String(edge.source || "");
+    const target = String(edge.target || "");
+    if (satIds.has(target) && !satIds.has(source)) return { ...edge, target: hubId, targetHandle: null };
+    if (satIds.has(source) && !satIds.has(target)) return { ...edge, source: hubId, sourceHandle: null };
+    return edge;
+  });
+
+  const firstSatellite = nodes.findIndex((node) => satIds.has(String(node.id)));
+  const withHub = [...nodes];
+  withHub.splice(firstSatellite < 0 ? withHub.length : firstSatellite, 0, hub);
+
+  return { nodes: withHub, edges: rewired };
 }
 
 function isEmptyRequiredValue(value) {
@@ -242,6 +284,7 @@ function validateGeneratedNodes(rawNodes, canvasNodes, canvasEdges) {
 export function toolToCanvas({ nodes = [], edges = [], userText = "" }) {
   if (!nodes.length) return null;
   ({ nodes, edges } = upgradeLinearServicesToAgent(nodes, edges, userText));
+  ({ nodes, edges } = ensureAgentHub(nodes, edges));
 
   const hasAiAgent = nodes.some((n) => n.backendType === "ai_agent");
   const isTriggerNode = (n) => TRIGGER_BT.has(n.backendType || "") || n.nodeType === "trigger";

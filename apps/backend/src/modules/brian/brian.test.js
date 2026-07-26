@@ -54,6 +54,60 @@ test("toolToCanvas auto-wires missing satellite edges to ai_agent", () => {
   ));
 });
 
+test("toolToCanvas builds the hub an orphan agent satellite implies", () => {
+  const flow = toolToCanvas({
+    nodes: [
+      { id: "trigger_1", backendType: "chat_trigger", label: "Chat Trigger", nodeType: "trigger", x: 0, y: 0, config: {} },
+      { id: "agent_1", backendType: "agent_nvidia_nim", label: "NVIDIA NIM", nodeType: "action", x: 0, y: 0, config: { model: "nvidia/nemotron", credentialId: "c1", prompt: "{{$json.message}}", systemPrompt: "Be concise." } },
+    ],
+    edges: [{ id: "e_trigger_agent", source: "trigger_1", target: "agent_1", sourceHandle: "output" }],
+  });
+
+  assert.ok(flow);
+  const hub = flow.nodes.find((n) => n.data.backendType === "ai_agent");
+  assert.ok(hub, "hub synthesized");
+  assert.equal(hub.data.config.prompt, "{{$json.message}}");
+  assert.equal(hub.data.config.systemPrompt, "Be concise.");
+  assert.ok(flow.edges.some((e) => e.source === "trigger_1" && e.target === hub.id && !e.targetHandle));
+  assert.ok(flow.edges.some((e) => e.source === "agent_1" && e.target === hub.id && e.targetHandle === "llm"));
+  assert.ok(!flow.edges.some((e) => e.target === "agent_1"), "satellite is never a chain target");
+});
+
+test("visualRepairBrianFlow builds the hub a saved orphan satellite implies", () => {
+  const flow = visualRepairBrianFlow({
+    nodes: [
+      { id: "trigger_1", type: "custom", position: { x: 0, y: 0 }, data: { label: "On Chat Message", backendType: "chat_trigger", type: "trigger", config: {} } },
+      { id: "agent_1", type: "custom", position: { x: 0, y: 0 }, data: { label: "NVIDIA NIM", backendType: "agent_nvidia_nim", type: "action", config: { prompt: "{{$json.message}}" } } },
+    ],
+    edges: [{ id: "e1", source: "trigger_1", target: "agent_1", sourceHandle: "output", targetHandle: null }],
+  });
+
+  const hub = flow.nodes.find((n) => n.data.backendType === "ai_agent");
+  assert.ok(hub, "hub synthesized");
+  assert.deepEqual(hub.position, { x: 400, y: 300 });
+  assert.equal(hub.data.config.prompt, "{{$json.message}}");
+  assert.ok(flow.edges.some((e) => e.source === "trigger_1" && e.target === hub.id && !e.targetHandle));
+  assert.ok(flow.edges.some((e) =>
+    e.source === "agent_1" &&
+    e.target === hub.id &&
+    e.sourceHandle === "agent_out" &&
+    e.targetHandle === "llm"
+  ));
+});
+
+test("visualRepairBrianFlow leaves a hubless non-agent flow alone", () => {
+  const flow = visualRepairBrianFlow({
+    nodes: [
+      { id: "t", type: "custom", position: { x: 10, y: 20 }, data: { label: "Webhook", backendType: "webhook", type: "trigger", config: {} } },
+      { id: "a", type: "custom", position: { x: 30, y: 40 }, data: { label: "Slack", backendType: "slack", type: "action", config: {} } },
+    ],
+    edges: [{ id: "e1", source: "t", target: "a", sourceHandle: "output", targetHandle: null }],
+  });
+
+  assert.equal(flow.nodes.length, 2);
+  assert.deepEqual(flow.nodes.map((n) => n.position), [{ x: 10, y: 20 }, { x: 30, y: 40 }]);
+});
+
 test("toolToCanvas drops inbound trigger edges", () => {
   const flow = toolToCanvas({
     nodes: [
