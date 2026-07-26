@@ -589,8 +589,11 @@ export const TOOLS = [
       } else if (n.integration) {
         const actions = await listActions(n.integration);
         const def = await defaultOperation(n.integration);
+        // Name the default operation's required params here so the common case
+        // needs no second call.
+        const defReq = actions.find((a) => a.key === def)?.required || [];
         out.push(
-          `Actions: ${actions.length} operation(s)${def ? `, default "${def}"` : ""} — run list_node_actions with node "${n.key}" to see them and their parameters.`,
+          `Actions: ${actions.length} operation(s)${def ? `, default "${def}"${defReq.length ? ` (requires ${defReq.join(", ")})` : ""}` : ""} — run list_node_actions with node "${n.key}" to see them and their parameters.`,
         );
       }
 
@@ -657,12 +660,25 @@ export const TOOLS = [
         return `No operations on ${n.key} match "${args.search}". It has ${all.length} in total — call again without a search.`;
       }
 
+      // Required first, so the ones the operation refuses to run without are the
+      // ones that survive the cap.
+      const renderParams = (a) => {
+        const req = new Set(a.required || []);
+        const names = Object.keys(a.params).sort(
+          (x, y) => (req.has(y) ? 1 : 0) - (req.has(x) ? 1 : 0),
+        );
+        const shown = names
+          .slice(0, 12)
+          .map((k) => `${k}${req.has(k) ? "*" : ""}${a.params[k]?.type ? `:${a.params[k].type}` : ""}`);
+        if (names.length > 12) shown.push(`+${names.length - 12} more`);
+        return shown.join(", ");
+      };
+
       const lines = actions.slice(0, 150).map((a) => {
         const bits = [];
         if (a.recommended || a.key === def) bits.push("default");
         if (a.scopes.length) bits.push(`scopes: ${a.scopes.join(" ")}`);
-        const params = a.params ? Object.keys(a.params) : null;
-        if (params?.length) bits.push(`params: ${params.join(", ")}`);
+        if (a.params && Object.keys(a.params).length) bits.push(`params: ${renderParams(a)}`);
         return `• ${a.key} — ${a.label}${a.description ? ` — ${a.description}` : ""}${bits.length ? ` [${bits.join(" · ")}]` : ""}`;
       });
 
@@ -678,7 +694,12 @@ export const TOOLS = [
           `Resource pickers (resolve live once a credential is set): ${kinds.map((k) => `${k.kind} → config.${k.param}`).join(", ")}`,
         );
       }
-      if (!actions.some((a) => a.params)) {
+      if (actions.some((a) => a.params && Object.keys(a.params).length)) {
+        out.push(
+          "Params go in the node config next to `operation`. A * marks one the operation refuses to run without. " +
+            "The list is read off the handlers, so it can miss a key it never names directly — if the app documents a field that isn't here, set it anyway and confirm with a test run.",
+        );
+      } else {
         out.push(
           "Parameters aren't declared for this app yet — pass the app's own field names in the node config and confirm with a test run.",
         );

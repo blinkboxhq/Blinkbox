@@ -7,11 +7,15 @@
  * scope union without hand-maintaining a second copy of the same knowledge.
  *
  * Apps without an OPERATION_SCHEMA still work: their operations are humanised
- * from the OPERATIONS keys and exposed with a passthrough `params` object.
+ * from the OPERATIONS keys, and their arguments come from OPERATION_PARAMS —
+ * derived from the handlers themselves, since no app hand-declares `params`.
+ * The passthrough `params` object stays open behind the derived ones because
+ * static derivation can miss a key it cannot see.
  */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getOperationParams } from "./operationParams.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGED_ROOT = path.join(HERE, "_packaged");
@@ -110,15 +114,36 @@ export async function listActions(type) {
   const fallbackDefault = mod.DEFAULT_OPERATION;
   return keys.map((key) => {
     const s = schema[key] || {};
+    const derived = s.params ? null : derivedParams(type, key);
     return {
       key,
       label: s.label || humanize(key),
       description: s.description || "",
-      params: s.params || null,
+      params: s.params || derived?.params || null,
+      required: derived?.required || paramsRequired(s.params),
+      derived: Boolean(derived),
       scopes: Array.isArray(s.scopes) ? s.scopes : [],
       recommended: s.recommended === true || key === fallbackDefault,
     };
   });
+}
+
+function paramsRequired(params) {
+  return params ? Object.keys(params).filter((k) => params[k]?.required) : [];
+}
+
+// The config keys the handler is seen to read, as JSON-schema properties. A key
+// with no inferable type stays untyped rather than being guessed at.
+function derivedParams(type, key) {
+  const d = getOperationParams(type, key);
+  if (!d) return null;
+  const params = {};
+  const required = [];
+  for (const [name, meta] of Object.entries(d)) {
+    params[name] = meta.t ? { type: meta.t } : {};
+    if (meta.r) required.push(name);
+  }
+  return { params, required };
 }
 
 export async function defaultOperation(type) {
@@ -174,6 +199,10 @@ export async function buildToolSchema(type, enabledActions) {
   let untyped = false;
   for (const a of actions) {
     if (!a.params) { untyped = true; continue; }
+    // Derivation reports the keys a handler is seen to read; one it cannot see
+    // statically would otherwise become unreachable, so the free-form escape
+    // hatch stays open alongside the typed properties.
+    if (a.derived) untyped = true;
     for (const [name, def] of Object.entries(a.params)) {
       if (properties[name]) continue;
       const { required: _req, ...rest } = def || {};
