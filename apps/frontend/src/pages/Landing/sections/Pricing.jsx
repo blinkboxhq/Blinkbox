@@ -10,7 +10,7 @@ const TIERS = [
     price: '$0',
     unit: 'forever',
     tagline: 'For your first automations.',
-    features: ['3 active workflows', '1,000 runs / month', 'All 251 integrations', 'Community support'],
+    features: ['2,000 credits / month', 'Unlimited workflows', 'All 251 integrations', 'Community support'],
     cta: 'Start free',
     featured: false,
   },
@@ -19,17 +19,17 @@ const TIERS = [
     price: '$19',
     unit: '/ month',
     tagline: 'For builders who ship daily.',
-    features: ['Unlimited workflows', '50,000 runs / month', 'Brian AI copilot', 'Retries, delays & branching', 'Priority support'],
-    cta: 'Start Pro trial',
+    features: ['150,000 credits / month', 'Buy extra credits any time', 'Brian AI copilot', 'Retries, delays & branching', 'Priority support'],
+    cta: 'Go Pro',
     featured: true,
   },
   {
-    name: 'Team',
-    price: 'Custom',
-    unit: '',
-    tagline: 'For orgs that self-host.',
-    features: ['Everything in Pro', 'Self-hosted or private cloud', 'SSO & audit logs', 'Shared credentials & RBAC', 'Dedicated support'],
-    cta: 'Talk to us',
+    name: 'Pay as you go',
+    price: '$10',
+    unit: 'and up',
+    tagline: 'No subscription, no reset.',
+    features: ['50,000 credits for $10', 'Better rates on bigger packs', 'Credits never expire', 'Works on any plan'],
+    cta: 'Buy credits',
     featured: false,
   },
 ];
@@ -47,13 +47,13 @@ export default function Pricing() {
         <div className="mb-16 text-center">
           <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f97e8]">Pricing</p>
           <h2 className="mx-auto max-w-[620px] font-semibold tracking-[-0.02em] text-[#fafafa]" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-            Priced per plan,{' '}
+            One balance,{' '}
             <span className="bg-gradient-to-br from-white via-[#8fb4ff] to-[#1d5fe0] bg-clip-text text-transparent">
-              not per task.
+              zero lock-in.
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-[440px] text-[15px] text-[#8c8c8c]">
-            No metered surprises. No paying for every step. Just run your automations.
+            Credits pay for the steps you actually run. Take the monthly plan, or just top up — purchased credits never expire.
           </p>
         </div>
 

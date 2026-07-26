@@ -267,10 +267,14 @@ export default function Dashboard() {
     };
   }, [fetchWorkflows]);
 
+  const fetchBillingUsage = useCallback(() => {
+    api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!user) return;
-    api.get('/api/billing/usage').then(r => setBillingUsage(r.data)).catch(() => {});
-  }, [user]);
+    fetchBillingUsage();
+  }, [user, fetchBillingUsage]);
 
   useEffect(() => {
     if (!user) return;
@@ -406,7 +410,7 @@ export default function Dashboard() {
         {activeTab === 'usage' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[760px] mx-auto w-full">
-              <UsagePage usage={billingUsage} />
+              <UsagePage usage={billingUsage} onRefresh={fetchBillingUsage} />
             </div>
           </div>
         )}

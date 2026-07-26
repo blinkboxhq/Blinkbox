@@ -144,7 +144,24 @@ export function getNodeCost(nodeType) {
 }
 
 /**
+ * Split a cost across the two buckets: plan credits drain first, purchased
+ * credits cover the rest. Pure — the atomic update and the tests both use it.
+ */
+export function splitSpend(cost, planRoom, purchasedCredits) {
+  const fromPlan = Math.max(0, Math.min(cost, planRoom));
+  const fromPurchased = Math.min(cost - fromPlan, Math.max(0, purchasedCredits));
+  return { fromPlan, fromPurchased, covered: fromPlan + fromPurchased >= cost };
+}
+
+function balanceOf(usage) {
+  const planRemaining = Math.max(0, usage.monthlyLimit - usage.creditsUsed);
+  const purchasedCredits = usage.purchasedCredits || 0;
+  return { planRemaining, purchasedCredits, remaining: planRemaining + purchasedCredits };
+}
+
+/**
  * Check if a workspace has enough credits for a node execution.
+ * Counts plan credits and purchased credits together.
  * Does NOT deduct — call deductCredits() after successful execution.
  *
  * @returns {{ allowed: boolean, remaining: number, cost: number }}
@@ -156,7 +173,7 @@ export async function checkCredits(workspaceId, nodeType) {
   if (cost === 0) return { allowed: true, remaining: Infinity, cost: 0 };
 
   const usage = await WorkspaceUsage.getOrCreate(workspaceId);
-  const remaining = usage.monthlyLimit - usage.creditsUsed;
+  const { planRemaining, purchasedCredits, remaining } = balanceOf(usage);
 
   return {
     allowed: remaining >= cost,
@@ -165,13 +182,17 @@ export async function checkCredits(workspaceId, nodeType) {
     plan: usage.plan,
     creditsUsed: usage.creditsUsed,
     monthlyLimit: usage.monthlyLimit,
+    planRemaining,
+    purchasedCredits,
   };
 }
 
 /**
  * Deduct credits after a successful node execution.
- * Uses atomic $inc to prevent race conditions.
- * Caps history at 100 entries with $slice.
+ *
+ * The split depends on the current balance, so the update is guarded by the
+ * values it was computed from and retried on a concurrent write. After the
+ * retries we fall back to charging the plan bucket rather than lose the debit.
  *
  * @returns {{ creditsUsed: number, remaining: number }}
  */
@@ -179,28 +200,89 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
   const cost = getNodeCost(nodeType);
   if (cost === 0) return { creditsUsed: 0, remaining: Infinity };
 
-  const result = await WorkspaceUsage.findOneAndUpdate(
-    { workspaceId },
-    {
-      $inc: { creditsUsed: cost },
-      $push: {
-        history: {
-          $each: [{
-            executionId: executionId.toString(),
-            nodeId,
-            nodeType,
-            credits: cost,
-            at: new Date(),
-          }],
-          $slice: -100, // Keep last 100 entries
-        },
+  const entry = {
+    executionId: executionId.toString(),
+    nodeId,
+    nodeType,
+    credits: cost,
+    at: new Date(),
+  };
+  const push = { history: { $each: [entry], $slice: -100 } };
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const usage = await WorkspaceUsage.getOrCreate(workspaceId);
+    const { planRemaining, purchasedCredits } = balanceOf(usage);
+    const { fromPlan, fromPurchased } = splitSpend(cost, planRemaining, purchasedCredits);
+
+    const result = await WorkspaceUsage.findOneAndUpdate(
+      {
+        workspaceId,
+        creditsUsed: usage.creditsUsed,
+        purchasedCredits: { $gte: fromPurchased },
       },
-    },
-    { returnDocument: 'after', upsert: true },
+      {
+        $inc: {
+          creditsUsed: fromPlan,
+          purchasedCredits: -fromPurchased,
+          purchasedSpent: fromPurchased,
+        },
+        $push: push,
+      },
+      { returnDocument: "after" },
+    );
+
+    if (result) {
+      const balance = balanceOf(result);
+      return {
+        creditsUsed: result.creditsUsed,
+        remaining: balance.remaining,
+        planRemaining: balance.planRemaining,
+        purchasedCredits: balance.purchasedCredits,
+      };
+    }
+  }
+
+  const fallback = await WorkspaceUsage.findOneAndUpdate(
+    { workspaceId },
+    { $inc: { creditsUsed: cost }, $push: push },
+    { returnDocument: "after", upsert: true },
   );
 
   return {
-    creditsUsed: result.creditsUsed,
-    remaining: result.monthlyLimit - result.creditsUsed,
+    creditsUsed: fallback.creditsUsed,
+    remaining: balanceOf(fallback).remaining,
   };
+}
+
+/**
+ * Add purchased credits. Idempotent on the Stripe session id so a replayed
+ * webhook cannot double-credit a workspace.
+ *
+ * @returns {{ credited: boolean, purchasedCredits: number }}
+ */
+export async function addPurchasedCredits(workspaceId, { sessionId, packId, credits, amountUsd }) {
+  const result = await WorkspaceUsage.findOneAndUpdate(
+    { workspaceId, "purchases.sessionId": { $ne: sessionId } },
+    {
+      $inc: { purchasedCredits: credits },
+      $push: {
+        purchases: {
+          $each: [{ sessionId, packId, credits, amountUsd, at: new Date() }],
+          $slice: -50,
+        },
+      },
+    },
+    { returnDocument: "after", upsert: false },
+  );
+
+  if (result) return { credited: true, purchasedCredits: result.purchasedCredits };
+
+  const existing = await WorkspaceUsage.getOrCreate(workspaceId);
+  const alreadyApplied = existing.purchases?.some((p) => p.sessionId === sessionId);
+  if (alreadyApplied) return { credited: false, purchasedCredits: existing.purchasedCredits };
+
+  existing.purchasedCredits += credits;
+  existing.purchases.push({ sessionId, packId, credits, amountUsd, at: new Date() });
+  await existing.save();
+  return { credited: true, purchasedCredits: existing.purchasedCredits };
 }

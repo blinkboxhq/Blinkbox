@@ -1,0 +1,48 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { PLANS, CREDIT_PACKS, getPack, planCredits, packRate } from "./credit.plans.js";
+import { splitSpend } from "../../infra/credit.engine.js";
+
+test("the catalog offers exactly one paid plan and pay-as-you-go packs", () => {
+  const paid = Object.values(PLANS).filter((p) => p.priceUsd > 0);
+  assert.equal(paid.length, 1);
+  assert.equal(paid[0].id, "pro");
+  assert.equal(paid[0].priceUsd, 19);
+  assert.ok(CREDIT_PACKS.length >= 2);
+  assert.equal(new Set(CREDIT_PACKS.map((p) => p.id)).size, CREDIT_PACKS.length);
+});
+
+test("bigger packs never cost more per credit", () => {
+  const sorted = [...CREDIT_PACKS].sort((a, b) => a.priceUsd - b.priceUsd);
+  for (let i = 1; i < sorted.length; i++) {
+    assert.ok(
+      packRate(sorted[i]) >= packRate(sorted[i - 1]),
+      `${sorted[i].id} is worse value than ${sorted[i - 1].id}`,
+    );
+  }
+});
+
+test("an unknown pack id is refused rather than guessed", () => {
+  assert.equal(getPack("pack_free_money"), null);
+  assert.equal(getPack(undefined), null);
+});
+
+test("an unknown plan falls back to the free allowance", () => {
+  assert.equal(planCredits("free"), PLANS.free.credits);
+  assert.equal(planCredits("pro"), PLANS.pro.credits);
+  assert.equal(planCredits("starter"), 10000);
+  assert.equal(planCredits("nonsense"), PLANS.free.credits);
+});
+
+test("spend drains the plan bucket before purchased credits", () => {
+  assert.deepEqual(splitSpend(10, 100, 500), { fromPlan: 10, fromPurchased: 0, covered: true });
+  assert.deepEqual(splitSpend(10, 4, 500), { fromPlan: 4, fromPurchased: 6, covered: true });
+  assert.deepEqual(splitSpend(10, 0, 500), { fromPlan: 0, fromPurchased: 10, covered: true });
+});
+
+test("spend never goes negative and reports when it cannot be covered", () => {
+  assert.deepEqual(splitSpend(10, 0, 0), { fromPlan: 0, fromPurchased: 0, covered: false });
+  assert.deepEqual(splitSpend(10, 3, 2), { fromPlan: 3, fromPurchased: 2, covered: false });
+  // An over-drafted plan bucket must not lend credits back.
+  assert.deepEqual(splitSpend(5, -20, 8), { fromPlan: 0, fromPurchased: 5, covered: true });
+});

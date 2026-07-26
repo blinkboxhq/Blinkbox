@@ -240,12 +240,12 @@ export default function Settings({ user }) {
               </div>
             </div>
             <button
-              onClick={() => navigate('/upgrade')}
+              onClick={() => navigate('/dashboard?tab=usage')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all ${isPro ? 'bb-card' : 'bb-btn bb-btn-primary'}`}
               style={isPro ? { color: 'var(--bb-text-mid)' } : undefined}
             >
               {isPro ? 'Manage plan' : (
-                <><Zap className="w-3.5 h-3.5" /> Upgrade to Pro</>
+                <><Zap className="w-3.5 h-3.5" /> Plans & credits</>
               )}
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -268,13 +268,20 @@ export default function Settings({ user }) {
                   }}
                 />
               </div>
-              <p className="text-[11px] text-[var(--bb-text-dim)] mt-2">{creditPct}% used · resets each billing cycle</p>
+              <p className="text-[11px] text-[var(--bb-text-dim)] mt-2">
+                {creditPct}% used · resets each billing cycle
+                {usage.purchasedCredits > 0 && ` · ${usage.purchasedCredits.toLocaleString()} purchased credits in reserve`}
+              </p>
             </div>
           )}
 
           {usage && isPro && (
             <div className="p-5">
-              <p className="text-[12px] text-[var(--bb-text-lo)]">Unlimited executions and workflows on your Pro plan.</p>
+              <p className="text-[12px] text-[var(--bb-text-lo)]">
+                {usage.monthlyLimit.toLocaleString()} credits a month
+                {usage.purchasedCredits > 0 && ` + ${usage.purchasedCredits.toLocaleString()} purchased`}
+                {' '}· top up any time from the Credits tab.
+              </p>
             </div>
           )}
         </div>

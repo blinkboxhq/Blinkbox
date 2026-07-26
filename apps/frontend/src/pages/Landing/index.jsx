@@ -76,7 +76,7 @@ function Header() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          {[['Product', '/product'], ['Integrations', '/integrations'], ['Docs', '/docs'], ['Pricing', '/upgrade']].map(([item, href]) => (
+          {[['Product', '/product'], ['Integrations', '/integrations'], ['Docs', '/docs'], ['Pricing', '/#pricing']].map(([item, href]) => (
             <a key={item} href={href} className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150">{item}</a>
           ))}
         </div>
@@ -100,7 +100,7 @@ function Header() {
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             className="absolute top-full left-4 right-4 mt-2 bg-[#08080a]/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 flex flex-col gap-4"
           >
-            {[['Product', '/product'], ['Integrations', '/integrations'], ['Docs', '/docs'], ['Pricing', '/upgrade']].map(([item, href]) => (
+            {[['Product', '/product'], ['Integrations', '/integrations'], ['Docs', '/docs'], ['Pricing', '/#pricing']].map(([item, href]) => (
               <a key={item} href={href} className="text-[15px] text-neutral-400" onClick={() => setOpen(false)}>{item}</a>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">

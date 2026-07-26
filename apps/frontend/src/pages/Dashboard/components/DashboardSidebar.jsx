@@ -7,7 +7,7 @@ const NAV_TOP = [
   { key: 'workflows', icon: LayoutDashboard, label: 'Dashboard' },
   { key: 'analytics', icon: BarChart2, label: 'Analytics' },
   { key: 'logs',      icon: Activity, label: 'History' },
-  { key: 'usage',     icon: Gauge,    label: 'Usage' },
+  { key: 'usage',     icon: Gauge,    label: 'Credits' },
   { key: 'vault',     icon: Key,      label: 'Credentials' },
   { key: 'mcp',       icon: Plug,     label: 'MCP' },
 ];
@@ -41,6 +41,9 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
   const w = expanded ? 'w-[200px]' : 'w-[56px]';
 
   const usedPct = usage ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)) : 0;
+  const creditBalance = usage
+    ? usage.balance ?? Math.max(0, usage.monthlyLimit - usage.creditsUsed) + (usage.purchasedCredits || 0)
+    : 0;
 
   const UserAvatar = ({ size = 'w-7 h-7', textSize = 'text-[11px]', className = '' }) => {
     if (user?.picture) {
@@ -108,7 +111,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
               className="bb-panel p-3 w-full text-left transition-colors hover:bg-white/[0.03]"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="bb-eyebrow">Usage</span>
+                <span className="bb-eyebrow">Credits</span>
                 <span className="text-[10px] font-mono text-[var(--bb-text-lo)]">{usedPct}%</span>
               </div>
               <div className="w-full rounded-full h-1" style={{ background: 'var(--bb-surface-3)' }}>
@@ -117,7 +120,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
-              <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{usage.creditsUsed} / {usage.monthlyLimit} credits</p>
+              <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{creditBalance.toLocaleString()} credits left</p>
             </button>
           </div>
         )}
