@@ -516,11 +516,23 @@ function sanitizeConfig(value, depth = 0) {
   return clean;
 }
 
+// A long generation (big max_tokens, reasoning models) routinely runs past a
+// minute, and every provider's HTTP client already waits 120s. Without this the
+// executor's 60s default kills the request first and reports a generic timeout
+// instead of the provider's real error.
+const LLM_TIMEOUT_MS = 150000;
+const LLM_NODES = new Set([
+  openai, anthropic, gemini, perplexity, xai, deepseek, moonshot, groq,
+  openrouter, zai, minimax, sakana, nvidiaNim, gemma, ollama, lmstudio,
+  claudeCode, geminiCli, githubCopilot, openaiAssistant,
+]);
+
 function hardenNode(name, node) {
   if (!node || typeof node.run !== "function") return node;
   const originalRun = node.run;
   return {
     ...node,
+    ...(node.timeoutMs === undefined && LLM_NODES.has(node) ? { timeoutMs: LLM_TIMEOUT_MS } : {}),
     async run(config, input, context) {
       const safeConfig = sanitizeConfig(config && typeof config === "object" ? config : {});
       try {
