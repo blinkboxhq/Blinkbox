@@ -26,7 +26,7 @@ export default [
     },
   },
   {
-    files: ['apps/backend/**/*.js', 'packages/**/*.js', 'scripts/**/*.{js,mjs}', '*.mjs', 'apps/frontend/vite.config.js'],
+    files: ['apps/backend/**/*.{js,mjs}', 'packages/**/*.{js,mjs}', '**/scripts/**/*.{js,mjs}', '**/*.mjs', 'apps/frontend/vite.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
