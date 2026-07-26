@@ -354,7 +354,7 @@ export const NODE_KB = {
     label: "Crypto / Hash",
     out: ["hash", "encoded", "decoded"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "hash", d: "hash|encode|decode|sign|verify" },
+      { k: "operation", t: "select", r: true, ex: "hash", d: "hash|hmac|base64encode|base64decode|uuid|random" },
       { k: "algorithm", t: "select", r: false, ex: "sha256", d: "sha256|sha512|md5|base64" },
       { k: "input", t: "string", r: true, ex: "{{$json.password}}", d: "Input string" },
     ],
@@ -839,7 +839,7 @@ export const NODE_KB = {
     label: "Gmail",
     out: ["messageId", "threadId", "labelIds"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "sendEmail", d: "sendEmail|replyToThread|getEmail|searchEmails|addLabel" },
+      { k: "operation", t: "select", r: true, ex: "sendEmail", d: "sendEmail|replyToEmail|forwardEmail|readEmail|searchEmails|getThread|createDraft|addLabel|markRead|archiveEmail" },
       { k: "to", t: "string", r: true, ex: "{{$json.customerEmail}}", d: "Recipient email address" },
       { k: "subject", t: "string", r: true, ex: "Re: {{$json.subject}}", d: "Email subject" },
       { k: "body", t: "string", r: true, ex: "Hi {{$json.name}},\n\n{{$json.message}}\n\nBest regards", d: "Email body (plain text or HTML)" },
@@ -872,7 +872,7 @@ export const NODE_KB = {
     label: "Airtable",
     out: ["id", "fields", "createdTime"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createRecord", d: "createRecord|updateRecord|getRecord|listRecords|deleteRecord" },
+      { k: "operation", t: "select", r: true, ex: "create", d: "create|read|update|delete|getRecord|search|bulkCreate|bulkUpdate" },
       { k: "baseId", t: "string", r: true, ex: "appXXXXXXXX", d: "Airtable base ID" },
       { k: "tableId", t: "string", r: true, ex: "Leads", d: "Table name or ID" },
       { k: "fields", t: "object", r: false, ex: { "Name": "{{$json.name}}", "Email": "{{$json.email}}", "Status": "New" }, d: "Record fields (for create/update)" },
@@ -883,7 +883,7 @@ export const NODE_KB = {
     label: "Google Sheets",
     out: ["values", "range", "updatedRows"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "appendRow", d: "appendRow|readRows|updateRow|clearRange" },
+      { k: "operation", t: "select", r: true, ex: "appendRow", d: "appendRow|readRange|writeRange|updateRow|insertRow|deleteRow|clearRange|lookupRow" },
       { k: "spreadsheetId", t: "string", r: true, ex: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms", d: "Google Sheets doc ID (from URL)" },
       { k: "range", t: "string", r: true, ex: "Sheet1!A:Z", d: "A1 notation range" },
       { k: "values", t: "array", r: false, ex: [["{{$json.name}}", "{{$json.email}}", "{{$json.date}}"]], d: "Row data to write (for append/update)" },
@@ -894,7 +894,7 @@ export const NODE_KB = {
     label: "Notion",
     out: ["id", "properties", "url"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createPage", d: "createPage|updatePage|queryDatabase|getPage|appendBlocks" },
+      { k: "operation", t: "select", r: true, ex: "createPage", d: "createPage|updatePage|getPage|deletePage|queryDatabase|createDatabase|appendBlock|searchPages|createComment" },
       { k: "databaseId", t: "string", r: false, ex: "abc123def456", d: "Notion database ID (for database operations)" },
       { k: "pageId", t: "string", r: false, ex: "{{$json.pageId}}", d: "Page ID (for page operations)" },
       { k: "properties", t: "object", r: false, ex: { "Name": { "title": [{ "text": { "content": "{{$json.title}}" } }] } }, d: "Page properties (Notion API format)" },
@@ -905,7 +905,7 @@ export const NODE_KB = {
     label: "MongoDB",
     out: ["result", "insertedId", "matchedCount"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "insertOne", d: "insertOne|findOne|findMany|updateOne|deleteOne|aggregate" },
+      { k: "operation", t: "select", r: true, ex: "insertOne", d: "insertOne|insertMany|find|findOne|updateOne|updateMany|deleteOne|deleteMany|aggregate|countDocuments" },
       { k: "collection", t: "string", r: true, ex: "users", d: "Collection name" },
       { k: "filter", t: "object", r: false, ex: { "email": "{{$json.email}}" }, d: "Query filter" },
       { k: "document", t: "object", r: false, ex: { "name": "{{$json.name}}", "email": "{{$json.email}}", "createdAt": "{{new Date().toISOString()}}" }, d: "Document to insert or update body" },
@@ -916,7 +916,7 @@ export const NODE_KB = {
     label: "PostgreSQL",
     out: ["rows", "rowCount"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "query", d: "query|insert|update|delete" },
+      { k: "operation", t: "select", r: true, ex: "query", d: "query|queryOne|execute|insert|update|deleteRows|upsert|transaction" },
       { k: "sql", t: "string", r: true, ex: "SELECT * FROM users WHERE email = $1 LIMIT 1", d: "SQL query with $1,$2 params" },
       { k: "params", t: "string", r: false, ex: "[\"{{$json.email}}\"]", d: "JSON array of query params" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "PostgreSQL credential" },
@@ -959,7 +959,7 @@ export const NODE_KB = {
     label: "Pinecone",
     out: ["matches", "namespace"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "query", d: "query|upsert|delete|fetch" },
+      { k: "operation", t: "select", r: true, ex: "query", d: "query|upsert|update|fetchById|listVectors|delete|describeIndexStats" },
       { k: "indexName", t: "string", r: true, ex: "my-embeddings", d: "Pinecone index name" },
       { k: "vector", t: "string", r: false, ex: "{{$json.embedding}}", d: "Query vector (for query operation)" },
       { k: "topK", t: "number", r: false, ex: 10, d: "Number of results to return" },
@@ -972,7 +972,7 @@ export const NODE_KB = {
     label: "GitHub",
     out: ["number", "url", "id", "title", "state"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createIssue", d: "createIssue|updateIssue|createPR|addComment|mergePR|getRepo" },
+      { k: "operation", t: "select", r: true, ex: "createIssue", d: "createIssue|getIssue|listIssues|updateIssue|createPR|listPRs|mergePR|createComment|createRelease|getRepo" },
       { k: "owner", t: "string", r: true, ex: "acmecorp", d: "Repository owner" },
       { k: "repo", t: "string", r: true, ex: "backend", d: "Repository name" },
       { k: "title", t: "string", r: false, ex: "Bug: {{$json.errorMessage}}", d: "Issue/PR title" },
@@ -984,7 +984,7 @@ export const NODE_KB = {
     label: "Linear",
     out: ["id", "title", "url", "identifier"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createIssue", d: "createIssue|updateIssue|addComment|getIssue" },
+      { k: "operation", t: "select", r: true, ex: "createIssue", d: "createIssue|getIssue|updateIssue|listIssues|searchIssues|assignIssue|setIssueState|createComment" },
       { k: "teamId", t: "string", r: true, ex: "TEAM_ID", d: "Linear team ID" },
       { k: "title", t: "string", r: true, ex: "{{$json.title}}", d: "Issue title" },
       { k: "description", t: "string", r: false, ex: "{{$json.description}}", d: "Issue description (markdown)" },
@@ -1006,7 +1006,7 @@ export const NODE_KB = {
     label: "Shopify",
     out: ["id", "email", "total_price", "fulfillment_status"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "getOrder", d: "getOrder|updateOrder|createProduct|updateInventory|fulfillOrder" },
+      { k: "operation", t: "select", r: true, ex: "getOrder", d: "listOrders|getOrder|updateOrder|cancelOrder|createProduct|updateProduct|listProducts|setInventoryLevel|createFulfillment|listCustomers|createCustomer" },
       { k: "orderId", t: "string", r: false, ex: "{{trigger.data.id}}", d: "Order ID" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Shopify credential" },
     ],
@@ -1015,7 +1015,7 @@ export const NODE_KB = {
     label: "Stripe",
     out: ["id", "amount", "currency", "status", "customer"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createPaymentIntent", d: "createPaymentIntent|getCustomer|createCustomer|createSubscription|refund" },
+      { k: "operation", t: "select", r: true, ex: "createPaymentIntent", d: "createPaymentIntent|getPaymentIntent|createCustomer|getCustomer|updateCustomer|createRefund|createInvoice|createSubscription|cancelSubscription|createCheckoutSession" },
       { k: "amount", t: "number", r: false, ex: 2999, d: "Amount in cents (e.g. 2999 = $29.99)" },
       { k: "currency", t: "string", r: false, ex: "usd", d: "3-letter currency code" },
       { k: "customerId", t: "string", r: false, ex: "{{$json.stripeCustomerId}}", d: "Stripe customer ID" },
@@ -1026,7 +1026,7 @@ export const NODE_KB = {
     label: "Zoom",
     out: ["id", "join_url", "start_url", "topic"],
     fields: [
-      { k: "operation", t: "select", r: true, ex: "createMeeting", d: "createMeeting|getMeeting|listMeetings|deleteMeeting" },
+      { k: "operation", t: "select", r: true, ex: "createMeeting", d: "createMeeting|getMeeting|listMeetings|updateMeeting" },
       { k: "topic", t: "string", r: true, ex: "{{$json.title}}", d: "Meeting title" },
       { k: "startTime", t: "string", r: false, ex: "{{$json.startTime}}", d: "ISO 8601 start time" },
       { k: "duration", t: "number", r: false, ex: 60, d: "Duration in minutes" },
@@ -1208,11 +1208,22 @@ export const NODE_KB = {
 };
 
 // Build a compact text representation for the system prompt
+// A select field's whole legal set lives in its description; only showing `ex`
+// left the model one sample value to pattern-match, so it invented operations
+// the panel and executor have never heard of. Enumerate them instead.
+const ENUM_D = /^[A-Za-z0-9_.:-]+(\s*\|\s*[A-Za-z0-9_.:-]+)+$/;
+function fieldRef(f) {
+  if (f.t === "select" && ENUM_D.test(String(f.d || "").trim())) {
+    return `${f.k}(one of: ${String(f.d).trim()})`;
+  }
+  return `${f.k}(ex:"${JSON.stringify(f.ex).slice(0, 40)}")`;
+}
+
 export function buildNodeRef() {
   const lines = [];
   for (const [type, node] of Object.entries(NODE_KB)) {
-    const required = node.fields.filter(f => f.r).map(f => `${f.k}(ex:"${JSON.stringify(f.ex).slice(0,40)}")`).join(", ");
-    const optional = node.fields.filter(f => !f.r).map(f => f.k).join(", ");
+    const required = node.fields.filter(f => f.r).map(fieldRef).join(", ");
+    const optional = node.fields.filter(f => !f.r).map(f => (f.t === "select" && ENUM_D.test(String(f.d || "").trim()) ? fieldRef(f) : f.k)).join(", ");
     const out = node.out.length ? `→ ${node.out.slice(0, 5).join(", ")}` : "";
     const roleStr = node.role ? ` [hub-role:${node.role}]` : "";
     lines.push(`${type}${roleStr}: ${required || "(no required fields)"}${optional ? ` | opt:${optional}` : ""} ${out}`);

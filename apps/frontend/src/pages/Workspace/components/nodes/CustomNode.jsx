@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { NodeRegistry } from "../../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../../triggerVariants";
 import { getTriggerEvent } from "../../triggerEvents";
+import { resolveSelectedAction, customNodeName } from "../../nodeNaming";
 import useWorkspaceStore from "../../../../store/workspaceStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -488,7 +489,7 @@ function SuggestionGhostNode({ data }) {
       {/* Label + accept/dismiss — full opacity, below the ghost card */}
       <div className="absolute" style={{ top: cardH + 7, left: 0, width: cardW }}>
         <p className="text-[11px] font-bold text-violet-300/80 text-center truncate px-1 mb-2 select-none">
-          {nodeDef.label || data.label}
+          {customNodeName(data, nodeDef.label) || nodeDef.label || data.label}
         </p>
         <div className="flex items-center justify-center gap-1.5 nodrag">
           <button
@@ -585,6 +586,9 @@ function CustomNodeImpl({ id, data, selected }) {
   const EDGE_RADIUS = 7;
   const shapeRadius = EDGE_RADIUS;
   const configHint = getConfigHint(data, edges, id);
+  const chosenAction = resolveSelectedAction(data.backendType, data.config);
+  const stepName = customNodeName(data, nodeDef.label, eventDef?.label, variantDef?.label)
+    || chosenAction || eventDef?.label || variantDef?.label || nodeDef.label || data.label;
 
   const getSlotConnected = slotId => edges.some(e => e.target === id && e.targetHandle === slotId);
   const hasOutputConnection  = edges.some(e => e.source === id && e.sourceHandle === "output");
@@ -662,8 +666,8 @@ function CustomNodeImpl({ id, data, selected }) {
           </div>
         )}
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
-          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{data.config?.customLabel || data.config?.selectedAction || eventDef?.label || variantDef?.label || nodeDef.label || data.label}</span>
-          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : eventDef ? variantDef?.label?.replace(/^On /, "") || nodeDef.label : (data.config?.customLabel || data.config?.selectedAction) ? variantDef?.label || nodeDef.label : "Click to run"}</span>
+          <span className="text-[11px] font-semibold text-white group-hover:text-white transition-colors duration-200 leading-snug block">{stepName}</span>
+          <span className="text-[10px] font-semibold text-white/50 mt-0.5 block">{isChatTrigger ? "Type below to test" : eventDef ? variantDef?.label?.replace(/^On /, "") || nodeDef.label : stepName !== (variantDef?.label || nodeDef.label) ? variantDef?.label || nodeDef.label : "Click to run"}</span>
         </div>
       </div>
     );
@@ -701,7 +705,7 @@ function CustomNodeImpl({ id, data, selected }) {
           {/* Icon + name centered in the full card */}
           <div className="flex items-center gap-3 px-5">
             <Bot className="w-9 h-9 text-white opacity-80 group-hover:opacity-100 shrink-0 transition-opacity duration-300" strokeWidth={1.4} />
-            <p className="text-[13px] font-bold text-white leading-tight">{nodeDef.label || data.label || "AI Agent"}</p>
+            <p className="text-[13px] font-bold text-white leading-tight">{stepName || "AI Agent"}</p>
           </div>
         </motion.div>
 
@@ -857,7 +861,7 @@ function CustomNodeImpl({ id, data, selected }) {
           })}
         </motion.div>
         <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 8 }}>
-          <span className="text-[11px] font-semibold text-zinc-400">{nodeDef.label || data.label || "Distributor"}</span>
+          <span className="text-[11px] font-semibold text-zinc-400">{stepName || "Distributor"}</span>
         </div>
       </div>
     );
@@ -933,12 +937,12 @@ function CustomNodeImpl({ id, data, selected }) {
 
       <div className="absolute text-center select-none" style={{ left: 0, width: cardW, top: cardH + 6 }}>
         <span className="text-[11px] font-semibold text-white leading-snug block truncate px-1">
-          {data.config?.customLabel || data.config?.selectedAction || nodeDef.label || data.label}
+          {stepName}
         </span>
-        {(data.config?.customLabel || data.config?.selectedAction) && (
-          <span className="text-[9px] font-semibold text-white/50 mt-0.5 block truncate px-1">{nodeDef.label}</span>
+        {stepName !== nodeDef.label && (
+          <span className="text-[9px] font-semibold text-white/50 mt-0.5 block truncate px-1">{chosenAction && stepName !== chosenAction ? `${nodeDef.label} · ${chosenAction}` : nodeDef.label}</span>
         )}
-        {!data.config?.selectedAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
+        {!chosenAction && configHint && <span className="text-[9px] font-medium text-white/40 mt-0.5 block truncate px-1 font-mono">{configHint}</span>}
       </div>
 
     </div>

@@ -10,6 +10,7 @@ import { getConfigSchema } from "../configSchemas";
 import { getTriggerSchema } from "../triggerSchemas";
 import { getTriggerEvent, getTriggerEvents, eventDefaults } from "../triggerEvents";
 import { NODE_ACTIONS, ACTION_PICKER_CATEGORIES } from "../nodeActions";
+import { resolveSelectedAction, actionValueFor, customNodeName } from "../nodeNaming";
 import SchemaPanel from "./nodes/SchemaPanel.jsx";
 import MonoSchemaPanel from "./nodes/MonoSchemaPanel.jsx";
 import { ConfigToggleRow, ConfigSelect, ConfigHeader } from "../../../components/ui/ConfigKit";
@@ -238,9 +239,11 @@ function InputPanel({ canvasNodes, edges, currentNodeId, allRunOutputs, nodeOutp
 
   const renderNode = (n) => {
     const def = NodeRegistry[n.data.backendType];
-    const name = n.data.config?.customLabel || n.data.config?.selectedAction || def?.label || n.data.backendType;
     const isOpen = openNode[n.id] === true;
     const tv = n.data.config?.triggerVariant ? TRIGGER_VARIANTS[n.data.config.triggerVariant] : null;
+    const name = customNodeName(n.data, def?.label, tv?.label)
+      || resolveSelectedAction(n.data.backendType, n.data.config)
+      || def?.label || n.data.backendType;
     const accent = tv?.accentColor ? `rgb(${tv.accentColor})` : "#a3a3a3";
 
     const { hasLiveData, rows } = fieldsOf(n);
@@ -352,7 +355,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const configSchema = !variant && backendType ? getConfigSchema(backendType) : null;
   const ConfigPanel  = variant?.ConfigPanel || nodeDef?.ConfigPanel;
   const config       = node?.data.config || {};
-  const selectedAction = config.selectedAction;
+  const selectedAction = resolveSelectedAction(backendType, config);
   const actionListRaw = !variant && ACTION_PICKER_CATEGORIES.includes(nodeDef?.category) ? NODE_ACTIONS[backendType] || null : null;
   // Wired into an agent's Integration slot? Then this app is a tool, not a step —
   // the user picks which of its operations the agent may call.
@@ -367,7 +370,8 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   const NO_SPLIT = ["condition", "loop", "merge"];
   const canSplitOutputs = node?.data.type !== "trigger" && !NO_SPLIT.includes(backendType) && !integrationMode;
 
-  const currentName = config.customLabel || selectedAction || def?.label || node?.data.label || "";
+  const currentName = customNodeName(node?.data || {}, def?.label, nodeDef?.label, eventDef?.label)
+    || selectedAction || def?.label || node?.data.label || "";
   const [editing, setEditing] = useState(false);
   const [nameVal, setNameVal] = useState(currentName);
 
@@ -385,7 +389,7 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
   });
 
   useEffect(() => {
-    setNameVal(config.customLabel || selectedAction || def?.label || node?.data.label || "");
+    setNameVal(currentName);
     setEditing(false);
   }, [node?.id]);
 
@@ -446,8 +450,12 @@ function ConfigurePanel({ node, updateConfig, renameNode }) {
               />
               <ConfigSelect
                 label="Action"
-                value={config.selectedAction || ""}
-                onChange={(v) => updateConfig(node.id, "selectedAction", v)}
+                value={selectedAction}
+                onChange={(v) => {
+                  updateConfig(node.id, "selectedAction", v);
+                  const op = actionValueFor(backendType, v);
+                  if (op) updateConfig(node.id, "operation", op);
+                }}
                 options={actionList.map((a) => ({ value: a.name, label: a.name, desc: a.description, logoUrl: nodeDef?.logoUrl, imgFilter: nodeDef?.imgFilter }))}
                 placeholder="Choose what this step does…"
                 accentColor="#4d7cff"
@@ -775,7 +783,9 @@ export default function NodeConfigModal() {
   const def        = variant || nodeDef;
   const logoUrl    = variant?.logoUrl || nodeDef?.logoUrl;
   const imgFilter  = variant?.imgFilter || nodeDef?.imgFilter;
-  const nodeLabel  = node?.data.config?.customLabel || node?.data.config?.selectedAction || def?.label || node?.data.label || "";
+  const nodeLabel  = customNodeName(node?.data || {}, def?.label, nodeDef?.label)
+    || resolveSelectedAction(node?.data.backendType, node?.data.config)
+    || def?.label || node?.data.label || "";
 
   // Resizable panels — percentages [p0, p1, p2]
   const containerRef = useRef(null);

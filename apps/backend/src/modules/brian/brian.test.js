@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { buildBrianPreflightQuestions } from "./brian.preflight.js";
 import { toolToCanvas } from "./brian.repair.js";
+import { NODE_KB, buildNodeRef } from "./brian.nodes.js";
 import { mergeBrianFlow, visualRepairBrianFlow } from "../../../../frontend/src/pages/Workspace/brianFlowMerge.js";
 
 test("toolToCanvas flips reversed agent satellite edges", () => {
@@ -209,4 +212,55 @@ test("toolToCanvas upgrades mistaken linear signup email flow into an AI agent h
     const bt = node.data.backendType;
     return !bt.startsWith("agent_") || bt === "ai_agent" || node.position.y > agent.position.y;
   }));
+});
+
+// Brian can only pick an operation it was told about, and a value the panels and
+// executor don't have is worse than no value: the panel silently falls back to
+// its default operation, so the step reads as unconfigured while holding config.
+// Keep every enumerated operation in NODE_KB grounded in a real panel.
+test("every NODE_KB operation enum exists in the node's real operation list", () => {
+  const repoRoot = path.resolve(import.meta.dirname, "../../../../..");
+  const ENUM_D = /^[A-Za-z0-9_.:-]+(\s*\|\s*[A-Za-z0-9_.:-]+)+$/;
+
+  const panelOps = (type) => {
+    const dir = path.join(repoRoot, "packages/nodes", type);
+    if (!fs.existsSync(dir)) return null;
+    const vals = new Set();
+    for (const file of fs.readdirSync(dir)) {
+      if (!/\.jsx?$/.test(file)) continue;
+      const src = fs.readFileSync(path.join(dir, file), "utf8");
+      const collect = (chunk) => {
+        for (const m of chunk.matchAll(/value:\s*['"`]([^'"`]+)['"`]/g)) vals.add(m[1]);
+      };
+      const ops = src.indexOf("OPERATIONS = [");
+      if (ops >= 0) collect(src.slice(ops, src.indexOf("\n];", ops) + 3));
+      const meta = Math.max(src.indexOf('name: "operation"'), src.indexOf("name: 'operation'"));
+      if (meta >= 0) collect(src.slice(meta, meta + 2500));
+    }
+    return vals.size ? vals : null;
+  };
+
+  const failures = [];
+  let checked = 0;
+  for (const [type, node] of Object.entries(NODE_KB)) {
+    const field = node.fields.find(
+      (f) => f.k === "operation" && f.t === "select" && ENUM_D.test(String(f.d || "").trim()),
+    );
+    if (!field) continue;
+    const real = panelOps(type);
+    if (!real) continue;
+    checked++;
+    const declared = String(field.d).split("|").map((s) => s.trim());
+    const missing = declared.filter((v) => !real.has(v));
+    if (!real.has(field.ex)) missing.push(`ex:${field.ex}`);
+    if (missing.length) failures.push(`${type} → ${missing.join(", ")}`);
+  }
+
+  assert.ok(checked >= 20, `expected to check 20+ nodes, checked ${checked}`);
+  assert.deepEqual(failures, []);
+});
+
+test("buildNodeRef enumerates select operations instead of one sample value", () => {
+  const line = buildNodeRef().split("\n").find((l) => l.startsWith("slack:"));
+  assert.match(line, /operation\(one of: postMessage\|/);
 });
