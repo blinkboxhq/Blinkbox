@@ -9,6 +9,7 @@ import { OAuth2Client } from "google-auth-library";
 import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
+import McpOAuthClient from "../../models/mcpOAuthClient.model.js";
 import { hashApiKey, isMcpHost } from "./apiKey.middleware.js";
 import { record } from "./mcp.routes.js";
 
@@ -187,18 +188,74 @@ router.get(/^\/\.well-known\/oauth-authorization-server\/.*/, authServerMetadata
 router.get("/.well-known/openid-configuration", authServerMetadata);
 
 // ── Dynamic Client Registration (RFC 7591) ────────────────────────────────────
-router.post("/oauth/register", (req, res) => {
+// Registrations are now persisted so /oauth/authorize and /oauth/token can
+// confirm a redirect_uri was actually declared here instead of trusting
+// whatever value shows up later in the flow (see validateClient below).
+router.post("/oauth/register", async (req, res) => {
   const body = req.body || {};
+  const redirectUris = Array.isArray(body.redirect_uris) ? body.redirect_uris.map(String) : [];
+  if (!redirectUris.length) {
+    return res.status(400).json({ error: "invalid_client_metadata", error_description: "redirect_uris is required" });
+  }
+  for (const uri of redirectUris) {
+    let parsed;
+    try {
+      parsed = new URL(uri);
+    } catch {
+      return res.status(400).json({ error: "invalid_redirect_uri", error_description: `Invalid redirect_uri: ${uri}` });
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return res.status(400).json({ error: "invalid_redirect_uri", error_description: `redirect_uri must be http or https: ${uri}` });
+    }
+  }
+
+  const clientId = `mcp-${crypto.randomBytes(8).toString("hex")}`;
+  try {
+    await McpOAuthClient.create({
+      clientId,
+      redirectUris,
+      clientName: body.client_name || "MCP Client",
+    });
+  } catch (e) {
+    console.error("[mcp register] persist failed:", e?.message || e);
+    return res.status(500).json({ error: "server_error", error_description: "Could not register client." });
+  }
+
   res.status(201).json({
-    client_id: `mcp-${crypto.randomBytes(8).toString("hex")}`,
+    client_id: clientId,
     client_id_issued_at: Math.floor(Date.now() / 1000),
     token_endpoint_auth_method: "none",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
-    redirect_uris: Array.isArray(body.redirect_uris) ? body.redirect_uris : [],
+    redirect_uris: redirectUris,
     client_name: body.client_name || "MCP Client",
   });
 });
+
+// RFC 6749 §3.1.2.3: the redirect_uri presented at /authorize (and again at
+// /token, §4.1.3) must match one declared by this client_id at registration.
+// Without this check, anyone can register their own client_id + redirect_uri,
+// walk a legitimate user through the real Blinkbox login/consent screen, and
+// have that victim's freshly minted API key delivered straight to their own
+// server — a phishing-based account takeover, not a theoretical gap.
+async function validateClient(clientId, redirectUri) {
+  if (!clientId || !redirectUri) {
+    return { ok: false, reason: "client_id and redirect_uri are required" };
+  }
+  let client;
+  try {
+    client = await McpOAuthClient.findOne({ clientId: String(clientId) });
+  } catch {
+    return { ok: false, reason: "Could not verify client." };
+  }
+  if (!client) {
+    return { ok: false, reason: "Unknown client_id. Reconnect to re-register the connector." };
+  }
+  if (!client.redirectUris.includes(String(redirectUri))) {
+    return { ok: false, reason: "redirect_uri does not match the one registered for this client." };
+  }
+  return { ok: true, client };
+}
 
 // ── Consent page ──────────────────────────────────────────────────────────────
 // Self-contained login + Allow screen, a pixel copy of the web app's login page
@@ -223,7 +280,7 @@ function consentPage({ params, error, googleClientId }) {
   // GIS's button/transform iframes are blocked inside Claude's OAuth popup, so an
   // anchor + full-page navigation is the only thing that survives there.
   const gStart = new URLSearchParams();
-  ["redirect_uri", "state", "code_challenge", "code_challenge_method", "scope"].forEach((k) => {
+  ["redirect_uri", "client_id", "state", "code_challenge", "code_challenge_method", "scope"].forEach((k) => {
     if (params[k] != null && params[k] !== "") gStart.set(k, String(params[k]));
   });
   // Same 48-viewBox mark the web app's login page uses, so the two buttons are
@@ -443,10 +500,15 @@ function consentPage({ params, error, googleClientId }) {
 }
 
 // ── Authorize (GET) — render the login + consent screen ───────────────────────
-router.get("/oauth/authorize", (req, res) => {
-  const { redirect_uri } = req.query;
-  if (!redirect_uri) {
-    return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
+router.get("/oauth/authorize", async (req, res) => {
+  const { redirect_uri, client_id } = req.query;
+  if (!redirect_uri || !client_id) {
+    return res.status(400).json({ error: "invalid_request", error_description: "client_id and redirect_uri required" });
+  }
+  const check = await validateClient(client_id, redirect_uri);
+  if (!check.ok) {
+    dbg(req, `authorize(get): ${check.reason}`);
+    return res.status(400).json({ error: "invalid_request", error_description: check.reason });
   }
   res.set("Content-Type", "text/html; charset=utf-8");
   res.send(consentPage({ params: req.query, error: null, googleClientId: GOOGLE_CLIENT_ID }));
@@ -455,10 +517,15 @@ router.get("/oauth/authorize", (req, res) => {
 // ── Authorize (POST) — authenticate, mint key, issue code ─────────────────────
 router.post("/oauth/authorize", async (req, res) => {
   const body = req.body || {};
-  const { redirect_uri, state, code_challenge, code_challenge_method, scope, email, password } = body;
+  const { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope, email, password } = body;
 
-  if (!redirect_uri) {
-    return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
+  if (!redirect_uri || !client_id) {
+    return res.status(400).json({ error: "invalid_request", error_description: "client_id and redirect_uri required" });
+  }
+  const check = await validateClient(client_id, redirect_uri);
+  if (!check.ok) {
+    dbg(req, `authorize(post): ${check.reason}`);
+    return res.status(400).json({ error: "invalid_request", error_description: check.reason });
   }
 
   const reRender = (error) => {
@@ -491,7 +558,7 @@ router.post("/oauth/authorize", async (req, res) => {
     return reRender("Please verify your email at blinkbox.net before connecting.");
   }
 
-  return issueCodeAndRedirect(req, res, user, { redirect_uri, state, code_challenge, code_challenge_method, scope }, reRender);
+  return issueCodeAndRedirect(req, res, user, { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope }, reRender);
 });
 
 // Shared tail for both password and Google sign-in: mint a per-connection key,
@@ -500,7 +567,7 @@ router.post("/oauth/authorize", async (req, res) => {
 // without it, strict clients (Claude/ChatGPT) discard the freshly issued token
 // and loop the whole OAuth flow with a new client_id instead of calling /api/mcp.
 async function issueCodeAndRedirect(req, res, user, params, onError) {
-  const { redirect_uri, state, code_challenge, code_challenge_method, scope } = params;
+  const { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope } = params;
   const today = new Date().toISOString().slice(0, 10);
   let rawKey;
   try {
@@ -510,9 +577,14 @@ async function issueCodeAndRedirect(req, res, user, params, onError) {
     return onError(`Could not create a connection key. (debug: ${e?.message || "unknown"})`);
   }
 
+  // client_id/redirect_uri ride along in the code so /oauth/token can confirm
+  // (RFC 6749 §4.1.3) the token exchange is happening for the same client that
+  // was validated at /oauth/authorize, not just whoever holds the code.
   const code = jwt.sign(
     {
       k: rawKey,
+      cid: client_id || null,
+      ru: redirect_uri || null,
       cc: code_challenge || null,
       ccm: (code_challenge_method || "plain").toLowerCase(),
       sc: scope || null,
@@ -546,10 +618,15 @@ function googleRedirectUri(req) {
 // No iframes: GIS's button/transform iframes are blocked in Claude's popup, so
 // we send the browser straight to accounts.google.com. The MCP OAuth params ride
 // through Google's own `state`, signed so the callback can trust them.
-router.get("/oauth/google/start", (req, res) => {
-  const { redirect_uri, state, code_challenge, code_challenge_method, scope } = req.query;
-  if (!redirect_uri) {
-    return res.status(400).json({ error: "invalid_request", error_description: "redirect_uri required" });
+router.get("/oauth/google/start", async (req, res) => {
+  const { redirect_uri, client_id, state, code_challenge, code_challenge_method, scope } = req.query;
+  if (!redirect_uri || !client_id) {
+    return res.status(400).json({ error: "invalid_request", error_description: "client_id and redirect_uri required" });
+  }
+  const check = await validateClient(client_id, redirect_uri);
+  if (!check.ok) {
+    dbg(req, `google/start: ${check.reason}`);
+    return res.status(400).json({ error: "invalid_request", error_description: check.reason });
   }
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     res.set("Content-Type", "text/html; charset=utf-8");
@@ -565,6 +642,7 @@ router.get("/oauth/google/start", (req, res) => {
   const gState = jwt.sign(
     {
       ru: String(redirect_uri),
+      ci: String(client_id),
       st: state ? String(state) : null,
       cc: code_challenge ? String(code_challenge) : null,
       ccm: code_challenge_method ? String(code_challenge_method) : null,
@@ -600,7 +678,7 @@ router.get("/oauth/google/callback", async (req, res) => {
     console.error("[mcp google callback] state verify failed:", e?.message || e);
     return res.status(400).json({ error: "invalid_request", error_description: "Google sign-in expired. Start again." });
   }
-  const params = { redirect_uri: st.ru, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm, scope: st.sc };
+  const params = { redirect_uri: st.ru, client_id: st.ci, state: st.st, code_challenge: st.cc, code_challenge_method: st.ccm, scope: st.sc };
   const reRender = (error) => {
     res.set("Content-Type", "text/html; charset=utf-8");
     res.status(401).send(consentPage({ params, error, googleClientId: GOOGLE_CLIENT_ID }));
@@ -785,6 +863,18 @@ router.post("/oauth/token", async (req, res) => {
       dbg(req, `code: PKCE mismatch ccm=${claims.ccm}`);
       return res.status(400).json({ error: "invalid_grant", error_description: "PKCE verification failed" });
     }
+  }
+
+  // RFC 6749 §4.1.3: if redirect_uri/client_id were supplied to /authorize, the
+  // token exchange must present the same ones — a second check beyond the
+  // registration-time validation already done, in case a code ever leaks.
+  if (body.redirect_uri && claims.ru && String(body.redirect_uri) !== claims.ru) {
+    dbg(req, "code: redirect_uri mismatch at token exchange");
+    return res.status(400).json({ error: "invalid_grant", error_description: "redirect_uri mismatch" });
+  }
+  if (body.client_id && claims.cid && String(body.client_id) !== claims.cid) {
+    dbg(req, "code: client_id mismatch at token exchange");
+    return res.status(400).json({ error: "invalid_grant", error_description: "client_id mismatch" });
   }
 
   // Confirm the minted key is still live (not revoked between authorize and now).

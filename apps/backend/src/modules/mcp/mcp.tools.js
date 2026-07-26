@@ -108,8 +108,16 @@ const BLOCKED_PREFIXES = [
   "oauth",     // OAuth authorize/callback — token exchange
   "billing",   // checkout / portal / webhook — moves real money
   "keys",      // minting/revoking MCP API keys (connector self-management)
-  "mcp",       // the connector talking to itself
 ];
+
+// Exact-match against BLOCKED_PREFIXES misses sibling routes like
+// /api/mcp-client (outbound MCP client, its own OAuth + SSRF-capable probe) —
+// segment "mcp-client" never equals "mcp". Anything starting with "mcp" is the
+// connector acting on itself or its plumbing, so it's blocked as a group.
+function isBlockedSegment(segment) {
+  const s = segment.toLowerCase();
+  return s.startsWith("mcp") || BLOCKED_PREFIXES.includes(s);
+}
 
 function normalizeApiPath(raw) {
   if (!raw || typeof raw !== "string") throw new Error("path is required.");
@@ -122,10 +130,10 @@ function normalizeApiPath(raw) {
   p = p.replace(/^\/?api\//, "/").replace(/^\/+/, "/");
   if (!p.startsWith("/")) p = "/" + p;
   const segment = p.split(/[/?]/).filter(Boolean)[0] || "";
-  if (BLOCKED_PREFIXES.includes(segment.toLowerCase())) {
+  if (isBlockedSegment(segment)) {
     throw new Error(
       `The '${segment}' area is off-limits to the connector for safety ` +
-        `(auth, admin, billing, oauth and key management are blocked). Everything else is allowed.`,
+        `(auth, admin, billing, oauth, key management, and mcp-internal routes are blocked). Everything else is allowed.`,
     );
   }
   return { path: p, segment };
