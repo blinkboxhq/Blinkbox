@@ -201,9 +201,11 @@ router.post("/oauth/register", (req, res) => {
 });
 
 // ── Consent page ──────────────────────────────────────────────────────────────
-// Self-contained dark-mode login + Allow screen. The OAuth params ride through
-// as hidden fields so the POST can rebuild the redirect. `error` shows a failed
-// login inline without losing the flow.
+// Self-contained login + Allow screen, a pixel copy of the web app's login page
+// (apps/frontend/src/pages/auth) — no bundler runs here, so its tokens and
+// component rules are inlined below. The OAuth params ride through as hidden
+// fields so the POST can rebuild the redirect. `error` shows a failed login
+// inline without losing the flow.
 function consentPage({ params, error, googleClientId }) {
   const esc = (s) =>
     String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
@@ -224,15 +226,18 @@ function consentPage({ params, error, googleClientId }) {
   ["redirect_uri", "state", "code_challenge", "code_challenge_method", "scope"].forEach((k) => {
     if (params[k] != null && params[k] !== "") gStart.set(k, String(params[k]));
   });
-  const googleLogo = `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.85 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.67-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.67 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>`;
+  // Same 48-viewBox mark the web app's login page uses, so the two buttons are
+  // pixel-identical.
+  const googleLogo = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
   const googleBlock = googleClientId
     ? `<div class="div"><span>or</span></div>
-    <a class="gbtn" href="/oauth/google/start?${esc(gStart.toString())}">${googleLogo}<span>Continue with Google</span></a>`
+      <a class="gbtn" href="/oauth/google/start?${esc(gStart.toString())}">${googleLogo}<span>Sign in with Google</span></a>`
     : `<div class="div"><span>Scoped &amp; revocable</span></div>`;
-  const googleScript = "";
-  const mailIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
-  const lockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+  const mailIcon = `<svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const lockIcon = `<svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   const arrowIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
+  const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeOffIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -240,67 +245,199 @@ function consentPage({ params, error, googleClientId }) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Connect to Blinkbox</title>
 <style>
+  /* Tokens and component rules lifted verbatim from the web app's index.css so
+     this page renders as the same material as apps/frontend .../pages/auth. */
+  :root {
+    --bb-surface-0: #0f0f0f;
+    --bb-surface-1: #1b1b1b;
+    --bb-surface-2: #262626;
+    --bb-border-subtle: #2b2b2b;
+    --bb-border: #3b3b3b;
+    --bb-border-strong: #545454;
+    --bb-text-hi: #fafafa;
+    --bb-text-mid: #b6b6b6;
+    --bb-text-lo: #8c8c8c;
+    --bb-text-dim: #6d6d6d;
+    --bb-radius: 14px;
+    --bb-radius-sm: 10px;
+    --bb-shadow-card: 0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #000; color: #fff; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; -webkit-font-smoothing: antialiased; }
-  .wrap { width: 100%; max-width: 380px; }
-  .brand { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 40px; animation: fadeUp 0.7s ease-out; }
-  .logo { position: relative; width: 64px; height: 64px; margin-bottom: 32px; }
-  .logo .ring { position: absolute; inset: 0; border-radius: 9999px; background: rgba(255,255,255,0.1); animation: pulse-ring 3s ease-out infinite; }
-  .logo img { position: relative; width: 64px; height: 64px; object-fit: contain; animation: float 6s ease-in-out infinite; }
-  .brand h1 { font-size: 30px; font-weight: 900; letter-spacing: 0.05em; margin-bottom: 8px; }
-  .brand .tag { font-size: 11px; letter-spacing: 0.3em; color: #525252; text-transform: uppercase; }
-  .head { font-size: 22px; font-weight: 700; margin-bottom: 4px; animation: slideSwitch 0.3s ease-out; }
-  .sub { font-size: 14px; color: #525252; margin-bottom: 24px; line-height: 1.5; }
-  .sub b { color: #d4d4d4; font-weight: 600; }
-  label { display: block; font-size: 11px; font-weight: 500; color: #737373; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .field { position: relative; margin-bottom: 14px; }
-  .field svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #404040; transition: color 0.2s; pointer-events: none; }
-  .field:focus-within svg { color: #fff; }
-  .field input { width: 100%; background: #0a0a0a; border: 1px solid #171717; border-radius: 8px; padding: 10px 12px 10px 36px; font-size: 14px; color: #fff; outline: none; transition: border-color 0.2s; }
-  .field input::placeholder { color: #404040; }
-  .field input:focus { border-color: #525252; }
-  button { width: 100%; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  button svg { width: 16px; height: 16px; }
-  .allow { background: #fff; color: #000; margin-top: 8px; }
-  .allow:hover { background: #f5f5f5; }
-  .allow:active { transform: scale(0.98); }
-  .err { background: #0a0a0a; border: 1px solid #171717; color: #f87171; font-size: 14px; padding: 10px 12px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; animation: fadeUp 0.2s ease-out; }
-  .err svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+  body {
+    position: relative; overflow: hidden;
+    background: var(--bb-surface-0); color: var(--bb-text-mid);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px 24px; -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ambient dot grid + cursor spotlight (AmbientBackground.jsx / .bb-ambient) */
+  .bb-ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    --mx: 50vw; --my: 50vh;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 16px 16px; background-position: -8px -8px;
+  }
+  .bb-ambient::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px);
+    background-size: 16px 16px; background-position: -8px -8px;
+    -webkit-mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+    mask-image: radial-gradient(220px 220px at var(--mx) var(--my), #000 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+  }
+  .glow {
+    position: absolute; top: -192px; left: 50%; transform: translateX(-50%);
+    width: 720px; height: 420px; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(111,151,232,0.09), transparent 70%);
+  }
+
+  .brand {
+    position: relative; z-index: 10; margin-bottom: 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    animation: fadeUp 0.5s ease-out both;
+  }
+  .brand img { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(111,151,232,0.35)); }
+  .brand span { font-size: 15px; font-weight: 600; letter-spacing: -0.025em; color: var(--bb-text-hi); }
+
+  /* .bb-card */
+  .card {
+    position: relative; z-index: 10; width: 100%; max-width: 400px; padding: 28px;
+    background: var(--bb-surface-1); border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius); box-shadow: var(--bb-shadow-card);
+    animation: fadeUp 0.55s ease-out 0.06s both;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 40px; right: 40px; top: 0; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(111,151,232,0.5), transparent);
+  }
+
+  .head { font-size: 20px; font-weight: 700; letter-spacing: -0.025em; color: var(--bb-text-hi); }
+  .sub { margin: 4px 0 24px; font-size: 13px; color: var(--bb-text-lo); }
+  .sub b { color: var(--bb-text-mid); font-weight: 600; }
+  .intro { animation: slideSwitch 0.3s ease-out; }
+
+  .err {
+    margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;
+    border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06);
+    border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #f87171;
+    animation: fadeUp 0.2s ease-out;
+  }
+  .err svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+
+  .fields { display: flex; flex-direction: column; gap: 14px; }
+  label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bb-text-lo); }
+  .group { position: relative; }
+  .group svg.lead { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--bb-text-dim); transition: color 0.2s; pointer-events: none; }
+  .group:focus-within svg.lead { color: var(--bb-text-hi); }
+  /* .bb-input */
+  .group input {
+    width: 100%; background: var(--bb-surface-1); border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius-sm); color: var(--bb-text-hi);
+    padding: 10px 12px 10px 36px; font-size: 13px; font-family: inherit;
+    outline: none; transition: border-color 0.15s ease;
+  }
+  .group input::placeholder { color: var(--bb-text-dim); }
+  .group input:focus { border-color: var(--bb-border-strong); }
+  #password { padding-right: 40px; }
+  .pwtoggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    display: flex; background: none; border: none; padding: 0; cursor: pointer;
+    color: var(--bb-text-dim); transition: color 0.15s ease;
+  }
+  .pwtoggle:hover { color: var(--bb-text-mid); }
+  .pwtoggle svg { width: 16px; height: 16px; }
+  .pwtoggle .off { display: none; }
+  .pwtoggle.on .on { display: none; }
+  .pwtoggle.on .off { display: flex; }
+
+  /* .bb-btn .bb-btn-primary */
+  .allow {
+    margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px; border: none; border-radius: var(--bb-radius-sm);
+    background: #fafafa; color: #09090b; font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .allow:hover { background: #fff; }
+  .allow:active { transform: scale(0.97); }
+  .allow svg { width: 16px; height: 16px; }
+
   .div { position: relative; margin: 20px 0; text-align: center; }
-  .div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid #171717; }
-  .div span { position: relative; background: #000; padding: 0 12px; font-size: 11px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
-  .gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #131314; border: 1px solid #2e2e2e; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; color: #e3e3e3; text-decoration: none; transition: background 0.2s, border-color 0.2s; }
-  .gbtn:hover { background: #1c1c1d; border-color: #404040; }
-  .gbtn svg { flex-shrink: 0; }
-  .foot { font-size: 11px; color: #2e2e2e; text-align: center; margin-top: 28px; line-height: 1.6; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .div::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid var(--bb-border-subtle); }
+  .div span { position: relative; background: var(--bb-surface-1); padding: 0 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bb-text-dim); }
+
+  .gbtn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    height: 44px; width: 100%; border: 1px solid var(--bb-border-subtle);
+    border-radius: var(--bb-radius-sm); background: var(--bb-surface-0);
+    font-size: 13px; font-weight: 500; color: var(--bb-text-mid);
+    text-decoration: none; transition: all 0.2s ease;
+  }
+  .gbtn:hover { border-color: var(--bb-border); color: var(--bb-text-hi); }
+  .gbtn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .foot { position: relative; z-index: 10; margin-top: 24px; text-align: center; font-size: 11px; color: var(--bb-text-dim); line-height: 1.6; animation: fadeIn 0.6s ease-out 0.25s both; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slideSwitch { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.15; } 100% { transform: scale(2.5); opacity: 0; } }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="brand">
-      <div class="logo"><div class="ring"></div><img src="/oauth/logo.svg" alt="Blinkbox" /></div>
-      <h1>Blinkbox</h1>
-      <div class="tag">Automation Engine</div>
+  <div class="bb-ambient" aria-hidden="true"></div>
+  <div class="glow" aria-hidden="true"></div>
+
+  <div class="brand">
+    <img src="/oauth/logo.svg" alt="Blinkbox" />
+    <span>blinkbox</span>
+  </div>
+
+  <div class="card">
+    <div class="intro">
+      <h1 class="head">Connect to Claude</h1>
+      <p class="sub">Sign in to let <b>Claude</b> access your workspace — list, run, and build automations on your behalf.</p>
     </div>
-    <h2 class="head">Connect to Claude</h2>
-    <p class="sub">Sign in to let <b>Claude</b> access your workspace — list, run, and build automations on your behalf.</p>
     ${errBanner}
     <form method="POST" action="/oauth/authorize">
       ${hidden}
-      <label for="email">Email</label>
-      <div class="field">${mailIcon}<input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus /></div>
-      <label for="password">Password</label>
-      <div class="field">${lockIcon}<input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required /></div>
+      <div class="fields">
+        <div>
+          <label for="email">Email</label>
+          <div class="group">${mailIcon}<input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus /></div>
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <div class="group">
+            ${lockIcon}<input id="password" name="password" type="password" autocomplete="current-password" placeholder="Min. 8 characters" required />
+            <button class="pwtoggle" id="pwtoggle" type="button" tabindex="-1" aria-label="Show password"><span class="on">${eyeIcon}</span><span class="off">${eyeOffIcon}</span></button>
+          </div>
+        </div>
+      </div>
       <button class="allow" type="submit" name="decision" value="allow">Sign In &amp; Allow ${arrowIcon}</button>
     </form>
     ${googleBlock}
-    <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
   </div>
-  ${googleScript}
+
+  <p class="foot">Connecting grants Claude a scoped key to your workspace.<br/>You can revoke it anytime in Blinkbox → API Keys.</p>
+<script>
+(function () {
+  var amb = document.querySelector(".bb-ambient"), raf = 0;
+  if (amb) window.addEventListener("pointermove", function (e) {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function () {
+      amb.style.setProperty("--mx", e.clientX + "px");
+      amb.style.setProperty("--my", e.clientY + "px");
+    });
+  }, { passive: true });
+  var t = document.getElementById("pwtoggle"), p = document.getElementById("password");
+  if (t && p) t.addEventListener("click", function () {
+    var reveal = p.type === "password";
+    p.type = reveal ? "text" : "password";
+    t.classList.toggle("on", reveal);
+    t.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+  });
+})();
+</script>
 </body>
 </html>`;
 }
