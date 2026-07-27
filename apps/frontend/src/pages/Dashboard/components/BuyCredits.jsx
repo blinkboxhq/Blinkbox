@@ -148,7 +148,7 @@ export default function BuyCredits({ usage, onBack }) {
         <button
           disabled={busy || !catalog?.stripeReady}
           onClick={buy}
-          className="bb-btn bb-btn-accent w-full flex items-center justify-center gap-2 h-11 mt-5 text-[13px] font-semibold disabled:opacity-50"
+          className="bb-btn w-full flex items-center justify-center gap-2 h-11 mt-5 rounded-full bg-[var(--bb-accent)] text-[#09090b] hover:bg-[var(--bb-accent-hot)] text-[13px] font-semibold disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           {busy ? 'Opening checkout…' : `Pay $${amount}`}

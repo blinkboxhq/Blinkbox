@@ -155,7 +155,7 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
 
         <button
           onClick={onBuyCredits}
-          className="bb-btn bb-btn-accent w-full flex items-center justify-center gap-2 h-10 mt-4 text-[13px] font-semibold"
+          className="bb-btn w-full flex items-center justify-center gap-2 h-10 mt-4 rounded-full bg-[var(--bb-accent)] text-[#09090b] hover:bg-[var(--bb-accent-hot)] text-[13px] font-semibold"
         >
           <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
           Buy credits
