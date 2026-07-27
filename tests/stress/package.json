@@ -1,0 +1,25 @@
+{
+  "name": "@blinkbox/chaos-cascade",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reliability stress suite for the Blinkbox engine — payload escalation, recursion storm, flaky peer, race hammer.",
+  "scripts": {
+    "chaos": "tsx chaos-cascade.ts",
+    "chaos:quick": "tsx chaos-cascade.ts --payload-iterations=4 --recursion-duration=8 --flaky-requests=20 --flaky-observe=45 --mutex-rounds=1",
+    "chaos:payload": "tsx chaos-cascade.ts --modules=payload",
+    "chaos:recursion": "tsx chaos-cascade.ts --modules=recursion",
+    "chaos:flaky": "tsx chaos-cascade.ts --modules=flaky",
+    "chaos:mutex": "tsx chaos-cascade.ts --modules=mutex",
+    "chaos:server": "tsx src/modules/chaos-server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
