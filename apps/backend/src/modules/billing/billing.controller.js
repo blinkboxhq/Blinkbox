@@ -1,4 +1,3 @@
-import Stripe from "stripe";
 import WorkspaceUsage from "../../models/workspaceUsage.model.js";
 import User from "../../models/user.model.js";
 import { getNodeCost, addPurchasedCredits } from "../../infra/credit.engine.js";
@@ -12,16 +11,16 @@ import {
   getPack,
   packSavingPercent,
   creditsForUsd,
+  usdForCredits,
   normalizePaygUsd,
+  normalizeAutoRecharge,
+  AUTO_RECHARGE_MIN_THRESHOLD,
+  AUTO_RECHARGE_MAX_THRESHOLD,
+  AUTO_RECHARGE_DEFAULT_CAP_USD,
+  AUTO_RECHARGE_MAX_CAP_USD,
 } from "./credit.plans.js";
-import {
-  STRIPE_SECRET_KEY,
-  STRIPE_WEBHOOK_SECRET,
-  STRIPE_PRICE_ID_PRO,
-  FRONTEND_URL,
-} from "../../config/env.js";
-
-const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" }) : null;
+import { stripe } from "./stripe.client.js";
+import { STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID_PRO, FRONTEND_URL } from "../../config/env.js";
 
 function nextCycleStart(billingCycleStart) {
   const from = new Date(billingCycleStart);
@@ -34,6 +33,9 @@ export async function getUsage(req, res) {
     const planRemaining = Math.max(0, usage.monthlyLimit - usage.creditsUsed);
     const purchasedCredits = usage.purchasedCredits || 0;
 
+    const balance = planRemaining + purchasedCredits;
+    const auto = usage.autoRecharge || {};
+
     res.json({
       plan: usage.plan,
       creditsUsed: usage.creditsUsed,
@@ -41,8 +43,24 @@ export async function getUsage(req, res) {
       planRemaining,
       purchasedCredits,
       purchasedSpent: usage.purchasedSpent || 0,
-      balance: planRemaining + purchasedCredits,
-      remaining: planRemaining + purchasedCredits,
+      balance,
+      remaining: balance,
+      creditsPerUsd: PAYG_CREDITS_PER_USD,
+      balanceUsd: usdForCredits(balance),
+      planRemainingUsd: usdForCredits(planRemaining),
+      purchasedCreditsUsd: usdForCredits(purchasedCredits),
+      autoRecharge: {
+        enabled: Boolean(auto.enabled),
+        thresholdCredits: auto.thresholdCredits || 0,
+        amountUsd: auto.amountUsd || 0,
+        monthlyCapUsd: auto.monthlyCapUsd || AUTO_RECHARGE_DEFAULT_CAP_USD,
+        spentThisCycleUsd: auto.spentThisCycleUsd || 0,
+        hasCard: Boolean(auto.paymentMethodId),
+        cardBrand: auto.cardBrand || null,
+        cardLast4: auto.cardLast4 || null,
+        lastChargeAt: auto.lastChargeAt || null,
+        lastFailure: auto.lastFailure || null,
+      },
       percentUsed: Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)),
       billingCycleStart: usage.billingCycleStart,
       billingCycleEnd: nextCycleStart(usage.billingCycleStart),
@@ -64,8 +82,56 @@ export async function getCatalog(_req, res) {
       minUsd: PAYG_MIN_USD,
       maxUsd: PAYG_MAX_USD,
     },
+    autoRecharge: {
+      minThreshold: AUTO_RECHARGE_MIN_THRESHOLD,
+      maxThreshold: AUTO_RECHARGE_MAX_THRESHOLD,
+      defaultCapUsd: AUTO_RECHARGE_DEFAULT_CAP_USD,
+      maxCapUsd: AUTO_RECHARGE_MAX_CAP_USD,
+    },
     stripeReady: Boolean(stripe),
   });
+}
+
+/**
+ * Turn auto-recharge on or off. Enabling needs a card already on file, which
+ * a manual top-up saves — we never ask for card details ourselves.
+ */
+export async function updateAutoRecharge(req, res) {
+  const { error, value } = normalizeAutoRecharge(req.body);
+  if (error) return res.status(400).json({ message: error });
+
+  try {
+    const usage = await WorkspaceUsage.getOrCreate(req.user.id);
+
+    if (value.enabled && !usage.autoRecharge?.paymentMethodId) {
+      return res.status(400).json({
+        message: "Buy credits once first — that saves the card auto-recharge will use.",
+      });
+    }
+
+    const set = value.enabled
+      ? {
+          "autoRecharge.enabled": true,
+          "autoRecharge.thresholdCredits": value.thresholdCredits,
+          "autoRecharge.amountUsd": value.amountUsd,
+          "autoRecharge.monthlyCapUsd": value.monthlyCapUsd,
+          // A fresh set of settings clears the strikes from an old dead card.
+          "autoRecharge.failureCount": 0,
+          "autoRecharge.lastFailure": null,
+        }
+      : { "autoRecharge.enabled": false };
+
+    const updated = await WorkspaceUsage.findOneAndUpdate(
+      { workspaceId: req.user.id },
+      { $set: set },
+      { returnDocument: "after" },
+    );
+
+    res.json({ autoRecharge: { ...updated.autoRecharge.toObject(), paymentMethodId: undefined } });
+  } catch (err) {
+    console.error("[Billing] updateAutoRecharge error:", err.message);
+    res.status(500).json({ message: "Failed to save auto-recharge settings." });
+  }
 }
 
 export async function getHistory(req, res) {
@@ -165,6 +231,8 @@ export async function createCreditCheckout(req, res) {
           },
         },
       ],
+      // Keeps the card on file so auto-recharge has something to charge later.
+      payment_intent_data: { setup_future_usage: "off_session" },
       success_url: `${FRONTEND_URL}/dashboard?tab=usage&purchase=success`,
       cancel_url: `${FRONTEND_URL}/dashboard?tab=buy-credits&purchase=cancelled`,
       metadata: {
@@ -240,6 +308,34 @@ export async function createPortalSession(req, res) {
   }
 }
 
+/**
+ * Store the card a completed purchase left behind, so auto-recharge has a
+ * payment method to use. Best-effort — a purchase must never fail over this.
+ */
+async function rememberCard(workspaceId, paymentIntentId) {
+  if (!paymentIntentId) return;
+  try {
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ["payment_method"],
+    });
+    const pm = intent.payment_method;
+    if (!pm?.id) return;
+
+    await WorkspaceUsage.updateOne(
+      { workspaceId },
+      {
+        $set: {
+          "autoRecharge.paymentMethodId": pm.id,
+          "autoRecharge.cardBrand": pm.card?.brand || null,
+          "autoRecharge.cardLast4": pm.card?.last4 || null,
+        },
+      },
+    );
+  } catch (err) {
+    console.warn(`[Billing] could not save card for ${workspaceId}: ${err.message}`);
+  }
+}
+
 export async function handleWebhook(req, res) {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) {
     return res.status(503).json({ message: "Stripe webhook not configured." });
@@ -264,13 +360,14 @@ export async function handleWebhook(req, res) {
       if (userId && Number.isFinite(credits) && credits > 0) {
         const { credited } = await addPurchasedCredits(userId, {
           sessionId: session.id,
-          packId: session.metadata.packId,
+          packId: session.metadata.packId || null,
           credits,
           amountUsd: Number(session.metadata.amountUsd) || 0,
         });
         console.log(
-          `[Billing] credit pack ${session.metadata.packId} for ${userId}: ${credited ? "applied" : "replay ignored"}`,
+          `[Billing] credit top-up for ${userId}: ${credited ? "applied" : "replay ignored"}`,
         );
+        await rememberCard(userId, session.payment_intent);
       }
       return res.json({ received: true });
     }

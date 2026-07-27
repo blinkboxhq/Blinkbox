@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
+import { creditsToUsd, fmtUsd } from '../../../lib/credits';
 
 const NAV_TOP = [
   { key: 'workflows', icon: LayoutDashboard, label: 'Dashboard' },
@@ -44,6 +45,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
   const creditBalance = usage
     ? usage.balance ?? Math.max(0, usage.monthlyLimit - usage.creditsUsed) + (usage.purchasedCredits || 0)
     : 0;
+  const balanceUsd = usage?.balanceUsd ?? creditsToUsd(creditBalance, usage?.creditsPerUsd);
 
   const UserAvatar = ({ size = 'w-7 h-7', textSize = 'text-[11px]', className = '' }) => {
     if (user?.picture) {
@@ -120,7 +122,8 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
-              <p className="text-[10px] font-mono text-[var(--bb-text-dim)] mt-1.5">{creditBalance.toLocaleString()} credits left</p>
+              <p className="text-[10px] font-mono text-[var(--bb-text-mid)] mt-1.5">{fmtUsd(balanceUsd)}</p>
+              <p className="text-[10px] font-mono text-[var(--bb-text-dim)]">{creditBalance.toLocaleString()} credits left</p>
             </button>
           </div>
         )}

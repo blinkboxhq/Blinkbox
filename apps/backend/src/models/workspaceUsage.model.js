@@ -38,10 +38,29 @@ const DeductionSchema = new mongoose.Schema(
 const PurchaseSchema = new mongoose.Schema(
   {
     sessionId: { type: String, required: true },
-    packId: { type: String, required: true },
+    // Slider and auto-recharge top-ups have no pack — only legacy packs do.
+    packId: { type: String, default: null },
     credits: { type: Number, required: true },
     amountUsd: { type: Number, required: true },
+    auto: { type: Boolean, default: false },
     at: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
+const AutoRechargeSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    thresholdCredits: { type: Number, default: 0 },
+    amountUsd: { type: Number, default: 0 },
+    monthlyCapUsd: { type: Number, default: 0 },
+    paymentMethodId: { type: String, default: null },
+    cardBrand: { type: String, default: null },
+    cardLast4: { type: String, default: null },
+    lastChargeAt: { type: Date, default: null },
+    spentThisCycleUsd: { type: Number, default: 0 },
+    failureCount: { type: Number, default: 0 },
+    lastFailure: { type: String, default: null },
   },
   { _id: false },
 );
@@ -90,6 +109,12 @@ const WorkspaceUsageSchema = new mongoose.Schema(
       type: [PurchaseSchema],
       default: [],
     },
+
+    // Charge a saved card automatically when the balance runs low
+    autoRecharge: {
+      type: AutoRechargeSchema,
+      default: () => ({}),
+    },
   },
   { timestamps: true },
 );
@@ -124,6 +149,7 @@ WorkspaceUsageSchema.statics.getOrCreate = async function (workspaceId) {
     usage.creditsUsed = 0;
     usage.monthlyLimit = planCredits(usage.plan);
     usage.history = [];
+    if (usage.autoRecharge) usage.autoRecharge.spentThisCycleUsd = 0;
     await usage.save();
   }
 

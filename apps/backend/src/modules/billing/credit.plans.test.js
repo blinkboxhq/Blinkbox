@@ -10,7 +10,15 @@ import {
   planCredits,
   packRate,
   creditsForUsd,
+  usdForCredits,
   normalizePaygUsd,
+  normalizeAutoRecharge,
+  shouldRecharge,
+  AUTO_RECHARGE_MIN_THRESHOLD,
+  AUTO_RECHARGE_MAX_THRESHOLD,
+  AUTO_RECHARGE_MAX_CAP_USD,
+  AUTO_RECHARGE_COOLDOWN_MS,
+  AUTO_RECHARGE_MAX_FAILURES,
 } from "./credit.plans.js";
 import { splitSpend } from "../../infra/credit.engine.js";
 
@@ -78,6 +86,109 @@ test("an unbuyable amount is refused rather than charged", () => {
   ]) {
     assert.equal(normalizePaygUsd(bad), null, `${String(bad)} should not be buyable`);
   }
+});
+
+test("a credit balance converts back to the dollars it cost", () => {
+  assert.equal(usdForCredits(PAYG_CREDITS_PER_USD), 1);
+  assert.equal(usdForCredits(creditsForUsd(25)), 25);
+  assert.equal(usdForCredits(0), 0);
+  // An over-drafted balance is worth nothing, not a negative refund.
+  assert.equal(usdForCredits(-5000), 0);
+  assert.equal(usdForCredits(null), 0);
+  assert.equal(usdForCredits(undefined), 0);
+});
+
+test("auto-recharge off needs no other settings", () => {
+  assert.deepEqual(normalizeAutoRecharge({ enabled: false }), { value: { enabled: false } });
+  assert.deepEqual(normalizeAutoRecharge({ enabled: false, thresholdCredits: 1 }), {
+    value: { enabled: false },
+  });
+  assert.ok(normalizeAutoRecharge(null).error);
+  assert.ok(normalizeAutoRecharge("yes").error);
+});
+
+test("a valid auto-recharge setup is accepted with a default cap", () => {
+  assert.deepEqual(normalizeAutoRecharge({ enabled: true, thresholdCredits: 500, amountUsd: 25 }), {
+    value: { enabled: true, thresholdCredits: 500, amountUsd: 25, monthlyCapUsd: 100 },
+  });
+  assert.deepEqual(
+    normalizeAutoRecharge({ enabled: true, thresholdCredits: "500", amountUsd: "25", monthlyCapUsd: "50" }),
+    { value: { enabled: true, thresholdCredits: 500, amountUsd: 25, monthlyCapUsd: 50 } },
+  );
+});
+
+test("a top-up smaller than the trigger point is refused as a charge loop", () => {
+  // $5 buys 5,120 credits — landing back under a 10,000 trigger would recharge forever.
+  assert.ok(normalizeAutoRecharge({ enabled: true, thresholdCredits: 10000, amountUsd: 5 }).error);
+  assert.ok(
+    normalizeAutoRecharge({ enabled: true, thresholdCredits: PAYG_CREDITS_PER_USD * 5, amountUsd: 5 }).error,
+  );
+  assert.ok(normalizeAutoRecharge({ enabled: true, thresholdCredits: 5000, amountUsd: 5 }).value);
+});
+
+test("auto-recharge bounds are enforced on every field", () => {
+  const ok = { enabled: true, thresholdCredits: 500, amountUsd: 25, monthlyCapUsd: 100 };
+  assert.ok(normalizeAutoRecharge({ ...ok, amountUsd: PAYG_MIN_USD - 1 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, amountUsd: PAYG_MAX_USD + 1 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, thresholdCredits: AUTO_RECHARGE_MIN_THRESHOLD - 1 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, thresholdCredits: AUTO_RECHARGE_MAX_THRESHOLD + 1 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, thresholdCredits: NaN }).error);
+  // A cap under the top-up could never let a single charge through.
+  assert.ok(normalizeAutoRecharge({ ...ok, monthlyCapUsd: 10 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, monthlyCapUsd: AUTO_RECHARGE_MAX_CAP_USD + 1 }).error);
+  assert.ok(normalizeAutoRecharge({ ...ok, monthlyCapUsd: 25 }).value);
+});
+
+const chargeable = {
+  monthlyLimit: 1000,
+  creditsUsed: 1000,
+  purchasedCredits: 200,
+  billingCycleStart: new Date("2026-07-01"),
+  autoRecharge: {
+    enabled: true,
+    thresholdCredits: 500,
+    amountUsd: 25,
+    monthlyCapUsd: 100,
+    paymentMethodId: "pm_test",
+    spentThisCycleUsd: 0,
+    failureCount: 0,
+    lastChargeAt: null,
+  },
+};
+
+const withSettings = (patch) => ({ ...chargeable, autoRecharge: { ...chargeable.autoRecharge, ...patch } });
+
+test("a balance under the trigger point with a saved card is chargeable", () => {
+  assert.deepEqual(shouldRecharge(chargeable), { ok: true });
+});
+
+test("auto-recharge holds off unless every condition is met", () => {
+  const cases = [
+    ["disabled", withSettings({ enabled: false })],
+    ["disabled", { ...chargeable, autoRecharge: undefined }],
+    ["disabled", undefined],
+    ["no_card", withSettings({ paymentMethodId: null })],
+    ["too_many_failures", withSettings({ failureCount: AUTO_RECHARGE_MAX_FAILURES })],
+    ["above_threshold", { ...chargeable, purchasedCredits: 500 }],
+    ["above_threshold", { ...chargeable, creditsUsed: 0, purchasedCredits: 0 }],
+    ["cooldown", withSettings({ lastChargeAt: new Date(Date.now() - AUTO_RECHARGE_COOLDOWN_MS / 2) })],
+    ["cap_reached", withSettings({ spentThisCycleUsd: 100 })],
+    ["cap_reached", withSettings({ spentThisCycleUsd: 80 })],
+  ];
+  for (const [reason, usage] of cases) {
+    assert.deepEqual(shouldRecharge(usage), { ok: false, reason });
+  }
+});
+
+test("the cooldown expires rather than blocking forever", () => {
+  const usage = withSettings({ lastChargeAt: new Date(Date.now() - AUTO_RECHARGE_COOLDOWN_MS - 1000) });
+  assert.deepEqual(shouldRecharge(usage), { ok: true });
+});
+
+test("an over-drafted plan bucket does not mask an empty balance", () => {
+  // creditsUsed above monthlyLimit must not make the balance look negative-free.
+  const usage = { ...chargeable, creditsUsed: 5000, purchasedCredits: 0 };
+  assert.deepEqual(shouldRecharge(usage), { ok: true });
 });
 
 test("an unknown pack id is refused rather than guessed", () => {

@@ -6,10 +6,9 @@ import {
   Check, Loader2, ArrowUpRight, Receipt,
 } from 'lucide-react';
 import api from '../../../lib/api';
+import { creditsToUsd, fmtCredits as fmt, fmtUsd } from '../../../lib/credits';
 
 const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
-
-const fmt = (n) => (typeof n === 'number' ? n.toLocaleString() : '—');
 
 const prettyNode = (type) =>
   String(type || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -86,6 +85,10 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
   const planRemaining = usage.planRemaining ?? Math.max(0, usage.monthlyLimit - usage.creditsUsed);
   const purchased = usage.purchasedCredits || 0;
   const balance = usage.balance ?? planRemaining + purchased;
+  const perUsd = usage.creditsPerUsd || catalog?.payg?.creditsPerUsd;
+  const balanceUsd = usage.balanceUsd ?? creditsToUsd(balance, perUsd);
+  const planRemainingUsd = usage.planRemainingUsd ?? creditsToUsd(planRemaining, perUsd);
+  const purchasedUsd = usage.purchasedCreditsUsd ?? creditsToUsd(purchased, perUsd);
   const pct = Math.min(100, usage.percentUsed ?? Math.round((usage.creditsUsed / usage.monthlyLimit) * 100));
   const isPro = usage.plan === 'pro' || usage.plan === 'enterprise';
   const barColor = pct > 80 ? 'bg-red-400' : pct > 50 ? 'bg-amber-400' : 'bg-[var(--bb-accent)]';
@@ -112,11 +115,14 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
       {/* Balance — plan bucket first, purchased second */}
       <div className="bb-card bb-liquid rounded-2xl p-5">
         <span className="bb-eyebrow">Available balance</span>
-        <p className="text-[38px] font-semibold text-[var(--bb-text-hi)] leading-none font-mono mt-2">
-          {fmt(balance)}
-        </p>
+        <div className="flex items-baseline gap-2.5 mt-2">
+          <p className="text-[38px] font-semibold text-[var(--bb-text-hi)] leading-none font-mono">
+            {fmtUsd(balanceUsd)}
+          </p>
+          <span className="text-[13px] font-mono text-[var(--bb-text-lo)]">{fmt(balance)} credits</span>
+        </div>
         <p className="text-[12px] text-[var(--bb-text-lo)] mt-1.5">
-          {fmt(planRemaining)} plan credits{renews ? ` · renews ${renews}` : ''} + {fmt(purchased)} purchased
+          {fmtUsd(planRemainingUsd)} plan credits{renews ? ` · renews ${renews}` : ''} + {fmtUsd(purchasedUsd)} purchased
         </p>
 
         <div className="mt-5">
@@ -134,9 +140,19 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Activity} label="Used" value={fmt(usage.creditsUsed)} sub="this cycle" />
-        <StatCard icon={Gauge} label="Plan left" value={fmt(planRemaining)} sub={renews ? `resets ${renews}` : 'monthly'} />
-        <StatCard icon={Wallet} label="Purchased" value={fmt(purchased)} sub="never expires" />
+        <StatCard icon={Activity} label="Used" value={fmt(usage.creditsUsed)} sub="credits this cycle" />
+        <StatCard
+          icon={Gauge}
+          label="Plan left"
+          value={fmtUsd(planRemainingUsd)}
+          sub={`${fmt(planRemaining)} credits${renews ? ` · resets ${renews}` : ''}`}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Purchased"
+          value={fmtUsd(purchasedUsd)}
+          sub={`${fmt(purchased)} credits · never expires`}
+        />
       </div>
 
       {/* Pay as you go */}

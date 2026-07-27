@@ -422,7 +422,7 @@ export default function Dashboard() {
         {activeTab === 'buy-credits' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[760px] mx-auto w-full">
-              <BuyCredits usage={billingUsage} onBack={() => setActiveTab('usage')} />
+              <BuyCredits usage={billingUsage} onBack={() => setActiveTab('usage')} onRefresh={fetchBillingUsage} />
             </div>
           </div>
         )}

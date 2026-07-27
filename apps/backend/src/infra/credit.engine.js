@@ -188,6 +188,17 @@ export async function checkCredits(workspaceId, nodeType) {
 }
 
 /**
+ * Kick off an auto top-up without blocking the execution path. Imported
+ * lazily so the Stripe client only loads on deployments that bill, and never
+ * in tests that just exercise the arithmetic.
+ */
+function triggerAutoRecharge(workspaceId) {
+  import("../modules/billing/auto.recharge.js")
+    .then((m) => m.maybeAutoRecharge(workspaceId))
+    .catch((err) => console.error("[Credits] auto-recharge check failed:", err.message));
+}
+
+/**
  * Deduct credits after a successful node execution.
  *
  * The split depends on the current balance, so the update is guarded by the
@@ -233,6 +244,7 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
 
     if (result) {
       const balance = balanceOf(result);
+      triggerAutoRecharge(workspaceId);
       return {
         creditsUsed: result.creditsUsed,
         remaining: balance.remaining,
@@ -248,6 +260,7 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
     { returnDocument: "after", upsert: true },
   );
 
+  triggerAutoRecharge(workspaceId);
   return {
     creditsUsed: fallback.creditsUsed,
     remaining: balanceOf(fallback).remaining,
@@ -260,17 +273,16 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
  *
  * @returns {{ credited: boolean, purchasedCredits: number }}
  */
-export async function addPurchasedCredits(workspaceId, { sessionId, packId, credits, amountUsd }) {
+export async function addPurchasedCredits(
+  workspaceId,
+  { sessionId, packId = null, credits, amountUsd, auto = false },
+) {
+  const entry = { sessionId, packId, credits, amountUsd, auto, at: new Date() };
   const result = await WorkspaceUsage.findOneAndUpdate(
     { workspaceId, "purchases.sessionId": { $ne: sessionId } },
     {
       $inc: { purchasedCredits: credits },
-      $push: {
-        purchases: {
-          $each: [{ sessionId, packId, credits, amountUsd, at: new Date() }],
-          $slice: -50,
-        },
-      },
+      $push: { purchases: { $each: [entry], $slice: -50 } },
     },
     { returnDocument: "after", upsert: false },
   );
@@ -282,7 +294,7 @@ export async function addPurchasedCredits(workspaceId, { sessionId, packId, cred
   if (alreadyApplied) return { credited: false, purchasedCredits: existing.purchasedCredits };
 
   existing.purchasedCredits += credits;
-  existing.purchases.push({ sessionId, packId, credits, amountUsd, at: new Date() });
+  existing.purchases.push(entry);
   await existing.save();
   return { credited: true, purchasedCredits: existing.purchasedCredits };
 }

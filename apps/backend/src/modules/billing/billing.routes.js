@@ -7,6 +7,7 @@ import {
   createCheckoutSession,
   createCreditCheckout,
   createPortalSession,
+  updateAutoRecharge,
   handleWebhook,
   getNodeCostEndpoint,
 } from "./billing.controller.js";
@@ -22,6 +23,7 @@ router.get("/catalog",     verifyToken, getCatalog);
 router.post("/checkout",   verifyToken, createCheckoutSession);
 router.post("/credits",    verifyToken, createCreditCheckout);
 router.post("/portal",     verifyToken, createPortalSession);
+router.put("/auto-recharge", verifyToken, updateAutoRecharge);
 router.get("/cost/:nodeType", verifyToken, getNodeCostEndpoint);
 
 export default router;

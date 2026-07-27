@@ -5,8 +5,8 @@ import {
   Boxes, Plug, Sparkles, Globe,
 } from 'lucide-react';
 import api from '../../../lib/api';
-
-const fmt = (n) => (typeof n === 'number' ? n.toLocaleString() : '—');
+import AutoRecharge from './AutoRecharge';
+import { creditsToUsd, fmtCredits as fmt, fmtUsd } from '../../../lib/credits';
 
 const FALLBACK = { creditsPerUsd: 1024, minUsd: 5, maxUsd: 500 };
 const DEFAULT_USD = 25;
@@ -19,7 +19,7 @@ const WHAT_YOU_GET = [
   { icon: Globe, label: 'Browser runs', cost: 15 },
 ];
 
-export default function BuyCredits({ usage, onBack }) {
+export default function BuyCredits({ usage, onBack, onRefresh }) {
   const [catalog, setCatalog] = useState(null);
   const [usd, setUsd] = useState(DEFAULT_USD);
   const [busy, setBusy] = useState(false);
@@ -45,6 +45,7 @@ export default function BuyCredits({ usage, onBack }) {
   const credits = amount * payg.creditsPerUsd;
   const pct = ((amount - payg.minUsd) / (payg.maxUsd - payg.minUsd)) * 100;
   const balance = usage?.balance ?? 0;
+  const balanceUsd = usage?.balanceUsd ?? creditsToUsd(balance, usage?.creditsPerUsd || payg.creditsPerUsd);
 
   const buy = async () => {
     setBusy(true);
@@ -190,10 +191,14 @@ export default function BuyCredits({ usage, onBack }) {
         </div>
       </div>
 
+      <AutoRecharge usage={usage} catalog={catalog} onSaved={onRefresh} />
+
       <p className="text-[12px] text-[var(--bb-text-lo)] px-1">
-        You have {fmt(balance)} credits now — this takes you to{' '}
-        <span className="font-mono text-[var(--bb-text-mid)]">{fmt(balance + credits)}</span>.
-        Purchased credits are spent only after your monthly plan credits run out.
+        You have <span className="font-mono text-[var(--bb-text-mid)]">{fmtUsd(balanceUsd)}</span> of
+        credits now ({fmt(balance)}) — this takes you to{' '}
+        <span className="font-mono text-[var(--bb-text-mid)]">{fmtUsd(balanceUsd + amount)}</span> (
+        {fmt(balance + credits)}). Purchased credits are spent only after your monthly plan credits
+        run out.
       </p>
     </div>
   );
