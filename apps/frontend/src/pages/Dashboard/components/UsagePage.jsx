@@ -27,7 +27,7 @@ function StatCard({ icon: Icon, label, value, sub }) {
   );
 }
 
-export default function UsagePage({ usage, onRefresh }) {
+export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [catalog, setCatalog] = useState(null);
   const [history, setHistory] = useState([]);
@@ -93,7 +93,7 @@ export default function UsagePage({ usage, onRefresh }) {
     ? new Date(usage.billingCycleEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     : null;
   const proPlan = catalog?.plans?.find((p) => p.id === 'pro');
-  const packs = catalog?.packs || [];
+  const payg = catalog?.payg || { creditsPerUsd: 1024 };
 
   return (
     <div className="flex flex-col gap-5">
@@ -149,32 +149,17 @@ export default function UsagePage({ usage, onRefresh }) {
           </span>
         </div>
         <p className="text-[12px] text-[var(--bb-text-lo)]">
-          Pay as you go. Purchased credits are spent only after your monthly plan credits run out.
+          Pay as you go — $1 buys {fmt(payg.creditsPerUsd)} credits at any size. Purchased credits are
+          spent only after your monthly plan credits run out.
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          {packs.map((pack) => (
-            <button
-              key={pack.id}
-              disabled={busy !== null}
-              onClick={() => start(pack.id, '/api/billing/credits', { packId: pack.id })}
-              className="bb-panel p-3.5 text-left transition-colors hover:bg-white/[0.04] disabled:opacity-50 flex flex-col gap-1"
-            >
-              <span className="text-[15px] font-semibold text-[var(--bb-text-hi)] font-mono leading-none">
-                {fmt(pack.credits)}
-              </span>
-              <span className="text-[11px] text-[var(--bb-text-dim)]">credits</span>
-              <span className="flex items-center gap-1.5 mt-2 text-[13px] font-semibold text-[var(--bb-text-mid)]">
-                {busy === pack.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : `$${pack.priceUsd}`}
-                {pack.savingPercent > 0 && busy !== pack.id && (
-                  <span className="text-[10px] font-semibold text-[var(--bb-accent)]">
-                    +{pack.savingPercent}% value
-                  </span>
-                )}
-              </span>
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={onBuyCredits}
+          className="bb-btn bb-btn-accent w-full flex items-center justify-center gap-2 h-10 mt-4 text-[13px] font-semibold"
+        >
+          <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
+          Buy credits
+        </button>
 
         {catalog && !catalog.stripeReady && (
           <p className="text-[11px] text-amber-400 mt-3">

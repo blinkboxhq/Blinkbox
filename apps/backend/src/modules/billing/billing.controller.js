@@ -3,7 +3,17 @@ import WorkspaceUsage from "../../models/workspaceUsage.model.js";
 import User from "../../models/user.model.js";
 import { getNodeCost, addPurchasedCredits } from "../../infra/credit.engine.js";
 import { sendProWelcomeEmail, sendProEndingSoonEmail } from "../../infra/email.service.js";
-import { PLANS, CREDIT_PACKS, getPack, packSavingPercent } from "./credit.plans.js";
+import {
+  PLANS,
+  CREDIT_PACKS,
+  PAYG_CREDITS_PER_USD,
+  PAYG_MIN_USD,
+  PAYG_MAX_USD,
+  getPack,
+  packSavingPercent,
+  creditsForUsd,
+  normalizePaygUsd,
+} from "./credit.plans.js";
 import {
   STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET,
@@ -49,6 +59,11 @@ export async function getCatalog(_req, res) {
   res.json({
     plans: Object.values(PLANS),
     packs: CREDIT_PACKS.map((pack) => ({ ...pack, savingPercent: packSavingPercent(pack) })),
+    payg: {
+      creditsPerUsd: PAYG_CREDITS_PER_USD,
+      minUsd: PAYG_MIN_USD,
+      maxUsd: PAYG_MAX_USD,
+    },
     stripeReady: Boolean(stripe),
   });
 }
@@ -102,18 +117,23 @@ export async function createCheckoutSession(req, res) {
 }
 
 /**
- * Pay-as-you-go: a one-time charge for a credit pack. Priced inline so packs
- * can be re-tuned in credit.plans.js without minting Stripe price IDs.
+ * Pay-as-you-go: a one-time charge for any dollar amount in range. Priced
+ * inline so the rate can be re-tuned in credit.plans.js without minting
+ * Stripe price IDs. `packId` is still accepted for older clients.
  */
 export async function createCreditCheckout(req, res) {
   if (!stripe) {
     return res.status(503).json({ message: "Stripe is not configured." });
   }
 
-  const pack = getPack(req.body?.packId);
-  if (!pack) {
-    return res.status(400).json({ message: "Unknown credit pack." });
+  const pack = req.body?.packId ? getPack(req.body.packId) : null;
+  const amountUsd = pack ? pack.priceUsd : normalizePaygUsd(req.body?.amountUsd);
+  if (!amountUsd) {
+    return res.status(400).json({
+      message: `Choose an amount between $${PAYG_MIN_USD} and $${PAYG_MAX_USD}.`,
+    });
   }
+  const credits = pack ? pack.credits : creditsForUsd(amountUsd);
 
   try {
     const user = await User.findById(req.user.id);
@@ -137,22 +157,22 @@ export async function createCreditCheckout(req, res) {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: pack.priceUsd * 100,
+            unit_amount: amountUsd * 100,
             product_data: {
-              name: `${pack.credits.toLocaleString()} Blinkbox credits`,
+              name: `${credits.toLocaleString()} Blinkbox credits`,
               description: "Credits never expire and roll over month to month.",
             },
           },
         },
       ],
       success_url: `${FRONTEND_URL}/dashboard?tab=usage&purchase=success`,
-      cancel_url: `${FRONTEND_URL}/dashboard?tab=usage&purchase=cancelled`,
+      cancel_url: `${FRONTEND_URL}/dashboard?tab=buy-credits&purchase=cancelled`,
       metadata: {
         userId: user._id.toString(),
         kind: "credits",
-        packId: pack.id,
-        credits: String(pack.credits),
-        amountUsd: String(pack.priceUsd),
+        ...(pack ? { packId: pack.id } : {}),
+        credits: String(credits),
+        amountUsd: String(amountUsd),
       },
     });
 

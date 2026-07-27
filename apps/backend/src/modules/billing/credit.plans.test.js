@@ -4,9 +4,13 @@ import {
   PLANS,
   CREDIT_PACKS,
   PAYG_CREDITS_PER_USD,
+  PAYG_MIN_USD,
+  PAYG_MAX_USD,
   getPack,
   planCredits,
   packRate,
+  creditsForUsd,
+  normalizePaygUsd,
 } from "./credit.plans.js";
 import { splitSpend } from "../../infra/credit.engine.js";
 
@@ -37,6 +41,43 @@ test("every pack buys credits at the published pay-as-you-go rate", () => {
 
 test("the plan allowance is better value per dollar than buying packs", () => {
   assert.ok(PLANS.pro.credits / PLANS.pro.priceUsd > PAYG_CREDITS_PER_USD);
+});
+
+test("a slider amount buys credits at the same flat rate as a pack", () => {
+  assert.equal(creditsForUsd(1), PAYG_CREDITS_PER_USD);
+  assert.equal(creditsForUsd(37), 37 * PAYG_CREDITS_PER_USD);
+  for (const pack of CREDIT_PACKS) {
+    assert.equal(creditsForUsd(pack.priceUsd), pack.credits);
+  }
+});
+
+test("the slider amount is clamped to whole buyable dollars", () => {
+  assert.equal(normalizePaygUsd(PAYG_MIN_USD), PAYG_MIN_USD);
+  assert.equal(normalizePaygUsd(PAYG_MAX_USD), PAYG_MAX_USD);
+  assert.equal(normalizePaygUsd("42"), 42);
+  assert.equal(normalizePaygUsd(17.34), 17);
+  assert.equal(normalizePaygUsd(16.5), 17);
+});
+
+test("an unbuyable amount is refused rather than charged", () => {
+  for (const bad of [
+    PAYG_MIN_USD - 1,
+    PAYG_MAX_USD + 1,
+    0,
+    -50,
+    "",
+    "  ",
+    null,
+    undefined,
+    "free",
+    NaN,
+    Infinity,
+    -Infinity,
+    {},
+    [],
+  ]) {
+    assert.equal(normalizePaygUsd(bad), null, `${String(bad)} should not be buyable`);
+  }
 });
 
 test("an unknown pack id is refused rather than guessed", () => {

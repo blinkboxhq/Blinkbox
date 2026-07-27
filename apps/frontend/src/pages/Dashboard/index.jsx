@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import UsagePage from './components/UsagePage';
+import BuyCredits from './components/BuyCredits';
 import HistoryPanel from './components/HistoryPanel';
 import AmbientBackground from '../../components/AmbientBackground';
 import EmptyState from './components/EmptyState';
@@ -192,7 +193,7 @@ export default function Dashboard() {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [billingUsage, setBillingUsage] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const TABS = ['workflows', 'analytics', 'logs', 'usage', 'vault', 'mcp', 'settings'];
+  const TABS = ['workflows', 'analytics', 'logs', 'usage', 'buy-credits', 'vault', 'mcp', 'settings'];
   const tabParam = searchParams.get('tab');
   const activeTab = TABS.includes(tabParam) ? tabParam : 'workflows';
   const setActiveTab = useCallback((tab) => {
@@ -380,7 +381,7 @@ export default function Dashboard() {
       <OnboardingModal />
       <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
 
-      <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
+      <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab === 'buy-credits' ? 'usage' : activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
       <div className="relative z-10 flex-1 flex flex-col min-w-0 overflow-hidden">
 
@@ -410,7 +411,18 @@ export default function Dashboard() {
         {activeTab === 'usage' && (
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[760px] mx-auto w-full">
-              <UsagePage usage={billingUsage} onRefresh={fetchBillingUsage} />
+              <UsagePage
+                usage={billingUsage}
+                onRefresh={fetchBillingUsage}
+                onBuyCredits={() => setActiveTab('buy-credits')}
+              />
+            </div>
+          </div>
+        )}
+        {activeTab === 'buy-credits' && (
+          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
+            <div className="max-w-[760px] mx-auto w-full">
+              <BuyCredits usage={billingUsage} onBack={() => setActiveTab('usage')} />
             </div>
           </div>
         )}

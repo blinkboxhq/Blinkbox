@@ -49,13 +49,31 @@ export const LEGACY_PLAN_CREDITS = {
 
 // Flat pay-as-you-go rate: $1 buys PAYG_CREDITS_PER_USD credits, at any size.
 export const PAYG_CREDITS_PER_USD = 1024;
+export const PAYG_MIN_USD = 5;
+export const PAYG_MAX_USD = 500;
 
+// Presets behind the amount slider — the same rate, just fewer drags.
 export const CREDIT_PACKS = [10, 25, 50, 100].map((priceUsd) => ({
   id: `pack_${priceUsd}`,
   priceUsd,
   credits: priceUsd * PAYG_CREDITS_PER_USD,
   ...(priceUsd === 25 ? { popular: true } : {}),
 }));
+
+export function creditsForUsd(amountUsd) {
+  return Math.round(amountUsd * PAYG_CREDITS_PER_USD);
+}
+
+/**
+ * Whole dollars only. Stripe charges in cents, and a slider that lands on
+ * $17.34 makes both the receipt and the credit figure unreadable.
+ * Returns null for anything outside the buyable range.
+ */
+export function normalizePaygUsd(input) {
+  const usd = Math.round(Number(input));
+  if (!Number.isFinite(usd) || usd < PAYG_MIN_USD || usd > PAYG_MAX_USD) return null;
+  return usd;
+}
 
 export function planCredits(plan) {
   return PLANS[plan]?.credits ?? LEGACY_PLAN_CREDITS[plan] ?? PLANS.free.credits;
