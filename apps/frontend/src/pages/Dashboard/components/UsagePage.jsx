@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import AutoRecharge from './AutoRecharge';
-import { creditsToUsd, fmtCredits as fmt, fmtUsd } from '../../../lib/credits';
+import { creditsToUsd, fmtCredits as fmt, fmtUsd, usedPercent } from '../../../lib/credits';
 
 const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
 
@@ -90,7 +90,7 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
   const balanceUsd = usage.balanceUsd ?? creditsToUsd(balance, perUsd);
   const planRemainingUsd = usage.planRemainingUsd ?? creditsToUsd(planRemaining, perUsd);
   const purchasedUsd = usage.purchasedCreditsUsd ?? creditsToUsd(purchased, perUsd);
-  const pct = Math.min(100, usage.percentUsed ?? Math.round((usage.creditsUsed / usage.monthlyLimit) * 100));
+  const pct = usedPercent(usage);
   const isPro = usage.plan === 'pro' || usage.plan === 'enterprise';
   const barColor = pct > 80 ? 'bg-red-400' : pct > 50 ? 'bg-amber-400' : 'bg-[var(--bb-accent)]';
   const renews = usage.billingCycleEnd

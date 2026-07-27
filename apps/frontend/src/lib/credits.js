@@ -20,3 +20,12 @@ export function fmtUsd(amount) {
 export function creditsAsUsd(credits, perUsd) {
   return fmtUsd(creditsToUsd(credits, perUsd));
 }
+
+// A zero allowance is fully spent, not NaN% — which is what a bare divide
+// renders into the meter width.
+export function usedPercent(usage) {
+  if (!usage) return 0;
+  if (typeof usage.percentUsed === 'number') return Math.min(100, Math.max(0, usage.percentUsed));
+  if (!usage.monthlyLimit) return 100;
+  return Math.min(100, Math.max(0, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)));
+}

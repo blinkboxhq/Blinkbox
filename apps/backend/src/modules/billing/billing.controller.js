@@ -22,8 +22,9 @@ import {
 import { stripe } from "./stripe.client.js";
 import { STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID_PRO, FRONTEND_URL } from "../../config/env.js";
 
-function nextCycleStart(billingCycleStart) {
-  const from = new Date(billingCycleStart);
+function nextCycleStart(usage) {
+  if (usage.billingCycleEnd) return usage.billingCycleEnd;
+  const from = new Date(usage.billingCycleStart);
   return new Date(from.getFullYear(), from.getMonth() + 1, 1);
 }
 
@@ -61,9 +62,11 @@ export async function getUsage(req, res) {
         lastChargeAt: auto.lastChargeAt || null,
         lastFailure: auto.lastFailure || null,
       },
-      percentUsed: Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)),
+      percentUsed: usage.monthlyLimit > 0
+        ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100))
+        : 100,
       billingCycleStart: usage.billingCycleStart,
-      billingCycleEnd: nextCycleStart(usage.billingCycleStart),
+      billingCycleEnd: nextCycleStart(usage),
       purchases: (usage.purchases || []).slice(-10).reverse(),
       costTable: { standard: 1, http_request: 5, ai_agent: 10, web_scraper: 15 },
     });
@@ -262,40 +265,9 @@ export async function createPortalSession(req, res) {
       return res.status(400).json({ message: "No active subscription found." });
     }
 
-    // If they have an active subscription, mark it to cancel at period end
-    // rather than immediately, so they keep Pro access until the cycle ends.
-    if (user.stripeSubscriptionId) {
-      const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-      if (sub.status === "active" && !sub.cancel_at_period_end) {
-        // Charge an invoice item for credits already used this cycle
-        const usage = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
-        const creditsUsed = usage?.creditsUsed || 0;
-        const proLimit    = WorkspaceUsage.PLAN_LIMITS.pro;
-        if (creditsUsed > 0) {
-          const fractionUsed  = Math.min(1, creditsUsed / proLimit);
-          // Plan price prorated by credit consumption — billed in cents
-          const chargeAmount  = Math.round(fractionUsed * PLANS.pro.priceUsd * 100);
-          if (chargeAmount > 0) {
-            await stripe.invoiceItems.create({
-              customer:    user.stripeCustomerId,
-              amount:      chargeAmount,
-              currency:    "usd",
-              description: `Blinkbox Pro — ${creditsUsed.toLocaleString()} credits used (${Math.round(fractionUsed * 100)}% of plan)`,
-            });
-            // Immediately invoice so the charge runs now
-            await stripe.invoices.create({
-              customer:          user.stripeCustomerId,
-              auto_advance:      true,
-              collection_method: "charge_automatically",
-            });
-          }
-        }
-        await stripe.subscriptions.update(user.stripeSubscriptionId, {
-          cancel_at_period_end: true,
-        });
-      }
-    }
-
+    // Opening the portal is a read — invoices, cards, and cancellation are all
+    // the customer's to drive from inside it. Cancelling or invoicing on their
+    // behalf here would charge people for clicking "Manage plan".
     const session = await stripe.billingPortal.sessions.create({
       customer:   user.stripeCustomerId,
       return_url: `${FRONTEND_URL}/dashboard`,
@@ -334,6 +306,67 @@ async function rememberCard(workspaceId, paymentIntentId) {
   } catch (err) {
     console.warn(`[Billing] could not save card for ${workspaceId}: ${err.message}`);
   }
+}
+
+// Stripe keeps a subscription billable through dunning; none of these states
+// should still be spending Pro credits.
+const DEAD_SUB_STATUSES = new Set(["past_due", "unpaid", "canceled", "incomplete_expired"]);
+
+/**
+ * Start a paid cycle and pin it to Stripe's period, so the plan bucket refills
+ * on the renewal date rather than on the 1st of the calendar month.
+ */
+async function startProCycle(workspaceId, sub) {
+  const periodStart = sub.current_period_start ? new Date(sub.current_period_start * 1000) : new Date();
+  const periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+
+  // invoice.paid and invoice.payment_succeeded both fire for one renewal, and
+  // Stripe replays on any non-2xx — refilling twice would wipe real usage.
+  const current = await WorkspaceUsage.findOne({ workspaceId });
+  if (current?.plan === "pro" && current.billingCycleStart?.getTime() === periodStart.getTime()) {
+    return;
+  }
+
+  await WorkspaceUsage.findOneAndUpdate(
+    { workspaceId },
+    {
+      $set: {
+        plan: "pro",
+        monthlyLimit: WorkspaceUsage.PLAN_LIMITS.pro,
+        creditsUsed: 0,
+        billingCycleStart: periodStart,
+        billingCycleEnd: periodEnd,
+        "autoRecharge.spentThisCycleUsd": 0,
+      },
+    },
+    { upsert: true },
+  );
+}
+
+/**
+ * Drop back to the free allowance. Purchased credits stay — they were paid for
+ * separately and never expire. Anything already spent this month counts against
+ * the free bucket so a cancellation can't hand out a free Pro month.
+ */
+async function downgradeToFree(workspaceId) {
+  const freeLimit = WorkspaceUsage.PLAN_LIMITS.free;
+  const usage = await WorkspaceUsage.findOne({ workspaceId });
+  if (usage?.plan === "free" && !usage.billingCycleEnd) return;
+
+  const now = new Date();
+  await WorkspaceUsage.findOneAndUpdate(
+    { workspaceId },
+    {
+      $set: {
+        plan: "free",
+        monthlyLimit: freeLimit,
+        creditsUsed: Math.min(usage?.creditsUsed ?? 0, freeLimit),
+        billingCycleStart: new Date(now.getFullYear(), now.getMonth(), 1),
+        billingCycleEnd: null,
+      },
+    },
+    { upsert: true },
+  );
 }
 
 export async function handleWebhook(req, res) {
@@ -383,11 +416,11 @@ export async function handleWebhook(req, res) {
         { stripeSubscriptionId: session.subscription },
         { new: true },
       );
-      await WorkspaceUsage.findOneAndUpdate(
-        { workspaceId: userId },
-        { plan: "pro", monthlyLimit: WorkspaceUsage.PLAN_LIMITS.pro },
-        { upsert: true },
-      );
+
+      const sub = session.subscription
+        ? await stripe.subscriptions.retrieve(session.subscription)
+        : {};
+      await startProCycle(userId, sub);
 
       // Welcome email
       if (user) {
@@ -397,20 +430,42 @@ export async function handleWebhook(req, res) {
       }
     }
 
-    // ── Subscription updated (e.g. cancel_at_period_end flipped) ────────────
+    // ── Renewal paid — refill the plan bucket for the new period ────────────
+    if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object;
+      if (invoice.subscription && invoice.billing_reason !== "subscription_create") {
+        const user = await User.findOne({ stripeCustomerId: invoice.customer });
+        if (user) {
+          const sub = await stripe.subscriptions.retrieve(invoice.subscription);
+          await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: sub.id });
+          await startProCycle(user._id.toString(), sub);
+          console.log(`[Billing] Pro renewed for ${user._id} — credits refilled`);
+        }
+      }
+    }
+
+    // ── Subscription updated (cancellation flagged, or payment lapsed) ───────
     if (event.type === "customer.subscription.updated") {
       const sub  = event.data.object;
       const prev = event.data.previous_attributes || {};
+      const user = await User.findOne({ stripeCustomerId: sub.customer });
 
       // Only act when cancel_at_period_end just became true (user just cancelled)
-      if (sub.cancel_at_period_end && prev.cancel_at_period_end === false) {
-        const user = await User.findOne({ stripeCustomerId: sub.customer });
-        if (user) {
-          const periodEnd = new Date(sub.current_period_end * 1000);
-          sendProEndingSoonEmail(user, periodEnd).catch(e =>
-            console.error("[Billing] ending-soon email failed:", e.message)
-          );
-        }
+      if (user && sub.cancel_at_period_end && prev.cancel_at_period_end === false) {
+        const periodEnd = new Date(sub.current_period_end * 1000);
+        sendProEndingSoonEmail(user, periodEnd).catch(e =>
+          console.error("[Billing] ending-soon email failed:", e.message)
+        );
+      }
+
+      // A failed renewal leaves the subscription alive but unpaid. Without this
+      // the workspace keeps drawing a Pro allowance it is no longer paying for.
+      if (user && DEAD_SUB_STATUSES.has(sub.status)) {
+        await downgradeToFree(user._id.toString());
+        console.log(`[Billing] Sub ${sub.status} for ${user._id} → dropped to free`);
+      } else if (user && sub.status === "active" && prev.status && prev.status !== "active") {
+        await startProCycle(user._id.toString(), sub);
+        console.log(`[Billing] Sub recovered for ${user._id} → Pro restored`);
       }
     }
 
@@ -420,25 +475,8 @@ export async function handleWebhook(req, res) {
       const user = await User.findOne({ stripeCustomerId: sub.customer });
       if (user) {
         await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: null });
-
-        // Prorate credits by fraction of Pro period actually used
-        const periodStart  = sub.current_period_start * 1000;
-        const periodEnd    = sub.current_period_end   * 1000;
-        const fractionUsed = Math.min(1, (Date.now() - periodStart) / (periodEnd - periodStart));
-        const proratedCap  = Math.floor(fractionUsed * WorkspaceUsage.PLAN_LIMITS.pro);
-
-        const usage         = await WorkspaceUsage.findOne({ workspaceId: user._id.toString() });
-        const cappedCredits = usage ? Math.min(usage.creditsUsed, proratedCap) : 0;
-
-        await WorkspaceUsage.findOneAndUpdate(
-          { workspaceId: user._id.toString() },
-          { plan: "free", monthlyLimit: proratedCap, creditsUsed: cappedCredits },
-          { upsert: true },
-        );
-
-        console.log(
-          `[Billing] Sub expired for user ${user._id}: ${Math.round(fractionUsed * 100)}% used → cap=${proratedCap}, creditsUsed=${cappedCredits}`,
-        );
+        await downgradeToFree(user._id.toString());
+        console.log(`[Billing] Sub ended for user ${user._id} → free plan`);
       }
     }
 

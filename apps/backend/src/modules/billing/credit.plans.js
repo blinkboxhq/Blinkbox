@@ -165,6 +165,38 @@ export function planCredits(plan) {
   return PLANS[plan]?.credits ?? LEGACY_PLAN_CREDITS[plan] ?? PLANS.free.credits;
 }
 
+function addMonth(date) {
+  const d = new Date(date);
+  return new Date(
+    d.getFullYear(), d.getMonth() + 1, d.getDate(),
+    d.getHours(), d.getMinutes(), d.getSeconds(),
+  );
+}
+
+/**
+ * When the plan bucket is due to refill. Pure on purpose — getting this wrong
+ * either strands a paying customer or hands out free allowances.
+ *
+ * Subscribed workspaces carry a billingCycleEnd pinned to Stripe's period, so
+ * they refill on their renewal date. Everyone else follows the calendar month.
+ * Returns null while the current cycle is still running.
+ *
+ * @returns {{ start: Date, end: Date | null } | null}
+ */
+export function dueRoll(usage, now = new Date()) {
+  if (usage?.billingCycleEnd) {
+    if (now < usage.billingCycleEnd) return null;
+    // Stripe's invoice.paid normally re-pins this. Advancing here too means a
+    // dropped webhook never strands a paying customer without their credits —
+    // a lapsed subscription is caught separately and drops them to free.
+    return { start: new Date(usage.billingCycleEnd), end: addMonth(usage.billingCycleEnd) };
+  }
+
+  const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  if (usage?.billingCycleStart >= cycleStart) return null;
+  return { start: cycleStart, end: null };
+}
+
 export function getPack(packId) {
   return CREDIT_PACKS.find((pack) => pack.id === packId) || null;
 }

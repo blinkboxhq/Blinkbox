@@ -7,6 +7,7 @@ import {
 import api from '../../../lib/api';
 import { toast } from 'sonner';
 import logoGoogle from '../../../assets/credentials/google-color.svg';
+import { usedPercent } from '../../../lib/credits';
 
 // ── Section wrapper ────────────────────────────────────────────────────────────
 function Section({ title, description, children }) {
@@ -157,7 +158,7 @@ export default function Settings({ user }) {
   };
 
   const isPro = usage?.plan === 'pro';
-  const creditPct = usage ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)) : 0;
+  const creditPct = usedPercent(usage);
 
   return (
     <div style={{ animation: 'dbFadeIn 0.15s ease-out' }}>

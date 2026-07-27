@@ -14,6 +14,7 @@ import {
   normalizePaygUsd,
   normalizeAutoRecharge,
   shouldRecharge,
+  dueRoll,
   AUTO_RECHARGE_MIN_THRESHOLD,
   AUTO_RECHARGE_MAX_THRESHOLD,
   AUTO_RECHARGE_MAX_CAP_USD,
@@ -214,4 +215,45 @@ test("spend never goes negative and reports when it cannot be covered", () => {
   assert.deepEqual(splitSpend(10, 3, 2), { fromPlan: 3, fromPurchased: 2, covered: false });
   // An over-drafted plan bucket must not lend credits back.
   assert.deepEqual(splitSpend(5, -20, 8), { fromPlan: 0, fromPurchased: 5, covered: true });
+});
+
+// ── Billing cycle ────────────────────────────────────────────────────────────
+
+test("a free workspace refills on the 1st of the calendar month", () => {
+  const usage = { billingCycleStart: new Date(2026, 6, 1), billingCycleEnd: null };
+
+  assert.equal(dueRoll(usage, new Date(2026, 6, 31, 23, 0)), null);
+
+  const roll = dueRoll(usage, new Date(2026, 7, 1, 0, 5));
+  assert.deepEqual(roll.start, new Date(2026, 7, 1));
+  assert.equal(roll.end, null);
+});
+
+test("a subscriber does not get a second allowance on the 1st", () => {
+  // Signed up on 28 July — the calendar month rolls three days later, and
+  // refilling there would hand out a free month before Stripe charges again.
+  const usage = {
+    billingCycleStart: new Date(2026, 6, 28),
+    billingCycleEnd: new Date(2026, 7, 28),
+  };
+
+  assert.equal(dueRoll(usage, new Date(2026, 7, 1)), null);
+  assert.equal(dueRoll(usage, new Date(2026, 7, 27, 23, 59)), null);
+});
+
+test("a subscriber refills on their renewal date even if the webhook is lost", () => {
+  const usage = {
+    billingCycleStart: new Date(2026, 6, 28),
+    billingCycleEnd: new Date(2026, 7, 28),
+  };
+
+  const roll = dueRoll(usage, new Date(2026, 7, 28, 0, 1));
+  assert.deepEqual(roll.start, new Date(2026, 7, 28));
+  assert.deepEqual(roll.end, new Date(2026, 8, 28));
+});
+
+test("a brand new workspace is already inside its first cycle", () => {
+  const now = new Date(2026, 6, 15);
+  const usage = { billingCycleStart: new Date(2026, 6, 1), billingCycleEnd: null };
+  assert.equal(dueRoll(usage, now), null);
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
-import { creditsToUsd, fmtUsd } from '../../../lib/credits';
+import { creditsToUsd, fmtUsd, usedPercent } from '../../../lib/credits';
 
 const NAV_TOP = [
   { key: 'workflows', icon: LayoutDashboard, label: 'Dashboard' },
@@ -41,7 +41,7 @@ export default function DashboardSidebar({ user, onLogout, activeTab, setActiveT
 
   const w = expanded ? 'w-[200px]' : 'w-[56px]';
 
-  const usedPct = usage ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)) : 0;
+  const usedPct = usedPercent(usage);
   const creditBalance = usage
     ? usage.balance ?? Math.max(0, usage.monthlyLimit - usage.creditsUsed) + (usage.purchasedCredits || 0)
     : 0;

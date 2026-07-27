@@ -22,7 +22,7 @@
  */
 
 import mongoose from "mongoose";
-import { planCredits } from "../modules/billing/credit.plans.js";
+import { planCredits, dueRoll } from "../modules/billing/credit.plans.js";
 
 const DeductionSchema = new mongoose.Schema(
   {
@@ -83,6 +83,12 @@ const WorkspaceUsageSchema = new mongoose.Schema(
       },
     },
 
+    // Set only while a paid subscription is live, and pinned to Stripe's own
+    // period end. Free workspaces leave it null and roll on the calendar month.
+    // Without it a subscriber who signs up on the 28th gets a second full
+    // allowance on the 1st, days before Stripe charges them again.
+    billingCycleEnd: { type: Date, default: null },
+
     // Plan bucket — resets every cycle
     creditsUsed: { type: Number, default: 0 },
     monthlyLimit: { type: Number, default: () => planCredits("free") },
@@ -140,12 +146,11 @@ WorkspaceUsageSchema.statics.getOrCreate = async function (workspaceId) {
     return usage;
   }
 
-  // Check if we need to roll into a new billing cycle
-  const now = new Date();
-  const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const roll = dueRoll(usage, new Date());
 
-  if (usage.billingCycleStart < cycleStart) {
-    usage.billingCycleStart = cycleStart;
+  if (roll) {
+    usage.billingCycleStart = roll.start;
+    usage.billingCycleEnd = roll.end;
     usage.creditsUsed = 0;
     usage.monthlyLimit = planCredits(usage.plan);
     usage.history = [];
