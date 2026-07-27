@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Copy, CheckCheck, KeyRound } from 'lucide-react';
+import { Trash2, Loader2, Copy, CheckCheck, KeyRound, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import imgBlinkbox from '../../../assets/blinkbox-knot.png';
@@ -11,6 +11,14 @@ import imgOpenClaw from '../../../assets/mcp-openclaw.svg';
 import imgManus from '../../../assets/mcp-manus.webp';
 
 const MCP_URL = 'https://mcp.blinkbox.net/mcp';
+
+// Two ways to hand the same server to a client. Header auth is the clean form;
+// key-in-URL exists because connectors like ChatGPT's expose no header field at
+// all, only OAuth or none — without it those clients simply cannot connect.
+const MODES = [
+  { id: 'header', label: 'Header auth' },
+  { id: 'url', label: 'Key in URL' },
+];
 
 // Tightly-overlapping arc of app tiles, Blinkbox highlighted in the centre.
 // `bleed` → image already has its own tile, fill edge-to-edge.
@@ -108,6 +116,9 @@ function CopyBtn({ value, label = 'Copy URL' }) {
 export default function ConnectMCP() {
   const [keys, setKeys] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mode, setMode] = useState('header');
+  const [inlineKey, setInlineKey] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -127,6 +138,22 @@ export default function ConnectMCP() {
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [fetchKeys]);
+
+  const displayUrl = mode === 'url' ? `${MCP_URL}/${inlineKey || 'YOUR_KEY'}` : MCP_URL;
+
+  const handleCreateKey = async () => {
+    setIsCreating(true);
+    try {
+      const res = await api.post('/api/keys', { label: 'MCP connector' });
+      setInlineKey(res.data.key);
+      fetchKeys();
+      toast.success('Key created — copy the URL now, it is shown once');
+    } catch {
+      toast.error('Failed to create key');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const handleRevoke = async (id) => {
     try {
@@ -178,19 +205,66 @@ export default function ConnectMCP() {
 
       {/* ── MCP Server URL ── */}
       <div className="bb-card bb-reflect rounded-2xl px-6 py-6 mb-8">
-        <div className="flex items-center gap-2.5 mb-4">
-          <span className="bb-eyebrow">MCP Server URL</span>
-          <span className="text-[9px] font-semibold text-[var(--bb-text-lo)] px-2 py-0.5 rounded-full bb-pill">Streamable HTTP</span>
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <span className="bb-eyebrow">MCP Server URL</span>
+            <span className="text-[9px] font-semibold text-[var(--bb-text-lo)] px-2 py-0.5 rounded-full bb-pill">Streamable HTTP</span>
+          </div>
+          <div className="flex items-center gap-1 p-0.5 rounded-lg" style={{ background: 'var(--bb-surface-2)', border: '1px solid var(--bb-border)' }}>
+            {MODES.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                className={`px-3 py-1.5 rounded-[7px] text-[11px] font-semibold transition-all duration-150 ${
+                  mode === m.id ? 'text-[var(--bb-text-hi)]' : 'text-[var(--bb-text-dim)] hover:text-[var(--bb-text-mid)]'
+                }`}
+                style={mode === m.id ? { background: 'var(--bb-surface-0)', border: '1px solid var(--bb-border)' } : undefined}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
           <code className="flex-1 min-w-0 rounded-xl px-4 py-3.5 text-[14px] text-[var(--bb-text-hi)] font-mono truncate" style={{ background: 'var(--bb-surface-0)', border: '1px solid var(--bb-border)' }}>
-            {MCP_URL}
+            {displayUrl}
           </code>
-          <CopyBtn value={MCP_URL} />
+          <CopyBtn value={displayUrl} />
         </div>
+
+        {mode === 'url' && (
+          <div className="mt-3.5 flex items-center gap-2.5">
+            <input
+              value={inlineKey}
+              onChange={(e) => setInlineKey(e.target.value.trim())}
+              placeholder="Paste an MCP key (bb_…) or create a new one"
+              spellCheck={false}
+              className="flex-1 min-w-0 rounded-lg px-3 py-2.5 text-[12px] font-mono text-[var(--bb-text-hi)] placeholder:text-[var(--bb-text-dim)] focus:outline-none focus:border-[var(--bb-text-dim)] transition-colors"
+              style={{ background: 'var(--bb-surface-0)', border: '1px solid var(--bb-border)' }}
+            />
+            <button
+              onClick={handleCreateKey}
+              disabled={isCreating}
+              className="bb-btn bb-btn-ghost flex items-center gap-2 px-3.5 py-2.5 text-[12px] shrink-0 disabled:opacity-50"
+            >
+              {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              New key
+            </button>
+          </div>
+        )}
+
         <p className="text-[12px] text-[var(--bb-text-lo)] mt-4 leading-relaxed">
-          In your AI app, add a custom MCP / connector, paste this URL, and authenticate with one of
-          your API keys. That’s the entire setup — no extra config.
+          {mode === 'header' ? (
+            <>Add a custom MCP server in your AI app, paste this URL, and authenticate with one of your
+            MCP keys as a <span className="font-mono text-[var(--bb-text-mid)]">Bearer</span> token. Works with any client
+            that lets you set a header — most desktop and CLI agents do.</>
+          ) : (
+            <>Some connectors — ChatGPT among them — only offer “OAuth” or “no authentication”, with nowhere
+            to put a header, so header auth can’t work there. This form carries the key in the path instead:
+            paste this URL with authentication set to <span className="font-mono text-[var(--bb-text-mid)]">None</span>.
+            Treat the whole URL as a secret, and revoke the key below to cut access.</>
+          )}
         </p>
       </div>
 

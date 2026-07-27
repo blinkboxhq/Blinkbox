@@ -3,6 +3,7 @@ import Hero from './Hero';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Marquee from './sections/Marquee';
 import Vision from './sections/Vision';
+import Pricing from './sections/Pricing';
 import Footer from './sections/Footer';
 
 export default function LandingV2() {
@@ -20,6 +21,7 @@ export default function LandingV2() {
       <Hero />
       <Marquee />
       <Vision />
+      <Pricing />
       <Footer />
     </div>
   );

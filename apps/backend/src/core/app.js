@@ -19,6 +19,7 @@ import billingRoutes from "../modules/billing/billing.routes.js";
 import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
 import mcpRoutes from "../modules/mcp/mcp.routes.js";
+import { rewriteMcpHostPath } from "../modules/mcp/mcpHostPath.js";
 import mcpOauthRoutes from "../modules/mcp/oauth.routes.js";
 import mcpClientRoutes from "../modules/mcp/mcpClient.routes.js";
 import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
@@ -63,15 +64,12 @@ const FAVICON_PNG_180 = readFileSync(join(ASSET_DIR, "favicon-180.png"));
 // the rawHeaders Accept fix all apply unchanged. OAuth discovery + flow paths
 // (`/.well-known/*`, `/oauth/*`) are root-served and host-agnostic already, so
 // they pass straight through.
-const MCP_ROOT_RE = /^\/(mcp\/?)?$/; // "/", "/mcp", "/mcp/"
 app.use((req, _res, next) => {
   const host = (req.headers["x-forwarded-host"] || req.headers.host || "").split(":")[0].toLowerCase();
   if (host !== String(MCP_HOST).toLowerCase()) return next();
   const pathOnly = req.url.split("?")[0];
-  const query = req.url.slice(pathOnly.length);
-  if (MCP_ROOT_RE.test(pathOnly)) {
-    req.url = "/api/mcp" + query;
-  }
+  const rewritten = rewriteMcpHostPath(pathOnly);
+  if (rewritten) req.url = rewritten + req.url.slice(pathOnly.length);
   next();
 });
 

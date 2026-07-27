@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Menu, X, ChevronDown } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
+import githubLogo from '../../../assets/credentials/github.svg';
+
+const REPO_URL = 'https://github.com/blinkboxhq/Blinkbox';
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -107,10 +110,27 @@ export default function Header() {
               </AnimatePresence>
             </div>
           ))}
+          {/* plain <a>: the section lives on "/", so this must work from the marketing pages too */}
+          <a
+            href="/#pricing"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#8c8c8c] transition-colors duration-150 hover:text-[#fafafa]"
+          >
+            Pricing
+          </a>
         </div>
 
         {/* right — actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            title="GitHub"
+            className="hidden h-9 w-9 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-white/[0.05] sm:flex"
+          >
+            <img src={githubLogo} alt="" className="h-[18px] w-[18px] opacity-60 transition-opacity duration-150 hover:opacity-100 [filter:brightness(0)_invert(1)]" />
+          </a>
           <Link
             to="/login"
             className="hidden rounded-[10px] px-3.5 py-2 text-[13px] font-medium text-[#b6b6b6] transition-colors duration-150 hover:text-[#fafafa] sm:block"
@@ -166,6 +186,23 @@ export default function Header() {
                   </div>
                 </div>
               ))}
+              <a
+                href="/#pricing"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2 text-[14px] font-medium text-[#b6b6b6] transition-colors hover:bg-white/[0.05] hover:text-[#fafafa]"
+              >
+                Pricing
+              </a>
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14px] font-medium text-[#b6b6b6] transition-colors hover:bg-white/[0.05] hover:text-[#fafafa]"
+              >
+                <img src={githubLogo} alt="" className="h-4 w-4 opacity-70 [filter:brightness(0)_invert(1)]" />
+                GitHub
+              </a>
               <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4">
                 <Link to="/login" className="bb-btn bb-btn-ghost justify-center py-2.5 text-[14px] font-medium">
                   Log in
