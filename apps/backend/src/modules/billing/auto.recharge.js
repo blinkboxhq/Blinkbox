@@ -52,7 +52,10 @@ export async function maybeAutoRecharge(workspaceId) {
 
   let usage;
   try {
-    usage = await WorkspaceUsage.findOne({ workspaceId });
+    // getOrCreate, not findOne — it rolls a due billing cycle, which is what
+    // clears spentThisCycleUsd. Reading raw would weigh this month's top-up
+    // against last month's cap and refuse a charge the user is owed.
+    usage = await WorkspaceUsage.getOrCreate(workspaceId);
   } catch {
     return { charged: false, reason: "lookup_failed" };
   }

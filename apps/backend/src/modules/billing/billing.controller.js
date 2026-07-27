@@ -62,8 +62,11 @@ export async function getUsage(req, res) {
         lastChargeAt: auto.lastChargeAt || null,
         lastFailure: auto.lastFailure || null,
       },
-      percentUsed: usage.monthlyLimit > 0
-        ? Math.min(100, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100))
+      // Measured against everything spendable, not just the plan bucket. On the
+      // allowance alone the meter reads 100% full to someone sitting on $50 of
+      // purchased credits, right above the line that says $50 left.
+      percentUsed: usage.monthlyLimit + purchasedCredits > 0
+        ? Math.min(100, Math.round((usage.creditsUsed / (usage.monthlyLimit + purchasedCredits)) * 100))
         : 100,
       billingCycleStart: usage.billingCycleStart,
       billingCycleEnd: nextCycleStart(usage),
@@ -129,6 +132,15 @@ export async function updateAutoRecharge(req, res) {
       { $set: set },
       { returnDocument: "after" },
     );
+
+    // Someone who switches this on while already empty is the whole reason the
+    // feature exists — waiting for a deduction that can never happen would
+    // leave them stuck with auto top-up on and nothing topping up.
+    if (value.enabled) {
+      import("./auto.recharge.js")
+        .then((m) => m.maybeAutoRecharge(req.user.id))
+        .catch((err) => console.error("[Billing] auto top-up on enable failed:", err.message));
+    }
 
     res.json({ autoRecharge: { ...updated.autoRecharge.toObject(), paymentMethodId: undefined } });
   } catch (err) {

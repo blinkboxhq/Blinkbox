@@ -175,6 +175,11 @@ export async function checkCredits(workspaceId, nodeType) {
   const usage = await WorkspaceUsage.getOrCreate(workspaceId);
   const { planRemaining, purchasedCredits, remaining } = balanceOf(usage);
 
+  // Auto top-up normally fires on the way down, after a deduction. A workspace
+  // that is already too poor to run this node never gets that far, so without
+  // this the "never run dry" promise fails at exactly the point it is needed.
+  if (remaining < cost) triggerAutoRecharge(workspaceId);
+
   return {
     allowed: remaining >= cost,
     remaining,

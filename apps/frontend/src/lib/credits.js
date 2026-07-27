@@ -21,11 +21,13 @@ export function creditsAsUsd(credits, perUsd) {
   return fmtUsd(creditsToUsd(credits, perUsd));
 }
 
-// A zero allowance is fully spent, not NaN% — which is what a bare divide
-// renders into the meter width.
+// How full the meter sits. Measured against every credit that can still be
+// spent, so it agrees with the balance printed beneath it — and a zero pool
+// reads as fully spent rather than the NaN a bare divide puts in the bar width.
 export function usedPercent(usage) {
   if (!usage) return 0;
   if (typeof usage.percentUsed === 'number') return Math.min(100, Math.max(0, usage.percentUsed));
-  if (!usage.monthlyLimit) return 100;
-  return Math.min(100, Math.max(0, Math.round((usage.creditsUsed / usage.monthlyLimit) * 100)));
+  const pool = (usage.monthlyLimit || 0) + (usage.purchasedCredits || 0);
+  if (!pool) return 100;
+  return Math.min(100, Math.max(0, Math.round((usage.creditsUsed / pool) * 100)));
 }
