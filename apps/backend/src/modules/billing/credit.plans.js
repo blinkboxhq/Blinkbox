@@ -14,10 +14,10 @@ export const PLANS = {
     id: "free",
     label: "Free",
     priceUsd: 0,
-    credits: 2000,
+    credits: 1000,
     blurb: "For trying things out.",
     features: [
-      "2,000 credits every month",
+      "1,000 credits every month",
       "Unlimited workflows",
       "Webhook, schedule & app triggers",
       "Community support",
@@ -27,10 +27,10 @@ export const PLANS = {
     id: "pro",
     label: "Pro",
     priceUsd: 19,
-    credits: 150000,
+    credits: 30000,
     blurb: "For teams running automation daily.",
     features: [
-      "150,000 credits every month",
+      "30,000 credits every month",
       "Buy extra credits any time",
       "AI agent builder",
       "Headless web scraping",
@@ -47,12 +47,15 @@ export const LEGACY_PLAN_CREDITS = {
   enterprise: Number.MAX_SAFE_INTEGER,
 };
 
-export const CREDIT_PACKS = [
-  { id: "pack_10", priceUsd: 10, credits: 50000 },
-  { id: "pack_25", priceUsd: 25, credits: 140000, popular: true },
-  { id: "pack_50", priceUsd: 50, credits: 300000 },
-  { id: "pack_100", priceUsd: 100, credits: 650000 },
-];
+// Flat pay-as-you-go rate: $1 buys PAYG_CREDITS_PER_USD credits, at any size.
+export const PAYG_CREDITS_PER_USD = 1024;
+
+export const CREDIT_PACKS = [10, 25, 50, 100].map((priceUsd) => ({
+  id: `pack_${priceUsd}`,
+  priceUsd,
+  credits: priceUsd * PAYG_CREDITS_PER_USD,
+  ...(priceUsd === 25 ? { popular: true } : {}),
+}));
 
 export function planCredits(plan) {
   return PLANS[plan]?.credits ?? LEGACY_PLAN_CREDITS[plan] ?? PLANS.free.credits;
@@ -70,6 +73,7 @@ export function packRate(pack) {
   return pack.credits / pack.priceUsd;
 }
 
+// Zero while the pay-as-you-go rate is flat — callers hide the badge at 0.
 export function packSavingPercent(pack) {
   const base = packRate(CREDIT_PACKS[0]);
   return Math.round(((packRate(pack) - base) / base) * 100);

@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PLANS, CREDIT_PACKS, getPack, planCredits, packRate } from "./credit.plans.js";
+import {
+  PLANS,
+  CREDIT_PACKS,
+  PAYG_CREDITS_PER_USD,
+  getPack,
+  planCredits,
+  packRate,
+} from "./credit.plans.js";
 import { splitSpend } from "../../infra/credit.engine.js";
 
 test("the catalog offers exactly one paid plan and pay-as-you-go packs", () => {
@@ -20,6 +27,16 @@ test("bigger packs never cost more per credit", () => {
       `${sorted[i].id} is worse value than ${sorted[i - 1].id}`,
     );
   }
+});
+
+test("every pack buys credits at the published pay-as-you-go rate", () => {
+  for (const pack of CREDIT_PACKS) {
+    assert.equal(packRate(pack), PAYG_CREDITS_PER_USD, `${pack.id} is off-rate`);
+  }
+});
+
+test("the plan allowance is better value per dollar than buying packs", () => {
+  assert.ok(PLANS.pro.credits / PLANS.pro.priceUsd > PAYG_CREDITS_PER_USD);
 });
 
 test("an unknown pack id is refused rather than guessed", () => {

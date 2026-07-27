@@ -43,7 +43,7 @@ export default function UsagePage({ usage, onRefresh }) {
     const purchase = searchParams.get('purchase');
     if (!upgrade && !purchase) return;
 
-    if (upgrade === 'success') toast.success('You are on Pro. 150,000 credits added.');
+    if (upgrade === 'success') toast.success('You are on Pro. 30,000 credits added.');
     if (purchase === 'success') toast.success('Credits added to your balance.');
     if (upgrade === 'cancelled' || purchase === 'cancelled') toast('Checkout cancelled.');
 
@@ -212,7 +212,7 @@ export default function UsagePage({ usage, onRefresh }) {
                   Pro — ${proPlan?.priceUsd ?? 19}/mo
                 </p>
                 <p className="text-[12px] text-[var(--bb-text-lo)] mt-0.5">
-                  {fmt(proPlan?.credits ?? 150000)} credits every month, and you can still top up any time.
+                  {fmt(proPlan?.credits ?? 30000)} credits every month, and you can still top up any time.
                 </p>
               </div>
               <button
