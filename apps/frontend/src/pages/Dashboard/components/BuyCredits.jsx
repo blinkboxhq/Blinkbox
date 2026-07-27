@@ -5,7 +5,6 @@ import {
   Boxes, Plug, Sparkles, Globe,
 } from 'lucide-react';
 import api from '../../../lib/api';
-import AutoRecharge from './AutoRecharge';
 import { creditsToUsd, fmtCredits as fmt, fmtUsd } from '../../../lib/credits';
 
 const FALLBACK = { creditsPerUsd: 1024, minUsd: 5, maxUsd: 500 };
@@ -19,7 +18,7 @@ const WHAT_YOU_GET = [
   { icon: Globe, label: 'Browser runs', cost: 15 },
 ];
 
-export default function BuyCredits({ usage, onBack, onRefresh }) {
+export default function BuyCredits({ usage, onBack }) {
   const [catalog, setCatalog] = useState(null);
   const [usd, setUsd] = useState(DEFAULT_USD);
   const [busy, setBusy] = useState(false);
@@ -190,8 +189,6 @@ export default function BuyCredits({ usage, onBack, onRefresh }) {
           ))}
         </div>
       </div>
-
-      <AutoRecharge usage={usage} catalog={catalog} onSaved={onRefresh} />
 
       <p className="text-[12px] text-[var(--bb-text-lo)] px-1">
         You have <span className="font-mono text-[var(--bb-text-mid)]">{fmtUsd(balanceUsd)}</span> of

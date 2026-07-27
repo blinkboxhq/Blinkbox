@@ -6,6 +6,7 @@ import {
   Check, Loader2, ArrowUpRight, Receipt,
 } from 'lucide-react';
 import api from '../../../lib/api';
+import AutoRecharge from './AutoRecharge';
 import { creditsToUsd, fmtCredits as fmt, fmtUsd } from '../../../lib/credits';
 
 const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
@@ -183,6 +184,8 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
           </p>
         )}
       </div>
+
+      <AutoRecharge usage={usage} catalog={catalog} onSaved={onRefresh} />
 
       {/* Plan */}
       <div className="bb-card bb-liquid rounded-2xl p-5">
