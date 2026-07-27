@@ -19,6 +19,7 @@ import WorkspaceUsage from "../../models/workspaceUsage.model.js";
 import User from "../../models/user.model.js";
 import { addPurchasedCredits } from "../../infra/credit.engine.js";
 import { acquireLock, releaseLock } from "../../infra/redis.lock.js";
+import { sendAutoTopUpEmail, sendAutoRechargeDisabledEmail } from "../../infra/email.service.js";
 import { stripe } from "./stripe.client.js";
 import { creditsForUsd, shouldRecharge, AUTO_RECHARGE_MAX_FAILURES } from "./credit.plans.js";
 
@@ -37,6 +38,16 @@ async function recordFailure(workspaceId, message) {
   if (updated && updated.autoRecharge.failureCount >= AUTO_RECHARGE_MAX_FAILURES) {
     await WorkspaceUsage.updateOne({ workspaceId }, { $set: { "autoRecharge.enabled": false } });
     console.warn(`[AutoRecharge] disabled for ${workspaceId} after repeated failures: ${message}`);
+
+    // Silence here reads as "my card is fine" right up until runs stop.
+    const user = await User.findById(workspaceId).catch(() => null);
+    if (user) {
+      sendAutoRechargeDisabledEmail(user, {
+        reason: message,
+        cardBrand: updated.autoRecharge.cardBrand,
+        cardLast4: updated.autoRecharge.cardLast4,
+      }).catch((e) => console.error("[AutoRecharge] disabled email failed:", e.message));
+    }
   }
 }
 
@@ -119,7 +130,7 @@ export async function maybeAutoRecharge(workspaceId) {
       return { charged: false, reason: intent.status };
     }
 
-    await addPurchasedCredits(workspaceId, {
+    const { purchasedCredits } = await addPurchasedCredits(workspaceId, {
       sessionId: intent.id,
       credits,
       amountUsd,
@@ -139,6 +150,18 @@ export async function maybeAutoRecharge(workspaceId) {
     );
 
     console.log(`[AutoRecharge] ${workspaceId} topped up $${amountUsd} → ${credits} credits`);
+
+    sendAutoTopUpEmail(user, {
+      credits,
+      amountUsd,
+      purchasedBalance: purchasedCredits,
+      cardBrand: usage.autoRecharge.cardBrand,
+      cardLast4: usage.autoRecharge.cardLast4,
+      spentThisCycleUsd: (spentThisCycleUsd || 0) + amountUsd,
+      monthlyCapUsd: usage.autoRecharge.monthlyCapUsd,
+      thresholdCredits: usage.autoRecharge.thresholdCredits,
+    }).catch((e) => console.error("[AutoRecharge] receipt email failed:", e.message));
+
     return { charged: true, credits };
   } catch (err) {
     console.error(`[AutoRecharge] unexpected error for ${workspaceId}: ${err.message}`);

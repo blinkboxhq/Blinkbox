@@ -1,7 +1,15 @@
 import WorkspaceUsage from "../../models/workspaceUsage.model.js";
 import User from "../../models/user.model.js";
 import { getNodeCost, addPurchasedCredits } from "../../infra/credit.engine.js";
-import { sendProWelcomeEmail, sendProEndingSoonEmail } from "../../infra/email.service.js";
+import {
+  sendProWelcomeEmail,
+  sendProEndingSoonEmail,
+  sendProEndedEmail,
+  sendInvoiceEmail,
+  sendPaymentFailedEmail,
+  sendRenewalReminderEmail,
+  sendTopUpReceiptEmail,
+} from "../../infra/email.service.js";
 import {
   PLANS,
   CREDIT_PACKS,
@@ -433,16 +441,31 @@ export async function handleWebhook(req, res) {
       }
 
       if (userId && Number.isFinite(credits) && credits > 0) {
-        const { credited } = await addPurchasedCredits(userId, {
+        const amountUsd = Number(session.metadata.amountUsd) || 0;
+        const { credited, purchasedCredits } = await addPurchasedCredits(userId, {
           sessionId: session.id,
           packId: session.metadata.packId || null,
           credits,
-          amountUsd: Number(session.metadata.amountUsd) || 0,
+          amountUsd,
         });
         console.log(
           `[Billing] credit top-up for ${userId}: ${credited ? "applied" : "replay ignored"}`,
         );
         await rememberCard(userId, session.payment_intent);
+
+        // Only on the first application — a Stripe replay must not re-send the
+        // receipt for a purchase the user already has one for.
+        if (credited) {
+          const buyer = await User.findById(userId);
+          if (buyer) {
+            sendTopUpReceiptEmail(buyer, {
+              credits,
+              amountUsd,
+              purchasedBalance: purchasedCredits,
+              receiptId: session.id,
+            }).catch((e) => console.error("[Billing] top-up receipt failed:", e.message));
+          }
+        }
       }
       return res.json({ received: true });
     }
@@ -468,7 +491,9 @@ export async function handleWebhook(req, res) {
 
       // Welcome email
       if (user) {
-        sendProWelcomeEmail(user).catch(e =>
+        sendProWelcomeEmail(user, {
+          renewsOn: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+        }).catch(e =>
           console.error("[Billing] welcome email failed:", e.message)
         );
       }
@@ -484,7 +509,55 @@ export async function handleWebhook(req, res) {
           await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: sub.id });
           await startProCycle(user._id.toString(), sub);
           console.log(`[Billing] Pro renewed for ${user._id} — credits refilled`);
+
+          // Both events fire for a single renewal. Pick one to carry the
+          // receipt, or every renewal mails two identical ones.
+          if (event.type === "invoice.paid") {
+            const line = invoice.lines?.data?.[0];
+            sendInvoiceEmail(user, {
+              invoiceNumber: invoice.number,
+              amountUsd: (invoice.amount_paid ?? 0) / 100,
+              paidAt: invoice.status_transitions?.paid_at
+                ? new Date(invoice.status_transitions.paid_at * 1000)
+                : new Date(),
+              periodStart: line?.period?.start ? new Date(line.period.start * 1000) : null,
+              periodEnd: line?.period?.end ? new Date(line.period.end * 1000) : null,
+              invoiceUrl: invoice.hosted_invoice_url || null,
+            }).catch(e => console.error("[Billing] invoice email failed:", e.message));
+          }
         }
+      }
+    }
+
+    // ── Renewal is a few days out — tell them before the card is charged ────
+    if (event.type === "invoice.upcoming") {
+      const invoice = event.data.object;
+      const user = await User.findOne({ stripeCustomerId: invoice.customer });
+      if (user && invoice.subscription) {
+        sendRenewalReminderEmail(user, {
+          renewsOn: invoice.next_payment_attempt
+            ? new Date(invoice.next_payment_attempt * 1000)
+            : invoice.period_end
+              ? new Date(invoice.period_end * 1000)
+              : null,
+          amountUsd: (invoice.amount_due ?? 0) / 100,
+        }).catch(e => console.error("[Billing] renewal reminder failed:", e.message));
+      }
+    }
+
+    // ── Renewal declined — Stripe keeps retrying, the user has to act ───────
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object;
+      const user = await User.findOne({ stripeCustomerId: invoice.customer });
+      if (user && invoice.subscription) {
+        sendPaymentFailedEmail(user, {
+          amountUsd: (invoice.amount_due ?? 0) / 100,
+          attemptCount: invoice.attempt_count || null,
+          nextAttempt: invoice.next_payment_attempt
+            ? new Date(invoice.next_payment_attempt * 1000)
+            : null,
+          updateUrl: invoice.hosted_invoice_url || null,
+        }).catch(e => console.error("[Billing] payment-failed email failed:", e.message));
       }
     }
 
@@ -521,6 +594,9 @@ export async function handleWebhook(req, res) {
         await User.findByIdAndUpdate(user._id, { stripeSubscriptionId: null });
         await downgradeToFree(user._id.toString());
         console.log(`[Billing] Sub ended for user ${user._id} → free plan`);
+        sendProEndedEmail(user, {
+          endedOn: sub.ended_at ? new Date(sub.ended_at * 1000) : new Date(),
+        }).catch(e => console.error("[Billing] pro-ended email failed:", e.message));
       }
     }
 

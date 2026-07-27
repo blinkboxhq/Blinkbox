@@ -60,7 +60,15 @@ async function bootstrap() {
       console.warn("Uptime monitor skipped:", err.message);
     }
 
-    // 6. Start server + workers
+    // 6. Start weekly usage digest (non-fatal)
+    try {
+      const { startWeeklyDigest } = await import("./infra/digest.scheduler.js");
+      startWeeklyDigest();
+    } catch (err) {
+      console.warn("Weekly digest skipped:", err.message);
+    }
+
+    // 7. Start server + workers
     await startServer();
 
     console.log("BOOTSTRAP: server started");

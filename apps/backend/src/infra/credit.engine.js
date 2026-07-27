@@ -204,6 +204,49 @@ function triggerAutoRecharge(workspaceId) {
 }
 
 /**
+ * Warn once a day when the balance is nearly gone.
+ *
+ * Skipped entirely when a working card is armed to top up — that user asked
+ * not to be interrupted, and an alert about a problem the system fixes by
+ * itself trains people to ignore the ones that matter.
+ */
+function maybeLowBalanceNotice(workspaceId, usage) {
+  if (!usage) return;
+  const auto = usage.autoRecharge;
+  if (auto?.enabled && auto.paymentMethodId) return;
+
+  const { purchasedCredits, remaining } = balanceOf(usage);
+  const floor = Math.max(50, Math.round((usage.monthlyLimit || 0) * 0.1));
+  if (remaining > floor) return;
+
+  const pool = (usage.monthlyLimit || 0) + purchasedCredits;
+  const percentUsed = pool ? Math.min(100, Math.round((usage.creditsUsed / pool) * 100)) : 100;
+
+  Promise.all([
+    import("./redis.lock.js"),
+    import("./email.service.js"),
+    import("../models/user.model.js"),
+  ])
+    .then(async ([lock, email, userModel]) => {
+      // acquireLock is SET-NX with a TTL, and this one is deliberately never
+      // released — it is the once-a-day flag, with no schema field to carry it.
+      if (!(await lock.acquireLock(`lowbalance:${workspaceId}`, "notice", 86400))) return;
+
+      const user = await userModel.default.findById(workspaceId);
+      if (!user) return;
+
+      await email.sendLowBalanceEmail(user, {
+        remaining,
+        monthlyLimit: usage.monthlyLimit,
+        purchased: purchasedCredits,
+        percentUsed,
+        plan: usage.plan,
+      });
+    })
+    .catch((err) => console.error("[Credits] low-balance notice failed:", err.message));
+}
+
+/**
  * Deduct credits after a successful node execution.
  *
  * The split depends on the current balance, so the update is guarded by the
@@ -250,6 +293,7 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
     if (result) {
       const balance = balanceOf(result);
       triggerAutoRecharge(workspaceId);
+      maybeLowBalanceNotice(workspaceId, result);
       return {
         creditsUsed: result.creditsUsed,
         remaining: balance.remaining,
@@ -266,6 +310,7 @@ export async function deductCredits(workspaceId, { executionId, nodeId, nodeType
   );
 
   triggerAutoRecharge(workspaceId);
+  maybeLowBalanceNotice(workspaceId, fallback);
   return {
     creditsUsed: fallback.creditsUsed,
     remaining: balanceOf(fallback).remaining,
