@@ -18,7 +18,7 @@
  *   purchasedSpent    — Lifetime purchased credits burned (reporting only)
  *   plan              — "free" | "starter" | "pro" | "enterprise"
  *   history           — Rolling log of last 100 deductions for audit
- *   purchases         — Rolling log of last 50 credit purchases
+ *   purchases         — Rolling log of last 500 credit purchases (replay guard)
  */
 
 import mongoose from "mongoose";

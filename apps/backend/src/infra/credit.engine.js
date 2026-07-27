@@ -287,7 +287,10 @@ export async function addPurchasedCredits(
     { workspaceId, "purchases.sessionId": { $ne: sessionId } },
     {
       $inc: { purchasedCredits: credits },
-      $push: { purchases: { $each: [entry], $slice: -50 } },
+      // The retention window IS the replay guard — a session id that ages out of
+      // this array can be credited twice. Stripe retries for three days, and the
+      // auto top-up cap tops out near 400 charges a cycle, so 500 outlives both.
+      $push: { purchases: { $each: [entry], $slice: -500 } },
     },
     { returnDocument: "after", upsert: false },
   );

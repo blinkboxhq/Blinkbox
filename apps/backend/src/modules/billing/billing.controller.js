@@ -22,6 +22,12 @@ import {
 import { stripe } from "./stripe.client.js";
 import { STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID_PRO, FRONTEND_URL } from "../../config/env.js";
 
+// Starting a second subscription while one of these is open bills the card
+// twice a month. "incomplete" is deliberately absent: it never charges and
+// expires on its own, so blocking on it would trap a retry after a declined card.
+const LIVE_SUB_STATUSES = new Set(["active", "trialing"]);
+const AILING_SUB_STATUSES = new Set(["past_due", "unpaid"]);
+
 function nextCycleStart(usage) {
   if (usage.billingCycleEnd) return usage.billingCycleEnd;
   const from = new Date(usage.billingCycleStart);
@@ -179,6 +185,18 @@ export async function createCheckoutSession(req, res) {
       });
       customerId = customer.id;
       await User.findByIdAndUpdate(user._id, { stripeCustomerId: customerId });
+    } else {
+      // A stale tab still showing "Go Pro" would otherwise open a second
+      // subscription on the same card and bill $19 twice every month.
+      const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+      if (subs.data.some((s) => LIVE_SUB_STATUSES.has(s.status))) {
+        return res.status(409).json({ message: "You are already on Pro. Manage it from the billing portal." });
+      }
+      if (subs.data.some((s) => AILING_SUB_STATUSES.has(s.status))) {
+        return res.status(409).json({
+          message: "Your Pro payment did not go through. Update your card in the billing portal to restart it.",
+        });
+      }
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -397,10 +415,22 @@ export async function handleWebhook(req, res) {
 
   try {
     // ── Credit pack purchased (one-time payment) ────────────────────────────
-    if (event.type === "checkout.session.completed" && event.data.object.metadata?.kind === "credits") {
+    if (
+      (event.type === "checkout.session.completed" ||
+        event.type === "checkout.session.async_payment_succeeded") &&
+      event.data.object.metadata?.kind === "credits"
+    ) {
       const session = event.data.object;
       const userId  = session.metadata.userId;
       const credits = Number(session.metadata.credits);
+
+      // Completed is not the same as paid. Anything settling asynchronously
+      // completes first and pays later, and handing over credits on that signal
+      // gives them away for free if the payment then fails.
+      if (session.payment_status !== "paid") {
+        console.warn(`[Billing] credit session ${session.id} not paid yet (${session.payment_status})`);
+        return res.json({ received: true });
+      }
 
       if (userId && Number.isFinite(credits) && credits > 0) {
         const { credited } = await addPurchasedCredits(userId, {
@@ -421,7 +451,9 @@ export async function handleWebhook(req, res) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const userId  = session.metadata?.userId;
-      if (!userId) return res.json({ received: true });
+      // Match on the mode, not on "everything that wasn't tagged credits" — a
+      // one-off top-up that arrived without its tag would otherwise buy Pro.
+      if (!userId || session.mode !== "subscription") return res.json({ received: true });
 
       const user = await User.findByIdAndUpdate(
         userId,
