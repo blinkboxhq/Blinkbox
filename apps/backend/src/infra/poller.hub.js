@@ -1,5 +1,6 @@
 import { Queue, Worker } from "bullmq";
 import { createBullMQConnection } from "./bullmq.js";
+import { POLLER_CONCURRENCY } from "../config/env.js";
 import Automation from "../models/automation.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
 
@@ -1006,7 +1007,7 @@ export async function startPollerHub() {
 
   hubWorker = new Worker(HUB_QUEUE, dispatch, {
     connection: createBullMQConnection(),
-    concurrency: 8,
+    concurrency: POLLER_CONCURRENCY,
   });
 
   hubWorker.on("failed", (job, err) => {

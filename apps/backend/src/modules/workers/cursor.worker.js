@@ -15,8 +15,9 @@ import { Worker } from "bullmq";
 import { createBullMQConnection, getCursorQueue, getDeadLetterQueue } from "../../infra/bullmq.js";
 import { processCursor } from "./cursor.executor.js";
 import { redis } from "../../infra/redis.client.js";
+import { CURSOR_CONCURRENCY } from "../../config/env.js";
 
-const NUM_CONCURRENT = 4;
+const NUM_CONCURRENT = CURSOR_CONCURRENCY;
 let worker = null;
 
 export async function startCursorWorker() {

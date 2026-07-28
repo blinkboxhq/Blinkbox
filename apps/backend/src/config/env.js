@@ -152,6 +152,12 @@ export const GITLAB_TOKEN        = process.env.GITLAB_TOKEN        || null;
 export const GITLAB_WEBHOOK_SECRET = process.env.GITLAB_WEBHOOK_SECRET || null;
 export const ASANA_WEBHOOK_SECRET  = process.env.ASANA_WEBHOOK_SECRET  || null;
 export const DOCKER_SOCKET         = process.env.DOCKER_SOCKET         || "/var/run/docker.sock";
+
+// Engine throughput ceilings. Both were hardcoded, so the only way to scale a
+// box vertically was a code change — these let an operator match concurrency to
+// the instance the worker actually landed on.
+export const CURSOR_CONCURRENCY    = parseInt(process.env.CURSOR_CONCURRENCY, 10) || 4;
+export const POLLER_CONCURRENCY    = parseInt(process.env.POLLER_CONCURRENCY, 10) || 8;
 export const SSH_PASSWORD          = process.env.SSH_PASSWORD          || null;
 export const SSH_PRIVATE_KEY       = process.env.SSH_PRIVATE_KEY       || null;
 
