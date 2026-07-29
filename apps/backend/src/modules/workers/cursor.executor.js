@@ -19,7 +19,7 @@ import { toPlatformTool } from "../../nodes/integrationManifest.js";
 
 const NODE_TIMEOUT_MS = 60 * 1000;
 // Must stay well under the resumer's STALE_MS (90s) or long-running nodes get re-enqueued mid-flight
-const HEARTBEAT_MS = 30 * 1000;
+const HEARTBEAT_MS = 15 * 1000;
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
 const RETRY_MAX_ATTEMPTS = 10;

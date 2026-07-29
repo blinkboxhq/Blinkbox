@@ -41,9 +41,12 @@ export async function startCursorWorker() {
     {
       connection: createBullMQConnection(),
       concurrency: NUM_CONCURRENT,
-      stalledInterval: 30000,   // Check for stalled jobs every 30s
-      maxStalledCount: 2,       // Re-attempt stalled jobs up to 2 times
-      lockDuration: 90000,      // Auto-renewed by BullMQ while the job runs — does NOT cap node runtime
+      stalledInterval: 60000,   // Check for stalled jobs every 60s
+      maxStalledCount: 1,       // Re-attempt a stalled job once — agent nodes are expensive to repeat
+      // Auto-renewed by BullMQ while the job runs, but renewal needs the event loop.
+      // Several concurrent agent nodes serializing large payloads can block it for
+      // tens of seconds, so keep the lock far longer than any plausible stall.
+      lockDuration: 300000,
     },
   );
 

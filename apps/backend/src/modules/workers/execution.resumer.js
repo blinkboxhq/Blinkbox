@@ -15,7 +15,10 @@ import Execution from "../../models/execution.model.js";
 import { enqueueCursor } from "./cursor.queue.js";
 import { redis } from "../../infra/redis.client.js";
 
-const STALE_MS = 90 * 1000; // Must exceed BullMQ lockDuration (90s)
+// Must comfortably exceed BullMQ lockDuration (300s). Reclaiming a cursor that is
+// still alive restarts its node, and for an agent node that means a second full
+// model run — so the bar for declaring a cursor dead is deliberately high.
+const STALE_MS = 600 * 1000;
 const RESUMER_INTERVAL_MS = 10000; // Check every 10s (less aggressive than old 5s)
 
 let intervalId = null;
@@ -63,6 +66,28 @@ export function startExecutionResumer() {
           }
         }
       }
+      // Recover "pending" cursors whose queue job was lost — an enqueue that lands
+      // while the workers are restarting leaves the cursor unclaimed forever, since
+      // nothing else re-delivers it. The executor's claim is atomic, so a duplicate
+      // job simply loses the race and returns.
+      const stuckPendingExecutions = await Execution.find({
+        status: { $in: ["pending", "running"] },
+        cursors: { $elemMatch: { status: "pending", lockedAt: null } },
+        updatedAt: { $lte: stale },
+      }).limit(100);
+
+      for (const execution of stuckPendingExecutions) {
+        for (const cursor of execution.cursors) {
+          if (cursor.status === "pending" && !cursor.lockedAt) {
+            console.log(`[Resumer] Re-enqueuing stranded pending cursor: ${cursor._id}`);
+            await enqueueCursor({
+              executionId: execution._id.toString(),
+              cursorId: cursor._id.toString(),
+            });
+          }
+        }
+      }
+
       // Recover "waiting" cursors whose Redis ZADD entry was lost (e.g. Redis restart)
       const staleWaiting = new Date(Date.now() - 5 * 60 * 1000);
       const stuckWaitingExecutions = await Execution.find({
