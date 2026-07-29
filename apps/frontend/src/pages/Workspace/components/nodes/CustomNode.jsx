@@ -727,13 +727,28 @@ function CustomNodeImpl({ id, data, selected }) {
             cardH={cardH} />
         ))}
 
-        <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
-        {outputCount != null && (
+        {splitOutputs ? (
+          <SuccessFailedOutputHandles cardHeight={cardH} successConnected={hasSuccessConnection} failedConnected={hasFailedConnection} onAdd={handleAddNext} />
+        ) : (
+          <OutputHandle nodeId={id} hasConnection={hasOutputConnection} onAdd={handleAddNext} dotColor={dotColor} statusGlow={statusGlow} cardHeight={cardH} />
+        )}
+        {outputCount != null && !splitOutputs && (
           <div className="absolute pointer-events-none select-none" style={{ left: cardW + 10, top: cardH / 2 - 16 }}>
             <span style={{ fontSize: 9, color: '#555', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
               {outputCount} item{outputCount !== 1 ? 's' : ''}
             </span>
           </div>
+        )}
+
+        {!splitOutputs && (hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
+          <>
+            <Handle type="source" position={Position.Right} id="onFailure"
+              className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
+              style={{ backgroundColor: hasErrorConnection ? "#ef4444" : "#7f1d1d", top: cardH * 0.72, right: -7 }}
+            />
+            <span className="absolute text-[7px] font-bold text-red-600 select-none pointer-events-none"
+              style={{ right: 14, top: cardH * 0.72, transform: "translateY(-50%)" }}>ERR</span>
+          </>
         )}
       </div>
     );

@@ -395,21 +395,23 @@ export const createGraphSlice = (set, get) => ({
     });
   },
 
-  // Toggling Split outputs off hides the success/failed handles, but edges
-  // drawn from them survive in the graph and keep routing invisibly — the
-  // failure edge especially, since the executor still honours its handle id.
-  // Drop the failure edges and fold the success edges back onto the default
-  // output so what the canvas shows is what the engine runs.
+  // Toggling Split outputs swaps which source handles the node renders, and an
+  // edge pointing at a handle that no longer exists is dropped from the canvas
+  // while the executor still honours its handle id. Either direction has to
+  // move the existing edges onto the handles that are actually on screen:
+  // on → output becomes Success and the ERR handle becomes Failed; off → the
+  // reverse. The executor treats each pair as the same route, so nothing about
+  // the run changes and no edge is thrown away.
   reconcileSplitEdges: (nodeId, splitOn) => {
-    if (splitOn) return;
     const state = get();
-    const newEdges = state.edges
-      .filter((e) => !(e.source === nodeId && e.sourceHandle === "failed"))
-      .map((e) =>
-        e.source === nodeId && e.sourceHandle === "success"
-          ? { ...e, sourceHandle: "output" }
-          : e,
-      );
+    const remap = splitOn
+      ? { output: "success", onFailure: "failed" }
+      : { success: "output", failed: "onFailure" };
+    const newEdges = state.edges.map((e) => {
+      if (e.source !== nodeId) return e;
+      const next = remap[e.sourceHandle || "output"];
+      return next ? { ...e, sourceHandle: next } : e;
+    });
     if (newEdges.length === state.edges.length && newEdges.every((e, i) => e === state.edges[i])) return;
 
     const newVars = calculateAllAvailableVariables(state.nodes, newEdges, state.nodeOutputSchemas);

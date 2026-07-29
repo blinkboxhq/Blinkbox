@@ -23,6 +23,9 @@ const PROMPT_TEMPLATES = [
 
 const SLOT_IDS = ["llm", "memory", "integration", "tools"];
 
+const MAX_ITERATIONS = 15;
+const MAX_TEMPERATURE = 1;
+
 function slotHandles(slotId) {
   return slotId === "llm" ? new Set(["llm", "chat_model"]) : new Set([slotId]);
 }
@@ -48,8 +51,16 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
   const toolCount =
     bySlot.tools.length + bySlot.integration.length + (config.builtinWebSearch ? 1 : 0);
   const prompt = config.prompt || "";
-  const maxIterations = config.maxIterations || 5;
-  const temperature = config.temperature ?? 0.3;
+  // Ceilings match the engine: it clamps iterations at 15 and rejects a
+  // temperature above 1 on Anthropic and NVIDIA-hosted models. A slider that
+  // goes further just promises something the run can't deliver. Values can
+  // arrive from the API as strings, so coerce before doing maths on them.
+  const numeric = (value, fallback, max) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? Math.min(Math.max(num, 0), max) : fallback;
+  };
+  const maxIterations = numeric(config.maxIterations, 5, MAX_ITERATIONS) || 5;
+  const temperature = numeric(config.temperature, 0.3, MAX_TEMPERATURE);
 
   const sliderStyle = (pct) => ({
     background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${pct}%, #3b3b3b ${pct}%, #3b3b3b 100%)`,
@@ -196,10 +207,10 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               Max Iterations
             </ConfigLabel>
             <input
-              type="range" min={1} max={20} step={1} value={maxIterations}
+              type="range" min={1} max={MAX_ITERATIONS} step={1} value={maxIterations}
               onChange={(e) => updateConfig("maxIterations", Number(e.target.value))}
               className="w-full h-1 rounded-full appearance-none cursor-pointer"
-              style={sliderStyle(((maxIterations - 1) / 19) * 100)}
+              style={sliderStyle(((maxIterations - 1) / (MAX_ITERATIONS - 1)) * 100)}
             />
             <div className="flex justify-between mt-1.5">
               <span className="text-[9px] font-mono text-neutral-600 tracking-wide">FAST</span>
@@ -224,10 +235,10 @@ export default function AIAgentNode({ config = {}, updateConfig, nodeId }) {
               Temperature
             </ConfigLabel>
             <input
-              type="range" min={0} max={2} step={0.1} value={temperature}
+              type="range" min={0} max={MAX_TEMPERATURE} step={0.1} value={temperature}
               onChange={(e) => updateConfig("temperature", parseFloat(e.target.value))}
               className="w-full h-1 rounded-full appearance-none cursor-pointer"
-              style={sliderStyle((temperature / 2) * 100)}
+              style={sliderStyle((temperature / MAX_TEMPERATURE) * 100)}
             />
             <div className="flex justify-between mt-1.5">
               <span className="text-[9px] font-mono text-neutral-600 tracking-wide">PRECISE</span>

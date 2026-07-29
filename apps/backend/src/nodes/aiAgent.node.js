@@ -1913,6 +1913,20 @@ async function withProviderRetry(fn) {
   throw lastErr;
 }
 
+// Providers disagree on the upper bound. OpenAI-style APIs take up to 2, but
+// Anthropic and the NVIDIA-hosted models reject anything above 1 with a 400 —
+// pushing the temperature slider right used to fail the whole node.
+const TEMPERATURE_CEILING = {
+  openai: 2, groq: 2, gemini: 2, deepseek: 2, xai: 2, together: 2, fireworks: 2,
+};
+const DEFAULT_TEMPERATURE_CEILING = 1;
+
+function clampTemperature(provider, value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0.3;
+  return Math.min(Math.max(num, 0), TEMPERATURE_CEILING[provider] ?? DEFAULT_TEMPERATURE_CEILING);
+}
+
 async function callProvider({
   provider,
   apiKey,
@@ -1924,18 +1938,20 @@ async function callProvider({
   tools,
   baseUrl,
 }) {
+  const temp = clampTemperature(provider, temperature);
+
   if (provider === "anthropic") {
-    return callAnthropic(apiKey, model, system, messages, temperature, maxTokens, tools);
+    return callAnthropic(apiKey, model, system, messages, temp, maxTokens, tools);
   }
   if (provider === "gemini") {
-    return callGemini(apiKey, model, system, messages, temperature, maxTokens, tools);
+    return callGemini(apiKey, model, system, messages, temp, maxTokens, tools);
   }
 
   // All other providers use OpenAI-compatible API
   const endpoint = resolveEndpoint(provider, baseUrl);
   const label =
     provider.charAt(0).toUpperCase() + provider.slice(1).replace(/([A-Z])/g, " $1");
-  return callOpenAICompat(apiKey, model, system, messages, temperature, maxTokens, tools, endpoint, label);
+  return callOpenAICompat(apiKey, model, system, messages, temp, maxTokens, tools, endpoint, label);
 }
 
 // ── OpenAI-Compatible ───────────────────────────────────────────────────────
@@ -2483,6 +2499,36 @@ const SUMMARIZE_SYSTEM_PROMPT =
  *   4. Replace the intermediate section with the summary
  *   5. Return the compressed messages array
  */
+function isToolResultMessage(m, provider) {
+  if (provider === "gemini") return m?.role === "function";
+  if (provider === "anthropic") {
+    return m?.role === "user" && Array.isArray(m.content) &&
+      m.content.some((b) => b?.type === "tool_result");
+  }
+  return m?.role === "tool";
+}
+
+function hasToolCallBlocks(m, provider) {
+  if (provider === "gemini") {
+    return m?.role === "model" && Array.isArray(m.parts) && m.parts.some((p) => p?.functionCall);
+  }
+  if (provider === "anthropic") {
+    return m?.role === "assistant" && Array.isArray(m.content) &&
+      m.content.some((b) => b?.type === "tool_use");
+  }
+  return m?.role === "assistant" && Array.isArray(m.tool_calls) && m.tool_calls.length > 0;
+}
+
+// A tool result with no matching call, or a call with no matching result, is a
+// hard 400 on every provider. Trim both ends of a window until it stands alone.
+function dropOrphanToolMessages(window, provider) {
+  let start = 0;
+  while (start < window.length && isToolResultMessage(window[start], provider)) start++;
+  const kept = window.slice(start);
+  while (kept.length > 0 && hasToolCallBlocks(kept[kept.length - 1], provider)) kept.pop();
+  return kept;
+}
+
 async function summarizeScratchpad({
   provider,
   apiKey,
@@ -2498,13 +2544,17 @@ async function summarizeScratchpad({
   const firstUserMsg = firstUserIdx >= 0 ? messages[firstUserIdx] : null;
 
   // Keep the last 4 messages (most recent context) — these are likely
-  // the latest tool call + result + assistant response
+  // the latest tool call + result + assistant response. The window can start
+  // mid tool-call group though, and a tool result whose originating call was in
+  // the summarized-away middle is a 400 on every provider, so drop the
+  // orphans — that crash is what long agent runs used to die on.
   const recentCount = Math.min(4, messages.length);
-  const recentMessages = messages.slice(-recentCount);
+  const recentMessages = dropOrphanToolMessages(messages.slice(-recentCount), provider);
 
-  // Everything in between gets summarized
+  // Everything in between gets summarized — including any orphan trimmed off
+  // the recent window, so its content survives in the summary.
   const middleStart = firstUserIdx >= 0 ? firstUserIdx + 1 : 0;
-  const middleEnd = messages.length - recentCount;
+  const middleEnd = messages.length - recentMessages.length;
 
   if (middleEnd <= middleStart) {
     // Nothing to summarize — context is already compact
@@ -2582,6 +2632,15 @@ async function summarizeScratchpad({
         summaryText,
     });
     compressed.push(...recentMessages);
+
+    // Trimming orphans can leave the summary as the last turn, and several
+    // providers refuse a request that ends on an assistant message.
+    if (recentMessages.length === 0) {
+      compressed.push({
+        role: "user",
+        content: "Continue from the summary above and complete the task.",
+      });
+    }
 
     return {
       messages: compressed,
