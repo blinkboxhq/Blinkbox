@@ -285,6 +285,7 @@ export async function retryExecution(req, res) {
 export async function getExecutionLogs(req, res) {
   try {
     const { executionId } = req.params;
+    const nodeFilter = String(req.query.nodeId || "").trim();
 
     // Resolve the workflowId from the execution (workspace-scoped)
     const execution = await Execution.findOne({
@@ -297,6 +298,7 @@ export async function getExecutionLogs(req, res) {
     const logs = await ExecutionLog.find({
       workflowId: execution.workflowId || executionId,
       type: { $in: ["node_step", "execution_start", "execution_end"] },
+      ...(nodeFilter ? { nodeId: nodeFilter } : {}),
     })
       .sort({ timestamp: 1 })
       .limit(2000)
@@ -307,7 +309,10 @@ export async function getExecutionLogs(req, res) {
     // The telemetry flusher only feeds ExecutionLog for legacy graph runs.
     // Cursor-based runs record every node in ExecutionData instead, so project
     // those into the same node_step shape the debugger UI already consumes.
-    const data = await ExecutionData.find({ executionId })
+    const data = await ExecutionData.find({
+      executionId,
+      ...(nodeFilter ? { nodeId: nodeFilter } : {}),
+    })
       .sort({ createdAt: 1 })
       .limit(2000)
       .lean();
