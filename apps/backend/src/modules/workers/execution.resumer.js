@@ -125,6 +125,25 @@ export function startExecutionResumer() {
           }
         }
       }
+      // Finalize executions whose cursors are all terminal but whose status was
+      // never flipped. In-executor finalization runs on the last cursor to
+      // finish, so a crash or a lost save between the two leaves the run
+      // "running" forever — visible to the user as a job that never ends.
+      const unfinalized = await Execution.find({
+        status: { $in: ["pending", "running"] },
+        updatedAt: { $lte: stale },
+        "cursors.status": { $nin: ["pending", "running", "waiting"] },
+      }).limit(100);
+
+      for (const execution of unfinalized) {
+        if (!execution.cursors.length) continue;
+        console.log(`[Resumer] Finalizing orphaned execution: ${execution._id}`);
+        execution.status = execution.cursors.some((c) => c.status === "failed")
+          ? "failed"
+          : "executed";
+        execution.completedAt = new Date();
+        await execution.save();
+      }
     } catch (err) {
       console.error("[Resumer] Error:", err.message);
     } finally {
