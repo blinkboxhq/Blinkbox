@@ -88,9 +88,7 @@ export default function Product() {
           <span className="text-[15px] font-bold tracking-tight text-white">blinkbox</span>
         </a>
         <div className="flex items-center gap-6">
-          <a href="/integrations" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Integrations</a>
           <a href="/docs" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Docs</a>
-          <a href="/#pricing" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Pricing</a>
           <div className="w-px h-4 bg-white/[0.1]" />
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Log in</a>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">

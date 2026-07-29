@@ -14,7 +14,6 @@ const NAV = [
     label: 'Product',
     items: [
       { label: 'Features', to: '/product' },
-      { label: 'Integrations', to: '/integrations' },
     ],
   },
   {
@@ -110,13 +109,6 @@ export default function Header() {
               </AnimatePresence>
             </div>
           ))}
-          {/* plain <a>: the section lives on "/", so this must work from the marketing pages too */}
-          <a
-            href="/#pricing"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#8c8c8c] transition-colors duration-150 hover:text-[#fafafa]"
-          >
-            Pricing
-          </a>
         </div>
 
         {/* right — actions */}
@@ -186,13 +178,6 @@ export default function Header() {
                   </div>
                 </div>
               ))}
-              <a
-                href="/#pricing"
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 text-[14px] font-medium text-[#b6b6b6] transition-colors hover:bg-white/[0.05] hover:text-[#fafafa]"
-              >
-                Pricing
-              </a>
               <a
                 href={REPO_URL}
                 target="_blank"
