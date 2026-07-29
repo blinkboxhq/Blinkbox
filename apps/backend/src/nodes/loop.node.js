@@ -25,8 +25,13 @@ export default {
     } = config;
 
     let sourceArray;
-    if (arrayPath) {
-      sourceArray = arrayPath.split(".").reduce((obj, key) => obj?.[key], input);
+    if (Array.isArray(arrayPath)) {
+      // A `{{ }}` expression in this field resolves to the array itself, not a path.
+      sourceArray = arrayPath;
+    } else if (arrayPath) {
+      sourceArray = String(arrayPath)
+        .split(".")
+        .reduce((obj, key) => obj?.[key], input);
     } else {
       sourceArray = input;
     }

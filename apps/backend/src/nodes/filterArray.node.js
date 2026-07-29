@@ -97,7 +97,12 @@ export default {
       throw new Error(`[filterArray] operator "${operator}" requires a value to compare against.`);
     }
 
-    const src = arrayPath ? getPath(input, arrayPath) : input;
+    // A `{{ }}` expression in this field resolves to the array itself, not a path.
+    const src = Array.isArray(arrayPath)
+      ? arrayPath
+      : arrayPath
+        ? getPath(input, arrayPath)
+        : input;
 
     if (src == null) {
       throw new Error(`[filterArray] no array found at path "${arrayPath || "(input)"}".`);

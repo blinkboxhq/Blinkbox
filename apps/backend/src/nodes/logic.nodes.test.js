@@ -65,6 +65,32 @@ test("loop fans out one item at a time", async () => {
   await assert.rejects(() => loop.run({}, { notAnArray: true }), /Expected an array/);
 });
 
+test("array nodes accept an arrayPath that already resolved to an array", async () => {
+  const rows = [{ status: "open", n: 2 }, { status: "closed", n: 1 }];
+
+  const loop = await load("loop");
+  const looped = await loop.run({ arrayPath: rows }, {});
+  assert.equal(looped.items.length, 2);
+
+  const filterArray = await load("filterArray");
+  const filtered = await filterArray.run(
+    { arrayPath: rows, field: "status", operator: "equals", value: "open" },
+    {},
+  );
+  assert.equal(filtered.items.length, 1);
+
+  const sortArray = await load("sortArray");
+  const sorted = await sortArray.run({ arrayPath: rows, field: "n", direction: "asc" }, {});
+  assert.deepEqual(sorted.items.map((r) => r.n), [1, 2]);
+
+  const dataMapper = await load("dataMapper");
+  const mapped = await dataMapper.run(
+    { operation: "filter", arrayPath: rows, field: "status", operator: "equals", value: "open" },
+    {},
+  );
+  assert.equal(mapped.filtered.length, 1);
+});
+
 test("merge keeps each branch addressable and exposes the combined result", async () => {
   const merge = await load("merge");
   const out = await merge.run(

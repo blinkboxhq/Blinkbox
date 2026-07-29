@@ -93,9 +93,15 @@ function handleFilter(config, input) {
   } = config;
 
   // Resolve the array to filter
+  // A `{{ }}` expression in this field resolves to the array itself, not a path.
+  const inlineArray = Array.isArray(arrayPath);
   let arr;
-  if (arrayPath) {
-    arr = arrayPath.split(".").reduce((obj, key) => obj?.[key], input);
+  if (inlineArray) {
+    arr = arrayPath;
+  } else if (arrayPath) {
+    arr = String(arrayPath)
+      .split(".")
+      .reduce((obj, key) => obj?.[key], input);
   } else {
     arr = input.findings || input.items || input.data;
   }
@@ -126,8 +132,8 @@ function handleFilter(config, input) {
   });
 
   // Write back to the original path
-  if (arrayPath) {
-    const parts = arrayPath.split(".");
+  if (arrayPath && !inlineArray) {
+    const parts = String(arrayPath).split(".");
     const output = { ...input };
     let target = output;
     for (let i = 0; i < parts.length - 1; i++) {

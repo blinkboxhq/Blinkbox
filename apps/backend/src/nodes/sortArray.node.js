@@ -76,7 +76,12 @@ export default {
       outputKey = "items",
     } = config;
 
-    const src = arrayPath ? getPath(input, arrayPath) : input;
+    // A `{{ }}` expression in this field resolves to the array itself, not a path.
+    const src = Array.isArray(arrayPath)
+      ? arrayPath
+      : arrayPath
+        ? getPath(input, arrayPath)
+        : input;
 
     if (src == null) {
       throw new Error(`[sortArray] no array found at path "${arrayPath || "(input)"}".`);
