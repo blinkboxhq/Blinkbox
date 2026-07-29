@@ -87,7 +87,6 @@ function DropGhost({ payload, x, y }) {
 
 function PlaceholderNode() {
   const setTriggerPickerOpen = useWorkspaceStore((s) => s.setTriggerPickerOpen);
-  const setBrianOpen = useWorkspaceStore((s) => s.setBrianOpen);
 
   return (
     <div className="flex flex-col items-center gap-6 select-none">
@@ -106,8 +105,10 @@ function PlaceholderNode() {
           <div className="w-px h-5 bg-white/10" />
         </div>
 
-        <button
-          onClick={() => setBrianOpen(true)}
+        <a
+          href="https://blinkbox.net/dashboard?tab=mcp"
+          target="_blank"
+          rel="noopener noreferrer"
           className="bb-glass bb-glow-border group flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl hover:bg-blue-400/[0.07] transition-all duration-200 cursor-pointer"
         >
           <span
@@ -124,7 +125,7 @@ function PlaceholderNode() {
             }}
           />
           <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-blue-400 transition-colors tracking-wide">Use MCP</span>
-        </button>
+        </a>
       </div>
       <p className="text-[11px] text-zinc-600 font-medium tracking-wide">Start by adding a trigger</p>
     </div>
