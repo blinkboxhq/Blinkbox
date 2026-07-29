@@ -2348,7 +2348,47 @@ function parseJsonResponse(text) {
     /* fall through */
   }
 
+  // Models routinely wrap the object in prose or tack on a stray closing brace.
+  // Scanning to the balanced close recovers the real payload; without this the
+  // node silently hands downstream nodes a string where they expect an object.
+  const balanced = extractBalancedJson(stripped);
+  if (balanced) {
+    try {
+      return JSON.parse(balanced);
+    } catch {
+      /* fall through */
+    }
+  }
+
   return text;
+}
+
+function extractBalancedJson(text) {
+  const start = text.search(/[{[]/);
+  if (start === -1) return null;
+
+  const open = text[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+
+    if (ch === '"') inString = true;
+    else if (ch === open) depth++;
+    else if (ch === close && --depth === 0) return text.slice(start, i + 1);
+  }
+
+  return null;
 }
 
 function safeParse(str) {
