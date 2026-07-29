@@ -74,6 +74,10 @@ const AutomationSchema = new mongoose.Schema(
     },
     description: { type: String, default: "" },
     thumbnail: { type: String, default: "" },
+    // Concurrency token for the canvas. Separate from `updatedAt` because
+    // thumbnails, activation and renames also touch the doc — using updatedAt
+    // would make those look like a conflicting graph edit.
+    graphUpdatedAt: { type: Date, default: null },
     collaborators: {
       type: [
         {

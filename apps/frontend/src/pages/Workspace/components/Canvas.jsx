@@ -262,7 +262,7 @@ export default function Canvas() {
     const socket = getSocket();
     const myId = (() => { try { return JSON.parse(localStorage.getItem("blinkbox_user") || "{}").id || ""; } catch { return ""; } })();
 
-    const onSync = ({ nodes: inNodes, edges: inEdges, savedBy }) => {
+    const onSync = ({ nodes: inNodes, edges: inEdges, savedBy, graphUpdatedAt }) => {
       // Don't apply our own save broadcast back to ourselves
       if (String(savedBy) === String(myId)) return;
       // Convert backend node format → ReactFlow format (same mapping as loadEngine)
@@ -290,7 +290,7 @@ export default function Canvas() {
         data: { conditionPath: e.conditionPath || "" },
         style: {},
       }));
-      applyGraphSync(rfNodes, rfEdges);
+      applyGraphSync(rfNodes, rfEdges, graphUpdatedAt);
     };
 
     socket.on("collab:graph_sync", onSync);

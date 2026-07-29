@@ -150,7 +150,9 @@ export const WorkflowDefinitionSchema = z.object({
   edges: z.array(EdgeConfigSchema).default([]),
   entryNodeId: z.string().optional().default(""),
   settings: AutomationSettingsSchema.default({ maxParallel: 10 }),
-  description: z.string().default(""),
+  // Not defaulted: the canvas payload omits description, and a default of ""
+  // would make every autosave erase whatever the user (or the API) had set.
+  description: z.string().optional(),
 }).passthrough();
 
 // ── Inferred TypeScript Types ───────────────────────────────────────────────────

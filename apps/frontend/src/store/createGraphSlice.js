@@ -443,7 +443,7 @@ export const createGraphSlice = (set, get) => ({
 
   // Replace the full graph from a collab:graph_sync event (after a remote save).
   // Skips nodes/edges that are already identical to avoid unnecessary re-renders.
-  applyGraphSync: (incomingNodes, rawEdges) => {
+  applyGraphSync: (incomingNodes, rawEdges, graphUpdatedAt) => {
     const state = get();
     const incomingEdges = normalizeEdgeHandles(incomingNodes, rawEdges);
     const newVars = calculateAllAvailableVariables(incomingNodes, incomingEdges, state.nodeOutputSchemas);
@@ -453,6 +453,9 @@ export const createGraphSlice = (set, get) => ({
       availableVariables: newVars,
       mappingWarnings: validateAllNodeMappings(incomingNodes, newVars),
       _schemaGeneration: state._schemaGeneration + 1,
+      // We just adopted the remote graph, so advance the concurrency token too.
+      // Without this the next autosave would 409 against a version we already have.
+      ...(graphUpdatedAt ? { baseUpdatedAt: graphUpdatedAt, lastSavedSignature: null } : {}),
     });
   },
 

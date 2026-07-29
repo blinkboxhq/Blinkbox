@@ -59,9 +59,52 @@ async function resolveGitHubToken(value, workspaceId) {
  * CREATE / UPDATE AUTOMATION
  * ===============================
  */
+
+// Mongoose stamps _id onto every subdocument, so a stored graph never compares
+// equal to the client payload it came from. Strip those and sort keys so the
+// same graph always produces the same string.
+function normalizeGraph(value) {
+  if (Array.isArray(value)) return value.map(normalizeGraph);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      if (key === "_id" || key === "__v") continue;
+      out[key] = normalizeGraph(value[key]);
+    }
+    return out;
+  }
+  return value === undefined ? null : value;
+}
+
+const GRAPH_FIELDS = [
+  "name",
+  "trigger",
+  "entryNodeId",
+  "description",
+  "nodes",
+  "edges",
+  "settings",
+  "triggerNodes",
+];
+
+function graphSignature(source, fields) {
+  const plain = typeof source.toObject === "function" ? source.toObject() : source;
+  const round = JSON.parse(JSON.stringify(plain));
+  const subset = {};
+  for (const field of fields) subset[field] = round[field] ?? null;
+  return JSON.stringify(normalizeGraph(subset));
+}
+
 export async function saveAutomation(req, res) {
   try {
     let automation;
+
+    // Concurrency token: the graphUpdatedAt the client last saw. Compared
+    // against the stored doc so a stale editor can't blind-overwrite a newer
+    // save. The client never sets the stored value itself.
+    const baseUpdatedAt = req.body.baseUpdatedAt;
+    delete req.body.baseUpdatedAt;
+    delete req.body.graphUpdatedAt;
 
     // Strip fields that must never be overwritten via save
     delete req.body.active;
@@ -92,7 +135,37 @@ export async function saveAutomation(req, res) {
       const existing = await Automation.findOne(accessFilter);
       if (!existing) throw new Error("Automation not found or access denied");
 
+      // Identical payload → skip the write. The canvas autosaves on a timer
+      // regardless of whether anything changed; without this an idle tab
+      // rewrites the doc and cuts a version snapshot every few seconds.
+      // Only fields the client actually sent count: the update is a $set, so
+      // absent fields aren't touched and must not make the graph look changed.
+      const sentFields = GRAPH_FIELDS.filter((f) => req.body[f] !== undefined);
+      if (
+        sentFields.length > 0 &&
+        graphSignature(existing, sentFields) === graphSignature(req.body, sentFields)
+      ) {
+        return res.json({ success: true, automation: existing, unchanged: true });
+      }
+
+      // Someone else saved after this client loaded the graph. Refuse rather
+      // than let the stale copy win — this is what silently reverted
+      // API/Brian/second-tab edits within one autosave tick.
+      const storedAt = existing.graphUpdatedAt ? new Date(existing.graphUpdatedAt).getTime() : 0;
+      const clientAt = baseUpdatedAt ? new Date(baseUpdatedAt).getTime() : 0;
+      if (baseUpdatedAt && storedAt && clientAt < storedAt) {
+        return res.status(409).json({
+          success: false,
+          code: "STALE_GRAPH",
+          message:
+            "This automation was changed somewhere else after you opened it. Reload to get the latest version.",
+          graphUpdatedAt: existing.graphUpdatedAt,
+        });
+      }
+
       await snapshotBeforeSave(existing, existing.workspaceId);
+
+      req.body.graphUpdatedAt = new Date();
 
       automation = await Automation.findOneAndUpdate(
         { _id: req.params.id, workspaceId: existing.workspaceId },
@@ -107,6 +180,8 @@ export async function saveAutomation(req, res) {
       delete req.body.__v;
       delete req.body.collaborators;
       req.body.workspaceId = req.user.id;
+      req.body.description ??= "";
+      req.body.graphUpdatedAt = new Date();
       automation = await Automation.create(req.body);
     }
 
@@ -117,6 +192,7 @@ export async function saveAutomation(req, res) {
         nodes: automation.nodes,
         edges: automation.edges,
         savedBy: String(req.user.id),
+        graphUpdatedAt: automation.graphUpdatedAt,
       });
     }
 
@@ -753,7 +829,9 @@ export async function saveThumbnail(req, res) {
     const automation = await Automation.findOneAndUpdate(
       { _id: req.params.id, workspaceId: req.user.id },
       { thumbnail },
-      { returnDocument: 'after', select: '_id thumbnail' },
+      // A thumbnail is a render artifact, not an edit — don't move updatedAt
+      // and make the dashboard show a workflow as freshly modified.
+      { returnDocument: 'after', select: '_id thumbnail', timestamps: false },
     );
     if (!automation) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true });

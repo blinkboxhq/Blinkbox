@@ -46,6 +46,7 @@ router.post("/:versionId/restore", verifyToken, async (req, res) => {
     automation.nodes = version.nodes;
     automation.edges = version.edges;
     automation.entryNodeId = version.entryNodeId;
+    automation.graphUpdatedAt = new Date();
     await automation.save();
 
     res.json({ success: true, automation });
@@ -54,13 +55,27 @@ router.post("/:versionId/restore", verifyToken, async (req, res) => {
   }
 });
 
+// Edits arrive far faster than they are worth versioning — a user dragging
+// nodes produces a save every few seconds. Without coalescing, the 50-version
+// cap holds only a couple of minutes of history and the real restore point the
+// user wants has already been pruned away.
+const SNAPSHOT_COALESCE_MS = 2 * 60 * 1000;
+
 export async function snapshotBeforeSave(automation, workspaceId) {
   try {
     const lastVersion = await AutomationVersion.findOne(
       { automationId: automation._id },
-      { version: 1 },
+      { version: 1, createdAt: 1 },
       { sort: { version: -1 } },
     );
+
+    if (
+      lastVersion?.createdAt &&
+      Date.now() - new Date(lastVersion.createdAt).getTime() < SNAPSHOT_COALESCE_MS
+    ) {
+      return;
+    }
+
     const nextVersion = (lastVersion?.version ?? 0) + 1;
 
     // Cap at 50 versions — prune oldest if needed

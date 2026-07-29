@@ -32,6 +32,9 @@ export const createUISlice = (set, get) => ({
   isSaving: false,
   isActivating: false,
   isLoading: true,
+  baseUpdatedAt: null,
+  lastSavedSignature: null,
+  isGraphStale: false,
   addNodeSource: null,
   addNodeSourceHandle: "output",
   insertEdgeId: null,
@@ -226,6 +229,9 @@ export const createUISlice = (set, get) => ({
         workflowName: workflow.name,
         isActive: workflow.active === true || workflow.status === "active",
         isLoading: false,
+        baseUpdatedAt: workflow.graphUpdatedAt || null,
+        lastSavedSignature: null,
+        isGraphStale: false,
         isRunning: false,
         isExecutionLive: false,
         liveExecutionState: null,
@@ -302,6 +308,18 @@ export const createUISlice = (set, get) => ({
   // ── API: Save Workflow ───────────────────────────────────────────────────
   saveEngine: async (automationId, silent = false) => {
     const state = get();
+
+    // A conflicting save landed elsewhere. Keep the user's canvas on screen but
+    // stop the timer pushing it, otherwise it would overwrite the newer version.
+    // An explicit save still goes through so the user sees the conflict again
+    // instead of a button that silently does nothing.
+    if (state.isGraphStale && silent) return;
+
+    // Two saves in flight from this tab would both carry the same token, so the
+    // second would 409 against our own first save and look like a collaborator
+    // conflict. One at a time.
+    if (state.isSaving) return;
+
     set({ isSaving: true });
     try {
       const triggerNodes = state.nodes.filter((n) => n.data.type === "trigger");
@@ -355,11 +373,38 @@ export const createUISlice = (set, get) => ({
         })),
       };
 
-      await api.put(`/api/automation/${automationId}`, payload);
+      // The autosave timer fires whether or not anything changed. Sending an
+      // identical graph costs a write, a version snapshot, and — worst — a
+      // chance to clobber a newer save made from somewhere else.
+      const signature = JSON.stringify(payload);
+      if (signature === state.lastSavedSignature) {
+        if (!silent) get().addNotification({ type: "success", title: "Workflow saved", message: "" });
+        return;
+      }
+
+      const response = await api.put(`/api/automation/${automationId}`, {
+        ...payload,
+        baseUpdatedAt: state.baseUpdatedAt,
+      });
+
+      set({
+        lastSavedSignature: signature,
+        baseUpdatedAt: response.data?.automation?.graphUpdatedAt || get().baseUpdatedAt,
+      });
+
       if (!silent) get().addNotification({ type: "success", title: "Workflow saved", message: "" });
       const thumbnail = get().generateThumbnail(state.nodes, state.edges);
       if (thumbnail) api.patch(`/api/automation/${automationId}/thumbnail`, { thumbnail }).catch(() => {});
     } catch (error) {
+      if (error.response?.status === 409) {
+        set({ isGraphStale: true });
+        get().addNotification({
+          type: "error",
+          title: "Someone else changed this workflow",
+          message: "Autosave is paused so your copy can't overwrite theirs. Reload to get the latest version.",
+        });
+        return;
+      }
       if (silent && (error.response?.status === 403 || error.response?.status === 401)) return;
       get().addNotification({ type: "error", title: "Save failed", message: error.response?.data?.message || error.message });
     } finally {
