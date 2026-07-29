@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Execution from "../../models/execution.model.js";
 import Automation from "../../models/automation.model.js";
 import ExecutionLog from "../../models/executionLog.model.js";
+import ExecutionData from "../../models/executionData.model.js";
 import { executeAutomation } from "../automation/automation.executor.js";
 import { enqueueCursor } from "../workers/cursor.queue.js";
 
@@ -301,7 +302,31 @@ export async function getExecutionLogs(req, res) {
       .limit(2000)
       .lean();
 
-    res.json({ success: true, logs });
+    if (logs.length) return res.json({ success: true, logs });
+
+    // The telemetry flusher only feeds ExecutionLog for legacy graph runs.
+    // Cursor-based runs record every node in ExecutionData instead, so project
+    // those into the same node_step shape the debugger UI already consumes.
+    const data = await ExecutionData.find({ executionId })
+      .sort({ createdAt: 1 })
+      .limit(2000)
+      .lean();
+
+    res.json({
+      success: true,
+      logs: data.map((doc) => ({
+        type: "node_step",
+        workflowId: String(execution.automationId || executionId),
+        automationId: String(execution.automationId || ""),
+        nodeId: doc.nodeId,
+        nodeType: doc.log?.nodeType || null,
+        status: doc.log?.status || null,
+        input: doc.log?.input ?? null,
+        output: doc.output ?? null,
+        error: doc.log?.error || null,
+        timestamp: doc.log?.executedAt || doc.createdAt,
+      })),
+    });
   } catch (err) {
     console.error("[ExecutionLogs]", err.message);
     res.status(500).json({ success: false, error: "Failed to load logs" });
