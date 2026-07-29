@@ -98,13 +98,15 @@ function evaluateExpression(expression, $json, $node, $runIndex) {
           },
         );
 
-        with (scope) { return ${safeExpression}; }
+        with (scope) { return JSON.stringify({ v: (${safeExpression}) }); }
       })();
     `);
 
-    const result = script.runSync(context, { timeout: EXPR_TIMEOUT_MS });
+    // Only primitives cross the isolate boundary; an object or array comes back
+    // as undefined unless it is copied out, so results travel as JSON.
+    const raw = script.runSync(context, { timeout: EXPR_TIMEOUT_MS });
     release(entry);
-    return result;
+    return typeof raw === "string" ? JSON.parse(raw).v : undefined;
   } catch (err) {
     // Determine if the isolate is still usable
     if (
