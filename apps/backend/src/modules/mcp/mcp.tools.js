@@ -825,7 +825,19 @@ export const TOOLS = [
       if (!flow || !Array.isArray(flow.nodes) || !flow.nodes.length) {
         const qs =
           brian.questions && brian.questions.length
-            ? `\n\nTo build it I need a bit more detail:\n- ${brian.questions.join("\n- ")}`
+            ? `\n\nTo build it I need a bit more detail:\n${brian.questions
+                .map((q, i) => {
+                  const text = typeof q === "string" ? q : q?.question || q?.label || q?.id || "";
+                  const opts = Array.isArray(q?.options)
+                    ? q.options
+                        .map((o) =>
+                          typeof o === "string" ? o : `${o?.label}${o?.hint ? ` — ${o.hint}` : ""}`,
+                        )
+                        .join(" | ")
+                    : "";
+                  return `${i + 1}. ${text}${opts ? `\n   options: ${opts}` : ""}`;
+                })
+                .join("\n")}`
             : "";
         return `I couldn't build a complete workflow from that yet.${qs}\n\n${brian.text || ""}`.trim();
       }
