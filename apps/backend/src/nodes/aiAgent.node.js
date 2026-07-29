@@ -1895,11 +1895,18 @@ function isRetryable(err) {
   return ["ECONNABORTED", "ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "ENOTFOUND", "ECONNREFUSED"].includes(err.code);
 }
 
+// REQUEST_TIMEOUT_MS is the budget for the whole call, not for each attempt.
+// Giving every attempt the full window let a hung provider hold one node — and
+// with it a worker slot — for retries × timeout, tens of minutes at a time.
+// Each attempt gets what is left of the deadline, so the ceiling is the budget.
 async function withProviderRetry(fn) {
+  const deadline = Date.now() + REQUEST_TIMEOUT_MS;
   let lastErr;
   for (let attempt = 0; attempt <= PROVIDER_MAX_RETRIES; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
     try {
-      return await fn();
+      return await fn(remaining);
     } catch (err) {
       lastErr = err;
       if (attempt === PROVIDER_MAX_RETRIES || !isRetryable(err)) throw err;
@@ -1907,10 +1914,11 @@ async function withProviderRetry(fn) {
       const wait = Number.isFinite(retryAfter) && retryAfter > 0
         ? Math.min(retryAfter * 1000, 30_000)
         : Math.min(1_000 * 2 ** attempt, 16_000) + Math.floor(Math.random() * 400);
+      if (Date.now() + wait >= deadline) throw err;
       await new Promise((r) => setTimeout(r, wait));
     }
   }
-  throw lastErr;
+  throw lastErr || new Error(`Provider call exceeded the ${REQUEST_TIMEOUT_MS}ms budget.`);
 }
 
 // Providers disagree on the upper bound. OpenAI-style APIs take up to 2, but
@@ -1973,12 +1981,12 @@ async function callOpenAICompat(
   }
 
   try {
-    const response = await withProviderRetry(() => axios.post(endpoint, body, {
+    const response = await withProviderRetry((timeout) => axios.post(endpoint, body, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      timeout: REQUEST_TIMEOUT_MS,
+      timeout,
       maxContentLength: 10 * 1024 * 1024,
       __bbSkipHardening: true,
     }));
@@ -2022,13 +2030,13 @@ async function callAnthropic(
   }
 
   try {
-    const response = await withProviderRetry(() => axios.post(ENDPOINTS.anthropic, body, {
+    const response = await withProviderRetry((timeout) => axios.post(ENDPOINTS.anthropic, body, {
       headers: {
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      timeout: REQUEST_TIMEOUT_MS,
+      timeout,
       maxContentLength: 10 * 1024 * 1024,
       __bbSkipHardening: true,
     }));
@@ -2116,9 +2124,9 @@ async function callGemini(
   }
 
   try {
-    const response = await withProviderRetry(() => axios.post(endpoint, body, {
+    const response = await withProviderRetry((timeout) => axios.post(endpoint, body, {
       headers: { "Content-Type": "application/json" },
-      timeout: REQUEST_TIMEOUT_MS,
+      timeout,
       maxContentLength: 10 * 1024 * 1024,
       __bbSkipHardening: true,
     }));
