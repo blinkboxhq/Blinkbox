@@ -1,5 +1,6 @@
-import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, Sparkles, Zap, Play, Loader2, CheckCircle2, XCircle, ZoomIn, ZoomOut, Maximize2, Minimize2, Maximize } from "lucide-react";
+import { Plus, AlignVerticalJustifyStart, AlignHorizontalJustifyStart, Trash2, Copy, Zap, Play, Loader2, CheckCircle2, XCircle, ZoomIn, ZoomOut, Maximize2, Minimize2, Maximize } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import mcpLogo from "../../../assets/mcp.svg";
 import React, { useCallback, useRef, useMemo, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NodeContextMenu from "./NodeContextMenu";
@@ -107,10 +108,22 @@ function PlaceholderNode() {
 
         <button
           onClick={() => setBrianOpen(true)}
-          className="bb-glass bb-glow-border group flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl hover:bg-violet-400/[0.07] transition-all duration-200 cursor-pointer"
+          className="bb-glass bb-glow-border group flex flex-col items-center justify-center w-[108px] h-[108px] rounded-2xl hover:bg-blue-400/[0.07] transition-all duration-200 cursor-pointer"
         >
-          <Sparkles className="relative w-6 h-6 text-zinc-400 group-hover:text-violet-300 transition-colors duration-200 mb-1.5" strokeWidth={1.5} />
-          <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-violet-300 transition-colors tracking-wide">Use Brian</span>
+          <span
+            className="relative w-6 h-6 mb-1.5 bg-zinc-400 group-hover:bg-blue-400 transition-colors duration-200"
+            style={{
+              maskImage: `url(${mcpLogo})`,
+              WebkitMaskImage: `url(${mcpLogo})`,
+              maskRepeat: 'no-repeat',
+              WebkitMaskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskPosition: 'center',
+              maskSize: 'contain',
+              WebkitMaskSize: 'contain',
+            }}
+          />
+          <span className="relative text-[10px] font-semibold text-zinc-400 group-hover:text-blue-400 transition-colors tracking-wide">Use MCP</span>
         </button>
       </div>
       <p className="text-[11px] text-zinc-600 font-medium tracking-wide">Start by adding a trigger</p>

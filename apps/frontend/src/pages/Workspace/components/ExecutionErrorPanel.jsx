@@ -1,35 +1,15 @@
 import { motion } from "framer-motion";
-import { X, Wand2 } from "lucide-react";
+import { X } from "lucide-react";
 import useWorkspaceStore from "../../../store/workspaceStore";
 
 export default function ExecutionErrorPanel({ liveExecutionState, onDismiss }) {
-  const queueBrianMessage = useWorkspaceStore((s) => s.queueBrianMessage);
-  const nodes             = useWorkspaceStore((s) => s.nodes);
+  const nodes = useWorkspaceStore((s) => s.nodes);
 
   const failedCursors = liveExecutionState?.cursors?.filter((c) => c.status === "failed") || [];
   const firstFailed   = failedCursors[0];
   const failedNode    = firstFailed ? nodes.find((n) => n.id === firstFailed.nodeId) : null;
   const failedLabel   = failedNode?.data?.label || firstFailed?.nodeId || "a node";
   const errorDetail   = firstFailed?.errorMessage?.split(" — ")[0] || "An unexpected error occurred.";
-
-  const handleFixViaBrian = () => {
-    const workflowSummary = nodes
-      .map((n) => `- ${n.data.label} (${n.data.backendType})`)
-      .join("\n");
-    const prompt = [
-      `My workflow just failed during execution.`,
-      ``,
-      `Failed node: **${failedLabel}**`,
-      `Error: ${errorDetail}`,
-      ``,
-      `Workflow nodes:`,
-      workflowSummary,
-      ``,
-      `Can you diagnose what went wrong and suggest a fix?`,
-    ].join("\n");
-    queueBrianMessage(prompt);
-    onDismiss();
-  };
 
   return (
     <motion.div
@@ -84,16 +64,6 @@ export default function ExecutionErrorPanel({ liveExecutionState, onDismiss }) {
 
       {/* Footer */}
       <div className="flex items-center gap-2 px-4 py-3">
-        <button
-          onClick={handleFixViaBrian}
-          className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-white transition-colors"
-          style={{ background: "#2a2a2a", border: "1px solid #3a3a3a", borderRadius: 6 }}
-          onMouseEnter={e => e.currentTarget.style.background = "#333"}
-          onMouseLeave={e => e.currentTarget.style.background = "#2a2a2a"}
-        >
-          <Wand2 className="w-3.5 h-3.5" />
-          Fix via Brian
-        </button>
         <button
           onClick={onDismiss}
           className="px-4 py-2 text-[12px] font-semibold text-neutral-500 hover:text-neutral-300 transition-colors"

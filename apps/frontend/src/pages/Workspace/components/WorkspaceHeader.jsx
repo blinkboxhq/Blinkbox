@@ -13,7 +13,6 @@ import CollabDMChat from './CollabDMChat';
 import NotificationBell from '../../../components/NotificationBell';
 import githubLogo from '../../../assets/credentials/github.svg';
 import { getSocket } from '../../../lib/socket';
-import brianLogo from '../../../assets/brian.svg';
 
 // ── Unified button tokens ─────────────────────────────────────────────────────
 const H = 'h-7';
@@ -68,8 +67,6 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
   const nodes          = useWorkspaceStore(s => s.nodes);
   const panels         = useWorkspaceStore(s => s.panels);
   const togglePanel    = useWorkspaceStore(s => s.togglePanel);
-  const isBrianOpen    = useWorkspaceStore(s => s.isBrianOpen);
-  const setBrianOpen   = useWorkspaceStore(s => s.setBrianOpen);
   const nodeCount      = nodes.length;
 
   // Keyboard shortcuts — Cmd+S / Cmd+Enter still work without visible Run
@@ -125,8 +122,6 @@ export default function WorkspaceHeader({ forceDashboard = false }) {
   const panelToggles = [
     { key: 'leftSidebar', title: 'Left sidebar (⌘1)',  active: panels.leftSidebar, onClick: () => togglePanel('leftSidebar'), icon: <PanelLeft  className="w-3.5 h-3.5" /> },
     { key: 'bottomChat',  title: 'Chat panel (⌘2)',    active: panels.bottomChat,  onClick: () => togglePanel('bottomChat'),  icon: <PanelBottom className="w-3.5 h-3.5" /> },
-    { key: 'brian',       title: 'Brian AI (⌘3)',       active: isBrianOpen,        onClick: () => setBrianOpen(!isBrianOpen),
-      icon: <img src={brianLogo} alt="Brian" className="w-3.5 h-3.5 object-contain rounded" /> },
   ];
 
   return (
