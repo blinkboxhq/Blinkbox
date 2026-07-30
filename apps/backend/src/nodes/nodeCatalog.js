@@ -57,6 +57,7 @@ export const PICKER_NODES = [
   {"key":"docker_trigger","label":"Docker Trigger","category":"trigger","pickers":["trigger"],"executable":true,"documented":false},
   {"key":"elevenlabs","label":"ElevenLabs","category":"infra","pickers":["action","agent"],"executable":true,"documented":true,"agentSlot":"integration","integration":"elevenlabs"},
   {"key":"email_parser","label":"Email Parser","category":"infra","pickers":["action"],"executable":true,"documented":true},
+  {"key":"email_verifier","label":"Email Verifier","category":"logic","pickers":["action"],"executable":true,"documented":true},
   {"key":"figma","label":"Figma","category":"apps","pickers":["action"],"executable":false,"documented":false},
   {"key":"figma_trigger","label":"On Figma Event","category":"trigger","pickers":["trigger"],"executable":true,"documented":false},
   {"key":"file_download","label":"File Download","category":"infra","pickers":["action"],"executable":false,"documented":false},

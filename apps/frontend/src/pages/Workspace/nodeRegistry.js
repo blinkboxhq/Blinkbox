@@ -14,6 +14,7 @@ import {
   Clock,
   Brain,
   Filter,
+  MailCheck,
   ArrowUpDown,
   Layers,
   LayoutGrid,
@@ -1757,6 +1758,16 @@ export const NodeRegistry = {
     ConfigPanel: FilterArrayNode,
     category: "logic",
     description: "Keep only the array items matching a condition",
+  },
+  email_verifier: {
+    label: "Email Verifier",
+    icon: MailCheck,
+    colorClass: "text-emerald-400",
+    accentColor: "52,211,153",
+    // TODO: build a dedicated ConfigPanel; stubbed with GenericActionNode for now.
+    ConfigPanel: GenericActionNode,
+    category: "logic",
+    description: "Reject role, disposable and unreachable (no-MX) email addresses",
   },
   sort_array: {
     label: "Sort Array",
