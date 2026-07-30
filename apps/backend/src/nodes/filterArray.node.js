@@ -104,11 +104,9 @@ export default {
         ? getPath(input, arrayPath)
         : input;
 
-    if (src == null) {
-      throw new Error(`[filterArray] no array found at path "${arrayPath || "(input)"}".`);
-    }
-
-    const arr = Array.isArray(src) ? src : [src];
+    // Upstream nodes (e.g. ai_agent with outputFormat:"json") have no fixed
+    // output schema — a missing path means "nothing to filter", not a hard error.
+    const arr = src == null ? [] : Array.isArray(src) ? src : [src];
     const key = String(outputKey || "items").trim() || "items";
 
     const filtered = arr.filter((item) => {
