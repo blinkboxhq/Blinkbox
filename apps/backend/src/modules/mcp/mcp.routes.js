@@ -13,9 +13,9 @@ const router = Router();
 const SERVER_INFO = { name: "blinkbox", title: "Blinkbox Automation", version: "1.0.0" };
 const INSTRUCTIONS =
   "Blinkbox builds and runs automations (like Zapier/Make/n8n) from chat. " +
-  "Use list_automations to see what exists, run_automation to run one now, " +
-  "create_automation to build a new one from a description, and " +
-  "activate_automation / deactivate_automation to turn them on and off.";
+  "Use list_automations to see what exists, run_automation to run one now, and " +
+  "activate_automation / deactivate_automation to turn them on and off. " +
+  "New automations are built in the visual builder, not from chat.";
 
 // Build a fresh MCP server bound to one user. The official SDK owns the wire
 // protocol — Accept negotiation, SSE framing, session/protocol-version headers,
