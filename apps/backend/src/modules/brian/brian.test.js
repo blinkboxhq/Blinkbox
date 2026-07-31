@@ -167,21 +167,59 @@ test("mergeBrianFlow upserts nodes and deduplicates edges", () => {
   assert.equal(merged.edges.length, 1);
 });
 
-test("Brian preflight asks before building credential-heavy Google RAG agents", () => {
-  const questions = buildBrianPreflightQuestions([
-    { role: "user", content: "make me a rag agent with all the google integrations and power it with chat and use claude cheaper one" },
-  ], "make me a rag agent with all the google integrations and power it with chat and use claude cheaper one");
+test("Brian preflight asks only for the points a Google RAG prompt left open", () => {
+  const prompt =
+    "make me a rag agent with all the google integrations and power it with chat and use claude cheaper one";
+  const questions = buildBrianPreflightQuestions([{ role: "user", content: prompt }], prompt);
 
   assert.ok(questions);
-  assert.equal(questions.questions.length, 5);
+  // Goal, entrypoint and model are all stated in the prompt — re-asking them is
+  // the loop this preflight exists to avoid. RAG with no named store still gets
+  // asked, because guessing provisions a vector DB the user may not have.
+  assert.deepEqual(questions.questions.map((q) => q.id), ["memory_provider", "credential_setup"]);
+  assert.ok(questions.intro.includes("Claude Haiku") || questions.intro.includes("Cheap Claude"));
+
+  const memory = questions.questions[0].options;
+  assert.equal(memory[0].value, "none");
+  assert.equal(memory.filter((o) => o.value === "agent_memory_pinecone").length, 1);
+});
+
+test("Brian preflight asks the full brief only when the prompt says almost nothing", () => {
+  const questions = buildBrianPreflightQuestions(
+    [{ role: "user", content: "build me an ai agent" }],
+    "build me an ai agent",
+  );
+
+  assert.ok(questions);
   assert.deepEqual(questions.questions.map((q) => q.id), [
     "agent_goal",
     "entrypoint",
     "model_choice",
-    "memory_provider",
     "credential_setup",
   ]);
-  assert.equal(questions.questions[3].options[0].value, "agent_memory_pinecone");
+  const models = questions.questions[2].options.map((o) => o.value);
+  assert.ok(models.includes("agent_nvidia_nim"));
+  assert.ok(questions.questions[1].options.some((o) => o.value === "manual"));
+  assert.ok(!questions.intro.includes("Haiku"));
+});
+
+test("Brian preflight builds instead of re-asking a prompt that answers the brief", () => {
+  const prompt =
+    "Research agent that finds leads. Entrypoint: manual run with a niche input. " +
+    "Model profile: NVIDIA NIM specifically, not Claude, not OpenAI, not Gemini. " +
+    "Memory: none. Credentials: use existing creds.";
+
+  assert.equal(buildBrianPreflightQuestions([{ role: "user", content: prompt }], prompt), null);
+});
+
+test("Brian preflight does not re-ask once a brief was already returned", () => {
+  const asked = [
+    { role: "user", content: "build me an ai agent" },
+    { role: "assistant", content: "Agent build brief: answer these 4 point(s)." },
+    { role: "user", content: "whatever you think is best" },
+  ];
+
+  assert.equal(buildBrianPreflightQuestions(asked, "whatever you think is best"), null);
 });
 
 test("Google RAG agent output uses cheap Claude, Pinecone memory, llm slot, and Google integrations", () => {

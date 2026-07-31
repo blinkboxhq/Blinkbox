@@ -813,14 +813,28 @@ export const TOOLS = [
           type: "boolean",
           description: "If true, turn the automation on right after creating it",
         },
+        brief_answers: {
+          type: "string",
+          description:
+            "Only when a previous create_automation call came back with a build brief: the user's answers to those questions, one per line. Pass the SAME prompt again alongside it — this is what tells the builder the brief is already answered so it builds instead of re-asking.",
+        },
       },
       required: ["prompt"],
       additionalProperties: false,
     },
     handler: async (args, api) => {
-      const brian = pick(
-        await api.post("/brian/chat", { messages: [{ role: "user", content: args.prompt }] }),
-      );
+      // Each tool call is its own HTTP request, so without this the builder sees
+      // a brand-new one-message conversation every time and re-asks the brief it
+      // already asked. Replaying the brief as a prior assistant turn is what
+      // threads that state across calls.
+      const messages = [{ role: "user", content: args.prompt }];
+      if (args.brief_answers) {
+        messages.push(
+          { role: "assistant", content: "Agent build brief: I asked for the missing details." },
+          { role: "user", content: String(args.brief_answers) },
+        );
+      }
+      const brian = pick(await api.post("/brian/chat", { messages }));
       const flow = brian.flow;
       if (!flow || !Array.isArray(flow.nodes) || !flow.nodes.length) {
         const qs =
@@ -839,7 +853,10 @@ export const TOOLS = [
                 })
                 .join("\n")}`
             : "";
-        return `I couldn't build a complete workflow from that yet.${qs}\n\n${brian.text || ""}`.trim();
+        const next = args.brief_answers
+        ? ""
+        : "\n\nAnswer these with the user, then call create_automation again with the SAME prompt plus brief_answers holding their answers.";
+      return `I couldn't build a complete workflow from that yet.${qs}${next}\n\n${brian.text || ""}`.trim();
       }
 
       const body = flowToWorkflow(flow, args.name || deriveName(args.prompt));
@@ -864,9 +881,34 @@ export const TOOLS = [
     },
   },
   {
+    name: "blinkbox_api_get",
+    description:
+      "Read ANY Blinkbox REST endpoint the user owns (GET only). Use this for every read the named tools above don't already cover — analytics, profile, workspace members, versions, credential metadata, workflow and run details. " +
+      "Pass a relative API path, e.g. '/analytics/overview', '/profile', '/automation/<id>'. " +
+      "This tool can only read; use blinkbox_api when you need POST/PATCH/PUT/DELETE. " +
+      "Off-limits for safety: auth, admin, billing, oauth, and API-key/connector management. Runs as the user, scoped to their own workspace.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Relative Blinkbox API path, e.g. '/analytics/overview' or '/automation/<id>'. Never a full URL.",
+        },
+      },
+      required: ["path"],
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      const { path } = normalizeApiPath(args.path);
+      const data = pick(await api.request({ method: "GET", url: path }));
+      const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      return text.length > 12000 ? text.slice(0, 12000) + "\n…(truncated)" : text;
+    },
+  },
+  {
     name: "blinkbox_api",
     description:
-      "Full control of Blinkbox: call ANY Blinkbox REST endpoint the user owns, with any HTTP method. Use this for anything the named tools above don't already do — analytics, profile, workspace members/invites, credentials, versions, feedback, duplicating/updating workflows, resuming/retrying/cancelling runs, and more. " +
+      "Full control of Blinkbox: call ANY Blinkbox REST endpoint the user owns, with any HTTP method. For plain reads prefer blinkbox_api_get, which needs no approval. Use this for anything the named tools above don't already do — analytics, profile, workspace members/invites, credentials, versions, feedback, duplicating/updating workflows, resuming/retrying/cancelling runs, and more. " +
       "Discover routes by reading what the app does; pass a relative API path (e.g. '/analytics/overview', '/profile', '/automation/<id>/duplicate'), the HTTP method, and an optional JSON body. " +
       "Methods: GET, POST, PATCH, PUT, DELETE. Anything destructive (DELETE, or POST/PUT/PATCH to a route that removes/cancels/overwrites) requires confirm:true — set it only when the user clearly asked to delete or replace something. " +
       "Off-limits for safety: auth, admin, billing, oauth, and API-key/connector management. Everything runs as the user, scoped to their own workspace, through every normal validation.",
@@ -926,8 +968,60 @@ export const TOOLS = [
   },
 ];
 
+// MCP tool annotations. A client uses these to decide whether a call can run
+// unattended or has to stop and collect a human approval first. A tool that
+// ships no annotations is treated as possibly-destructive, so every first call
+// to it blocks on an approval the connector surface may never be able to ask
+// for — which surfaces to the model as a bare "No approval received" and never
+// reaches this server at all. Declaring the reads read-only is what lets them
+// run without that round-trip; everything with a side effect stays gated on
+// purpose.
+const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const WRITE = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
+const WRITE_IDEMPOTENT = { ...WRITE, idempotentHint: true };
+const DESTRUCTIVE = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false };
+// Runs real workflow steps that reach third-party systems (send an email, write
+// a row) — never auto-approvable, and open-world by definition.
+const SIDE_EFFECTING = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true };
+
+const ANNOTATIONS = {
+  list_automations: { title: "List automations", ...READ },
+  get_automation: { title: "Get automation", ...READ },
+  get_execution: { title: "Get execution", ...READ },
+  get_execution_logs: { title: "Get execution logs", ...READ },
+  list_executions: { title: "List executions", ...READ },
+  list_nodes: { title: "List nodes", ...READ },
+  get_node: { title: "Get node", ...READ },
+  list_node_actions: { title: "List node actions", ...READ },
+  list_credentials: { title: "List credentials", ...READ },
+  blinkbox_api_get: { title: "Read any Blinkbox endpoint", ...READ },
+  run_automation: { title: "Run automation", ...SIDE_EFFECTING },
+  activate_automation: { title: "Activate automation", ...WRITE_IDEMPOTENT },
+  deactivate_automation: { title: "Deactivate automation", ...WRITE_IDEMPOTENT },
+  rename_automation: { title: "Rename automation", ...WRITE_IDEMPOTENT },
+  create_automation: { title: "Create automation", ...WRITE },
+  create_credential: { title: "Create credential", ...WRITE },
+  delete_automation: { title: "Delete automation", ...DESTRUCTIVE },
+  blinkbox_api: { title: "Call any Blinkbox endpoint", ...DESTRUCTIVE, openWorldHint: true },
+};
+
+// Fail at boot rather than shipping an unannotated tool — an unannotated tool is
+// invisibly unusable on approval-gated clients, which is the exact regression
+// this map exists to prevent.
+const UNANNOTATED = TOOLS.filter((t) => !ANNOTATIONS[t.name]).map((t) => t.name);
+if (UNANNOTATED.length) {
+  throw new Error(
+    `MCP tools missing annotations (add them to ANNOTATIONS in mcp.tools.js): ${UNANNOTATED.join(", ")}`,
+  );
+}
+
 export function listToolSpecs() {
-  return TOOLS.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
+  return TOOLS.map(({ name, description, inputSchema }) => ({
+    name,
+    description,
+    inputSchema,
+    annotations: ANNOTATIONS[name],
+  }));
 }
 
 export async function runTool(name, args, userId) {

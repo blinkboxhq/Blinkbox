@@ -118,3 +118,65 @@ test("create_credential requires a secret and stores it under the node's type", 
   assert.equal(api.posts[0].body.type, "stripe");
   assert.ok(!out.includes("sk_test_x"), "the secret must never be echoed back");
 });
+
+// An MCP tool that ships no annotations is treated by approval-gated clients as
+// possibly-destructive, so every first call blocks on an approval the connector
+// may never be able to ask for — the model just sees "No approval received" and
+// the request never reaches this server. Reads have to say they are reads.
+test("every tool declares annotations and reads are marked read-only", () => {
+  const specs = listToolSpecs();
+  assert.equal(specs.length, TOOLS.length);
+
+  for (const spec of specs) {
+    assert.ok(spec.annotations, `${spec.name} has no annotations`);
+    assert.equal(typeof spec.annotations.readOnlyHint, "boolean", `${spec.name} readOnlyHint`);
+    assert.equal(typeof spec.annotations.title, "string", `${spec.name} title`);
+  }
+
+  const readOnly = specs.filter((s) => s.annotations.readOnlyHint).map((s) => s.name).sort();
+  assert.deepEqual(readOnly, [
+    "blinkbox_api_get",
+    "get_automation",
+    "get_execution",
+    "get_execution_logs",
+    "get_node",
+    "list_automations",
+    "list_credentials",
+    "list_executions",
+    "list_node_actions",
+    "list_nodes",
+  ]);
+
+  for (const spec of specs) {
+    if (spec.annotations.readOnlyHint) {
+      assert.equal(spec.annotations.destructiveHint, false, `${spec.name} cannot be read-only and destructive`);
+    }
+  }
+
+  const del = specs.find((s) => s.name === "delete_automation");
+  assert.equal(del.annotations.destructiveHint, true);
+  // The write passthrough accepts DELETE, so it can never claim to be read-only.
+  const passthrough = specs.find((s) => s.name === "blinkbox_api");
+  assert.equal(passthrough.annotations.readOnlyHint, false);
+  assert.equal(passthrough.annotations.destructiveHint, true);
+});
+
+test("create_automation threads answered brief state back to the builder", async () => {
+  const posts = [];
+  const api = {
+    post: async (url, body) => {
+      posts.push({ url, body });
+      return { status: 200, data: { text: "built", flow: { nodes: [{ id: "n1" }], edges: [] } } };
+    },
+    get: async () => ({ status: 200, data: {} }),
+  };
+
+  await call("create_automation", { name: "Lead Finder", prompt: "find leads", brief_answers: "Memory: none" }, api);
+
+  const messages = posts[0].body.messages;
+  assert.equal(messages[0].content, "find leads");
+  // Without a prior assistant turn the builder sees a brand-new conversation and
+  // re-asks the brief it already asked.
+  assert.equal(messages.at(-2).role, "assistant");
+  assert.equal(messages.at(-1).content, "Memory: none");
+});
