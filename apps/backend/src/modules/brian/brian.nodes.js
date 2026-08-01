@@ -260,20 +260,6 @@ export const NODE_KB = {
       { k: "outputKey", t: "string", r: false, ex: "items", d: "Key name for result array" },
     ],
   },
-  email_verifier: {
-    label: "Email Verifier",
-    out: ["verified", "rejected", "verifiedCount", "rejectedCount", "domainsChecked"],
-    fields: [
-      { k: "arrayPath", t: "string", r: true, ex: "{{$json.leads}}", d: "Array of items to verify" },
-      { k: "emailField", t: "string", r: false, ex: "email", d: "Field name holding the email address (default email)" },
-      { k: "rejectRoleAddresses", t: "boolean", r: false, ex: "true", d: "Reject info@/admin@/support@ style addresses (default true)" },
-      { k: "rejectDisposable", t: "boolean", r: false, ex: "true", d: "Reject known disposable-email domains (default true)" },
-      { k: "requireMx", t: "boolean", r: false, ex: "true", d: "Reject domains with no MX record (default true)" },
-      { k: "mxTimeoutMs", t: "number", r: false, ex: "5000", d: "Per-domain MX lookup timeout in ms (default 5000)" },
-      { k: "outputVerifiedKey", t: "string", r: false, ex: "verified", d: "Key name for the verified array (default verified)" },
-      { k: "outputRejectedKey", t: "string", r: false, ex: "rejected", d: "Key name for the rejected array (default rejected)" },
-    ],
-  },
   sort_array: {
     label: "Sort Array",
     out: ["sorted"],

@@ -99,7 +99,6 @@ import cryptoUtils     from "./cryptoUtils.node.js";
 import templateRenderer from "./templateRenderer.node.js";
 import imageResize     from "./imageResize.node.js";
 import aggregate       from "./aggregate.node.js";
-import emailVerifier   from "./emailVerifier.node.js";
 import pdfGenerator    from "./pdfGenerator.node.js";
 import emailParser     from "./emailParser.node.js";
 import vectorMemory    from "./vectorMemory.node.js";
@@ -322,7 +321,6 @@ const rawNodeRegistry = {
   aggregate:         aggregate,
   pdf_generator:     pdfGenerator,
   email_parser:      emailParser,
-  email_verifier:    emailVerifier,
   ocr:               ocr,
   json_transform:    jsonTransform,
   translation:       translation,
