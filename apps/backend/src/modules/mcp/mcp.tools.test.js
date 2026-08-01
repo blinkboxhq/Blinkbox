@@ -160,3 +160,23 @@ test("every tool declares annotations and reads are marked read-only", () => {
   assert.equal(passthrough.annotations.readOnlyHint, false);
   assert.equal(passthrough.annotations.destructiveHint, true);
 });
+
+test("create_automation threads answered brief state back to the builder", async () => {
+  const posts = [];
+  const api = {
+    post: async (url, body) => {
+      posts.push({ url, body });
+      return { status: 200, data: { text: "built", flow: { nodes: [{ id: "n1" }], edges: [] } } };
+    },
+    get: async () => ({ status: 200, data: {} }),
+  };
+
+  await call("create_automation", { name: "Lead Finder", prompt: "find leads", brief_answers: "Memory: none" }, api);
+
+  const messages = posts[0].body.messages;
+  assert.equal(messages[0].content, "find leads");
+  // Without a prior assistant turn the builder sees a brand-new conversation and
+  // re-asks the brief it already asked.
+  assert.equal(messages.at(-2).role, "assistant");
+  assert.equal(messages.at(-1).content, "Memory: none");
+});

@@ -48,6 +48,51 @@ async function resolveAutomationId(api, ref) {
   return hit._id;
 }
 
+function deriveName(prompt) {
+  const s = String(prompt || "").trim().replace(/\s+/g, " ");
+  if (!s) return "New automation";
+  return s.length > 60 ? s.slice(0, 57) + "…" : s;
+}
+
+// Map Brian's canvas flow (nodes carry `backendType`) onto the save schema
+// (nodes carry `type`) — the same shape the visual builder persists.
+function flowToWorkflow(flow, name) {
+  const nodes = (flow.nodes || [])
+    .map((n) => ({
+      id: n.id,
+      type: n.backendType || n.data?.backendType || n.type || n.data?.type,
+      // `data` on the save schema is the node's flat config and `description` is
+      // its display name. Passing the canvas node's nested data through instead
+      // buries the config one level deep (config.config) and loses the name.
+      data: n.data?.config || n.config || {},
+      description: n.data?.label || n.label || "",
+      position: n.position || { x: n.x || 0, y: n.y || 0 },
+    }))
+    .filter((n) => n.id && n.type);
+  const edges = (flow.edges || [])
+    .map((e) => ({
+      id: e.id || `${e.source}-${e.target}`,
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle ?? null,
+      targetHandle: e.targetHandle ?? null,
+    }))
+    .filter((e) => e.source && e.target);
+  const triggerNode =
+    (flow.nodes || []).find((n) => (n.data?.type || n.type) === "trigger") || flow.nodes?.[0];
+  const triggerType = triggerNode
+    ? triggerNode.backendType || triggerNode.data?.backendType || triggerNode.type
+    : "manualTrigger";
+  return {
+    name,
+    trigger: triggerType || "manualTrigger",
+    nodes,
+    edges,
+    entryNodeId: triggerNode?.id || nodes[0]?.id || "",
+    description: "",
+  };
+}
+
 // ── Universal-API guards ──────────────────────────────────────────────────────
 // blinkbox_api gives the connected model full control of Blinkbox: any REST
 // route, any method, run as the user. Three safety layers keep "do anything"
@@ -208,7 +253,7 @@ export const TOOLS = [
       const data = pick(await api.get("/automation", { params: { limit: 50 } }));
       const items = data.automations || [];
       if (!items.length)
-        return `No automations yet. Build one in the visual builder at ${FRONTEND_URL}, or POST /automation through blinkbox_api.`;
+        return "No automations yet. Use create_automation to build one from a plain-English description.";
       const lines = items.map((a) => {
         const status = a.active ? "🟢 active" : "⚪ inactive";
         return `• ${a.name || "Untitled"} — ${status} — trigger: ${a.trigger || "—"} — ${a.nodeCount ?? "?"} steps (id: ${a._id})`;
@@ -403,7 +448,7 @@ export const TOOLS = [
     description:
       "Browse or search Blinkbox's node catalog — the building blocks of a workflow. Only nodes the user can actually reach from a picker are listed, so anything returned here is safe to build with. " +
       "Filter by picker ('trigger' = what starts a workflow, 'action' = a step, 'agent' = AI-agent models/memory/tools), by category, or by free-text search over the name and key. " +
-      "Use this to find real node keys, then get_node to learn how to configure one.",
+      "Use this to find real node keys before create_automation, then get_node to learn how to configure one.",
     inputSchema: {
       type: "object",
       properties: {
@@ -753,6 +798,89 @@ export const TOOLS = [
     },
   },
   {
+    name: "create_automation",
+    description:
+      "Build a brand-new automation from a plain-English description using Blinkbox's AI builder. Example: 'When a Stripe payment succeeds, send me a Slack DM'. Optionally activate it immediately.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prompt: {
+          type: "string",
+          description: "Plain-English description of the automation to build",
+        },
+        name: { type: "string", description: "Optional name for the new automation" },
+        activate: {
+          type: "boolean",
+          description: "If true, turn the automation on right after creating it",
+        },
+        brief_answers: {
+          type: "string",
+          description:
+            "Only when a previous create_automation call came back with a build brief: the user's answers to those questions, one per line. Pass the SAME prompt again alongside it — this is what tells the builder the brief is already answered so it builds instead of re-asking.",
+        },
+      },
+      required: ["prompt"],
+      additionalProperties: false,
+    },
+    handler: async (args, api) => {
+      // Each tool call is its own HTTP request, so without this the builder sees
+      // a brand-new one-message conversation every time and re-asks the brief it
+      // already asked. Replaying the brief as a prior assistant turn is what
+      // threads that state across calls.
+      const messages = [{ role: "user", content: args.prompt }];
+      if (args.brief_answers) {
+        messages.push(
+          { role: "assistant", content: "Agent build brief: I asked for the missing details." },
+          { role: "user", content: String(args.brief_answers) },
+        );
+      }
+      const brian = pick(await api.post("/brian/chat", { messages }));
+      const flow = brian.flow;
+      if (!flow || !Array.isArray(flow.nodes) || !flow.nodes.length) {
+        const qs =
+          brian.questions && brian.questions.length
+            ? `\n\nTo build it I need a bit more detail:\n${brian.questions
+                .map((q, i) => {
+                  const text = typeof q === "string" ? q : q?.question || q?.label || q?.id || "";
+                  const opts = Array.isArray(q?.options)
+                    ? q.options
+                        .map((o) =>
+                          typeof o === "string" ? o : `${o?.label}${o?.hint ? ` — ${o.hint}` : ""}`,
+                        )
+                        .join(" | ")
+                    : "";
+                  return `${i + 1}. ${text}${opts ? `\n   options: ${opts}` : ""}`;
+                })
+                .join("\n")}`
+            : "";
+        const next = args.brief_answers
+        ? ""
+        : "\n\nAnswer these with the user, then call create_automation again with the SAME prompt plus brief_answers holding their answers.";
+      return `I couldn't build a complete workflow from that yet.${qs}${next}\n\n${brian.text || ""}`.trim();
+      }
+
+      const body = flowToWorkflow(flow, args.name || deriveName(args.prompt));
+      const saveRes = await api.post("/automation", body);
+      if (saveRes.status < 200 || saveRes.status >= 300) {
+        const why = saveRes.data?.issues
+          ? JSON.stringify(saveRes.data.issues)
+          : saveRes.data?.message || saveRes.data?.error || `HTTP ${saveRes.status}`;
+        return `I designed the workflow but couldn't auto-save it (${why}). Here's the plan so you can finish it in the builder:\n\n${brian.text || ""}`;
+      }
+
+      const saved = saveRes.data.automation || {};
+      let out = `✅ Created "${saved.name}" (id: ${saved._id}).\nOpen it: ${FRONTEND_URL}/workspace/${saved._id}`;
+      if (args.activate) {
+        const act = await api.post(`/automation/${saved._id}/activate`, {});
+        out +=
+          act.status >= 200 && act.status < 300
+            ? "\n🟢 Activated — it's live."
+            : `\n⚠️ Created but couldn't activate yet: ${act.data?.message || act.data?.error || "validation failed"}. Open it in the builder to finish setup.`;
+      }
+      return out;
+    },
+  },
+  {
     name: "blinkbox_api_get",
     description:
       "Read ANY Blinkbox REST endpoint the user owns (GET only). Use this for every read the named tools above don't already cover — analytics, profile, workspace members, versions, credential metadata, workflow and run details. " +
@@ -871,6 +999,7 @@ const ANNOTATIONS = {
   activate_automation: { title: "Activate automation", ...WRITE_IDEMPOTENT },
   deactivate_automation: { title: "Deactivate automation", ...WRITE_IDEMPOTENT },
   rename_automation: { title: "Rename automation", ...WRITE_IDEMPOTENT },
+  create_automation: { title: "Create automation", ...WRITE },
   create_credential: { title: "Create credential", ...WRITE },
   delete_automation: { title: "Delete automation", ...DESTRUCTIVE },
   blinkbox_api: { title: "Call any Blinkbox endpoint", ...DESTRUCTIVE, openWorldHint: true },
