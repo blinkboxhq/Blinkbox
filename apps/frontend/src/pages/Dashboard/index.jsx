@@ -303,17 +303,6 @@ export default function Dashboard() {
     setIsCreating(false);
   };
 
-  const handlePickTemplate = async (prompt) => {
-    if (isCreating) return;
-    const name = prompt.length > 48 ? `${prompt.slice(0, 45)}…` : prompt;
-    setIsCreating(true); setSystemError(null);
-    try {
-      const r = await api.post('/api/automation', { name, description: '', trigger: 'manual' });
-      if (r.data?.success) navigate(`/workspace/${r.data.automation._id}`, { state: { brianPrompt: prompt } });
-    } catch (e) { setSystemError(e.message || 'Failed.'); }
-    setIsCreating(false);
-  };
-
   const handleDelete = async (id) => {
     try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); }
     catch { toast.error('Failed to delete workflow'); }
@@ -518,7 +507,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} onPickTemplate={handlePickTemplate} />
+              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
 
             ) : viewMode === 'list' ? (
               /* ── LIST VIEW ── */
