@@ -5,8 +5,9 @@ import api from '../../lib/api';
 import { GoogleLogin } from '@react-oauth/google';
 import AmbientBackground from '../../components/AmbientBackground';
 import logo from '../../assets/logo.svg';
+import { IS_SELF_HOSTED } from '../../config/selfHost';
 
-const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID && !IS_SELF_HOSTED;
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(false);

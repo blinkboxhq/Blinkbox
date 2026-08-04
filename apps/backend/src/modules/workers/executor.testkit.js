@@ -54,7 +54,7 @@ mock.module("../../infra/delay.scheduler.js", {
     },
   },
 });
-mock.module("../../infra/credit.engine.js", {
+mock.module("../../infra/credit.gateway.js", {
   namedExports: { checkCredits: async () => ({ allowed: true }), deductCredits: noop },
 });
 mock.module("../../nodes/agentTools.registry.js", { defaultExport: { resolve: () => null } });

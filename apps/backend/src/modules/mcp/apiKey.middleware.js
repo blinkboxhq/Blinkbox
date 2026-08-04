@@ -66,7 +66,13 @@ export async function verifyMcpAuth(req, res, next) {
 
   if (token.startsWith("bb_")) {
     try {
-      const record = await ApiKey.findOne({ hashedKey: hashApiKey(token), revoked: false });
+      // scope pins this to connector keys — a self-hosted license key grants
+      // only the credits API, never a user's full MCP surface.
+      const record = await ApiKey.findOne({
+        hashedKey: hashApiKey(token),
+        scope: "mcp",
+        revoked: false,
+      });
       if (!record) return challenge401(req, res, "invalid_token", "Invalid or revoked API key.");
       req.user = { id: record.userId, role: "user" };
       req.apiKeyId = record._id;

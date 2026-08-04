@@ -12,7 +12,7 @@ import { acquireLock, releaseLock, renewLock } from "../../infra/redis.lock.js";
 import { emitExecutionUpdate, emitNodeStatus } from "../../infra/socket.server.js";
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
-import { checkCredits, deductCredits } from "../../infra/credit.engine.js";
+import { checkCredits, deductCredits } from "../../infra/credit.gateway.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
 import { describeMemoryNode } from "../../nodes/agentMemory.js";
 import { toPlatformTool } from "../../nodes/integrationManifest.js";
@@ -225,17 +225,24 @@ export async function processCursor({ executionId, cursorId }) {
   // CREDIT GATE: Check quota before executing this node
   const creditCheck = await checkCredits(execution.workspaceId, node.type);
   if (!creditCheck.allowed) {
+    // Self-hosted instances meter over the network, so "cannot bill" is a
+    // distinct failure from "out of credits" and needs its own wording.
+    const blocked =
+      creditCheck.reason === "invalid_license"
+        ? "Self-hosted license key is invalid or revoked. Check SELF_HOST_LICENSE_KEY."
+        : creditCheck.reason === "metering_unavailable"
+          ? "Cannot reach Blinkbox cloud to meter this node. Execution paused until connectivity returns."
+          : `Credit quota exceeded: ${creditCheck.remaining} remaining, need ${creditCheck.cost}. Upgrade your plan to continue.`;
+
     await emitExecutionEvent(execution._id, {
       type: "quota_exceeded",
       nodeId: node.id,
-      message: `Credit limit reached (${creditCheck.creditsUsed}/${creditCheck.monthlyLimit}). Node "${node.type}" costs ${creditCheck.cost} credits.`,
-      meta: { plan: creditCheck.plan, remaining: creditCheck.remaining, cost: creditCheck.cost },
+      message: creditCheck.reason
+        ? blocked
+        : `Credit limit reached (${creditCheck.creditsUsed}/${creditCheck.monthlyLimit}). Node "${node.type}" costs ${creditCheck.cost} credits.`,
+      meta: { plan: creditCheck.plan, remaining: creditCheck.remaining, cost: creditCheck.cost, reason: creditCheck.reason },
     });
-    await _markCursorFailed(
-      execution, cursor,
-      `Credit quota exceeded: ${creditCheck.remaining} remaining, need ${creditCheck.cost}. Upgrade your plan to continue.`,
-      "quota",
-    );
+    await _markCursorFailed(execution, cursor, blocked, "quota");
     return;
   }
 

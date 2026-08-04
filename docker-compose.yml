@@ -1,0 +1,83 @@
+# Blinkbox — self-hosted install.
+#
+#   cp docker/env.example .env && $EDITOR .env
+#   docker compose up -d
+#
+# Workflows, executions and credentials live in the Mongo below — on your disk,
+# in your network. Credits are metered against your Blinkbox cloud account via
+# SELF_HOST_LICENSE_KEY, so plan and purchased credits carry over unchanged.
+
+name: blinkbox
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/blinkbox
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env (exactly 32 chars)}
+      SELF_HOSTED: "true"
+      CLOUD_API_URL: ${CLOUD_API_URL:-https://api.blinkbox.net}
+      SELF_HOST_LICENSE_KEY: ${SELF_HOST_LICENSE_KEY:?get one at blinkbox.net → Settings → Self-hosting}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      # Optional — your own provider keys for AI and integration nodes.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3000}
+        VITE_SELF_HOSTED: "true"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  mongo-data:
+  redis-data:

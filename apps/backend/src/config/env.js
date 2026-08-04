@@ -18,6 +18,10 @@ if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 32) {
   throw new Error("FATAL: ENCRYPTION_KEY must be exactly 32 characters");
 }
 
+if (process.env.SELF_HOSTED === "true" && !process.env.SELF_HOST_LICENSE_KEY) {
+  throw new Error("FATAL: SELF_HOST_LICENSE_KEY is required when SELF_HOSTED=true");
+}
+
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 // BACKEND_PUBLIC_URL must be the public-facing URL (e.g. https://blinkbox-backend-production.up.railway.app)
@@ -194,3 +198,11 @@ export const ALERT_EMAIL_PASS   = process.env.ALERT_EMAIL_PASS   || null;
 export const SLACK_WEBHOOK_URL  = process.env.SLACK_WEBHOOK_URL  || null;
 export const ENABLE_SHELL_TOOLS    = process.env.ENABLE_SHELL_TOOLS    === "true";
 export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true";
+
+// ── Self-hosted deployments ───────────────────────────────────────────────────
+// A self-hosted container runs the app + its own local Mongo/Redis, but credits
+// and billing stay authoritative on the central Blinkbox cloud API — the license
+// key is never a database credential, only a bearer token for the credits API.
+export const SELF_HOSTED      = process.env.SELF_HOSTED === "true";
+export const CLOUD_API_URL    = process.env.CLOUD_API_URL    || "https://api.blinkbox.net";
+export const SELF_HOST_LICENSE_KEY = process.env.SELF_HOST_LICENSE_KEY || null;

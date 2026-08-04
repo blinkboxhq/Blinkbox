@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/build
+**/.vite
+**/*.log
+.git
+.github
+.claude
+.env
+.env.*
+**/.DS_Store
+docs
+evals

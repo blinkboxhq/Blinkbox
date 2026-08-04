@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import TopProgressBar from './components/TopProgressBar';
 import useGlowBorder from './hooks/useGlowBorder';
 import useCredentialsStore from './store/credentialsStore';
+import { IS_SELF_HOSTED } from './config/selfHost';
 const Landing      = lazy(() => import('./pages/Landing'));
 const LandingV2    = lazy(() => import('./pages/Landing/LandingV2'));
 const Auth         = lazy(() => import('./pages/auth'));
@@ -84,7 +85,14 @@ export default function App() {
         <Toaster theme="dark" position="top-center" richColors expand={false} closeButton duration={5000} />
 <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<RequireGuest><LandingV2 /></RequireGuest>} />
+            <Route
+              path="/"
+              element={
+                IS_SELF_HOSTED
+                  ? <Navigate to="/login" replace />
+                  : <RequireGuest><LandingV2 /></RequireGuest>
+              }
+            />
             <Route path="/login" element={<RequireGuest><Auth /></RequireGuest>} />
             <Route path="/reset-password" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />

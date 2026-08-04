@@ -8,6 +8,7 @@ const apiKeySchema = new mongoose.Schema(
     // first chars of the raw key, safe to display so users can tell keys apart
     prefix: { type: String, required: true },
     label: { type: String, default: "Chatbot connector", maxlength: 100 },
+    scope: { type: String, enum: ["mcp", "selfhost"], default: "mcp", index: true },
     lastUsedAt: { type: Date, default: null },
     revoked: { type: Boolean, default: false },
   },
