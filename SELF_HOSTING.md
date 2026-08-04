@@ -23,69 +23,82 @@ spending your own credits.
 
 ## Requirements
 
-- Docker and Docker Compose
+- A Linux server with a public IPv4 (Docker is installed for you if missing)
 - ~4 GB RAM (Chromium for the scraper nodes is the heavy part)
 - A Blinkbox account on any paid plan
 
 ## Install
 
-```bash
-git clone https://github.com/your-org/blinkbox.git
-cd blinkbox
+Create a license key at **blinkbox.net → Self-host → New license**. It is shown
+once. Then, on your server:
 
-cp docker/env.example .env
+```bash
+curl -fsSL https://get.blinkbox.net/install.sh | sudo sh
 ```
 
-Fill in `.env`:
+It asks two things:
 
-1. **License key** — blinkbox.net → Settings → Self-hosting → *Create license*.
-   It is shown once. Paste it into `SELF_HOST_LICENSE_KEY`.
-2. **Secrets** — generate your own, they never leave your install:
-   ```bash
-   openssl rand -hex 32   # → JWT_SECRET
-   openssl rand -hex 16   # → ENCRYPTION_KEY (must be exactly 32 chars)
-   ```
+```
+? Paste your license key
+> bb_selfhost_••••••••••••••••••••
+✓ License valid — Pro plan
 
-Then:
+? Choose a name for this instance
+> acme
+✓ Reserved acme.blinkbox.net → 203.0.113.9
+✓ Blinkbox is running
 
-```bash
-docker compose up -d
+  https://acme.blinkbox.net
 ```
 
-Open **http://localhost:8080**. You land on the sign-in screen — create an
-account, and it lives in your local database. There is no marketing site and no
-social sign-in on a self-hosted install.
+That is the whole install. The name reserves `<name>.blinkbox.net`, the DNS A
+record is created for you, and Caddy issues the certificate on first visit. If
+the name is already taken it becomes `<name>-v2`, `-v3`, and so on.
 
-## Putting it on a domain
+Open the URL and create your account — it lives in the database on your machine.
+There is no marketing site and no social sign-in on a self-hosted install.
 
-The frontend inlines the API URL when it is built, so changing the address
-means rebuilding:
+Everything lands in `/opt/blinkbox`: `docker-compose.yml`, `docker/Caddyfile`
+and a `.env` holding your license key and the two secrets the installer
+generated. **Keep that `.env`.**
+
+### Non-interactive install
 
 ```bash
-# .env
-BACKEND_PUBLIC_URL=https://blinkbox.yourcompany.com/api
+BLINKBOX_LICENSE_KEY=bb_selfhost_… BLINKBOX_NAME=acme \
+  sh -c "$(curl -fsSL https://get.blinkbox.net/install.sh)"
+```
+
+## Using your own domain instead
+
+Point your own A record at the box, then:
+
+```bash
+# /opt/blinkbox/.env
+BLINKBOX_HOSTNAME=blinkbox.yourcompany.com
+BACKEND_PUBLIC_URL=https://blinkbox.yourcompany.com
 CORS_ORIGINS=https://blinkbox.yourcompany.com
 ```
 
 ```bash
-docker compose up -d --build
+cd /opt/blinkbox && docker compose up -d
 ```
 
-Terminate TLS at your own reverse proxy in front of the `frontend` service.
+No rebuild is needed — the frontend talks to whatever origin serves it.
 
 ## Upgrading
 
 ```bash
-git pull
-docker compose up -d --build
+cd /opt/blinkbox && docker compose pull && docker compose up -d
 ```
 
 Your data lives in the `mongo-data` and `redis-data` volumes and survives
-rebuilds.
+upgrades.
 
 ## Backups
 
 ```bash
+cd /opt/blinkbox
 docker compose exec mongo mongodump --archive=/tmp/bb.gz --gzip --db blinkbox
 docker compose cp mongo:/tmp/bb.gz ./blinkbox-backup.gz
 ```
@@ -96,8 +109,12 @@ credentials cannot be decrypted from a restore.
 ## Troubleshooting
 
 **"Self-hosted license key is invalid or revoked"** — the key was revoked, or
-`SELF_HOST_LICENSE_KEY` is mistyped. Mint a fresh one and
-`docker compose up -d` again.
+`SELF_HOST_LICENSE_KEY` in `/opt/blinkbox/.env` is mistyped. Mint a fresh one
+and `docker compose up -d` again.
+
+**The certificate never appears** — Caddy needs ports 80 and 443 reachable from
+the internet for the ACME challenge, and DNS needs a moment to propagate. Check
+your firewall and security groups, then `docker compose logs caddy`.
 
 **"Cannot reach Blinkbox cloud to meter this node"** — your instance cannot
 reach `api.blinkbox.net`. Executions pause rather than run unmetered, and

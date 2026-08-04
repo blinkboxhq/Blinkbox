@@ -35,6 +35,7 @@ services:
       retries: 10
 
   backend:
+    image: ghcr.io/blinkboxhq/blinkbox-backend:${BLINKBOX_TAG:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -66,11 +67,13 @@ services:
       - "${BACKEND_PORT:-3000}:3000"
 
   frontend:
+    image: ghcr.io/blinkboxhq/blinkbox-frontend:${BLINKBOX_TAG:-latest}
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
       args:
-        VITE_API_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3000}
+        # Deliberately no VITE_API_URL: a self-hosted build talks to its own
+        # origin, so one image works on every customer domain without a rebuild.
         VITE_SELF_HOSTED: "true"
     restart: unless-stopped
     depends_on:
@@ -78,6 +81,27 @@ services:
     ports:
       - "${FRONTEND_PORT:-8080}:80"
 
+  # Fronts the whole install on <name>.blinkbox.net and gets a Let's Encrypt
+  # certificate on its own — the DNS record the installer created is what makes
+  # the HTTP-01 challenge resolve.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    environment:
+      BLINKBOX_HOSTNAME: ${BLINKBOX_HOSTNAME:-:80}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+
 volumes:
   mongo-data:
   redis-data:
+  caddy-data:
+  caddy-config:

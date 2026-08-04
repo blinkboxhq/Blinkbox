@@ -10,8 +10,9 @@ import logoNotion from '../../../assets/credentials/notion.svg';
 import logoSlack from '../../../assets/credentials/slack-new-logo-logo-svgrepo-com.svg';
 import logoAirtable from '../../../assets/credentials/Airtable--Streamline-Svg-Logos.svg';
 import logoMicrosoft from '../../../assets/credentials/microsoft-color.svg';
+import { API_BASE } from '../../../config/selfHost';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = API_BASE;
 
 const TYPE_LABELS = {
   bearer: 'Bearer Token',

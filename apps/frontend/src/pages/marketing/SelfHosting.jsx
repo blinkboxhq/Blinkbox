@@ -2,31 +2,33 @@ import { Database, Server, Cpu } from 'lucide-react';
 import MarketingLayout from './MarketingLayout';
 
 const REQUIREMENTS = [
-  { icon: Cpu, label: 'Node.js 20+', desc: 'Runs the API and the execution engine.' },
-  { icon: Database, label: 'MongoDB + Redis', desc: 'Workflow storage, queues, and atomic locks.' },
-  { icon: Server, label: '2 GB RAM minimum', desc: 'A single small VM handles thousands of runs a day.' },
+  { icon: Server, label: 'A Linux box', desc: 'Any VM with a public IP. Docker is installed for you.' },
+  { icon: Cpu, label: '4 GB RAM', desc: 'Chromium for the scraper nodes is the heavy part.' },
+  { icon: Database, label: 'Nothing else', desc: 'Mongo and Redis come up in the stack, on your disk.' },
 ];
 
 const STEPS = [
   {
     n: '01',
-    title: 'Clone and install',
-    code: `git clone https://github.com/blinkboxhq/Blinkbox.git blinkbox
-cd blinkbox && npm install`,
+    title: 'Create a license key',
+    code: `blinkbox.net → Self-host → New license
+bb_selfhost_••••••••••••••••••••`,
   },
   {
     n: '02',
-    title: 'Point it at your databases',
-    code: `# apps/backend/.env
-MONGODB_URI=mongodb://localhost:27017/blinkbox
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=<generate-a-long-random-string>`,
+    title: 'Run one command',
+    code: `curl -fsSL https://get.blinkbox.net/install.sh | sudo sh
+
+? Paste your license key
+? Choose a name for this instance`,
   },
   {
     n: '03',
-    title: 'Run it',
-    code: `npm run dev        # backend :3000 + frontend :5174
-npm run start      # production mode`,
+    title: 'Open your instance',
+    code: `✓ Reserved acme.blinkbox.net → 203.0.113.9
+✓ Blinkbox is running
+
+https://acme.blinkbox.net`,
   },
 ];
 
@@ -36,7 +38,7 @@ export default function SelfHosting() {
       kicker="Self-hosting"
       plain="Your infra."
       gradient="Same engine."
-      sub="The Team plan ships the exact engine the cloud runs — cursor-based execution, crash recovery, credential vault — on hardware you control."
+      sub="One command, one license key, one name — and the exact engine the cloud runs sits on hardware you control, at name.blinkbox.net. Your plan and credits come with you."
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {REQUIREMENTS.map((req) => {
@@ -68,8 +70,10 @@ export default function SelfHosting() {
       </div>
 
       <p className="mt-12 max-w-[560px] text-[13px] leading-relaxed text-[#8c8c8c]">
-        Self-hosting licenses include update access and migration support —{' '}
-        <a href="mailto:hello@blinkbox.net" className="text-[#8fb4ff] hover:underline">talk to us</a> to get set up.
+        The installer reserves the subdomain, adds the DNS record and issues the certificate.
+        Workflows, logs and credentials never leave your machine; only credit metering talks
+        to the cloud. Questions —{' '}
+        <a href="mailto:hello@blinkbox.net" className="text-[#8fb4ff] hover:underline">talk to us</a>.
       </p>
     </MarketingLayout>
   );

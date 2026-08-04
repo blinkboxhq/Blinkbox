@@ -1,9 +1,20 @@
 import crypto from "crypto";
 import ApiKey from "../../models/apiKey.model.js";
+import SelfHostInstance from "../../models/selfHostInstance.model.js";
 import { hashApiKey } from "../mcp/apiKey.middleware.js";
 import { checkCredits, deductCredits, getNodeCost } from "../../infra/credit.engine.js";
+import { dnsEnabled, upsertARecord, deleteRecord } from "../../infra/dns.cloudflare.js";
+import { SELF_HOST_DOMAIN } from "../../config/env.js";
 
 const MAX_LICENSES = 5;
+const MAX_NAME_VERSIONS = 50;
+
+// Names that would collide with Blinkbox's own hostnames on the zone.
+const RESERVED_NAMES = new Set([
+  "www", "api", "app", "mcp", "admin", "mail", "smtp", "ns1", "ns2", "cdn",
+  "docs", "blog", "status", "get", "dash", "dashboard", "staging", "dev",
+  "test", "beta", "auth", "login", "billing", "support", "help", "blinkbox",
+]);
 
 // ── License management (dashboard, JWT-authenticated) ────────────────────────
 
@@ -66,10 +77,173 @@ export async function revokeLicense(req, res) {
     if (!result.matchedCount) {
       return res.status(404).json({ success: false, message: "License not found." });
     }
+    // The instance dies with its license, so its subdomain must not linger
+    // pointing at an IP the customer may hand back to their provider.
+    const instances = await SelfHostInstance.find({ licenseId: String(req.params.id), userId: req.user.id });
+    for (const inst of instances) {
+      if (dnsEnabled()) await deleteRecord(inst.dnsRecordId).catch(() => {});
+      await inst.deleteOne();
+    }
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false, message: "Failed to revoke license." });
   }
+}
+
+export async function listInstances(req, res) {
+  try {
+    const instances = await SelfHostInstance.find({ userId: req.user.id })
+      .select("name hostname ip version lastSeenAt createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ success: true, instances });
+  } catch {
+    res.status(500).json({ success: false, message: "Failed to list instances." });
+  }
+}
+
+// ── Instance registration (license-authenticated, called by the installer) ────
+
+export async function registerInstance(req, res) {
+  const requested = slugify(req.body?.name);
+  if (!requested) {
+    return res.status(400).json({
+      success: false,
+      message: "Name must be 3-30 characters, letters, numbers and dashes only.",
+    });
+  }
+  if (RESERVED_NAMES.has(requested)) {
+    return res.status(409).json({ success: false, message: `"${requested}" is reserved. Pick another name.` });
+  }
+
+  const ip = publicIPv4(req.body?.ip) || publicIPv4(sourceIP(req));
+  if (!ip) {
+    return res.status(400).json({
+      success: false,
+      message: "Could not determine a public IPv4 for this machine. Pass it explicitly.",
+    });
+  }
+  const version = String(req.body?.version || "").slice(0, 40) || null;
+
+  try {
+    // Re-running the installer on the same box is an update, not a collision —
+    // only somebody else's name forces a -v bump. A license that already owns
+    // acme-v2 keeps it when the installer is re-run with "acme".
+    let instance = await SelfHostInstance.findOne({ licenseId: String(req.licenseId) });
+    const keepsName =
+      instance && (instance.name === requested || instance.name.startsWith(`${requested}-v`));
+    let name = keepsName ? instance.name : requested;
+
+    if (!keepsName) {
+      name = await availableName(requested);
+      if (!name) {
+        return res.status(409).json({
+          success: false,
+          message: `"${requested}" is taken and all versioned variants are used. Pick another name.`,
+        });
+      }
+      if (instance) {
+        // One license, one instance: the box was re-registered under a different
+        // name, so its old subdomain must not keep pointing at it.
+        if (dnsEnabled()) await deleteRecord(instance.dnsRecordId).catch(() => {});
+        instance.dnsRecordId = null;
+        instance.name = name;
+      } else {
+        instance = new SelfHostInstance({
+          userId: req.licenseUserId,
+          licenseId: String(req.licenseId),
+          name,
+          hostname: `${name}.${SELF_HOST_DOMAIN}`,
+        });
+      }
+    }
+
+    const hostname = `${name}.${SELF_HOST_DOMAIN}`;
+    let dnsRecordId = instance.dnsRecordId;
+    let dns = "skipped";
+    if (dnsEnabled()) {
+      try {
+        dnsRecordId = await upsertARecord(hostname, ip, dnsRecordId);
+        dns = "ok";
+      } catch (err) {
+        console.error("[SelfHost] DNS provisioning failed:", err.message);
+        dns = "failed";
+      }
+    }
+
+    Object.assign(instance, { hostname, ip, version, dnsRecordId, lastSeenAt: new Date() });
+    await instance.save();
+
+    res.status(201).json({
+      success: true,
+      name,
+      hostname,
+      url: `https://${hostname}`,
+      ip,
+      dns,
+      renamed: name !== requested,
+    });
+  } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(409).json({ success: false, message: "That name was just taken. Try another." });
+    }
+    res.status(500).json({ success: false, message: "Failed to register instance." });
+  }
+}
+
+export async function heartbeat(req, res) {
+  try {
+    await SelfHostInstance.updateOne(
+      { licenseId: String(req.licenseId) },
+      { $set: { lastSeenAt: new Date(), ...(req.body?.version ? { version: String(req.body.version).slice(0, 40) } : {}) } },
+    );
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ success: false, message: "Heartbeat failed." });
+  }
+}
+
+function slugify(raw) {
+  const s = String(raw || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-|-$/g, "");
+  return s.length >= 3 && s.length <= 30 ? s : null;
+}
+
+// "acme" taken → acme-v2, acme-v3, … so a second box for the same team still
+// gets a predictable, related hostname instead of an outright rejection.
+async function availableName(base) {
+  for (let v = 1; v <= MAX_NAME_VERSIONS; v++) {
+    const candidate = v === 1 ? base : `${base}-v${v}`;
+    if (candidate.length > 40) break;
+    const taken = await SelfHostInstance.exists({ name: candidate });
+    if (!taken) return candidate;
+  }
+  return null;
+}
+
+function sourceIP(req) {
+  const fwd = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return fwd || req.ip || "";
+}
+
+// Rejects private, loopback, link-local and CGNAT space — a subdomain on our
+// zone must never be pointed at something the wider internet cannot reach.
+function publicIPv4(raw) {
+  const ip = String(raw || "").trim().replace(/^::ffff:/, "");
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
+  if (!m) return null;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  if ([a, Number(m[2]), Number(m[3]), Number(m[4])].some((n) => n > 255)) return null;
+  if (a === 0 || a === 10 || a === 127 || a >= 224) return null;
+  if (a === 169 && b === 254) return null;
+  if (a === 172 && b >= 16 && b <= 31) return null;
+  if (a === 192 && b === 168) return null;
+  if (a === 100 && b >= 64 && b <= 127) return null;
+  return ip;
 }
 
 // ── Credits API (license-authenticated, called by self-hosted instances) ─────

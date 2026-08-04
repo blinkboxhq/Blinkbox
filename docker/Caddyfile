@@ -1,0 +1,25 @@
+{$BLINKBOX_HOSTNAME} {
+	encode gzip
+
+	# The API, realtime socket and public webhook endpoints all live on the
+	# backend; everything else is the single-page app.
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+
+	handle /socket.io/* {
+		reverse_proxy backend:3000
+	}
+
+	handle /webhook/* {
+		reverse_proxy backend:3000
+	}
+
+	handle /health {
+		reverse_proxy backend:3000
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

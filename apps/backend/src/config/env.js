@@ -206,3 +206,10 @@ export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true
 export const SELF_HOSTED      = process.env.SELF_HOSTED === "true";
 export const CLOUD_API_URL    = process.env.CLOUD_API_URL    || "https://api.blinkbox.net";
 export const SELF_HOST_LICENSE_KEY = process.env.SELF_HOST_LICENSE_KEY || null;
+
+// Cloud side only: the installer asks for a name and we hand back
+// <name>.SELF_HOST_DOMAIN, pointed at the customer's public IP. Without a
+// Cloudflare token the register endpoint still reserves the name but skips DNS.
+export const SELF_HOST_DOMAIN     = process.env.SELF_HOST_DOMAIN     || "blinkbox.net";
+export const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN || null;
+export const CLOUDFLARE_ZONE_ID   = process.env.CLOUDFLARE_ZONE_ID   || null;

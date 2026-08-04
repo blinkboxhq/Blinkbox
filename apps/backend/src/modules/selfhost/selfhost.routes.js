@@ -9,6 +9,9 @@ import {
   deductLicenseCredits,
   licenseStatus,
   nodeCost,
+  listInstances,
+  registerInstance,
+  heartbeat,
 } from "./selfhost.controller.js";
 
 const router = Router();
@@ -17,8 +20,11 @@ const router = Router();
 router.post("/licenses", verifyToken, createLicense);
 router.get("/licenses", verifyToken, listLicenses);
 router.delete("/licenses/:id", verifyToken, revokeLicense);
+router.get("/instances", verifyToken, listInstances);
 
 // Self-hosted instances — metering against the license owner's workspace.
+router.post("/register", verifyLicense, registerInstance);
+router.post("/heartbeat", verifyLicense, heartbeat);
 router.get("/status", verifyLicense, licenseStatus);
 router.get("/cost/:nodeType", verifyLicense, nodeCost);
 router.post("/credits/check", verifyLicense, checkLicenseCredits);
