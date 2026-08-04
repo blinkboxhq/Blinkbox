@@ -11,7 +11,6 @@ import {
 import api from '../../lib/api';
 import { toast } from 'sonner';
 
-import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import UsagePage from './components/UsagePage';
 import BuyCredits from './components/BuyCredits';
@@ -378,7 +377,6 @@ export default function Dashboard() {
 
       <AmbientBackground />
 
-      <OnboardingModal />
       <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
 
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab === 'buy-credits' ? 'usage' : activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
