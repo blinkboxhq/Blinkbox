@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import AutoRecharge from './AutoRecharge';
+import RedeemGift from './RedeemGift';
 import { creditsToUsd, fmtCredits as fmt, fmtUsd, usedPercent } from '../../../lib/credits';
 
 const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' };
@@ -184,6 +185,8 @@ export default function UsagePage({ usage, onRefresh, onBuyCredits }) {
           </p>
         )}
       </div>
+
+      <RedeemGift onRedeemed={onRefresh} />
 
       <AutoRecharge usage={usage} catalog={catalog} onSaved={onRefresh} />
 

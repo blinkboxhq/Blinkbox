@@ -8,6 +8,7 @@
     "test": "node --import tsx --experimental-test-module-mocks --test \"src/**/*.test.js\" \"e2e/**/*.test.js\"",
     "typecheck": "tsc --noEmit",
     "catalog": "node scripts/generate-node-catalog.mjs && node scripts/generate-trigger-fields.mjs && node scripts/generate-operation-params.mjs",
+    "gift": "node --import tsx scripts/gift-card.mjs",
     "eval": "node evals/run.js",
     "eval:vc": "node evals/run.js --vc",
     "eval:agent": "node evals/run.js --agent"
