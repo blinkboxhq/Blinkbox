@@ -420,6 +420,10 @@ export async function processCursor({ executionId, cursorId }) {
         handler.run(resolvedConfig, branches, { workspaceId: execution.workspaceId, toolRegistry, triggerOutput: dynamicContext[automation.entryNodeId]?.[0]?.json }),
         nodeTimeoutMs,
       );
+      if (outputIsSkipped(rawOutput)) {
+        finalOutputs.__skipped = true;
+        finalOutputs.__skipReason = rawOutput.error;
+      }
       finalOutputs.push(...(Array.isArray(rawOutput) ? rawOutput.map((r) => (r.json ? r : { json: r })) : [{ json: rawOutput }]));
     } else
     for (let i = 0; i < inputItems.length; i++) {
@@ -492,6 +496,14 @@ export async function processCursor({ executionId, cursorId }) {
         finalOutputs.__stopBranch = true;
       }
 
+      // A node that refused to run (missing config, no credential) reports it in
+      // the payload rather than throwing. Record the first reason and keep going
+      // so the item's own output is still stored for diagnostics.
+      if (outputIsSkipped(rawOutput) && !finalOutputs.__skipped) {
+        finalOutputs.__skipped = true;
+        finalOutputs.__skipReason = rawOutput.error;
+      }
+
       const formatted = Array.isArray(rawOutput)
         ? rawOutput.map((r) => (r.json ? r : { json: r }))
         : [{ json: rawOutput }];
@@ -536,7 +548,52 @@ export async function processCursor({ executionId, cursorId }) {
     const latestCursor = latestExecution.cursors.id(cursorId);
     const duration = (performance.now() - startTime).toFixed(2);
 
-    if (!executionError) {
+    if (!executionError && finalOutputs.__skipped) {
+      // SKIPPED PATH — the node declined to run and said so in its payload
+      // instead of throwing. It did no work, so it is charged nothing, and the
+      // branch stops here unless the user wired a failure edge to handle it.
+      const skipReason = finalOutputs.__skipReason || `Node "${node.type}" was skipped.`;
+
+      await ExecutionData.findOneAndUpdate(
+        { executionId: latestExecution._id, nodeId: node.id },
+        {
+          output: finalOutputs,
+          log: {
+            nodeType: node.type,
+            status: "skipped",
+            error: skipReason,
+            input: resolvedInput,
+            duration,
+          },
+        },
+        { upsert: true },
+      );
+
+      latestCursor.status = "skipped";
+      latestCursor.errorMessage = skipReason;
+      latestCursor.lockedAt = null;
+      latestCursor.lockedBy = null;
+
+      console.warn(`[Skipped] Node [${node.id}] (${node.type}) did not run: ${skipReason}`);
+
+      await emitExecutionEvent(latestExecution._id, {
+        type: "node_skipped",
+        nodeId: node.id,
+        message: skipReason,
+        meta: { duration },
+      });
+
+      emitNodeStatus(execution.automationId?.toString() || execution.workflowId?.toString(), {
+        automationId: execution.automationId?.toString() || execution.workflowId?.toString(),
+        nodeId: node.id,
+        status: "skipped",
+        executionId: execution._id?.toString(),
+      });
+
+      if (hasFailureBranch(automation, node.id)) {
+        await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
+      }
+    } else if (!executionError) {
       // SUCCESS PATH
       await ExecutionData.findOneAndUpdate(
         { executionId: latestExecution._id, nodeId: node.id },
@@ -703,7 +760,8 @@ export async function processCursor({ executionId, cursorId }) {
 
     if (!stillActive) {
       const hasFailed = latestExecution.cursors.some((c) => c.status === "failed");
-      latestExecution.status = hasFailed ? "failed" : "executed";
+      const hasSkipped = latestExecution.cursors.some((c) => c.status === "skipped");
+      latestExecution.status = hasFailed ? "failed" : hasSkipped ? "partial" : "executed";
       latestExecution.completedAt = new Date();
 
       await emitExecutionEvent(latestExecution._id, {
@@ -802,6 +860,14 @@ function splitOutputsOn(node) {
 
 function hasFailureBranch(automation, nodeId) {
   return automation.edges.some((e) => e.source === nodeId && isFailureEdge(e));
+}
+
+// A node that cannot run at all returns { success:false, error, skipped:true }
+// instead of throwing, so classifyError never sees it. Keyed on `skipped` alone:
+// a bare success:false stays ordinary data unless the node opts into Split
+// outputs, which is a separate contract with its own test.
+function outputIsSkipped(raw) {
+  return !!raw && raw.skipped === true && raw.success === false;
 }
 
 // A node can report failure in its output without throwing. Under Split outputs

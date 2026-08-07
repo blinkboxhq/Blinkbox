@@ -7,6 +7,7 @@ process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
 
 export const enqueued = [];
 export const delays = [];
+export const deducted = [];
 
 export const stubRegistry = {
   stub_ok: { run: async () => ({ ok: true }) },
@@ -24,6 +25,11 @@ export const stubRegistry = {
     },
   },
   stub_soft_fail: { run: async () => ({ success: false, error: "upstream said no" }) },
+  // What a node returns when it cannot run at all — missing config, no
+  // credential. It does not throw, so nothing upstream classifies it.
+  stub_skipped: {
+    run: async () => ({ success: false, error: "stub: 'url' is required.", skipped: true }),
+  },
   stub_fanout: { run: async (config) => ({ __loopFanOut: true, items: config.items }) },
 };
 
@@ -55,7 +61,12 @@ mock.module("../../infra/delay.scheduler.js", {
   },
 });
 mock.module("../../infra/credit.gateway.js", {
-  namedExports: { checkCredits: async () => ({ allowed: true }), deductCredits: noop },
+  namedExports: {
+    checkCredits: async () => ({ allowed: true }),
+    deductCredits: async (workspaceId, payload) => {
+      deducted.push({ workspaceId, ...payload });
+    },
+  },
 });
 mock.module("../../nodes/agentTools.registry.js", { defaultExport: { resolve: () => null } });
 

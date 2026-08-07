@@ -7,6 +7,7 @@ import {
   processCursor,
   Execution,
   enqueued,
+  deducted,
 } from "./executor.testkit.js";
 
 before(startDb);
@@ -321,4 +322,85 @@ test("an edge from the legacy onFailure handle never fires on success", async ()
     (c) => !c._id.equals(cursorId),
   );
   assert.deepEqual(spawned.map((c) => c.nodeId), ["next"]);
+});
+
+test("a skipped node stops its branch and does not report success", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_skipped", data: {} },
+      { id: "next", type: "stub_ok", data: {} },
+    ],
+    edges: [{ id: "e1", source: "n1", target: "next" }],
+    cursorNode: "n1",
+  });
+
+  const deductedBefore = deducted.length;
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  const cursor = fresh.cursors.id(cursorId);
+  assert.equal(cursor.status, "skipped", "a node that refused to run is not completed");
+  assert.match(cursor.errorMessage, /'url' is required/, "the node's own reason survives");
+  assert.equal(
+    fresh.cursors.filter((c) => c.nodeId === "next").length,
+    0,
+    "the failed payload must not flow downstream",
+  );
+  assert.equal(fresh.status, "partial", "the run is not a clean success");
+  assert.equal(deducted.length, deductedBefore, "a node that did nothing is charged nothing");
+});
+
+test("a skipped node takes a wired failure branch instead of dying silently", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_skipped", data: {} },
+      { id: "ok", type: "stub_ok", data: {} },
+      { id: "rescue", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "ok" },
+      { id: "e2", source: "n1", target: "rescue", sourceHandle: "failed" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  const spawned = fresh.cursors.filter((c) => !c._id.equals(cursorId));
+  assert.equal(spawned.length, 1, "only the failure branch spawns");
+  assert.equal(spawned[0].nodeId, "rescue");
+});
+
+test("a skipped node reports node_skipped, not node_completed", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [{ id: "n1", type: "stub_skipped", data: {} }],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.cursors.id(cursorId).status, "skipped");
+  assert.equal(fresh.status, "partial");
+  assert.ok(fresh.completedAt, "the run still finishes");
+});
+
+test("a real failure still outranks a skip when both are present", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_skipped", data: {} },
+      { id: "bad", type: "stub_hard_fail", data: {} },
+    ],
+    cursorNode: "n1",
+    extraCursors: [{ nodeId: "bad", status: "pending" }],
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+  const mid = await Execution.findById(execution._id);
+  const badCursor = mid.cursors.find((c) => c.nodeId === "bad");
+  await processCursor({ executionId: execution._id, cursorId: badCursor._id });
+
+  const fresh = await Execution.findById(execution._id);
+  assert.equal(fresh.status, "failed", "a hard failure is not downgraded to partial");
 });

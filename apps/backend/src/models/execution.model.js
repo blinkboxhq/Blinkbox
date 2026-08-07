@@ -14,6 +14,7 @@ const CursorSchema = new mongoose.Schema(
         "waiting",
         "running",
         "completed",
+        "skipped",
         "failed",
         "cancelled",
       ], // Added running & cancelled
@@ -39,7 +40,7 @@ const NodeLogSchema = new mongoose.Schema(
   {
     nodeId: String,
     nodeType: String,
-    status: { type: String, enum: ["success", "failed"] },
+    status: { type: String, enum: ["success", "skipped", "failed"] },
     input: mongoose.Schema.Types.Mixed,
     output: mongoose.Schema.Types.Mixed,
     error: String,

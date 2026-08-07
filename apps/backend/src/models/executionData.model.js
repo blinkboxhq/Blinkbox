@@ -18,7 +18,7 @@ const ExecutionDataSchema = new mongoose.Schema(
     },
     log: {
       nodeType: String,
-      status: { type: String, enum: ["success", "failed"] },
+      status: { type: String, enum: ["success", "skipped", "failed"] },
       input: mongoose.Schema.Types.Mixed,
       error: String,
       executedAt: { type: Date, default: Date.now },

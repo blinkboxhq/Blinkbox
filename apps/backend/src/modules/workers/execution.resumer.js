@@ -140,7 +140,9 @@ export function startExecutionResumer() {
         console.log(`[Resumer] Finalizing orphaned execution: ${execution._id}`);
         execution.status = execution.cursors.some((c) => c.status === "failed")
           ? "failed"
-          : "executed";
+          : execution.cursors.some((c) => c.status === "skipped")
+            ? "partial"
+            : "executed";
         execution.completedAt = new Date();
         await execution.save();
       }
