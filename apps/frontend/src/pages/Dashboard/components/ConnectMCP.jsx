@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Copy, CheckCheck, KeyRound, Plus } from 'lucide-react';
+import { Trash2, Loader2, Copy, CheckCheck, KeyRound, Plus, Download, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import imgBlinkbox from '../../../assets/blinkbox-knot.png';
@@ -11,6 +11,10 @@ import imgOpenClaw from '../../../assets/mcp-openclaw.svg';
 import imgManus from '../../../assets/mcp-manus.webp';
 
 const MCP_URL = 'https://mcp.blinkbox.net/mcp';
+
+// Packed by .claude/skills/blinkbox/pack.sh — rerun it after editing the skill.
+const SKILL_ZIP = '/blinkbox-skill.zip';
+const SKILL_FILES = ['SKILL.md', 'tools', 'building', 'credentials', 'catalog', 'troubleshooting'];
 
 // Two ways to hand the same server to a client. Header auth is the clean form;
 // key-in-URL exists because connectors like ChatGPT's expose no header field at
@@ -265,6 +269,54 @@ export default function ConnectMCP() {
             paste this URL with authentication set to <span className="font-mono text-[var(--bb-text-mid)]">None</span>.
             Treat the whole URL as a secret, and revoke the key below to cut access.</>
           )}
+        </p>
+      </div>
+
+      {/* ── Agent Skill ── */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-px flex-1 bb-divider border-t" />
+        <span className="bb-eyebrow">Agent Skill</span>
+        <div className="h-px flex-1 bb-divider border-t" />
+      </div>
+
+      <div className="bb-card bb-reflect rounded-2xl px-6 py-6 mb-8">
+        <div className="flex items-start justify-between gap-5 flex-wrap">
+          <div className="flex items-start gap-3.5 min-w-0 flex-1">
+            <Sparkles className="w-[18px] h-[18px] text-[var(--bb-text-lo)] mt-0.5 shrink-0" strokeWidth={1.75} />
+            <div className="min-w-0">
+              <h3 className="text-[15px] font-semibold text-[var(--bb-text-hi)]">Teach your AI to use Blinkbox</h3>
+              <p className="text-[12px] text-[var(--bb-text-lo)] mt-1.5 leading-relaxed max-w-[440px]">
+                The connector gives your AI the tools. This skill gives it the knowledge —
+                the node catalog, how credentials work, expression syntax and execution rules.
+                Without it a model guesses field names and burns a dozen calls; with it a
+                workflow takes about four and runs on the first try.
+              </p>
+            </div>
+          </div>
+          <a
+            href={SKILL_ZIP}
+            download
+            className="bb-btn bb-btn-primary flex items-center gap-2 px-4 py-3 text-[13px] shrink-0 no-underline"
+          >
+            <Download className="w-4 h-4" />
+            Download .zip
+          </a>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap mt-5">
+          {SKILL_FILES.map((f) => (
+            <span key={f} className="text-[10px] font-mono text-[var(--bb-text-dim)] px-2 py-0.5 rounded-full bb-pill">
+              {f}
+            </span>
+          ))}
+        </div>
+
+        <p className="text-[12px] text-[var(--bb-text-lo)] mt-4 leading-relaxed">
+          Unzip the <span className="font-mono text-[var(--bb-text-mid)]">blinkbox</span> folder into your
+          client’s skills directory — <span className="font-mono text-[var(--bb-text-mid)]">.claude/skills/</span> for
+          a project, <span className="font-mono text-[var(--bb-text-mid)]">~/.claude/skills/</span> for every
+          project — then restart it. It is plain Markdown, so an app with no skill loader can take
+          <span className="font-mono text-[var(--bb-text-mid)]"> SKILL.md</span> as a system prompt instead.
         </p>
       </div>
 
