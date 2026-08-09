@@ -1,8 +1,6 @@
 import Header from './sections/Header';
 import Hero from './Hero';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import Marquee from './sections/Marquee';
-import Vision from './sections/Vision';
 import Footer from './sections/Footer';
 
 export default function LandingV2() {
@@ -18,8 +16,6 @@ export default function LandingV2() {
       />
       <Header />
       <Hero />
-      <Marquee />
-      <Vision />
       <Footer />
     </div>
   );
