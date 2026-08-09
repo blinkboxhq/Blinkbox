@@ -4,6 +4,8 @@ import {
   User, Server, Zap, ChevronRight,
   Loader2, Check, AlertTriangle, Shield,
 } from 'lucide-react';
+import { THEMES } from '../../../theme/presets';
+import { useTheme } from '../../../theme/applyTheme';
 import api from '../../../lib/api';
 import { toast } from 'sonner';
 import logoGoogle from '../../../assets/credentials/google-color.svg';
@@ -82,8 +84,43 @@ function Avatar({ name, size = 48 }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// ── Theme swatch card ─────────────────────────────────────────────────────────
+function ThemeCard({ theme, active, onSelect }) {
+  const [page, raised, accent] = theme.swatch;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(theme.id)}
+      aria-pressed={active}
+      className="group relative flex flex-col gap-2.5 rounded-xl p-2.5 text-left transition-all duration-150"
+      style={{
+        background: active ? 'var(--bb-accent-soft)' : 'transparent',
+        border: `1px solid ${active ? 'var(--bb-accent-ring)' : 'var(--bb-border-subtle)'}`,
+      }}
+    >
+      <div
+        className="relative h-[62px] w-full overflow-hidden rounded-lg"
+        style={{ background: page, border: '1px solid rgb(255 255 255 / 0.06)' }}
+      >
+        <div className="absolute inset-x-2 top-2 h-2 rounded-sm" style={{ background: raised }} />
+        <div className="absolute left-2 top-6 h-2 w-6 rounded-sm" style={{ background: accent }} />
+        <div className="absolute left-10 top-6 h-2 w-8 rounded-sm" style={{ background: raised }} />
+        <div className="absolute inset-x-2 bottom-2 h-2 rounded-sm" style={{ background: raised }} />
+      </div>
+      <div className="flex items-center gap-1.5 px-0.5">
+        <span className="text-[12px] font-semibold text-[var(--bb-text-hi)]">{theme.label}</span>
+        {theme.isDefault && (
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--bb-text-dim)]">Default</span>
+        )}
+        {active && <Check className="ml-auto h-3.5 w-3.5 shrink-0" style={{ color: 'var(--bb-accent-hot)' }} />}
+      </div>
+    </button>
+  );
+}
+
 export default function Settings({ user }) {
   const navigate = useNavigate();
+  const [theme, setTheme] = useTheme();
 
   // Profile
   const [profileName, setProfileName] = useState(user?.name || '');
@@ -193,6 +230,18 @@ export default function Settings({ user }) {
           </Field>
         </div>
         <SaveBtn onClick={handleSaveProfile} saving={profileSaving} success={profileOk} disabled={!profileName.trim()} />
+      </Section>
+
+      {/* ── Appearance ── */}
+      <Section title="Appearance" description="Pick a colour theme — applies instantly, only to this browser">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+          {THEMES.map(t => (
+            <ThemeCard key={t.id} theme={t} active={theme === t.id} onSelect={setTheme} />
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] text-[var(--bb-text-dim)]">
+          {THEMES.find(t => t.id === theme)?.blurb}
+        </p>
       </Section>
 
       {/* ── Security ── */}

@@ -188,7 +188,7 @@ export function ConfigPills({ label, icon, value, onChange, options = [], accent
               onClick={() => onChange?.(o.value)}
               className={`bb-glow-border px-3 py-1.5 rounded-md text-[11.5px] font-mono font-medium border transition-colors ${sel ? 'text-neutral-100' : 'text-neutral-500 border-[#2b2b2b] hover:text-neutral-300'}`}
               style={sel
-                ? { color: accentColor, backgroundColor: `${accentColor}1f`, borderColor: 'rgba(111,151,232,0.40)' }
+                ? { color: accentColor, backgroundColor: `${accentColor}1f`, borderColor: 'var(--bb-accent-ring)' }
                 : { backgroundColor: '#0f0f0f' }}
             >
               {o.label}
@@ -206,7 +206,7 @@ export function AddRow({ label, onClick, accentColor = BB_ACCENT }) {
       type="button"
       onClick={onClick}
       className="bb-glow-border w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-[11px] font-mono font-semibold uppercase tracking-wider text-neutral-500 hover:text-neutral-200 bg-[#0f0f0f] border border-dashed border-[#3b3b3b] transition-colors"
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(111,151,232,0.40)'; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--bb-accent-ring)'; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; }}
     >
       <Plus className="w-3.5 h-3.5" style={{ color: accentColor }} /> {label}

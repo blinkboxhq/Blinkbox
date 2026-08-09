@@ -2,7 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from "./App.jsx";
+import "./themes.css";
 import "./index.css";
+import { bootTheme } from "./theme/applyTheme";
+
+bootTheme();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 

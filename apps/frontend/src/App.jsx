@@ -24,8 +24,8 @@ const Status       = lazy(() => import('./pages/marketing/Status'));
 const Security     = lazy(() => import('./pages/marketing/Security'));
 
 const PageLoader = () => (
-  <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ width: 32, height: 32, border: '2px solid #27272a', borderTop: '2px solid #a1a1aa', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+  <div style={{ background: 'var(--bb-loader-bg, #000)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: 32, height: 32, border: '2px solid rgb(var(--c-zinc-800))', borderTop: '2px solid rgb(var(--c-zinc-400))', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );

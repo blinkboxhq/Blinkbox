@@ -1,21 +1,29 @@
+import palette from "tailwindcss/colors";
+
+const FAMILIES = ["slate","gray","zinc","neutral","stone","red","orange","amber","yellow","lime","green",
+  "emerald","teal","cyan","sky","blue","indigo","violet","purple","fuchsia","pink","rose"];
+
+/* Channel triplets + <alpha-value> is the only var form Tailwind can still apply
+   opacity modifiers to (bg-zinc-900/60). A var holding a hex silently drops them. */
+const THEMED_COLORS = Object.fromEntries(
+  FAMILIES.map((f) => [
+    f,
+    Object.fromEntries(
+      Object.keys(palette[f])
+        .filter((step) => /^\d+$/.test(step))
+        .map((step) => [step, `rgb(var(--c-${f}-${step}) / <alpha-value>)`]),
+    ),
+  ]),
+);
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
-      colors: {
-        surface: {
-          0: "#101010",
-          1: "#181818",
-          2: "#242424",
-          3: "#2e2e2e",
-        },
-        accent: {
-          DEFAULT: "#4d7cff",
-          soft: "rgba(77,124,255,0.14)",
-          hot: "#7aa0ff",
-        },
-      },
+      colors: THEMED_COLORS,
+      /* Remapping `blue` would otherwise drag preflight's --tw-ring-color along with it. */
+      ringColor: { DEFAULT: "#3b82f6" },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
