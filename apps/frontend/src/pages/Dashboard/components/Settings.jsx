@@ -92,27 +92,27 @@ function ThemeCard({ theme, active, onSelect }) {
       type="button"
       onClick={() => onSelect(theme.id)}
       aria-pressed={active}
-      className="group relative flex flex-col gap-2.5 rounded-xl p-2.5 text-left transition-all duration-150"
-      style={{
-        background: active ? 'var(--bb-accent-soft)' : 'transparent',
-        border: `1px solid ${active ? 'var(--bb-accent-ring)' : 'var(--bb-border-subtle)'}`,
-      }}
+      title={theme.blurb}
+      className={`w-[98px] shrink-0 rounded-xl border p-1.5 text-left bg-[var(--bb-surface-0)] transition-colors ${
+        active
+          ? 'border-[var(--bb-accent-ring)]'
+          : 'border-[var(--bb-border)] hover:border-[var(--bb-border-strong)]'
+      }`}
     >
-      <div
-        className="relative h-[62px] w-full overflow-hidden rounded-lg"
-        style={{ background: page, border: '1px solid rgb(255 255 255 / 0.06)' }}
-      >
-        <div className="absolute inset-x-2 top-2 h-2 rounded-sm" style={{ background: raised }} />
-        <div className="absolute left-2 top-6 h-2 w-6 rounded-sm" style={{ background: accent }} />
-        <div className="absolute left-10 top-6 h-2 w-8 rounded-sm" style={{ background: raised }} />
-        <div className="absolute inset-x-2 bottom-2 h-2 rounded-sm" style={{ background: raised }} />
+      <div className="relative h-[46px] w-full overflow-hidden rounded-[8px]" style={{ background: page }}>
+        <div className="absolute inset-y-0 left-0 w-[22px]" style={{ background: raised }} />
+        <div className="absolute left-[6px] top-[6px] h-[10px] w-[10px] rounded-[3px]" style={{ background: accent }} />
+        <div className="absolute left-[6px] top-[21px] h-[3px] w-[10px] rounded-full opacity-50" style={{ background: raised, filter: 'brightness(2)' }} />
+        <div className="absolute left-[6px] top-[28px] h-[3px] w-[10px] rounded-full opacity-30" style={{ background: raised, filter: 'brightness(2)' }} />
+        <div className="absolute left-[30px] top-[8px] h-[4px] w-[34px] rounded-full" style={{ background: raised }} />
+        <div className="absolute left-[30px] top-[18px] h-[16px] w-[44px] rounded-[4px]" style={{ background: raised }} />
+        <div className="absolute left-[34px] top-[23px] h-[6px] w-[6px] rounded-full" style={{ background: accent }} />
       </div>
-      <div className="flex items-center gap-1.5 px-0.5">
-        <span className="text-[12px] font-semibold text-[var(--bb-text-hi)]">{theme.label}</span>
-        {theme.isDefault && (
-          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--bb-text-dim)]">Default</span>
-        )}
-        {active && <Check className="ml-auto h-3.5 w-3.5 shrink-0" style={{ color: 'var(--bb-accent-hot)' }} />}
+      <div className="flex items-center gap-1 px-0.5 pt-1.5">
+        <span className={`text-[12px] font-medium truncate ${active ? 'text-[var(--bb-text-hi)]' : 'text-[var(--bb-text-mid)]'}`}>
+          {theme.label}
+        </span>
+        {active && <Check className="ml-auto w-3.5 h-3.5 shrink-0" style={{ color: 'var(--bb-accent-hot)' }} />}
       </div>
     </button>
   );
@@ -233,15 +233,20 @@ export default function Settings({ user }) {
       </Section>
 
       {/* ── Appearance ── */}
-      <Section title="Appearance" description="Pick a colour theme — applies instantly, only to this browser">
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-          {THEMES.map(t => (
-            <ThemeCard key={t.id} theme={t} active={theme === t.id} onSelect={setTheme} />
-          ))}
+      <Section title="Appearance" description="How Blinkbox looks for you">
+        <div className="bb-card bb-liquid rounded-2xl overflow-hidden">
+          <Field label="Colour theme" hint="Applies instantly, saved on this device">
+            <div className="flex flex-wrap gap-2">
+              {THEMES.map(t => (
+                <ThemeCard key={t.id} theme={t} active={theme === t.id} onSelect={setTheme} />
+              ))}
+            </div>
+            <p className="text-[11px] text-[var(--bb-text-dim)] mt-2.5">
+              {THEMES.find(t => t.id === theme)?.blurb}
+              {THEMES.find(t => t.id === theme)?.isDefault && ' Blinkbox default.'}
+            </p>
+          </Field>
         </div>
-        <p className="mt-3 text-[11px] text-[var(--bb-text-dim)]">
-          {THEMES.find(t => t.id === theme)?.blurb}
-        </p>
       </Section>
 
       {/* ── Security ── */}
