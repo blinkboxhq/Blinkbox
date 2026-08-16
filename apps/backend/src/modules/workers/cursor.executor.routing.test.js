@@ -198,6 +198,70 @@ test("a false condition with an unwired false handle ends the run cleanly", asyn
   assert.ok(fresh.completedAt, "completedAt is stamped");
 });
 
+// The verdict is an engine signal, not data. Left in the payload it landed in
+// the next node's $json, and any node that passes its input through re-emitted
+// it — the executor then read that as the passthrough node's own false verdict
+// and routed it to failure edges it never had, so the branch died one node in.
+test("the false branch keeps flowing past a passthrough node", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "n1", type: "stub_condition_false", data: {} },
+      { id: "pass", type: "stub_passthrough", data: {} },
+      { id: "after", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "pass", sourceHandle: "false" },
+      { id: "e2", source: "pass", target: "after" },
+    ],
+    cursorNode: "n1",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+  let fresh = await Execution.findById(execution._id);
+  const branch = fresh.cursors.find((c) => c.nodeId === "pass");
+  assert.ok(branch, "false branch cursor spawned");
+  assert.ok(
+    !(branch._branchItems || []).some((i) => "__conditionResult" in i),
+    "the signal is stripped before it reaches the branch",
+  );
+
+  await processCursor({ executionId: execution._id, cursorId: branch._id });
+  fresh = await Execution.findById(execution._id);
+  assert.ok(fresh.cursors.some((c) => c.nodeId === "after"), "the node after the false branch still runs");
+});
+
+// One failing item used to flip the whole batch onto the false branch and the
+// true branch never fired at all.
+test("a mixed batch splits per item across the two branches", async () => {
+  const { execution, cursorId } = await seed({
+    nodes: [
+      { id: "t", type: "stub_two_items", data: {} },
+      { id: "n1", type: "stub_condition_split", data: {} },
+      { id: "nTrue", type: "stub_ok", data: {} },
+      { id: "nFalse", type: "stub_ok", data: {} },
+    ],
+    edges: [
+      { id: "e0", source: "t", target: "n1" },
+      { id: "e1", source: "n1", target: "nTrue", sourceHandle: "true" },
+      { id: "e2", source: "n1", target: "nFalse", sourceHandle: "false" },
+    ],
+    cursorNode: "t",
+  });
+
+  await processCursor({ executionId: execution._id, cursorId });
+  let fresh = await Execution.findById(execution._id);
+  const cond = fresh.cursors.find((c) => c.nodeId === "n1");
+  await processCursor({ executionId: execution._id, cursorId: cond._id });
+
+  fresh = await Execution.findById(execution._id);
+  const yes = fresh.cursors.find((c) => c.nodeId === "nTrue");
+  const no = fresh.cursors.find((c) => c.nodeId === "nFalse");
+  assert.ok(yes, "the passing item still takes the true branch");
+  assert.ok(no, "the failing item takes the false branch");
+  assert.deepEqual(yes._branchItems.map((i) => i.id), [1]);
+  assert.deepEqual(no._branchItems.map((i) => i.id), [2]);
+});
+
 // ── Split outputs ────────────────────────────────────────────────────────────
 
 test("split outputs: a node error powers only the failed handle", async () => {

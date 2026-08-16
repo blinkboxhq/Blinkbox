@@ -31,6 +31,15 @@ export const stubRegistry = {
     run: async () => ({ success: false, error: "stub: 'url' is required.", skipped: true }),
   },
   stub_fanout: { run: async (config) => ({ __loopFanOut: true, items: config.items }) },
+  // The real condition contract: a verdict per item, returned alongside the item.
+  stub_condition_split: {
+    run: async (config, input) => ({ ...input, __conditionResult: input.pass === true }),
+  },
+  stub_two_items: {
+    run: async () => [{ json: { id: 1, pass: true } }, { json: { id: 2, pass: false } }],
+  },
+  // Hands its input straight back out, the way setFields / dataMapper do.
+  stub_passthrough: { run: async (config, input) => ({ ...input, mapped: true }) },
 };
 
 const noop = async () => {};

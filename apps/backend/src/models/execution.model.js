@@ -32,6 +32,9 @@ const CursorSchema = new mongoose.Schema(
     waitingForWebhook: { type: Boolean, default: false },
     // Set by loop fan-out: the specific item this cursor should process
     _loopItemOverride: { type: mongoose.Schema.Types.Mixed, default: null },
+    // Set by a condition split: the subset of the source node's items that
+    // took this branch
+    _branchItems: { type: mongoose.Schema.Types.Mixed, default: null },
   },
   { _id: false },
 );

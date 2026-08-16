@@ -248,6 +248,8 @@ export async function processCursor({ executionId, cursorId }) {
 
   let finalOutputs = [];
   let nodeDelayUntil = null;
+  const conditionTrueItems = [];
+  const conditionFalseItems = [];
   let executionError = null;
   let errorClassification = null;
   let dynamicContext = {};
@@ -300,6 +302,10 @@ export async function processCursor({ executionId, cursorId }) {
     // LOOP FAN-OUT: cursor carries a specific item snapshot — use it exclusively
     if (cursor._loopItemOverride != null) {
       inputItems = [{ json: cursor._loopItemOverride }];
+    } else if (Array.isArray(cursor._branchItems)) {
+      // Condition split: only the items that took this branch, not the node's
+      // whole output batch.
+      inputItems = cursor._branchItems.map((json) => ({ json }));
     } else if (dataFlowEdges.length === 0) {
       inputItems = dynamicContext[node.id] || [{ json: {} }];
     } else {
@@ -477,9 +483,15 @@ export async function processCursor({ executionId, cursorId }) {
         break; // loop node only runs once per trigger item
       }
 
-      // Condition node false-path signal — mark for non-error routing to false edges
-      if (rawOutput && rawOutput.__conditionResult === false) {
-        finalOutputs.__conditionFalse = true;
+      // Condition branch signal — stripped here so it never travels downstream.
+      // Left in the payload, any passthrough node on the branch re-emits it and
+      // the executor reads it as that node's own false verdict, routing to
+      // failure edges it does not have and killing the rest of the branch.
+      let conditionBranch = null;
+      if (rawOutput && typeof rawOutput.__conditionResult === "boolean") {
+        const { __conditionResult, ...passthrough } = rawOutput;
+        conditionBranch = __conditionResult;
+        rawOutput = passthrough;
       }
 
       // Aggregate is still filling its batch. This cursor completes without
@@ -509,6 +521,10 @@ export async function processCursor({ executionId, cursorId }) {
         : [{ json: rawOutput }];
 
       finalOutputs.push(...formatted);
+
+      if (conditionBranch !== null) {
+        (conditionBranch ? conditionTrueItems : conditionFalseItems).push(...formatted);
+      }
     }
   } catch (err) {
     errorClassification = classifyError(err, node.type, node.data);
@@ -636,8 +652,13 @@ export async function processCursor({ executionId, cursorId }) {
       // Condition node false-path: route to "false" edges but keep cursor completed
       if (finalOutputs.__hold || finalOutputs.__stopBranch) {
         // batch incomplete, or deliberately dropped — nothing downstream
-      } else if (finalOutputs.__conditionFalse) {
-        await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
+      } else if (conditionFalseItems.length > 0) {
+        // A batch can split: items that passed still take the true branch
+        // instead of being dragged down the false one by their neighbours.
+        if (conditionTrueItems.length > 0) {
+          await routeEdges(automation, latestExecution, node, conditionTrueItems, "onSuccess", nodeDelayUntil, null, false, conditionTrueItems);
+        }
+        await routeEdges(automation, latestExecution, node, conditionFalseItems, "onFailure", null, null, false, conditionFalseItems);
       } else if (splitOutputsOn(node) && outputReportsFailure(finalOutputs)) {
         await routeEdges(automation, latestExecution, node, finalOutputs, "onFailure", null);
       } else {
@@ -889,6 +910,7 @@ async function routeEdges(
   delayUntil,
   fanOutItems = null,
   webhookPark = false,
+  branchItems = null,
 ) {
   const edges = automation.edges.filter((e) => {
     if (e.source !== sourceNode.id) return false;
@@ -974,6 +996,9 @@ async function routeEdges(
         retries: 0,
         lockedAt: null,
         lockedBy: null,
+        // Only when this branch is the target's sole input — a join needs every
+        // parent's full output, not one branch's slice of it.
+        _branchItems: branchItems && allIncoming.length <= 1 ? branchItems.map((o) => o.json) : null,
       };
 
       execution.cursors.push(newCursor);
