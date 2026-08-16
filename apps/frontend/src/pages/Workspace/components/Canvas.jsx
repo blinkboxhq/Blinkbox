@@ -19,6 +19,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import useWorkspaceStore from "../../../store/workspaceStore";
+import { useTheme } from "../../../theme/applyTheme";
 import { NodeRegistry } from "../nodeRegistry";
 import { TRIGGER_VARIANTS } from "../triggerVariants";
 import { getDragPayload, clearDragPayload } from "../dragPayload";
@@ -190,6 +191,12 @@ export default function Canvas() {
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
   const { id: automationId } = useParams();
+
+  const [theme] = useTheme();
+  const dotGridColor = useMemo(
+    () => getComputedStyle(document.documentElement).getPropertyValue("--bb-canvas-dot").trim() || "#3a3a3a",
+    [theme],
+  );
 
   const storeNodes = useWorkspaceStore((s) => s.nodes);
   const edges = useWorkspaceStore((s) => s.edges);
@@ -486,7 +493,7 @@ export default function Canvas() {
 
   return (
     <div
-      className="flex-1 h-full min-w-0 relative bg-transparent"
+      className="flex-1 h-full min-w-0 relative bg-[var(--bb-canvas-bg)]"
       ref={reactFlowWrapper}
     >
       <ReactFlow
@@ -554,7 +561,7 @@ export default function Canvas() {
             )}
           </AnimatePresence>
         </ViewportPortal>
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="#2a2a30" />
+        <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color={dotGridColor} />
         <MiniMap
           nodeColor={(node) => {
             if (node.data?.type === "trigger") return "rgba(139,92,246,0.6)";

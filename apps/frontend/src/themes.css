@@ -261,6 +261,8 @@
   --bb-body-fg: #e5e5e5;
   --bb-rf-minimap-bg: #0a0a0a;
   --bb-rf-minimap-border: #1a1a1a;
+  --bb-canvas-bg: #181818;
+  --bb-canvas-dot: #3a3a3a;
   --bb-loader-bg: #000000;
   --bb-accent: #6f97e8;
   --bb-accent-hot: #a9c0ef;
@@ -352,6 +354,8 @@
   --bb-body-fg: #e1e5ee;
   --bb-rf-minimap-bg: #060a12;
   --bb-rf-minimap-border: #151a25;
+  --bb-canvas-bg: #131823;
+  --bb-canvas-dot: #343a48;
   --bb-loader-bg: #010207;
   --bb-accent: #7097e8;
   --bb-accent-hot: #a9c0ef;
@@ -443,6 +447,8 @@
   --bb-body-fg: #ece3de;
   --bb-rf-minimap-bg: #100804;
   --bb-rf-minimap-border: #221710;
+  --bb-canvas-bg: #20160f;
+  --bb-canvas-dot: #44372e;
   --bb-loader-bg: #060200;
   --bb-accent: #d38340;
   --bb-accent-hot: #e4b593;
@@ -534,6 +540,8 @@
   --bb-body-fg: #dde8e8;
   --bb-rf-minimap-bg: #030c0c;
   --bb-rf-minimap-border: #0d1d1d;
+  --bb-canvas-bg: #0c1b1b;
+  --bb-canvas-dot: #2c3e3e;
   --bb-loader-bg: #000303;
   --bb-accent: #00afab;
   --bb-accent-hot: #88cfcc;
@@ -625,6 +633,8 @@
   --bb-body-fg: #e9e3ea;
   --bb-rf-minimap-bg: #0e080f;
   --bb-rf-minimap-border: #1f1720;
+  --bb-canvas-bg: #1d151e;
+  --bb-canvas-dot: #403642;
   --bb-loader-bg: #040105;
   --bb-accent: #a984da;
   --bb-accent-hot: #c9b5e7;

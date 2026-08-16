@@ -93,6 +93,7 @@ const BB_GREY = {
   'text-hi': '#fafafa', 'text-mid': '#b6b6b6', 'text-lo': '#8c8c8c', 'text-dim': '#6d6d6d',
   'body-bg': '#0c0c0c', 'body-fg': '#e5e5e5',
   'rf-minimap-bg': '#0a0a0a', 'rf-minimap-border': '#1a1a1a',
+  'canvas-bg': '#181818', 'canvas-dot': '#3a3a3a',
 };
 const BB_ACCENT = '#6f97e8';
 const BB_ACCENT_HOT = '#a9c0ef';
