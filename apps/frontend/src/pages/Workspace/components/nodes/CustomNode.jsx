@@ -79,7 +79,7 @@ const EDGE_COLOR = "#3f3f46";
 
 // ─── Liquid-glass card surface, shared across all node types ────────────────
 const GLASS_BG =
-  "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%), rgba(16,16,16,0.72)";
+  "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%), rgba(48,48,48,0.70)";
 const GLASS_SHADOW = (hovered, selected) =>
   [
     `inset 0 1px 0 rgba(255,255,255,${selected ? 0.22 : 0.12})`,
@@ -264,7 +264,7 @@ function ToolbarButton({ icon: Icon, label, onClick, danger = false }) {
 }
 
 // ─── Output Handle + Plus Button ──────────────────────────────────────────────
-const HANDLE_BORDER = EDGE_COLOR;
+const HANDLE_BORDER = "rgba(255,255,255,0.28)";
 
 function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", statusGlow = "none", cardHeight, handleId = "output" }) {
   const top = cardHeight ? cardHeight / 2 : "50%";
@@ -298,7 +298,7 @@ function OutputHandle({ nodeId, hasConnection, onAdd, dotColor = "#52525b", stat
 function AgentOutHandle({ hasConnection, cardHeight }) {
   return (
     <Handle type="source" position={Position.Bottom} id="agent_out"
-      className="!w-3 !h-3 !rounded-full !border-2 !border-[#3f3f46] touch-none"
+      className="!w-3 !h-3 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
       style={{ backgroundColor: hasConnection ? "#10b981" : "#52525b", bottom: -6 }}
     />
   );
@@ -308,7 +308,7 @@ function AgentOutHandle({ hasConnection, cardHeight }) {
 function AgentInHandle() {
   return (
     <Handle type="target" position={Position.Top} id="input"
-      className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#3f3f46] !bg-zinc-600 touch-none"
+      className="!w-4 !h-4 !rounded-full !border-[2.5px] !border-[#1a1a1e] !bg-zinc-600 touch-none"
       style={{ top: -8 }}
     />
   );
@@ -466,7 +466,7 @@ function SuggestionGhostNode({ data }) {
 
       {/* Input handle */}
       <Handle type="target" position={Position.Left} id="input"
-        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#3f3f46] !bg-violet-700/60 touch-none"
+        className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-violet-700/60 touch-none"
         style={{ top: cardH / 2 }} />
 
       {/* Ghost card — semi-transparent, solid violet border */}
@@ -639,7 +639,7 @@ function CustomNodeImpl({ id, data, selected }) {
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
       : selected ? "1.5px solid rgba(255,255,255,0.65)"
-      : `1.5px solid ${EDGE_COLOR}`;
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -684,7 +684,7 @@ function CustomNodeImpl({ id, data, selected }) {
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
       : selected ? "1.5px solid rgba(255,255,255,0.65)"
-      : `1.5px solid ${EDGE_COLOR}`;
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -743,7 +743,7 @@ function CustomNodeImpl({ id, data, selected }) {
         {!splitOutputs && (hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
           <>
             <Handle type="source" position={Position.Right} id="onFailure"
-              className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#3f3f46] touch-none"
+              className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
               style={{ backgroundColor: hasErrorConnection ? "#ef4444" : "#7f1d1d", top: cardH * 0.72, right: -7 }}
             />
             <span className="absolute text-[7px] font-bold text-red-600 select-none pointer-events-none"
@@ -772,7 +772,7 @@ function CustomNodeImpl({ id, data, selected }) {
       ? "2px solid transparent"
       : selected
       ? "1.5px solid rgba(255,255,255,0.65)"
-      : `1.5px solid ${EDGE_COLOR}`;
+      : "1.5px solid rgba(255,255,255,0.28)";
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -802,7 +802,7 @@ function CustomNodeImpl({ id, data, selected }) {
 
         {/* Single top dot — connects back up to agent slot */}
         <Handle type="source" position={Position.Top} id="agent_out"
-          className="!rounded-full !border-2 !border-[#3f3f46] touch-none"
+          className="!rounded-full !border-2 !border-[#1a1a1e] touch-none"
           style={{ width: 10, height: 10, backgroundColor: "#52525b", top: -5, left: "50%", transform: "translateX(-50%)" }}
         />
 
@@ -844,14 +844,14 @@ function CustomNodeImpl({ id, data, selected }) {
       <div className="relative group" style={{ width: cardW, height: cardH + 28 }}>
         {toolbar}
         <Handle type="target" position={Position.Left} id="input"
-          className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#3f3f46] !bg-[#52525b] touch-none"
+          className="!w-5 !h-5 !rounded-full !border-[3px] !border-[#1a1a1e] !bg-[#52525b] touch-none"
           style={{ top: cardH / 2 }} />
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
           onClick={handleOpenConfig} className="bb-card relative cursor-pointer overflow-visible"
           style={{ width: cardW, height: cardH, borderRadius: 11,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
-            border: selected ? "1.5px solid rgba(255,255,255,0.65)" : `1.5px solid ${EDGE_COLOR}`,
+            border: selected ? "1.5px solid rgba(255,255,255,0.65)" : "1.5px solid rgba(255,255,255,0.28)",
             boxShadow: GLASS_SHADOW(isHovered, selected) }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 10, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -867,7 +867,7 @@ function CustomNodeImpl({ id, data, selected }) {
             return (
               <div key={i}>
                 <Handle type="source" position={Position.Right} id={`worker_${i + 1}`}
-                  className="!w-4 !h-4 !rounded-full !border-2 !border-[#3f3f46] touch-none"
+                  className="!w-4 !h-4 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
                   style={{ backgroundColor: isConnected ? "#a78bfa" : "#52525b", top: y, right: -8 }} />
                 <span className="absolute text-[8px] text-zinc-600 font-bold select-none pointer-events-none"
                   style={{ right: 10, top: y, transform: "translateY(-50%)" }}>W{i + 1}</span>
@@ -888,9 +888,9 @@ function CustomNodeImpl({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
     : selected ? "1.5px solid rgba(255,255,255,0.65)"
-    : `1.5px solid ${EDGE_COLOR}`;
+    : "1.5px solid rgba(255,255,255,0.28)";
   const cardBorder = cardBorderTop;
-  const cardBottomBorder = status === "failed" ? "1.5px solid rgba(239,68,68,0.45)" : `2px solid ${EDGE_COLOR}`;
+  const cardBottomBorder = status === "failed" ? "1.5px solid rgba(239,68,68,0.45)" : "2px solid rgba(255,255,255,0.32)";
   const cardShadow = GLASS_SHADOW(isHovered, selected);
 
   return (
@@ -941,7 +941,7 @@ function CustomNodeImpl({ id, data, selected }) {
           Suppressed under splitOutputs, which owns the dedicated Failed handle. */}
       {!splitOutputs && (hasErrorConnection || data.config?.retryPolicy?.retryOnFailure === false) && (
         <Handle type="source" position={Position.Right} id="onFailure"
-          className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#3f3f46] touch-none"
+          className="!w-3.5 !h-3.5 !rounded-full !border-2 !border-[#1a1a1e] touch-none"
           style={{ backgroundColor: hasErrorConnection ? "#ef4444" : "#7f1d1d", top: cardH * 0.72, right: -7 }}
         />
       )}
