@@ -80,13 +80,19 @@ const EDGE_COLOR = "#3f3f46";
 // ─── Liquid-glass card surface, shared across all node types ────────────────
 const GLASS_BG =
   "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%), rgba(38,38,38,0.70)";
+// At rest the card shows exactly one edge — its border. The inner ring, outer
+// ring and glow only come back on selection, so nothing haloes the idle card.
 const GLASS_SHADOW = (hovered, selected) =>
   [
     `inset 0 1px 0 rgba(255,255,255,${selected ? 0.22 : 0.12})`,
-    `inset 0 0 0 1px rgba(255,255,255,${selected ? 0.22 : 0.07})`,
     "inset 0 -18px 36px -24px rgba(255,255,255,0.07)",
-    `0 0 0 1px rgba(255,255,255,${selected ? 0.18 : 0.05})`,
-    `0 0 26px -2px rgba(255,255,255,${selected ? 0.20 : 0.05})`,
+    ...(selected
+      ? [
+          "inset 0 0 0 1px rgba(255,255,255,0.22)",
+          "0 0 0 1px rgba(255,255,255,0.18)",
+          "0 0 26px -2px rgba(255,255,255,0.20)",
+        ]
+      : []),
     "0 14px 44px -12px rgba(0,0,0,0.78)",
   ].join(", ");
 
@@ -639,7 +645,7 @@ function CustomNodeImpl({ id, data, selected }) {
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
       : selected ? "1.5px solid rgba(255,255,255,0.65)"
-      : "1.5px solid rgba(255,255,255,0.28)";
+      : `1.5px solid ${HANDLE_BORDER}`;
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -684,7 +690,7 @@ function CustomNodeImpl({ id, data, selected }) {
     const cardBorder = status === "running" ? "2px solid transparent"
       : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
       : selected ? "1.5px solid rgba(255,255,255,0.65)"
-      : "1.5px solid rgba(255,255,255,0.28)";
+      : `1.5px solid ${HANDLE_BORDER}`;
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -772,7 +778,7 @@ function CustomNodeImpl({ id, data, selected }) {
       ? "2px solid transparent"
       : selected
       ? "1.5px solid rgba(255,255,255,0.65)"
-      : "1.5px solid rgba(255,255,255,0.28)";
+      : `1.5px solid ${HANDLE_BORDER}`;
     const cardShadow = GLASS_SHADOW(isHovered, selected);
 
     return (
@@ -851,7 +857,7 @@ function CustomNodeImpl({ id, data, selected }) {
           style={{ width: cardW, height: cardH, borderRadius: 11,
             background: GLASS_BG,
             backdropFilter: "blur(12px) saturate(120%)", WebkitBackdropFilter: "blur(12px) saturate(120%)",
-            border: selected ? "1.5px solid rgba(255,255,255,0.65)" : "1.5px solid rgba(255,255,255,0.28)",
+            border: selected ? "1.5px solid rgba(255,255,255,0.65)" : `1.5px solid ${HANDLE_BORDER}`,
             boxShadow: GLASS_SHADOW(isHovered, selected) }}>
           <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 10, background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
           <div className="flex flex-col items-start justify-center h-full gap-1 px-5">
@@ -888,9 +894,9 @@ function CustomNodeImpl({ id, data, selected }) {
   const cardBorderTop = status === "running" ? "2px solid transparent"
     : status === "failed" ? "1.5px solid rgba(239,68,68,0.6)"
     : selected ? "1.5px solid rgba(255,255,255,0.65)"
-    : "1.5px solid rgba(255,255,255,0.28)";
+    : `1.5px solid ${HANDLE_BORDER}`;
   const cardBorder = cardBorderTop;
-  const cardBottomBorder = status === "failed" ? "1.5px solid rgba(239,68,68,0.45)" : "2px solid rgba(255,255,255,0.32)";
+  const cardBottomBorder = status === "failed" ? "1.5px solid rgba(239,68,68,0.45)" : `2px solid ${HANDLE_BORDER}`;
   const cardShadow = GLASS_SHADOW(isHovered, selected);
 
   return (
