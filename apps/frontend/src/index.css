@@ -12,6 +12,9 @@
   --bb-ring:      0 0 0 1px var(--bb-border);
   --bb-shadow-card: 0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
   --bb-shadow-pop:  0 12px 40px -12px rgba(0,0,0,0.7), 0 0 0 1px var(--bb-border);
+  /* Shared by the canvas node cards and the global sidebar so the two surfaces
+     stay the same material — change it once, both follow. */
+  --bb-node-fill: rgba(48, 48, 48, 0.70);
 }
 
 /* ── Semantic component layer ─────────────────────────────────────────────────
@@ -593,6 +596,13 @@ html {
   -webkit-backdrop-filter: blur(30px) saturate(100%);
   backdrop-filter: blur(30px) saturate(100%);
   border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Global sidebar: same material as the canvas node cards. */
+.bb-sidebar.bb-liquid {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%),
+    var(--bb-node-fill);
 }
 
 /* Config-modal panels: brighter raised glass so each panel reads as a clear
