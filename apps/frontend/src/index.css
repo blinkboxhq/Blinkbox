@@ -12,9 +12,6 @@
   --bb-ring:      0 0 0 1px var(--bb-border);
   --bb-shadow-card: 0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
   --bb-shadow-pop:  0 12px 40px -12px rgba(0,0,0,0.7), 0 0 0 1px var(--bb-border);
-  /* The liquid-glass fill: the global sidebar's surface, reused by the canvas
-     node cards so the two read as the same material. */
-  --bb-glass-fill: rgba(19, 19, 19, 0.5);
 }
 
 /* ── Semantic component layer ─────────────────────────────────────────────────
@@ -592,7 +589,7 @@ html {
   --gi: 0;
   background:
     linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 34%, transparent 62%),
-    var(--bb-glass-fill);
+    rgba(19, 19, 19, 0.5);
   -webkit-backdrop-filter: blur(30px) saturate(100%);
   backdrop-filter: blur(30px) saturate(100%);
   border-color: rgba(255, 255, 255, 0.05);
