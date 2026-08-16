@@ -1,22 +1,29 @@
 {$BLINKBOX_HOSTNAME} {
 	encode gzip
 
+	header {
+		# The certificate is Caddy's, so pin browsers to HTTPS for this host.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		Cross-Origin-Opener-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+
 	# The API, realtime socket and public webhook endpoints all live on the
 	# backend; everything else is the single-page app.
-	handle /api/* {
-		reverse_proxy backend:3000
-	}
+	@backend path /api/* /socket.io/* /webhook/* /health
 
-	handle /socket.io/* {
-		reverse_proxy backend:3000
-	}
-
-	handle /webhook/* {
-		reverse_proxy backend:3000
-	}
-
-	handle /health {
-		reverse_proxy backend:3000
+	handle @backend {
+		# Caddy appends to X-Forwarded-For by default, which leaves the leftmost
+		# entry under the caller's control. The backend keys login lockouts on
+		# the resolved client IP, so overwrite the header rather than extend it —
+		# otherwise a forged prefix would shed a lockout on every request.
+		reverse_proxy backend:3000 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle {

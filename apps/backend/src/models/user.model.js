@@ -35,6 +35,13 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: "" },
     stripeCustomerId:     { type: String, default: null },
     stripeSubscriptionId: { type: String, default: null },
+
+    // Self-hosted installs have exactly one owner, seeded by the installer.
+    // isOwner is the login subject on a password-only sign-in, so it is indexed
+    // and must stay unique — two owners would make that lookup ambiguous.
+    isOwner: { type: Boolean, default: false, index: true },
+    mustChangePassword: { type: Boolean, default: false },
+    bootstrapExpiresAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

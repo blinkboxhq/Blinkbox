@@ -4,7 +4,7 @@ import crypto from "crypto";
 import User from "../../models/user.model.js";
 import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
-import { JWT_SECRET } from "../../config/env.js";
+import { JWT_SECRET, SELF_HOSTED } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
 import { decrypt } from "../../utils/crypto.js";
 import { verifyToken as verifyTotp } from "../../utils/totp.js";
@@ -25,9 +25,164 @@ const APP_URL = process.env.VITE_APP_URL || "https://blinkbox.net";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// ── Self-hosted owner sign-in ────────────────────────────────────────────────
+
+// A self-hosted instance has exactly one account, so the login form asks for a
+// password and nothing else. That removes the email field as an oracle — the
+// page reveals neither who the owner is nor whether a guessed address exists.
+
+// Compared against on every failed attempt so that a wrong password costs the
+// same wall-clock time whether or not an owner row exists. Without it, response
+// latency alone tells an attacker whether the instance has been claimed.
+const DUMMY_HASH = bcrypt.hashSync("blinkbox-timing-equalizer", 12);
+
+const OWNER_LOCK_THRESHOLD = 5;
+const OWNER_LOCK_STEPS = [15, 60, 300, 900, 3600];
+const OWNER_FAIL_TTL = 900;
+
+// req.ip honours `trust proxy` and resolves to the peer Caddy actually saw.
+// Reading X-Forwarded-For directly would key the lockout on a value the caller
+// controls, letting an attacker shed a lockout by forging a fresh prefix.
+function trustedClientIp(req) {
+  return req.ip || "unknown";
+}
+
+async function ownerLogin(req, res) {
+  const { password } = req.body || {};
+  const ip = trustedClientIp(req);
+  const lockKey = `auth:lockout:owner:${ip}`;
+  const failKey = `auth:fails:owner:${ip}`;
+
+  const locked = await redis.get(lockKey);
+  if (locked) {
+    const ttl = await redis.ttl(lockKey);
+    return res.status(429).json({
+      message: `Too many attempts. Try again in ${ttl} seconds.`,
+      lockoutTimer: ttl,
+    });
+  }
+
+  if (!password || typeof password !== "string") {
+    return res.status(400).json({ message: "Password is required." });
+  }
+
+  const owner = await User.findOne({ isOwner: true });
+  const isMatch = await bcrypt.compare(password, owner?.password || DUMMY_HASH);
+
+  if (!owner || !isMatch) {
+    const fails = await redis.incr(failKey);
+    if (fails === 1) await redis.expire(failKey, OWNER_FAIL_TTL);
+    if (fails >= OWNER_LOCK_THRESHOLD) {
+      const step = Math.min(fails - OWNER_LOCK_THRESHOLD, OWNER_LOCK_STEPS.length - 1);
+      const secs = OWNER_LOCK_STEPS[step];
+      await redis.set(lockKey, "1", "EX", secs);
+      return res.status(429).json({
+        message: `Too many attempts. Try again in ${secs} seconds.`,
+        lockoutTimer: secs,
+      });
+    }
+    return res.status(401).json({ message: "Incorrect password." });
+  }
+
+  // A printed-once bootstrap password sits in terminal scrollback forever. It
+  // stops being accepted after its window so a stale transcript is not a
+  // standing key to the instance.
+  if (owner.mustChangePassword && owner.bootstrapExpiresAt && owner.bootstrapExpiresAt < new Date()) {
+    return res.status(403).json({
+      message: "This setup password has expired. On the server run:  cd /opt/blinkbox && docker compose exec backend node src/modules/selfhost/resetOwner.js",
+    });
+  }
+
+  await redis.del(failKey);
+
+  if (owner.twoFactorEnabled) {
+    const challenge = crypto.randomBytes(32).toString("hex");
+    await redis.set(`bb:2fa:${challenge}`, String(owner._id), "EX", TWO_FA_TTL);
+    return res.json({
+      twoFactorRequired: true,
+      twoFactorToken: challenge,
+      message: "Enter the code from your authenticator app.",
+    });
+  }
+
+  // While the bootstrap password is still in force the session is scoped to the
+  // change-password call alone, so an unrotated credential cannot be used to
+  // drive the rest of the API.
+  if (owner.mustChangePassword) {
+    const scoped = jwt.sign(
+      { id: owner._id, role: owner.role, scope: "password_change" },
+      JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+    return res.json({
+      mustChangePassword: true,
+      token: scoped,
+      message: "Choose a password of your own to finish setup.",
+    });
+  }
+
+  const token = jwt.sign({ id: owner._id, role: owner.role }, JWT_SECRET, { expiresIn: "24h" });
+  return res.json({
+    message: "Authentication successful.",
+    token,
+    user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role },
+  });
+}
+
+// Completes setup: swaps the installer-issued password for one the owner picks.
+// Reachable with a password_change-scoped token, which is all a bootstrap login
+// hands out.
+export async function changeOwnerPassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (!currentPassword || !newPassword || typeof newPassword !== "string") {
+      return res.status(400).json({ message: "Current and new password are both required." });
+    }
+    if (newPassword.length < 12) {
+      return res.status(400).json({ message: "Password must be at least 12 characters." });
+    }
+    if (!/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ message: "Password must mix upper case, lower case and digits." });
+    }
+
+    const owner = await User.findById(req.user.id);
+    if (!owner) return res.status(404).json({ message: "Account not found." });
+    if (SELF_HOSTED && !owner.isOwner) {
+      return res.status(403).json({ message: "Not permitted." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, owner.password || DUMMY_HASH);
+    if (!isMatch) return res.status(401).json({ message: "Current password is incorrect." });
+
+    if (await bcrypt.compare(newPassword, owner.password || DUMMY_HASH)) {
+      return res.status(400).json({ message: "Choose a password you have not used here before." });
+    }
+
+    owner.password = await bcrypt.hash(newPassword, 12);
+    owner.mustChangePassword = false;
+    owner.bootstrapExpiresAt = null;
+    await owner.save();
+
+    const token = jwt.sign({ id: owner._id, role: owner.role }, JWT_SECRET, { expiresIn: "24h" });
+    return res.json({
+      message: "Password updated.",
+      token,
+      user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role },
+    });
+  } catch (error) {
+    console.error("Owner password change error:", error.message);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
 // ── Google SSO ───────────────────────────────────────────────────────────────
 export async function googleLogin(req, res) {
   try {
+    if (SELF_HOSTED) {
+      return res.status(403).json({ message: "Google sign-in is not available on this instance." });
+    }
+
     const { credential, access_token } = req.body;
 
     if (!credential && !access_token) {
@@ -110,6 +265,13 @@ export async function googleLogin(req, res) {
 // ── Register ─────────────────────────────────────────────────────────────────
 export async function register(req, res) {
   try {
+    // The owner is seeded by the installer and is the only account a
+    // self-hosted instance ever has. Leaving sign-up reachable would let anyone
+    // who finds the hostname provision themselves a foothold on it.
+    if (SELF_HOSTED) {
+      return res.status(403).json({ message: "Sign-up is disabled on this instance." });
+    }
+
     const { name, email, password } = req.body;
 
     if (!name || typeof name !== "string" || name.trim().length < 1 || name.trim().length > 100) {
@@ -220,6 +382,14 @@ export async function resendVerification(req, res) {
 
 // ── Forgot Password ───────────────────────────────────────────────────────────
 export async function forgotPassword(req, res) {
+  // No SMTP is configured on a self-hosted box, so a reset mail would never
+  // arrive. Recovery is gated on shell access to the host instead.
+  if (SELF_HOSTED) {
+    return res.status(403).json({
+      message: "Recover a self-hosted instance from the server:  docker compose exec backend node src/modules/selfhost/resetOwner.js",
+    });
+  }
+
   // Always return success — never reveal whether an email exists
   const { email } = req.body;
   if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -291,6 +461,8 @@ export async function resetPassword(req, res) {
 // ── Login ─────────────────────────────────────────────────────────────────────
 export async function login(req, res) {
   try {
+    if (SELF_HOSTED) return await ownerLogin(req, res);
+
     const { email, password } = req.body;
 
     const lockoutKey = `auth:lockout:${email}`;

@@ -36,7 +36,7 @@ once. Then, on your server:
 curl -fsSL https://get.blinkbox.net/install.sh | sudo sh
 ```
 
-It asks two things:
+It asks three things:
 
 ```
 ? Paste your license key
@@ -46,17 +46,56 @@ It asks two things:
 ? Choose a name for this instance
 > acme
 ✓ Reserved acme.blinkbox.net → 203.0.113.9
+
+? Which email owns this instance?
+> you@acme.com
+✓ Owner: you@acme.com
+
 ✓ Blinkbox is running
 
   https://acme.blinkbox.net
+
+  ────────────────────────────────────────────────────────────
+  Your password — shown once, right now
+
+      k7Rmqx-Ta9vPd-3nHyWs-Zb6EjL
+
+  Copy it before you close this window. It is stored only as a
+  hash, so nothing here or on the server can print it again, and
+  it stops working in 24 hours — sign in and pick your own.
+  ────────────────────────────────────────────────────────────
 ```
 
 That is the whole install. The name reserves `<name>.blinkbox.net`, the DNS A
 record is created for you, and Caddy issues the certificate on first visit. If
 the name is already taken it becomes `<name>-v2`, `-v3`, and so on.
 
-Open the URL and create your account — it lives in the database on your machine.
-There is no marketing site and no social sign-in on a self-hosted install.
+### Signing in
+
+The login page asks for a password and nothing else. Your instance has exactly
+one account, so there is no email field to fill in — and none shown, which keeps
+the address off a page anyone can load.
+
+Paste the installer password, and the site immediately asks you to replace it
+with one of your own (12+ characters, mixed case and a digit). That first
+password is a delivery mechanism, not a credential: it only unlocks the
+change-password screen, it cannot drive the rest of the API, and it stops being
+accepted 24 hours after install so a stale terminal transcript is not a key to
+your instance.
+
+There is no sign-up form and no social sign-in on a self-hosted install. Both
+are disabled server-side, not just hidden.
+
+**If you lose the password**, there is no reset email — a self-hosted box has no
+mail provider, and an email link would be a second way in. Recovery is proof of
+control over the server instead:
+
+```bash
+cd /opt/blinkbox && docker compose exec backend node src/modules/selfhost/resetOwner.js
+```
+
+It prints a fresh one-time password and immediately invalidates every session
+that was open, so a stolen login does not outlive the credential it came from.
 
 Everything lands in `/opt/blinkbox`: `docker-compose.yml`, `docker/Caddyfile`
 and a `.env` holding your license key and the two secrets the installer
@@ -66,8 +105,12 @@ generated. **Keep that `.env`.**
 
 ```bash
 BLINKBOX_LICENSE_KEY=bb_selfhost_… BLINKBOX_NAME=acme \
+  BLINKBOX_OWNER_EMAIL=you@acme.com \
   sh -c "$(curl -fsSL https://get.blinkbox.net/install.sh)"
 ```
+
+The generated password is still printed once on stdout. Capture it there — it is
+never written to `.env` and cannot be recovered afterwards.
 
 ## Using your own domain instead
 
@@ -125,6 +168,14 @@ at blinkbox.net; the running instance picks it up on the next node.
 
 **Scraper nodes fail** — Chromium needs more than the default container memory
 on some hosts. Raise Docker's memory limit to at least 4 GB.
+
+**"This setup password has expired"** — the installer password is only good for
+24 hours. Issue a new one with `docker compose exec backend node
+src/modules/selfhost/resetOwner.js`.
+
+**"Too many attempts. Try again in N seconds."** — five wrong passwords starts a
+lockout that backs off from 15 seconds to an hour, keyed on the client address.
+Wait it out, or reset the password from the server to clear it.
 
 ## Licensing
 

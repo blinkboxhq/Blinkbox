@@ -55,6 +55,7 @@ services:
       SELF_HOSTED: "true"
       CLOUD_API_URL: ${CLOUD_API_URL:-https://api.blinkbox.net}
       SELF_HOST_LICENSE_KEY: ${SELF_HOST_LICENSE_KEY:?get one at blinkbox.net → Settings → Self-hosting}
+      OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3000}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
       # Optional — your own provider keys for AI and integration nodes.

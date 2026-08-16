@@ -6,10 +6,16 @@ import { GoogleLogin } from '@react-oauth/google';
 import AmbientBackground from '../../components/AmbientBackground';
 import logo from '../../assets/logo.svg';
 import { IS_SELF_HOSTED } from '../../config/selfHost';
+import SelfHostAuth from './SelfHostAuth';
 
 const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID && !IS_SELF_HOSTED;
 
 export default function Auth() {
+  if (IS_SELF_HOSTED) return <SelfHostAuth />;
+  return <CloudAuth />;
+}
+
+function CloudAuth() {
   const [isLogin, setIsLogin] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

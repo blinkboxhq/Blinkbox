@@ -3,8 +3,8 @@
 #
 #   curl -fsSL https://get.blinkbox.net/install.sh | sh
 #
-# Asks for a license key and a name, then brings the whole stack up on
-# <name>.blinkbox.net with a certificate. Nothing else is required.
+# Asks for a license key, a name and an owner email, then brings the whole stack
+# up on <name>.blinkbox.net with a certificate and prints the owner password once.
 set -eu
 
 CLOUD_API_URL="${CLOUD_API_URL:-https://api.blinkbox.net}"
@@ -117,6 +117,23 @@ DNS_STATE=$(json_str "$REG" dns)
 ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
 [ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
 
+# ── Owner ────────────────────────────────────────────────────────────────────
+
+OWNER_EMAIL="${BLINKBOX_OWNER_EMAIL:-}"
+while :; do
+  if [ -z "$OWNER_EMAIL" ]; then
+    say ""
+    say "Which email owns this instance? ${DIM}(it identifies the account — you sign in with a password)${OFF}"
+    ask "  email: "
+    OWNER_EMAIL=$(printf '%s' "$REPLY_VALUE" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+  fi
+  case "$OWNER_EMAIL" in
+    ?*@?*.?*) break ;;
+    *) printf '%s✗%s That does not look like an email address.\n' "$RED" "$OFF"; OWNER_EMAIL=""; [ -n "$TTY" ] || exit 1 ;;
+  esac
+done
+ok "Owner: $OWNER_EMAIL"
+
 # ── Files ────────────────────────────────────────────────────────────────────
 
 step "Writing $INSTALL_DIR"
@@ -140,6 +157,7 @@ cat > "$INSTALL_DIR/.env" <<ENVFILE
 SELF_HOST_LICENSE_KEY=$LICENSE_KEY
 JWT_SECRET=$JWT_SECRET
 ENCRYPTION_KEY=$ENCRYPTION_KEY
+OWNER_EMAIL=$OWNER_EMAIL
 
 BLINKBOX_HOSTNAME=$HOSTNAME_FQDN
 BACKEND_PUBLIC_URL=https://$HOSTNAME_FQDN
@@ -165,12 +183,44 @@ while [ $i -lt 60 ]; do
 done
 say ""
 
-say ""
 ok "Blinkbox is running"
+
+# The password is generated inside the container and reaches us only on stdout.
+# It is never written to .env, never passed as an argument and never exported —
+# so it exists in exactly one place: the screen below.
+step "Creating the owner account"
+set +e
+OWNER_PASSWORD=$(docker compose exec -T backend node src/modules/selfhost/seedOwner.js)
+SEED_CODE=$?
+set -e
+
 say ""
 say "  ${BLD}https://$HOSTNAME_FQDN${OFF}"
 say ""
-say "  ${DIM}Create your account on that page — it lives in your database, here.${OFF}"
+
+if [ $SEED_CODE -eq 0 ] && [ -n "$OWNER_PASSWORD" ]; then
+  RULE="────────────────────────────────────────────────────────────"
+  say "  $RULE"
+  say "  ${BLD}Your password — shown once, right now${OFF}"
+  say ""
+  say "      ${BLD}$OWNER_PASSWORD${OFF}"
+  say ""
+  say "  ${DIM}Copy it before you close this window. It is stored only as a${OFF}"
+  say "  ${DIM}hash, so nothing here or on the server can print it again, and${OFF}"
+  say "  ${DIM}it stops working in 24 hours — sign in and pick your own.${OFF}"
+  say "  $RULE"
+  say ""
+  say "  ${DIM}No email needed at sign-in: this instance already knows it${OFF}"
+  say "  ${DIM}belongs to $OWNER_EMAIL.${OFF}"
+elif [ $SEED_CODE -eq 3 ]; then
+  say "  ${DIM}This instance already has an owner — sign in with your existing password.${OFF}"
+  say "  ${DIM}Forgotten it?  cd $INSTALL_DIR && docker compose exec backend node src/modules/selfhost/resetOwner.js${OFF}"
+else
+  printf '%s✗%s Could not create the owner account.\n' "$RED" "$OFF"
+  say "  ${DIM}Retry:  cd $INSTALL_DIR && docker compose exec backend node src/modules/selfhost/seedOwner.js${OFF}"
+fi
+
+say ""
 say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
 say ""
 say "  ${DIM}logs     cd $INSTALL_DIR && docker compose logs -f${OFF}"
