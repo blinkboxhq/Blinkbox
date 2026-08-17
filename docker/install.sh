@@ -22,15 +22,12 @@ INSTALL_DIR="${BLINKBOX_DIR:-/opt/blinkbox}"
 # The repo is public, so raw.githubusercontent.com serves these three files with
 # no DNS of ours in the path. BLINKBOX_ASSET_BASE overrides it with a flat mirror
 # that keeps docker-compose.yml, Caddyfile and install.sh at its root.
-RAW_BASE="https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main"
+REPO="blinkboxhq/Blinkbox"
+REF="${BLINKBOX_REF:-main}"
 if [ -n "${BLINKBOX_ASSET_BASE:-}" ]; then
   INSTALL_URL="$BLINKBOX_ASSET_BASE/install.sh"
-  COMPOSE_URL="$BLINKBOX_ASSET_BASE/docker-compose.yml"
-  CADDY_URL="$BLINKBOX_ASSET_BASE/Caddyfile"
 else
-  INSTALL_URL="$RAW_BASE/docker/install.sh"
-  COMPOSE_URL="$RAW_BASE/docker-compose.yml"
-  CADDY_URL="$RAW_BASE/docker/Caddyfile"
+  INSTALL_URL="https://raw.githubusercontent.com/$REPO/$REF/docker/install.sh"
 fi
 
 RED=''; GRN=''; DIM=''; BLD=''; OFF=''
@@ -62,6 +59,46 @@ json_str() { printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*\"\([
 rand_hex() { # rand_hex <bytes>
   if command -v openssl >/dev/null 2>&1; then openssl rand -hex "$1"
   else tr -dc 'a-f0-9' < /dev/urandom | head -c $(( $1 * 2 )); fi
+}
+
+# fetch_asset <repo-relative-path> <dest>
+#
+# raw.githubusercontent.com is unauthenticated and aggressively rate-limited, and
+# a VPS sharing a cloud provider's IP range can be handed a 429 through no fault
+# of its own. So every asset has a second source: the contents API serves the
+# same bytes off a separate quota. BLINKBOX_ASSET_BASE overrides both with a
+# flat mirror you control, and is the escape hatch when GitHub is unhappy.
+fetch_asset() {
+  _path=$1; _dest=$2; _name=${1##*/}
+
+  if [ -n "${BLINKBOX_ASSET_BASE:-}" ]; then
+    curl -fsSL -m 60 "$BLINKBOX_ASSET_BASE/$_name" -o "$_dest" && return 0
+    die "Could not fetch $_name from $BLINKBOX_ASSET_BASE."
+  fi
+
+  _limited=no
+  _try=1
+  while [ "$_try" -le 3 ]; do
+    _code=$(curl -sL -m 60 -o "$_dest" -w '%{http_code}' \
+      "https://raw.githubusercontent.com/$REPO/$REF/$_path" 2>/dev/null || echo 000)
+    [ "$_code" = 200 ] && return 0
+    [ "$_code" = 429 ] && _limited=yes
+
+    _code=$(curl -sL -m 60 -o "$_dest" -w '%{http_code}' \
+      -H 'Accept: application/vnd.github.raw' \
+      "https://api.github.com/repos/$REPO/contents/$_path?ref=$REF" 2>/dev/null || echo 000)
+    [ "$_code" = 200 ] && return 0
+    case "$_code" in 403|429) _limited=yes ;; esac
+
+    [ "$_try" -eq 3 ] || sleep $(( _try * 5 ))
+    _try=$(( _try + 1 ))
+  done
+
+  rm -f "$_dest"
+  [ "$_limited" = yes ] && die "GitHub is rate-limiting this machine's IP, so $_name could not be downloaded.
+  Wait a few minutes and re-run, or put docker-compose.yml, Caddyfile and
+  install.sh on a host you control and set BLINKBOX_ASSET_BASE to that URL."
+  die "Could not download $_name from GitHub. Check this box's outbound HTTPS."
 }
 
 # ── Preflight ────────────────────────────────────────────────────────────────
@@ -223,8 +260,8 @@ fi
 
 step "Writing $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR/docker"
-curl -fsSL "$COMPOSE_URL" -o "$INSTALL_DIR/docker-compose.yml" || die "Could not fetch docker-compose.yml from $COMPOSE_URL"
-curl -fsSL "$CADDY_URL"   -o "$INSTALL_DIR/docker/Caddyfile"   || die "Could not fetch Caddyfile from $CADDY_URL"
+fetch_asset "docker-compose.yml" "$INSTALL_DIR/docker-compose.yml"
+fetch_asset "docker/Caddyfile"   "$INSTALL_DIR/docker/Caddyfile"
 
 # Secrets are generated here and never leave this machine. Preserve them across
 # re-runs: rotating ENCRYPTION_KEY makes stored credentials undecryptable.
