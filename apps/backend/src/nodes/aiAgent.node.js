@@ -1213,7 +1213,12 @@ async function assembleTools({
       } catch (err) {
         console.error(`[AIAgent] Manifest tool build failed for "${type}": ${err.message}`);
       }
-      if (!derived) continue;
+      // A type the manifest cannot resolve yields no tool at all — silently, which
+      // is how Redis sat on 9 of its 42 operations unnoticed. Say so in the log.
+      if (!derived) {
+        console.warn(`[AIAgent] Integration "${type}" has no operation manifest — no tool exposed.`);
+        continue;
+      }
       const opList = derived.actions.map((a) => a.key).join(", ");
       tools.push({
         name: toolName,
