@@ -1,15 +1,28 @@
 #!/bin/sh
 # Blinkbox self-hosted installer (Linux).
 #
-#   curl -fsSL https://get.blinkbox.net/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sh
 #
 # Asks for a license key, a name and an owner email, then brings the whole stack
 # up on <name>.blinkbox.net with a certificate and prints the owner password once.
 set -eu
 
 CLOUD_API_URL="${CLOUD_API_URL:-https://api.blinkbox.net}"
-ASSET_BASE="${BLINKBOX_ASSET_BASE:-https://get.blinkbox.net}"
 INSTALL_DIR="${BLINKBOX_DIR:-/opt/blinkbox}"
+
+# The repo is public, so raw.githubusercontent.com serves these three files with
+# no DNS of ours in the path. BLINKBOX_ASSET_BASE overrides it with a flat mirror
+# that keeps docker-compose.yml, Caddyfile and install.sh at its root.
+RAW_BASE="https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main"
+if [ -n "${BLINKBOX_ASSET_BASE:-}" ]; then
+  INSTALL_URL="$BLINKBOX_ASSET_BASE/install.sh"
+  COMPOSE_URL="$BLINKBOX_ASSET_BASE/docker-compose.yml"
+  CADDY_URL="$BLINKBOX_ASSET_BASE/Caddyfile"
+else
+  INSTALL_URL="$RAW_BASE/docker/install.sh"
+  COMPOSE_URL="$RAW_BASE/docker-compose.yml"
+  CADDY_URL="$RAW_BASE/docker/Caddyfile"
+fi
 
 RED=''; GRN=''; DIM=''; BLD=''; OFF=''
 if [ -t 1 ]; then
@@ -44,7 +57,7 @@ rand_hex() { # rand_hex <bytes>
 
 # ── Preflight ────────────────────────────────────────────────────────────────
 
-[ "$(id -u)" -eq 0 ] || die "Run as root:  curl -fsSL $ASSET_BASE/install.sh | sudo sh"
+[ "$(id -u)" -eq 0 ] || die "Run as root:  curl -fsSL $INSTALL_URL | sudo sh"
 [ "$(uname -s)" = "Linux" ] || die "This installer supports Linux only."
 command -v curl >/dev/null 2>&1 || die "curl is required. Install it and re-run."
 
@@ -72,11 +85,23 @@ while :; do
   fi
   [ -n "$LICENSE_KEY" ] || continue
 
-  BODY=$(curl -fsS -m 20 -H "Authorization: Bearer $LICENSE_KEY" "$CLOUD_API_URL/api/self-host/status" 2>/dev/null || true)
-  case "$BODY" in
-    *'"valid":true'*) break ;;
-    *) printf '%s✗%s That key was rejected. Check it and paste again.\n' "$RED" "$OFF"; LICENSE_KEY=""; [ -n "$TTY" ] || exit 1 ;;
+  # Separate "key is wrong" from "the endpoint isn't there", or a cloud that has
+  # not been deployed yet reads to the user as a bad key they cannot fix.
+  LIC_CODE=$(curl -s -o /tmp/bb-lic.json -w '%{http_code}' -m 20 \
+    -H "Authorization: Bearer $LICENSE_KEY" "$CLOUD_API_URL/api/self-host/status" || echo 000)
+  BODY=$(cat /tmp/bb-lic.json 2>/dev/null || echo '')
+  rm -f /tmp/bb-lic.json
+
+  case "$BODY" in *'"valid":true'*) break ;; esac
+  case "$LIC_CODE" in
+    000) die "Cannot reach $CLOUD_API_URL. Check this box's DNS and outbound HTTPS." ;;
+    404) die "$CLOUD_API_URL is running a build without the self-host API, so no key can be checked. Nothing to fix on this box." ;;
+    5*)  die "$CLOUD_API_URL returned HTTP $LIC_CODE. Try again shortly." ;;
+    401|403) printf '%s✗%s That key was rejected. Check it and paste again.\n' "$RED" "$OFF" ;;
+    *)   printf '%s✗%s Unexpected reply (HTTP %s). Check the key and paste again.\n' "$RED" "$OFF" "$LIC_CODE" ;;
   esac
+  LICENSE_KEY=""
+  [ -n "$TTY" ] || exit 1
 done
 
 PLAN=$(json_str "$BODY" plan)
@@ -138,8 +163,8 @@ ok "Owner: $OWNER_EMAIL"
 
 step "Writing $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR/docker"
-curl -fsSL "$ASSET_BASE/docker-compose.yml" -o "$INSTALL_DIR/docker-compose.yml" || die "Could not fetch docker-compose.yml"
-curl -fsSL "$ASSET_BASE/Caddyfile"          -o "$INSTALL_DIR/docker/Caddyfile"   || die "Could not fetch Caddyfile"
+curl -fsSL "$COMPOSE_URL" -o "$INSTALL_DIR/docker-compose.yml" || die "Could not fetch docker-compose.yml from $COMPOSE_URL"
+curl -fsSL "$CADDY_URL"   -o "$INSTALL_DIR/docker/Caddyfile"   || die "Could not fetch Caddyfile from $CADDY_URL"
 
 # Secrets are generated here and never leave this machine. Preserve them across
 # re-runs: rotating ENCRYPTION_KEY makes stored credentials undecryptable.

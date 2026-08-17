@@ -33,7 +33,16 @@ Create a license key at **blinkbox.net → Self-host → New license**. It is sh
 once. Then, on your server:
 
 ```bash
-curl -fsSL https://get.blinkbox.net/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sudo sh
+```
+
+The installer pulls `docker-compose.yml` and `docker/Caddyfile` from the same
+place, so this is the only URL involved. To serve it from a host of your own,
+put all three files at one path and point `BLINKBOX_ASSET_BASE` at it:
+
+```bash
+BLINKBOX_ASSET_BASE=https://get.example.com \
+  sh -c "$(curl -fsSL https://get.example.com/install.sh)"
 ```
 
 It asks three things:
@@ -106,7 +115,7 @@ generated. **Keep that `.env`.**
 ```bash
 BLINKBOX_LICENSE_KEY=bb_selfhost_… BLINKBOX_NAME=acme \
   BLINKBOX_OWNER_EMAIL=you@acme.com \
-  sh -c "$(curl -fsSL https://get.blinkbox.net/install.sh)"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh)"
 ```
 
 The generated password is still printed once on stdout. Capture it there — it is
