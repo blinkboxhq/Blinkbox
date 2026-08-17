@@ -1183,10 +1183,17 @@ async function assembleTools({
 
       const spec = PLATFORM_TOOL_SPECS[type];
       if (spec) {
+        let everyOp = null;
+        try {
+          everyOp = await buildToolSchema(type, []);
+        } catch (err) {
+          console.error(`[AIAgent] Manifest widening failed for "${type}": ${err.message}`);
+        }
+        const merged = restrictOperations(mergeSpecParameters(spec.parameters, everyOp), enabled);
         tools.push({
           name: toolName,
           description: alias ? `${spec.description} (${alias})` : spec.description,
-          parameters: describeResources(type, pinned, restrictOperations(spec.parameters, enabled)),
+          parameters: describeResources(type, pinned, merged),
           execute: (args) =>
             spec.run(applyResourceDefaults(type, args, pinned), credentialId, workspaceId, inputAttachments),
         });
@@ -1297,6 +1304,41 @@ function restrictOperations(parameters, enabledActions) {
       ...parameters.properties,
       operation: { ...parameters.properties.operation, enum: kept },
     },
+  };
+}
+
+/**
+ * A hand-written spec knows things the manifest cannot derive (attachment
+ * forwarding, better arg wording) but its operation list is a frozen subset of
+ * what the app's router actually implements — the action checklist offers every
+ * op, so the tool schema has to as well. Spec properties win on overlap; the
+ * manifest contributes the missing ops, their args and the passthrough hatch.
+ * Widening makes per-op requirements diverge, so only `operation` stays required
+ * — each op's own needs are named in its description.
+ */
+function mergeSpecParameters(specParams, manifest) {
+  const manifestProps = manifest?.parameters?.properties;
+  const manifestOps = manifestProps?.operation?.enum;
+  if (!Array.isArray(manifestOps) || !manifestOps.length) return specParams;
+
+  const specProps = specParams?.properties || {};
+  const specOps = Array.isArray(specProps.operation?.enum) ? specProps.operation.enum : [];
+  const added = manifestOps.filter((op) => !specOps.includes(op));
+  if (!added.length) return specParams;
+
+  const specNote = specProps.operation?.description;
+  return {
+    type: "object",
+    properties: {
+      ...manifestProps,
+      ...specProps,
+      operation: {
+        type: "string",
+        enum: [...specOps, ...added],
+        description: [manifestProps.operation.description, specNote].filter(Boolean).join(". "),
+      },
+    },
+    required: ["operation"],
   };
 }
 

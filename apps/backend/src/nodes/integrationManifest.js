@@ -173,6 +173,12 @@ const PASSTHROUGH_PARAMS = {
   },
 };
 
+// Requirements differ per operation, so JSON-schema `required` can only carry
+// `operation` itself — the rest of each op's contract is spelled out here.
+const describeAction = (a) =>
+  `${a.key}${a.description ? ` — ${a.description}` : ""}` +
+  (a.required?.length ? ` (needs: ${a.required.join(", ")})` : "");
+
 /**
  * JSON-schema tool definition for an app, restricted to the ticked actions.
  * Ops that declare `params` contribute typed properties; anything else falls
@@ -190,9 +196,7 @@ export async function buildToolSchema(type, enabledActions) {
     operation: {
       type: "string",
       enum: actions.map((a) => a.key),
-      description: actions
-        .map((a) => `${a.key}${a.description ? ` — ${a.description}` : ""}`)
-        .join("; "),
+      description: actions.map(describeAction).join("; "),
     },
   };
   const required = ["operation"];
