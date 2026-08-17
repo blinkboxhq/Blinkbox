@@ -6,7 +6,10 @@
 # env. Changing the API URL means rebuilding this image.
 FROM node:22-bookworm-slim AS build
 
-ARG VITE_API_URL=http://localhost:3000
+# Must stay empty. src/config/selfHost.js falls back to window.location.origin
+# only when VITE_API_URL is falsy — a default here bakes one hostname into an
+# image that has to serve every customer domain.
+ARG VITE_API_URL=
 ARG VITE_SELF_HOSTED=true
 ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_API_URL=$VITE_API_URL \

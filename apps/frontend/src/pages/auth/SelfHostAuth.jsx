@@ -215,7 +215,7 @@ export default function SelfHostAuth() {
 
             <p className="mt-5 flex items-start gap-2 text-[11px] leading-relaxed text-[var(--bb-text-dim)]">
               <KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Lost it? On the server run <code className="text-[var(--bb-text-lo)]">docker compose exec backend node src/modules/selfhost/resetOwner.js</code>
+              Lost it? On the server run <code className="text-[var(--bb-text-lo)]">docker compose exec backend node apps/backend/src/modules/selfhost/resetOwner.js</code>
             </p>
           </form>
         )}

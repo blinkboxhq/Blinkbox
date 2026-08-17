@@ -10,12 +10,6 @@ set -eu
 CLOUD_API_URL="${CLOUD_API_URL:-https://api.blinkbox.net}"
 INSTALL_DIR="${BLINKBOX_DIR:-/opt/blinkbox}"
 
-# BLINKBOX_LOCAL=1 stands the stack up with no cloud round-trip: no license
-# check, no subdomain, no certificate. Metering fails closed, so nodes will not
-# execute — this mode is for exercising install and sign-in, not for running work.
-LOCAL_MODE="${BLINKBOX_LOCAL:-}"
-LOCAL_HOST="${BLINKBOX_HOST:-localhost}"
-
 # The repo is public, so raw.githubusercontent.com serves these three files with
 # no DNS of ours in the path. BLINKBOX_ASSET_BASE overrides it with a flat mirror
 # that keeps docker-compose.yml, Caddyfile and install.sh at its root.
@@ -83,7 +77,7 @@ docker info >/dev/null 2>&1 || die "Docker is installed but not running. Start i
 # ── License ──────────────────────────────────────────────────────────────────
 
 LICENSE_KEY="${BLINKBOX_LICENSE_KEY:-}"
-while [ -z "$LOCAL_MODE" ]; do
+while :; do
   if [ -z "$LICENSE_KEY" ]; then
     say "Paste your license key ${DIM}(blinkbox.net → Self-hosting)${OFF}"
     ask "  license key: "
@@ -110,14 +104,8 @@ while [ -z "$LOCAL_MODE" ]; do
   [ -n "$TTY" ] || exit 1
 done
 
-if [ -n "$LOCAL_MODE" ]; then
-  # env.js refuses to boot on an empty key, so give it a syntactically present one.
-  LICENSE_KEY="${LICENSE_KEY:-local}"
-  ok "Local mode — skipping the license check"
-else
-  PLAN=$(json_str "$BODY" plan)
-  ok "License valid${PLAN:+ — $PLAN plan}"
-fi
+PLAN=$(json_str "$BODY" plan)
+ok "License valid${PLAN:+ — $PLAN plan}"
 
 # ── Name → DNS ───────────────────────────────────────────────────────────────
 
@@ -125,7 +113,7 @@ PUBLIC_IP="${BLINKBOX_IP:-}"
 [ -n "$PUBLIC_IP" ] || PUBLIC_IP=$(curl -fsS -m 10 https://api.ipify.org 2>/dev/null || true)
 
 NAME="${BLINKBOX_NAME:-}"
-while [ -z "$LOCAL_MODE" ]; do
+while :; do
   if [ -z "$NAME" ]; then
     say ""
     say "Choose a name for this instance ${DIM}(letters, numbers, dashes)${OFF}"
@@ -147,21 +135,14 @@ while [ -z "$LOCAL_MODE" ]; do
   [ -n "$TTY" ] || exit 1
 done
 
-if [ -n "$LOCAL_MODE" ]; then
-  HOSTNAME_FQDN="$LOCAL_HOST"
-  CADDY_SITE=":80"
-  PUBLIC_URL="http://$LOCAL_HOST"
-  ok "Local mode — serving on $PUBLIC_URL, no certificate"
-else
-  HOSTNAME_FQDN=$(json_str "$REG" hostname)
-  FINAL_NAME=$(json_str "$REG" name)
-  DNS_STATE=$(json_str "$REG" dns)
-  [ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
-  ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
-  [ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
-  CADDY_SITE="$HOSTNAME_FQDN"
-  PUBLIC_URL="https://$HOSTNAME_FQDN"
-fi
+HOSTNAME_FQDN=$(json_str "$REG" hostname)
+FINAL_NAME=$(json_str "$REG" name)
+DNS_STATE=$(json_str "$REG" dns)
+[ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
+ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
+[ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
+CADDY_SITE="$HOSTNAME_FQDN"
+PUBLIC_URL="https://$HOSTNAME_FQDN"
 
 # ── Owner ────────────────────────────────────────────────────────────────────
 
@@ -218,13 +199,16 @@ ok "Config written"
 
 step "Starting Blinkbox ${DIM}(first run pulls a few images)${OFF}"
 cd "$INSTALL_DIR"
-docker compose pull --quiet 2>/dev/null || true
+docker compose pull --quiet || die "Could not pull the Blinkbox images from ghcr.io.
+  Check this box's outbound HTTPS, then re-run. Nothing was started."
 docker compose up -d || die "Startup failed. Logs:  cd $INSTALL_DIR && docker compose logs"
 
 printf '%s' "  waiting for the engine "
 i=0
 while [ $i -lt 60 ]; do
-  if curl -fsS -m 3 "http://localhost:${BACKEND_PORT:-3000}/health" >/dev/null 2>&1; then break; fi
+  if docker compose exec -T backend node -e \
+    "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" \
+    >/dev/null 2>&1; then break; fi
   printf '.'; sleep 3; i=$((i + 1))
 done
 say ""
@@ -236,7 +220,7 @@ ok "Blinkbox is running"
 # so it exists in exactly one place: the screen below.
 step "Creating the owner account"
 set +e
-OWNER_PASSWORD=$(docker compose exec -T backend node src/modules/selfhost/seedOwner.js)
+OWNER_PASSWORD=$(docker compose exec -T backend node apps/backend/src/modules/selfhost/seedOwner.js)
 SEED_CODE=$?
 set -e
 
@@ -260,20 +244,14 @@ if [ $SEED_CODE -eq 0 ] && [ -n "$OWNER_PASSWORD" ]; then
   say "  ${DIM}belongs to $OWNER_EMAIL.${OFF}"
 elif [ $SEED_CODE -eq 3 ]; then
   say "  ${DIM}This instance already has an owner — sign in with your existing password.${OFF}"
-  say "  ${DIM}Forgotten it?  cd $INSTALL_DIR && docker compose exec backend node src/modules/selfhost/resetOwner.js${OFF}"
+  say "  ${DIM}Forgotten it?  cd $INSTALL_DIR && docker compose exec backend node apps/backend/src/modules/selfhost/resetOwner.js${OFF}"
 else
   printf '%s✗%s Could not create the owner account.\n' "$RED" "$OFF"
-  say "  ${DIM}Retry:  cd $INSTALL_DIR && docker compose exec backend node src/modules/selfhost/seedOwner.js${OFF}"
+  say "  ${DIM}Retry:  cd $INSTALL_DIR && docker compose exec backend node apps/backend/src/modules/selfhost/seedOwner.js${OFF}"
 fi
 
 say ""
-if [ -n "$LOCAL_MODE" ]; then
-  say "  ${BLD}Local mode: workflows will not execute.${OFF}"
-  say "  ${DIM}Credit metering fails closed and the cloud API is unreachable, so${OFF}"
-  say "  ${DIM}every metered node is blocked. Sign-in and the editor work.${OFF}"
-else
-  say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
-fi
+say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
 say ""
 say "  ${DIM}logs     cd $INSTALL_DIR && docker compose logs -f${OFF}"
 say "  ${DIM}upgrade  cd $INSTALL_DIR && docker compose pull && docker compose up -d${OFF}"

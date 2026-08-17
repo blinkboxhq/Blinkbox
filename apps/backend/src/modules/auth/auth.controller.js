@@ -89,7 +89,7 @@ async function ownerLogin(req, res) {
   // standing key to the instance.
   if (owner.mustChangePassword && owner.bootstrapExpiresAt && owner.bootstrapExpiresAt < new Date()) {
     return res.status(403).json({
-      message: "This setup password has expired. On the server run:  cd /opt/blinkbox && docker compose exec backend node src/modules/selfhost/resetOwner.js",
+      message: "This setup password has expired. On the server run:  cd /opt/blinkbox && docker compose exec backend node apps/backend/src/modules/selfhost/resetOwner.js",
     });
   }
 
@@ -386,7 +386,7 @@ export async function forgotPassword(req, res) {
   // arrive. Recovery is gated on shell access to the host instead.
   if (SELF_HOSTED) {
     return res.status(403).json({
-      message: "Recover a self-hosted instance from the server:  docker compose exec backend node src/modules/selfhost/resetOwner.js",
+      message: "Recover a self-hosted instance from the server:  docker compose exec backend node apps/backend/src/modules/selfhost/resetOwner.js",
     });
   }
 

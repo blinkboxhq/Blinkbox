@@ -1,7 +1,11 @@
 # Blinkbox — self-hosted install.
 #
+# Installed by docker/install.sh. To run it from a source checkout instead:
+#
 #   cp docker/env.example .env && $EDITOR .env
-#   docker compose up -d
+#   docker compose up -d          # then open http://localhost
+#
+# Caddy is the only published listener — everything reaches the app through it.
 #
 # Workflows, executions and credentials live in the Mongo below — on your disk,
 # in your network. Credits are metered against your Blinkbox cloud account via
@@ -56,16 +60,16 @@ services:
       CLOUD_API_URL: ${CLOUD_API_URL:-https://api.blinkbox.net}
       SELF_HOST_LICENSE_KEY: ${SELF_HOST_LICENSE_KEY:?get one at blinkbox.net → Settings → Self-hosting}
       OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
-      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3000}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       # Optional — your own provider keys for AI and integration nodes.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-    ports:
-      - "${BACKEND_PORT:-3000}:3000"
+    expose:
+      - "3000"
 
   frontend:
     image: ghcr.io/blinkboxhq/blinkbox-frontend:${BLINKBOX_TAG:-latest}
@@ -79,8 +83,8 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - "${FRONTEND_PORT:-8080}:80"
+    expose:
+      - "80"
 
   # Fronts the whole install on <name>.blinkbox.net and gets a Let's Encrypt
   # certificate on its own — the DNS record the installer created is what makes

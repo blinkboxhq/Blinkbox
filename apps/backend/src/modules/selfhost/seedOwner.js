@@ -45,7 +45,7 @@ async function main() {
   const existing = await User.findOne({ isOwner: true }).select("_id email");
   if (existing) {
     console.error(`This instance is already claimed by ${existing.email}.`);
-    console.error("To issue a fresh password, run:  docker compose exec backend node src/modules/selfhost/resetOwner.js");
+    console.error("To issue a fresh password, run:  docker compose exec backend node apps/backend/src/modules/selfhost/resetOwner.js");
     process.exit(3);
   }
 
