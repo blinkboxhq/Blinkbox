@@ -129,7 +129,7 @@ certificate:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh \
-  | sudo BLINKBOX_LOCAL=1 BLINKBOX_OWNER_EMAIL=you@example.com sh
+  | sudo env BLINKBOX_LOCAL=1 BLINKBOX_OWNER_EMAIL=you@example.com sh
 ```
 
 Then open `http://localhost`. Set `BLINKBOX_HOST` to the box's IP or hostname if
