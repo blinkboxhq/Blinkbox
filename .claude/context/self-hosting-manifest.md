@@ -44,10 +44,17 @@ Non-negotiable. A change that breaks one of these is wrong even if it passes.
    headers and its `X-Forwarded-For` overwrite, which login lockouts depend on.
 4. **The frontend has no hostname compiled into it.** `VITE_API_URL` is never
    set for a self-hosted build. One image serves every customer domain.
-5. **Metering degrades, it does not cliff.** A successful check is cached; the
-   instance keeps executing for `GRACE_HOURS` (default 72) while the cloud is
-   unreachable, then fails closed. A blinkbox.net outage must not stop every
-   customer's workflows.
+5. **Metering degrades, it does not cliff.** A successful check is stamped on
+   the instance's own database; the instance keeps executing for `GRACE_HOURS`
+   (default 72) while the cloud is unreachable, then fails closed. A
+   blinkbox.net outage must not stop every customer's workflows. Three things
+   keep that from being a hole: the window is set by the cloud and shipped on
+   every check, so a customer cannot widen it by editing `.env`; spend during
+   the window is queued and replayed on reconnect, so grace is deferred billing
+   rather than free execution; and a rejected key burns the stamp, so §2.6
+   still bites on the next node. Grace extends a proven license — an instance
+   that has never reached the cloud gets none. Only an outage counts: a 4xx is
+   the cloud answering, and a definite no is never run through.
 6. **Revocation is total.** Revoking a license tears down the DNS record, drops
    the managed credential, and denies the next bootstrap and the next check.
 7. **The owner password exists in exactly one place: the installer's stdout,
@@ -111,8 +118,10 @@ No source is ever placed here. The installer pulls images; it cannot build.
 
 `SELF_HOSTED=true` is set by compose, not by `.env` — it is a property of the
 deployment, not a customer choice. `MONGODB_URI` / `REDIS_URL` are supplied by
-compose in `local` mode and are **absent** in `managed` mode; that absence is
-what triggers the bootstrap.
+compose in both modes and simply ignored in `managed`, where the backend
+bootstraps its own tenant-scoped pair instead. `SELF_HOST_STORAGE` is the single
+trigger: an absent variable would mean "managed" and "the customer deleted a
+line" at the same time, and only one of those should boot.
 
 ### 4.3 Cloud API — `/api/self-host`
 
@@ -123,7 +132,7 @@ what triggers the bootstrap.
 | `POST` | `/heartbeat` | license | liveness + version, every 5 min |
 | `GET`  | `/status` | license | `{ valid, plan, graceHours }` |
 | `GET`  | `/cost/:nodeType` | license | |
-| `POST` | `/credits/check` | license | |
+| `POST` | `/credits/check` | license | carries `graceHours` — the window is the cloud's to set |
 | `POST` | `/credits/deduct` | license | |
 | `POST` `GET` | `/licenses` | token | dashboard: mint / list |
 | `DELETE` | `/licenses/:id` | token | dashboard: revoke → tears down DNS + creds |
@@ -239,13 +248,19 @@ Each phase leaves the tree working. Ship them in order.
 
 | Phase | Scope | Why here |
 |-------|-------|----------|
-| **1** | D2, D3, D6, D8 + delete `BLINKBOX_LOCAL` + fix `env.example` | surgical; makes the one remaining path coherent |
-| **2** | `release.yml` → GHCR (D1) | the installer can finally run end to end |
-| **3** | Grace-window metering: cache the last good check, `GRACE_HOURS`, `/status` carries it | §2.5 |
-| **4** | Heartbeat client (D4) + real `lastSeenAt` in the dashboard | §4.3 |
-| **5** | Storage question in the installer; `local` compose profile | the fork becomes a supported choice |
+| **1** ✅ | D2, D3, D6, D8 + delete `BLINKBOX_LOCAL` + fix `env.example` | surgical; makes the one remaining path coherent |
+| **2** ✅ | `release.yml` → GHCR (D1) | the installer can finally run end to end |
+| **3** ✅ | Grace-window metering: cache the last good check, `GRACE_HOURS`, `/status` carries it | §2.5 |
+| **4** ✅ | Heartbeat client (D4) + real `lastSeenAt` in the dashboard | §4.3 |
+| **5** ✅ | Storage question in the installer; `local` compose profile | the fork becomes a supported choice |
 | **6** | `/bootstrap` + Atlas/Redis provisioning + prefix plumbing (§5) | managed mode |
 
 Phase 1 is the only phase that changes existing behaviour without adding
 surface. Phases 5–6 are the new product; 2–4 are debt that has to clear first
 or the new product gets built on sand.
+
+Phase 5 ships the *choice* but not yet its second half: `SELF_HOST_STORAGE=managed`
+throws on boot, and the installer only offers the option when the cloud sets
+`MANAGED_STORAGE_ENABLED=true`. Phase 6 removes that throw and flips the flag —
+until then an install can pick managed only by editing `.env` by hand, and gets
+told why on line one rather than hanging on a Mongo that was never started.

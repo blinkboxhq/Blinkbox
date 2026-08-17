@@ -22,6 +22,13 @@ if (process.env.SELF_HOSTED === "true" && !process.env.SELF_HOST_LICENSE_KEY) {
   throw new Error("FATAL: SELF_HOST_LICENSE_KEY is required when SELF_HOSTED=true");
 }
 
+// Managed storage needs the /bootstrap client to fetch tenant-scoped credentials
+// before the first connect. Until that ships, say so on line one rather than
+// hanging on a Mongo the local compose profile deliberately never started.
+if (process.env.SELF_HOSTED === "true" && process.env.SELF_HOST_STORAGE === "managed") {
+  throw new Error("FATAL: SELF_HOST_STORAGE=managed is not supported by this build yet — use local");
+}
+
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 // BACKEND_PUBLIC_URL must be the public-facing URL (e.g. https://blinkbox-backend-production.up.railway.app)
@@ -206,6 +213,26 @@ export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true
 export const SELF_HOSTED      = process.env.SELF_HOSTED === "true";
 export const CLOUD_API_URL    = process.env.CLOUD_API_URL    || "https://api.blinkbox.net";
 export const SELF_HOST_LICENSE_KEY = process.env.SELF_HOST_LICENSE_KEY || null;
+
+// Where this instance keeps its data: "local" (mongo + redis run on the
+// customer's own box) or "managed" (our cluster, on credentials scoped to this
+// instance and fetched at boot). One env var is the whole fork — compose hands
+// down MONGODB_URI and REDIS_URL either way and managed mode simply ignores them.
+export const SELF_HOST_STORAGE = process.env.SELF_HOST_STORAGE === "managed" ? "managed" : "local";
+
+// Cloud side only. Managed storage cannot be offered until per-tenant Mongo and
+// Redis provisioning exists behind /bootstrap, so the installer asks the cloud
+// whether the option is real rather than assuming it.
+export const MANAGED_STORAGE_ENABLED = process.env.MANAGED_STORAGE_ENABLED === "true";
+// The image tag this container was started from, reported on heartbeat so the
+// dashboard can tell which build a customer is actually running.
+export const BLINKBOX_TAG = process.env.BLINKBOX_TAG || null;
+
+// How long an instance may keep executing on its last successful credit check
+// while the cloud is unreachable. Set on the cloud, which hands it to instances
+// on every check — a customer cannot widen their own window by editing .env.
+// Read here as the instance-side fallback for the very first check.
+export const GRACE_HOURS = Math.min(Math.max(Number(process.env.GRACE_HOURS) || 72, 0), 720);
 
 // Cloud side only: the installer asks for a name and we hand back
 // <name>.SELF_HOST_DOMAIN, pointed at the customer's public IP. Without a

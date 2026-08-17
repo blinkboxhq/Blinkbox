@@ -7,15 +7,22 @@
 #
 # Caddy is the only published listener — everything reaches the app through it.
 #
-# Workflows, executions and credentials live in the Mongo below — on your disk,
-# in your network. Credits are metered against your Blinkbox cloud account via
-# SELF_HOST_LICENSE_KEY, so plan and purchased credits carry over unchanged.
+# Two storage modes, one file. In `local` mode (the default) the mongo and redis
+# services below run on your box and your workflows, executions and credentials
+# never leave it. In `managed` mode they are switched off by the compose profile
+# and the backend fetches instance-scoped credentials for our cluster at boot.
+# The installer writes the choice; COMPOSE_PROFILES in .env is what selects it.
+#
+# Credits are metered against your Blinkbox cloud account via
+# SELF_HOST_LICENSE_KEY either way, so plan and purchased credits carry over.
 
 name: blinkbox
 
 services:
   mongo:
     image: mongo:7
+    # Not started in managed mode — COMPOSE_PROFILES is empty there.
+    profiles: ["local"]
     restart: unless-stopped
     volumes:
       - mongo-data:/data/db
@@ -28,6 +35,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    profiles: ["local"]
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
@@ -45,19 +53,27 @@ services:
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     depends_on:
+      # required:false so managed mode, where neither service exists, still comes
+      # up instead of erroring on a dependency its profile never enabled.
       mongo:
         condition: service_healthy
+        required: false
       redis:
         condition: service_healthy
+        required: false
     environment:
       NODE_ENV: production
       PORT: 3000
+      # Ignored in managed mode, where the backend gets tenant-scoped
+      # credentials from the cloud at boot and never writes them to disk.
+      SELF_HOST_STORAGE: ${SELF_HOST_STORAGE:-local}
       MONGODB_URI: mongodb://mongo:27017/blinkbox
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env (exactly 32 chars)}
       SELF_HOSTED: "true"
       CLOUD_API_URL: ${CLOUD_API_URL:-https://api.blinkbox.net}
+      BLINKBOX_TAG: ${BLINKBOX_TAG:-latest}
       SELF_HOST_LICENSE_KEY: ${SELF_HOST_LICENSE_KEY:?get one at blinkbox.net → Settings → Self-hosting}
       OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost}

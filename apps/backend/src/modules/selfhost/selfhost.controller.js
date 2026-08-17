@@ -4,7 +4,7 @@ import SelfHostInstance from "../../models/selfHostInstance.model.js";
 import { hashApiKey } from "../mcp/apiKey.middleware.js";
 import { checkCredits, deductCredits, getNodeCost } from "../../infra/credit.engine.js";
 import { dnsEnabled, upsertARecord, deleteRecord } from "../../infra/dns.cloudflare.js";
-import { SELF_HOST_DOMAIN } from "../../config/env.js";
+import { SELF_HOST_DOMAIN, GRACE_HOURS, MANAGED_STORAGE_ENABLED } from "../../config/env.js";
 
 const MAX_LICENSES = 5;
 const MAX_NAME_VERSIONS = 50;
@@ -255,7 +255,10 @@ export async function checkLicenseCredits(req, res) {
   }
   try {
     const result = await checkCredits(req.licenseUserId, nodeType);
-    res.json({ success: true, ...result, remaining: finite(result.remaining) });
+    // The grace policy rides along with every check, so an instance that has
+    // ever reached us knows how long it may coast — and cannot widen the
+    // window itself by editing its own .env.
+    res.json({ success: true, ...result, remaining: finite(result.remaining), graceHours: GRACE_HOURS });
   } catch {
     res.status(500).json({ success: false, message: "Credit check failed." });
   }
@@ -287,6 +290,11 @@ export async function licenseStatus(req, res) {
       monthlyLimit: usage.monthlyLimit,
       creditsUsed: usage.creditsUsed,
       purchasedCredits: usage.purchasedCredits,
+      graceHours: GRACE_HOURS,
+      // The installer reads this to decide whether to offer "Blinkbox-managed"
+      // as a storage choice at all — an option we cannot fulfil is worse than
+      // one we never showed.
+      managedStorage: MANAGED_STORAGE_ENABLED,
     });
   } catch {
     res.status(500).json({ success: false, message: "Status lookup failed." });

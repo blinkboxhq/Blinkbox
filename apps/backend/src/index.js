@@ -68,6 +68,14 @@ async function bootstrap() {
       console.warn("Weekly digest skipped:", err.message);
     }
 
+    // 6b. Self-hosted liveness beacon (no-op on cloud)
+    try {
+      const { startHeartbeat } = await import("./infra/selfhost.heartbeat.js");
+      startHeartbeat();
+    } catch (err) {
+      console.warn("Self-host heartbeat skipped:", err.message);
+    }
+
     // 7. Start server + workers
     await startServer();
 

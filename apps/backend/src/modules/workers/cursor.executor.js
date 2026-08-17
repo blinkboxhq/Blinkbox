@@ -231,7 +231,7 @@ export async function processCursor({ executionId, cursorId }) {
       creditCheck.reason === "invalid_license"
         ? "Self-hosted license key is invalid or revoked. Check SELF_HOST_LICENSE_KEY."
         : creditCheck.reason === "metering_unavailable"
-          ? "Cannot reach Blinkbox cloud to meter this node. Execution paused until connectivity returns."
+          ? "Cannot reach Blinkbox cloud to meter this node, and the offline grace window has run out. Execution resumes once connectivity returns."
           : `Credit quota exceeded: ${creditCheck.remaining} remaining, need ${creditCheck.cost}. Upgrade your plan to continue.`;
 
     await emitExecutionEvent(execution._id, {
