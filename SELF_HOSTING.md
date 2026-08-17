@@ -121,6 +121,26 @@ BLINKBOX_LICENSE_KEY=bb_selfhost_… BLINKBOX_NAME=acme \
 The generated password is still printed once on stdout. Capture it there — it is
 never written to `.env` and cannot be recovered afterwards.
 
+### Local install (no cloud, no domain)
+
+Installs Docker, pulls every image, brings the whole stack up on plain HTTP and
+prints the owner password — with no license key, no subdomain and no
+certificate:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh \
+  | sudo BLINKBOX_LOCAL=1 BLINKBOX_OWNER_EMAIL=you@example.com sh
+```
+
+Then open `http://localhost`. Set `BLINKBOX_HOST` to the box's IP or hostname if
+you are not browsing from the machine itself.
+
+**Workflows will not run in this mode.** Credit metering fails closed: every
+metered node asks `api.blinkbox.net` for authorisation first, and with no
+license key that call is refused, so the node is blocked with
+`metering_unavailable`. Sign-in, the canvas and the editor all work — execution
+does not. Use this to verify the install, not to run automations.
+
 ## Using your own domain instead
 
 Point your own A record at the box, then:

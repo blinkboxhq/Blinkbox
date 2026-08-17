@@ -10,6 +10,12 @@ set -eu
 CLOUD_API_URL="${CLOUD_API_URL:-https://api.blinkbox.net}"
 INSTALL_DIR="${BLINKBOX_DIR:-/opt/blinkbox}"
 
+# BLINKBOX_LOCAL=1 stands the stack up with no cloud round-trip: no license
+# check, no subdomain, no certificate. Metering fails closed, so nodes will not
+# execute — this mode is for exercising install and sign-in, not for running work.
+LOCAL_MODE="${BLINKBOX_LOCAL:-}"
+LOCAL_HOST="${BLINKBOX_HOST:-localhost}"
+
 # The repo is public, so raw.githubusercontent.com serves these three files with
 # no DNS of ours in the path. BLINKBOX_ASSET_BASE overrides it with a flat mirror
 # that keeps docker-compose.yml, Caddyfile and install.sh at its root.
@@ -77,7 +83,7 @@ docker info >/dev/null 2>&1 || die "Docker is installed but not running. Start i
 # ── License ──────────────────────────────────────────────────────────────────
 
 LICENSE_KEY="${BLINKBOX_LICENSE_KEY:-}"
-while :; do
+while [ -z "$LOCAL_MODE" ]; do
   if [ -z "$LICENSE_KEY" ]; then
     say "Paste your license key ${DIM}(blinkbox.net → Self-hosting)${OFF}"
     ask "  license key: "
@@ -104,8 +110,14 @@ while :; do
   [ -n "$TTY" ] || exit 1
 done
 
-PLAN=$(json_str "$BODY" plan)
-ok "License valid${PLAN:+ — $PLAN plan}"
+if [ -n "$LOCAL_MODE" ]; then
+  # env.js refuses to boot on an empty key, so give it a syntactically present one.
+  LICENSE_KEY="${LICENSE_KEY:-local}"
+  ok "Local mode — skipping the license check"
+else
+  PLAN=$(json_str "$BODY" plan)
+  ok "License valid${PLAN:+ — $PLAN plan}"
+fi
 
 # ── Name → DNS ───────────────────────────────────────────────────────────────
 
@@ -113,7 +125,7 @@ PUBLIC_IP="${BLINKBOX_IP:-}"
 [ -n "$PUBLIC_IP" ] || PUBLIC_IP=$(curl -fsS -m 10 https://api.ipify.org 2>/dev/null || true)
 
 NAME="${BLINKBOX_NAME:-}"
-while :; do
+while [ -z "$LOCAL_MODE" ]; do
   if [ -z "$NAME" ]; then
     say ""
     say "Choose a name for this instance ${DIM}(letters, numbers, dashes)${OFF}"
@@ -135,12 +147,21 @@ while :; do
   [ -n "$TTY" ] || exit 1
 done
 
-HOSTNAME_FQDN=$(json_str "$REG" hostname)
-FINAL_NAME=$(json_str "$REG" name)
-DNS_STATE=$(json_str "$REG" dns)
-[ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
-ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
-[ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
+if [ -n "$LOCAL_MODE" ]; then
+  HOSTNAME_FQDN="$LOCAL_HOST"
+  CADDY_SITE=":80"
+  PUBLIC_URL="http://$LOCAL_HOST"
+  ok "Local mode — serving on $PUBLIC_URL, no certificate"
+else
+  HOSTNAME_FQDN=$(json_str "$REG" hostname)
+  FINAL_NAME=$(json_str "$REG" name)
+  DNS_STATE=$(json_str "$REG" dns)
+  [ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
+  ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
+  [ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
+  CADDY_SITE="$HOSTNAME_FQDN"
+  PUBLIC_URL="https://$HOSTNAME_FQDN"
+fi
 
 # ── Owner ────────────────────────────────────────────────────────────────────
 
@@ -184,9 +205,9 @@ JWT_SECRET=$JWT_SECRET
 ENCRYPTION_KEY=$ENCRYPTION_KEY
 OWNER_EMAIL=$OWNER_EMAIL
 
-BLINKBOX_HOSTNAME=$HOSTNAME_FQDN
-BACKEND_PUBLIC_URL=https://$HOSTNAME_FQDN
-CORS_ORIGINS=https://$HOSTNAME_FQDN
+BLINKBOX_HOSTNAME=$CADDY_SITE
+BACKEND_PUBLIC_URL=$PUBLIC_URL
+CORS_ORIGINS=$PUBLIC_URL
 
 CLOUD_API_URL=$CLOUD_API_URL
 ENVFILE
@@ -220,7 +241,7 @@ SEED_CODE=$?
 set -e
 
 say ""
-say "  ${BLD}https://$HOSTNAME_FQDN${OFF}"
+say "  ${BLD}$PUBLIC_URL${OFF}"
 say ""
 
 if [ $SEED_CODE -eq 0 ] && [ -n "$OWNER_PASSWORD" ]; then
@@ -246,7 +267,13 @@ else
 fi
 
 say ""
-say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
+if [ -n "$LOCAL_MODE" ]; then
+  say "  ${BLD}Local mode: workflows will not execute.${OFF}"
+  say "  ${DIM}Credit metering fails closed and the cloud API is unreachable, so${OFF}"
+  say "  ${DIM}every metered node is blocked. Sign-in and the editor work.${OFF}"
+else
+  say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
+fi
 say ""
 say "  ${DIM}logs     cd $INSTALL_DIR && docker compose logs -f${OFF}"
 say "  ${DIM}upgrade  cd $INSTALL_DIR && docker compose pull && docker compose up -d${OFF}"
