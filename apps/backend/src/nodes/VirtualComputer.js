@@ -22,7 +22,7 @@
 
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "../infra/bullmq.prefixed.js";
 import { Router } from "express";
 import crypto from "crypto";
 import { redis } from "../infra/redis.client.js";

@@ -3,7 +3,7 @@
  * Checks if a TCP port is open/closed. Fires on state change.
  * Great for detecting service outages, port scans, or unexpected open ports.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

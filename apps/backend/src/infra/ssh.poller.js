@@ -4,7 +4,7 @@
  * Fires the automation with stdout/stderr/exitCode output.
  * Dedup key: bb:ssh:lastRun:{automationId} — fires every interval regardless (no dedup, output always emitted).
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
 import Automation from "../models/automation.model.js";

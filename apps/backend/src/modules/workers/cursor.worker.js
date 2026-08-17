@@ -11,7 +11,7 @@
  *   - Failed jobs are moved to dead-letter queue for operator inspection
  */
 
-import { Worker } from "bullmq";
+import { Worker } from "../../infra/bullmq.prefixed.js";
 import { createBullMQConnection, getCursorQueue, getDeadLetterQueue } from "../../infra/bullmq.js";
 import { processCursor } from "./cursor.executor.js";
 import { redis } from "../../infra/redis.client.js";

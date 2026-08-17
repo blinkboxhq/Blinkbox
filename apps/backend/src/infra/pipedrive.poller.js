@@ -3,7 +3,7 @@
  * Polls Pipedrive CRM for new deals or persons using REST API v1.
  * Dedup key: bb:pipedrive:seen:{automationId} — item ID set, 30-day TTL.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

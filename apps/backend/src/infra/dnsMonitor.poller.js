@@ -3,7 +3,7 @@
  * Resolves DNS records for a domain and fires when they change.
  * Stores last-known values in Redis. State-change aware.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

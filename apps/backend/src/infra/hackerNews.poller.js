@@ -3,7 +3,7 @@
  * Polls HN Algolia API for new stories matching a keyword or by points threshold.
  * No auth required. Dedup key: bb:hn:seen:{automationId} (7-day TTL).
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

@@ -4,7 +4,7 @@
  * Fires when the site goes down (non-2xx), comes back up, or response time spikes.
  * Dedup: fires on STATE CHANGE only — tracks last state in Redis.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

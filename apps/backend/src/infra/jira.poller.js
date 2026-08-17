@@ -3,7 +3,7 @@
  * Polls Jira REST API for new issues matching a JQL filter.
  * Dedup key: bb:jira:seen:{automationId} — issue key set, 30-day TTL.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

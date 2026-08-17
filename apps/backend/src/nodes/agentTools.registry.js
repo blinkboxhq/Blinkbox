@@ -26,7 +26,7 @@
  */
 
 import axios from "axios";
-import { redis } from "../infra/redis.client.js";
+import { redis, stripPrefix } from "../infra/redis.client.js";
 import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -302,7 +302,7 @@ register({
         }
 
         // Enforce key count limit per workspace
-        const existingKeys = await redis.keys(prefix + "*");
+        const existingKeys = stripPrefix(await redis.keys(prefix + "*"));
         if (existingKeys.length >= MAX_KEYS && !existingKeys.includes(prefix + key)) {
           return { error: true, message: `workspace_memory: Workspace has reached the ${MAX_KEYS} key limit. Delete some keys first.` };
         }
@@ -318,7 +318,7 @@ register({
       }
 
       case "list": {
-        const keys = await redis.keys(prefix + "*");
+        const keys = stripPrefix(await redis.keys(prefix + "*"));
         const stripped = keys.map((k) => k.replace(prefix, ""));
         return { keys: stripped, count: stripped.length };
       }

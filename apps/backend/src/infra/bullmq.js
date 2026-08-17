@@ -10,13 +10,16 @@
  *   - Separate ioredis connections for Queue vs Worker (BullMQ requirement)
  */
 
-import { Queue, QueueEvents } from "bullmq";
+import { Queue, QueueEvents } from "./bullmq.prefixed.js";
 import IORedis from "ioredis";
 
 // ── Connection Factory ────────────────────────────────────────────────────────
 // BullMQ requires maxRetriesPerRequest: null (disables auto-retry on commands).
 // We create dedicated connections so the main app's Redis client isn't affected.
 
+// Deliberately no keyPrefix here: BullMQ rejects a prefixed connection because
+// its Lua scripts address key slots themselves. Tenant namespacing for queues
+// comes from the `prefix` option instead — see bullmq.prefixed.js.
 function createBullMQConnection() {
   return new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
     maxRetriesPerRequest: null, // Required by BullMQ

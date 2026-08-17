@@ -3,7 +3,7 @@
  * Polls Reddit's public JSON API for new posts in a subreddit.
  * No auth required. Dedup key: bb:reddit:seen:{automationId} (7-day TTL)
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

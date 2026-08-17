@@ -10,7 +10,7 @@
  * TTL: 30 days (items older than that are considered new again — fine for feeds).
  */
 
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import Parser from "rss-parser";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";

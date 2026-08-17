@@ -13,7 +13,7 @@
  * After exhausting retries, they land in the dead-letter queue.
  */
 
-import { Worker } from "bullmq";
+import { Worker } from "../../infra/bullmq.prefixed.js";
 import { createBullMQConnection } from "../../infra/bullmq.js";
 import { webhookDeadLetterQueue } from "../../infra/webhook.queue.js";
 import { executeAutomation } from "../automation/automation.executor.js";

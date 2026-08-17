@@ -4,6 +4,7 @@ import SelfHostInstance from "../../models/selfHostInstance.model.js";
 import { hashApiKey } from "../mcp/apiKey.middleware.js";
 import { checkCredits, deductCredits, getNodeCost } from "../../infra/credit.engine.js";
 import { dnsEnabled, upsertARecord, deleteRecord } from "../../infra/dns.cloudflare.js";
+import { provisionTenant, deprovisionTenant, provisioningReady } from "../../infra/managedStorage.provision.js";
 import { SELF_HOST_DOMAIN, GRACE_HOURS, MANAGED_STORAGE_ENABLED } from "../../config/env.js";
 
 const MAX_LICENSES = 5;
@@ -84,6 +85,9 @@ export async function revokeLicense(req, res) {
       if (dnsEnabled()) await deleteRecord(inst.dnsRecordId).catch(() => {});
       await inst.deleteOne();
     }
+    // Managed tenants lose their data-plane credentials with the license. The
+    // data itself stays: a customer who comes back should not find it deleted.
+    await deprovisionTenant(String(req.params.id)).catch(() => {});
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false, message: "Failed to revoke license." });
@@ -293,8 +297,10 @@ export async function licenseStatus(req, res) {
       graceHours: GRACE_HOURS,
       // The installer reads this to decide whether to offer "Blinkbox-managed"
       // as a storage choice at all — an option we cannot fulfil is worse than
-      // one we never showed.
-      managedStorage: MANAGED_STORAGE_ENABLED,
+      // one we never showed. The flag alone is not enough: without Atlas and
+      // Redis credentials configured, /bootstrap would 503 and the customer's
+      // box would fail its first boot having already chosen managed.
+      managedStorage: MANAGED_STORAGE_ENABLED && provisioningReady(),
     });
   } catch {
     res.status(500).json({ success: false, message: "Status lookup failed." });
@@ -308,4 +314,36 @@ export function nodeCost(req, res) {
 // Infinity is not valid JSON — free nodes report -1 and the client restores it.
 function finite(n) {
   return Number.isFinite(n) ? n : -1;
+}
+
+// ── Managed storage bootstrap ────────────────────────────────────────────────
+
+// A healthy instance asks roughly twice a day; a crash-looping one could ask far
+// more often, and Atlas rate-limits per project. Serving the last lease for a
+// few minutes keeps one broken box from starving every other tenant's renewal.
+const LEASE_MEMO_MS = 5 * 60_000;
+const leases = new Map();
+
+export async function bootstrapStorage(req, res) {
+  if (!MANAGED_STORAGE_ENABLED || !provisioningReady()) {
+    return res.status(503).json({
+      success: false,
+      message: "Managed storage is not available on this cloud. Reinstall with local storage.",
+    });
+  }
+
+  const id = String(req.licenseId);
+  const memo = leases.get(id);
+  if (memo && memo.mintedAt > Date.now() - LEASE_MEMO_MS) {
+    return res.json(memo.creds);
+  }
+
+  try {
+    const creds = await provisionTenant(id);
+    leases.set(id, { creds, mintedAt: Date.now() });
+    res.json(creds);
+  } catch (err) {
+    console.error("[SelfHost] bootstrap failed:", err.message);
+    res.status(502).json({ success: false, message: "Could not provision managed storage." });
+  }
 }

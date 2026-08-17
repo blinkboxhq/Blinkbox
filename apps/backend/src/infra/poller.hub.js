@@ -1,4 +1,4 @@
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { POLLER_CONCURRENCY } from "../config/env.js";
 import Automation from "../models/automation.model.js";

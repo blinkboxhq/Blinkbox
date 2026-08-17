@@ -4,7 +4,7 @@
  * Uses OAuth credential (same pattern as gmail.poller.js).
  * Dedup key: bb:gcal:seen:{automationId} (24h TTL)
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

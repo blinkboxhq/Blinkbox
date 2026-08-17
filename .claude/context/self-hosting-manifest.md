@@ -253,14 +253,45 @@ Each phase leaves the tree working. Ship them in order.
 | **3** ✅ | Grace-window metering: cache the last good check, `GRACE_HOURS`, `/status` carries it | §2.5 |
 | **4** ✅ | Heartbeat client (D4) + real `lastSeenAt` in the dashboard | §4.3 |
 | **5** ✅ | Storage question in the installer; `local` compose profile | the fork becomes a supported choice |
-| **6** | `/bootstrap` + Atlas/Redis provisioning + prefix plumbing (§5) | managed mode |
+| **6** ✅ | `/bootstrap` + Atlas/Redis provisioning + prefix plumbing (§5) | managed mode |
 
 Phase 1 is the only phase that changes existing behaviour without adding
 surface. Phases 5–6 are the new product; 2–4 are debt that has to clear first
 or the new product gets built on sand.
 
-Phase 5 ships the *choice* but not yet its second half: `SELF_HOST_STORAGE=managed`
-throws on boot, and the installer only offers the option when the cloud sets
-`MANAGED_STORAGE_ENABLED=true`. Phase 6 removes that throw and flips the flag —
-until then an install can pick managed only by editing `.env` by hand, and gets
-told why on line one rather than hanging on a Mongo that was never started.
+Phase 5 shipped the *choice*; Phase 6 shipped its second half. The boot-time
+throw on `SELF_HOST_STORAGE=managed` is gone, replaced by
+`infra/selfhost.bootstrap.js`, which leases credentials from `POST /bootstrap`
+and writes them into `process.env` **before** `config/env.js` is first imported.
+That ordering is why `index.js` now imports `redis.client.js`, `database.js` and
+`server.js` dynamically inside `bootstrap()` — an ES module body runs once, so a
+static import would freeze the placeholder URIs compose hands down.
+
+Tenant isolation on the shared Redis rests on two things. Keys go through
+ioredis' `keyPrefix` (`REDIS_KEY_PREFIX`, empty on cloud and in local mode), and
+because ioredis returns `KEYS`/`SCAN` results *with* the prefix still attached,
+every pattern-matching caller runs them back through `stripPrefix()`. Queues are
+separate: BullMQ ignores a connection `keyPrefix` because its Lua scripts address
+key slots themselves, so all 33 direct `from "bullmq"` imports were rewired to
+`infra/bullmq.prefixed.js`, which forces its own `prefix`. Import `Queue`,
+`Worker` or `QueueEvents` from anywhere else and that queue leaves the tenant
+namespace. `QUEUE_PREFIX` stays `"bull"` when there is no key prefix, so cloud
+and local deployments need no key migration.
+
+**What Phase 6 still needs from the operator.** The cloud half
+(`infra/managedStorage.provision.js`) is written but inert until these are set:
+`ATLAS_PUBLIC_KEY`, `ATLAS_PRIVATE_KEY`, `ATLAS_GROUP_ID`, `ATLAS_CLUSTER_HOST`,
+`MANAGED_REDIS_ADMIN_URL`, `MANAGED_REDIS_PUBLIC_HOST`, `MANAGED_STORAGE_SECRET`
+— plus `MANAGED_STORAGE_ENABLED=true`. `provisioningReady()` gates both
+`/bootstrap` (503) and the `managedStorage` flag on `/status`, so a
+half-configured cloud never advertises an option it cannot fulfil: the installer
+simply doesn't offer managed. None of this path can be exercised without a real
+Atlas project and an ACL-capable Redis.
+
+Two known gaps, deliberately left: Atlas users self-expire via `deleteAfterDate`,
+but **Redis ACL users have no TTL** — they are removed only when a license is
+revoked, so an abandoned-but-unrevoked license leaves its ACL user in place until
+someone sweeps it. And a lease refresh renews the *same* derived credential
+(HMAC over `id:vN`, never stored) precisely so live pools stay valid; a genuine
+rotation is signalled by a changed URI, and the instance responds by exiting so
+the container restarts onto it.

@@ -12,7 +12,7 @@
  * DLQ:   bb-webhook-dead-letter
  */
 
-import { Queue } from "bullmq";
+import { Queue } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 
 export const webhookQueue = new Queue("bb-webhook-ingest", {

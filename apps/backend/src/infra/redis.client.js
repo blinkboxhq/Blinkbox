@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { REDIS_URL } from "../config/env.js";
+import { REDIS_URL, REDIS_KEY_PREFIX } from "../config/env.js";
 
 // commandTimeout: without it ioredis parks every command in an unbounded
 // offline queue while disconnected, so an await on redis.get() never settles
@@ -9,7 +9,13 @@ import { REDIS_URL } from "../config/env.js";
 // opened a socket that retried forever and kept the event loop alive. The
 // connection now opens on first command instead.
 // (BullMQ's blocking commands use their own connection — see infra/bullmq.js.)
+// keyPrefix: empty on cloud and in local self-host. In managed mode it is the
+// tenant namespace the Redis ACL user is locked to, so it is not a nicety —
+// without it the first command is refused. Note ioredis prefixes the keys it
+// sends but returns them unchanged, so KEYS/SCAN results come back *with* the
+// prefix attached — see stripPrefix() below.
 const redis = new Redis(REDIS_URL || "redis://127.0.0.1:6379", {
+  keyPrefix: REDIS_KEY_PREFIX,
   retryStrategy: (times) => Math.min(times * 200, 10000),
   maxRetriesPerRequest: 2,
   commandTimeout: 5000,
@@ -48,5 +54,13 @@ redis.on("error", (err) => {
     suppressed++;
   }
 });
+
+// Feeding a KEYS/SCAN result straight back into del()/get() double-prefixes it
+// and quietly matches nothing. Every caller that pattern-matches keys must run
+// the results through this first.
+export function stripPrefix(keys) {
+  if (!REDIS_KEY_PREFIX) return keys;
+  return keys.map((k) => (k.startsWith(REDIS_KEY_PREFIX) ? k.slice(REDIS_KEY_PREFIX.length) : k));
+}
 
 export { redis }; // named export

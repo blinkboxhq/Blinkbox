@@ -22,13 +22,6 @@ if (process.env.SELF_HOSTED === "true" && !process.env.SELF_HOST_LICENSE_KEY) {
   throw new Error("FATAL: SELF_HOST_LICENSE_KEY is required when SELF_HOSTED=true");
 }
 
-// Managed storage needs the /bootstrap client to fetch tenant-scoped credentials
-// before the first connect. Until that ships, say so on line one rather than
-// hanging on a Mongo the local compose profile deliberately never started.
-if (process.env.SELF_HOSTED === "true" && process.env.SELF_HOST_STORAGE === "managed") {
-  throw new Error("FATAL: SELF_HOST_STORAGE=managed is not supported by this build yet — use local");
-}
-
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 // BACKEND_PUBLIC_URL must be the public-facing URL (e.g. https://blinkbox-backend-production.up.railway.app)
@@ -220,10 +213,35 @@ export const SELF_HOST_LICENSE_KEY = process.env.SELF_HOST_LICENSE_KEY || null;
 // down MONGODB_URI and REDIS_URL either way and managed mode simply ignores them.
 export const SELF_HOST_STORAGE = process.env.SELF_HOST_STORAGE === "managed" ? "managed" : "local";
 
+// Every Redis key this instance writes is namespaced with this. Empty in local
+// mode — the customer's Redis is theirs alone, so a prefix would only make keys
+// longer. In managed mode selfhost.bootstrap.js sets it from /bootstrap before
+// this file is ever imported, and it must match the pattern the tenant's Redis
+// ACL user is restricted to, or the very first command is refused.
+export const REDIS_KEY_PREFIX = process.env.REDIS_KEY_PREFIX || "";
+
 // Cloud side only. Managed storage cannot be offered until per-tenant Mongo and
 // Redis provisioning exists behind /bootstrap, so the installer asks the cloud
 // whether the option is real rather than assuming it.
 export const MANAGED_STORAGE_ENABLED = process.env.MANAGED_STORAGE_ENABLED === "true";
+
+// Cloud side only: what /bootstrap provisions against. All optional — with any
+// of them missing managedStorage.provision.js reports itself unavailable and the
+// endpoint answers 503, so a half-configured cloud cannot hand an instance a
+// credential that reaches more than it should.
+export const ATLAS_PUBLIC_KEY   = process.env.ATLAS_PUBLIC_KEY   || null;
+export const ATLAS_PRIVATE_KEY  = process.env.ATLAS_PRIVATE_KEY  || null;
+export const ATLAS_GROUP_ID     = process.env.ATLAS_GROUP_ID     || null;
+export const ATLAS_CLUSTER_NAME = process.env.ATLAS_CLUSTER_NAME || null;
+// Host only, e.g. cluster0.abcde.mongodb.net — never a full URI with credentials.
+export const ATLAS_CLUSTER_HOST = process.env.ATLAS_CLUSTER_HOST || null;
+// Admin connection used solely to run ACL SETUSER/DELUSER; never handed out.
+export const MANAGED_REDIS_ADMIN_URL   = process.env.MANAGED_REDIS_ADMIN_URL   || null;
+// host:port instances dial, with their own ACL user injected per tenant.
+export const MANAGED_REDIS_PUBLIC_HOST = process.env.MANAGED_REDIS_PUBLIC_HOST || null;
+// Seed for deriving tenant passwords. Rotating it invalidates every live lease,
+// which is the intended break-glass.
+export const MANAGED_STORAGE_SECRET = process.env.MANAGED_STORAGE_SECRET || null;
 // The image tag this container was started from, reported on heartbeat so the
 // dashboard can tell which build a customer is actually running.
 export const BLINKBOX_TAG = process.env.BLINKBOX_TAG || null;

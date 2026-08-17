@@ -14,7 +14,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { connectDB } from "../../core/database.js";
 import User from "../../models/user.model.js";
-import { redis } from "../../infra/redis.client.js";
+import { redis, stripPrefix } from "../../infra/redis.client.js";
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const LENGTH = 24;
@@ -46,8 +46,10 @@ async function main() {
   await redis.set(`bb:token-epoch:${owner._id}`, String(Date.now()), "EX", 30 * 24 * 3600).catch(() => {});
   // Lockouts are keyed per client IP, so clear the whole family — a reset must
   // not leave the owner locked out by whoever was guessing.
-  const locks = await redis.keys("auth:lockout:owner:*").catch(() => []);
-  const fails = await redis.keys("auth:fails:owner:*").catch(() => []);
+  // stripPrefix: ioredis prefixes what it sends but not what comes back, so
+  // these results carry the tenant namespace and would double-prefix on del().
+  const locks = stripPrefix(await redis.keys("auth:lockout:owner:*").catch(() => []));
+  const fails = stripPrefix(await redis.keys("auth:fails:owner:*").catch(() => []));
   if (locks.length || fails.length) await redis.del(...locks, ...fails).catch(() => {});
 
   console.error(`Password reset for ${owner.email}.`);

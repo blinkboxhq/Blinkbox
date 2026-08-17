@@ -1,4 +1,4 @@
-import { redis } from "../../infra/redis.client.js";
+import { redis, stripPrefix } from "../../infra/redis.client.js";
 
 const EXECUTION_TTL = 60 * 60 * 24;
 
@@ -63,7 +63,7 @@ export default {
         do {
           const [next, batch] = await redis.scan(cursor, "MATCH", `${prefix}:*`, "COUNT", 200);
           cursor = next;
-          found.push(...batch);
+          found.push(...stripPrefix(batch));
         } while (cursor !== "0");
 
         const variables = {};

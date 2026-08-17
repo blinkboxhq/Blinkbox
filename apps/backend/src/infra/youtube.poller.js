@@ -3,7 +3,7 @@
  * Polls YouTube Data API v3 for new videos from a channel.
  * Dedup key: bb:yt:seen:{automationId} (Redis Set, 7-day TTL)
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

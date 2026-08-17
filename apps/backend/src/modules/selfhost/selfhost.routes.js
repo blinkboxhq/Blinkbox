@@ -12,6 +12,7 @@ import {
   listInstances,
   registerInstance,
   heartbeat,
+  bootstrapStorage,
 } from "./selfhost.controller.js";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.get("/instances", verifyToken, listInstances);
 
 // Self-hosted instances — metering against the license owner's workspace.
 router.post("/register", verifyLicense, registerInstance);
+router.post("/bootstrap", verifyLicense, bootstrapStorage);
 router.post("/heartbeat", verifyLicense, heartbeat);
 router.get("/status", verifyLicense, licenseStatus);
 router.get("/cost/:nodeType", verifyLicense, nodeCost);

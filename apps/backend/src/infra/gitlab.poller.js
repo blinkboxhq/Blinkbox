@@ -3,7 +3,7 @@
  * Polls GitLab projects for new merge requests, issues, or pipeline events.
  * Dedup key: bb:gitlab:seen:{automationId} — event ID set, 30-day TTL.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

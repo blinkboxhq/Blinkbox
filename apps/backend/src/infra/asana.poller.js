@@ -3,7 +3,7 @@
  * Polls Asana projects for new or modified tasks.
  * Dedup key: bb:asana:seen:{automationId} — task GID set, 30-day TTL.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

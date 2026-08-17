@@ -16,7 +16,7 @@
  *   - BullMQ also supports `every` in ms for simple intervals
  */
 
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import Automation from "../models/automation.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";

@@ -4,7 +4,7 @@
  * Requires a Google OAuth credential (sheets.readonly scope).
  * Dedup key: bb:gsheets:seen:{automationId} — row index watermark in Redis.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

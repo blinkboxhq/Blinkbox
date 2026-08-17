@@ -1,13 +1,24 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { redis } from "./infra/redis.client.js";
-import { connectDB } from "./core/database.js";
-import { startServer } from "./core/server.js";
+// These three are loaded inside bootstrap(), not here. In managed self-host mode
+// the Mongo and Redis credentials do not exist until primeManagedStorage() has
+// fetched them, and config/env.js — which redis.client.js pulls in — freezes
+// process.env into consts the first time it is imported. A static import at the
+// top of this file would therefore capture the placeholder URIs compose hands
+// down and connect to nothing.
+import { primeManagedStorage } from "./infra/selfhost.bootstrap.js";
 
 async function bootstrap() {
   try {
     console.log("BOOTSTRAP: starting");
+
+    // 0. Lease tenant-scoped storage credentials (no-op on cloud / local mode)
+    await primeManagedStorage();
+
+    const { redis } = await import("./infra/redis.client.js");
+    const { connectDB } = await import("./core/database.js");
+    const { startServer } = await import("./core/server.js");
 
     // 1. Connect DB
     await connectDB();

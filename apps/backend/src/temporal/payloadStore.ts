@@ -15,7 +15,7 @@
  */
 
 import crypto from "crypto";
-import { redis } from "../infra/redis.client.js";
+import { redis, stripPrefix } from "../infra/redis.client.js";
 import mongoose from "mongoose";
 
 // ── Threshold ────────────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ export async function getPendingWorkflowIds(): Promise<string[]> {
       100,
     );
     cursor = nextCursor;
-    for (const key of keys) {
+    for (const key of stripPrefix(keys)) {
       ids.push(key.replace(REDIS_INDEX_PREFIX, ""));
     }
   } while (cursor !== "0");

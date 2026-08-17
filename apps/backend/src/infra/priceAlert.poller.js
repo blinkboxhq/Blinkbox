@@ -4,7 +4,7 @@
  * Fires when price freshly crosses a threshold (not on every poll).
  * State key: bb:price:state:{automationId} -> { side: "above"|"below", price: number }
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";

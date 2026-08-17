@@ -4,7 +4,7 @@
  * Supports local socket (/var/run/docker.sock) or remote TCP (host:port).
  * Dedup key: bb:docker:seen:{automationId} — event ID based on Actor+Action+time.
  */
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker } from "./bullmq.prefixed.js";
 import { createBullMQConnection } from "./bullmq.js";
 import { redis } from "./redis.client.js";
 import { acquireLock, releaseLock } from "./redis.lock.js";
