@@ -164,8 +164,22 @@ curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/ins
   → wait /health          → seed owner    → print password once
 ```
 
-Non-interactive equivalents: `BLINKBOX_LICENSE_KEY`, `BLINKBOX_NAME`,
-`BLINKBOX_OWNER_EMAIL`, `BLINKBOX_STORAGE`.
+Unattended, every answer supplied up front:
+
+```
+curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sudo env \
+  BLINKBOX_LICENSE_KEY=bb_xxxxxxxx \
+  BLINKBOX_NAME=acme \
+  BLINKBOX_OWNER_EMAIL=you@acme.com \
+  BLINKBOX_STORAGE=local sh
+```
+
+`sudo env`, not `VAR=x sudo` — sudo drops the environment, so the plain form
+silently falls through to the prompts and then dies for want of a tty.
+
+Other overrides, none of them needed on a normal install: `BLINKBOX_DIR`
+(default `/opt/blinkbox`), `BLINKBOX_IP` (skips the ipify lookup),
+`CLOUD_API_URL`, `BLINKBOX_ASSET_BASE` (flat mirror of the three fetched files).
 
 ### 4.5 Image delivery
 

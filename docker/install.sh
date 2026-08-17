@@ -1,11 +1,19 @@
 #!/bin/sh
 # Blinkbox self-hosted installer (Linux).
 #
-#   curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sudo sh
 #
 # Asks for a license key, a name, an owner email and where the data should live,
 # then brings the whole stack up on <name>.blinkbox.net with a certificate and
 # prints the owner password once.
+#
+# Unattended — `sudo env`, not `VAR=x sudo`, because sudo drops the environment:
+#
+#   curl -fsSL .../install.sh | sudo env \
+#     BLINKBOX_LICENSE_KEY=bb_xxx \
+#     BLINKBOX_NAME=acme \
+#     BLINKBOX_OWNER_EMAIL=you@acme.com \
+#     BLINKBOX_STORAGE=local sh
 set -eu
 
 CLOUD_API_URL="${CLOUD_API_URL:-https://api.blinkbox.net}"
