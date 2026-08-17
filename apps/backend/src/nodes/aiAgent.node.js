@@ -1195,7 +1195,12 @@ async function assembleTools({
           description: alias ? `${spec.description} (${alias})` : spec.description,
           parameters: describeResources(type, pinned, merged),
           execute: (args) =>
-            spec.run(applyResourceDefaults(type, args, pinned), credentialId, workspaceId, inputAttachments),
+            spec.run(
+              applyResourceDefaults(type, flattenPassthrough(args), pinned),
+              credentialId,
+              workspaceId,
+              inputAttachments,
+            ),
         });
         seen.add(toolName);
         continue;
@@ -1316,6 +1321,21 @@ function restrictOperations(parameters, enabledActions) {
  * Widening makes per-op requirements diverge, so only `operation` stays required
  * — each op's own needs are named in its description.
  */
+/**
+ * The manifest schema offers a free-form `params` object for arguments static
+ * derivation cannot see, and the manifest executor unwraps it — but a spec's
+ * own `run` spreads args straight into its node, so anything the model nested
+ * there would be dropped in silence. Flatten it here. Explicit top-level args
+ * win, and a non-object `params` (postgres passes SQL values as an array) is
+ * left exactly as the spec declared it.
+ */
+function flattenPassthrough(args) {
+  const nested = args?.params;
+  if (!nested || typeof nested !== "object" || Array.isArray(nested)) return args;
+  const { params: _drop, ...rest } = args;
+  return { ...nested, ...rest };
+}
+
 function mergeSpecParameters(specParams, manifest) {
   const manifestProps = manifest?.parameters?.properties;
   const manifestOps = manifestProps?.operation?.enum;

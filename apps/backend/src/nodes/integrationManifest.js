@@ -26,6 +26,12 @@ const TYPE_OVERRIDES = {
   redis: "redis_node",
 };
 
+// The canvas node and its agent tool are typed `redis`, but the node registry
+// key — and so the manifest type — is `redis_node`. Accept either spelling, or
+// the app answers 404 to its own action checklist.
+const TYPE_ALIASES = { redis: "redis_node" };
+const resolveType = (t) => TYPE_ALIASES[t] || t;
+
 const snake = (s) => s.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
 const typeOf = (basename) => TYPE_OVERRIDES[basename] || snake(basename);
 
@@ -63,7 +69,8 @@ function dirIndex() {
 // a node entry — the node is what resolves the credential the router needs.
 export function isKnownIntegration(type) {
   const { packaged, nodes } = dirIndex();
-  return Boolean(packaged[type] && nodes[type]);
+  const t = resolveType(type);
+  return Boolean(packaged[t] && nodes[t]);
 }
 
 export function listIntegrationTypes() {
@@ -71,7 +78,8 @@ export function listIntegrationTypes() {
 }
 
 const _routerCache = new Map();
-async function loadRouter(type) {
+async function loadRouter(rawType) {
+  const type = resolveType(rawType);
   if (_routerCache.has(type)) return _routerCache.get(type);
   const dir = dirIndex().packaged[type];
   let mod = null;
@@ -87,7 +95,8 @@ async function loadRouter(type) {
 }
 
 const _nodeCache = new Map();
-async function loadNode(type) {
+async function loadNode(rawType) {
+  const type = resolveType(rawType);
   if (_nodeCache.has(type)) return _nodeCache.get(type);
   const file = dirIndex().nodes[type];
   let mod = null;
@@ -114,7 +123,7 @@ export async function listActions(type) {
   const fallbackDefault = mod.DEFAULT_OPERATION;
   return keys.map((key) => {
     const s = schema[key] || {};
-    const derived = s.params ? null : derivedParams(type, key);
+    const derived = s.params ? null : derivedParams(resolveType(type), key);
     return {
       key,
       label: s.label || humanize(key),
