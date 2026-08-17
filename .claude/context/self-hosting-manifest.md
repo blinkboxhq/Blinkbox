@@ -160,11 +160,21 @@ Non-interactive equivalents: `BLINKBOX_LICENSE_KEY`, `BLINKBOX_NAME`,
 
 ### 4.5 Image delivery
 
-`.github/workflows/release.yml` builds both images on tag and on `main`, and
-pushes to `ghcr.io/blinkboxhq/blinkbox-{backend,frontend}` tagged `latest`, the
-SHA, and the release tag. Both packages must be **public** or every install
-fails at pull. The frontend build passes `VITE_SELF_HOSTED=true` and **no**
-`VITE_API_URL`.
+`.github/workflows/release.yml` builds both images on `main` and on `v*` tags,
+and pushes to `ghcr.io/blinkboxhq/blinkbox-{backend,frontend}` tagged `latest`
+(default branch only), `sha-<short>`, and the semver tag. Both packages must be
+**public** or every install fails at pull — the installer runs on a customer box
+with no credentials for our registry. The frontend build passes
+`VITE_SELF_HOSTED=true` and **no** `VITE_API_URL`.
+
+`latest` is what every new install pulls, so the publish job is gated on the
+registry drift check, lint, and the backend test suite. Nothing reaches
+customers untested.
+
+**linux/amd64 only.** `install.sh` refuses to run on another architecture rather
+than letting the pull fail with "no matching manifest". arm64 is deliberate
+future work: cheap arm VPSs are common, but a QEMU-emulated build of the backend
+image is slow enough to want a native runner first.
 
 A failed pull is a fatal, named error — never swallowed.
 

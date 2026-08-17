@@ -2,8 +2,9 @@ name: test
 
 on:
   pull_request:
-  push:
-    branches: [main]
+  # No `push: main` trigger: release.yml owns main and calls this workflow as
+  # its publish gate, so a direct push runs the suite once, not twice.
+  workflow_call:
 
 jobs:
   backend-tests:

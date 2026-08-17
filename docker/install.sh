@@ -59,6 +59,12 @@ rand_hex() { # rand_hex <bytes>
 
 [ "$(id -u)" -eq 0 ] || die "Run as root:  curl -fsSL $INSTALL_URL | sudo sh"
 [ "$(uname -s)" = "Linux" ] || die "This installer supports Linux only."
+case "$(uname -m)" in
+  x86_64|amd64) ;;
+  # Say so here rather than letting `docker compose pull` fail with an opaque
+  # "no matching manifest" — the images are published for linux/amd64 only.
+  *) die "Blinkbox images are built for x86_64; this machine is $(uname -m)." ;;
+esac
 command -v curl >/dev/null 2>&1 || die "curl is required. Install it and re-run."
 
 say ""

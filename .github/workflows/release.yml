@@ -1,0 +1,79 @@
+name: release
+
+# Publishes the two images that docker-compose.yml pulls. Without this workflow
+# nothing exists at ghcr.io/blinkboxhq/blinkbox-* and every self-hosted install
+# dies at `docker compose pull`.
+#
+# Both packages must be PUBLIC in the org's package settings — the installer
+# runs on a customer box with no credentials for our registry.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # `latest` is what every new install pulls, so nothing reaches it untested.
+  # This is the same suite PRs run — called, not copied, so the gate can't drift.
+  verify:
+    uses: ./.github/workflows/test.yml
+
+  images:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            dockerfile: apps/backend/Dockerfile
+          - name: frontend
+            dockerfile: apps/frontend/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/blinkboxhq/blinkbox-${{ matrix.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - uses: docker/build-push-action@v6
+        with:
+          # Build context is the repo root — both images are workspace-aware.
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # linux/amd64 only. install.sh refuses to run on anything else rather
+          # than letting the pull fail with "no matching manifest".
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          build-args: |
+            VITE_SELF_HOSTED=true
