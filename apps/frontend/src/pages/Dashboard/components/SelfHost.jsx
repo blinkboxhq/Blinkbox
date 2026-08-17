@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import imgBlinkbox from '../../../assets/blinkbox-knot.png';
 
-const INSTALL_CMD = 'curl -fsSL https://get.blinkbox.net/install.sh | sudo sh';
+const INSTALL_CMD = 'curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sudo sh';
 
 // The exact session the installer runs — shown so the one thing the user has to
 // supply (the key, then a name) is obvious before they ever open a terminal.

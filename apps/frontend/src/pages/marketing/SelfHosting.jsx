@@ -17,7 +17,7 @@ bb_selfhost_••••••••••••••••••••`,
   {
     n: '02',
     title: 'Run one command',
-    code: `curl -fsSL https://get.blinkbox.net/install.sh | sudo sh
+    code: `curl -fsSL https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/docker/install.sh | sudo sh
 
 ? Paste your license key
 ? Choose a name for this instance`,
