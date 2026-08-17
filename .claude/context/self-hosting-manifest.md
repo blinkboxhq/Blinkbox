@@ -179,7 +179,24 @@ silently falls through to the prompts and then dies for want of a tty.
 
 Other overrides, none of them needed on a normal install: `BLINKBOX_DIR`
 (default `/opt/blinkbox`), `BLINKBOX_IP` (skips the ipify lookup),
-`CLOUD_API_URL`, `BLINKBOX_ASSET_BASE` (flat mirror of the three fetched files).
+`CLOUD_API_URL`, `BLINKBOX_REF` (branch or tag to install from, default `main`),
+`BLINKBOX_ASSET_BASE` (flat mirror of the three fetched files).
+
+**When GitHub 429s.** `raw.githubusercontent.com` is unauthenticated and
+rate-limited by IP, so a VPS on a busy cloud range can be refused through no
+fault of its own. Inside the script every asset is tried against raw and then
+against the contents API, which bills a separate quota, three times with
+backoff; only if both stay unhappy does it fail, and it says so in those words.
+The outer `curl` that fetches the script itself has no such luxury, so the
+by-hand version of the same fallback is:
+
+```
+curl -fsSL -H 'Accept: application/vnd.github.raw' \
+  "https://api.github.com/repos/blinkboxhq/Blinkbox/contents/docker/install.sh?ref=main" | sudo sh
+```
+
+`BLINKBOX_ASSET_BASE` remains the escape hatch when GitHub is unreachable
+altogether: put the three files on a host you control and point at it.
 
 ### 4.5 Image delivery
 
