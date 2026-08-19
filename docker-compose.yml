@@ -50,7 +50,7 @@ services:
     image: ghcr.io/blinkboxhq/blinkbox-backend:${BLINKBOX_TAG:-latest}
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
+      dockerfile: apps/backend/Dockerfile.selfhost
     restart: unless-stopped
     depends_on:
       # required:false so managed mode, where neither service exists, still comes

@@ -37,7 +37,7 @@ jobs:
       matrix:
         include:
           - name: backend
-            dockerfile: apps/backend/Dockerfile
+            dockerfile: apps/backend/Dockerfile.selfhost
           - name: frontend
             dockerfile: apps/frontend/Dockerfile
 
