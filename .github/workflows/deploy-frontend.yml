@@ -1,8 +1,11 @@
 name: Deploy Frontend to GitHub Pages
 
 on:
+  # release is what actually runs on a push to main; it calls test.yml as a
+  # workflow_call, and a called workflow emits no workflow_run event of its
+  # own. Listening for "test" here meant Pages never redeployed from main.
   workflow_run:
-    workflows: ["test"]
+    workflows: ["release"]
     types: [completed]
     branches: ["main"]
   workflow_dispatch:
