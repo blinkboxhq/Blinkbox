@@ -16,6 +16,9 @@ mock.module("../infra/redis.client.js", {
         return ["0", [...store.keys()].filter((k) => k.startsWith(prefix))];
       },
     },
+    // The store is unprefixed, so this matches the real export's behaviour when
+    // REDIS_KEY_PREFIX is empty. Omitting it breaks module instantiation.
+    stripPrefix: (keys) => keys,
   },
 });
 

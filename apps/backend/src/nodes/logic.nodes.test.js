@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 const store = new Map();
 mock.module("../infra/redis.client.js", {
   namedExports: {
+    stripPrefix: (keys) => keys,
     redis: {
       rpush: async (k, v) => {
         const list = store.get(k) ?? [];

@@ -27,7 +27,7 @@ mock.module("../src/modules/workers/cursor.queue.js", {
     },
   },
 });
-mock.module("../src/infra/redis.client.js", { namedExports: { redis: new RedisMock() } });
+mock.module("../src/infra/redis.client.js", { namedExports: { redis: new RedisMock(), stripPrefix: (keys) => keys } });
 mock.module("../src/infra/socket.server.js", {
   namedExports: { emitExecutionUpdate: () => {}, emitNodeStatus: () => {} },
 });

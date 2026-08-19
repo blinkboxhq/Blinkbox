@@ -13,7 +13,7 @@ const redis = new RedisMock();
 const googlePayload = { current: null };
 const noop = async () => {};
 
-mock.module("../../infra/redis.client.js", { namedExports: { redis } });
+mock.module("../../infra/redis.client.js", { namedExports: { redis, stripPrefix: (keys) => keys } });
 mock.module("../../infra/email.service.js", {
   namedExports: {
     sendRegistrationEmail: noop,
