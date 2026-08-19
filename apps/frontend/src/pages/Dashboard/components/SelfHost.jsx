@@ -120,7 +120,15 @@ export default function SelfHost() {
       fetchAll();
       toast.success('License created — copy it now, it is shown once');
     } catch (e) {
-      toast.error(e?.response?.data?.message || 'Failed to create license');
+      // A 404 here means the cloud API is running a build without the
+      // self-host router, and the body is Express's HTML page, not our JSON.
+      const status = e?.response?.status;
+      toast.error(
+        e?.response?.data?.message ||
+        (status === 404
+          ? 'Self-hosting is not enabled on this Blinkbox server yet.'
+          : `Failed to create license${status ? ` (HTTP ${status})` : ''}`),
+      );
     } finally {
       setIsCreating(false);
     }

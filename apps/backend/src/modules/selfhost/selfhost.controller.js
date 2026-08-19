@@ -52,7 +52,8 @@ export async function createLicense(req, res) {
       prefix: doc.prefix,
       createdAt: doc.createdAt,
     });
-  } catch {
+  } catch (err) {
+    console.error("[SelfHost] license mint failed:", err.message);
     res.status(500).json({ success: false, message: "Failed to create license." });
   }
 }
@@ -64,7 +65,8 @@ export async function listLicenses(req, res) {
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, licenses });
-  } catch {
+  } catch (err) {
+    console.error("[SelfHost] license list failed:", err.message);
     res.status(500).json({ success: false, message: "Failed to list licenses." });
   }
 }
@@ -89,7 +91,8 @@ export async function revokeLicense(req, res) {
     // data itself stays: a customer who comes back should not find it deleted.
     await deprovisionTenant(String(req.params.id)).catch(() => {});
     res.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("[SelfHost] license revoke failed:", err.message);
     res.status(500).json({ success: false, message: "Failed to revoke license." });
   }
 }
@@ -101,7 +104,8 @@ export async function listInstances(req, res) {
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, instances });
-  } catch {
+  } catch (err) {
+    console.error("[SelfHost] instance list failed:", err.message);
     res.status(500).json({ success: false, message: "Failed to list instances." });
   }
 }
