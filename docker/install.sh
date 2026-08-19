@@ -164,6 +164,22 @@ ok "License valid${PLAN:+ — $PLAN plan}"
 PUBLIC_IP="${BLINKBOX_IP:-}"
 [ -n "$PUBLIC_IP" ] || PUBLIC_IP=$(curl -fsS -m 10 https://api.ipify.org 2>/dev/null || true)
 
+# ipify reports whoever leaves the house, which on any home or office line is the
+# router, not this box. When they differ, nothing from the internet reaches port
+# 80 or 443 here until someone forwards them — and the first symptom is the
+# router's own admin page answering on the new subdomain, which reads like a
+# Blinkbox bug. Say it before the install rather than after.
+BEHIND_NAT=no
+if [ -n "$PUBLIC_IP" ]; then
+  LOCAL_IPS=$(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}')
+  [ -n "$LOCAL_IPS" ] || LOCAL_IPS=$(hostname -I 2>/dev/null | tr ' ' '\n')
+  if [ -n "$LOCAL_IPS" ]; then
+    BEHIND_NAT=yes
+    for _ip in $LOCAL_IPS; do [ "$_ip" = "$PUBLIC_IP" ] && BEHIND_NAT=no; done
+    LAN_IP=$(printf '%s\n' $LOCAL_IPS | head -n1)
+  fi
+fi
+
 NAME="${BLINKBOX_NAME:-}"
 while :; do
   if [ -z "$NAME" ]; then
@@ -316,6 +332,13 @@ while [ $i -lt 60 ]; do
 done
 say ""
 
+if [ $i -ge 60 ]; then
+  die "The engine did not answer /health within 3 minutes.
+  Logs:  cd $INSTALL_DIR && docker compose logs backend
+  Once it starts, finish with:
+    cd $INSTALL_DIR && docker compose exec backend node apps/backend/src/modules/selfhost/seedOwner.js"
+fi
+
 ok "Blinkbox is running"
 
 # The password is generated inside the container and reaches us only on stdout.
@@ -328,7 +351,12 @@ SEED_CODE=$?
 set -e
 
 say ""
-say "  ${BLD}$PUBLIC_URL${OFF}"
+if [ "$BEHIND_NAT" = yes ]; then
+  say "  ${BLD}http://${LAN_IP:-this machine}${OFF}  ${DIM}(from this network, right now)${OFF}"
+  say "  ${DIM}$PUBLIC_URL — once the ports below are open${OFF}"
+else
+  say "  ${BLD}$PUBLIC_URL${OFF}"
+fi
 say ""
 
 if [ $SEED_CODE -eq 0 ] && [ -n "$OWNER_PASSWORD" ]; then
@@ -354,6 +382,24 @@ else
 fi
 
 say ""
+if [ "$BEHIND_NAT" = yes ]; then
+  RULE2="────────────────────────────────────────────────────────────"
+  say "  $RULE2"
+  say "  ${BLD}One more step — this box is behind a router${OFF}"
+  say ""
+  say "  $HOSTNAME_FQDN points at $PUBLIC_IP, which is your router,"
+  say "  not this machine (${LAN_IP:-unknown}). On the router's admin page:"
+  say ""
+  say "    1. turn off its own web management on ports 80 and 443"
+  say "    2. forward TCP 80  -> ${LAN_IP:-this machine}:80"
+  say "    3. forward TCP 443 -> ${LAN_IP:-this machine}:443"
+  say ""
+  say "  ${DIM}Until then the subdomain shows your router's login page, and${OFF}"
+  say "  ${DIM}the HTTPS certificate cannot be issued — it is granted over${OFF}"
+  say "  ${DIM}port 80. Nothing to re-run afterwards; it works on next visit.${OFF}"
+  say "  $RULE2"
+  say ""
+fi
 say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
 say ""
 say "  ${DIM}logs     cd $INSTALL_DIR && docker compose logs -f${OFF}"
