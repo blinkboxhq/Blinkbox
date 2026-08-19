@@ -201,10 +201,32 @@ export async function registerInstance(req, res) {
 
 export async function heartbeat(req, res) {
   try {
-    await SelfHostInstance.updateOne(
-      { licenseId: String(req.licenseId) },
-      { $set: { lastSeenAt: new Date(), ...(req.body?.version ? { version: String(req.body.version).slice(0, 40) } : {}) } },
-    );
+    const set = {
+      lastSeenAt: new Date(),
+      ...(req.body?.version ? { version: String(req.body.version).slice(0, 40) } : {}),
+    };
+
+    // A box that registered while Cloudflare was unconfigured kept its hostname
+    // but never got a record, and nothing else would ever create one. The filter
+    // matches only those boxes, so a healthy instance pays one indexed miss.
+    if (dnsEnabled()) {
+      const orphan = await SelfHostInstance.findOne({
+        licenseId: String(req.licenseId),
+        dnsRecordId: null,
+      })
+        .select("hostname ip")
+        .lean();
+      if (orphan?.hostname && orphan.ip) {
+        try {
+          set.dnsRecordId = await upsertARecord(orphan.hostname, orphan.ip, null);
+          console.log(`[SelfHost] backfilled DNS ${orphan.hostname} -> ${orphan.ip}`);
+        } catch (err) {
+          console.error("[SelfHost] DNS backfill failed:", err.message);
+        }
+      }
+    }
+
+    await SelfHostInstance.updateOne({ licenseId: String(req.licenseId) }, { $set: set });
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false, message: "Heartbeat failed." });

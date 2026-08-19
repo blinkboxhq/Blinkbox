@@ -87,6 +87,23 @@ async function bootstrap() {
       console.warn("Self-host heartbeat skipped:", err.message);
     }
 
+    // 6c. The cloud mints every self-hosted subdomain. Without Cloudflare
+    // credentials registration still succeeds and just returns dns:"skipped",
+    // which pushes the record onto the customer by hand — so say it here once
+    // at boot instead of finding out one install at a time.
+    if (process.env.SELF_HOSTED !== "true") {
+      try {
+        const { dnsEnabled } = await import("./infra/dns.cloudflare.js");
+        if (!dnsEnabled()) {
+          console.warn(
+            "[SelfHost] CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID unset - subdomains under " +
+              (process.env.SELF_HOST_DOMAIN || "blinkbox.net") +
+              " will NOT be created automatically.",
+          );
+        }
+      } catch {}
+    }
+
     // 7. Start server + workers
     await startServer();
 

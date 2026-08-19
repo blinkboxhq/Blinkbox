@@ -192,7 +192,13 @@ FINAL_NAME=$(json_str "$REG" name)
 DNS_STATE=$(json_str "$REG" dns)
 [ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
 ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
-[ "$DNS_STATE" = "ok" ] || say "${DIM}  DNS record not created automatically — point $HOSTNAME_FQDN at $PUBLIC_IP yourself.${OFF}"
+case "$DNS_STATE" in
+  ok) ;;
+  # "skipped" is the Blinkbox server missing its DNS credentials, not anything
+  # this box did — say so, because the reader cannot fix it from here.
+  skipped) say "${DIM}  Automatic DNS is not enabled on $CLOUD_API_URL. Point $HOSTNAME_FQDN at $PUBLIC_IP yourself, or ask your Blinkbox admin to turn it on — it is picked up on the next heartbeat.${OFF}" ;;
+  *) say "${DIM}  DNS record could not be created — point $HOSTNAME_FQDN at $PUBLIC_IP yourself. Retried automatically on every heartbeat.${OFF}" ;;
+esac
 CADDY_SITE="$HOSTNAME_FQDN"
 PUBLIC_URL="https://$HOSTNAME_FQDN"
 
