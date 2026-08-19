@@ -24,11 +24,11 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 
-# Railway auto-detects this Dockerfile when the service Root Directory is
-# apps/backend, which makes the context that folder. The COPYs below then
-# resolve to nothing and BuildKit reports an opaque '"/apps/backend": not
-# found' checksum error six steps later. Say what is actually wrong instead.
-RUN node -e "if(!require('/app/package.json').workspaces){console.error('\n[blinkbox] Build context must be the repo ROOT, not apps/backend.\n  docker build -f apps/backend/Dockerfile .\n  Railway: clear the service Root Directory, or keep builder=NIXPACKS.\n');process.exit(1)}"
+# This build only works with the repo root as its context: the backend
+# resolves packages/* through npm workspaces. A wrong context otherwise
+# surfaces as an opaque BuildKit checksum error several steps later, so name
+# the context in the log and stop here instead.
+RUN node -e "const p=require('/app/package.json');console.log('[blinkbox] context root package:',p.name,'workspaces:',!!p.workspaces);if(!p.workspaces){console.error('\n[blinkbox] Build context must be the repo ROOT, not apps/backend.\n  docker build -f apps/backend/Dockerfile .\n  Railway: clear the service Root Directory, or keep builder=NIXPACKS.\n');process.exit(1)}"
 
 COPY apps/backend/package.json apps/backend/
 COPY packages/nodes/package.json packages/nodes/
@@ -38,8 +38,15 @@ COPY packages/triggers/package.json packages/triggers/
 RUN npm ci --omit=dev --workspace apps/backend --include-workspace-root \
     || npm install --omit=dev --workspace apps/backend --include-workspace-root
 
-COPY packages/ packages/
-COPY apps/backend/ apps/backend/
+# One COPY, not per-directory ones. Railway's Metal builder ships an
+# incremental context snapshot, and it reports whole directories as
+# '"/apps/backend": not found' even when files inside them copied fine two
+# steps earlier. Copying the context wholesale sidesteps that; .dockerignore
+# already keeps node_modules, .git and .env out.
+COPY . .
+
+RUN test -f apps/backend/src/index.js \
+    || (echo '[blinkbox] Build context is missing apps/backend/src — the context is not the repo root.' && exit 1)
 
 RUN groupadd -r blinkbox && useradd -r -g blinkbox -m blinkbox \
     && chown -R blinkbox:blinkbox /app
