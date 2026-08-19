@@ -23,6 +23,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
+
+# Railway auto-detects this Dockerfile when the service Root Directory is
+# apps/backend, which makes the context that folder. The COPYs below then
+# resolve to nothing and BuildKit reports an opaque '"/apps/backend": not
+# found' checksum error six steps later. Say what is actually wrong instead.
+RUN node -e "if(!require('/app/package.json').workspaces){console.error('\n[blinkbox] Build context must be the repo ROOT, not apps/backend.\n  docker build -f apps/backend/Dockerfile .\n  Railway: clear the service Root Directory, or keep builder=NIXPACKS.\n');process.exit(1)}"
+
 COPY apps/backend/package.json apps/backend/
 COPY packages/nodes/package.json packages/nodes/
 COPY packages/shared-types/package.json packages/shared-types/
