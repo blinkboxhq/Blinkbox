@@ -25,7 +25,6 @@ import Analytics from './components/Analytics';
 import StatCard from './components/StatCard';
 import Settings from './components/Settings';
 import ConnectMCP from './components/ConnectMCP';
-import SelfHost from './components/SelfHost';
 import { TrendingUp, CheckCircle2, XCircle, Zap as ZapStat } from 'lucide-react';
 
 const TRIGGER_META = {
@@ -193,7 +192,7 @@ export default function Dashboard() {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [billingUsage, setBillingUsage] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const TABS = ['workflows', 'analytics', 'logs', 'usage', 'buy-credits', 'vault', 'mcp', 'self-host', 'settings'];
+  const TABS = ['workflows', 'analytics', 'logs', 'usage', 'buy-credits', 'vault', 'mcp', 'settings'];
   const tabParam = searchParams.get('tab');
   const activeTab = TABS.includes(tabParam) ? tabParam : 'workflows';
   const setActiveTab = useCallback((tab) => {
@@ -418,13 +417,6 @@ export default function Dashboard() {
           <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
             <div className="max-w-[1000px] mx-auto">
               <ConnectMCP />
-            </div>
-          </div>
-        )}
-        {activeTab === 'self-host' && (
-          <div className="bb-page flex-1 overflow-y-auto px-8 py-6" style={{ animation: 'dbFadeIn 0.2s ease-out' }}>
-            <div className="max-w-[1000px] mx-auto">
-              <SelfHost />
             </div>
           </div>
         )}
