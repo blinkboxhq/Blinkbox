@@ -120,9 +120,24 @@ say ""
 
 if ! command -v docker >/dev/null 2>&1; then
   step "Installing Docker"
-  curl -fsSL https://get.docker.com | sh >/dev/null 2>&1 || die "Docker install failed. Install Docker, then re-run."
+  # get.docker.com refuses Arch outright ("unsupported distribution"), and Arch
+  # is a common choice for the always-on box in the corner — use its own package.
+  if command -v pacman >/dev/null 2>&1; then
+    pacman -Sy --noconfirm --needed docker docker-compose >/dev/null 2>&1 \
+      || die "Docker install failed. Run:  pacman -S docker docker-compose
+  then re-run this installer."
+  else
+    curl -fsSL https://get.docker.com | sh >/dev/null 2>&1 || die "Docker install failed. Install Docker, then re-run."
+  fi
   ok "Docker installed"
 fi
+
+# The containers are restart: unless-stopped, which only survives a reboot if
+# the daemon itself comes back. On a box meant to stay up, that is the point.
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl enable --now docker >/dev/null 2>&1 || true
+fi
+
 docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is required (docker compose)."
 docker info >/dev/null 2>&1 || die "Docker is installed but not running. Start it and re-run."
 
