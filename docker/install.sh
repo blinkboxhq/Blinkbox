@@ -374,16 +374,19 @@ ok "Config written"
 
 step "Starting Blinkbox ${DIM}(first run pulls a few images)${OFF}"
 cd "$INSTALL_DIR"
-docker compose pull --quiet || die "Could not pull the Blinkbox images from ghcr.io.
+# Every docker call reads from /dev/null. This script is piped into `sh`, so the
+# shell's stdin *is* the rest of the script: anything that reads stdin swallows
+# the lines that have not run yet and the install ends mid-way, silently.
+docker compose pull --quiet </dev/null || die "Could not pull the Blinkbox images from ghcr.io.
   Check this box's outbound HTTPS, then re-run. Nothing was started."
-docker compose up -d || die "Startup failed. Logs:  cd $INSTALL_DIR && docker compose logs"
+docker compose up -d </dev/null || die "Startup failed. Logs:  cd $INSTALL_DIR && docker compose logs"
 
 printf '%s' "  waiting for the engine "
 i=0
 while [ $i -lt 60 ]; do
   if docker compose exec -T backend node -e \
     "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" \
-    >/dev/null 2>&1; then break; fi
+    </dev/null >/dev/null 2>&1; then break; fi
   printf '.'; sleep 3; i=$((i + 1))
 done
 say ""
@@ -402,6 +405,15 @@ ok "Blinkbox is running"
 # for a fingerprint only this install can produce, then points the name at the
 # one that answers. This is the step that stopped subdomains landing on a
 # stranger's address.
+# The cloud probes port 80, which is Caddy's, not the backend's. The wait above
+# only proved the engine answers inside the network, so give the front door its
+# own moment before asking the internet to knock on it.
+j=0
+while [ $j -lt 10 ]; do
+  curl -fsS -m 3 -o /dev/null "http://127.0.0.1/health" 2>/dev/null && break
+  sleep 2; j=$((j + 1))
+done
+
 step "Checking this machine is reachable from the internet"
 VERIFY=$(curl -s -m 90 -X POST \
   -H "Authorization: Bearer $LICENSE_KEY" -H 'Content-Type: application/json' \
@@ -421,7 +433,7 @@ fi
 # so it exists in exactly one place: the screen below.
 step "Creating the owner account"
 set +e
-OWNER_PASSWORD=$(docker compose exec -T backend node apps/backend/src/modules/selfhost/seedOwner.js)
+OWNER_PASSWORD=$(docker compose exec -T backend node apps/backend/src/modules/selfhost/seedOwner.js </dev/null)
 SEED_CODE=$?
 set -e
 
