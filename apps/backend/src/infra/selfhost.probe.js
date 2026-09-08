@@ -73,7 +73,20 @@ export async function probeAddress(ip, token) {
     // /health answers 503 while Mongo or Redis are still warming up, and the
     // fingerprint is present either way — reachability is the question here.
     const got = res.data && typeof res.data === "object" ? res.data.probe : null;
-    if (!got) return { ok: false, reason: `no probe answer (HTTP ${res.status})`, status: res.status };
+    if (!got) {
+      // The overwhelmingly common case on a home connection: port 80 reaches the
+      // router's own admin page, not the box behind it. Saying "unreachable"
+      // sends people hunting a firewall; naming the squatter sends them to the
+      // one setting that actually fixes it.
+      const squatter = typeof res.data === "string" || String(res.headers?.["content-type"] || "").includes("html");
+      return {
+        ok: false,
+        status: res.status,
+        reason: squatter
+          ? "port 80 is answering, but with a web page that is not Blinkbox — most likely your router's own admin panel. Forward external port 80 and 443 to this machine, and move the router's admin page off port 80."
+          : `no probe answer (HTTP ${res.status})`,
+      };
+    }
     if (got !== probeFingerprint(token, nonce)) {
       return { ok: false, reason: "answered, but not this install", status: res.status };
     }
