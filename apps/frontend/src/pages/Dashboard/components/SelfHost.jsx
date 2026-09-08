@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Copy, CheckCheck, KeyRound, Plus, Globe, ShieldCheck } from 'lucide-react';
+import { Trash2, Loader2, Copy, CheckCheck, KeyRound, Plus, Globe, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import imgBlinkbox from '../../../assets/blinkbox-knot.png';
@@ -28,6 +28,18 @@ const LINE_COLOR = {
   in: 'text-[var(--bb-text-hi)]',
   ok: 'text-emerald-400',
   url: 'text-[var(--bb-text-hi)]',
+};
+
+// What the cloud last managed to prove about a box, in words its owner can act
+// on. `reachable` is the only thing that decides whether the site loads at all —
+// the DNS state just says how far the name got.
+const DNS_LABEL = {
+  ok: 'name pointed here',
+  existing: 'name pointed here',
+  'awaiting-verification': 'name waiting for a reachable address',
+  failed: 'DNS update failed',
+  skipped: 'DNS managed elsewhere',
+  pending: 'name not pointed yet',
 };
 
 function timeAgo(d) {
@@ -256,10 +268,12 @@ export default function SelfHost() {
         </div>
       ) : (
         <div className="bb-card bb-reflect rounded-2xl overflow-hidden mb-8">
-          {instances.map((inst) => (
-            <div key={inst._id || inst.hostname} className="flex items-center justify-between px-4 py-3 border-t bb-divider first:border-t-0">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--bb-surface-2)', border: '1px solid var(--bb-border)', color: 'var(--bb-text-lo)' }}>
+          {instances.map((inst) => {
+            const live = Boolean(inst.reachable);
+            return (
+            <div key={inst._id || inst.hostname} className="flex items-start justify-between gap-4 px-4 py-3 border-t bb-divider first:border-t-0">
+              <div className="flex items-start gap-3.5 min-w-0">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--bb-surface-2)', border: '1px solid var(--bb-border)', color: live ? '#4ade80' : 'var(--bb-text-lo)' }}>
                   <Globe className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -267,18 +281,56 @@ export default function SelfHost() {
                     className="text-[13px] font-semibold text-[var(--bb-text-hi)] truncate hover:underline">
                     {inst.hostname}
                   </a>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-[var(--bb-text-dim)] font-mono">{inst.ip || '—'}</span>
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                    <span className="text-[11px] font-mono" style={{ color: live ? 'var(--bb-text-lo)' : 'var(--bb-text-dim)' }}>
+                      {inst.ip || 'no verified address'}
+                    </span>
+                    <span className="text-[var(--bb-text-dim)]">·</span>
+                    <span className="text-[11px] text-[var(--bb-text-dim)]">{DNS_LABEL[inst.dnsState] || 'name state unknown'}</span>
                     <span className="text-[var(--bb-text-dim)]">·</span>
                     <span className="text-[11px] text-[var(--bb-text-dim)]">seen {timeAgo(inst.lastSeenAt)}</span>
+                    {inst.lastProbeAt && (
+                      <>
+                        <span className="text-[var(--bb-text-dim)]">·</span>
+                        <span className="text-[11px] text-[var(--bb-text-dim)]">checked {timeAgo(inst.lastProbeAt)}</span>
+                      </>
+                    )}
                   </div>
+
+                  {!live && (
+                    <div className="flex items-start gap-2 mt-2 px-2.5 py-2 rounded-lg max-w-[460px]" style={{ background: 'var(--bb-surface-2)', border: '1px solid var(--bb-border)' }}>
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-[1px]" style={{ color: '#f59e0b' }} />
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="text-[11px] font-medium text-[var(--bb-text-lo)]">
+                          Nothing answered from the internet, so the name is not pointed at this machine yet.
+                        </span>
+                        {inst.probeError && (
+                          <span className="text-[10px] font-mono text-[var(--bb-text-dim)] break-words">{inst.probeError}</span>
+                        )}
+                        <span className="text-[10px] text-[var(--bb-text-dim)] leading-relaxed">
+                          {inst.egressIp && inst.egressIp !== inst.ip
+                            ? `Its traffic leaves from ${inst.egressIp}, which is not an address the internet can reach it back on. `
+                            : ''}
+                          Forward TCP 80 and 443 to the box, or open them in its firewall. It rechecks itself every few minutes — nothing to re-run.
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              {inst.version && (
-                <span className="text-[10px] font-mono text-[var(--bb-text-dim)] px-2 py-0.5 rounded-full bb-pill shrink-0">{inst.version}</span>
-              )}
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bb-pill" style={{ color: live ? '#4ade80' : 'var(--bb-text-dim)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: live ? '#4ade80' : 'var(--bb-text-dim)' }} />
+                  {live ? 'Live' : 'Unreachable'}
+                </span>
+                {inst.version && (
+                  <span className="text-[10px] font-mono text-[var(--bb-text-dim)] px-2 py-0.5 rounded-full bb-pill shrink-0">{inst.version}</span>
+                )}
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

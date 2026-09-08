@@ -32,7 +32,8 @@ import { parseMultipartFields } from "../modules/automation/webhook.multipart.js
 import { handleWaitWebhook } from "../modules/automation/waitWebhook.controller.js";
 import { handleSlackEvents } from "../modules/automation/slackEvents.controller.js";
 import { redis } from "../infra/redis.client.js";
-import { MCP_HOST } from "../config/env.js";
+import { MCP_HOST, SELF_HOSTED, SELF_HOST_PROBE_TOKEN } from "../config/env.js";
+import { probeFingerprint } from "../infra/selfhost.probe.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -224,11 +225,20 @@ app.get("/health", async (_req, res) => {
     healthy = false;
   }
 
+  // Reachability check from the Blinkbox cloud. It sends a nonce and we answer
+  // with a fingerprint only this install's probe token can produce — that is
+  // what proves the address it dialled really is this box before its
+  // <name>.blinkbox.net record is pointed there. Unauthenticated on purpose:
+  // the nonce is single-use and the answer reveals nothing without the token.
+  const nonce = typeof _req.query?.probe === "string" ? _req.query.probe.slice(0, 64) : null;
+  const probe = SELF_HOSTED && nonce ? probeFingerprint(SELF_HOST_PROBE_TOKEN, nonce) : null;
+
   res.status(healthy ? 200 : 503).json({
     status: healthy ? "ok" : "degraded",
     uptime: Math.floor(process.uptime()),
     commit: (process.env.RAILWAY_GIT_COMMIT_SHA || "unknown").slice(0, 7),
     ...checks,
+    ...(probe ? { probe } : {}),
   });
 });
 

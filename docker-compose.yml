@@ -75,6 +75,13 @@ services:
       CLOUD_API_URL: ${CLOUD_API_URL:-https://api.blinkbox.net}
       BLINKBOX_TAG: ${BLINKBOX_TAG:-latest}
       SELF_HOST_LICENSE_KEY: ${SELF_HOST_LICENSE_KEY:?get one at blinkbox.net → Settings → Self-hosting}
+      # Lets the cloud prove this box is the one the subdomain should point at:
+      # it asks /health for a fingerprint only the holder of this token can
+      # produce, so a Blinkbox name can never be aimed at someone else's server.
+      SELF_HOST_PROBE_TOKEN: ${SELF_HOST_PROBE_TOKEN:-}
+      # The machine's own globally-routable addresses, as the installer saw
+      # them. Reported on every heartbeat so a changed IP re-points DNS.
+      SELF_HOST_PUBLIC_IPS: ${SELF_HOST_PUBLIC_IPS:-}
       OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
@@ -104,7 +111,8 @@ services:
 
   # Fronts the whole install on <name>.blinkbox.net and gets a Let's Encrypt
   # certificate on its own — the DNS record the installer created is what makes
-  # the HTTP-01 challenge resolve.
+  # the HTTP-01 challenge resolve. Plain HTTP is served for every other host as
+  # well (see docker/Caddyfile), so the box is reachable by IP straight away.
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -112,7 +120,8 @@ services:
       - backend
       - frontend
     environment:
-      BLINKBOX_HOSTNAME: ${BLINKBOX_HOSTNAME:-:80}
+      # Only the HTTPS site is named; port 80 is a catch-all either way.
+      BLINKBOX_HOSTNAME: ${BLINKBOX_HOSTNAME:-localhost}
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

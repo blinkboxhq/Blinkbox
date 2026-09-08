@@ -161,24 +161,65 @@ ok "License valid${PLAN:+ — $PLAN plan}"
 
 # ── Name → DNS ───────────────────────────────────────────────────────────────
 
-PUBLIC_IP="${BLINKBOX_IP:-}"
-[ -n "$PUBLIC_IP" ] || PUBLIC_IP=$(curl -fsS -m 10 https://api.ipify.org 2>/dev/null || true)
+# Two addresses, and confusing them is what used to aim a customer's subdomain at
+# a machine that was not theirs. EGRESS_IP is where this box appears to *leave*
+# from — on a home line that is the router, in a cloud VPC a shared NAT gateway.
+# BOUND_IPS are the routable addresses actually configured on its own interfaces.
+# On a plain VPS they match; behind NAT they do not, and only an address the
+# internet can dial *back* on is any use as a DNS record.
+#
+# So nothing here is trusted. Every candidate is sent to the cloud, and once the
+# stack is up it probes them and points the record at whichever one answers as
+# this install.
 
-# ipify reports whoever leaves the house, which on any home or office line is the
-# router, not this box. When they differ, nothing from the internet reaches port
-# 80 or 443 here until someone forwards them — and the first symptom is the
-# router's own admin page answering on the new subdomain, which reads like a
-# Blinkbox bug. Say it before the install rather than after.
+is_public_ip() {
+  case "$1" in
+    0.*|10.*|127.*|169.254.*|192.168.*) return 1 ;;
+    172.1[6-9].*|172.2[0-9].*|172.3[01].*) return 1 ;;
+    100.6[4-9].*|100.[7-9][0-9].*|100.1[01][0-9].*|100.12[0-7].*) return 1 ;;
+    22[4-9].*|2[3-5][0-9].*) return 1 ;;
+    *.*.*.*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+CANDIDATE_IPS=""
+add_candidate() {
+  [ -n "$1" ] || return 0
+  is_public_ip "$1" || return 0
+  for _c in $CANDIDATE_IPS; do [ "$_c" = "$1" ] && return 0; done
+  CANDIDATE_IPS="${CANDIDATE_IPS:+$CANDIDATE_IPS }$1"
+  return 0
+}
+
+BOUND_IPS=$(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}')
+[ -n "$BOUND_IPS" ] || BOUND_IPS=$(hostname -I 2>/dev/null | tr ' ' '\n')
+for _ip in $BOUND_IPS; do add_candidate "$_ip"; done
+LAN_IP=$(printf '%s\n' $BOUND_IPS | head -n1)
+
+EGRESS_IP="${BLINKBOX_IP:-}"
+[ -n "$EGRESS_IP" ] || EGRESS_IP=$(curl -fsS -m 10 https://api.ipify.org 2>/dev/null || true)
+add_candidate "$EGRESS_IP"
+
+# Worth saying up front rather than after: when these differ, nothing from the
+# internet reaches port 80 or 443 here until someone forwards them.
 BEHIND_NAT=no
-if [ -n "$PUBLIC_IP" ]; then
-  LOCAL_IPS=$(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}')
-  [ -n "$LOCAL_IPS" ] || LOCAL_IPS=$(hostname -I 2>/dev/null | tr ' ' '\n')
-  if [ -n "$LOCAL_IPS" ]; then
-    BEHIND_NAT=yes
-    for _ip in $LOCAL_IPS; do [ "$_ip" = "$PUBLIC_IP" ] && BEHIND_NAT=no; done
-    LAN_IP=$(printf '%s\n' $LOCAL_IPS | head -n1)
-  fi
+if [ -n "$EGRESS_IP" ] && [ -n "$BOUND_IPS" ]; then
+  BEHIND_NAT=yes
+  for _ip in $BOUND_IPS; do [ "$_ip" = "$EGRESS_IP" ] && BEHIND_NAT=no; done
 fi
+
+CAND_JSON=""
+for _ip in $CANDIDATE_IPS; do CAND_JSON="${CAND_JSON:+$CAND_JSON,}\"$_ip\""; done
+
+# Proof that this box is the one asking. The cloud keeps a copy and later asks
+# /health for sha256(token:nonce) before pointing any name at any address, so a
+# Blinkbox subdomain can never be steered onto a server someone else runs. Kept
+# across re-runs so an upgrade does not orphan the install already registered.
+if [ -f "$INSTALL_DIR/.env" ]; then
+  PROBE_TOKEN=$(sed -n 's/^SELF_HOST_PROBE_TOKEN=//p' "$INSTALL_DIR/.env" | head -n1)
+fi
+PROBE_TOKEN="${PROBE_TOKEN:-$(rand_hex 16)}"
 
 NAME="${BLINKBOX_NAME:-}"
 while :; do
@@ -192,7 +233,7 @@ while :; do
 
   CODE=$(curl -s -o /tmp/bb-reg.json -w '%{http_code}' -m 30 -X POST \
     -H "Authorization: Bearer $LICENSE_KEY" -H 'Content-Type: application/json' \
-    -d "{\"name\":\"$NAME\",\"ip\":\"$PUBLIC_IP\"}" \
+    -d "{\"name\":\"$NAME\",\"candidates\":[$CAND_JSON],\"egressIp\":\"$EGRESS_IP\",\"probeToken\":\"$PROBE_TOKEN\"}" \
     "$CLOUD_API_URL/api/self-host/register" || true)
   REG=$(cat /tmp/bb-reg.json 2>/dev/null || echo '')
   rm -f /tmp/bb-reg.json
@@ -207,13 +248,12 @@ HOSTNAME_FQDN=$(json_str "$REG" hostname)
 FINAL_NAME=$(json_str "$REG" name)
 DNS_STATE=$(json_str "$REG" dns)
 [ "$FINAL_NAME" = "$NAME" ] || say "${DIM}  \"$NAME\" was taken — using \"$FINAL_NAME\"${OFF}"
-ok "Reserved $HOSTNAME_FQDN → $PUBLIC_IP"
+ok "Reserved $HOSTNAME_FQDN"
 case "$DNS_STATE" in
-  ok) ;;
   # "skipped" is the Blinkbox server missing its DNS credentials, not anything
   # this box did — say so, because the reader cannot fix it from here.
-  skipped) say "${DIM}  Automatic DNS is not enabled on $CLOUD_API_URL. Point $HOSTNAME_FQDN at $PUBLIC_IP yourself, or ask your Blinkbox admin to turn it on — it is picked up on the next heartbeat.${OFF}" ;;
-  *) say "${DIM}  DNS record could not be created — point $HOSTNAME_FQDN at $PUBLIC_IP yourself. Retried automatically on every heartbeat.${OFF}" ;;
+  skipped) say "${DIM}  Automatic DNS is not enabled on $CLOUD_API_URL. Point $HOSTNAME_FQDN at this machine yourself, or ask your Blinkbox admin to turn it on.${OFF}" ;;
+  *) say "${DIM}  The name is pointed at this machine once the engine is up — checked at the end of this install.${OFF}" ;;
 esac
 CADDY_SITE="$HOSTNAME_FQDN"
 PUBLIC_URL="https://$HOSTNAME_FQDN"
@@ -294,6 +334,18 @@ fi
 JWT_SECRET="${JWT_SECRET:-$(rand_hex 32)}"
 ENCRYPTION_KEY="${ENCRYPTION_KEY:-$(rand_hex 16)}"
 
+# The box is reachable at its own addresses over plain HTTP from the moment the
+# containers are up — long before DNS and the certificate exist — so those
+# origins have to be allowed too, or the first thing anyone sees is a socket that
+# will not connect.
+CORS_LIST="$PUBLIC_URL"
+for _ip in $CANDIDATE_IPS; do CORS_LIST="$CORS_LIST,http://$_ip"; done
+case ",$CORS_LIST," in
+  *",http://$LAN_IP,"*) ;;
+  *) [ -n "$LAN_IP" ] && CORS_LIST="$CORS_LIST,http://$LAN_IP" ;;
+esac
+CAND_CSV=$(printf '%s' "$CANDIDATE_IPS" | tr ' ' ',')
+
 umask 077
 cat > "$INSTALL_DIR/.env" <<ENVFILE
 # Generated by the Blinkbox installer. Keep this file — ENCRYPTION_KEY is the
@@ -307,7 +359,11 @@ OWNER_EMAIL=$OWNER_EMAIL
 
 BLINKBOX_HOSTNAME=$CADDY_SITE
 BACKEND_PUBLIC_URL=$PUBLIC_URL
-CORS_ORIGINS=$PUBLIC_URL
+CORS_ORIGINS=$CORS_LIST
+
+# Answers the cloud's reachability probe, and tells it which addresses to try.
+SELF_HOST_PROBE_TOKEN=$PROBE_TOKEN
+SELF_HOST_PUBLIC_IPS=$CAND_CSV
 
 CLOUD_API_URL=$CLOUD_API_URL
 ENVFILE
@@ -341,6 +397,25 @@ fi
 
 ok "Blinkbox is running"
 
+# Only now can anything be verified: until this point nothing was listening, so
+# every address was a guess. The cloud dials each candidate on port 80 and asks
+# for a fingerprint only this install can produce, then points the name at the
+# one that answers. This is the step that stopped subdomains landing on a
+# stranger's address.
+step "Checking this machine is reachable from the internet"
+VERIFY=$(curl -s -m 90 -X POST \
+  -H "Authorization: Bearer $LICENSE_KEY" -H 'Content-Type: application/json' \
+  -d "{\"candidates\":[$CAND_JSON],\"egressIp\":\"$EGRESS_IP\",\"probeToken\":\"$PROBE_TOKEN\"}" \
+  "$CLOUD_API_URL/api/self-host/verify" || true)
+REACHABLE=no
+case "$VERIFY" in *'"reachable":true'*) REACHABLE=yes ;; esac
+VERIFIED_IP=$(json_str "$VERIFY" ip)
+if [ "$REACHABLE" = yes ]; then
+  ok "$HOSTNAME_FQDN → $VERIFIED_IP"
+else
+  printf '%s!%s %s\n' "$BLD" "$OFF" "$(json_str "$VERIFY" message)"
+fi
+
 # The password is generated inside the container and reaches us only on stdout.
 # It is never written to .env, never passed as an argument and never exported —
 # so it exists in exactly one place: the screen below.
@@ -351,11 +426,12 @@ SEED_CODE=$?
 set -e
 
 say ""
-if [ "$BEHIND_NAT" = yes ]; then
+if [ "$REACHABLE" = yes ]; then
+  say "  ${BLD}$PUBLIC_URL${OFF}"
+  say "  ${DIM}http://${LAN_IP:-this machine} — from this network, without waiting for DNS${OFF}"
+else
   say "  ${BLD}http://${LAN_IP:-this machine}${OFF}  ${DIM}(from this network, right now)${OFF}"
   say "  ${DIM}$PUBLIC_URL — once the ports below are open${OFF}"
-else
-  say "  ${BLD}$PUBLIC_URL${OFF}"
 fi
 say ""
 
@@ -382,25 +458,34 @@ else
 fi
 
 say ""
-if [ "$BEHIND_NAT" = yes ]; then
+if [ "$REACHABLE" != yes ]; then
   RULE2="────────────────────────────────────────────────────────────"
   say "  $RULE2"
-  say "  ${BLD}One more step — this box is behind a router${OFF}"
+  say "  ${BLD}One more step — nothing outside reached this box${OFF}"
   say ""
-  say "  $HOSTNAME_FQDN points at $PUBLIC_IP, which is your router,"
-  say "  not this machine (${LAN_IP:-unknown}). On the router's admin page:"
+  if [ "$BEHIND_NAT" = yes ]; then
+    say "  This machine (${LAN_IP:-unknown}) sits behind ${EGRESS_IP:-your router},"
+    say "  so the internet cannot reach it yet. On the router's admin page:"
+    say ""
+    say "    1. turn off its own web management on ports 80 and 443"
+    say "    2. forward TCP 80  -> ${LAN_IP:-this machine}:80"
+    say "    3. forward TCP 443 -> ${LAN_IP:-this machine}:443"
+  else
+    say "  Port 80 did not answer at ${CANDIDATE_IPS:-any address on this box}."
+    say "  Open TCP 80 and 443 in the provider's firewall or security group"
+    say "  (and in ufw/firewalld if this box runs one)."
+  fi
   say ""
-  say "    1. turn off its own web management on ports 80 and 443"
-  say "    2. forward TCP 80  -> ${LAN_IP:-this machine}:80"
-  say "    3. forward TCP 443 -> ${LAN_IP:-this machine}:443"
-  say ""
-  say "  ${DIM}Until then the subdomain shows your router's login page, and${OFF}"
-  say "  ${DIM}the HTTPS certificate cannot be issued — it is granted over${OFF}"
-  say "  ${DIM}port 80. Nothing to re-run afterwards; it works on next visit.${OFF}"
+  say "  ${DIM}$HOSTNAME_FQDN is reserved and stays yours — it is pointed${OFF}"
+  say "  ${DIM}at this machine automatically within a few minutes of the ports${OFF}"
+  say "  ${DIM}opening. Nothing to re-run. Until then use the address above.${OFF}"
+  say "  ${DIM}The HTTPS certificate is granted over port 80, so it is issued${OFF}"
+  say "  ${DIM}on the same first visit.${OFF}"
   say "  $RULE2"
   say ""
+else
+  say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
 fi
-say "  ${DIM}Certificates are issued on first visit; give it a few seconds.${OFF}"
 say ""
 say "  ${DIM}logs     cd $INSTALL_DIR && docker compose logs -f${OFF}"
 say "  ${DIM}upgrade  cd $INSTALL_DIR && docker compose pull && docker compose up -d${OFF}"

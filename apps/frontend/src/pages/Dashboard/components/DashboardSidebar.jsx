@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge } from 'lucide-react';
+import { LayoutDashboard, Activity, Key, Settings, LogOut, ChevronLeft, ChevronRight, BarChart2, Plug, Gauge, Server } from 'lucide-react';
 import logo from '../../../assets/logo.svg';
 import { creditsToUsd, fmtUsd, usedPercent } from '../../../lib/credits';
+import { IS_SELF_HOSTED } from '../../../config/selfHost';
 
 const NAV_TOP = [
   { key: 'workflows', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,6 +12,9 @@ const NAV_TOP = [
   { key: 'usage',     icon: Gauge,    label: 'Credits' },
   { key: 'vault',     icon: Key,      label: 'Credentials' },
   { key: 'mcp',       icon: Plug,     label: 'MCP' },
+  // Licences are minted on the cloud dashboard — the tab is noise on an install
+  // that is already self-hosted.
+  ...(IS_SELF_HOSTED ? [] : [{ key: 'self-host', icon: Server, label: 'Self-host' }]),
 ];
 
 const NAV_BOTTOM = [

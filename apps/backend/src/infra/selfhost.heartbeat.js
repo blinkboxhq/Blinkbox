@@ -11,7 +11,13 @@
  */
 
 import axios from "axios";
-import { SELF_HOSTED, CLOUD_API_URL, SELF_HOST_LICENSE_KEY, BLINKBOX_TAG } from "../config/env.js";
+import {
+  SELF_HOSTED,
+  CLOUD_API_URL,
+  SELF_HOST_LICENSE_KEY,
+  SELF_HOST_PUBLIC_IPS,
+  BLINKBOX_TAG,
+} from "../config/env.js";
 
 const INTERVAL_MS = 5 * 60 * 1000;
 const TIMEOUT_MS = 10000;

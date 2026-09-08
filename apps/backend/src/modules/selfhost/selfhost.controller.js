@@ -5,6 +5,7 @@ import { hashApiKey } from "../mcp/apiKey.middleware.js";
 import { checkCredits, deductCredits, getNodeCost } from "../../infra/credit.engine.js";
 import { dnsEnabled, upsertARecord, deleteRecord } from "../../infra/dns.cloudflare.js";
 import { provisionTenant, deprovisionTenant, provisioningReady } from "../../infra/managedStorage.provision.js";
+import { candidateIPs, findReachableIP, publicIPv4 } from "../../infra/selfhost.probe.js";
 import { SELF_HOST_DOMAIN, GRACE_HOURS, MANAGED_STORAGE_ENABLED } from "../../config/env.js";
 
 const MAX_LICENSES = 5;
@@ -100,7 +101,7 @@ export async function revokeLicense(req, res) {
 export async function listInstances(req, res) {
   try {
     const instances = await SelfHostInstance.find({ userId: req.user.id })
-      .select("name hostname ip version lastSeenAt createdAt")
+      .select("name hostname ip egressIp candidateIps reachable lastProbeAt probeError dnsState version lastSeenAt createdAt")
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, instances });
@@ -124,14 +125,20 @@ export async function registerInstance(req, res) {
     return res.status(409).json({ success: false, message: `"${requested}" is reserved. Pick another name.` });
   }
 
-  const ip = publicIPv4(req.body?.ip) || publicIPv4(sourceIP(req));
-  if (!ip) {
+  // Every address this box might be reachable at, best guess first: the ones
+  // bound to its own interfaces, then where its outbound traffic appears from,
+  // then where this request came from. None of them is trusted — registration
+  // only records them, and /verify decides which one (if any) is real.
+  const egressIp = publicIPv4(req.body?.egressIp) || publicIPv4(sourceIP(req));
+  const candidates = candidateIPs(req.body?.candidates, req.body?.ip, egressIp);
+  if (!candidates.length) {
     return res.status(400).json({
       success: false,
       message: "Could not determine a public IPv4 for this machine. Pass it explicitly.",
     });
   }
   const version = String(req.body?.version || "").slice(0, 40) || null;
+  const probeToken = String(req.body?.probeToken || "").slice(0, 128) || null;
 
   try {
     // Re-running the installer on the same box is an update, not a collision —
@@ -167,19 +174,23 @@ export async function registerInstance(req, res) {
     }
 
     const hostname = `${name}.${SELF_HOST_DOMAIN}`;
-    let dnsRecordId = instance.dnsRecordId;
-    let dns = "skipped";
-    if (dnsEnabled()) {
-      try {
-        dnsRecordId = await upsertARecord(hostname, ip, dnsRecordId);
-        dns = "ok";
-      } catch (err) {
-        console.error("[SelfHost] DNS provisioning failed:", err.message);
-        dns = "failed";
-      }
-    }
 
-    Object.assign(instance, { hostname, ip, version, dnsRecordId, lastSeenAt: new Date() });
+    // Deliberately no DNS here. Registration happens before the containers are
+    // up, so nothing can prove the box owns any of these addresses yet — and
+    // pointing the record at a guess is exactly how installs ended up on an
+    // address that was never theirs. The installer calls /verify once the stack
+    // is healthy; that is where the record gets created.
+    const dns = dnsEnabled() ? (instance.dnsRecordId ? "existing" : "awaiting-verification") : "skipped";
+
+    Object.assign(instance, {
+      hostname,
+      version,
+      egressIp,
+      candidateIps: candidates,
+      dnsState: dns,
+      lastSeenAt: new Date(),
+      ...(probeToken ? { probeToken } : {}),
+    });
     await instance.save();
 
     res.status(201).json({
@@ -187,7 +198,9 @@ export async function registerInstance(req, res) {
       name,
       hostname,
       url: `https://${hostname}`,
-      ip,
+      ip: instance.ip || null,
+      candidates,
+      egressIp,
       dns,
       renamed: name !== requested,
     });
@@ -199,37 +212,125 @@ export async function registerInstance(req, res) {
   }
 }
 
+// Points <name>.blinkbox.net at whichever candidate address actually answers as
+// this install, and records why when none of them does. Shared by /verify and
+// the heartbeat so a box that moves — new VPS, new lease, port forwarding
+// finally opened — repairs itself without anyone re-running the installer.
+async function reconcileAddress(instance, candidates) {
+  const ordered = candidateIPs(instance.ip, candidates, instance.candidateIps);
+  const { ip, tried } = await findReachableIP(ordered, instance.probeToken);
+
+  const set = { lastProbeAt: new Date(), reachable: Boolean(ip) };
+  if (ordered.length) set.candidateIps = ordered;
+
+  if (!ip) {
+    set.probeError =
+      tried.map((t) => `${t.ip}: ${t.reason}`).join("; ").slice(0, 300) ||
+      "no public address to try";
+    await SelfHostInstance.updateOne({ _id: instance._id }, { $set: set });
+    return { ip: null, dns: instance.dnsState, tried };
+  }
+
+  set.probeError = null;
+  set.ip = ip;
+
+  let dns = "skipped";
+  if (dnsEnabled()) {
+    if (ip === instance.ip && instance.dnsRecordId) {
+      dns = "ok";
+    } else {
+      try {
+        set.dnsRecordId = await upsertARecord(instance.hostname, ip, instance.dnsRecordId);
+        dns = "ok";
+        console.log(`[SelfHost] ${instance.hostname} -> ${ip}`);
+      } catch (err) {
+        console.error("[SelfHost] DNS update failed:", err.message);
+        dns = "failed";
+      }
+    }
+  }
+  set.dnsState = dns;
+
+  await SelfHostInstance.updateOne({ _id: instance._id }, { $set: set });
+  return { ip, dns, tried };
+}
+
+// Called by the installer once the containers are healthy, and by anyone
+// re-checking a box that says it is down.
+export async function verifyInstance(req, res) {
+  try {
+    const instance = await SelfHostInstance.findOne({ licenseId: String(req.licenseId) }).select(
+      "+probeToken",
+    );
+    if (!instance) {
+      return res.status(404).json({ success: false, message: "Register this instance first." });
+    }
+
+    const probeToken = String(req.body?.probeToken || "").slice(0, 128);
+    if (probeToken && probeToken !== instance.probeToken) {
+      instance.probeToken = probeToken;
+      await instance.save();
+    }
+
+    const reported = candidateIPs(
+      req.body?.candidates,
+      req.body?.ip,
+      publicIPv4(req.body?.egressIp) || publicIPv4(sourceIP(req)),
+    );
+    const { ip, dns, tried } = await reconcileAddress(instance, reported);
+
+    res.json({
+      success: true,
+      hostname: instance.hostname,
+      url: `https://${instance.hostname}`,
+      reachable: Boolean(ip),
+      ip,
+      dns,
+      tried,
+      message: ip
+        ? `${instance.hostname} now points at ${ip}.`
+        : "Nothing answered on port 80 at any of this machine's public addresses. If it is behind a router or a cloud firewall, forward ports 80 and 443 to it and try again.",
+    });
+  } catch (err) {
+    console.error("[SelfHost] verify failed:", err.message);
+    res.status(500).json({ success: false, message: "Verification failed." });
+  }
+}
+
+const REVERIFY_MS = 30 * 60 * 1000;
+
 export async function heartbeat(req, res) {
   try {
     const set = {
       lastSeenAt: new Date(),
       ...(req.body?.version ? { version: String(req.body.version).slice(0, 40) } : {}),
     };
-
-    // A box that registered while Cloudflare was unconfigured kept its hostname
-    // but never got a record, and nothing else would ever create one. The filter
-    // matches only those boxes, so a healthy instance pays one indexed miss.
-    if (dnsEnabled()) {
-      const orphan = await SelfHostInstance.findOne({
-        licenseId: String(req.licenseId),
-        dnsRecordId: null,
-      })
-        .select("hostname ip")
-        .lean();
-      if (orphan?.hostname && orphan.ip) {
-        try {
-          set.dnsRecordId = await upsertARecord(orphan.hostname, orphan.ip, null);
-          console.log(`[SelfHost] backfilled DNS ${orphan.hostname} -> ${orphan.ip}`);
-        } catch (err) {
-          console.error("[SelfHost] DNS backfill failed:", err.message);
-        }
-      }
-    }
-
     await SelfHostInstance.updateOne({ licenseId: String(req.licenseId) }, { $set: set });
     res.json({ success: true });
-  } catch {
-    res.status(500).json({ success: false, message: "Heartbeat failed." });
+
+    const reported = candidateIPs(
+      req.body?.candidates,
+      publicIPv4(sourceIP(req)),
+    );
+    const instance = await SelfHostInstance.findOne({ licenseId: String(req.licenseId) }).select(
+      "+probeToken",
+    );
+    if (!instance) return;
+
+    // Re-probe when something looks wrong or stale: never verified, currently
+    // down, missing its record, or the box is now reporting an address the
+    // record does not know about. Otherwise a slow half-hourly sanity check.
+    const stale = !instance.lastProbeAt || Date.now() - instance.lastProbeAt.getTime() > REVERIFY_MS;
+    const moved = reported.length > 0 && instance.ip && !reported.includes(instance.ip);
+    const broken = !instance.reachable || (dnsEnabled() && !instance.dnsRecordId);
+    if (!stale && !moved && !broken) return;
+
+    await reconcileAddress(instance, reported);
+  } catch (err) {
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, message: "Heartbeat failed." });
+    }
+    console.error("[SelfHost] heartbeat reconcile failed:", err.message);
   }
 }
 
@@ -260,21 +361,6 @@ function sourceIP(req) {
   return fwd || req.ip || "";
 }
 
-// Rejects private, loopback, link-local and CGNAT space — a subdomain on our
-// zone must never be pointed at something the wider internet cannot reach.
-function publicIPv4(raw) {
-  const ip = String(raw || "").trim().replace(/^::ffff:/, "");
-  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
-  if (!m) return null;
-  const [a, b] = [Number(m[1]), Number(m[2])];
-  if ([a, Number(m[2]), Number(m[3]), Number(m[4])].some((n) => n > 255)) return null;
-  if (a === 0 || a === 10 || a === 127 || a >= 224) return null;
-  if (a === 169 && b === 254) return null;
-  if (a === 172 && b >= 16 && b <= 31) return null;
-  if (a === 192 && b === 168) return null;
-  if (a === 100 && b >= 64 && b <= 127) return null;
-  return ip;
-}
 
 // ── Credits API (license-authenticated, called by self-hosted instances) ─────
 

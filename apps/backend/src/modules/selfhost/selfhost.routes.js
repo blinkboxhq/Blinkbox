@@ -11,6 +11,7 @@ import {
   nodeCost,
   listInstances,
   registerInstance,
+  verifyInstance,
   heartbeat,
   bootstrapStorage,
 } from "./selfhost.controller.js";
@@ -25,6 +26,9 @@ router.get("/instances", verifyToken, listInstances);
 
 // Self-hosted instances — metering against the license owner's workspace.
 router.post("/register", verifyLicense, registerInstance);
+// Called once the containers are healthy: proves the box is reachable and
+// only then points its subdomain at the address that answered.
+router.post("/verify", verifyLicense, verifyInstance);
 router.post("/bootstrap", verifyLicense, bootstrapStorage);
 router.post("/heartbeat", verifyLicense, heartbeat);
 router.get("/status", verifyLicense, licenseStatus);

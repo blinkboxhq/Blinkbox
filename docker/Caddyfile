@@ -1,16 +1,17 @@
-{$BLINKBOX_HOSTNAME} {
-	encode gzip
+# One app, two front doors.
+#
+# The named block is the certificate holder: <name>.blinkbox.net over HTTPS.
+# The http:// block below answers on *any* host — the box's own IP, a LAN
+# address, localhost — so the install is reachable the moment the containers
+# are up, before DNS has propagated and before Let's Encrypt has issued
+# anything. Without it Caddy matched only the FQDN and every other request got
+# a blank 404, which read as "the web never comes up".
+#
+# ACME HTTP-01 challenges are handled by Caddy ahead of these routes, so the
+# catch-all does not get in the way of issuing the certificate.
 
-	header {
-		# The certificate is Caddy's, so pin browsers to HTTPS for this host.
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
-		Referrer-Policy "same-origin"
-		Cross-Origin-Opener-Policy "same-origin"
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-		-Server
-	}
+(app) {
+	encode gzip
 
 	# The API, realtime socket and public webhook endpoints all live on the
 	# backend; everything else is the single-page app.
@@ -29,4 +30,30 @@
 	handle {
 		reverse_proxy frontend:80
 	}
+}
+
+https://{$BLINKBOX_HOSTNAME:localhost} {
+	header {
+		# The certificate is Caddy's, so pin browsers to HTTPS for this host.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		Cross-Origin-Opener-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+
+	import app
+}
+
+http:// {
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	import app
 }
