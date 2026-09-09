@@ -429,8 +429,21 @@ done
 say ""
 
 if [ $i -ge 60 ]; then
+  # /health answers 503 while Mongo or Redis are down, and the loop above wants a
+  # 200 — so a backend that is running perfectly well but cannot reach its
+  # databases lands here too, with nothing wrong in its own log. Print what every
+  # container is actually doing instead of sending people off to guess which one
+  # to look at.
+  say ""
+  say "${BLD}What each container is doing${OFF}"
+  docker compose ps -a </dev/null 2>&1 | sed 's/^/  /'
+  for svc in mongo redis backend; do
+    say ""
+    say "${BLD}— $svc —${OFF}"
+    docker compose logs --tail=15 "$svc" </dev/null 2>&1 | sed 's/^/  /'
+  done
   die "The engine did not answer /health within 3 minutes.
-  Logs:  cd $INSTALL_DIR && docker compose logs backend
+  The output above says which container is the problem.
   Once it starts, finish with:
     cd $INSTALL_DIR && docker compose exec backend node apps/backend/src/modules/selfhost/seedOwner.js"
 fi
