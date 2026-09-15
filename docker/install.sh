@@ -439,6 +439,18 @@ cd "$INSTALL_DIR"
 # Every docker call reads from /dev/null. This script is piped into `sh`, so the
 # shell's stdin *is* the rest of the script: anything that reads stdin swallows
 # the lines that have not run yet and the install ends mid-way, silently.
+# Out of disk shows up as Mongo crash-looping on its journal and the backend
+# failing on mkdir /tmp — neither log says "disk full". Check before pulling.
+DOCKER_ROOT=$(docker info --format '{{.DockerRootDir}}' </dev/null 2>/dev/null || true)
+[ -d "${DOCKER_ROOT:-}" ] || DOCKER_ROOT=/var/lib/docker
+FREE_MB=$(df -Pk "$DOCKER_ROOT" 2>/dev/null | awk 'NR==2 { print int($4 / 1024) }')
+if [ -n "${FREE_MB:-}" ] && [ "$FREE_MB" -lt 3072 ]; then
+  die "Only ${FREE_MB} MB free on the disk holding $DOCKER_ROOT — Blinkbox needs about 3 GB.
+  Old images and volumes are the usual culprit:
+    docker system prune -a -f
+  Then re-run this installer. Nothing was started."
+fi
+
 docker compose pull --quiet </dev/null || die "Could not pull the Blinkbox images from ghcr.io.
   Check this box's outbound HTTPS, then re-run. Nothing was started."
 docker compose up -d </dev/null || die "Startup failed. Logs:  cd $INSTALL_DIR && docker compose logs"
@@ -467,6 +479,14 @@ if [ $i -ge 60 ]; then
     say "${BLD}— $svc —${OFF}"
     docker compose logs --tail=15 "$svc" </dev/null 2>&1 | sed 's/^/  /'
   done
+  if docker compose logs --tail=200 mongo backend </dev/null 2>&1 | grep -q 'ENOSPC\|No space left on device\|__wt_log_allocfile'; then
+    die "The engine did not answer /health within 3 minutes: the disk is full.
+  Free some space, then start again:
+    docker system prune -a -f
+    df -h $DOCKER_ROOT
+    cd $INSTALL_DIR && docker compose up -d
+    docker compose exec backend node apps/backend/src/modules/selfhost/seedOwner.js"
+  fi
   die "The engine did not answer /health within 3 minutes.
   The output above says which container is the problem.
   Once it starts, finish with:
