@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.blinkboxhq/blinkbox",
-  "description": "Open-source automation platform (Zapier/Make/n8n alternative) as an MCP server: create, run and debug workflows across 250+ integrations from Claude, Cursor or ChatGPT.",
+  "description": "Open-source Zapier/n8n alternative as an MCP server: agents build, run and debug your workflows.",
   "repository": {
     "url": "https://github.com/blinkboxhq/Blinkbox",
     "source": "github"
