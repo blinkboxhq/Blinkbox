@@ -1,21 +1,66 @@
 # BlinkBox
 
-**Visual automation platform — build workflows that used to take a sprint in an afternoon.**
+**Open-source automation platform (Zapier / Make / n8n alternative) with a native MCP server — connect Claude Code, Cursor or ChatGPT and let the agent build, run and debug your workflows.**
 
-BlinkBox replaces Zapier, Make, and n8n for teams that need AI agents, headless scraping, and sandboxed code execution — all on a flat-rate plan with no per-task fees.
+Free hosted tier at [blinkbox.net](https://blinkbox.net) (no card) · self-host with Node 22 + MongoDB + Redis · MIT.
 
 ---
 
 ## What it does
 
-- **Drag-and-drop canvas** — connect triggers, actions, AI nodes, and logic blocks visually
-- **Brian AI** — describe an automation in plain English, get a fully wired workflow in seconds
+- **MCP server** — the whole platform is exposed over the Model Context Protocol (Streamable HTTP). Your coding agent lists, creates, runs, activates and debugs workflows with tool calls — see [Use it from Claude Code](#use-it-from-claude-code-cursor-or-chatgpt-60-seconds)
+- **Agent skill** — a [`SKILL.md`](.claude/skills/blinkbox/SKILL.md) that teaches the agent node fields, expression syntax and execution rules, so a working flow takes ~4 tool calls instead of ~12 of guessing
+- **Drag-and-drop canvas** — everything the agent builds is a normal workflow you can open and edit visually
 - **AI Agents** — LLM nodes that reason over data and output structured results
 - **Headless scraping** — full Chromium pool, defeats anti-bot, renders JavaScript
 - **Code sandbox** — write JavaScript in an isolated V8 sandbox with memory limits
 - **250+ integrations** — Gmail, Slack, Stripe, GitHub, Notion, Airtable, Shopify, and more
 - **Encrypted credential vault** — AES-256-GCM; secrets never leave the server decrypted
-- **Multi-turn chat** — Brian remembers context across follow-ups to refine your workflow
+
+---
+
+## Use it from Claude Code, Cursor or ChatGPT (60 seconds)
+
+1. Sign up at [blinkbox.net](https://blinkbox.net) → **Dashboard → MCP** → create an API key.
+2. Add the server to your client:
+
+   ```bash
+   # Claude Code
+   claude mcp add --transport http blinkbox https://mcp.blinkbox.net/mcp \
+     --header "Authorization: Bearer <your key>"
+   ```
+
+   ```json
+   // Cursor / Claude Desktop / any client that takes a JSON config
+   {
+     "mcpServers": {
+       "blinkbox": {
+         "url": "https://mcp.blinkbox.net/mcp",
+         "headers": { "Authorization": "Bearer <your key>" }
+       }
+     }
+   }
+   ```
+
+   Clients that can't send headers can pass the key in the URL instead: `https://mcp.blinkbox.net/mcp?key=<your key>`.
+
+3. (Recommended) install the skill so the agent knows the node catalog and expression syntax:
+
+   ```bash
+   mkdir -p ~/.claude/skills/blinkbox && curl -fsSL \
+     https://raw.githubusercontent.com/blinkboxhq/Blinkbox/main/.claude/skills/blinkbox/SKILL.md \
+     -o ~/.claude/skills/blinkbox/SKILL.md
+   ```
+
+4. Ask for what you want:
+
+   > *"Every morning at 8, find dentists in Berlin on OpenStreetMap that list a website, email and phone, dedupe against my Google Sheet and append the new ones."*
+
+   The agent calls `create_automation`, runs it with `run_automation`, reads `get_execution_logs` when something fails, and `activate_automation` when it's green. OAuth apps (Google, Slack, Notion…) are connected once by you in the dashboard — the agent never sees your tokens.
+
+**Tools:** `list_automations` · `get_automation` · `create_automation` · `run_automation` · `activate_automation` · `deactivate_automation` · `rename_automation` · `delete_automation` · `list_executions` · `get_execution` · `get_execution_logs` · `list_nodes` · `get_node` · `list_node_actions` · `list_credentials` · `create_credential` · `blinkbox_api_get` · `blinkbox_api`
+
+Self-hosting? The same server is at `<your backend>/api/mcp` — create keys in your own dashboard.
 
 ---
 
@@ -61,7 +106,7 @@ MONGODB_URI=mongodb+srv://...
 REDIS_URL=redis://localhost:6379
 JWT_SECRET=your-32-char-secret
 ENCRYPTION_KEY=your-exactly-32-char-key
-ANTHROPIC_API_KEY=sk-ant-...          # enables Brian AI
+ANTHROPIC_API_KEY=sk-ant-...          # enables the AI workflow builder behind create_automation
 ```
 
 ### 3. Run
@@ -93,7 +138,7 @@ Open [http://localhost:5174](http://localhost:5174).
 
 | Variable | Description |
 |----------|-------------|
-| `ANTHROPIC_API_KEY` | Enables Brian AI via Claude Sonnet 4.6 |
+| `ANTHROPIC_API_KEY` | Enables the AI workflow builder (Claude) used by the `create_automation` MCP tool |
 | `GROQ_API_KEY` | Fallback LLM (Llama 3.3 70B) |
 | `GOOGLE_AI_KEY` | Fallback LLM (Gemini 2.0 Flash) |
 
@@ -123,13 +168,13 @@ Open [http://localhost:5174](http://localhost:5174).
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    Frontend (Vite)                  │
-│  Dashboard · Workspace Canvas · Brian AI Chat       │
+│  Dashboard · Workspace Canvas · MCP keys            │
 └───────────────────────┬─────────────────────────────┘
                         │ REST API
 ┌───────────────────────▼─────────────────────────────┐
 │                Backend (Express)                    │
 │  Auth · Automations · Executions · Credentials      │
-│  Brian Controller · OAuth · Webhooks                │
+│  MCP server · AI builder · OAuth · Webhooks         │
 └──────────┬──────────────────┬───────────────────────┘
            │                  │
     ┌──────▼──────┐    ┌──────▼──────┐
@@ -159,13 +204,13 @@ The same `backendType` key connects both sides. 250+ nodes are registered.
 
 ---
 
-## Brian AI
+## AI workflow builder
 
-Brian is the AI workflow builder. Type a description in the dashboard chat bar:
+`create_automation` (the MCP tool) hands your description to a server-side builder:
 
 > *"When a new Stripe payment comes in, look up the customer in HubSpot, and send a Slack alert to #revenue"*
 
-Brian calls Claude Sonnet 4.6 with a 70-node knowledge base and forced tool use. It outputs a fully configured workflow with real field values, correct variable chaining (`{{trigger.data.from}}`), and proper node positions — ready to run.
+The builder calls Claude with the node knowledge base and forced tool use, and returns a fully configured, canvas-correct workflow — real field values, variable chaining (`{{trigger.data.from}}`), node positions — as a draft you can run, inspect and activate from the agent or the UI.
 
 **Provider fallback chain:** Anthropic → Groq → Gemini
 
