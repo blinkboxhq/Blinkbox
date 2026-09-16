@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.blinkboxhq/blinkbox",
+  "description": "Open-source automation platform (Zapier/Make/n8n alternative) as an MCP server: create, run and debug workflows across 250+ integrations from Claude, Cursor or ChatGPT.",
+  "repository": {
+    "url": "https://github.com/blinkboxhq/Blinkbox",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "websiteUrl": "https://blinkbox.net",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.blinkbox.net/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer <your Blinkbox MCP key> — create one at https://blinkbox.net/dashboard?tab=mcp",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
