@@ -537,6 +537,9 @@ export async function deactivateAutomation(req, res) {
   }
 }
 
+const DRAFT_RUN_MESSAGE =
+  "This workflow is still a draft. Click Activate (top right) to turn it on, then Run.";
+
 /**
  * ===============================
  * TRIGGER AUTOMATION (STEP 5)
@@ -552,7 +555,9 @@ export async function triggerAutomation(req, res) {
     if (!automation) throw new Error("Automation not found or access denied");
 
     if (!automation.active) {
-      throw new Error("Engine is paused or inactive.");
+      // A draft can't be triggered through this endpoint. Say so — the old
+      // "Engine is paused or inactive." read like a platform outage to new users.
+      throw new Error(DRAFT_RUN_MESSAGE);
     }
 
     // Validate DAG before execution — reject cycles and malformed graphs
@@ -626,7 +631,7 @@ export async function triggerAutomation(req, res) {
 
     res.json({ success: true, reused: false, execution: result });
   } catch (err) {
-    if (err.message !== "Engine is paused or inactive.") {
+    if (err.message !== DRAFT_RUN_MESSAGE) {
       console.error("Trigger error:", err.message);
     }
     res.status(400).json({ success: false, message: err.message });
