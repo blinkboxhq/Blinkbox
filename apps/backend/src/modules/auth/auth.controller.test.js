@@ -34,7 +34,7 @@ mock.module("google-auth-library", {
   },
 });
 
-const { login, loginTwoFactor, forgotPassword, googleLogin } = await import("./auth.controller.js");
+const { login, loginTwoFactor, forgotPassword, googleLogin, register } = await import("./auth.controller.js");
 const { default: User } = await import("../../models/user.model.js");
 const { encrypt } = await import("../../utils/crypto.js");
 const { generateSecret } = await import("../../utils/totp.js");
@@ -161,4 +161,32 @@ test("Google SSO rejects mismatched googleId on an existing account", async () =
   await googleLogin(mkReq({ credential: "fake-jwt" }), ok);
   assert.equal(ok.statusCode, 200);
   assert.ok(ok.body.token);
+});
+
+test("register signs the new user in immediately, flagged unverified", async () => {
+  const res = mkRes();
+  await register(mkReq({ name: "New", email: "fresh@test.dev", password: "correct-horse" }), res);
+  assert.equal(res.statusCode, 201);
+  assert.ok(res.body.token, "register must return a session token");
+  assert.equal(res.body.emailVerified, false);
+  assert.equal(res.body.needsVerification, undefined);
+  const stored = await User.findOne({ email: "fresh@test.dev" });
+  assert.equal(stored.emailVerified, false, "verification is still pending server-side");
+});
+
+test("login admits an unverified account inside the 7-day grace window, then walls it", async () => {
+  await makeUser("grace@test.dev", { emailVerified: false });
+  const ok = mkRes();
+  await login(mkReq({ email: "grace@test.dev", password: "correct-horse" }), ok);
+  assert.equal(ok.statusCode, 200);
+  assert.ok(ok.body.token);
+  assert.equal(ok.body.emailVerified, false);
+
+  const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+  // createdAt is immutable through Mongoose once timestamps are on; age the row via the driver.
+  await User.collection.updateOne({ email: "grace@test.dev" }, { $set: { createdAt: eightDaysAgo } });
+  const walled = mkRes();
+  await login(mkReq({ email: "grace@test.dev", password: "correct-horse" }), walled);
+  assert.equal(walled.statusCode, 403);
+  assert.equal(walled.body.needsVerification, true);
 });
