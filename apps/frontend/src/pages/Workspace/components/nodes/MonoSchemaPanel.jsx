@@ -60,6 +60,10 @@ function UrlDisplay({ field, config, accent, automationId }) {
 
 function Field({ field, config, set, accent, automationId }) {
   const v = (key, dflt) => (config[key] !== undefined ? config[key] : dflt);
+  const setWithEffects = (val) => {
+    set(field.key, val);
+    if (field.sideEffects) Object.entries(field.sideEffects(val, { ...config, [field.key]: val })).forEach(([k, x]) => set(k, x));
+  };
 
   switch (field.type) {
     case 'url-display':
@@ -95,10 +99,10 @@ function Field({ field, config, set, accent, automationId }) {
 
     case 'select':
       return <ConfigSelect label={field.label} icon={field.icon} value={v(field.key, field.default)} options={field.options} accentColor={accent}
-        onChange={(val) => { set(field.key, val); if (field.sideEffects) Object.entries(field.sideEffects(val)).forEach(([k, x]) => set(k, x)); }} />;
+        onChange={setWithEffects} />;
 
     case 'hour':
-      return <ConfigSelect label={field.label} value={v(field.key, field.default || '09')} options={HOURS} accentColor={accent} onChange={(val) => set(field.key, val)} />;
+      return <ConfigSelect label={field.label} value={v(field.key, field.default || '09')} options={HOURS} accentColor={accent} onChange={setWithEffects} />;
 
     case 'pills': {
       const cur = v(field.key, field.default ?? (field.multi ? [] : undefined));
@@ -123,7 +127,7 @@ function Field({ field, config, set, accent, automationId }) {
               const on = cur.includes(d);
               return (
                 <button key={d} type="button"
-                  onClick={() => set(field.key, on ? cur.filter((x) => x !== d) : [...cur, d])}
+                  onClick={() => setWithEffects(on ? cur.filter((x) => x !== d) : [...cur, d])}
                   className="bb-glow-border flex-1 py-2 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border transition-colors"
                   style={on ? { color: accent, backgroundColor: `${accent}1f`, borderColor: `${accent}66` } : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>
                   {d[0]}

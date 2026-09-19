@@ -23,6 +23,27 @@ import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } f
 
 const CRON_QUEUE_NAME = "bb-cron-scheduler";
 
+const PRESET_CRON = {
+  every_5m: "*/5 * * * *",
+  every_15m: "*/15 * * * *",
+  every_30m: "*/30 * * * *",
+  every_hour: "0 * * * *",
+  every_6h: "0 */6 * * *",
+  every_12h: "0 */12 * * *",
+};
+const DAY_CRON = { Mon: "1", Tue: "2", Wed: "3", Thu: "4", Fri: "5", Sat: "6", Sun: "0" };
+
+// The preset/hour/day fields are the source of truth; `schedule` on older
+// automations was only rewritten when the preset changed, not the hour.
+function resolveCron(cfg, automation) {
+  const { preset, dailyHour = "09", selectedDays = ["Mon", "Tue", "Wed", "Thu", "Fri"] } = cfg;
+  if (preset === "custom") return cfg.customCron || cfg.schedule;
+  if (preset === "daily") return `0 ${dailyHour} * * *`;
+  if (preset === "weekly") return `0 ${dailyHour} * * ${selectedDays.map((d) => DAY_CRON[d]).filter(Boolean).join(",") || "*"}`;
+  if (PRESET_CRON[preset]) return PRESET_CRON[preset];
+  return cfg.cronExpression || cfg.schedule || automation.settings?.cronExpression;
+}
+
 let cronQueue = null;
 let cronWorker = null;
 
@@ -110,23 +131,24 @@ export async function syncCronJobs() {
   for (const automation of cronAutomations) {
     for (const node of getTriggerNodesOfType(automation, "cron_trigger")) {
       const cfg = getTriggerConfig(node);
-      const schedule = cfg.cronExpression || cfg.schedule || automation.settings?.cronExpression;
+      const schedule = resolveCron(cfg, automation);
       if (!schedule) {
         console.warn(`[CronScheduler] Automation ${automation._id} node ${node.id} has no cronExpression, skipping`);
         continue;
       }
+      const tz = cfg.timezone || "UTC";
 
       await cronQueue.add(
         "cron-fire",
         { automationId: automation._id.toString(), triggerNodeId: node.id },
         {
-          repeat: { pattern: schedule },
+          repeat: { pattern: schedule, tz },
           jobId: `cron-${automation._id}-${node.id}`,
         },
       );
 
       registered++;
-      console.log(`[CronScheduler] Registered: "${automation.name}" node ${node.id} → ${schedule}`);
+      console.log(`[CronScheduler] Registered: "${automation.name}" node ${node.id} → ${schedule} (${tz})`);
     }
   }
 
@@ -136,13 +158,13 @@ export async function syncCronJobs() {
 /**
  * Add a single cron job for an automation.
  */
-export async function addCronJob(automationId, cronExpression) {
+export async function addCronJob(automationId, cronExpression, tz = "UTC") {
   if (!cronQueue) return;
   await cronQueue.add(
     "cron-fire",
     { automationId: automationId.toString() },
     {
-      repeat: { pattern: cronExpression },
+      repeat: { pattern: cronExpression, tz },
       jobId: `cron-${automationId}`,
     },
   );

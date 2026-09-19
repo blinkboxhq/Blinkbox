@@ -94,6 +94,8 @@ const liveCron = (config) => {
   return (INTERVAL_PRESETS.find((p) => p.value === preset) || INTERVAL_PRESETS[4]).cron;
 };
 
+const syncSchedule = (_val, config) => ({ schedule: liveCron(config) });
+
 export const TRIGGER_SCHEMAS = {
   cron_trigger: {
     title: 'Schedule',
@@ -104,9 +106,9 @@ export const TRIGGER_SCHEMAS = {
     fields: [
       { type: 'select', key: 'preset', label: 'Run Every', default: 'every_hour',
         options: INTERVAL_PRESETS.map((p) => ({ value: p.value, label: p.label })),
-        sideEffects: (val) => { const p = INTERVAL_PRESETS.find((x) => x.value === val); return p?.cron ? { schedule: p.cron } : {}; } },
-      { type: 'days', key: 'selectedDays', label: 'On These Days', showWhen: { preset: 'weekly' } },
-      { type: 'hour', key: 'dailyHour', label: 'At Time', default: '09', showWhen: { preset: ['daily', 'weekly'] } },
+        sideEffects: syncSchedule },
+      { type: 'days', key: 'selectedDays', label: 'On These Days', showWhen: { preset: 'weekly' }, sideEffects: syncSchedule },
+      { type: 'hour', key: 'dailyHour', label: 'At Time', default: '09', showWhen: { preset: ['daily', 'weekly'] }, sideEffects: syncSchedule },
       { type: 'text', key: 'customCron', label: 'Cron Expression', default: '0 * * * *',
         placeholder: '0 9 * * 1-5', hint: '// minute hour day-of-month month day-of-week',
         mirrorTo: 'schedule', showWhen: { preset: 'custom' } },
