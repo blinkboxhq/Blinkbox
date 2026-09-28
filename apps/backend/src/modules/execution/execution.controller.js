@@ -241,6 +241,13 @@ export async function retryExecution(req, res) {
     });
   }
 
+  if (execution.dataPrunedAt) {
+    return res.status(410).json({
+      success: false,
+      message: "This run is too old to retry. Run the automation again instead.",
+    });
+  }
+
   let retriedCount = 0;
 
   // Find failed cursors, reset them, and push back to queue

@@ -81,6 +81,9 @@ const ExecutionSchema = new mongoose.Schema(
 
     cursors: { type: [CursorSchema], default: [] },
     completedAt: Date,
+    // Set by storage retention once node inputs/outputs are deleted; retry is
+    // impossible after this because downstream nodes would run on empty input.
+    dataPrunedAt: Date,
 
     events: [
       {
@@ -114,5 +117,7 @@ ExecutionSchema.index({
 ExecutionSchema.index({ "cursors.status": 1, "cursors.lockedAt": 1 });
 // Index for stuck-waiting recovery (status + cursors.status + updatedAt)
 ExecutionSchema.index({ status: 1, "cursors.status": 1, updatedAt: 1 });
+// Per-automation history listing and the retention cap
+ExecutionSchema.index({ automationId: 1, createdAt: -1 });
 
 export default mongoose.model("Execution", ExecutionSchema);

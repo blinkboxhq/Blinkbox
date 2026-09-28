@@ -4,6 +4,8 @@
  * DB internals, and node configs are never leaked to the client.
  */
 
+import { isDbInternalError } from "./redactInternals.js";
+
 export const USER_ERRORS = {
   NOT_FOUND: "Resource not found.",
   AUTOMATION_NOT_FOUND: "Automation not found.",
@@ -21,6 +23,9 @@ export function sanitizeError(err) {
   if (!err) return USER_ERRORS.INTERNAL;
 
   const msg = err.message || String(err);
+
+  // Before the quota rule: Atlas "over your space quota" is not a credit problem
+  if (isDbInternalError(err)) return USER_ERRORS.INTERNAL;
 
   // Deterministic pattern matching — ordered from most specific to most generic
   if (/cycle detected/i.test(msg)) return USER_ERRORS.CYCLE_DETECTED;

@@ -10,6 +10,7 @@ import { startRealtimeHub } from "../infra/realtime.hub.js";
 import { startPushRenewal } from "../infra/push.renewal.js";
 import { startTelemetryFlusher } from "../modules/telemetry/telemetry.flusher.js";
 import { startPayloadFlusher } from "../infra/payload.flusher.js";
+import { startStorageRetention } from "../infra/storage.retention.js";
 import { warmPool as warmIsolatePool } from "../infra/isolate.pool.js";
 import { initSocketServer } from "../infra/socket.server.js";
 
@@ -50,6 +51,9 @@ export async function startServer() {
 
   // 7. Start payload flusher (Redis → MongoDB for vault blobs)
   startPayloadFlusher();
+
+  // 7b. Prune finished-run data, old runs and extra versions so MongoDB stays under quota
+  startStorageRetention();
 
   // 8. Pre-warm isolate pool for code node execution
   warmIsolatePool();

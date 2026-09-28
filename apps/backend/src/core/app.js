@@ -26,6 +26,7 @@ import apiKeyRoutes from "../modules/mcp/apiKey.routes.js";
 import selfHostRoutes from "../modules/selfhost/selfhost.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import { verifyToken } from "../modules/auth/auth.middleware.js";
+import { scrubResponses, isDbInternalError, SAFE_INTERNAL_MESSAGE } from "../utils/redactInternals.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
@@ -207,6 +208,7 @@ app.use(express.json({
   verify: (req, _res, buf) => { req.rawBody = buf; },
 }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+app.use(scrubResponses);
 
 // ── Health / readiness probe ──────────────────────────────────────────────────
 app.get("/health", async (_req, res) => {
@@ -290,6 +292,7 @@ app.use((err, req, res, _next) => {
     return res.status(400).json({ error: msg });
   }
   console.error("[Unhandled Express Error]", err.message);
+  if (isDbInternalError(err)) return res.status(503).json({ error: SAFE_INTERNAL_MESSAGE });
   res.status(err.status || 500).json({ error: "Internal Server Error" });
 });
 

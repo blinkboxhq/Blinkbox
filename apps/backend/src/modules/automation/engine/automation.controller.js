@@ -3,6 +3,8 @@ import cronParser from "cron-parser";
 const { parseExpression: parseCron } = cronParser;
 import Automation from "../../../models/automation.model.js";
 import Execution from "../../../models/execution.model.js";
+import ExecutionData from "../../../models/executionData.model.js";
+import AutomationVersion from "../../../models/automationVersion.model.js";
 import { validateAutomation } from "./automation.validator.js";
 import { executeAutomation } from "../automation.executor.js";
 import { syncCronJobs } from "../../../infra/cron.scheduler.js";
@@ -746,10 +748,11 @@ export async function deleteAutomation(req, res) {
       }
     }
 
-    await Execution.deleteMany({
-      automationId: req.params.id,
-      workspaceId: req.user.id,
-    });
+    const runFilter = { automationId: req.params.id, workspaceId: req.user.id };
+    const runIds = await Execution.find(runFilter).distinct("_id");
+    await ExecutionData.deleteMany({ executionId: { $in: runIds } });
+    await Execution.deleteMany(runFilter);
+    await AutomationVersion.deleteMany({ automationId: automation._id });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to delete." });
