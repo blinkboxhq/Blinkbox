@@ -8,6 +8,7 @@ import { JWT_SECRET, SELF_HOSTED } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
 import { decrypt } from "../../utils/crypto.js";
 import { verifyToken as verifyTotp } from "../../utils/totp.js";
+import { isDbFullError, SIGNUP_DB_FULL_MESSAGE } from "../../utils/dbErrors.js";
 import {
   sendRegistrationEmail,
   sendVerificationEmail,
@@ -245,7 +246,7 @@ export async function googleLogin(req, res) {
 
     if (picture && user.picture !== picture) {
       user.picture = picture;
-      await user.save();
+      await user.save().catch((err) => console.error("[Auth] Google picture update failed:", err.message));
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
@@ -265,6 +266,10 @@ export async function googleLogin(req, res) {
     });
   } catch (error) {
     console.error("Google auth error:", error.response?.data || error.message);
+    if (isDbFullError(error)) {
+      res.set("Retry-After", "600");
+      return res.status(503).json({ message: SIGNUP_DB_FULL_MESSAGE, code: "DB_FULL" });
+    }
     res.status(401).json({ message: "Failed to verify Google identity." });
   }
 }
@@ -305,12 +310,17 @@ export async function register(req, res) {
       emailVerified: false,
     });
 
-    // Generate and store verification token
-    const verifyToken = crypto.randomBytes(32).toString("hex");
-    await redis.set(`bb:verify:${verifyToken}`, String(user._id), "EX", VERIFY_TTL);
-
-    const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
-    await sendRegistrationEmail(user, verifyUrl);
+    // The account exists from here on. The verification link is best-effort:
+    // failing now would answer 500 for an account that was created, and the
+    // retry would then say "already exists". "Resend verification" covers it.
+    try {
+      const verifyToken = crypto.randomBytes(32).toString("hex");
+      await redis.set(`bb:verify:${verifyToken}`, String(user._id), "EX", VERIFY_TTL);
+      const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
+      await sendRegistrationEmail(user, verifyUrl);
+    } catch (err) {
+      console.error("[Auth] verification link setup failed:", err.message);
+    }
 
     // Sign the user in straight away; the verification mail is already on its
     // way and the grace window in `login` keeps the account usable meanwhile.
@@ -324,6 +334,10 @@ export async function register(req, res) {
     });
   } catch (error) {
     console.error("Registration Error:", error.message);
+    if (isDbFullError(error)) {
+      res.set("Retry-After", "600");
+      return res.status(503).json({ message: SIGNUP_DB_FULL_MESSAGE, code: "DB_FULL" });
+    }
     res.status(500).json({ message: "Internal server error during registration." });
   }
 }

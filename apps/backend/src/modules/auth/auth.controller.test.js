@@ -190,3 +190,26 @@ test("login admits an unverified account inside the 7-day grace window, then wal
   assert.equal(walled.statusCode, 403);
   assert.equal(walled.body.needsVerification, true);
 });
+
+test("register on a full database answers a friendly 503 and leaves no account behind", async (t) => {
+  const full = Object.assign(new Error("you are over your space quota, using 512 MB of 512 MB"), { code: 8000, codeName: "AtlasError" });
+  t.mock.method(User, "create", async () => { throw full; });
+  const headers = {};
+  const res = mkRes();
+  res.set = (k, v) => { headers[k] = v; return res; };
+  await register(mkReq({ name: "Full", email: "full@test.dev", password: "correct-horse" }), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.code, "DB_FULL");
+  assert.match(res.body.message, /sign up again shortly/);
+  assert.equal(headers["Retry-After"], "600");
+  assert.equal(await User.findOne({ email: "full@test.dev" }), null);
+});
+
+test("login still works while writes are failing", async (t) => {
+  await makeUser("reader@test.dev");
+  t.mock.method(User.prototype, "save", async () => { throw Object.assign(new Error("over your space quota"), { code: 8000 }); });
+  const res = mkRes();
+  await login(mkReq({ email: "reader@test.dev", password: "correct-horse" }), res);
+  assert.equal(res.statusCode, 200);
+  assert.ok(res.body.token);
+});

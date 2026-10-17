@@ -27,6 +27,7 @@ import selfHostRoutes from "../modules/selfhost/selfhost.routes.js";
 import { vcRouter } from "../nodes/VirtualComputer.js";
 import { verifyToken } from "../modules/auth/auth.middleware.js";
 import { scrubResponses, isDbInternalError, SAFE_INTERNAL_MESSAGE } from "../utils/redactInternals.js";
+import { isDbFullError, DB_FULL_MESSAGE } from "../utils/dbErrors.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
@@ -292,6 +293,10 @@ app.use((err, req, res, _next) => {
     return res.status(400).json({ error: msg });
   }
   console.error("[Unhandled Express Error]", err.message);
+  if (isDbFullError(err)) {
+    res.set("Retry-After", "600");
+    return res.status(503).json({ error: DB_FULL_MESSAGE, message: DB_FULL_MESSAGE, code: "DB_FULL" });
+  }
   if (isDbInternalError(err)) return res.status(503).json({ error: SAFE_INTERNAL_MESSAGE });
   res.status(err.status || 500).json({ error: "Internal Server Error" });
 });
