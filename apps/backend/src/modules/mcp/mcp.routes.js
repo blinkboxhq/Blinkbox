@@ -7,6 +7,15 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { verifyMcpAuth } from "./apiKey.middleware.js";
 import { listToolSpecs, runTool } from "./mcp.tools.js";
+import { isDbFullError, DB_FULL_MESSAGE } from "../../utils/dbErrors.js";
+import { safeErrorMessage } from "../../utils/redactInternals.js";
+
+// The transport writes its own response, so the app-wide response scrubber
+// never sees tool errors: map storage-full and driver internals here.
+export function toolErrorText(err) {
+  if (isDbFullError(err)) return `Error: ${DB_FULL_MESSAGE}`;
+  return `Error: ${safeErrorMessage(err)}`;
+}
 
 const router = Router();
 
@@ -38,7 +47,7 @@ function buildServer(userId) {
       return { content: [{ type: "text", text: String(text) }], isError: false };
     } catch (err) {
       // Tool failures surface in-band so the model can react, not as protocol errors.
-      return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+      return { content: [{ type: "text", text: toolErrorText(err) }], isError: true };
     }
   });
 
@@ -139,7 +148,7 @@ async function handle(req, res) {
     if (!res.headersSent) {
       res
         .status(500)
-        .json({ jsonrpc: "2.0", id: null, error: { code: -32603, message: err.message } });
+        .json({ jsonrpc: "2.0", id: null, error: { code: -32603, message: safeErrorMessage(err) } });
     }
   }
 }

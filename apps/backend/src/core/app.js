@@ -28,6 +28,7 @@ import { vcRouter } from "../nodes/VirtualComputer.js";
 import { verifyToken } from "../modules/auth/auth.middleware.js";
 import { scrubResponses, isDbInternalError, SAFE_INTERNAL_MESSAGE } from "../utils/redactInternals.js";
 import { isDbFullError, DB_FULL_MESSAGE } from "../utils/dbErrors.js";
+import { trackDbRequests, dbFullResponses } from "../infra/dbHealth.js";
 import ollamaRoutes from "../modules/ollama/ollama.routes.js";
 import { handlePublicWebhook, handleGooglePubSub } from "../modules/automation/webhook.controller.js";
 import { parseMultipartFields } from "../modules/automation/webhook.multipart.js";
@@ -210,6 +211,8 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(scrubResponses);
+app.use(trackDbRequests);
+app.use(dbFullResponses);
 
 // ── Health / readiness probe ──────────────────────────────────────────────────
 app.get("/health", async (_req, res) => {

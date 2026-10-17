@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { attachDbMonitor } from "../infra/dbHealth.js";
 
 export async function connectDB() {
   const MONGO_URI =
@@ -14,7 +15,9 @@ export async function connectDB() {
   );
 
   try {
-    await mongoose.connect(MONGO_URI);
+    // Command monitoring lets dbHealth notice "storage full" write failures.
+    await mongoose.connect(MONGO_URI, { monitorCommands: true });
+    attachDbMonitor(mongoose.connection.getClient());
   } catch (err) {
     console.error("❌ Could not connect to MongoDB:", err);
     process.exit(1);

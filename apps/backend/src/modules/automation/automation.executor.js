@@ -74,6 +74,31 @@ export async function executeAutomation(
     throw new Error("Execution not found or failed to create");
   }
 
+  try {
+    await startExecution(execution, automation, entryNodeId, triggerItems, workspaceId);
+  } catch (err) {
+    // The run exists but never got going (e.g. the database filled up between
+    // the two writes). Mark it failed so it doesn't sit "pending" forever and
+    // get re-queued by the resumer; best-effort, since the same cause may
+    // block this write too.
+    await Execution.updateOne(
+      { _id: execution._id, status: "pending" },
+      {
+        $set: {
+          status: "failed",
+          completedAt: new Date(),
+          "cursors.$[].status": "failed",
+          "cursors.$[].errorMessage": "This run could not be started. Please try again.",
+        },
+      },
+    ).catch(() => {});
+    throw err;
+  }
+
+  return execution;
+}
+
+async function startExecution(execution, automation, entryNodeId, triggerItems, workspaceId) {
   // Trigger data goes to the ExecutionData vault, not the main document.
   // findOneAndUpdate so the payload is injected even when the API
   // controller pre-created the Execution ID.
@@ -104,6 +129,4 @@ export async function executeAutomation(
     execution.status = "pending";
     await execution.save();
   }
-
-  return execution;
 }

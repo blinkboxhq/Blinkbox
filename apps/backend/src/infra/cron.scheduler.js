@@ -17,6 +17,7 @@
  */
 
 import { Queue, Worker } from "./bullmq.prefixed.js";
+import { dbIsFull } from "./dbHealth.js";
 import { createBullMQConnection } from "./bullmq.js";
 import Automation from "../models/automation.model.js";
 import { findAutomationsWithTrigger, getTriggerNodesOfType, getTriggerConfig } from "./triggerNodes.util.js";
@@ -63,6 +64,14 @@ export async function startCronScheduler() {
     CRON_QUEUE_NAME,
     async (job) => {
       const { automationId, triggerNodeId } = job.data;
+
+      // A run can't be recorded while MongoDB is full; skip this tick instead
+      // of failing it. dbIsFull() lapses after a quiet spell, so the next tick
+      // probes again and schedules resume on their own once space is back.
+      if (dbIsFull()) {
+        console.warn(`[CronScheduler] Skipping ${automationId}: database is full`);
+        return;
+      }
 
       // Dynamic import to avoid circular deps
       const { executeAutomation } = await import(

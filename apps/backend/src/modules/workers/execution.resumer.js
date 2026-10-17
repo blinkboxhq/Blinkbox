@@ -14,6 +14,7 @@
 import Execution from "../../models/execution.model.js";
 import { enqueueCursor } from "./cursor.queue.js";
 import { redis } from "../../infra/redis.client.js";
+import { dbIsFull } from "../../infra/dbHealth.js";
 
 // Must comfortably exceed BullMQ lockDuration (300s). Reclaiming a cursor that is
 // still alive restarts its node, and for an agent node that means a second full
@@ -27,6 +28,10 @@ export function startExecutionResumer() {
   console.log("[Resumer] Started (crash recovery, 10s interval)");
 
   intervalId = setInterval(async () => {
+    // Every recovery below starts with a write; while the database is full they
+    // would all fail and only pile re-queued jobs onto Redis.
+    if (dbIsFull()) return;
+
     // Prevent overlapping resumer runs across instances
     const acquired = await redis.set("bb:lock:resumer", "1", "NX", "EX", 15);
     if (!acquired) return;
@@ -79,6 +84,10 @@ export function startExecutionResumer() {
       for (const execution of stuckPendingExecutions) {
         for (const cursor of execution.cursors) {
           if (cursor.status === "pending" && !cursor.lockedAt) {
+            // A cursor that keeps failing before it can claim itself leaves
+            // updatedAt untouched, so without this it is re-queued every 10s.
+            const first = await redis.set(`bb:resumer:requeued:${cursor._id}`, "1", "NX", "EX", Math.round(STALE_MS / 1000));
+            if (!first) continue;
             console.log(`[Resumer] Re-enqueuing stranded pending cursor: ${cursor._id}`);
             await enqueueCursor({
               executionId: execution._id.toString(),

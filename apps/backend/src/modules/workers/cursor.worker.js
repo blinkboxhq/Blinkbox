@@ -16,6 +16,38 @@ import { createBullMQConnection, getCursorQueue, getDeadLetterQueue } from "../.
 import { processCursor } from "./cursor.executor.js";
 import { redis } from "../../infra/redis.client.js";
 import { CURSOR_CONCURRENCY } from "../../config/env.js";
+import { isDbFullError } from "../../utils/dbErrors.js";
+import { dbIsFull } from "../../infra/dbHealth.js";
+
+// While MongoDB is full a cursor can't even claim itself, so failing the job
+// would only park it in the dead-letter queue. Wait and try again instead,
+// for up to DB_FULL_MAX_WAITS * DB_FULL_WAIT_MS (2 hours).
+const DB_FULL_WAIT_MS = 10 * 60 * 1000;
+const DB_FULL_MAX_WAITS = 12;
+
+// Nothing consumes the dead-letter queue, so keep it from growing forever.
+const DEAD_LETTER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const DEAD_LETTER_TRIM_EVERY_MS = 10 * 60 * 1000;
+let lastDeadLetterTrim = 0;
+
+export async function runCursorJob(data, {
+  process = processCursor,
+  requeue = (next, delay) => getCursorQueue().add("process-cursor", next, { delay }),
+  isFull = dbIsFull,
+} = {}) {
+  try {
+    await process(data);
+  } catch (err) {
+    const waits = data.dbFullWaits || 0;
+    if ((isDbFullError(err) || isFull()) && waits < DB_FULL_MAX_WAITS) {
+      await requeue({ ...data, dbFullWaits: waits + 1 }, DB_FULL_WAIT_MS);
+      if (waits === 0) console.warn(`[BullMQ] Cursor ${data.cursorId} is waiting for database space before it can run.`);
+      return "waiting";
+    }
+    throw err;
+  }
+  return "done";
+}
 
 const NUM_CONCURRENT = CURSOR_CONCURRENCY;
 let worker = null;
@@ -36,7 +68,7 @@ export async function startCursorWorker() {
         return; // Complete this job silently, the re-queued one will run later
       }
 
-      await processCursor(job.data);
+      await runCursorJob(job.data);
     },
     {
       connection: createBullMQConnection(),
@@ -54,13 +86,21 @@ export async function startCursorWorker() {
     console.error(`[BullMQ] Job ${job?.id} failed:`, err.message);
 
     // Move to dead-letter queue for inspection and possible replay
-    if (job) {
-      await getDeadLetterQueue().add("dead-cursor", {
+    if (!job) return;
+    try {
+      const dlq = getDeadLetterQueue();
+      await dlq.add("dead-cursor", {
         ...job.data,
         error: err.message,
         failedAt: new Date().toISOString(),
         originalJobId: job.id,
       });
+      if (Date.now() - lastDeadLetterTrim > DEAD_LETTER_TRIM_EVERY_MS) {
+        lastDeadLetterTrim = Date.now();
+        await dlq.clean(DEAD_LETTER_MAX_AGE_MS, 5000, "wait");
+      }
+    } catch (dlqErr) {
+      console.error("[BullMQ] Could not record dead-letter job:", dlqErr.message);
     }
   });
 
