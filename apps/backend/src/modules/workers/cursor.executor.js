@@ -13,6 +13,7 @@ import { emitExecutionUpdate, emitNodeStatus } from "../../infra/socket.server.j
 import { RedisKeys } from "../../infra/redis.keys.js";
 import { scheduleDelay } from "../../infra/delay.scheduler.js";
 import { checkCredits, deductCredits } from "../../infra/credit.gateway.js";
+import { trimAutomationRuns } from "../../infra/execution.trim.js";
 import toolRegistry from "../../nodes/agentTools.registry.js";
 import { describeMemoryNode } from "../../nodes/agentMemory.js";
 import { toPlatformTool } from "../../nodes/integrationManifest.js";
@@ -826,6 +827,8 @@ export async function processCursor({ executionId, cursorId }) {
       cursors: latestExecution.cursors,
       completedAt: latestExecution.completedAt,
     });
+
+    if (!stillActive) trimRunsInBackground(latestExecution.automationId);
   } finally {
     clearInterval(lockHeartbeat);
     await releaseLock(lockKey, lockOwner);
@@ -852,6 +855,15 @@ async function _markCursorFailed(execution, cursor, reason, category = "unknown"
   });
 
   console.error(`[Fatal] Cursor ${cursor._id} killed (${category}): ${reason}`);
+  trimRunsInBackground(execution.automationId);
+}
+
+// Drop this automation's runs beyond the retention cap. Never delays or fails the run itself.
+function trimRunsInBackground(automationId) {
+  if (!automationId) return;
+  trimAutomationRuns(automationId).catch((err) =>
+    console.error(`[Retention] Trim for ${automationId} failed:`, err.message),
+  );
 }
 
 // A node can still produce data only if it sits downstream of something that is

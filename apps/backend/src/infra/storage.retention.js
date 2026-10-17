@@ -17,6 +17,7 @@ import ExecutionLog from "../models/executionLog.model.js";
 import Automation from "../models/automation.model.js";
 import AutomationVersion, { MAX_VERSIONS } from "../models/automationVersion.model.js";
 import { acquireLock, renewLock, releaseLock } from "./redis.lock.js";
+import { trimAutomationRuns } from "./execution.trim.js";
 import {
   EXECUTION_DATA_SUCCESS_HOURS,
   EXECUTION_DATA_FAILED_DAYS,
@@ -93,18 +94,11 @@ async function capExecutionsPerAutomation() {
   const heavy = await Execution.aggregate([
     { $group: { _id: "$automationId", n: { $sum: 1 } } },
     { $match: { n: { $gt: EXECUTION_MAX_PER_AUTOMATION } } },
-    { $limit: 100 },
+    { $limit: 1000 },
   ]);
   let count = 0;
   for (const { _id: automationId } of heavy) {
-    const [boundary] = await Execution.find({ automationId })
-      .sort({ createdAt: -1 })
-      .skip(EXECUTION_MAX_PER_AUTOMATION - 1)
-      .limit(1)
-      .select("createdAt")
-      .lean();
-    if (!boundary) continue;
-    count += await deleteExecutions({ ...finished, automationId, createdAt: { $lt: boundary.createdAt } });
+    count += await trimAutomationRuns(automationId);
   }
   return count;
 }

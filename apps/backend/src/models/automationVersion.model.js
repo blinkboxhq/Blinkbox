@@ -17,7 +17,7 @@ const AutomationVersionSchema = new mongoose.Schema(
 
 AutomationVersionSchema.index({ automationId: 1, version: -1 });
 
-export const MAX_VERSIONS = 10;
+export const MAX_VERSIONS = 5;
 
 const AutomationVersion = mongoose.model("AutomationVersion", AutomationVersionSchema);
 export default AutomationVersion;

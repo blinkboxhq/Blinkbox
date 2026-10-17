@@ -282,5 +282,5 @@ const clampNum = (v, def, min, max) => Math.min(Math.max(Number(v) || def, min),
 export const EXECUTION_DATA_SUCCESS_HOURS = clampNum(process.env.EXECUTION_DATA_SUCCESS_HOURS, 24, 1, 24 * 30);
 export const EXECUTION_DATA_FAILED_DAYS   = clampNum(process.env.EXECUTION_DATA_FAILED_DAYS, 7, 1, 90);
 export const EXECUTION_RETENTION_DAYS     = clampNum(process.env.EXECUTION_RETENTION_DAYS, 90, 7, 3650);
-export const EXECUTION_MAX_PER_AUTOMATION = clampNum(process.env.EXECUTION_MAX_PER_AUTOMATION, 1000, 50, 100000);
+export const EXECUTION_MAX_PER_AUTOMATION = clampNum(process.env.EXECUTION_MAX_PER_AUTOMATION, 5, 1, 100000);
 export const EXECUTION_LOG_RETENTION_DAYS = clampNum(process.env.EXECUTION_LOG_RETENTION_DAYS, 90, 7, 365);
