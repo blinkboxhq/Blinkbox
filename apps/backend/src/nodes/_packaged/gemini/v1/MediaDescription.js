@@ -4,9 +4,10 @@
  * Bodies moved verbatim from the monolith.
  */
 import { generationConfig, resolveInlinePart, callGemini } from "../GenericFunctions.js";
+import { AI_MODELS } from "../../../../utils/aiModels.js";
 
 async function opAnalyzeImage(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt = "Describe this image in detail." } = config;
+  const { model = AI_MODELS.gemini.default, prompt = "Describe this image in detail." } = config;
   const imageUrl = config.imageUrl || input?.imageUrl || input?.url;
   if (!imageUrl) return { success: false, error: "Gemini analyzeImage: 'imageUrl' is required.", skipped: true };
 
@@ -21,7 +22,7 @@ async function opAnalyzeImage(config, input, apiKey) {
 }
 
 async function opGenerateImage(config, input, apiKey) {
-  const { model = "gemini-3.1-flash-image" } = config;
+  const { model = AI_MODELS.gemini.image } = config;
   const imagePrompt = config.imagePrompt || config.prompt || input?.prompt;
   if (!imagePrompt) return { success: false, error: "Gemini generateImage: 'imagePrompt' is required.", skipped: true };
 
@@ -38,7 +39,7 @@ async function opGenerateImage(config, input, apiKey) {
 }
 
 async function opAnalyzePdf(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt = "Summarize this PDF." } = config;
+  const { model = AI_MODELS.gemini.default, prompt = "Summarize this PDF." } = config;
   const fileRef = config.fileInput || input?.fileUrl || input?.url;
   if (!fileRef) return { success: false, error: "Gemini analyzePdf: a PDF 'fileInput' is required.", skipped: true };
 
@@ -53,7 +54,7 @@ async function opAnalyzePdf(config, input, apiKey) {
 }
 
 async function opAnalyzeAudio(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt = "Transcribe this audio." } = config;
+  const { model = AI_MODELS.gemini.default, prompt = "Transcribe this audio." } = config;
   const fileRef = config.fileInput || config.audioUrl || input?.audioUrl || input?.url;
   if (!fileRef) return { success: false, error: "Gemini analyzeAudio: an audio 'fileInput' is required.", skipped: true };
 
@@ -68,7 +69,7 @@ async function opAnalyzeAudio(config, input, apiKey) {
 }
 
 async function opAnalyzeVideo(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt = "Describe what happens in this video." } = config;
+  const { model = AI_MODELS.gemini.default, prompt = "Describe what happens in this video." } = config;
   const fileRef = config.fileInput || config.videoUrl || input?.videoUrl || input?.url;
   if (!fileRef) return { success: false, error: "Gemini analyzeVideo: a video 'fileInput' is required.", skipped: true };
 

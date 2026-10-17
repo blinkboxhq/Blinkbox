@@ -9,9 +9,10 @@ import {
   MODELS_URL,
   inputSummary, maybeJson, generationConfig, callGemini,
 } from "../GenericFunctions.js";
+import { AI_MODELS } from "../../../../utils/aiModels.js";
 
 async function opMessage(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt, outputFormat = "text" } = config;
+  const { model = AI_MODELS.gemini.default, prompt, outputFormat = "text" } = config;
   if (!prompt) return { success: false, error: "Gemini message: 'prompt' is required.", skipped: true };
 
   const system = config.systemPrompt ||
@@ -34,7 +35,7 @@ async function opMessage(config, input, apiKey) {
 }
 
 async function opStructuredOutput(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt } = config;
+  const { model = AI_MODELS.gemini.default, prompt } = config;
   if (!prompt) return { success: false, error: "Gemini structuredOutput: 'prompt' is required.", skipped: true };
 
   let schema;
@@ -57,7 +58,7 @@ async function opStructuredOutput(config, input, apiKey) {
 }
 
 async function opFunctionCalling(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt } = config;
+  const { model = AI_MODELS.gemini.default, prompt } = config;
   if (!prompt) return { success: false, error: "Gemini functionCalling: 'prompt' is required.", skipped: true };
 
   let declarations;
@@ -88,7 +89,7 @@ async function opFunctionCalling(config, input, apiKey) {
 }
 
 async function opReasoning(config, input, apiKey) {
-  const { model = "gemini-3.1-pro-preview", prompt } = config;
+  const { model = AI_MODELS.gemini.pro, prompt } = config;
   if (!prompt) return { success: false, error: "Gemini reasoning: 'prompt' is required.", skipped: true };
 
   const gen = generationConfig(config, { temperature: 0.4, maxTokens: 8000 });
@@ -106,7 +107,7 @@ async function opReasoning(config, input, apiKey) {
 }
 
 async function opAnalyzeDocument(config, input, apiKey) {
-  const { model = "gemini-3.5-flash", prompt = "Summarize this document.", outputFormat = "text" } = config;
+  const { model = AI_MODELS.gemini.default, prompt = "Summarize this document.", outputFormat = "text" } = config;
   const documentText = config.documentText || input?.text || input?.content || input?.body || inputSummary(input);
   if (!documentText) throw new Error("Gemini analyzeDocument: provide 'documentText' or pass text as input.");
 
@@ -124,7 +125,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
 }
 
 async function opExtractData(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
   if (!source) return { success: false, error: "Gemini extractData: provide text to extract from.", skipped: true };
 
@@ -141,7 +142,7 @@ async function opExtractData(config, input, apiKey) {
 }
 
 async function opClassify(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
   if (!source) return { success: false, error: "Gemini classify: provide text to classify.", skipped: true };
 
@@ -161,7 +162,7 @@ async function opClassify(config, input, apiKey) {
 }
 
 async function opSummarize(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
   if (!source) return { success: false, error: "Gemini summarize: provide text to summarize.", skipped: true };
 
@@ -183,7 +184,7 @@ async function opSummarize(config, input, apiKey) {
 }
 
 async function opTranslate(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
   if (!source) return { success: false, error: "Gemini translate: provide text to translate.", skipped: true };
 
@@ -198,7 +199,7 @@ async function opTranslate(config, input, apiKey) {
 }
 
 async function opGeneratePrompt(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const taskDescription = config.task || config.prompt || input?.task || inputSummary(input);
   if (!taskDescription) return { success: false, error: "Gemini generatePrompt: 'task' description is required.", skipped: true };
 
@@ -212,7 +213,7 @@ async function opGeneratePrompt(config, input, apiKey) {
 }
 
 async function opCountTokens(config, input, apiKey) {
-  const { model = "gemini-3.5-flash" } = config;
+  const { model = AI_MODELS.gemini.default } = config;
   const source = config.prompt || config.text || input?.text || input?.content || inputSummary(input);
   if (!source) return { success: false, error: "Gemini countTokens: provide text to count.", skipped: true };
 

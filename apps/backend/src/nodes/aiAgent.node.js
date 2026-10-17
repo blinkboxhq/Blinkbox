@@ -50,8 +50,11 @@ import axios from "axios";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 import { redis } from "../infra/redis.client.js";
-import { BRIAN_ANTHROPIC_MODEL } from "../modules/brian/brian.registry.js";
 import { assertSafeUrl, assertSafeUrlResolved } from "../utils/ssrf.js";
+import {
+  AI_MODELS, resolveModel, shapeOpenAIChatBody, shapeAnthropicBody,
+  openaiChatToolsUnsupported, isGemini3Plus, REASONING_TOKEN_FLOOR,
+} from "../utils/aiModels.js";
 import {
   buildToolSchema,
   runIntegrationOperation,
@@ -114,14 +117,14 @@ const ENDPOINTS = {
 };
 
 const DEFAULT_MODELS = {
-  openai: "gpt-4o-mini",
-  anthropic: BRIAN_ANTHROPIC_MODEL,
-  gemini: "gemini-2.0-flash",
-  deepseek: "deepseek-chat",
-  openrouter: "anthropic/claude-3.5-sonnet",
+  openai: AI_MODELS.openai.tools,
+  anthropic: AI_MODELS.anthropic.default,
+  gemini: AI_MODELS.gemini.default,
+  deepseek: AI_MODELS.deepseek.default,
+  openrouter: AI_MODELS.openrouter.default,
   together: "meta-llama/Llama-3-70b-chat-hf",
-  perplexity: "llama-3-sonar-large-32k-online",
-  xai: "grok-beta",
+  perplexity: AI_MODELS.perplexity.default,
+  xai: AI_MODELS.xai.default,
   fireworks: "accounts/fireworks/models/firefunction-v2",
   cerebras: "llama3.1-70b",
   ollama:   "llama3",
@@ -129,7 +132,7 @@ const DEFAULT_MODELS = {
   groq: "llama-3.3-70b-versatile",
   nvidia_nim: "nvidia/nemotron-3-ultra-550b-a55b",
   gemma:      "google/gemma-4-31b-it",
-  moonshot:   "moonshot-v1-8k",
+  moonshot:   "kimi-k3",
   novita: "meta-llama/llama-3-70b-instruct",
   deepinfra: "meta-llama/Meta-Llama-3-70B-Instruct",
   hyperbolic: "meta-llama/Meta-Llama-3-70B-Instruct",
@@ -432,8 +435,8 @@ const agentNode = {
       _chatModel,
       enabledToolIds,
       outputFormat = "text",
-      temperature = 0.3,
-      maxTokens = 8192,
+      temperature: _configTemperature,
+      maxTokens: _configMaxTokens = 8192,
       maxIterations = 5,
       returnIntermediateSteps = false,
 
@@ -474,6 +477,9 @@ const agentNode = {
     const provider = _llm?.provider || _derivedProvider || _configProvider;
     const model = _llm?.customModel?.trim() || _llm?.model || _configModel;
     const credentialId = _llm?.credentialId || _configCredentialId;
+    // The model node's own sliders win, like its provider/model/credential do.
+    const temperature = _llm?.temperature ?? _configTemperature;
+    const maxTokens = Number(_llm?.maxTokens) > 0 ? Number(_llm.maxTokens) : _configMaxTokens;
 
     // ── Validation ─────────────────────────────────────────────────────
     if (!prompt) {
@@ -1997,6 +2003,7 @@ const TEMPERATURE_CEILING = {
 const DEFAULT_TEMPERATURE_CEILING = 1;
 
 function clampTemperature(provider, value) {
+  if (value === undefined || value === null || value === "") return 0.3;
   const num = Number(value);
   if (!Number.isFinite(num)) return 0.3;
   return Math.min(Math.max(num, 0), TEMPERATURE_CEILING[provider] ?? DEFAULT_TEMPERATURE_CEILING);
@@ -2014,26 +2021,28 @@ async function callProvider({
   baseUrl,
 }) {
   const temp = clampTemperature(provider, temperature);
+  model = resolveModel(provider, model);
 
   if (provider === "anthropic") {
     return callAnthropic(apiKey, model, system, messages, temp, maxTokens, tools);
   }
   if (provider === "gemini") {
-    return callGemini(apiKey, model, system, messages, temp, maxTokens, tools);
+    const explicit = temperature !== undefined && temperature !== null && temperature !== "";
+    return callGemini(apiKey, model, system, messages, explicit || !isGemini3Plus(model) ? temp : undefined, maxTokens, tools);
   }
 
   // All other providers use OpenAI-compatible API
   const endpoint = resolveEndpoint(provider, baseUrl);
   const label =
     provider.charAt(0).toUpperCase() + provider.slice(1).replace(/([A-Z])/g, " $1");
-  return callOpenAICompat(apiKey, model, system, messages, temp, maxTokens, tools, endpoint, label);
+  return callOpenAICompat(apiKey, model, system, messages, temp, maxTokens, tools, endpoint, label, provider);
 }
 
 // ── OpenAI-Compatible ───────────────────────────────────────────────────────
 
 async function callOpenAICompat(
   apiKey, model, system, messages, temperature, maxTokens, tools,
-  endpoint, providerName
+  endpoint, providerName, provider
 ) {
   const body = {
     model,
@@ -2045,6 +2054,16 @@ async function callOpenAICompat(
   if (tools && tools.length > 0) {
     body.tools = tools;
     body.tool_choice = "auto";
+  }
+
+  if (provider === "openai") {
+    if (body.tools && openaiChatToolsUnsupported(model)) {
+      throw new Error(
+        `AI Agent: ${model} can't use tools through OpenAI's Chat Completions API. ` +
+        `Pick ${AI_MODELS.openai.tools} or ${AI_MODELS.openai.fast} for an agent with tools, or turn the tools off.`
+      );
+    }
+    shapeOpenAIChatBody(body);
   }
 
   try {
@@ -2095,6 +2114,7 @@ async function callAnthropic(
   if (tools && tools.length > 0) {
     body.tools = tools;
   }
+  shapeAnthropicBody(body);
 
   try {
     const response = await withProviderRetry((timeout) => axios.post(ENDPOINTS.anthropic, body, {
@@ -2146,7 +2166,25 @@ async function callGemini(
 ) {
   const endpoint = `${ENDPOINTS.gemini}/${model}:generateContent?key=${apiKey}`;
 
-  const contents = messages.map((m) => {
+  const contents = [];
+  for (const m of messages) {
+    // Tool-call turns and tool results are stored as ready-made parts.
+    if (Array.isArray(m.parts)) {
+      const role = m.role === "model" || m.role === "assistant" ? "model" : "user";
+      const prev = contents[contents.length - 1];
+      const isResponse = m.parts.every((p) => p?.functionResponse);
+      // Gemini wants every response to one call turn in a single content.
+      if (isResponse && prev?.role === "user" && prev.parts.every((p) => p?.functionResponse)) {
+        prev.parts.push(...m.parts);
+      } else {
+        contents.push({ role, parts: m.parts });
+      }
+      continue;
+    }
+    contents.push(toGeminiContent(m));
+  }
+
+  function toGeminiContent(m) {
     const role = m.role === "assistant" ? "model" : "user";
     const content = m.content;
 
@@ -2162,16 +2200,17 @@ async function callGemini(
 
     return {
       role,
-      parts: [{ text: typeof content === "string" ? content : JSON.stringify(content) }],
+      parts: [{ text: typeof content === "string" ? content : JSON.stringify(content ?? "") }],
     };
-  });
+  }
 
   const body = {
     contents,
     systemInstruction: { parts: [{ text: system }] },
     generationConfig: {
-      temperature,
-      maxOutputTokens: maxTokens,
+      ...(temperature !== undefined ? { temperature } : {}),
+      // Gemini 3 thinks by default and thinking tokens share this cap.
+      maxOutputTokens: isGemini3Plus(model) ? Math.max(Number(maxTokens) || 0, REASONING_TOKEN_FLOOR) : maxTokens,
     },
   };
 
@@ -2212,6 +2251,8 @@ async function callGemini(
           id: `gemini_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
           name: part.functionCall.name,
           arguments: part.functionCall.args || {},
+          // Gemini 3 rejects a replayed function call without its signature.
+          ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
         });
       }
     }
@@ -2294,6 +2335,7 @@ function buildAssistantToolCallMessage(response, provider) {
     for (const tc of response.toolCalls) {
       parts.push({
         functionCall: { name: tc.name, args: tc.arguments },
+        ...(tc.thoughtSignature ? { thoughtSignature: tc.thoughtSignature } : {}),
       });
     }
     return { role: "model", parts };
@@ -2906,7 +2948,7 @@ agentNode._think = async function ({
     model: resolvedModel,
     system: systemPromptFinal,
     messages,
-    temperature: nodeConfig.temperature ?? 0.3,
+    temperature: nodeConfig.temperature,
     maxTokens: nodeConfig.maxTokens ?? 8192,
     tools: formattedTools,
     baseUrl: providerBaseUrl,

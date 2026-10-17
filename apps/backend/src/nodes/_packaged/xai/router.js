@@ -3,6 +3,7 @@
  * single OPERATIONS registry (ORDER preserved from the monolith), and dispatches
  * `run(config, input, apiKey)` → handler, funneling errors to handleError.
  */
+import { resolveModel } from "../../../utils/aiModels.js";
 import { handleError } from "./GenericFunctions.js";
 import { chatOperations } from "./v1/ChatDescription.js";
 import { imageOperations } from "./v1/ImageDescription.js";
@@ -28,6 +29,7 @@ export const OPERATIONS = {
 export const DEFAULT_OPERATION = "message";
 
 export async function run(config, input, apiKey) {
+  if (config.model) config = { ...config, model: resolveModel("xai", config.model) };
   const operation = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[operation];
   if (!handler) throw new Error(`xAI: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);

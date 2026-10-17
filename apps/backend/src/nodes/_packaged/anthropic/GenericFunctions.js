@@ -7,16 +7,17 @@
 import axios from "axios";
 import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 import { assertSafeUrlResolved } from "../../../utils/ssrf.js";
+import { AI_MODELS, shapeAnthropicBody } from "../../../utils/aiModels.js";
 
 export const API_URL = "https://api.anthropic.com/v1/messages";
 export const MODELS_URL = "https://api.anthropic.com/v1/models";
 export const ANTHROPIC_VERSION = "2023-06-01";
 export const HEADERS_BASE = { "anthropic-version": ANTHROPIC_VERSION, "Content-Type": "application/json" };
 
-export const DEFAULT_MODEL = "claude-sonnet-4-6";
-export const DEFAULT_FAST_MODEL = "claude-haiku-4-5";
-export const DEFAULT_VISION_MODEL = "claude-sonnet-4-6";
-export const DEFAULT_THINKING_MODEL = "claude-opus-4-8";
+export const DEFAULT_MODEL = AI_MODELS.anthropic.default;
+export const DEFAULT_FAST_MODEL = AI_MODELS.anthropic.fast;
+export const DEFAULT_VISION_MODEL = AI_MODELS.anthropic.default;
+export const DEFAULT_THINKING_MODEL = AI_MODELS.anthropic.flagship;
 
 export async function getApiKey(credentialId, workspaceId) {
   return getOAuthToken(credentialId, workspaceId, "Anthropic");
@@ -29,7 +30,7 @@ export function handleError(err) {
   if (err.response?.status === 404) {
     let model = "unknown";
     try { model = JSON.parse(err.config?.data || "{}")?.model || "unknown"; } catch { /* keep unknown */ }
-    throw new Error(`Anthropic: Model "${model}" not found. Try: ${DEFAULT_MODEL}, ${DEFAULT_FAST_MODEL}, claude-opus-4-8.`);
+    throw new Error(`Anthropic: Model "${model}" not found. Try: ${DEFAULT_MODEL}, ${DEFAULT_FAST_MODEL}, ${DEFAULT_THINKING_MODEL}.`);
   }
   if (err.response?.status === 400) throw new Error(`Anthropic: Bad request — ${err.response?.data?.error?.message || err.message}`);
   if (err.response?.status === 422) throw new Error(`Anthropic: Unprocessable request — ${err.response?.data?.error?.message || err.message}`);
@@ -76,8 +77,8 @@ export async function resolveMediaSource(ref, { kind = "image", fallbackMime } =
   return { type: "base64", media_type: fallbackMime, data: ref };
 }
 
-export async function callAnthropic(apiKey, { model, system, content, maxTokens, sampling = {}, tools, toolChoice, thinking }) {
-  const body = {
+export async function callAnthropic(apiKey, { model, system, content, maxTokens, sampling = {}, tools, toolChoice, thinking, outputConfig }) {
+  const body = shapeAnthropicBody({
     model,
     max_tokens: maxTokens,
     messages: [{ role: "user", content }],
@@ -86,7 +87,8 @@ export async function callAnthropic(apiKey, { model, system, content, maxTokens,
     ...(tools ? { tools } : {}),
     ...(toolChoice ? { tool_choice: toolChoice } : {}),
     ...(thinking ? { thinking } : {}),
-  };
+    ...(outputConfig ? { output_config: outputConfig } : {}),
+  });
   const response = await axios.post(API_URL, body, {
     headers: { "x-api-key": apiKey, ...HEADERS_BASE },
     timeout: 300000,

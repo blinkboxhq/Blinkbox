@@ -4,6 +4,7 @@
  * `run(config, input, apiKey)` → handler, funneling errors to handleError.
  * Text-only API — no vision op, no backwards-compat aliases in the monolith.
  */
+import { resolveModel } from "../../../utils/aiModels.js";
 import { handleError } from "./GenericFunctions.js";
 import { chatOperations } from "./v1/ChatDescription.js";
 
@@ -25,6 +26,7 @@ export const OPERATIONS = {
 export const DEFAULT_OPERATION = "message";
 
 export async function run(config, input, apiKey) {
+  if (config.model) config = { ...config, model: resolveModel("deepseek", config.model) };
   const operation = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[operation];
   if (!handler) throw new Error(`DeepSeek: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);

@@ -19,12 +19,12 @@ export default {
     },
 
     {
-      name: "model", type: "options", label: "Model", cols: 2, default: "gpt-4o",
+      name: "model", type: "options", label: "Model", cols: 2, default: "gpt-6.1-sol",
       options: [
-        { value: "gpt-4o",       label: "GPT-4o" },
-        { value: "gpt-4o-mini",  label: "GPT-4o Mini" },
-        { value: "gpt-4-turbo",  label: "GPT-4 Turbo" },
-        { value: "gpt-3.5-turbo",label: "GPT-3.5 Turbo" },
+        { value: "gpt-6.1-sol",  label: "GPT-6.1 Sol" },
+        { value: "gpt-6-astra",  label: "GPT-6 Astra" },
+        { value: "gpt-6-luna",   label: "GPT-6 Luna" },
+        { value: "gpt-5.6-sol",  label: "GPT-5.6 Sol" },
       ],
       show: { operation: ["message", "analyzeImage", "analyzeDocument", "generatePrompt", "improvePrompt", "moderateContent"] },
     },

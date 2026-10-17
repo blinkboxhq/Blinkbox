@@ -48,7 +48,7 @@ export default {
     }
 
     // OpenAI Whisper
-    const model = config.model || "whisper-1";
+    const model = config.model || "gpt-transcribe";
     const form = new FormData();
     form.append("file", audioBuffer, { filename: `audio.${ext}`, contentType });
     form.append("model", model);

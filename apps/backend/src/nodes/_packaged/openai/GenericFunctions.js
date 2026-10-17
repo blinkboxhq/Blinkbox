@@ -7,9 +7,13 @@
 import axios from "axios";
 import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 import { assertSafeUrlResolved } from "../../../utils/ssrf.js";
+import { AI_MODELS } from "../../../utils/aiModels.js";
 
 export const BASE = "https://api.openai.com/v1";
-export const DEFAULT_CHAT_MODEL = "gpt-5.4";
+export const DEFAULT_CHAT_MODEL = AI_MODELS.openai.default;
+export const DEFAULT_TOOLS_MODEL = AI_MODELS.openai.tools;
+export const DEFAULT_FAST_MODEL = AI_MODELS.openai.fast;
+export const DEFAULT_IMAGE_MODEL = AI_MODELS.openai.image;
 
 export async function getApiKey(credentialId, workspaceId) {
   const __accessToken = await getOAuthToken(credentialId, workspaceId, "OpenAI");

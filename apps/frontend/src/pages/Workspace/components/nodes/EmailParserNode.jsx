@@ -115,9 +115,9 @@ export default function EmailParserNode({ config = {}, updateConfig, nodeId }) {
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Model</label>
           <input
-            value={config.model || (provider === "anthropic" ? "claude-3-haiku-20240307" : "gpt-4o-mini")}
+            value={config.model || (provider === "anthropic" ? "claude-haiku-5-5" : "gpt-6-luna")}
             onChange={(e) => updateConfig("model", e.target.value)}
-            placeholder={provider === "anthropic" ? "claude-3-haiku-20240307" : "gpt-4o-mini"}
+            placeholder={provider === "anthropic" ? "claude-haiku-5-5" : "gpt-6-luna"}
             className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-orange-500/40"
           />
         </div>

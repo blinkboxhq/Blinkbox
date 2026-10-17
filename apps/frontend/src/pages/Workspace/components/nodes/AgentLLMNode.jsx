@@ -1,11 +1,11 @@
 import CredentialPicker from "../../../../components/ui/CredentialPicker";
 
 const PROVIDERS = [
-  { id: "openai",      label: "OpenAI",      models: ["gpt-5.6","gpt-5.6-mini","gpt-5.5","o3"], color: "#10A37F", credential: "openai" },
-  { id: "anthropic",   label: "Anthropic",   models: ["claude-opus-4-8","claude-sonnet-5","claude-haiku-4-5"], color: "#D4C1B3", credential: "anthropic" },
-  { id: "gemini",      label: "Gemini",      models: ["gemini-3.5-flash","gemini-3.5-pro","gemini-3.1-pro-preview"], color: "#4285F4", credential: "gemini" },
-  { id: "deepseek",    label: "DeepSeek",    models: ["deepseek-v4-pro","deepseek-v4-flash","deepseek-reasoner"], color: "#4D9BF8", credential: "deepseek" },
-  { id: "openrouter",  label: "OpenRouter",  models: ["deepseek/deepseek-v4-pro","anthropic/claude-sonnet-5","openai/gpt-5.6"], color: "#6366f1", credential: "openrouter" },
+  { id: "openai",      label: "OpenAI",      models: ["gpt-6-sol","gpt-6-luna","gpt-5.6-sol","gpt-5.6-terra"], color: "#10A37F", credential: "openai" },
+  { id: "anthropic",   label: "Anthropic",   models: ["claude-sonnet-5-5","claude-opus-5-5","claude-haiku-5-5","claude-fable-5-1"], color: "#D4C1B3", credential: "anthropic" },
+  { id: "gemini",      label: "Gemini",      models: ["gemini-3.8-flash","gemini-4-argon","gemini-3.5-flash-lite"], color: "#4285F4", credential: "gemini" },
+  { id: "deepseek",    label: "DeepSeek",    models: ["deepseek-flash","deepseek-v4-pro"], color: "#4D9BF8", credential: "deepseek" },
+  { id: "openrouter",  label: "OpenRouter",  models: ["anthropic/claude-sonnet-5.5","openai/gpt-6-sol","deepseek/deepseek-v4-pro"], color: "#6366f1", credential: "openrouter" },
 ];
 
 export default function AgentLLMNode({ config = {}, updateConfig }) {

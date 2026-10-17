@@ -15,11 +15,11 @@ export default {
     },
 
     {
-      name: "model", type: "options", label: "Model", cols: 1, default: "gemini-2.0-flash",
+      name: "model", type: "options", label: "Model", cols: 1, default: "gemini-3.8-flash",
       options: [
-        { value: "gemini-2.0-flash",  label: "Gemini 2.0 Flash" },
-        { value: "gemini-1.5-pro",    label: "Gemini 1.5 Pro" },
-        { value: "gemini-1.5-flash",  label: "Gemini 1.5 Flash" },
+        { value: "gemini-3.8-flash",      label: "Gemini 3.8 Flash" },
+        { value: "gemini-4-argon",        label: "Gemini 4 Argon" },
+        { value: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
       ],
     },
 

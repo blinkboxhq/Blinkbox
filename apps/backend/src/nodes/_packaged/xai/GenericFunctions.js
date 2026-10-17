@@ -10,22 +10,20 @@ import { assertSafeUrlResolved } from "../../../utils/ssrf.js";
 
 export const BASE = "https://api.x.ai/v1";
 
-export const DEFAULT_CHAT_MODEL = "grok-4.3";
-export const DEFAULT_REASON_MODEL = "grok-4.20";
-export const DEFAULT_VISION_MODEL = "grok-4.3";
-export const DEFAULT_IMAGE_MODEL = "grok-2-image";
+export const DEFAULT_CHAT_MODEL = "grok-4.7";
+export const DEFAULT_REASON_MODEL = "grok-4.7";
+export const DEFAULT_VISION_MODEL = "grok-4.7";
+export const DEFAULT_IMAGE_MODEL = "grok-imagine-image-2.0";
 
 export const KNOWN_MODELS = [
+  "grok-4.7",
+  "grok-4.6",
+  "grok-4.5",
   "grok-4.3",
-  "grok-4.20",
-  "grok-4-fast",
-  "grok-4.1",
-  "grok-4",
-  "grok-3",
-  "grok-3-mini",
-  "grok-code-fast",
-  "grok-2-vision",
-  "grok-2-image",
+  "grok-4.20-0309-reasoning",
+  "grok-4.20-0309-non-reasoning",
+  "grok-imagine-image-2.0",
+  "grok-imagine-image",
 ];
 
 export async function getApiKey(credentialId, workspaceId) {

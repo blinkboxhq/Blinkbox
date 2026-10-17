@@ -4,6 +4,7 @@
  * `run(config, input, apiKey)` → handler, funneling errors to handleError.
  */
 import { handleError } from "./GenericFunctions.js";
+import { resolveModel } from "../../../utils/aiModels.js";
 import { chatOperations } from "./v1/ChatDescription.js";
 import { imageOperations } from "./v1/ImageDescription.js";
 import { audioOperations } from "./v1/AudioDescription.js";
@@ -33,6 +34,7 @@ export const OPERATIONS = {
 export const DEFAULT_OPERATION = "message";
 
 export async function run(config, input, apiKey) {
+  if (config.model) config = { ...config, model: resolveModel("openai", config.model) };
   const operation = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[operation];
   if (!handler) throw new Error(`OpenAI: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);

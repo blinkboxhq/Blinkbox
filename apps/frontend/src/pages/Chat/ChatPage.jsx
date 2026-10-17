@@ -486,7 +486,7 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="text-[13px] font-bold text-white leading-none">AI Assistant</h1>
-              <p className="text-[9px] text-zinc-600 leading-tight mt-0.5 font-mono">claude-sonnet-4-6 · file-capable</p>
+              <p className="text-[9px] text-zinc-600 leading-tight mt-0.5 font-mono">claude-sonnet-5-5 · file-capable</p>
             </div>
           </div>
         </div>

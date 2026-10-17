@@ -4,6 +4,8 @@ import { ConfigSelect } from "@/components/ui/ConfigKit";
 export default function ModelSelect({ provider, credentialId, label = "Model", value, fallback, onChange, models = [], accentColor }) {
   const list = useProviderModels(provider, credentialId, models);
   const opts = list.map((m) => (typeof m === "string" ? { value: m, label: m } : m));
+  // A workflow saved with a model that is no longer listed still shows it.
+  if (value && !opts.some((o) => o.value === value)) opts.unshift({ value, label: `${value} (saved)` });
   return (
     <ConfigSelect
       label={label}

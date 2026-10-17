@@ -9,33 +9,32 @@ const MONO = '#e5e5e5';
 
 // OpenRouter routes to 300+ models behind one key — ids are "vendor/model".
 const MODELS_CHAT = [
-  'anthropic/claude-opus-4-8',
-  'anthropic/claude-sonnet-5',
-  'anthropic/claude-haiku-4-5',
-  'openai/gpt-5.6',
-  'openai/gpt-5.6-mini',
-  'openai/o3',
-  'google/gemini-3.5-pro',
-  'google/gemini-3.5-flash',
-  'x-ai/grok-4.3',
-  'x-ai/grok-4-fast',
+  'anthropic/claude-sonnet-5.5',
+  'anthropic/claude-opus-5.5',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-fable-5.1',
+  'openai/gpt-6.1-sol',
+  'openai/gpt-6-astra',
+  'openai/gpt-6-luna',
+  'google/gemini-3.8-flash',
+  'google/gemini-4-argon',
+  'x-ai/grok-4.7',
   'deepseek/deepseek-v4-pro',
-  'deepseek/deepseek-v4-flash',
+  'deepseek/deepseek-v4.1-flash',
   'deepseek/deepseek-r1',
-  'qwen/qwen3-max',
+  'qwen/qwen3.8-max-prime',
   'qwen/qwen3.5-397b-a17b',
-  'z-ai/glm-5.2',
-  'z-ai/glm-4.7',
-  'minimax/minimax-m2.1',
-  'moonshotai/kimi-k2.6',
-  'mistralai/mistral-large-3',
+  'z-ai/glm-5.3',
+  'minimax/minimax-m3',
+  'moonshotai/kimi-k3',
+  'mistralai/mistral-large-4-0',
   'meta-llama/llama-4-maverick',
   'nvidia/nemotron-3-ultra-550b-a55b',
   'cohere/command-a',
 ];
-const MODELS_CODE = ['qwen/qwen3-coder', 'z-ai/glm-4.7', 'deepseek/deepseek-v4-pro', 'anthropic/claude-sonnet-5', 'openai/gpt-5.6', 'mistralai/codestral-2'];
-const MODELS_REASON = ['deepseek/deepseek-r1', 'deepseek/deepseek-v4-pro', 'openai/o3', 'openai/gpt-5.6', 'anthropic/claude-opus-4-8', 'x-ai/grok-4.3', 'qwen/qwen3-max'];
-const MODELS_VISION = ['openai/gpt-5.6', 'google/gemini-3.5-pro', 'anthropic/claude-opus-4-8', 'z-ai/glm-4.6v', 'qwen/qwen3-vl-plus', 'meta-llama/llama-4-maverick'];
+const MODELS_CODE = ['qwen/qwen3-coder', 'anthropic/claude-sonnet-5.5', 'openai/gpt-6.1-sol', 'deepseek/deepseek-v4-pro', 'z-ai/glm-5.3', 'mistralai/devstral-2512'];
+const MODELS_REASON = ['deepseek/deepseek-r1', 'deepseek/deepseek-v4-pro', 'openai/gpt-6-astra', 'anthropic/claude-opus-5.5', 'google/gemini-4-argon', 'x-ai/grok-4.7', 'qwen/qwen3.8-max-prime'];
+const MODELS_VISION = ['openai/gpt-6.1-sol', 'google/gemini-4-argon', 'anthropic/claude-sonnet-5.5', 'z-ai/glm-4.6v', 'qwen/qwen3-vl-235b-a22b-instruct', 'meta-llama/llama-4-maverick'];
 
 const opt = (v) => v.map((s) => ({ value: s, label: s }));
 

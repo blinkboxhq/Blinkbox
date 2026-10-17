@@ -1,13 +1,14 @@
 import axios from "axios";
+import { resolveModel, shapeAnthropicBody } from "../../utils/aiModels.js";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
-const MODELS = ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-haiku-4-5-20251001"];
+const MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"];
 
 export default {
   async run(config, _input, context = {}) {
     const operation = config.operation || "generate";
-    const model     = config.model     || MODELS[0];
+    const model     = resolveModel("anthropic", config.model || MODELS[0]);
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 
@@ -26,12 +27,12 @@ export default {
     try {
       const res = await axios.post(
         "https://api.anthropic.com/v1/messages",
-        { model, max_tokens: maxTokens, temperature: temp,
+        shapeAnthropicBody({ model, max_tokens: maxTokens, temperature: temp,
           system: SYSTEM_PROMPTS.claude_code,
-          messages: [{ role: "user", content: userMsg }] },
+          messages: [{ role: "user", content: userMsg }] }),
         { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, timeout: 120000 },
       );
-      const text   = res.data.content?.[0]?.text || "";
+      const text   = (res.data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
       const tokens = (res.data.usage?.input_tokens || 0) + (res.data.usage?.output_tokens || 0);
       return buildOutput(text, res.data.model, tokens, operation, "claude_code");
     } catch (err) {

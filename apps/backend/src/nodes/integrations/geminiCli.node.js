@@ -1,13 +1,14 @@
 import axios from "axios";
+import { resolveModel } from "../../utils/aiModels.js";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
-const MODELS = ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"];
+const MODELS = ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"];
 
 export default {
   async run(config, _input, context = {}) {
     const operation = config.operation || "generate";
-    const model     = config.model     || MODELS[0];
+    const model     = resolveModel("gemini", config.model || MODELS[0]);
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 

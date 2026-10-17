@@ -10,29 +10,20 @@ const MONO = '#e5e5e5';
 const MODELS_CHAT = [
   'nvidia/nemotron-3-ultra-550b-a55b',
   'nvidia/nemotron-3-super-120b-a12b',
-  'nvidia/nemotron-3-nano-30b-a3b',
+  'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'nvidia/nemotron-nano-3-30b-a3b',
   'nvidia/llama-3.1-nemotron-ultra-253b-v1',
-  'nvidia/llama-3.3-nemotron-super-49b-v1',
-  'meta/llama-4-maverick-17b-128e-instruct',
-  'meta/llama-4-scout-17b-16e-instruct',
-  'meta/llama-3.3-70b-instruct',
-  'meta/llama-3.1-405b-instruct',
-  'meta/llama-3.1-8b-instruct',
-  'deepseek-ai/deepseek-v4-pro',
-  'deepseek-ai/deepseek-v4-flash',
-  'deepseek-ai/deepseek-r1',
-  'qwen/qwen3.5-397b-a17b',
-  'qwen/qwen3-max',
+  'deepseek-ai/deepseek-v4.1-flash',
   'moonshotai/kimi-k2.6',
-  'minimaxai/minimax-m2.7',
-  'mistralai/mistral-large',
-  'mistralai/mixtral-8x22b-instruct-v0.1',
-  'microsoft/phi-4',
-  'google/gemma-3-27b-it',
+  'z-ai/glm-5.3',
+  'z-ai/glm-5.3-flash',
+  'google/gemma-4-31b-it',
+  'mistralai/mistral-large-2-instruct',
+  'openai/gpt-oss-20b',
 ];
-const MODELS_CODE = ['qwen/qwen3-coder-480b-a35b-instruct', 'nvidia/nemotron-3-super-120b-a12b', 'deepseek-ai/deepseek-v4-pro', 'meta/llama-4-maverick-17b-128e-instruct'];
-const MODELS_VISION = ['meta/llama-4-maverick-17b-128e-instruct', 'meta/llama-4-scout-17b-16e-instruct', 'meta/llama-3.2-90b-vision-instruct', 'microsoft/phi-4-multimodal-instruct'];
-const MODELS_EMBED = ['nvidia/llama-nemotron-embed-1b-v2', 'nvidia/nv-embedqa-e5-v5', 'nvidia/nv-embedqa-mistral-7b-v2', 'baai/bge-m3'];
+const MODELS_CODE = ['nvidia/nemotron-3-super-120b-a12b', 'deepseek-ai/deepseek-v4.1-flash', 'z-ai/glm-5.3', 'poolside/laguna-xs-2.1'];
+const MODELS_VISION = ['nvidia/nemotron-3.5-super-vl-120b-a12b', 'meta/llama-3.2-90b-vision-instruct', 'meta/llama-3.2-11b-vision-instruct'];
+const MODELS_EMBED = ['nvidia/nemotron-3-embed-1b', 'nvidia/llama-nemotron-embed-vl-1b-v2', 'nvidia/nv-embedqa-mistral-7b-v2', 'snowflake/arctic-embed-l'];
 
 const opt = (v) => v.map((s) => ({ value: s, label: s }));
 
@@ -65,7 +56,7 @@ function ChatPanel({ config, updateConfig, nodeId }) {
 function CodePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="qwen/qwen3-coder-480b-a35b-instruct" onChange={(v) => updateConfig('model', v)} models={MODELS_CODE} accentColor={MONO} />
+      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="nvidia/nemotron-3-super-120b-a12b" onChange={(v) => updateConfig('model', v)} models={MODELS_CODE} accentColor={MONO} />
       <Text label="System Prompt" value={config.systemPrompt} onChange={(v) => updateConfig('systemPrompt', v)} placeholder="Optional coding guidance…" multiline nodeId={nodeId} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Write a debounce hook in TypeScript…" multiline nodeId={nodeId} />
     </>
@@ -105,7 +96,7 @@ function ReasoningPanel({ config, updateConfig, nodeId }) {
 function VisionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="meta/llama-4-maverick-17b-128e-instruct" onChange={(v) => updateConfig('model', v)} models={MODELS_VISION} accentColor={MONO} />
+      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="nvidia/nemotron-3.5-super-vl-120b-a12b" onChange={(v) => updateConfig('model', v)} models={MODELS_VISION} accentColor={MONO} />
       <Text label="Image URL or Data URI" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.image}}" nodeId={nodeId} />
       <Text label="Question" value={config.question} onChange={(v) => updateConfig('question', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
       <Dropdown label="Detail" value={config.detail} fallback="" onChange={(v) => updateConfig('detail', v)} options={[{ value: '', label: 'Default' }, { value: 'low', label: 'Low' }, { value: 'high', label: 'High' }]} />
@@ -116,7 +107,7 @@ function VisionPanel({ config, updateConfig, nodeId }) {
 function EmbeddingPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="nvidia/llama-nemotron-embed-1b-v2" onChange={(v) => updateConfig('model', v)} models={MODELS_EMBED} accentColor={MONO} />
+      <ModelSelect provider="nvidia_nim" credentialId={config.credentialId} value={config.model} fallback="nvidia/nemotron-3-embed-1b" onChange={(v) => updateConfig('model', v)} models={MODELS_EMBED} accentColor={MONO} />
       <Text label="Text to Embed" value={config.input} onChange={(v) => updateConfig('input', v)} placeholder="{{$node.text}} or paste text…" multiline nodeId={nodeId} />
       <Dropdown label="Input Type" value={config.inputType} fallback="passage" onChange={(v) => updateConfig('inputType', v)} options={[{ value: 'passage', label: 'Passage — for documents to index' }, { value: 'query', label: 'Query — for search queries' }]} />
     </>

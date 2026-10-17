@@ -7,6 +7,9 @@
 import axios from "axios";
 import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 import { assertSafeUrlResolved } from "../../../utils/ssrf.js";
+import { isGemini3Plus, REASONING_TOKEN_FLOOR } from "../../../utils/aiModels.js";
+
+const DEFAULTED_TEMPERATURE = Symbol("defaultedTemperature");
 
 export const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
 export const MODELS_URL = `${GEMINI_BASE}/models`;
@@ -62,6 +65,9 @@ export function generationConfig(config, defaults = {}) {
   const temperature = config.temperature ?? defaults.temperature;
   const maxTokens = config.maxTokens ?? defaults.maxTokens;
   if (temperature !== undefined && temperature !== "") gen.temperature = Number(temperature);
+  if (config.temperature === undefined && gen.temperature !== undefined) {
+    Object.defineProperty(gen, DEFAULTED_TEMPERATURE, { value: true });
+  }
   if (maxTokens !== undefined && maxTokens !== "") gen.maxOutputTokens = Number(maxTokens);
   if (config.topP !== undefined && config.topP !== "") gen.topP = Number(config.topP);
   if (config.topK !== undefined && config.topK !== "") gen.topK = Number(config.topK);
@@ -76,6 +82,15 @@ export function generationConfig(config, defaults = {}) {
 export async function callGemini(apiKey, model, { systemInstruction, parts, gen, tools, toolConfig } = {}) {
   const body = { contents: [{ role: "user", parts }] };
   if (systemInstruction) body.system_instruction = { parts: [{ text: systemInstruction }] };
+  if (gen && isGemini3Plus(model)) {
+    // Gemini 3+ loops below its default temperature of 1.0, so drop the
+    // node's built-in default and keep only a value the user typed. It also
+    // thinks by default, and thinking tokens share maxOutputTokens.
+    const defaulted = gen[DEFAULTED_TEMPERATURE];
+    gen = { ...gen };
+    if (defaulted) delete gen.temperature;
+    if (gen.maxOutputTokens) gen.maxOutputTokens = Math.max(gen.maxOutputTokens, REASONING_TOKEN_FLOOR);
+  }
   if (gen && Object.keys(gen).length) body.generationConfig = gen;
   if (tools) body.tools = tools;
   if (toolConfig) body.toolConfig = toolConfig;

@@ -10,32 +10,30 @@ import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 export const BASE = "https://openrouter.ai/api/v1";
 
 export const DEFAULT_CHAT_MODEL   = "deepseek/deepseek-v4-pro";
-export const DEFAULT_VISION_MODEL = "openai/gpt-5.6";
+export const DEFAULT_VISION_MODEL = "openai/gpt-6.1-sol";
 export const DEFAULT_THINK_MODEL  = "deepseek/deepseek-r1";
 export const DEFAULT_CODE_MODEL   = "qwen/qwen3-coder";
 
 export const KNOWN_MODELS = [
-  "anthropic/claude-opus-4-8",
-  "anthropic/claude-sonnet-5",
-  "anthropic/claude-haiku-4-5",
-  "openai/gpt-5.6",
-  "openai/gpt-5.6-mini",
-  "openai/o3",
-  "google/gemini-3.5-pro",
-  "google/gemini-3.5-flash",
-  "x-ai/grok-4.3",
-  "x-ai/grok-4-fast",
+  "anthropic/claude-fable-5.1",
+  "anthropic/claude-opus-5.5",
+  "anthropic/claude-sonnet-5.5",
+  "anthropic/claude-haiku-5.5",
+  "openai/gpt-6-astra",
+  "openai/gpt-6.1-sol",
+  "openai/gpt-6-luna",
+  "google/gemini-4-argon",
+  "google/gemini-3.8-flash",
+  "x-ai/grok-4.7",
   "deepseek/deepseek-v4-pro",
-  "deepseek/deepseek-v4-flash",
+  "deepseek/deepseek-v4.1-flash",
   "deepseek/deepseek-r1",
   "qwen/qwen3-coder",
-  "qwen/qwen3-max",
-  "qwen/qwen3.5-397b-a17b",
-  "z-ai/glm-5.2",
-  "z-ai/glm-4.7",
-  "minimax/minimax-m2.1",
-  "moonshotai/kimi-k2.6",
-  "mistralai/mistral-large-3",
+  "qwen/qwen3.8-max-prime",
+  "z-ai/glm-5.3",
+  "minimax/minimax-m3",
+  "moonshotai/kimi-k3",
+  "mistralai/mistral-large-4-0",
   "meta-llama/llama-4-maverick",
   "nvidia/nemotron-3-ultra-550b-a55b",
   "cohere/command-a",

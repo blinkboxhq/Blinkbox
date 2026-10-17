@@ -401,7 +401,7 @@ export const NODE_KB = {
     fields: [
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant that processes customer requests.", d: "Agent system instructions" },
       { k: "prompt", t: "string", r: true, ex: "{{$json.message}}", d: "User input to the agent" },
-      { k: "model", t: "select", r: false, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|gpt-4o|gpt-4o-mini" },
+      { k: "model", t: "select", r: false, ex: "claude-sonnet-5-5", d: "claude-sonnet-5-5|claude-opus-5-5|gpt-6-sol|gpt-6-luna" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "AI model credential" },
     ],
   },
@@ -412,7 +412,7 @@ export const NODE_KB = {
       { k: "text", t: "string", r: true, ex: "{{$json.message}}", d: "Text to classify" },
       { k: "categories", t: "string", r: true, ex: "billing, technical, general", d: "Comma-separated category list" },
       { k: "context", t: "string", r: false, ex: "Customer support ticket classification", d: "Context to improve accuracy" },
-      { k: "model", t: "select", r: false, ex: "gpt-4o-mini", d: "AI model to use" },
+      { k: "model", t: "select", r: false, ex: "gpt-6-luna", d: "AI model to use" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "AI credential" },
     ],
   },
@@ -460,7 +460,7 @@ export const NODE_KB = {
     label: "Anthropic Claude",
     out: ["content", "usage", "model"],
     fields: [
-      { k: "model", t: "select", r: true, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|claude-haiku-4-5-20251001" },
+      { k: "model", t: "select", r: true, ex: "claude-sonnet-5-5", d: "claude-sonnet-5-5|claude-opus-5-5|claude-haiku-5-5|claude-fable-5-1" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
       { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "maxTokens", t: "number", r: false, ex: 1024, d: "Max output tokens" },
@@ -471,7 +471,7 @@ export const NODE_KB = {
     label: "OpenAI",
     out: ["content", "usage", "model"],
     fields: [
-      { k: "model", t: "select", r: true, ex: "gpt-4o-mini", d: "gpt-4o|gpt-4o-mini|gpt-4-turbo|o1-mini" },
+      { k: "model", t: "select", r: true, ex: "gpt-6-sol", d: "gpt-6-sol|gpt-6-luna|gpt-5.6-sol (agents with tools; gpt-6-astra/gpt-6.1-sol can't call tools here)" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
       { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "maxTokens", t: "number", r: false, ex: 1024, d: "Max output tokens" },
@@ -482,7 +482,7 @@ export const NODE_KB = {
     label: "Google Gemini",
     out: ["content", "usage"],
     fields: [
-      { k: "model", t: "select", r: true, ex: "gemini-2.0-flash", d: "gemini-2.0-flash|gemini-1.5-pro|gemini-1.5-flash" },
+      { k: "model", t: "select", r: true, ex: "gemini-3.8-flash", d: "gemini-3.8-flash|gemini-4-argon|gemini-3.5-flash-lite" },
       { k: "systemPrompt", t: "string", r: false, ex: "You are a helpful assistant.", d: "System instructions" },
       { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Google AI credential" },
@@ -492,7 +492,7 @@ export const NODE_KB = {
     label: "Groq",
     out: ["content", "usage"],
     fields: [
-      { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|mixtral-8x7b" },
+      { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|llama-3.1-8b-instant|qwen/qwen3-32b" },
       { k: "prompt", t: "string", r: true, ex: "{{$json.prompt}}", d: "User message" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Groq API key credential" },
     ],
@@ -502,7 +502,7 @@ export const NODE_KB = {
     out: ["content", "citations"],
     fields: [
       { k: "query", t: "string", r: true, ex: "{{$json.question}}", d: "Question to search and answer" },
-      { k: "model", t: "select", r: false, ex: "llama-3.1-sonar-small-128k-online", d: "Perplexity model" },
+      { k: "model", t: "select", r: false, ex: "sonar-pro", d: "sonar-pro|sonar|sonar-reasoning-pro|sonar-deep-research" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Perplexity API key credential" },
     ],
   },
@@ -521,7 +521,7 @@ export const NODE_KB = {
     role: "model",
     out: [],
     fields: [
-      { k: "model", t: "select", r: true, ex: "claude-sonnet-4-6", d: "claude-sonnet-4-6|claude-opus-4-7|claude-haiku-4-5-20251001" },
+      { k: "model", t: "select", r: true, ex: "claude-sonnet-5-5", d: "claude-sonnet-5-5|claude-opus-5-5|claude-haiku-5-5|claude-fable-5-1" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Anthropic API key — user connects after generation" },
     ],
   },
@@ -530,7 +530,7 @@ export const NODE_KB = {
     role: "model",
     out: [],
     fields: [
-      { k: "model", t: "select", r: true, ex: "gpt-4o", d: "gpt-4o|gpt-4o-mini|gpt-4-turbo|o1-mini" },
+      { k: "model", t: "select", r: true, ex: "gpt-6-sol", d: "gpt-6-sol|gpt-6-luna|gpt-5.6-sol" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "OpenAI API key" },
     ],
   },
@@ -539,7 +539,7 @@ export const NODE_KB = {
     role: "model",
     out: [],
     fields: [
-      { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|llama-3.1-8b-instant|mixtral-8x7b" },
+      { k: "model", t: "select", r: true, ex: "llama-3.3-70b-versatile", d: "llama-3.3-70b-versatile|llama-3.1-8b-instant|qwen/qwen3-32b" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Groq API key" },
     ],
   },
@@ -548,7 +548,7 @@ export const NODE_KB = {
     role: "model",
     out: [],
     fields: [
-      { k: "model", t: "select", r: true, ex: "gemini-2.0-flash", d: "gemini-2.0-flash|gemini-1.5-pro|gemini-1.5-flash" },
+      { k: "model", t: "select", r: true, ex: "gemini-3.8-flash", d: "gemini-3.8-flash|gemini-4-argon|gemini-3.5-flash-lite" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Google AI Studio API key" },
     ],
   },
@@ -1109,7 +1109,7 @@ export const NODE_KB = {
       { k: "imageUrl", t: "string", r: true, ex: "{{$json.fileUrl}}", d: "Public URL of the image to read" },
       { k: "provider", t: "select", r: false, ex: "openai", d: "openai|anthropic" },
       { k: "prompt", t: "string", r: false, ex: "Extract the invoice total", d: "What to pull out of the image" },
-      { k: "model", t: "string", r: false, ex: "gpt-4o-mini", d: "Vision model override" },
+      { k: "model", t: "string", r: false, ex: "gpt-6-luna", d: "Vision model override" },
       { k: "detail", t: "select", r: false, ex: "auto", d: "auto|low|high image detail" },
       { k: "credentialId", t: "credential", r: true, ex: "", d: "Credential for the chosen provider" },
     ],

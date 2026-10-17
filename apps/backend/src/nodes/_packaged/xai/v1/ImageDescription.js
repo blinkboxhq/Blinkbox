@@ -1,5 +1,5 @@
 /**
- * xAI (Grok) — image operations: analyzeImage (vision), generateImage (grok-2-image).
+ * xAI (Grok) — image operations: analyzeImage (vision), generateImage (Grok Imagine).
  * Handlers receive `(config, input, apiKey)`. Bodies moved verbatim from the monolith.
  */
 import axios from "axios";

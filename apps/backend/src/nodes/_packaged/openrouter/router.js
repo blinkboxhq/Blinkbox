@@ -3,6 +3,7 @@
  * single OPERATIONS registry (ORDER preserved from the monolith), then dispatches
  * `run(config, input, apiKey)` → handler, funneling errors to handleError.
  */
+import { resolveModel } from "../../../utils/aiModels.js";
 import { handleError } from "./GenericFunctions.js";
 import { chatOperations } from "./v1/ChatDescription.js";
 import { visionOperations } from "./v1/VisionDescription.js";
@@ -31,6 +32,7 @@ OPERATIONS.vision = visionOperations.analyzeImage;
 export const DEFAULT_OPERATION = "message";
 
 export async function run(config, input, apiKey) {
+  if (config.model) config = { ...config, model: resolveModel("openrouter", config.model) };
   const operation = config.operation || DEFAULT_OPERATION;
   const handler = OPERATIONS[operation];
   if (!handler) throw new Error(`OpenRouter: Unknown operation "${operation}". Valid: ${Object.keys(OPERATIONS).join(", ")}`);

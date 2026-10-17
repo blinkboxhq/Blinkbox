@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AI_MODELS, resolveModel, shapeOpenAIChatBody, shapeAnthropicBody } from "../utils/aiModels.js";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
@@ -41,17 +42,18 @@ export default {
 
     if (provider === "anthropic") {
       const { data } = await axios.post("https://api.anthropic.com/v1/messages",
-        { model: config.model || "claude-haiku-4-5-20251001", max_tokens: 2048, messages: [{ role: "user", content: `Translate the following text to ${target}. Return ONLY the translated text, nothing else:\n\n${text}` }] },
+        shapeAnthropicBody({ model: resolveModel("anthropic", config.model || AI_MODELS.anthropic.fast), max_tokens: 2048, messages: [{ role: "user", content: `Translate the following text to ${target}. Return ONLY the translated text, nothing else:\n\n${text}` }] }),
         { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, timeout: 120000 }
       );
-      return { translatedText: data.content[0].text.trim(), targetLanguage: target, provider: "anthropic" };
+      const translated = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+      return { translatedText: translated, targetLanguage: target, provider: "anthropic" };
     }
 
     // OpenAI
     const { data } = await axios.post("https://api.openai.com/v1/chat/completions",
-      { model: config.model || "gpt-4o-mini", messages: [{ role: "system", content: "You are a professional translator. Return ONLY the translated text, nothing else." }, { role: "user", content: `Translate to ${target}:\n\n${text}` }] },
+      shapeOpenAIChatBody({ model: resolveModel("openai", config.model || AI_MODELS.openai.fast), messages: [{ role: "system", content: "You are a professional translator. Return ONLY the translated text, nothing else." }, { role: "user", content: `Translate to ${target}:\n\n${text}` }] }),
       { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 }
     );
-    return { translatedText: data.choices[0].message.content.trim(), targetLanguage: target, provider: "openai" };
+    return { translatedText: (data.choices?.[0]?.message?.content || "").trim(), targetLanguage: target, provider: "openai" };
   },
 };

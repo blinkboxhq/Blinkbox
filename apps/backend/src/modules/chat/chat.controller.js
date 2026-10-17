@@ -1,4 +1,5 @@
 import "../../config/env.js";
+import { AI_MODELS } from "../../utils/aiModels.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { randomBytes } from "crypto";
 const nanoid = (n = 12) => randomBytes(n).toString("base64url").slice(0, n);
@@ -90,7 +91,7 @@ async function runWithTools(messages) {
   const callAPI = (msgs) =>
     client.messages.create(
       {
-        model: "claude-sonnet-4-6",
+        model: AI_MODELS.anthropic.default,
         max_tokens: 8096,
         system: SYSTEM,
         messages: msgs,

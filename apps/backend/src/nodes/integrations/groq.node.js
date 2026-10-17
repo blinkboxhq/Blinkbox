@@ -1,8 +1,9 @@
 import axios from "axios";
+import { resolveModel } from "../../utils/aiModels.js";
 import { getOAuthToken } from "../../utils/getOAuthToken.js";
 import { SYSTEM_PROMPTS, buildUserMessage, buildOutput } from "./codingAgent.helper.js";
 
-const MODELS = ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant"];
+const MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen/qwen3-32b"];
 
 function handleError(err) {
   if (err.message?.startsWith("Groq")) throw err;
@@ -19,7 +20,7 @@ function handleError(err) {
 export default {
   async run(config, _input, context = {}) {
     const operation = config.operation || "generate";
-    const model     = config.model     || MODELS[0];
+    const model     = resolveModel("groq", config.model || MODELS[0]);
     const maxTokens = parseInt(config.maxTokens) || 4000;
     const temp      = parseFloat(config.temperature ?? 0.2);
 

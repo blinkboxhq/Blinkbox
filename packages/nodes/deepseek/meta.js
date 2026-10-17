@@ -3,9 +3,9 @@ export default {
   label: "DeepSeek",
   description: "Powerful reasoning & chat models",
   fields: [
-    { name: "model", label: "Model", type: "options", cols: 1, default: "deepseek-chat", options: [
-      { value: "deepseek-chat",     label: "DeepSeek V3 (Chat)" },
-      { value: "deepseek-reasoner", label: "DeepSeek R1 (Reasoner)" },
+    { name: "model", label: "Model", type: "options", cols: 1, default: "deepseek-flash", options: [
+      { value: "deepseek-flash",    label: "DeepSeek Flash (V4.1)" },
+      { value: "deepseek-v4-pro",   label: "DeepSeek V4 Pro" },
     ]},
     { name: "outputFormat", label: "Output Format", type: "options", cols: 2, default: "text", options: [
       { value: "text", label: "Raw Text" },

@@ -5,9 +5,10 @@
  */
 import axios from "axios";
 import {
-  BASE, DEFAULT_CHAT_MODEL,
+  BASE, DEFAULT_CHAT_MODEL, DEFAULT_IMAGE_MODEL,
   samplingParams, resolveInlineRef, resolveFileToBuffer,
 } from "../GenericFunctions.js";
+import { shapeOpenAIChatBody } from "../../../../utils/aiModels.js";
 
 async function opAnalyzeImage(config, input, apiKey) {
   const { model = DEFAULT_CHAT_MODEL, prompt = "Describe this image in detail.", detail = "auto" } = config;
@@ -16,7 +17,7 @@ async function opAnalyzeImage(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [{
         role: "user",
@@ -26,7 +27,7 @@ async function opAnalyzeImage(config, input, apiKey) {
         ],
       }],
       ...samplingParams({ maxTokens: config.maxTokens ?? 1000, ...config }),
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -36,7 +37,7 @@ async function opAnalyzeImage(config, input, apiKey) {
 
 async function opGenerateImage(config, input, apiKey) {
   const {
-    model = "gpt-image-2",
+    model = DEFAULT_IMAGE_MODEL,
     imagePrompt,
     prompt,
     imageSize = "1024x1024",
@@ -54,7 +55,7 @@ async function opGenerateImage(config, input, apiKey) {
     body.quality = imageQuality === "high" ? "hd" : "standard";
     body.response_format = "b64_json";
   } else {
-    body.quality = ["high", "medium", "low"].includes(imageQuality) ? imageQuality : "high";
+    body.quality = ["low", "medium", "high", "xhigh", "max", "auto"].includes(imageQuality) ? imageQuality : "high";
     if (config.background) body.background = config.background;
   }
 
@@ -89,7 +90,7 @@ async function opGenerateImage(config, input, apiKey) {
 }
 
 async function opEditImage(config, input, apiKey) {
-  const { model = "gpt-image-2", imagePrompt, prompt, imageSize = "1024x1024" } = config;
+  const { model = DEFAULT_IMAGE_MODEL, imagePrompt, prompt, imageSize = "1024x1024" } = config;
   const description = imagePrompt || prompt;
   if (!description) return { success: false, error: "OpenAI editImage: 'imagePrompt' is required.", skipped: true };
 
@@ -126,19 +127,24 @@ async function opEditImage(config, input, apiKey) {
   };
 }
 
+// /images/variations only ever served dall-e-2, which OpenAI shut down on
+// 2026-05-12. A gpt-image edit with a "make a variation" prompt replaces it.
 async function opImageVariation(config, input, apiKey) {
   const sourceRef = config.fileInput || config.imageUrl || input?.dataUri || input?.imageUrl || input?.url || input?.base64;
   const imageBuffer = await resolveFileToBuffer(sourceRef, { label: "source image" });
   const n = Math.min(Math.max(parseInt(config.n, 10) || 1, 1), 10);
   const size = config.imageSize || "1024x1024";
+  const model = config.model && !/^dall-e/.test(config.model) ? config.model : DEFAULT_IMAGE_MODEL;
 
   const FormData = (await import("form-data")).default;
   const form = new FormData();
+  form.append("model", model);
+  form.append("prompt", config.imagePrompt || config.prompt || "Create a new variation of this image. Keep the subject, style and composition, but vary the details.");
   form.append("image", imageBuffer, { filename: "source.png", contentType: "image/png" });
   form.append("n", String(n));
   form.append("size", size);
 
-  const response = await axios.post(`${BASE}/images/variations`, form, {
+  const response = await axios.post(`${BASE}/images/edits`, form, {
     headers: { Authorization: `Bearer ${apiKey}`, ...form.getHeaders() },
     timeout: 180000,
   });
@@ -150,7 +156,7 @@ async function opImageVariation(config, input, apiKey) {
     dataUri: d.b64_json ? `data:image/png;base64,${d.b64_json}` : d.url,
     imageUrl: d.url,
   }));
-  return { images, count: images.length, ...images[0], provider: "openai", operation: "imageVariation" };
+  return { images, count: images.length, ...images[0], model, provider: "openai", operation: "imageVariation" };
 }
 
 export const imageOperations = {

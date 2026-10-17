@@ -93,7 +93,6 @@ export async function callPerplexity(apiKey, { model, system, user, sampling, ex
 export const KNOWN_MODELS = [
   "sonar",
   "sonar-pro",
-  "sonar-reasoning",
   "sonar-reasoning-pro",
   "sonar-deep-research",
 ];

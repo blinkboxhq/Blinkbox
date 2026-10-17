@@ -11,6 +11,7 @@ import {
   DEFAULT_MODEL, DEFAULT_THINKING_MODEL,
   callAnthropic, samplingParams, inputSummary, maybeJson,
 } from "../GenericFunctions.js";
+import { shapeAnthropicBody, anthropicRejectsForcedTools } from "../../../../utils/aiModels.js";
 
 async function opMessage(config, input, apiKey) {
   const { model = DEFAULT_MODEL, prompt, outputFormat = "text", maxTokens = 2000 } = config;
@@ -39,6 +40,17 @@ async function opStructuredOutput(config, input, apiKey) {
   try { schema = typeof config.jsonSchema === "string" ? JSON.parse(config.jsonSchema) : config.jsonSchema; }
   catch { return { success: false, error: "Anthropic structuredOutput: jsonSchema is not valid JSON.", skipped: true }; }
   if (!schema || typeof schema !== "object") return { success: false, error: "Anthropic structuredOutput: a JSON schema is required.", skipped: true };
+
+  // Claude 5.5-family models reject forced tool use; structured outputs
+  // guarantee schema-valid JSON there instead.
+  if (anthropicRejectsForcedTools(model)) {
+    const r = await callAnthropic(apiKey, {
+      model, system: config.systemPrompt, maxTokens: Number(maxTokens),
+      content: `${prompt}\n\n---\nInput Data:\n${inputSummary(input)}`,
+      outputConfig: { format: { type: "json_schema", schema } },
+    });
+    return { result: maybeJson(r.text), model: r.model, tokensUsed: r.tokensUsed, provider: "anthropic", operation: "structuredOutput" };
+  }
 
   const toolName = config.schemaName || "respond";
   const tools = [{ name: toolName, description: "Return the result in the required structure.", input_schema: schema }];
@@ -106,7 +118,7 @@ async function opMultiTurn(config, input, apiKey) {
     ...(config.systemPrompt ? { system: config.systemPrompt } : {}),
     ...samplingParams(config, { temperature: 0.7 }),
   };
-  const response = await axios.post(API_URL, body, {
+  const response = await axios.post(API_URL, shapeAnthropicBody(body), {
     headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
   });
   const blocks = response.data.content || [];
@@ -139,7 +151,7 @@ async function opCitations(config, input, apiKey) {
     { type: "text", text: question },
   ];
   const body = { model, max_tokens: Number(maxTokens), messages: [{ role: "user", content }], ...samplingParams(config) };
-  const response = await axios.post(API_URL, body, {
+  const response = await axios.post(API_URL, shapeAnthropicBody(body), {
     headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
   });
   const blocks = response.data.content || [];
@@ -160,7 +172,7 @@ async function opPromptCaching(config, input, apiKey) {
     messages: [{ role: "user", content: prompt }],
     ...samplingParams(config),
   };
-  const response = await axios.post(API_URL, body, {
+  const response = await axios.post(API_URL, shapeAnthropicBody(body), {
     headers: { "x-api-key": apiKey, ...HEADERS_BASE }, timeout: 300000, maxContentLength: 32 * 1024 * 1024,
   });
   const blocks = response.data.content || [];

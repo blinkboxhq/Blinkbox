@@ -7,7 +7,7 @@ import axios from "axios";
 import { BASE, resolveFileToBuffer } from "../GenericFunctions.js";
 
 async function opTextToSpeech(config, input, apiKey) {
-  const { model = "tts-1", voice = "alloy", format = "mp3", speed = 1 } = config;
+  const { model = "gpt-4o-mini-tts", voice = "alloy", format = "mp3", speed = 1 } = config;
   const text = config.text || config.prompt || input?.text || (typeof input === "string" ? input : "");
   if (!text) return { success: false, error: "OpenAI textToSpeech: 'text' is required.", skipped: true };
 

@@ -12,15 +12,17 @@ import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect } from '@/compone
 // here is neutral white/zinc so nothing competes with the logo.
 const MONO = '#e5e5e5';
 
-const MODELS_CHAT   = ['gpt-5.6', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.5-pro', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano', 'gpt-5.3-instant'];
-const MODELS_VISION = ['gpt-5.6', 'gpt-5.5', 'gpt-4.1', 'gpt-4o'];
-const MODELS_IMAGE  = ['gpt-image-1', 'dall-e-3', 'dall-e-2'];
+const MODELS_CHAT   = ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini'];
+// Chat Completions can call tools only on these (GPT-6 Astra / 6.1 Sol can't).
+const MODELS_TOOLS  = ['gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4'];
+const MODELS_VISION = ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.5'];
+const MODELS_IMAGE  = ['gpt-image-2.5-flare', 'gpt-image-2.5-sunburst', 'gpt-image-2'];
 const MODELS_EMBED  = ['text-embedding-3-small', 'text-embedding-3-large', 'text-embedding-ada-002'];
-const MODELS_TTS    = ['tts-1', 'tts-1-hd', 'gpt-4o-mini-tts'];
-const MODELS_STT    = ['whisper-1', 'gpt-4o-transcribe', 'gpt-4o-mini-transcribe'];
+const MODELS_TTS    = ['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'];
+const MODELS_STT    = ['gpt-transcribe', 'gpt-4o-transcribe', 'gpt-4o-mini-transcribe', 'whisper-1'];
 const MODELS_FT     = ['gpt-4o-mini-2024-07-18', 'gpt-4.1-mini-2025-04-14', 'gpt-3.5-turbo'];
 
-const IMAGE_SIZES   = ['1024x1024', '1792x1024', '1024x1792', '512x512', '256x256'];
+const IMAGE_SIZES   = ['1024x1024', '1536x1024', '1024x1536', 'auto'];
 const TTS_VOICES    = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 const TTS_FORMATS   = ['mp3', 'opus', 'aac', 'flac', 'wav', 'pcm'];
 
@@ -54,7 +56,7 @@ function Dropdown({ label, value, fallback, onChange, options }) {
 function ChatPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-5.6" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
+      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-6.1-sol" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="System Instructions" value={config.system} onChange={(v) => updateConfig('system', v)} placeholder="You are a helpful assistant…" multiline nodeId={nodeId} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Summarize the following data…" multiline nodeId={nodeId} />
       <ConfigInput label="Temperature" type="number" value={config.temperature ?? '0.7'} onChange={(v) => updateConfig('temperature', v)} placeholder="0.7" />
@@ -65,7 +67,7 @@ function ChatPanel({ config, updateConfig, nodeId }) {
 function StreamPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-5.6" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
+      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-6.1-sol" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Write a story about…" multiline nodeId={nodeId} />
       <Dropdown label="Emit Mode" value={config.streamMode} fallback="token" onChange={(v) => updateConfig('streamMode', v)} options={[{ value: 'token', label: 'Per token' }, { value: 'sentence', label: 'Per sentence' }, { value: 'final', label: 'Final only' }]} />
     </>
@@ -75,7 +77,7 @@ function StreamPanel({ config, updateConfig, nodeId }) {
 function StructuredPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-5.6" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
+      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-6.1-sol" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Extract the invoice fields…" multiline nodeId={nodeId} />
       <Text label="JSON Schema" value={config.jsonSchema} onChange={(v) => updateConfig('jsonSchema', v)} placeholder='{"name":"invoice","schema":{…}}' multiline nodeId={nodeId} />
     </>
@@ -85,7 +87,7 @@ function StructuredPanel({ config, updateConfig, nodeId }) {
 function FunctionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-5.6" onChange={(v) => updateConfig('model', v)} models={MODELS_CHAT} accentColor={MONO} />
+      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-6-sol" onChange={(v) => updateConfig('model', v)} models={MODELS_TOOLS} accentColor={MONO} />
       <Text label="Prompt" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="What's the weather in Paris?" multiline nodeId={nodeId} />
       <Text label="Tools (function definitions)" value={config.tools} onChange={(v) => updateConfig('tools', v)} placeholder='[{"type":"function","function":{…}}]' multiline nodeId={nodeId} />
       <Dropdown label="Tool Choice" value={config.toolChoice} fallback="auto" onChange={(v) => updateConfig('toolChoice', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'required', label: 'Required' }, { value: 'none', label: 'None' }]} />
@@ -96,7 +98,7 @@ function FunctionPanel({ config, updateConfig, nodeId }) {
 function VisionPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-5.6" onChange={(v) => updateConfig('model', v)} models={MODELS_VISION} accentColor={MONO} />
+      <ModelSelect provider="openai" credentialId={config.credentialId} value={config.model} fallback="gpt-6.1-sol" onChange={(v) => updateConfig('model', v)} models={MODELS_VISION} accentColor={MONO} />
       <Text label="Image URL" value={config.imageUrl} onChange={(v) => updateConfig('imageUrl', v)} placeholder="https://… or {{$node.imageUrl}}" nodeId={nodeId} />
       <Text label="Question" value={config.prompt} onChange={(v) => updateConfig('prompt', v)} placeholder="Describe this image in detail." multiline nodeId={nodeId} />
       <Dropdown label="Detail" value={config.detail} fallback="auto" onChange={(v) => updateConfig('detail', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'low', label: 'Low' }, { value: 'high', label: 'High' }]} />
@@ -107,10 +109,10 @@ function VisionPanel({ config, updateConfig, nodeId }) {
 function GenerateImagePanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="gpt-image-1" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_IMAGE)} />
+      <Dropdown label="Model" value={config.model} fallback="gpt-image-2.5-flare" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_IMAGE)} />
       <Text label="Image Description" value={config.imagePrompt} onChange={(v) => updateConfig('imagePrompt', v)} placeholder="A photorealistic cat in a spacesuit…" multiline nodeId={nodeId} />
       <Dropdown label="Size" value={config.imageSize} fallback="1024x1024" onChange={(v) => updateConfig('imageSize', v)} options={opt(IMAGE_SIZES)} />
-      <Dropdown label="Quality" value={config.imageQuality} fallback="standard" onChange={(v) => updateConfig('imageQuality', v)} options={[{ value: 'standard', label: 'Standard' }, { value: 'hd', label: 'HD' }]} />
+      <Dropdown label="Quality" value={config.imageQuality} fallback="high" onChange={(v) => updateConfig('imageQuality', v)} options={[{ value: 'auto', label: 'Auto' }, { value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High' }]} />
     </>
   );
 }
@@ -158,7 +160,7 @@ function TranslatePanel({ config, updateConfig, nodeId }) {
 function SpeechPanel({ config, updateConfig, nodeId }) {
   return (
     <>
-      <Dropdown label="Model" value={config.model} fallback="tts-1" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_TTS)} />
+      <Dropdown label="Model" value={config.model} fallback="gpt-4o-mini-tts" onChange={(v) => updateConfig('model', v)} options={opt(MODELS_TTS)} />
       <Text label="Text" value={config.text} onChange={(v) => updateConfig('text', v)} placeholder="The text to speak aloud…" multiline nodeId={nodeId} />
       <Dropdown label="Voice" value={config.voice} fallback="alloy" onChange={(v) => updateConfig('voice', v)} options={opt(TTS_VOICES)} />
       <Dropdown label="Format" value={config.format} fallback="mp3" onChange={(v) => updateConfig('format', v)} options={opt(TTS_FORMATS)} />

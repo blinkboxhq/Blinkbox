@@ -7,7 +7,7 @@ import { ConfigSection, ConfigLabel, ConfigInput, ConfigSelect, ConfigDivider } 
 // Black & white only. The brand logo is the sole colored element.
 const MONO = '#e5e5e5';
 
-const MODELS = ['sonar', 'sonar-pro', 'sonar-reasoning', 'sonar-reasoning-pro', 'sonar-deep-research'];
+const MODELS = ['sonar', 'sonar-pro', 'sonar-reasoning-pro', 'sonar-deep-research'];
 const RECENCY = [
   { value: '', label: 'Any time' },
   { value: 'hour', label: 'Past hour' },

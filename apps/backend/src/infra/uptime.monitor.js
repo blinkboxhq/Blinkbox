@@ -27,8 +27,9 @@ async function composeEmail(isDown, statusCode, latencyMs) {
     const res = await axios.post(
       "https://api.anthropic.com/v1/messages",
       {
-        model: "claude-haiku-4-5-20251001",
+        model: "claude-haiku-5-5",
         max_tokens: 200,
+        thinking: { type: "disabled" },
         messages: [{ role: "user", content: prompt }],
       },
       {
@@ -40,7 +41,7 @@ async function composeEmail(isDown, statusCode, latencyMs) {
         timeout: 15_000,
       },
     );
-    const text = res.data.content?.[0]?.text || "";
+    const text = (res.data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
     const subject = isDown ? `🔴 Site Down: ${TARGET_URL}` : `✅ Site Recovered: ${TARGET_URL}`;
     return { subject, body: text };
   } catch {

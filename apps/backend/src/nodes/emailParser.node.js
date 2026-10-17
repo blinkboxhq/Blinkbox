@@ -10,11 +10,12 @@
  *   emailFrom     — sender for context
  *   customSchema  — for extractCustom: "name, email, amount" or JSON field array
  *   provider      — "openai" (default) | "anthropic"
- *   model         — LLM model ID (default: gpt-4o-mini)
+ *   model         — LLM model ID (default: the provider's fast model)
  *   credentialId  — API key in vault
  */
 
 import axios from "axios";
+import { AI_MODELS, resolveModel, shapeOpenAIChatBody, shapeAnthropicBody } from "../utils/aiModels.js";
 import { resolveCredential } from "../utils/resolveCredential.js";
 import { decrypt } from "../utils/crypto.js";
 
@@ -125,8 +126,10 @@ export default {
     const {
       operation = "extractInvoice",
       provider = "openai",
-      model = "gpt-4o-mini",
     } = config;
+    const model = provider === "anthropic"
+      ? resolveModel("anthropic", config.model || AI_MODELS.anthropic.fast)
+      : resolveModel("openai", config.model || AI_MODELS.openai.fast);
 
     const emailText = config.emailText ?? input?.body ?? input?.text ?? (typeof input === "string" ? input : "");
     const emailSubject = config.emailSubject ?? input?.subject ?? "";
@@ -183,12 +186,12 @@ ${hint ? `Note: ${hint}\n` : ""}Use null for any field not found. Do not guess �
     if (provider === "anthropic") {
       const response = await axios.post(
         "https://api.anthropic.com/v1/messages",
-        {
-          model: model || "claude-3-haiku-20240307",
+        shapeAnthropicBody({
+          model,
           max_tokens: 1000,
           system: systemPrompt,
           messages: [{ role: "user", content: userContent }],
-        },
+        }),
         {
           headers: {
             "x-api-key": apiKey,
@@ -198,14 +201,14 @@ ${hint ? `Note: ${hint}\n` : ""}Use null for any field not found. Do not guess �
           timeout: 120000,
         },
       );
-      const raw = response.data.content[0].text;
+      const raw = (response.data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("Email Parser: Model returned no JSON.");
       try { extracted = JSON.parse(match[0]); } catch { throw new Error(`Email Parser: Invalid JSON from model: ${raw.slice(0, 200)}`); }
     } else {
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
-        {
+        shapeOpenAIChatBody({
           model,
           messages: [
             { role: "system", content: systemPrompt },
@@ -214,10 +217,10 @@ ${hint ? `Note: ${hint}\n` : ""}Use null for any field not found. Do not guess �
           temperature: 0,
           response_format: { type: "json_object" },
           max_tokens: 1000,
-        },
+        }),
         { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
       );
-      const raw = response.data.choices[0].message.content;
+      const raw = response.data.choices?.[0]?.message?.content || "";
       try { extracted = JSON.parse(raw); } catch { throw new Error(`Email Parser: Invalid JSON from model: ${raw.slice(0, 200)}`); }
     }
 

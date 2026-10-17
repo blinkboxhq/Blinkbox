@@ -23,15 +23,15 @@ const FIELDS = [
 export default function InvoiceParserNode({ config = {}, updateConfig, nodeId }) {
   const imageUrl  = config.imageUrl  ?? '';
   const provider  = config.provider  ?? 'openai';
-  const model     = config.model     ?? 'gpt-5.6';
+  const model     = config.model     ?? 'gpt-6-luna';
   const fields    = config.fields    ?? FIELDS.map((f) => f.value);
   const language  = config.language  ?? 'auto';
   const apiKey    = config.apiKey    ?? '';
 
   const MODELS = {
-    openai:    ['gpt-5.6', 'gpt-5.6-mini'],
-    anthropic: ['claude-sonnet-5', 'claude-haiku-4-5'],
-    google:    ['gemini-3.5-flash', 'gemini-3.5-pro'],
+    openai:    ['gpt-6-luna', 'gpt-6.1-sol'],
+    anthropic: ['claude-haiku-5-5', 'claude-sonnet-5-5'],
+    google:    ['gemini-3.8-flash', 'gemini-4-argon'],
   };
 
   const toggleField = (f) => {

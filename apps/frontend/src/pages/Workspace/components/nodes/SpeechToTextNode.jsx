@@ -6,7 +6,7 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
   const audioUrl = config.audioUrl ?? '';
   const provider = config.provider ?? 'openai'; // 'openai' | 'google' | 'assemblyai'
   const language = config.language ?? 'en';
-  const model = config.model ?? 'whisper-1';
+  const model = config.model ?? 'gpt-transcribe';
   const apiKey = config.apiKey ?? '';
   const timestamps = config.timestamps ?? false;
   const speakerDiarization = config.speakerDiarization ?? false;
@@ -49,7 +49,7 @@ export default function SpeechToTextNode({ config = {}, updateConfig, nodeId }) 
         <div>
           <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 block">Model</label>
           <div className="flex gap-1.5">
-            {[{ value: 'whisper-1', label: 'Whisper-1' }, { value: 'gpt-4o-transcribe', label: 'GPT-4o Transcribe' }].map((m) => (
+            {[{ value: 'gpt-transcribe', label: 'GPT Transcribe' }, { value: 'gpt-4o-transcribe', label: 'GPT-4o Transcribe' }, { value: 'whisper-1', label: 'Whisper-1' }].map((m) => (
               <button key={m.value} onClick={() => updateConfig('model', m.value)}
                 className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${model === m.value ? 'bg-rose-500/20 border-rose-500/40 text-rose-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
                 {m.label}

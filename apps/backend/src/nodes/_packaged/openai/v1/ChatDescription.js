@@ -6,16 +6,17 @@
  */
 import axios from "axios";
 import {
-  BASE, DEFAULT_CHAT_MODEL,
+  BASE, DEFAULT_CHAT_MODEL, DEFAULT_TOOLS_MODEL, DEFAULT_FAST_MODEL,
   inputSummary, samplingParams, resolveInlineRef,
 } from "../GenericFunctions.js";
+import { shapeOpenAIChatBody, openaiChatToolsUnsupported } from "../../../../utils/aiModels.js";
 
 async function opMessage(config, input, apiKey) {
   const { model = DEFAULT_CHAT_MODEL, prompt, outputFormat = "text" } = config;
   if (!prompt) return { success: false, error: "OpenAI message: 'prompt' is required.", skipped: true };
 
   const systemMessage =
-    config.systemPrompt ||
+    config.systemPrompt || config.system ||
     (outputFormat === "json"
       ? "You are a data processing assistant. Always respond with valid JSON. No markdown fences, no explanations — just the JSON object."
       : "You are a helpful assistant. Respond clearly and concisely.");
@@ -24,7 +25,7 @@ async function opMessage(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         { role: "system", content: systemMessage },
@@ -32,7 +33,7 @@ async function opMessage(config, input, apiKey) {
       ],
       ...samplingParams({ temperature: config.temperature ?? 0.7, maxTokens: config.maxTokens ?? 2000, ...config }),
       ...(outputFormat === "json" && { response_format: { type: "json_object" } }),
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -50,7 +51,7 @@ async function opMessage(config, input, apiKey) {
 }
 
 async function opAnalyzeDocument(config, input, apiKey) {
-  const { model = "gpt-4o-mini", prompt = "Summarize this document.", maxTokens = 4000 } = config;
+  const { model = DEFAULT_FAST_MODEL, prompt = "Summarize this document.", maxTokens = 4000 } = config;
 
   const documentText =
     config.documentText ||
@@ -63,7 +64,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         { role: "system", content: "You are a document analysis assistant. Analyze the provided document thoroughly and answer questions about it." },
@@ -71,7 +72,7 @@ async function opAnalyzeDocument(config, input, apiKey) {
       ],
       max_tokens: maxTokens,
       temperature: config.temperature ?? 0.3,
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -132,7 +133,7 @@ async function opStructuredOutput(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         ...(config.systemPrompt ? [{ role: "system", content: config.systemPrompt }] : []),
@@ -140,7 +141,7 @@ async function opStructuredOutput(config, input, apiKey) {
       ],
       response_format,
       ...samplingParams(config),
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -151,8 +152,11 @@ async function opStructuredOutput(config, input, apiKey) {
 }
 
 async function opFunctionCalling(config, input, apiKey) {
-  const { model = DEFAULT_CHAT_MODEL, prompt } = config;
+  const { model = DEFAULT_TOOLS_MODEL, prompt } = config;
   if (!prompt) return { success: false, error: "OpenAI functionCalling: 'prompt' is required.", skipped: true };
+  if (openaiChatToolsUnsupported(model)) {
+    return { success: false, error: `OpenAI functionCalling: ${model} can't call functions through Chat Completions. Pick ${DEFAULT_TOOLS_MODEL} or ${DEFAULT_FAST_MODEL}.`, skipped: true };
+  }
 
   let tools;
   try {
@@ -168,7 +172,7 @@ async function opFunctionCalling(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         ...(config.systemPrompt ? [{ role: "system", content: config.systemPrompt }] : []),
@@ -177,7 +181,7 @@ async function opFunctionCalling(config, input, apiKey) {
       tools: normalized,
       ...(config.toolChoice ? { tool_choice: config.toolChoice } : {}),
       ...samplingParams(config),
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -205,7 +209,7 @@ async function opReasoning(config, input, apiKey) {
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         ...(config.systemPrompt ? [{ role: "system", content: config.systemPrompt }] : []),
@@ -213,7 +217,7 @@ async function opReasoning(config, input, apiKey) {
       ],
       reasoning_effort: reasoningEffort,
       ...(config.maxTokens ? { max_completion_tokens: Number(config.maxTokens) } : {}),
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 300000 },
   );
 
@@ -260,13 +264,13 @@ async function opEmbeddings(config, input, apiKey) {
 }
 
 async function opGeneratePrompt(config, input, apiKey) {
-  const { model = "gpt-4o-mini", task } = config;
+  const { model = DEFAULT_FAST_MODEL, task } = config;
   const taskDescription = task || config.prompt || input?.task || inputSummary(input);
   if (!taskDescription) return { success: false, error: "OpenAI generatePrompt: 'task' description is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         { role: "system", content: "You are an expert prompt engineer. Write clear, effective prompts for AI models. Return only the prompt text, no explanations." },
@@ -274,7 +278,7 @@ async function opGeneratePrompt(config, input, apiKey) {
       ],
       max_tokens: 1000,
       temperature: 0.8,
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 
@@ -283,13 +287,13 @@ async function opGeneratePrompt(config, input, apiKey) {
 }
 
 async function opImprovePrompt(config, input, apiKey) {
-  const { model = "gpt-4o-mini" } = config;
+  const { model = DEFAULT_FAST_MODEL } = config;
   const originalPrompt = config.prompt || input?.prompt || input?.text || inputSummary(input);
   if (!originalPrompt) return { success: false, error: "OpenAI improvePrompt: 'prompt' to improve is required.", skipped: true };
 
   const response = await axios.post(
     `${BASE}/chat/completions`,
-    {
+    shapeOpenAIChatBody({
       model,
       messages: [
         { role: "system", content: "You are an expert prompt engineer. Rewrite and improve the given prompt to be clearer, more specific, and more effective. Return only the improved prompt, no explanations." },
@@ -297,7 +301,7 @@ async function opImprovePrompt(config, input, apiKey) {
       ],
       max_tokens: 1000,
       temperature: 0.7,
-    },
+    }),
     { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, timeout: 120000 },
   );
 

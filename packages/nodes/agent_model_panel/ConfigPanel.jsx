@@ -22,7 +22,8 @@ export default function makeAgentModelPanel({
   const fallback = models.map((m) => (typeof m === "string" ? m : m.value));
 
   return function AgentModelPanel({ config = {}, updateConfig }) {
-    const temperature = config.temperature ?? 0.7;
+    // Same defaults the AI Agent applies when these are left unset.
+    const temperature = config.temperature ?? 0.3;
 
     return (
       <ConfigSection>
@@ -84,9 +85,9 @@ export default function makeAgentModelPanel({
           label="Max Tokens"
           icon={Hash}
           type="number"
-          value={config.maxTokens ?? 2048}
+          value={config.maxTokens ?? 8192}
           onChange={(v) => updateConfig("maxTokens", parseInt(v, 10) || 0)}
-          placeholder="2048"
+          placeholder="8192"
         />
 
         <ConfigToggleRow
@@ -99,7 +100,7 @@ export default function makeAgentModelPanel({
         />
 
         <ConfigBanner>
-          The agent's instructions live on the AI Agent node — this panel only picks the model.
+          The agent's instructions live on the AI Agent node — this panel picks the model and its sampling settings.
         </ConfigBanner>
       </ConfigSection>
     );

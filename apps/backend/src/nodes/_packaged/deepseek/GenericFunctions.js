@@ -9,14 +9,13 @@ import { getOAuthToken } from "../../../utils/getOAuthToken.js";
 
 export const BASE = "https://api.deepseek.com";
 
-export const DEFAULT_CHAT_MODEL = "deepseek-chat";
-export const DEFAULT_REASON_MODEL = "deepseek-reasoner";
+// deepseek-chat / deepseek-reasoner were discontinued on 2026-07-24.
+export const DEFAULT_CHAT_MODEL = "deepseek-flash";
+export const DEFAULT_REASON_MODEL = "deepseek-v4-pro";
 
 export const KNOWN_MODELS = [
-  "deepseek-v4-flash",
+  "deepseek-flash",
   "deepseek-v4-pro",
-  "deepseek-chat",
-  "deepseek-reasoner",
 ];
 
 export async function getApiKey(credentialId, workspaceId) {
