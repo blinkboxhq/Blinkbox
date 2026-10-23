@@ -17,6 +17,7 @@ import meta_sftp from "@nodes/sftp/meta.js";
 import meta_s3 from "@nodes/s3/meta.js";
 import meta_email_parser from "@nodes/email_parser/meta.js";
 import meta_elevenlabs from "@nodes/elevenlabs/meta.js";
+import meta_computer_files from "@nodes/computer_files/meta.js";
 
 import { OPERATIONS as ops_gitlab } from "@nodes/gitlab/ConfigPanel.jsx";
 import { OPERATIONS as ops_azure_devops } from "@nodes/azure_devops/ConfigPanel.jsx";
@@ -186,6 +187,7 @@ const INFRA_OPERATIONS = {
   s3: opsFromMeta(meta_s3),
   email_parser: opsFromMeta(meta_email_parser),
   elevenlabs: opsFromMeta(meta_elevenlabs),
+  computer_files: opsFromMeta(meta_computer_files),
   gitlab: ops_gitlab,
   azure_devops: ops_azure_devops,
 };

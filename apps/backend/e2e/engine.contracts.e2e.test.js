@@ -203,11 +203,15 @@ test("loop fan-out spawns one cursor per item, each with its own item snapshot",
   assert.equal(fresh.status, "executed");
   assert.equal(fresh.cursors.filter((c) => c.nodeId === "s1").length, 3);
   assert.ok(fresh.cursors.every((c) => c.status === "completed"));
-  const overrides = fresh.cursors
-    .filter((c) => c.nodeId === "s1")
-    .map((c) => c._loopItemOverride.id)
-    .sort();
-  assert.deepEqual(overrides, [1, 2, 3], "each cursor carries its own item");
+  assert.equal(
+    fresh.events.filter((e) => e.type === "node_completed" && e.nodeId === "s1").length,
+    3,
+    "each item ran through s1",
+  );
+  assert.ok(
+    fresh.cursors.every((c) => c._loopItemOverride == null),
+    "per-item payloads are pruned once the run completes",
+  );
 
   const loopData = await ExecutionData.findOne({ executionId: execution._id, nodeId: "l1" });
   assert.equal(loopData.output.length, 3, "loop output keeps the full items array");

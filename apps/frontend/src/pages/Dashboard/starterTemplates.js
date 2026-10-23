@@ -1,9 +1,11 @@
-// Starter workflows for a first-time user. Every one of these runs with zero
-// credentials and shows real data on the first click of Run — the point is to
-// replace "blank canvas → leave" with "Run → see output → edit one thing".
+// Starter workflows for a first-time user. None needs a credential — the HTTP
+// ones call public APIs, the computer ones use the Linux computer the backend
+// is wired to — and each shows real data on the first click of Run. The point
+// is to replace "blank canvas → leave" with "Run → see output → edit one thing".
 //
 // Each template is a complete backend graph (same shape the API stores), so
-// the dashboard can POST it as-is, activate it, and open it.
+// the dashboard can POST it as-is, activate it, and open it. Its first node is
+// the trigger.
 
 const TRIGGER = {
   id: "n1",
@@ -23,6 +25,17 @@ const edge = (id, source, target, sourceHandle = "output") => ({
   type: "onSuccess",
   description: "",
 });
+
+// Some browsers report India's zone by its legacy alias, which the Schedule
+// panel's timezone list doesn't include.
+const TZ = (() => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    return tz === "Asia/Calcutta" ? "Asia/Kolkata" : tz;
+  } catch {
+    return "UTC";
+  }
+})();
 
 // One code node per branch keeps the "what happened" readable in the node
 // inspector — the last node's output is what a new user actually looks at.
@@ -212,19 +225,112 @@ export const STARTER_TEMPLATES = [
     ],
     edges: branchEdges,
   },
+  {
+    id: "computer-health",
+    name: "Computer health check",
+    tagline: "Ask your Linux computer for its CPU, memory, disk and uptime, then run df and free on it.",
+    chain: ["Computer Info", "Command"],
+    nextStep: "Add a Condition after Computer Info on disk.usedPercent, with an email or Slack alert on its true branch.",
+    nodes: [
+      TRIGGER,
+      {
+        id: "n2",
+        type: "computer_info",
+        position: { x: 380, y: 300 },
+        data: {},
+        description: "Computer info",
+      },
+      {
+        id: "n3",
+        type: "computer_command",
+        position: { x: 600, y: 300 },
+        data: { command: "df -h / && (free -m 2>/dev/null || head -n 3 /proc/meminfo)" },
+        description: "Disk and memory",
+      },
+    ],
+    edges: [edge("e1", "n1", "n2"), edge("e2", "n2", "n3")],
+  },
+  {
+    id: "daily-disk-report",
+    name: "Daily disk report",
+    tagline: "Every day at 09:00 your time, check how full your Linux computer's disk is.",
+    chain: ["Schedule", "Command"],
+    nextStep: "Send the output to yourself by email or Slack, or pick another hour in the Schedule trigger.",
+    nodes: [
+      {
+        id: "n1",
+        type: "cron_trigger",
+        position: { x: 160, y: 300 },
+        data: { triggerVariant: "cron", preset: "daily", dailyHour: "09", dailyMinute: "00", timezone: TZ, schedule: "0 9 * * *" },
+        description: "Every day at 09:00",
+      },
+      {
+        id: "n2",
+        type: "computer_command",
+        position: { x: 380, y: 300 },
+        data: { command: "df -h /" },
+        description: "Disk usage",
+      },
+    ],
+    edges: [edge("e1", "n1", "n2")],
+  },
+  {
+    id: "python-to-file",
+    name: "Python script to file",
+    tagline: "Run a Python script on your Linux computer and save the report it prints to a dated file.",
+    chain: ["Python", "File"],
+    nextStep: "Swap in your own script (print JSON with \"file\" and \"text\"), or switch the file step to Append to keep a running log.",
+    nodes: [
+      TRIGGER,
+      {
+        id: "n2",
+        type: "computer_script",
+        position: { x: 380, y: 300 },
+        data: {
+          language: "python",
+          parseJson: true,
+          code:
+            'import datetime, json, platform\n' +
+            '\n' +
+            'now = datetime.datetime.now(datetime.timezone.utc)\n' +
+            'lines = [\n' +
+            '    "Report generated " + now.strftime("%Y-%m-%d %H:%M UTC"),\n' +
+            '    "Host: " + platform.node(),\n' +
+            '    "System: " + platform.platform(),\n' +
+            '    "Python: " + platform.python_version(),\n' +
+            ']\n' +
+            'print(json.dumps({\n' +
+            '    "file": "reports/report-" + now.strftime("%Y-%m-%d") + ".txt",\n' +
+            '    "text": "\\n".join(lines) + "\\n",\n' +
+            '}))\n',
+        },
+        description: "Build a report",
+      },
+      {
+        id: "n3",
+        type: "computer_files",
+        position: { x: 600, y: 300 },
+        data: { operation: "write", selectedAction: "Write File", path: "{{$json.json.file}}", content: "{{$json.json.text}}" },
+        description: "Save to reports/",
+      },
+    ],
+    edges: [edge("e1", "n1", "n2"), edge("e2", "n2", "n3")],
+  },
 ];
 
 // The body POST /api/automation expects. Trigger metadata mirrors what the
 // canvas itself saves so activation and the node inspector behave identically.
 export function templatePayload(template) {
+  const trigger = template.nodes[0];
+  const cronExpression = trigger.type === "cron_trigger" ? trigger.data.schedule : undefined;
   return {
     name: template.name,
     description: template.tagline,
-    trigger: "manual",
+    trigger: trigger.type,
     nodes: template.nodes,
     edges: template.edges,
-    entryNodeId: "n1",
-    triggerNodes: [{ nodeId: "n1", type: "manual" }],
-    settings: { maxParallel: 10 },
+    entryNodeId: trigger.id,
+    triggerNodes: [{ nodeId: trigger.id, type: trigger.type }],
+    settings: { maxParallel: 10, ...(cronExpression ? { cronExpression } : {}) },
   };
 }

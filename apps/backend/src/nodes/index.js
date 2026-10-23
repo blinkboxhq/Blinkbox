@@ -193,6 +193,10 @@ import sharepoint     from "./integrations/sharepoint.node.js";
 import box            from "./integrations/box.node.js";
 import sftp           from "./integrations/sftp.node.js";
 import ssh            from "./integrations/ssh.node.js";
+import computerCommand from "./integrations/computerCommand.node.js";
+import computerScript  from "./integrations/computerScript.node.js";
+import computerFiles   from "./integrations/computerFiles.node.js";
+import computerInfo    from "./integrations/computerInfo.node.js";
 
 // Social & publishing
 import twitter        from "./integrations/twitter.node.js";
@@ -412,6 +416,10 @@ const rawNodeRegistry = {
   box:        box,
   sftp:       sftp,
   ssh:        ssh,
+  computer_command: computerCommand,
+  computer_script:  computerScript,
+  computer_files:   computerFiles,
+  computer_info:    computerInfo,
 
   // ── Social & publishing ───────────────────────────────────────────────────
   twitter:   twitter,
