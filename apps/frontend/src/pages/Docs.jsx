@@ -129,7 +129,7 @@ export default function Docs() {
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Log in</a>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors px-3.5 py-1.5 rounded-lg">
-              Get started
+              Sign in
             </button>
           </a>
         </div>

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import User from "../../models/user.model.js";
 import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
-import { JWT_SECRET, SELF_HOSTED } from "../../config/env.js";
+import { JWT_SECRET, SELF_HOSTED, ALLOW_SIGNUPS } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
 import { decrypt } from "../../utils/crypto.js";
 import { verifyToken as verifyTotp } from "../../utils/totp.js";
@@ -223,6 +223,9 @@ export async function googleLogin(req, res) {
     let isNewUser = false;
 
     if (!user) {
+      if (!ALLOW_SIGNUPS) {
+        return res.status(403).json({ message: "Sign-ups are closed on this instance." });
+      }
       user = await User.create({
         name: safeName,
         email,
@@ -277,6 +280,9 @@ export async function register(req, res) {
     // who finds the hostname provision themselves a foothold on it.
     if (SELF_HOSTED) {
       return res.status(403).json({ message: "Sign-up is disabled on this instance." });
+    }
+    if (!ALLOW_SIGNUPS) {
+      return res.status(403).json({ message: "Sign-ups are closed on this instance." });
     }
 
     const { name, email, password } = req.body;

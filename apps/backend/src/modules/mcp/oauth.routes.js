@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { OAuth2Client } from "google-auth-library";
-import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../config/env.js";
+import { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ALLOW_SIGNUPS } from "../../config/env.js";
 import ApiKey from "../../models/apiKey.model.js";
 import User from "../../models/user.model.js";
 import McpOAuthClient from "../../models/mcpOAuthClient.model.js";
@@ -751,6 +751,9 @@ router.get("/oauth/google/callback", async (req, res) => {
     return reRender("Google account mismatch. Please try again.");
   }
   if (!user) {
+    if (!ALLOW_SIGNUPS) {
+      return reRender("Sign-ups are closed on this instance. Sign in with an existing account.");
+    }
     try {
       user = await User.create({
         name: payload.name || payload.given_name || email.split("@")[0],

@@ -199,6 +199,23 @@ export const SLACK_WEBHOOK_URL  = process.env.SLACK_WEBHOOK_URL  || null;
 export const ENABLE_SHELL_TOOLS    = process.env.ENABLE_SHELL_TOOLS    === "true";
 export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true";
 
+// ── Personal instance ─────────────────────────────────────────────────────────
+// Sign-ups are closed; existing accounts can still log in. Turn on only long
+// enough to create an account, then turn it back off.
+export const ALLOW_SIGNUPS         = process.env.ALLOW_SIGNUPS         === "true";
+
+// Schedules saved without a timezone run in this one (IANA name, e.g.
+// "Asia/Kolkata"). The cron worker otherwise falls back to UTC.
+export const DEFAULT_TIMEZONE      = process.env.DEFAULT_TIMEZONE      || "UTC";
+
+// ── Computer (Linux service on the Railway private network) ───────────────────
+// Terminal, script and file nodes run on this separate box, never inside the
+// API process. Only the owner account (admin / isOwner) or a workspace id listed
+// in COMPUTER_ALLOWED_WORKSPACES (comma-separated) may drive it.
+export const COMPUTER_URL                = process.env.COMPUTER_URL                || null;
+export const COMPUTER_TOKEN              = process.env.COMPUTER_TOKEN              || null;
+export const COMPUTER_ALLOWED_WORKSPACES = process.env.COMPUTER_ALLOWED_WORKSPACES || null;
+
 // ── Self-hosted deployments ───────────────────────────────────────────────────
 // A self-hosted container runs the app + its own local Mongo/Redis, but credits
 // and billing stay authoritative on the central Blinkbox cloud API — the license

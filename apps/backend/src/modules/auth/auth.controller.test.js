@@ -8,6 +8,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
+process.env.ALLOW_SIGNUPS = "false";
 
 const redis = new RedisMock();
 const googlePayload = { current: null };
@@ -163,15 +164,23 @@ test("Google SSO rejects mismatched googleId on an existing account", async () =
   assert.ok(ok.body.token);
 });
 
-test("register signs the new user in immediately, flagged unverified", async () => {
+test("register is closed: 403 and no user is created", async () => {
   const res = mkRes();
   await register(mkReq({ name: "New", email: "fresh@test.dev", password: "correct-horse" }), res);
-  assert.equal(res.statusCode, 201);
-  assert.ok(res.body.token, "register must return a session token");
-  assert.equal(res.body.emailVerified, false);
-  assert.equal(res.body.needsVerification, undefined);
-  const stored = await User.findOne({ email: "fresh@test.dev" });
-  assert.equal(stored.emailVerified, false, "verification is still pending server-side");
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.message, "Sign-ups are closed on this instance.");
+  assert.equal(res.body.token, undefined, "no session may be minted");
+  assert.equal(await User.countDocuments({ email: "fresh@test.dev" }), 0);
+});
+
+test("Google SSO refuses an unknown email while sign-ups are closed", async () => {
+  googlePayload.current = { sub: "google-id-new", email: "stranger@test.dev", name: "S" };
+  const res = mkRes();
+  await googleLogin(mkReq({ credential: "fake-jwt" }), res);
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.message, "Sign-ups are closed on this instance.");
+  assert.equal(res.body.token, undefined, "no session may be minted");
+  assert.equal(await User.countDocuments({ email: "stranger@test.dev" }), 0);
 });
 
 test("login admits an unverified account inside the 7-day grace window, then walls it", async () => {

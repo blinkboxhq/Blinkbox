@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle2, ShieldCheck } from 'lucide-react';
 import api from '../../lib/api';
 import { GoogleLogin } from '@react-oauth/google';
 import AmbientBackground from '../../components/AmbientBackground';
@@ -16,8 +16,6 @@ export default function Auth() {
 }
 
 function CloudAuth() {
-  const [isLogin, setIsLogin] = useState(false);
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +23,6 @@ function CloudAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [formKey, setFormKey] = useState(0);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
@@ -51,13 +48,6 @@ function CloudAuth() {
       return () => clearTimeout(timer);
     }
   }, [lockoutTimer]);
-
-  const switchMode = (login) => {
-    setIsLogin(login);
-    setError(null);
-    setLockoutTimer(0);
-    setFormKey((k) => k + 1);
-  };
 
   const handleGoogleSuccess = useCallback(async (credentialResponse) => {
     setIsLoading(true);
@@ -95,10 +85,8 @@ function CloudAuth() {
     }
     setIsLoading(true);
     setError(null);
-    const endpoint = isLogin ? '/login' : '/register';
-    const payload = isLogin ? { email, password } : { name, email, password };
     try {
-      const response = await api.post(`/api/auth${endpoint}`, payload);
+      const response = await api.post('/api/auth/login', { email, password });
       if (response.data.needsVerification) {
         setVerifyEmail(response.data.email || email);
         setVerifyPending(true);
@@ -241,30 +229,12 @@ function CloudAuth() {
           style={{ background: 'linear-gradient(90deg, transparent, rgba(111,151,232,0.5), transparent)' }}
         />
 
-        {!resetToken && (
-          <div className="bb-seg mb-7 flex">
-            {['Log In', 'Register'].map((label, i) => {
-              const active = i === 0 ? isLogin : !isLogin;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => switchMode(i === 0)}
-                  className={`bb-seg-btn flex-1 py-2 text-[13px] font-semibold ${active ? 'is-active' : ''}`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div key={`heading-${formKey}`} style={{ animation: 'slideSwitch 0.3s ease-out' }}>
+        <div style={{ animation: 'slideSwitch 0.3s ease-out' }}>
           <h1 className="text-[20px] font-bold tracking-tight text-[var(--bb-text-hi)]">
-            {resetToken ? 'Set a new password' : isLogin ? 'Welcome back' : 'Create your account'}
+            {resetToken ? 'Set a new password' : 'Welcome back'}
           </h1>
           <p className="mb-6 mt-1 text-[13px] text-[var(--bb-text-lo)]">
-            {resetToken ? 'Choose a strong password (8+ characters).' : isLogin ? 'Sign in to your workspace.' : 'Start automating in under a minute.'}
+            {resetToken ? 'Choose a strong password (8+ characters).' : 'Sign in to your workspace.'}
           </p>
         </div>
 
@@ -278,25 +248,10 @@ function CloudAuth() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} key={`form-${formKey}`}>
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-3.5">
-            {!isLogin && (
-              <div className="field-enter" style={{ animationDelay: '0s' }}>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--bb-text-lo)]">Full Name</label>
-                <div className="group relative">
-                  <UserIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--bb-text-dim)] transition-colors duration-200 group-focus-within:text-[var(--bb-text-hi)]" />
-                  <input
-                    type="text" required={!isLogin} value={name}
-                    onChange={(e) => setName(e.target.value)} disabled={lockoutTimer > 0}
-                    className="bb-input w-full py-2.5 pl-9 pr-3 text-[13px] disabled:opacity-40"
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-            )}
-
             {!resetToken && (
-              <div className="field-enter" style={{ animationDelay: isLogin ? '0s' : '0.06s' }}>
+              <div className="field-enter" style={{ animationDelay: '0s' }}>
                 <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--bb-text-lo)]">Email</label>
                 <div className="group relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--bb-text-dim)] transition-colors duration-200 group-focus-within:text-[var(--bb-text-hi)]" />
@@ -310,7 +265,7 @@ function CloudAuth() {
               </div>
             )}
 
-            <div className="field-enter" style={{ animationDelay: isLogin ? '0.06s' : '0.12s' }}>
+            <div className="field-enter" style={{ animationDelay: '0.06s' }}>
               <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--bb-text-lo)]">Password</label>
               <div className="group relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--bb-text-dim)] transition-colors duration-200 group-focus-within:text-[var(--bb-text-hi)]" />
@@ -318,7 +273,7 @@ function CloudAuth() {
                   type={showPassword ? 'text' : 'password'} required value={password}
                   onChange={(e) => setPassword(e.target.value)} disabled={lockoutTimer > 0}
                   className="bb-input w-full py-2.5 pl-9 pr-10 text-[13px] disabled:opacity-40"
-                  placeholder="Min. 8 characters"
+                  placeholder="Your password"
                 />
                 <button
                   type="button"
@@ -332,7 +287,7 @@ function CloudAuth() {
             </div>
           </div>
 
-          {isLogin && !resetToken && (
+          {!resetToken && (
             <div className="mt-2 text-right">
               <button type="button" onClick={() => { setForgotOpen(true); setForgotSent(false); setForgotEmail(''); }} className="text-[11px] text-[var(--bb-text-dim)] transition-colors hover:text-[var(--bb-text-mid)]">
                 Forgot password?
@@ -354,7 +309,7 @@ function CloudAuth() {
             ) : lockoutTimer > 0 ? (
               <>Wait {lockoutTimer}s</>
             ) : (
-              <>{resetToken ? 'Set new password' : isLogin ? 'Sign In' : 'Create Account'} <ArrowRight className="h-4 w-4" /></>
+              <>{resetToken ? 'Set new password' : 'Sign In'} <ArrowRight className="h-4 w-4" /></>
             )}
           </button>
         </form>
@@ -378,7 +333,7 @@ function CloudAuth() {
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                 </svg>
-                {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
+                Sign in with Google
               </div>
               <div className="google-btn-wrapper absolute inset-0 h-full w-full opacity-[0.001] [&>div]:!w-full [&_iframe]:!w-full">
                 <GoogleLogin
@@ -388,7 +343,7 @@ function CloudAuth() {
                   size="large"
                   width="380"
                   shape="rectangular"
-                  text={isLogin ? 'signin_with' : 'signup_with'}
+                  text="signin_with"
                 />
               </div>
             </div>
@@ -489,7 +444,7 @@ function CloudAuth() {
             </button>
 
             <button
-              onClick={() => { setVerifyPending(false); switchMode(true); }}
+              onClick={() => { setVerifyPending(false); setError(null); }}
               className="text-[12px] text-[var(--bb-text-dim)] transition-colors hover:text-[var(--bb-text-mid)]"
             >
               Back to sign in

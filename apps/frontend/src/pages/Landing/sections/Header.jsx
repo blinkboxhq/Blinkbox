@@ -125,15 +125,9 @@ export default function Header() {
           </a>
           <Link
             to="/login"
-            className="hidden rounded-[10px] px-3.5 py-2 text-[13px] font-medium text-[#b6b6b6] transition-colors duration-150 hover:text-[#fafafa] sm:block"
-          >
-            Log in
-          </Link>
-          <Link
-            to="/login"
             className="bb-btn bb-btn-primary group hidden items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold sm:flex"
           >
-            Get started
+            Sign in
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
           </Link>
 
@@ -189,11 +183,8 @@ export default function Header() {
                 GitHub
               </a>
               <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4">
-                <Link to="/login" className="bb-btn bb-btn-ghost justify-center py-2.5 text-[14px] font-medium">
-                  Log in
-                </Link>
                 <Link to="/login" className="bb-btn bb-btn-primary justify-center rounded-full py-2.5 text-[14px] font-semibold">
-                  Get started
+                  Sign in
                 </Link>
               </div>
             </div>

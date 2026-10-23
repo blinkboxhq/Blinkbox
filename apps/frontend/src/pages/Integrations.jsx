@@ -178,7 +178,7 @@ export default function Integrations() {
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Log in</a>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors px-3.5 py-1.5 rounded-lg">
-              Get started
+              Sign in
             </button>
           </a>
         </div>
@@ -298,7 +298,7 @@ export default function Integrations() {
           <div className="flex items-center justify-center gap-3">
             <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="flex items-center gap-2 text-[14px] font-semibold text-black bg-white hover:bg-neutral-200 transition-colors px-5 py-2.5 rounded-xl">
-                Start automating <ArrowRight className="w-4 h-4" />
+                Sign in <ArrowRight className="w-4 h-4" />
               </button>
             </a>
             <a href="mailto:hello@blinkbox.co.in" className="text-[14px] text-neutral-500 hover:text-white transition-colors px-4 py-2.5">

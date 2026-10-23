@@ -83,9 +83,8 @@ function Header() {
 
         <div className="hidden md:flex items-center gap-2 shrink-0">
           <div className="w-px h-4 bg-white/[0.1] mx-1" />
-          <a href={LOGIN} target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</a>
           <a href={LOGIN} target="_blank" rel="noopener noreferrer">
-            <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-lg">Sign up</button>
+            <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-lg">Sign in</button>
           </a>
         </div>
 
@@ -104,9 +103,8 @@ function Header() {
               <a key={item} href={href} className="text-[15px] text-neutral-400" onClick={() => setOpen(false)}>{item}</a>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
-              <a href={LOGIN} target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-500">Log in</a>
               <a href={LOGIN} target="_blank" rel="noopener noreferrer">
-                <button className="w-full h-10 rounded-lg bg-white text-black text-[14px] font-semibold">Sign up</button>
+                <button className="w-full h-10 rounded-lg bg-white text-black text-[14px] font-semibold">Sign in</button>
               </a>
             </div>
           </motion.div>
@@ -165,7 +163,7 @@ function Hero() {
         <a href={LOGIN} target="_blank" rel="noopener noreferrer" className="group">
           <button className="h-12 px-7 text-[15px] font-semibold rounded-xl transition-all duration-200 hover:bg-neutral-200 active:scale-[0.98] inline-flex items-center gap-1.5"
             style={{ background: '#fff', color: '#000', boxShadow: '0 10px 30px rgba(120,160,255,0.18), 0 0 0 1px rgba(255,255,255,0.06)' }}>
-            Start for free
+            Sign in
             <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </a>
@@ -279,7 +277,7 @@ function StaticHero() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <a href={LOGIN} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-[14px] font-medium text-black transition-colors duration-150 hover:bg-neutral-200">
-            Start free <ArrowRight className="h-4 w-4" />
+            Sign in <ArrowRight className="h-4 w-4" />
           </a>
           <Link to="/product"
             className="inline-flex items-center rounded-lg border border-white/15 px-5 py-2.5 text-[14px] font-medium text-neutral-200 transition-colors duration-150 hover:border-white/30 hover:text-white">
