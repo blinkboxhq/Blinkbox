@@ -54,6 +54,7 @@ const POLL_INTERVALS = [
 const DAY_CRON = { Mon: '1', Tue: '2', Wed: '3', Thu: '4', Fri: '5', Sat: '6', Sun: '0' };
 const pad = (n) => String(n).padStart(2, '0');
 const HOURS = Array.from({ length: 24 }, (_, i) => ({ value: pad(i), label: `${pad(i)}:00` }));
+const MINUTES = Array.from({ length: 60 }, (_, i) => ({ value: pad(i), label: `:${pad(i)}` }));
 
 const INTERVAL_PRESETS = [
   { label: 'Every minute',     value: 'every_minute', cron: '* * * * *' },
@@ -81,15 +82,22 @@ const TIMEZONES = [
   { value: 'Australia/Sydney',    label: 'Sydney (AEST/AEDT)' },
 ];
 
+const BROWSER_TZ = (() => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch { return 'UTC'; }
+})();
+const TIMEZONE_OPTIONS = TIMEZONES.some((t) => t.value === BROWSER_TZ)
+  ? TIMEZONES
+  : [{ value: BROWSER_TZ, label: `${BROWSER_TZ} (this device)` }, ...TIMEZONES];
+
 const liveCron = (config) => {
   const preset = config.preset || 'every_hour';
-  const dailyHour = config.dailyHour || '09';
+  const at = `${Number(config.dailyMinute || 0)} ${Number(config.dailyHour || 9)}`;
   const selectedDays = config.selectedDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   if (preset === 'custom') return config.customCron || '0 * * * *';
-  if (preset === 'daily') return `0 ${dailyHour} * * *`;
+  if (preset === 'daily') return `${at} * * *`;
   if (preset === 'weekly') {
     const days = selectedDays.map((d) => DAY_CRON[d]).join(',');
-    return `0 ${dailyHour} * * ${days || '*'}`;
+    return `${at} * * ${days || '*'}`;
   }
   return (INTERVAL_PRESETS.find((p) => p.value === preset) || INTERVAL_PRESETS[4]).cron;
 };
@@ -103,16 +111,19 @@ export const TRIGGER_SCHEMAS = {
     icon: Clock,
     accent: '#f5b542',
     badge: { label: liveCron, tone: 'code' },
+    persistDefaults: true,
     fields: [
       { type: 'select', key: 'preset', label: 'Run Every', default: 'every_hour',
         options: INTERVAL_PRESETS.map((p) => ({ value: p.value, label: p.label })),
         sideEffects: syncSchedule },
       { type: 'days', key: 'selectedDays', label: 'On These Days', showWhen: { preset: 'weekly' }, sideEffects: syncSchedule },
-      { type: 'hour', key: 'dailyHour', label: 'At Time', default: '09', showWhen: { preset: ['daily', 'weekly'] }, sideEffects: syncSchedule },
+      { type: 'hour', key: 'dailyHour', label: 'At Hour', default: '09', showWhen: { preset: ['daily', 'weekly'] }, sideEffects: syncSchedule },
+      { type: 'select', key: 'dailyMinute', label: 'At Minute', default: '00', options: MINUTES,
+        showWhen: { preset: ['daily', 'weekly'] }, sideEffects: syncSchedule },
       { type: 'text', key: 'customCron', label: 'Cron Expression', default: '0 * * * *',
         placeholder: '0 9 * * 1-5', hint: '// minute hour day-of-month month day-of-week',
         mirrorTo: 'schedule', showWhen: { preset: 'custom' } },
-      { type: 'select', key: 'timezone', label: 'Timezone', default: 'UTC', options: TIMEZONES },
+      { type: 'select', key: 'timezone', label: 'Timezone', default: BROWSER_TZ, options: TIMEZONE_OPTIONS },
       { type: 'vars', label: 'Output Variables', rows: [
         ['$trigger.triggeredAt', 'ISO timestamp when the schedule fired'],
         ['$trigger.schedule', 'Cron expression (e.g. "0 9 * * *")'],

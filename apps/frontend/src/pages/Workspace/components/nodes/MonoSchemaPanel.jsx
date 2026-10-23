@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Copy, Check } from 'lucide-react';
 import { API_URL } from '@/lib/api';
@@ -188,6 +188,20 @@ export default function MonoSchemaPanel({ schema, config = {}, updateConfig }) {
   const logoUrl = schema.logoUrl;
 
   const set = (key, val) => updateConfig?.(key, val);
+
+  // Schedules read these on the server; a default that only lives in the UI
+  // never reaches the cron worker, so write them into the node once.
+  useEffect(() => {
+    if (!schema.persistDefaults) return;
+    const merged = { ...config };
+    for (const f of schema.fields) {
+      if (f.key && f.default !== undefined && merged[f.key] === undefined) merged[f.key] = f.default;
+    }
+    for (const f of schema.fields) {
+      if (f.sideEffects) Object.assign(merged, f.sideEffects(merged[f.key], merged));
+    }
+    Object.entries(merged).forEach(([k, x]) => { if (config[k] !== x) set(k, x); });
+  }, [schema]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const visible = schema.fields.filter((f) => {
     if (!matchesShowWhen(f.showWhen, config)) return false;

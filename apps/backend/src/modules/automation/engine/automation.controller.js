@@ -1,13 +1,11 @@
 import crypto from "crypto";
-import cronParser from "cron-parser";
-const { parseExpression: parseCron } = cronParser;
 import Automation from "../../../models/automation.model.js";
 import Execution from "../../../models/execution.model.js";
 import ExecutionData from "../../../models/executionData.model.js";
 import AutomationVersion from "../../../models/automationVersion.model.js";
 import { validateAutomation } from "./automation.validator.js";
 import { executeAutomation } from "../automation.executor.js";
-import { syncCronJobs } from "../../../infra/cron.scheduler.js";
+import { requestCronSync, resolveSchedule } from "../../../infra/cron.scheduler.js";
 import { syncPollerHub } from "../../../infra/poller.hub.js";
 import { syncRealtimeHub } from "../../../infra/realtime.hub.js";
 import { emitToCollabRoom } from "../../../infra/socket.server.js";
@@ -187,6 +185,10 @@ export async function saveAutomation(req, res) {
       automation = await Automation.create(req.body);
     }
 
+    // A live automation's schedule must follow the edit before we answer, or
+    // the next fire still runs on the old one.
+    if (automation?.active) await requestCronSync(automation._id);
+
     // Broadcast updated graph to everyone else editing this automation
     if (req.params.id && automation) {
       emitToCollabRoom(String(automation._id), "collab:graph_sync", {
@@ -229,8 +231,6 @@ export async function activateAutomation(req, res) {
       ? automation.triggerNodes
       : [{ nodeId: automation.entryNodeId, type: automation.trigger }];
 
-    const triggerTypesSeen = new Set();
-
     for (const entry of triggerEntries) {
       const triggerNode = automation.nodes.find((n) => n.id === entry.nodeId);
       if (!triggerNode) {
@@ -242,20 +242,14 @@ export async function activateAutomation(req, res) {
       const trigger = entry.type;
       const cfg = getTriggerConfig(triggerNode);
 
-      // Validate cron expression before going live — bad expressions silently never fire
+      // Validate with the scheduler's own resolver so a schedule that passes here
+      // is exactly the one that gets scheduled — bad ones silently never fire.
       if (trigger === "cron_trigger") {
-        const expr = cfg.schedule || cfg.customCron;
-        if (!expr)
+        const resolved = resolveSchedule(cfg, automation);
+        if (resolved.error)
           throw new Error(
-            "Cron trigger requires a schedule. Open the trigger node and set a cron expression.",
+            `Cron trigger has an invalid schedule: ${resolved.error}. Open the trigger node and fix it.`,
           );
-        try {
-          parseCron(expr);
-        } catch {
-          throw new Error(
-            `Cron trigger has an invalid schedule expression: "${expr}". Please check your cron syntax.`,
-          );
-        }
       }
 
       // ── Auto-register external webhooks ────────────────────────────────────
@@ -380,8 +374,6 @@ export async function activateAutomation(req, res) {
         const refreshed = await Automation.findById(automation._id);
         if (refreshed) Object.assign(automation, refreshed.toObject());
       }
-
-      triggerTypesSeen.add(trigger);
     }
 
     automation.active = true;
@@ -390,8 +382,8 @@ export async function activateAutomation(req, res) {
 
     // Re-sync so the new automation is picked up immediately. The poller hub is the
     // single live worker for all polled triggers and iterates every trigger node;
-    // cron runs on its own scheduler.
-    if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
+    // cron runs on its own scheduler and is awaited so the first slot is not missed.
+    await requestCronSync(automation._id);
     syncPollerHub().catch(console.error);
     syncRealtimeHub().catch(console.error);
 
@@ -528,8 +520,7 @@ export async function deactivateAutomation(req, res) {
     await target.save();
 
     // Re-sync so the deactivated automation drops out of the job sets.
-    const triggerTypesSeen = new Set(triggerEntries.map((e) => e.type));
-    if (triggerTypesSeen.has("cron_trigger")) syncCronJobs().catch(console.error);
+    await requestCronSync(target._id);
     syncPollerHub().catch(console.error);
     syncRealtimeHub().catch(console.error);
 
@@ -656,6 +647,9 @@ export async function deleteAutomation(req, res) {
         .status(404)
         .json({ success: false, message: "Not found or access denied" });
     }
+
+    // The doc is gone, so this drops every schedule it owned.
+    await requestCronSync(automation._id);
 
     // Clean up external webhook registrations on delete, per trigger node.
     const triggerEntries = automation.triggerNodes?.length
